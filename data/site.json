@@ -11,7 +11,10 @@
     "profileRichness": "standard",
     "density": "medium",
     "modePolicy": "dark-toggle",
-    "linkTarget": "new-tab-external"
+    "linkTarget": "new-tab-external",
+    "desktopColumns": "one",
+    "typographyScale": "fixed",
+    "targetSize": "comfortable"
   },
   "baseUrl": "/",
   "custom": {
