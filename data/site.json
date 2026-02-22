@@ -3,13 +3,14 @@
   "description": "Personal, free, open source, version-controlled social links website.",
   "theme": {
     "active": "midnight",
-    "available": ["midnight", "daybreak"]
+    "available": ["midnight", "daybreak", "neutral", "editorial", "futuristic", "humanist"]
   },
   "ui": {
     "compositionMode": "balanced",
     "groupingStyle": "subtle",
     "profileRichness": "standard",
     "density": "medium",
+    "modePolicy": "dark-toggle",
     "linkTarget": "new-tab-external"
   },
   "baseUrl": "/",
