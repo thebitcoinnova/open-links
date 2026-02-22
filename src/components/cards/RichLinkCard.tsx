@@ -1,0 +1,70 @@
+import { Show } from "solid-js";
+import type { OpenLink } from "../../lib/content/load-content";
+import type { RichCardViewModel } from "../../lib/ui/rich-card-policy";
+
+export interface RichLinkCardProps {
+  link: OpenLink;
+  viewModel: RichCardViewModel;
+  target?: "_blank" | "_self";
+  rel?: string;
+  interaction?: "minimal";
+}
+
+const iconFor = (value?: string) => {
+  switch ((value ?? "").toLowerCase()) {
+    case "github":
+      return "GH";
+    case "linkedin":
+      return "IN";
+    case "x":
+      return "X";
+    case "youtube":
+      return "YT";
+    case "instagram":
+      return "IG";
+    default:
+      return "↗";
+  }
+};
+
+export const RichLinkCard = (props: RichLinkCardProps) => {
+  const target = () => props.target ?? "_blank";
+  const rel = () => (target() === "_blank" ? props.rel ?? "noopener noreferrer" : undefined);
+
+  return (
+    <a
+      class={`rich-link-card image-${props.viewModel.imageTreatment}`}
+      href={props.link.url}
+      target={target()}
+      rel={rel()}
+      aria-label={`Open ${props.viewModel.title}`}
+      data-interaction={props.interaction ?? "minimal"}
+      data-link-type={props.link.type}
+    >
+      <Show
+        when={props.viewModel.imageUrl}
+        fallback={<span class="rich-card-media rich-card-media-fallback">No preview image</span>}
+      >
+        <span class="rich-card-media" aria-hidden="true">
+          <img src={props.viewModel.imageUrl} alt="" loading="lazy" />
+        </span>
+      </Show>
+
+      <span class="rich-card-body">
+        <strong class="rich-card-title">{props.viewModel.title}</strong>
+        <span class="rich-card-description">{props.viewModel.description}</span>
+
+        <span class="rich-card-meta">
+          <span class="card-icon" aria-hidden="true">
+            {iconFor(props.link.icon)}
+          </span>
+          <Show when={props.viewModel.showSourceLabel}>
+            <span class="rich-card-source">{props.viewModel.sourceLabel}</span>
+          </Show>
+        </span>
+      </span>
+    </a>
+  );
+};
+
+export default RichLinkCard;

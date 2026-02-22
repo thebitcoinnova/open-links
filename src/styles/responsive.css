@@ -31,6 +31,14 @@
   body .simple-link-card {
     padding-block: calc(var(--space-3) * var(--density-scale) + 0.1rem);
   }
+
+  body .rich-link-card {
+    grid-template-columns: 1fr;
+  }
+
+  body .rich-card-media {
+    min-height: 7rem;
+  }
 }
 
 @media (min-width: 980px) {

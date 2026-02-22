@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
 import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
@@ -16,6 +17,7 @@ import {
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
+import { buildRichCardViewModel, resolveRichCardVariant } from "../lib/ui/rich-card-policy";
 
 const content = loadContent();
 const composition = resolveComposition(content.site);
@@ -34,6 +36,23 @@ const targetForLink = (url: string): "_blank" | "_self" => {
   if (mode === "new-tab-all") return "_blank";
 
   return url.startsWith("http://") || url.startsWith("https://") ? "_blank" : "_self";
+};
+
+const renderCard = (link: (typeof content.links)[number]) => {
+  const target = targetForLink(link.url);
+
+  if (resolveRichCardVariant(content.site, link) === "rich") {
+    return (
+      <RichLinkCard
+        link={link}
+        viewModel={buildRichCardViewModel(content.site, link)}
+        target={target}
+        interaction="minimal"
+      />
+    );
+  }
+
+  return <SimpleLinkCard link={link} target={target} interaction="minimal" />;
 };
 
 export default function RouteIndex() {
@@ -97,13 +116,7 @@ export default function RouteIndex() {
                     showHeading={showGroupHeading}
                     groupingStyle={composition.grouping}
                   >
-                    {(link) => (
-                      <SimpleLinkCard
-                        link={link}
-                        target={targetForLink(link.url)}
-                        interaction="minimal"
-                      />
-                    )}
+                    {(link) => renderCard(link)}
                   </LinkSection>
                 )}
               </For>
