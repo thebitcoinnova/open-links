@@ -38,6 +38,7 @@ export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
       aria-label={`Open ${props.link.label}`}
       data-interaction={interaction()}
       data-link-type={props.link.type}
+      data-card-variant="simple"
     >
       <span class="card-icon" aria-hidden="true">
         {iconFor(props.link.icon)}

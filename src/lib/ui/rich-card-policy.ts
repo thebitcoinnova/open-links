@@ -16,7 +16,7 @@ export interface RichCardViewModel {
   showSourceLabel: boolean;
 }
 
-const resolveRenderMode = (site: SiteData): "auto" | "simple" =>
+export const resolveRichRenderMode = (site: SiteData): "auto" | "simple" =>
   site.ui?.richCards?.renderMode === "simple" ? "simple" : "auto";
 
 const resolveSourceDefault = (site: SiteData): SourceLabelDefault =>
@@ -43,7 +43,7 @@ export const resolveRichCardVariant = (site: SiteData, link: OpenLink): Resolved
     return "simple";
   }
 
-  if (resolveRenderMode(site) === "simple") {
+  if (resolveRichRenderMode(site) === "simple") {
     return "simple";
   }
 

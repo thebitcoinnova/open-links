@@ -17,11 +17,16 @@ import {
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
-import { buildRichCardViewModel, resolveRichCardVariant } from "../lib/ui/rich-card-policy";
+import {
+  buildRichCardViewModel,
+  resolveRichCardVariant,
+  resolveRichRenderMode
+} from "../lib/ui/rich-card-policy";
 
 const content = loadContent();
 const composition = resolveComposition(content.site);
 const layout = resolveLayoutPreferences(content.site);
+const richRenderMode = resolveRichRenderMode(content.site);
 const modePolicy = resolveModePolicy(content.site);
 const themeSelection = resolveThemeSelection(content.site);
 const themeDefinition = getThemeDefinition(themeSelection.active);
@@ -99,6 +104,9 @@ export default function RouteIndex() {
         </Show>
         <span class="utility-pill" aria-live="polite">
           {themeDefinition?.label ?? themeSelection.active} · {themeDefinition?.intensity ?? "mild"}
+        </span>
+        <span class="utility-pill" aria-live="polite">
+          Cards: {richRenderMode === "simple" ? "simple only" : "rich + simple"}
         </span>
       </TopUtilityBar>
 
