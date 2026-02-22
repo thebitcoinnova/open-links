@@ -5,6 +5,13 @@
     "active": "midnight",
     "available": ["midnight", "daybreak"]
   },
+  "ui": {
+    "compositionMode": "balanced",
+    "groupingStyle": "subtle",
+    "profileRichness": "standard",
+    "density": "medium",
+    "linkTarget": "new-tab-external"
+  },
   "baseUrl": "/",
   "custom": {
     "heroStyle": "sleek-cards"

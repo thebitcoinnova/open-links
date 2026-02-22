@@ -3,6 +3,15 @@ import profileData from "../../../data/profile.json";
 import siteData from "../../../data/site.json";
 
 export type LinkType = "simple" | "rich";
+export type CompositionMode = "balanced" | "identity-first" | "links-first" | "links-only";
+export type GroupingStyle = "subtle" | "none" | "bands";
+export type ProfileRichness = "minimal" | "standard" | "rich";
+export type DensityMode = "compact" | "medium" | "spacious";
+export type ModePolicy = "dark-toggle" | "static-dark" | "static-light";
+export type LinkTargetMode = "new-tab-external" | "same-tab" | "new-tab-all";
+export type DesktopColumnsMode = "one" | "two";
+export type TypographyScaleMode = "fixed" | "compact" | "expressive";
+export type TargetSizeMode = "comfortable" | "compact" | "large";
 
 export interface OpenLink {
   id: string;
@@ -45,6 +54,17 @@ export interface SiteData {
   theme: {
     active: string;
     available: string[];
+  };
+  ui?: {
+    compositionMode?: CompositionMode;
+    groupingStyle?: GroupingStyle;
+    profileRichness?: ProfileRichness;
+    density?: DensityMode;
+    modePolicy?: ModePolicy;
+    linkTarget?: LinkTargetMode;
+    desktopColumns?: DesktopColumnsMode;
+    typographyScale?: TypographyScaleMode;
+    targetSize?: TargetSizeMode;
   };
   custom?: Record<string, unknown>;
   [key: string]: unknown;
