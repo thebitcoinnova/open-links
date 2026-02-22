@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 Phase: 1 of 6 (Bootstrap + Data Contract)
 Plan: 0 of 3 in current phase
 Status: Ready to plan
-Last activity: 2026-02-22 - Created ROADMAP.md, initialized STATE.md, and mapped requirements to phases.
+Last activity: 2026-02-22 - Captured Phase 1 context decisions for data shape, validation, extension model, and starter experience.
 
 Progress: [----------] 0%
 
@@ -45,6 +45,7 @@ Recent decisions affecting current work:
 - Initialization: SolidJS static architecture with JSON schema validation and GitHub Pages first.
 - Scope: v1 excludes auth, analytics, CMS, and plugin marketplace.
 - Quality: Performance, accessibility, and SEO treated as mandatory gates.
+- Phase 1 context: hybrid grouping, strict-mode-capable validation, dual-level custom blocks, and starter split-file workflow.
 
 ### Pending Todos
 
@@ -56,6 +57,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-22 00:00
-Stopped at: Project initialization artifacts complete; next step is phase discussion/planning.
-Resume file: None
+Last session: 2026-02-22 15:44
+Stopped at: Phase 1 context gathered and committed.
+Resume file: .planning/phases/01-bootstrap-data-contract/01-CONTEXT.md
