@@ -12,7 +12,7 @@ OpenLinks moves from a schema-validated data foundation to a polished static Sol
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Bootstrap + Data Contract** - Establish template-ready repository setup and schema-validated JSON model.
+- [x] **Phase 1: Bootstrap + Data Contract** - Establish template-ready repository setup and schema-validated JSON model.
 - [ ] **Phase 2: Core UI + Theme Foundation** - Deliver profile page, simple cards, responsive layout, and baseline theming.
 - [ ] **Phase 3: Rich Cards + Content Enrichment** - Add configurable rich card support with resilient fallback behavior.
 - [ ] **Phase 4: CI/CD + GitHub Pages Delivery** - Automate validation, build, and deployment on GitHub.
@@ -125,7 +125,7 @@ Phases execute in numeric order: 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Bootstrap + Data Contract | 0/3 | Not started | - |
+| 1. Bootstrap + Data Contract | 3/3 | Complete | 2026-02-22 |
 | 2. Core UI + Theme Foundation | 0/3 | Not started | - |
 | 3. Rich Cards + Content Enrichment | 0/2 | Not started | - |
 | 4. CI/CD + GitHub Pages Delivery | 0/2 | Not started | - |
