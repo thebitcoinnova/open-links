@@ -1,0 +1,16 @@
+{
+  "links": [
+    {
+      "id": "example",
+      "label": "Example",
+      "url": "https://example.com",
+      "type": "simple",
+      "custom": {
+        "label": "This collides with a reserved key"
+      }
+    }
+  ],
+  "custom": {
+    "links": "This conflicts with reserved top-level key"
+  }
+}
