@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-links.dev/schema/links.schema.json",
+  "title": "OpenLinks Links",
+  "type": "object",
+  "required": ["links"],
+  "properties": {
+    "links": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "url", "type"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "format": "uri" },
+          "type": { "type": "string", "enum": ["simple", "rich"] },
+          "icon": { "type": "string" },
+          "description": { "type": "string" },
+          "group": { "type": "string" },
+          "order": { "type": "integer", "minimum": 0 },
+          "enabled": { "type": "boolean" },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "image": { "type": "string", "format": "uri" }
+            },
+            "additionalProperties": true
+          },
+          "custom": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "order": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "custom": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
