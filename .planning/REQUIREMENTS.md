@@ -94,45 +94,45 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BOOT-01 | Phase TBD | Pending |
-| BOOT-02 | Phase TBD | Pending |
-| BOOT-03 | Phase TBD | Pending |
-| DATA-01 | Phase TBD | Pending |
-| DATA-02 | Phase TBD | Pending |
-| DATA-03 | Phase TBD | Pending |
-| DATA-04 | Phase TBD | Pending |
-| DATA-05 | Phase TBD | Pending |
-| DATA-06 | Phase TBD | Pending |
-| UI-01 | Phase TBD | Pending |
-| UI-02 | Phase TBD | Pending |
-| UI-03 | Phase TBD | Pending |
-| UI-04 | Phase TBD | Pending |
-| UI-05 | Phase TBD | Pending |
-| UI-06 | Phase TBD | Pending |
-| THEME-01 | Phase TBD | Pending |
-| THEME-02 | Phase TBD | Pending |
-| THEME-03 | Phase TBD | Pending |
-| THEME-04 | Phase TBD | Pending |
-| DEP-01 | Phase TBD | Pending |
-| DEP-02 | Phase TBD | Pending |
-| DEP-03 | Phase TBD | Pending |
-| DEP-04 | Phase TBD | Pending |
-| DEP-05 | Phase TBD | Pending |
-| QUAL-01 | Phase TBD | Pending |
-| QUAL-02 | Phase TBD | Pending |
-| QUAL-03 | Phase TBD | Pending |
-| QUAL-04 | Phase TBD | Pending |
-| QUAL-05 | Phase TBD | Pending |
-| DOC-01 | Phase TBD | Pending |
-| DOC-02 | Phase TBD | Pending |
-| DOC-03 | Phase TBD | Pending |
-| DOC-04 | Phase TBD | Pending |
+| BOOT-01 | Phase 1 | Pending |
+| BOOT-02 | Phase 1 | Pending |
+| BOOT-03 | Phase 6 | Pending |
+| DATA-01 | Phase 1 | Pending |
+| DATA-02 | Phase 1 | Pending |
+| DATA-03 | Phase 3 | Pending |
+| DATA-04 | Phase 1 | Pending |
+| DATA-05 | Phase 1 | Pending |
+| DATA-06 | Phase 1 | Pending |
+| UI-01 | Phase 2 | Pending |
+| UI-02 | Phase 2 | Pending |
+| UI-03 | Phase 3 | Pending |
+| UI-04 | Phase 2 | Pending |
+| UI-05 | Phase 2 | Pending |
+| UI-06 | Phase 2 | Pending |
+| THEME-01 | Phase 2 | Pending |
+| THEME-02 | Phase 2 | Pending |
+| THEME-03 | Phase 6 | Pending |
+| THEME-04 | Phase 6 | Pending |
+| DEP-01 | Phase 4 | Pending |
+| DEP-02 | Phase 4 | Pending |
+| DEP-03 | Phase 4 | Pending |
+| DEP-04 | Phase 4 | Pending |
+| DEP-05 | Phase 6 | Pending |
+| QUAL-01 | Phase 5 | Pending |
+| QUAL-02 | Phase 5 | Pending |
+| QUAL-03 | Phase 5 | Pending |
+| QUAL-04 | Phase 5 | Pending |
+| QUAL-05 | Phase 5 | Pending |
+| DOC-01 | Phase 6 | Pending |
+| DOC-02 | Phase 6 | Pending |
+| DOC-03 | Phase 6 | Pending |
+| DOC-04 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 33 total
-- Mapped to phases: 0
-- Unmapped: 33 ⚠️
+- Mapped to phases: 33
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 after initial definition*
+*Last updated: 2026-02-22 after roadmap traceability mapping*
