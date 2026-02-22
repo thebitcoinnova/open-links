@@ -24,17 +24,17 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### UI & Experience
 
-- [ ] **UI-01**: Site renders a profile page with a sleek card-based layout from JSON data.
-- [ ] **UI-02**: Simple cards render platform icon, label, and destination link.
+- [x] **UI-01**: Site renders a profile page with a sleek card-based layout from JSON data.
+- [x] **UI-02**: Simple cards render platform icon, label, and destination link.
 - [ ] **UI-03**: Rich cards render optional preview fields (for example title/description/image) with graceful fallback when absent.
-- [ ] **UI-04**: UI is fully responsive and usable on common mobile and desktop breakpoints.
-- [ ] **UI-05**: Default visual mode is dark with a user-selectable light mode.
-- [ ] **UI-06**: Theme choice persists across page reloads.
+- [x] **UI-04**: UI is fully responsive and usable on common mobile and desktop breakpoints.
+- [x] **UI-05**: Default visual mode is dark with a user-selectable light mode.
+- [x] **UI-06**: Theme choice persists across page reloads.
 
 ### Theme & Customization
 
-- [ ] **THEME-01**: Project includes at least two starter themes selectable by configuration.
-- [ ] **THEME-02**: Theme system uses tokens/variables so forks can add new themes without rewriting core card logic.
+- [x] **THEME-01**: Project includes at least two starter themes selectable by configuration.
+- [x] **THEME-02**: Theme system uses tokens/variables so forks can add new themes without rewriting core card logic.
 - [ ] **THEME-03**: Project exposes a documented path for custom CSS overrides.
 - [ ] **THEME-04**: Project exposes documented layout template hooks for deeper UI customization.
 
@@ -103,14 +103,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-04 | Phase 1 | Complete |
 | DATA-05 | Phase 1 | Complete |
 | DATA-06 | Phase 1 | Complete |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
+| UI-01 | Phase 2 | Complete |
+| UI-02 | Phase 2 | Complete |
 | UI-03 | Phase 3 | Pending |
-| UI-04 | Phase 2 | Pending |
-| UI-05 | Phase 2 | Pending |
-| UI-06 | Phase 2 | Pending |
-| THEME-01 | Phase 2 | Pending |
-| THEME-02 | Phase 2 | Pending |
+| UI-04 | Phase 2 | Complete |
+| UI-05 | Phase 2 | Complete |
+| UI-06 | Phase 2 | Complete |
+| THEME-01 | Phase 2 | Complete |
+| THEME-02 | Phase 2 | Complete |
 | THEME-03 | Phase 6 | Pending |
 | THEME-04 | Phase 6 | Pending |
 | DEP-01 | Phase 4 | Pending |
@@ -135,4 +135,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 after Phase 1 completion*
+*Last updated: 2026-02-22 after Phase 2 completion*

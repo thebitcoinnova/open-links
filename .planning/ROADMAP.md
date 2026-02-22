@@ -13,7 +13,7 @@ OpenLinks moves from a schema-validated data foundation to a polished static Sol
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Bootstrap + Data Contract** - Establish template-ready repository setup and schema-validated JSON model.
-- [ ] **Phase 2: Core UI + Theme Foundation** - Deliver profile page, simple cards, responsive layout, and baseline theming.
+- [x] **Phase 2: Core UI + Theme Foundation** - Deliver profile page, simple cards, responsive layout, and baseline theming. (completed 2026-02-22)
 - [ ] **Phase 3: Rich Cards + Content Enrichment** - Add configurable rich card support with resilient fallback behavior.
 - [ ] **Phase 4: CI/CD + GitHub Pages Delivery** - Automate validation, build, and deployment on GitHub.
 - [ ] **Phase 5: Quality Hardening (Perf/A11y/SEO)** - Add and enforce quality gates for production readiness.
@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Scaffold SolidJS project structure, starter data files, and schema files.
-- [ ] 01-02: Implement validation scripts and wire validation into build/prebuild flow.
-- [ ] 01-03: Add starter examples and basic contributor guidance for data edits.
+- [x] 01-01: Scaffold SolidJS project structure, starter data files, and schema files.
+- [x] 01-02: Implement validation scripts and wire validation into build/prebuild flow.
+- [x] 01-03: Add starter examples and basic contributor guidance for data edits.
 
 ### Phase 2: Core UI + Theme Foundation
 **Goal**: Render an attractive, responsive profile page with simple cards and baseline theming.
@@ -50,9 +50,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Build profile layout and simple card components with accessible semantics.
-- [ ] 02-02: Implement theme token system with two starter themes and mode persistence.
-- [ ] 02-03: Add responsive behavior and visual polish for card-based UI.
+- [x] 02-01: Build profile layout and simple card components with accessible semantics.
+- [x] 02-02: Implement theme token system with two starter themes and mode persistence.
+- [x] 02-03: Add responsive behavior and visual polish for card-based UI.
 
 ### Phase 3: Rich Cards + Content Enrichment
 **Goal**: Support per-link simple/rich card configuration with resilient preview fallback.
@@ -126,7 +126,7 @@ Phases execute in numeric order: 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Bootstrap + Data Contract | 3/3 | Complete | 2026-02-22 |
-| 2. Core UI + Theme Foundation | 0/3 | Not started | - |
+| 2. Core UI + Theme Foundation | 3/3 | Complete   | 2026-02-22 |
 | 3. Rich Cards + Content Enrichment | 0/2 | Not started | - |
 | 4. CI/CD + GitHub Pages Delivery | 0/2 | Not started | - |
 | 5. Quality Hardening (Perf/A11y/SEO) | 0/3 | Not started | - |
