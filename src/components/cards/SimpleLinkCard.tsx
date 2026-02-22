@@ -4,6 +4,7 @@ export interface SimpleLinkCardProps {
   link: OpenLink;
   target?: "_blank" | "_self";
   rel?: string;
+  interaction?: "minimal";
 }
 
 const iconFor = (value?: string) => {
@@ -26,9 +27,18 @@ const iconFor = (value?: string) => {
 export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? props.rel ?? "noreferrer" : undefined);
+  const interaction = () => props.interaction ?? "minimal";
 
   return (
-    <a class="simple-link-card" href={props.link.url} target={target()} rel={rel()}>
+    <a
+      class="simple-link-card"
+      href={props.link.url}
+      target={target()}
+      rel={rel()}
+      aria-label={`Open ${props.link.label}`}
+      data-interaction={interaction()}
+      data-link-type={props.link.type}
+    >
       <span class="card-icon" aria-hidden="true">
         {iconFor(props.link.icon)}
       </span>
