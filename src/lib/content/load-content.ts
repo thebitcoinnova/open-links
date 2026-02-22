@@ -12,6 +12,29 @@ export type LinkTargetMode = "new-tab-external" | "same-tab" | "new-tab-all";
 export type DesktopColumnsMode = "one" | "two";
 export type TypographyScaleMode = "fixed" | "compact" | "expressive";
 export type TargetSizeMode = "comfortable" | "compact" | "large";
+export type RichCardRenderMode = "auto" | "simple";
+export type SourceLabelDefault = "show" | "hide";
+export type RichImageTreatment = "cover" | "thumbnail" | "off";
+
+export interface RichLinkMetadata {
+  title?: string;
+  description?: string;
+  image?: string;
+  sourceLabel?: string;
+  sourceLabelVisible?: boolean;
+  enrichmentStatus?: "fetched" | "partial" | "failed" | "skipped";
+  enrichedAt?: string;
+  custom?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface LinkEnrichmentPolicy {
+  enabled?: boolean;
+  sourceLabel?: string;
+  sourceLabelVisible?: boolean;
+  custom?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 
 export interface OpenLink {
   id: string;
@@ -23,7 +46,8 @@ export interface OpenLink {
   group?: string;
   order?: number;
   enabled?: boolean;
-  metadata?: Record<string, unknown>;
+  metadata?: RichLinkMetadata;
+  enrichment?: LinkEnrichmentPolicy;
   custom?: Record<string, unknown>;
 }
 
@@ -65,6 +89,16 @@ export interface SiteData {
     desktopColumns?: DesktopColumnsMode;
     typographyScale?: TypographyScaleMode;
     targetSize?: TargetSizeMode;
+    richCards?: {
+      renderMode?: RichCardRenderMode;
+      sourceLabelDefault?: SourceLabelDefault;
+      imageTreatment?: RichImageTreatment;
+      enrichment?: {
+        enabledByDefault?: boolean;
+        timeoutMs?: number;
+        retries?: number;
+      };
+    };
   };
   custom?: Record<string, unknown>;
   [key: string]: unknown;

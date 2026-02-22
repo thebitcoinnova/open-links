@@ -14,7 +14,17 @@
     "linkTarget": "new-tab-external",
     "desktopColumns": "one",
     "typographyScale": "fixed",
-    "targetSize": "comfortable"
+    "targetSize": "comfortable",
+    "richCards": {
+      "renderMode": "auto",
+      "sourceLabelDefault": "show",
+      "imageTreatment": "cover",
+      "enrichment": {
+        "enabledByDefault": true,
+        "timeoutMs": 4000,
+        "retries": 1
+      }
+    }
   },
   "baseUrl": "/",
   "custom": {

@@ -26,7 +26,31 @@
             "properties": {
               "title": { "type": "string" },
               "description": { "type": "string" },
-              "image": { "type": "string", "format": "uri" }
+              "image": { "type": "string", "format": "uri" },
+              "sourceLabel": { "type": "string" },
+              "sourceLabelVisible": { "type": "boolean" },
+              "enrichmentStatus": {
+                "type": "string",
+                "enum": ["fetched", "partial", "failed", "skipped"]
+              },
+              "enrichedAt": { "type": "string", "format": "date-time" },
+              "custom": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
+          "enrichment": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "sourceLabel": { "type": "string" },
+              "sourceLabelVisible": { "type": "boolean" },
+              "custom": {
+                "type": "object",
+                "additionalProperties": true
+              }
             },
             "additionalProperties": true
           },
