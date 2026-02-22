@@ -1,0 +1,10 @@
+{
+  "name": "Grouped Creator",
+  "headline": "Links organized by intent",
+  "avatar": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=320&q=80",
+  "bio": "OpenLinks example showing optional grouped layout.",
+  "location": "Remote",
+  "custom": {
+    "accent": "teal"
+  }
+}

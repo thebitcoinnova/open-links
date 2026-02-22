@@ -1,0 +1,51 @@
+{
+  "links": [
+    {
+      "id": "github",
+      "label": "GitHub",
+      "url": "https://github.com",
+      "type": "simple",
+      "group": "social",
+      "order": 1,
+      "enabled": true,
+      "custom": {}
+    },
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "url": "https://linkedin.com",
+      "type": "rich",
+      "group": "work",
+      "order": 1,
+      "enabled": true,
+      "metadata": {
+        "title": "Professional profile"
+      },
+      "custom": {}
+    },
+    {
+      "id": "portfolio",
+      "label": "Portfolio",
+      "url": "https://example.com/portfolio",
+      "type": "simple",
+      "group": "work",
+      "order": 2,
+      "enabled": true,
+      "custom": {}
+    }
+  ],
+  "groups": [
+    {
+      "id": "social",
+      "label": "Social",
+      "order": 1
+    },
+    {
+      "id": "work",
+      "label": "Work",
+      "order": 2
+    }
+  ],
+  "order": ["github", "linkedin", "portfolio"],
+  "custom": {}
+}

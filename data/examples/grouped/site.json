@@ -1,0 +1,10 @@
+{
+  "title": "Grouped OpenLinks",
+  "description": "Grouped example with two starter themes",
+  "theme": {
+    "active": "daybreak",
+    "available": ["midnight", "daybreak"]
+  },
+  "baseUrl": "/",
+  "custom": {}
+}

@@ -1,0 +1,39 @@
+{
+  "links": [
+    {
+      "id": "github",
+      "label": "GitHub",
+      "url": "https://github.com",
+      "type": "simple",
+      "icon": "github",
+      "order": 1,
+      "enabled": true,
+      "custom": {}
+    },
+    {
+      "id": "x",
+      "label": "X",
+      "url": "https://x.com",
+      "type": "simple",
+      "icon": "x",
+      "order": 2,
+      "enabled": true,
+      "custom": {}
+    },
+    {
+      "id": "website",
+      "label": "Website",
+      "url": "https://example.com",
+      "type": "rich",
+      "description": "Main project home",
+      "order": 3,
+      "enabled": true,
+      "metadata": {
+        "title": "Example Project"
+      },
+      "custom": {}
+    }
+  ],
+  "order": ["github", "x", "website"],
+  "custom": {}
+}
