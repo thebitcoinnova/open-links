@@ -1,0 +1,12 @@
+{
+  "title": "OpenLinks",
+  "description": "Personal, free, open source, version-controlled social links website.",
+  "theme": {
+    "active": "midnight",
+    "available": ["midnight", "daybreak"]
+  },
+  "baseUrl": "/",
+  "custom": {
+    "heroStyle": "sleek-cards"
+  }
+}

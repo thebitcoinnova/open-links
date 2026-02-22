@@ -1,0 +1,67 @@
+:root {
+  --surface: #0f1117;
+  --text: #f5f7fb;
+  --muted: #9ca5bb;
+  --card: #181d2b;
+  --accent: #50e3c2;
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top right, #1f2540 0%, #0b0e15 55%, #06070a 100%);
+  color: var(--text);
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.hero {
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+}
+
+.hero p {
+  margin: 0.35rem 0;
+  color: var(--muted);
+}
+
+.card-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.card {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--card) 88%, #fff 12%), var(--card));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+}
+
+.card h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.card p {
+  margin: 0.28rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}

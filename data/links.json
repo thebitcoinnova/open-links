@@ -1,0 +1,57 @@
+{
+  "links": [
+    {
+      "id": "github",
+      "label": "GitHub",
+      "url": "https://github.com/pRizz",
+      "type": "simple",
+      "icon": "github",
+      "description": "Code, experiments, and open-source projects",
+      "group": "social",
+      "order": 1,
+      "enabled": true,
+      "custom": {}
+    },
+    {
+      "id": "x",
+      "label": "X",
+      "url": "https://x.com",
+      "type": "simple",
+      "icon": "x",
+      "description": "Short updates and project notes",
+      "group": "social",
+      "order": 2,
+      "enabled": true,
+      "custom": {}
+    },
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "url": "https://linkedin.com",
+      "type": "rich",
+      "icon": "linkedin",
+      "description": "Professional profile and recent work",
+      "group": "work",
+      "order": 3,
+      "enabled": true,
+      "metadata": {
+        "title": "OpenLinks on LinkedIn"
+      },
+      "custom": {}
+    }
+  ],
+  "groups": [
+    {
+      "id": "social",
+      "label": "Social",
+      "order": 1
+    },
+    {
+      "id": "work",
+      "label": "Work",
+      "order": 2
+    }
+  ],
+  "order": ["github", "x", "linkedin"],
+  "custom": {}
+}
