@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 
 Phase: 3 of 6 (Rich Cards + Content Enrichment)
 Plan: 0 of 2 in current phase
-Status: Ready for discuss
-Last activity: 2026-02-22 - Completed Phase 2 execution, verification, and requirements updates.
+Status: Ready to plan
+Last activity: 2026-02-22 - Captured Phase 3 context decisions for rich contract, fallback behavior, enrichment controls, and mixed presentation rules.
 
 Progress: [####------] 38%
 
@@ -47,6 +47,7 @@ Recent decisions affecting current work:
 - Validation strategy: schema + policy checks with strict-mode escalation and dual output modes.
 - Data model: split files with optional grouping/order and explicit extension pathways.
 - Phase 2 implementation: composition and grouping are config-driven; mode behavior is policy-driven; responsive layout preferences are resolver-based.
+- Phase 3 defaults: rich cards require only core fields, use resilient fallback shells, and run build-time enrichment with strict-mode failure + structured diagnostics.
 
 ### Pending Todos
 
@@ -58,6 +59,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-22 18:45
-Stopped at: Phase 2 completed and verified; ready for Phase 3 discussion.
-Resume file: .planning/phases/02-core-ui-theme-foundation/02-VERIFICATION.md
+Last session: 2026-02-22 23:32
+Stopped at: Phase 3 context gathered and ready for planning.
+Resume file: .planning/phases/03-rich-cards-content-enrichment/03-CONTEXT.md
