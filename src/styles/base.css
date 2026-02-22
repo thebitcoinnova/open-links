@@ -217,6 +217,11 @@ a {
   transform: translateY(-1px);
 }
 
+.simple-link-card:active {
+  transform: translateY(0);
+  background: color-mix(in srgb, var(--surface-card) 78%, var(--accent) 22%);
+}
+
 .simple-link-card:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
@@ -272,6 +277,10 @@ a {
 .theme-toggle:hover {
   border-color: var(--border-strong);
   transform: translateY(-1px);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
 }
 
 .theme-toggle:focus-visible {

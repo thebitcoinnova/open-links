@@ -4,7 +4,7 @@
     padding: var(--space-4) var(--space-3) var(--space-6);
   }
 
-  body .top-utility-bar {
+  body .top-utility-bar[data-sticky-mobile="true"] {
     position: sticky;
     top: 0;
     z-index: 20;
@@ -26,6 +26,10 @@
 
   body .utility-actions {
     gap: var(--space-1);
+  }
+
+  body .simple-link-card {
+    padding-block: calc(var(--space-3) * var(--density-scale) + 0.1rem);
   }
 }
 

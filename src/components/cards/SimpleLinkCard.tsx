@@ -26,7 +26,7 @@ const iconFor = (value?: string) => {
 
 export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
   const target = () => props.target ?? "_blank";
-  const rel = () => (target() === "_blank" ? props.rel ?? "noreferrer" : undefined);
+  const rel = () => (target() === "_blank" ? props.rel ?? "noopener noreferrer" : undefined);
   const interaction = () => props.interaction ?? "minimal";
 
   return (
