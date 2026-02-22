@@ -65,18 +65,18 @@ export default function RouteIndex() {
     <main
       class={`page composition-${composition.mode} profile-${composition.profileEmphasis} density-${content.site.ui?.density ?? "medium"}`}
     >
-      <TopUtilityBar title={content.site.title}>
+      <TopUtilityBar title={content.site.title} controlsLabel="Theme and mode controls">
         <Show
           when={canToggle()}
           fallback={
-            <span class="utility-pill">
+            <span class="utility-pill" aria-live="polite">
               {modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
             </span>
           }
         >
           <ThemeToggle mode={mode()} onToggle={handleModeToggle} />
         </Show>
-        <span class="utility-pill">
+        <span class="utility-pill" aria-live="polite">
           {themeDefinition?.label ?? themeSelection.active} · {themeDefinition?.intensity ?? "mild"}
         </span>
       </TopUtilityBar>
