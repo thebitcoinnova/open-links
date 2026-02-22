@@ -50,6 +50,31 @@ npm run validate:data:strict
 npm run validate:data:json
 ```
 
+## Validation Modes and Data Contract Rules
+
+### Standard vs strict mode
+
+- `npm run validate:data`: fails on errors, allows warnings.
+- `npm run validate:data:strict`: fails on errors and warnings.
+
+### URL policy
+
+Link URLs must use one of these schemes:
+
+- `http`
+- `https`
+- `mailto`
+- `tel`
+
+### Extension model
+
+- Top-level unknown keys are allowed but reported as warnings.
+- Use `custom` objects for extension metadata:
+  - top-level `custom` in `profile`, `links`, and `site`
+  - per-link `custom` in each link object
+- Custom keys must not collide with reserved core keys. Conflicts fail validation.
+- Extension compatibility is best-effort, not guaranteed as a stable API contract.
+
 ## First Publish Checklist
 
 - [ ] Updated `data/profile.json`, `data/links.json`, and `data/site.json` with your content.
@@ -63,6 +88,7 @@ npm run validate:data:json
 - If validation reports schema errors, check the exact JSON path in the message and update that field.
 - If validation reports custom-key conflicts, rename keys under `custom` so they do not match reserved core fields.
 - If validation reports URL scheme errors, use one of `http`, `https`, `mailto`, or `tel`.
+- If strict mode fails on warnings, either resolve warnings or use standard mode during local iteration.
 
 ## Example Data Presets
 
