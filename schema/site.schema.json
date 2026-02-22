@@ -36,6 +36,48 @@
       },
       "additionalProperties": true
     },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "compositionMode": {
+          "type": "string",
+          "enum": ["balanced", "identity-first", "links-first", "links-only"]
+        },
+        "groupingStyle": {
+          "type": "string",
+          "enum": ["subtle", "none", "bands"]
+        },
+        "profileRichness": {
+          "type": "string",
+          "enum": ["minimal", "standard", "rich"]
+        },
+        "density": {
+          "type": "string",
+          "enum": ["compact", "medium", "spacious"]
+        },
+        "modePolicy": {
+          "type": "string",
+          "enum": ["dark-toggle", "static-dark", "static-light"]
+        },
+        "linkTarget": {
+          "type": "string",
+          "enum": ["new-tab-external", "same-tab", "new-tab-all"]
+        },
+        "desktopColumns": {
+          "type": "string",
+          "enum": ["one", "two"]
+        },
+        "typographyScale": {
+          "type": "string",
+          "enum": ["fixed", "compact", "expressive"]
+        },
+        "targetSize": {
+          "type": "string",
+          "enum": ["comfortable", "compact", "large"]
+        }
+      },
+      "additionalProperties": true
+    },
     "custom": {
       "type": "object",
       "additionalProperties": true
