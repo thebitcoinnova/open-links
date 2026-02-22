@@ -1,0 +1,29 @@
+:root[data-theme="humanist"][data-mode="dark"] {
+  --font-display: "Merriweather", "Georgia", serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  --surface-bg: #101311;
+  --surface-panel: #1c241e;
+  --surface-card: #253028;
+  --surface-pill: #2d3c31;
+  --text-primary: #f2f7f2;
+  --text-muted: #b5c4b4;
+  --accent: #8bc57f;
+  --accent-strong: #b0dea3;
+  --border-subtle: rgb(170 208 162 / 0.2);
+  --border-strong: rgb(176 222 163 / 0.44);
+}
+
+:root[data-theme="humanist"][data-mode="light"] {
+  --font-display: "Merriweather", "Georgia", serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  --surface-bg: #f4f7f2;
+  --surface-panel: #fff;
+  --surface-card: #e8f0e6;
+  --surface-pill: #dde9da;
+  --text-primary: #213026;
+  --text-muted: #576a5d;
+  --accent: #3d8754;
+  --accent-strong: #28603b;
+  --border-subtle: rgb(58 108 74 / 0.2);
+  --border-strong: rgb(40 96 59 / 0.42);
+}

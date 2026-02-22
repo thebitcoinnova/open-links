@@ -1,0 +1,29 @@
+:root[data-theme="editorial"][data-mode="dark"] {
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+  --surface-bg: #161115;
+  --surface-panel: #261922;
+  --surface-card: #321f2a;
+  --surface-pill: #3d2433;
+  --text-primary: #ffeef7;
+  --text-muted: #d7b7c7;
+  --accent: #ff5f9a;
+  --accent-strong: #ff90b8;
+  --border-subtle: rgb(255 182 213 / 0.2);
+  --border-strong: rgb(255 144 184 / 0.45);
+}
+
+:root[data-theme="editorial"][data-mode="light"] {
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+  --surface-bg: #fff4f9;
+  --surface-panel: #fff;
+  --surface-card: #ffe7f1;
+  --surface-pill: #ffdce9;
+  --text-primary: #3f1b2e;
+  --text-muted: #7d4d65;
+  --accent: #cb1f66;
+  --accent-strong: #981248;
+  --border-subtle: rgb(185 36 96 / 0.2);
+  --border-strong: rgb(152 18 72 / 0.45);
+}

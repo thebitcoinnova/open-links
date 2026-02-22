@@ -1,0 +1,51 @@
+:root {
+  --font-display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Manrope", "IBM Plex Sans", "Segoe UI", sans-serif;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.75rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.9rem;
+  --radius-lg: 1.25rem;
+
+  --shadow-soft: 0 14px 30px rgb(0 0 0 / 0.24);
+  --shadow-focus: 0 0 0 2px var(--accent-strong);
+
+  --density-scale: 1;
+  --target-size: 44px;
+
+  --type-title: clamp(1.7rem, 4vw, 2.4rem);
+  --type-headline: clamp(1.05rem, 2.3vw, 1.2rem);
+  --type-body: 1rem;
+  --type-caption: 0.88rem;
+
+  --motion-fast: 140ms cubic-bezier(0.2, 0.72, 0.2, 1);
+  --motion-mid: 220ms cubic-bezier(0.2, 0.72, 0.2, 1);
+
+  --surface-bg: #090b10;
+  --surface-panel: #121724;
+  --surface-card: #171d2b;
+  --surface-pill: #1a2232;
+  --text-primary: #f5f7fb;
+  --text-muted: #9ca5bb;
+  --accent: #50e3c2;
+  --accent-strong: #7cf2d8;
+  --border-subtle: rgb(255 255 255 / 0.12);
+  --border-strong: rgb(124 242 216 / 0.4);
+}
+
+:root[data-density="compact"] {
+  --density-scale: 0.9;
+  --target-size: 40px;
+}
+
+:root[data-density="spacious"] {
+  --density-scale: 1.1;
+  --target-size: 48px;
+}

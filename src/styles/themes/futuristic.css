@@ -1,0 +1,29 @@
+:root[data-theme="futuristic"][data-mode="dark"] {
+  --font-display: "Orbitron", "Avenir Next", sans-serif;
+  --font-body: "Rajdhani", "Segoe UI", sans-serif;
+  --surface-bg: #04030d;
+  --surface-panel: #0c1122;
+  --surface-card: #101834;
+  --surface-pill: #142044;
+  --text-primary: #e3efff;
+  --text-muted: #8ea4cf;
+  --accent: #2ed0ff;
+  --accent-strong: #7ce6ff;
+  --border-subtle: rgb(88 164 255 / 0.26);
+  --border-strong: rgb(124 230 255 / 0.52);
+}
+
+:root[data-theme="futuristic"][data-mode="light"] {
+  --font-display: "Orbitron", "Avenir Next", sans-serif;
+  --font-body: "Rajdhani", "Segoe UI", sans-serif;
+  --surface-bg: #edf5ff;
+  --surface-panel: #ffffff;
+  --surface-card: #deebff;
+  --surface-pill: #d3e3ff;
+  --text-primary: #102343;
+  --text-muted: #3e5c90;
+  --accent: #005adb;
+  --accent-strong: #003f97;
+  --border-subtle: rgb(24 78 173 / 0.22);
+  --border-strong: rgb(0 63 151 / 0.46);
+}

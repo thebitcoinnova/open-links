@@ -1,0 +1,25 @@
+:root[data-theme="daybreak"][data-mode="dark"] {
+  --surface-bg: #14100a;
+  --surface-panel: #20160e;
+  --surface-card: #2a1f16;
+  --surface-pill: #35251b;
+  --text-primary: #fff6ea;
+  --text-muted: #dac6ad;
+  --accent: #ff9f47;
+  --accent-strong: #ffbe7e;
+  --border-subtle: rgb(255 204 157 / 0.2);
+  --border-strong: rgb(255 190 126 / 0.4);
+}
+
+:root[data-theme="daybreak"][data-mode="light"] {
+  --surface-bg: #fff9f1;
+  --surface-panel: #fffefb;
+  --surface-card: #fff5e8;
+  --surface-pill: #ffe9d4;
+  --text-primary: #2f2217;
+  --text-muted: #6e5340;
+  --accent: #d56c11;
+  --accent-strong: #9e4b00;
+  --border-subtle: rgb(164 82 10 / 0.2);
+  --border-strong: rgb(158 75 0 / 0.4);
+}
