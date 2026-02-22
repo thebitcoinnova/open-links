@@ -4,6 +4,11 @@ import process from "node:process";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import { runPolicyRules, type ValidationIssue } from "./validation/rules";
+import {
+  formatHumanOutput,
+  formatJsonOutput,
+  type ValidationResult
+} from "./validation/format-output";
 
 type OutputFormat = "human" | "json";
 
@@ -14,19 +19,6 @@ type ArgMap = {
   linksPath: string;
   sitePath: string;
 };
-
-interface ValidationResult {
-  strict: boolean;
-  format: OutputFormat;
-  success: boolean;
-  errors: ValidationIssue[];
-  warnings: ValidationIssue[];
-  files: {
-    profile: string;
-    links: string;
-    site: string;
-  };
-}
 
 const ROOT = process.cwd();
 
@@ -82,39 +74,6 @@ const sortIssues = (issues: ValidationIssue[]): ValidationIssue[] =>
     if (left.path !== right.path) return left.path.localeCompare(right.path);
     return left.message.localeCompare(right.message);
   });
-
-const printHuman = (result: ValidationResult) => {
-  const totalErrors = result.errors.length;
-  const totalWarnings = result.warnings.length;
-
-  console.log(`OpenLinks data validation (${result.strict ? "strict" : "standard"} mode)`);
-  console.log(`Files: profile=${result.files.profile}, links=${result.files.links}, site=${result.files.site}`);
-  console.log(`Errors: ${totalErrors} | Warnings: ${totalWarnings}`);
-
-  if (totalErrors > 0) {
-    console.log("\nErrors:");
-    for (const issue of result.errors) {
-      console.log(`- [${issue.source}] ${issue.path}: ${issue.message}`);
-      console.log(`  Fix: ${issue.remediation}`);
-    }
-  }
-
-  if (totalWarnings > 0) {
-    console.log("\nWarnings:");
-    for (const issue of result.warnings) {
-      console.log(`- [${issue.source}] ${issue.path}: ${issue.message}`);
-      console.log(`  Fix: ${issue.remediation}`);
-    }
-  }
-
-  if (totalErrors === 0 && totalWarnings === 0) {
-    console.log("No issues found.");
-  }
-};
-
-const printJson = (result: ValidationResult) => {
-  console.log(JSON.stringify(result, null, 2));
-};
 
 const run = () => {
   const args = parseArgs();
@@ -178,9 +137,9 @@ const run = () => {
   };
 
   if (args.format === "json") {
-    printJson(result);
+    console.log(formatJsonOutput(result));
   } else {
-    printHuman(result);
+    console.log(formatHumanOutput(result));
   }
 
   process.exit(result.success ? 0 : 1);
