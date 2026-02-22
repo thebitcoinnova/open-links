@@ -1,9 +1,12 @@
-import { For, Show } from "solid-js";
+import { For } from "solid-js";
+import SimpleLinkCard from "../components/cards/SimpleLinkCard";
+import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
+import ProfileHeader from "../components/profile/ProfileHeader";
 import { loadContent } from "../lib/content/load-content";
 
 const content = loadContent();
 
-const groupedLinks = () => {
+const groupedLinks = (): LinkSectionData[] => {
   const byGroup = new Map<string, typeof content.links>();
 
   for (const link of content.links) {
@@ -38,29 +41,13 @@ export default function RouteIndex() {
 
   return (
     <main class="page">
-      <section class="hero">
-        <h1>{content.profile.name}</h1>
-        <p>{content.profile.headline}</p>
-        <p>{content.profile.bio}</p>
-      </section>
+      <ProfileHeader profile={content.profile} />
 
       <For each={sections}>
         {(section) => (
-          <section>
-            <Show when={section.label}>
-              <h2 class="section-heading">{section.label}</h2>
-            </Show>
-            <div class="card-grid" aria-label={section.label}>
-              <For each={section.links}>
-                {(link) => (
-                  <a class="card" href={link.url} target="_blank" rel="noreferrer">
-                    <h3>{link.label}</h3>
-                    <p>{link.description ?? link.url}</p>
-                  </a>
-                )}
-              </For>
-            </div>
-          </section>
+          <LinkSection section={section}>
+            {(link) => <SimpleLinkCard link={link} />}
+          </LinkSection>
         )}
       </For>
     </main>
