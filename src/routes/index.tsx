@@ -15,9 +15,11 @@ import {
 } from "../lib/theme/mode-controller";
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
+import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
 
 const content = loadContent();
 const composition = resolveComposition(content.site);
+const layout = resolveLayoutPreferences(content.site);
 const modePolicy = resolveModePolicy(content.site);
 const themeSelection = resolveThemeSelection(content.site);
 const themeDefinition = getThemeDefinition(themeSelection.active);
@@ -47,7 +49,7 @@ export default function RouteIndex() {
       themeId: themeSelection.active,
       mode: mode(),
       policy: modePolicy,
-      density: content.site.ui?.density
+      density: layout.density
     });
   });
 
@@ -63,7 +65,7 @@ export default function RouteIndex() {
 
   return (
     <main
-      class={`page composition-${composition.mode} profile-${composition.profileEmphasis} density-${content.site.ui?.density ?? "medium"}`}
+      class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
     >
       <TopUtilityBar title={content.site.title} controlsLabel="Theme and mode controls">
         <Show
@@ -90,7 +92,11 @@ export default function RouteIndex() {
             <Match when={block === "links"}>
               <For each={sections}>
                 {(section) => (
-                  <LinkSection section={section} showHeading={showGroupHeading}>
+                  <LinkSection
+                    section={section}
+                    showHeading={showGroupHeading}
+                    groupingStyle={composition.grouping}
+                  >
                     {(link) => (
                       <SimpleLinkCard
                         link={link}

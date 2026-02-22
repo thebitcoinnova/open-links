@@ -5,6 +5,7 @@
 @import "./themes/editorial.css";
 @import "./themes/futuristic.css";
 @import "./themes/humanist.css";
+@import "./responsive.css";
 
 * {
   box-sizing: border-box;
@@ -32,11 +33,36 @@ a {
 }
 
 .page {
+  --page-type-title: var(--type-title);
+  --page-type-headline: var(--type-headline);
+  --page-type-caption: var(--type-caption);
+  --page-target-size: var(--target-size);
+
   max-width: 52rem;
   margin: 0 auto;
   padding: var(--space-6) var(--space-4) var(--space-7);
   display: grid;
   gap: calc(var(--space-5) * var(--density-scale));
+}
+
+.page.typography-compact {
+  --page-type-title: clamp(1.5rem, 3.2vw, 2.05rem);
+  --page-type-headline: clamp(0.95rem, 2vw, 1.08rem);
+  --page-type-caption: 0.82rem;
+}
+
+.page.typography-expressive {
+  --page-type-title: clamp(1.9rem, 4.5vw, 2.75rem);
+  --page-type-headline: clamp(1.15rem, 2.4vw, 1.3rem);
+  --page-type-caption: 0.93rem;
+}
+
+.page.targets-compact {
+  --page-target-size: 40px;
+}
+
+.page.targets-large {
+  --page-target-size: 52px;
 }
 
 .top-utility-bar {
@@ -52,7 +78,7 @@ a {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--page-type-caption);
 }
 
 .utility-actions {
@@ -67,7 +93,7 @@ a {
   background: var(--surface-pill);
   color: var(--text-muted);
   padding: 0.35rem 0.7rem;
-  font-size: var(--type-caption);
+  font-size: var(--page-type-caption);
 }
 
 .profile-header {
@@ -98,14 +124,14 @@ a {
 .profile-copy h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--type-title);
+  font-size: var(--page-type-title);
   line-height: 1.05;
 }
 
 .profile-headline {
   margin: 0;
   color: color-mix(in srgb, var(--text-primary) 78%, var(--accent) 22%);
-  font-size: var(--type-headline);
+  font-size: var(--page-type-headline);
 }
 
 .profile-bio {
@@ -126,7 +152,7 @@ a {
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
   color: var(--text-muted);
-  font-size: var(--type-caption);
+  font-size: var(--page-type-caption);
 }
 
 .profile-contact-list {
@@ -142,7 +168,7 @@ a {
   justify-content: space-between;
   gap: var(--space-2);
   color: var(--text-muted);
-  font-size: var(--type-caption);
+  font-size: var(--page-type-caption);
 }
 
 .profile-contact-list span:first-child {
@@ -151,10 +177,17 @@ a {
 
 .section-heading {
   margin: 0 0 var(--space-2);
-  font-size: 0.8rem;
+  font-size: var(--page-type-caption);
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--accent) 66%, var(--text-primary) 34%);
+}
+
+.link-section.grouping-bands {
+  padding: calc(var(--space-3) * var(--density-scale));
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-panel) 82%, transparent 18%);
 }
 
 .card-grid {
@@ -166,7 +199,7 @@ a {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: var(--target-size);
+  min-height: var(--page-target-size);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   padding: calc(var(--space-3) * var(--density-scale));
@@ -216,7 +249,7 @@ a {
 
 .card-copy span {
   color: var(--text-muted);
-  font-size: var(--type-caption);
+  font-size: var(--page-type-caption);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -227,11 +260,11 @@ a {
   border: 1px solid var(--border-subtle);
   background: var(--surface-pill);
   color: var(--text-primary);
-  min-height: var(--target-size);
+  min-height: var(--page-target-size);
   min-width: 5.5rem;
   padding: 0.35rem 0.8rem;
   font: inherit;
-  font-size: var(--type-caption);
+  font-size: var(--page-type-caption);
   cursor: pointer;
   transition: border-color var(--motion-fast), transform var(--motion-fast);
 }
