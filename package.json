@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prebuild": "npm run validate:data",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "validate:data": "tsx scripts/validate-data.ts",
@@ -17,6 +18,8 @@
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
