@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "ci:required": "npm run validate:data && npm run typecheck && npm run build",
+    "ci:strict": "npm run validate:data:strict && npm run build:strict",
     "dev": "vite",
     "build": "vite build",
     "build:strict": "npm run enrich:rich:strict && npm run validate:data:strict && vite build",
