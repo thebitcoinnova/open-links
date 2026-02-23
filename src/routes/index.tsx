@@ -31,6 +31,7 @@ const composition = resolveComposition(content.site);
 const layout = resolveLayoutPreferences(content.site);
 const richRenderMode = resolveRichRenderMode(content.site);
 const modePolicy = resolveModePolicy(content.site);
+const brandIconColorMode = content.site.ui?.brandIcons?.colorMode === "theme" ? "theme" : "brand";
 const themeSelection = resolveThemeSelection(content.site);
 const themeDefinition = getThemeDefinition(themeSelection.active);
 const typography = resolveTypographyPreferences({
@@ -162,11 +163,19 @@ const renderCard = (link: (typeof content.links)[number]) => {
         viewModel={buildRichCardViewModel(content.site, link)}
         target={target}
         interaction="minimal"
+        brandIconColorMode={brandIconColorMode}
       />
     );
   }
 
-  return <SimpleLinkCard link={link} target={target} interaction="minimal" />;
+  return (
+    <SimpleLinkCard
+      link={link}
+      target={target}
+      interaction="minimal"
+      brandIconColorMode={brandIconColorMode}
+    />
+  );
 };
 
 export default function RouteIndex() {

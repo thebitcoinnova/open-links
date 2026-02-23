@@ -361,6 +361,16 @@ a {
   color: color-mix(in srgb, var(--accent-strong) 85%, white 15%);
 }
 
+:root .card-icon[data-color-mode="brand"] {
+  color: color-mix(in srgb, var(--site-brand-color) 72%, var(--text-primary) 28%);
+}
+
+.card-icon svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
 .card-copy {
   min-width: 0;
   display: grid;

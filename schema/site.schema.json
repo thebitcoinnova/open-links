@@ -180,6 +180,16 @@
         "targetSize": {
           "type": "string",
           "enum": ["comfortable", "compact", "large"]
+        },
+        "brandIcons": {
+          "type": "object",
+          "properties": {
+            "colorMode": {
+              "type": "string",
+              "enum": ["brand", "theme"]
+            }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true

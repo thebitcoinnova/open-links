@@ -25,6 +25,9 @@
     "desktopColumns": "one",
     "typographyScale": "fixed",
     "targetSize": "comfortable",
+    "brandIcons": {
+      "colorMode": "brand"
+    },
     "richCards": {
       "renderMode": "auto",
       "sourceLabelDefault": "show",

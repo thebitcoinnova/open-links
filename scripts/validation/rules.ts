@@ -1,3 +1,5 @@
+import { KNOWN_SITE_ALIASES, normalizeKnownSiteAlias } from "../../src/lib/icons/known-sites-data";
+
 export interface ValidationIssue {
   level: "error" | "warning";
   source: string;
@@ -134,6 +136,33 @@ const checkScheme = (source: string, path: string, value: unknown): ValidationIs
   return [];
 };
 
+const checkKnownIconAlias = (source: string, path: string, value: unknown): ValidationIssue[] => {
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  const alias = normalizeKnownSiteAlias(value);
+  if (!alias) {
+    return [];
+  }
+
+  if (KNOWN_SITE_ALIASES.has(alias)) {
+    return [];
+  }
+
+  return [
+    {
+      level: "warning",
+      source,
+      path,
+      message:
+        `Unknown icon alias '${value}'. Runtime rendering will fall back to URL-domain matching or generic icon fallback.`,
+      remediation:
+        "Use a known alias from src/lib/icons/known-sites-data.ts, or remove links[].icon to rely on domain mapping."
+    }
+  ];
+};
+
 export const runPolicyRules = ({ profile, links, site, sources: overrideSources }: PolicyInput): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const sources = {
@@ -165,6 +194,7 @@ export const runPolicyRules = ({ profile, links, site, sources: overrideSources 
     }
 
     issues.push(...checkScheme(sources.links, `$.links[${index}].url`, link.url));
+    issues.push(...checkKnownIconAlias(sources.links, `$.links[${index}].icon`, link.icon));
     issues.push(
       ...checkCustomConflicts(
         sources.links,

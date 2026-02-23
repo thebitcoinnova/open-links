@@ -1,28 +1,13 @@
 import type { OpenLink } from "../../lib/content/load-content";
+import LinkSiteIcon from "../icons/LinkSiteIcon";
 
 export interface SimpleLinkCardProps {
   link: OpenLink;
   target?: "_blank" | "_self";
   rel?: string;
   interaction?: "minimal";
+  brandIconColorMode?: "brand" | "theme";
 }
-
-const iconFor = (value?: string) => {
-  switch ((value ?? "").toLowerCase()) {
-    case "github":
-      return "GH";
-    case "linkedin":
-      return "IN";
-    case "x":
-      return "X";
-    case "youtube":
-      return "YT";
-    case "instagram":
-      return "IG";
-    default:
-      return "↗";
-  }
-};
 
 const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
 
@@ -51,9 +36,12 @@ export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
       data-link-type={props.link.type}
       data-card-variant="simple"
     >
-      <span class="card-icon" aria-hidden="true">
-        {iconFor(props.link.icon)}
-      </span>
+      <LinkSiteIcon
+        icon={props.link.icon}
+        url={props.link.url}
+        label={props.link.label}
+        colorMode={props.brandIconColorMode ?? "brand"}
+      />
       <span class="card-copy">
         <strong id={titleId()}>{props.link.label}</strong>
         <span id={descriptionId()}>{description()}</span>

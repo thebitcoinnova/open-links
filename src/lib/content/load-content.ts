@@ -12,6 +12,7 @@ export type LinkTargetMode = "new-tab-external" | "same-tab" | "new-tab-all";
 export type DesktopColumnsMode = "one" | "two";
 export type TypographyScaleMode = "fixed" | "compact" | "expressive";
 export type TypographyTransformMode = "none" | "uppercase" | "lowercase" | "capitalize";
+export type BrandIconColorMode = "brand" | "theme";
 export type TargetSizeMode = "comfortable" | "compact" | "large";
 export type RichCardRenderMode = "auto" | "simple";
 export type SourceLabelDefault = "show" | "hide";
@@ -180,6 +181,9 @@ export interface SiteData {
     typographyScale?: TypographyScaleMode;
     typography?: TypographyConfig;
     targetSize?: TargetSizeMode;
+    brandIcons?: {
+      colorMode?: BrandIconColorMode;
+    };
     richCards?: {
       renderMode?: RichCardRenderMode;
       sourceLabelDefault?: SourceLabelDefault;

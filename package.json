@@ -25,6 +25,7 @@
     "validate:data:json": "tsx scripts/validate-data.ts --format json"
   },
   "dependencies": {
+    "@tabler/icons-solidjs": "^3.37.1",
     "solid-js": "^1.9.11"
   },
   "devDependencies": {

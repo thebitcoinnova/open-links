@@ -101,6 +101,16 @@ Every item in `links` must include:
 - `enrichment` (build-time enrichment policy)
 - `custom`
 
+#### Icon resolution behavior
+
+Link icons resolve using this precedence:
+
+1. `links[].icon` alias match from `src/lib/icons/known-sites-data.ts`
+2. URL domain match (exact or subdomain) from the same static registry
+3. Generic fallback glyph
+
+If `links[].icon` is unknown, validation emits a warning and runtime still attempts domain-based resolution.
+
 ### Simple card example
 
 ```json
@@ -237,8 +247,16 @@ Main presentation controls include:
 - `typographyScale`: `fixed`, `compact`, `expressive`
 - `typography`: optional global/per-theme typography overrides
 - `targetSize`: `comfortable`, `compact`, `large`
+- `brandIcons.colorMode`: `brand`, `theme`
 
 Rich-card policy settings live under `ui.richCards`.
+
+#### `ui.brandIcons`
+
+`ui.brandIcons.colorMode` controls icon tinting strategy for known-site logos:
+
+- `brand`: uses the registry brand color (default)
+- `theme`: uses theme text/icon color
 
 #### `ui.typography`
 
