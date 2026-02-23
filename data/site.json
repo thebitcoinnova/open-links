@@ -30,6 +30,7 @@
   },
   "quality": {
     "reportPath": "data/generated/quality-report.json",
+    "summaryPath": "data/generated/quality-report.md",
     "blockingDomains": ["seo", "accessibility", "performance"],
     "seo": {
       "canonicalBaseUrl": "https://openlinks.example",

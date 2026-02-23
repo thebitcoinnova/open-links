@@ -3,7 +3,12 @@ import path from "node:path";
 import { runA11yChecks } from "./a11y";
 import { runManualSmokeChecks } from "./manual-smoke";
 import { runPerformanceChecks } from "./perf";
-import { formatQualityHumanOutput, formatQualityJsonOutput, writeQualityReport } from "./report";
+import {
+  formatQualityHumanOutput,
+  formatQualityJsonOutput,
+  writeQualityReport,
+  writeQualitySummary
+} from "./report";
 import { runSeoChecks } from "./seo";
 import type {
   QualityDomain,
@@ -21,6 +26,7 @@ interface ArgMap {
   strict: boolean;
   format: OutputFormat;
   reportPath?: string;
+  summaryPath?: string;
   sitePath: string;
   profilePath: string;
 }
@@ -47,6 +53,7 @@ const parseArgs = (): ArgMap => {
     strict: args.includes("--strict"),
     format: formatRaw === "json" ? "json" : "human",
     reportPath: getFlagValue("--report"),
+    summaryPath: getFlagValue("--summary"),
     sitePath: getFlagValue("--site") ?? "data/site.json",
     profilePath: getFlagValue("--profile") ?? "data/profile.json"
   };
@@ -117,6 +124,7 @@ const run = () => {
 
   const qualityPolicy = site.quality;
   const reportPath = args.reportPath ?? qualityPolicy?.reportPath ?? "data/generated/quality-report.json";
+  const summaryPath = args.summaryPath ?? qualityPolicy?.summaryPath ?? "data/generated/quality-report.md";
 
   const seoResult = runSeoChecks(site, profile);
   const a11yResult = runA11yChecks({
@@ -145,6 +153,7 @@ const run = () => {
   const result = buildResult(args.strict, reportPath, blockingDomains, domainResults, manualSmokeResult.checks);
 
   writeQualityReport(reportPath, result);
+  writeQualitySummary(summaryPath, result);
 
   if (args.format === "json") {
     console.log(formatQualityJsonOutput(result));

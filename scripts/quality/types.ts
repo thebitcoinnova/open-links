@@ -94,6 +94,7 @@ export interface QualityPerformanceConfig {
 
 export interface QualityPolicy {
   reportPath?: string;
+  summaryPath?: string;
   blockingDomains?: QualityDomain[];
   seo?: QualitySeoConfig;
   accessibility?: QualityAccessibilityConfig;

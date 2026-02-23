@@ -66,3 +66,9 @@ export const writeQualityReport = (reportPath: string, result: QualityRunResult)
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, formatQualityJsonOutput(result));
 };
+
+export const writeQualitySummary = (summaryPath: string, result: QualityRunResult) => {
+  const absolutePath = path.isAbsolute(summaryPath) ? summaryPath : path.join(process.cwd(), summaryPath);
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(absolutePath, formatQualityHumanOutput(result));
+};

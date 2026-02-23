@@ -48,6 +48,7 @@ export interface PerformanceProfileBudget {
 
 export interface SiteQualityConfig {
   reportPath?: string;
+  summaryPath?: string;
   blockingDomains?: QualityDomain[];
   seo?: {
     canonicalBaseUrl?: string;
