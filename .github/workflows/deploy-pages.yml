@@ -36,16 +36,51 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Attempt CI artifact reuse
+        id: download_ci_artifact
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: openlinks-dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: .
+
+      - name: Resolve deploy artifact strategy
+        id: artifact_strategy
+        shell: bash
+        run: |
+          strategy_reason=""
+          if [ -d dist ] && [ -n "$(find dist -mindepth 1 -print -quit)" ]; then
+            echo "reuse=true" >> "$GITHUB_OUTPUT"
+            echo "reason=ci-artifact-reuse" >> "$GITHUB_OUTPUT"
+            strategy_reason="ci-artifact-reuse"
+          else
+            echo "reuse=false" >> "$GITHUB_OUTPUT"
+            echo "reason=rebuild-fallback" >> "$GITHUB_OUTPUT"
+            strategy_reason="rebuild-fallback"
+          fi
+
+          {
+            echo "## Pages Deploy Artifact Strategy"
+            echo "- Strategy: \`${strategy_reason}\`"
+            echo "- CI artifact reuse preferred; rebuild used only when artifact is unavailable."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Setup Node
+        if: steps.artifact_strategy.outputs.reuse != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: steps.artifact_strategy.outputs.reuse != 'true'
         run: npm ci
 
       - name: Build site
+        if: steps.artifact_strategy.outputs.reuse != 'true'
         run: npm run build
 
       - name: Configure Pages

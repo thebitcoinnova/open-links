@@ -134,6 +134,16 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+      - name: Record deploy handoff contract
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          {
+            echo "### Deploy Handoff Artifact"
+            echo "- Artifact name: \`openlinks-dist\`"
+            echo "- Producer workflow: \`CI\`"
+            echo "- Intended consumer: \`Deploy Pages\` workflow"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   strict-signals:
     name: Strict Signals (Non-Blocking)
     runs-on: ubuntu-latest
