@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   required-checks:
@@ -42,7 +43,87 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run required checks
-        run: npm run ci:required
+        id: run_required
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .ci-diagnostics/required
+
+          run_check() {
+            local key="$1"
+            shift
+            local log_file=".ci-diagnostics/required/${key}.log"
+            echo "::group::${key}"
+            "$@" 2>&1 | tee "$log_file"
+            local status=${PIPESTATUS[0]}
+            echo "::endgroup::"
+            return $status
+          }
+
+          failures=()
+          run_check "validate_data" npm run validate:data || failures+=("validate:data")
+          run_check "typecheck" npm run typecheck || failures+=("typecheck")
+          run_check "build" npm run build || failures+=("build")
+
+          if ((${#failures[@]} > 0)); then
+            echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "failures=none" >> "$GITHUB_OUTPUT"
+
+      - name: Required check failure summary
+        if: failure()
+        run: |
+          {
+            echo "### ❌ Required checks failed"
+            echo "- Failed commands: \`${{ steps.run_required.outputs.failures }}\`"
+            echo "- Review log sections below and use local parity commands to reproduce."
+            echo "- Suggested commands:"
+            echo "  - \`npm run validate:data\`"
+            echo "  - \`npm run typecheck\`"
+            echo "  - \`npm run build\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Replay required raw logs
+        if: failure()
+        shell: bash
+        run: |
+          echo "Replaying required-check logs (raw):"
+          for file in .ci-diagnostics/required/*.log; do
+            echo "----- ${file} -----"
+            cat "$file"
+          done
+
+      - name: Upload required diagnostics artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics-required
+          path: .ci-diagnostics/required
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Comment on PR for required-check failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failed = `${{ steps.run_required.outputs.failures }}` || 'unknown';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              '### ❌ OpenLinks CI required checks failed',
+              `- Failed commands: \`${failed}\``,
+              '- Workflow summary includes remediation steps and raw diagnostics replay.',
+              '- Artifact: `ci-diagnostics-required` (uploaded on failure).',
+              `- Run details: ${runUrl}`
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
 
       - name: Upload deployment artifact
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -85,13 +166,80 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run strict checks
-        run: npm run ci:strict
+        id: run_strict
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .ci-diagnostics/strict
+
+          run_check() {
+            local key="$1"
+            shift
+            local log_file=".ci-diagnostics/strict/${key}.log"
+            echo "::group::${key}"
+            "$@" 2>&1 | tee "$log_file"
+            local status=${PIPESTATUS[0]}
+            echo "::endgroup::"
+            return $status
+          }
+
+          failures=()
+          run_check "validate_data_strict" npm run validate:data:strict || failures+=("validate:data:strict")
+          run_check "build_strict" npm run build:strict || failures+=("build:strict")
+
+          if ((${#failures[@]} > 0)); then
+            echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "failures=none" >> "$GITHUB_OUTPUT"
 
       - name: Report strict warning signal
-        if: failure()
+        if: steps.run_strict.outcome == 'failure'
         run: |
           {
             echo "### ⚠ Strict checks reported failures (non-blocking)"
-            echo "- Required checks already passed."
+            echo "- Failed strict commands: \`${{ steps.run_strict.outputs.failures }}\`"
+            echo "- Required checks passed, so this does not block merge/deploy in Phase 4."
             echo "- Address strict diagnostics before Phase 5 hardening."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Replay strict raw logs
+        if: steps.run_strict.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "Replaying strict-check logs (raw):"
+          for file in .ci-diagnostics/strict/*.log; do
+            echo "----- ${file} -----"
+            cat "$file"
+          done
+
+      - name: Upload strict diagnostics artifact
+        if: steps.run_strict.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics-strict
+          path: .ci-diagnostics/strict
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Comment on PR for strict warning signal
+        if: steps.run_strict.outcome == 'failure' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failed = `${{ steps.run_strict.outputs.failures }}` || 'unknown';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              '### ⚠ OpenLinks strict checks failed (non-blocking in Phase 4)',
+              `- Failed commands: \`${failed}\``,
+              '- Required checks passed; this signal does not block merge/deploy in this phase.',
+              '- Artifact: `ci-diagnostics-strict` (uploaded on strict failure).',
+              `- Run details: ${runUrl}`
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
