@@ -89,7 +89,7 @@ jobs:
           name: openlinks-dist
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
-          path: .
+          path: dist
 
       - name: Resolve deploy artifact strategy
         id: artifact_strategy
