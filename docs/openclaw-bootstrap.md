@@ -1,0 +1,233 @@
+# OpenClaw Bootstrap Contract (OpenLinks)
+
+This document is the canonical runbook for OpenClaw agents that bootstrap and maintain a user's OpenLinks fork.
+
+Use this contract as authoritative behavior for:
+
+- repository bootstrap,
+- profile/social personalization,
+- validation/build/push,
+- deployment verification,
+- URL reporting,
+- README deployment URL block updates.
+
+## Scope and Non-Goals
+
+In scope:
+
+- End-to-end automation for GitHub-hosted OpenLinks forks.
+- Markdown-only process contract (no repo-local skill package format).
+- Structured deployment URL reporting that supports future targets.
+
+Out of scope:
+
+- Runtime app code changes.
+- New CI/CD workflows.
+- Interactive checkpoints or approval pauses other than a single identity-confirmation prompt when confidence is low.
+
+## Required Execution Policy
+
+- Git flow: commit and push directly to `main`.
+- Pause policy: no pauses by default; allow a single identity-confirmation prompt only when identity confidence is low.
+- Retry policy: bounded deployment verification retries only.
+- Source trust policy: high-confidence social discovery from authoritative-chain sources only.
+- Payment/crypto policy: do not infer or add payment links or crypto addresses unless the user explicitly requests them.
+
+If auth/permission or environment blockers occur, fail fast with remediation instructions in final output.
+
+## End-to-End OpenClaw Sequence
+
+Execute in this exact order.
+
+1. Ensure user fork exists.
+2. Clone user fork and enter repository root.
+3. Install dependencies (`npm install` or `npm ci`).
+4. Resolve user identity using the precedence rules in this document.
+5. Personalize data files:
+   - `data/profile.json`
+   - `data/links.json`
+   - `data/site.json`
+6. Validate and build:
+   - `npm run validate:data`
+   - `npm run build`
+   - `npm run quality:check`
+7. Commit and push directly to `main`.
+8. Verify GitHub Pages source is set to **GitHub Actions**.
+9. Poll CI and Deploy Pages workflow status for the pushed SHA.
+10. On success, collect deployment URLs.
+11. Post structured URL summary in chat using the schema in this file.
+12. Update the README deploy URL marker block only if normalized URL/status values changed.
+13. Commit/push README update if and only if step 12 changed file content.
+
+## Automation and Identity Confirmation Rule
+
+OpenClaw should not request user confirmation mid-run except for identity ambiguity.
+
+- Low-confidence social candidates: skip and report in `Not Applied` section.
+- Missing credentials/permissions: stop run, report blocker, provide concrete remediation.
+- Validation/build/deploy failures: follow retry policy where applicable, then exit with terminal summary.
+- If identity confidence is low, ask one explicit identity confirmation question before writing identity fields.
+- If identity cannot be confirmed (no response channel), stop with a blocker summary instead of assuming.
+
+## Social Discovery and Inference Contract
+
+### Allowed discovery sources only
+
+Use only this authoritative chain:
+
+1. Existing repo data (`data/profile.json`, `data/links.json`).
+2. Fork owner identity and repository metadata.
+3. GitHub profile fields/links for that owner.
+4. Verified personal website links reachable from items 1-3.
+
+Do not use broad web search as a primary discovery method.
+
+### Excluded by default (explicit opt-in required)
+
+Do not auto-add payment or financial endpoints unless the user explicitly asks.
+
+Examples:
+
+- payment links (for example PayPal, Stripe payment links, Buy Me a Coffee, Patreon),
+- donation links,
+- crypto wallet addresses (for example BTC, ETH, SOL, Lightning).
+
+If these are discovered incidentally, place them in `Not Applied` with reason `explicit_request_required`.
+
+### Fork seed-data identity guardrail
+
+This repository may contain starter identity data from the upstream author, including `Peter Ryszkiewicz` and associated links.
+
+Treat forked `data/profile.json` and `data/links.json` identity values as template defaults, not user truth.
+
+- Do not assume the OpenClaw user is `Peter Ryszkiewicz` unless explicitly confirmed by the user.
+- Prefer the fork owner's GitHub identity and explicitly user-provided identity over seeded file content.
+- If seeded identity conflicts with higher-authority identity signals, replace seeded identity fields and personal links.
+- If confidence remains low after authoritative checks, run the single identity-confirmation prompt described above.
+
+### Acceptance rule
+
+- Auto-apply only high-confidence profile URLs derived from the authoritative chain.
+- Skip uncertain candidates.
+- Payment links and crypto addresses are never auto-applied without explicit user request, even when confidence is high.
+- Include skipped candidates in final summary under `Not Applied` with reason.
+
+### Deterministic field mapping
+
+- Identity profile fields -> `data/profile.json`.
+- Social/profile endpoints -> `data/links.json` links and optional `profileLinks` in `data/profile.json`.
+- Payment links and crypto addresses -> include only when explicitly requested by the user.
+- Preserve unknown extension fields under `custom`.
+- Never drop existing `custom` keys unless explicitly invalid and replaced with documented remediation.
+
+### Identity resolution precedence
+
+Resolve identity in this order:
+
+1. Explicit user-provided identity in current session.
+2. Authenticated GitHub actor/fork owner profile.
+3. Authoritative links reachable from (1) or (2).
+4. Existing fork data values as fallback defaults only.
+
+Never let step 4 override steps 1-3.
+
+## Deployment Verification Contract
+
+### Target in scope now
+
+- `github-pages`
+
+### Workflow evidence sources
+
+- CI workflow: `.github/workflows/ci.yml`
+- Deploy workflow: `.github/workflows/deploy-pages.yml`
+- Deployment URL source: `steps.deployment.outputs.page_url` in Deploy Pages workflow environment output.
+
+### Required success checks for pushed SHA
+
+1. CI `required-checks` succeeded on the relevant commit lineage.
+2. Deploy Pages workflow ran for `main` and concluded `success`.
+3. Deployment produced a non-empty page URL.
+
+### Bounded auto-retry policy
+
+Retry deployment verification at most 3 attempts total with backoff:
+
+1. wait 60 seconds
+2. wait 120 seconds
+3. wait 240 seconds
+
+After final unsuccessful attempt, terminate with:
+
+- failing check,
+- evidence inspected,
+- remediation commands/actions.
+
+## Structured URL Reporting Schema
+
+Use this stable schema for chat output and README marker-block updates.
+
+| Field | Description |
+|------|-------------|
+| `target` | Deployment target id (for example `github-pages`) |
+| `status` | `success`, `warning`, or `failed` |
+| `primary_url` | Main user-facing URL |
+| `additional_urls` | Comma-separated auxiliary URLs or `none` |
+| `evidence` | Workflow/job/source pointer used to verify |
+
+### Current required row
+
+Always include one row for `github-pages`.
+
+Example format:
+
+| target | status | primary_url | additional_urls | evidence |
+|--------|--------|-------------|-----------------|----------|
+| github-pages | success | https://<owner>.github.io/<repo>/ | none | deploy-pages.yml -> Deploy Pages -> `steps.deployment.outputs.page_url` |
+
+### Future target compatibility
+
+When new deployment targets are supported, append additional rows using the same columns.
+Do not change existing column names or semantics.
+
+## README Deploy URL Marker-Block Contract
+
+OpenClaw must update only the content bounded by these exact markers in `README.md`:
+
+- `OPENCLAW_DEPLOY_URLS_START`
+- `OPENCLAW_DEPLOY_URLS_END`
+
+Rules:
+
+1. Rewrite only lines inside marker boundaries.
+2. Normalize URL/status values before comparing.
+3. Commit only when normalized values changed.
+4. Keep markdown table shape stable.
+
+This prevents deploy-update commit loops.
+
+## Final Output Contract (Chat)
+
+End run with a structured summary containing:
+
+- `Applied`:
+  - files changed,
+  - checks passed,
+  - commit SHA(s),
+  - deployment URL rows.
+- `Not Applied`:
+  - skipped low-confidence social candidates,
+  - payment/crypto candidates skipped by default unless explicitly requested,
+  - unsupported operations,
+  - reason per item.
+- `Blockers` (if any):
+  - exact failure point,
+  - minimal remediation steps.
+
+## Recommended Bootstrap Prompt (for OpenClaw)
+
+Use this single-message prompt with OpenClaw:
+
+```text
+Follow docs/openclaw-bootstrap.md exactly for this repository. Fork (if needed), clone my fork, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run validate/build/quality checks, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in the structured target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+```

@@ -4,6 +4,8 @@ This guide is for developers who want an AI agent to help customize their OpenLi
 
 Use it as a step-by-step checklist. Every step includes an opt-out path so you can stop automation and edit manually.
 
+For OpenClaw automation-first execution (with one identity confirmation only when confidence is low), use `docs/openclaw-bootstrap.md` as the canonical contract.
+
 ## When to Use This
 
 Use this wizard when you want to:
@@ -13,6 +15,23 @@ Use this wizard when you want to:
 - keep changes reviewable through normal git commits.
 
 Do not use this as a replacement for understanding your repository. Keep final review human-owned.
+
+## OpenClaw Execution Contract (No-Pause Mode)
+
+If you are running OpenClaw in this repository, prefer `docs/openclaw-bootstrap.md` and apply these rules:
+
+1. Push directly to `main` after checks pass.
+2. Do not pause for user confirmation mid-run, except for one identity confirmation when confidence is low.
+3. Treat fork prefilled identity (for example Peter Ryszkiewicz) as starter data, not user truth.
+4. Resolve identity from fork owner GitHub profile and explicit user-provided identity first.
+5. If identity confidence is low, ask one identity confirmation question before writing identity fields.
+6. Skip low-confidence social inferences and report them under `Not Applied`.
+7. Do not infer or add payment links or crypto addresses unless explicitly requested by the user.
+8. Verify CI + Deploy Pages for the pushed SHA and collect deployment URLs.
+9. Report deployment URLs as a structured table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
+10. Update the `README.md` `OPENCLAW_DEPLOY_URLS` marker block only when normalized URL/status values changed.
+
+If a blocker occurs (auth, permissions, failing checks after retries), stop and return a terminal remediation summary instead of asking interactive questions.
 
 ## Inputs You Should Prepare
 
@@ -33,6 +52,12 @@ At each step, present options and let me choose.
 Always offer an opt-out to manual edits.
 Apply changes in small commits with clear messages.
 Validate using npm run validate:data and npm run build before finalizing.
+```
+
+OpenClaw-specific starter prompt:
+
+```text
+Follow docs/openclaw-bootstrap.md exactly. Run fully autonomously by default, but if identity confidence is low ask one identity confirmation question. Treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data, not user truth. Do not infer or add payment links or crypto addresses unless explicitly requested. Push directly to main after checks pass, verify Pages deployment for the pushed SHA, report deployment URLs using target/status/primary_url/additional_urls/evidence, and update README OPENCLAW_DEPLOY_URLS only when normalized URL/status values changed.
 ```
 
 ## Wizard Flow
@@ -142,7 +167,7 @@ Opt-out:
 References:
 
 - `docs/data-model.md` (`site.json` section)
-- `docs/theming-and-layouts.md` (once available)
+- `docs/theming-and-layouts.md`
 
 ### Step 5: Build and quality verification
 
@@ -181,7 +206,7 @@ Agent should confirm:
 References:
 
 - `docs/quickstart.md`
-- `docs/deployment.md` (once available)
+- `docs/deployment.md`
 
 Opt-out:
 
@@ -221,6 +246,7 @@ You can leave the wizard at any point and continue manually:
 
 - `README.md`
 - `docs/quickstart.md`
+- `docs/openclaw-bootstrap.md`
 - `docs/data-model.md`
-- `docs/theming-and-layouts.md` (once available)
-- `docs/deployment.md` (once available)
+- `docs/theming-and-layouts.md`
+- `docs/deployment.md`

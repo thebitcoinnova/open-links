@@ -2,6 +2,20 @@
 
 This guide is the fastest path from fork/template to first successful local run and GitHub Pages deployment.
 
+## Preferred: OpenClaw One-Message Bootstrap
+
+Use the canonical OpenClaw contract:
+
+- `docs/openclaw-bootstrap.md`
+
+Paste this one-liner into OpenClaw:
+
+```text
+Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+```
+
+Use the manual steps below only when you are not using OpenClaw.
+
 ## Before You Start
 
 ### Prerequisites
@@ -15,7 +29,7 @@ This guide is the fastest path from fork/template to first successful local run 
 - You are comfortable editing JSON and committing changes.
 - You can work directly in your own repository.
 
-## Bootstrap Your Repository
+## Manual Bootstrap Your Repository
 
 Use one approach:
 
@@ -217,6 +231,8 @@ npm run images:sync -- --force
 
 ## Next Guides
 
-- Back to root docs: `README.md`
-- Data model deep dive: will be added in this phase.
-- AI-guided customization wizard: will be added in this phase.
+- Root docs: `README.md`
+- OpenClaw contract: `docs/openclaw-bootstrap.md`
+- Data model deep dive: `docs/data-model.md`
+- AI-guided customization wizard: `docs/ai-guided-customization.md`
+- Deployment operations: `docs/deployment.md`

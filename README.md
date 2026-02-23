@@ -34,14 +34,22 @@ This project is developer-first: fork or template the repo, edit JSON, push, and
 
 For full walkthrough and troubleshooting, see [Quickstart](docs/quickstart.md).
 
-### 1) Create your own repository
+### 1) OpenClaw Bootstrap (Recommended)
+
+Paste this one-liner into your OpenClaw instance:
+
+```text
+Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+```
+
+### 2) Create your own repository (Manual Path)
 
 Use one of:
 
 1. Fork this repository.
 2. Use this repository as a template.
 
-### 2) Clone and install
+### 3) Clone and install
 
 ```bash
 git clone <your-repo-url>
@@ -49,7 +57,7 @@ cd open-links
 npm install
 ```
 
-### 3) Update your data
+### 4) Update your data
 
 Edit these files:
 
@@ -63,23 +71,36 @@ Starter presets:
 - `data/examples/grouped/`
 - `data/examples/invalid/` (intentional failures for testing)
 
-### 4) Validate and run locally
+### 5) Validate and run locally
 
 ```bash
 npm run validate:data
 npm run dev
 ```
 
-### 5) Build production output
+### 6) Build production output
 
 ```bash
 npm run build
 npm run preview
 ```
 
+## OpenClaw Deployment URLs
+
+OpenClaw should update only the rows between the exact marker lines below:
+
+- rewrite only marker-bounded rows,
+- commit only if normalized URL/status values changed.
+
+OPENCLAW_DEPLOY_URLS_START
+| target | status | primary_url | additional_urls | evidence |
+|--------|--------|-------------|-----------------|----------|
+| github-pages | pending | TBD | none | waiting for first successful deploy |
+OPENCLAW_DEPLOY_URLS_END
+
 ## AI-Guided Path (Optional)
 
-If you want an AI agent to drive setup and updates with opt-out checkpoints, use the [AI-Guided Customization Wizard](docs/ai-guided-customization.md).
+If you want an AI agent workflow with explicit checkpoints and manual opt-outs, use the [AI-Guided Customization Wizard](docs/ai-guided-customization.md). For automation-first execution (with one identity confirmation only when confidence is low), use [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md).
 
 Recommended flow:
 
@@ -106,6 +127,7 @@ npm run ci:strict
 Then use:
 
 - [Deployment Operations Guide](docs/deployment.md) for full troubleshooting and diagnostics flow.
+- [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md) for deployment URL reporting and README marker-block updates.
 - [Adapter Contract Guide](docs/adapter-contract.md) for future non-GitHub host planning.
 
 High-signal deployment checks:
@@ -190,6 +212,7 @@ For full data model details and examples, see [Data Model](docs/data-model.md).
 ## Docs Map
 
 - [Quickstart](docs/quickstart.md)
+- [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md)
 - [Data Model](docs/data-model.md)
 - [AI-Guided Customization Wizard](docs/ai-guided-customization.md)
 - [Theming and Layout Extensibility](docs/theming-and-layouts.md)

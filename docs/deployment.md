@@ -67,6 +67,36 @@ Confirm:
 - deployment step produced a URL,
 - URL serves your updated content.
 
+## URL Reporting Contract (OpenClaw)
+
+For OpenClaw-managed runs, use `docs/openclaw-bootstrap.md` as the canonical behavior contract.
+
+After a successful deploy, OpenClaw should:
+
+1. Read deployment evidence from `.github/workflows/deploy-pages.yml` (`steps.deployment.outputs.page_url`).
+2. Emit a structured chat table with these columns:
+   - `target`
+   - `status`
+   - `primary_url`
+   - `additional_urls`
+   - `evidence`
+3. Include a `github-pages` row at minimum.
+4. Update only the marker-bounded block in `README.md`:
+   - `OPENCLAW_DEPLOY_URLS_START`
+   - `OPENCLAW_DEPLOY_URLS_END`
+5. Commit/push the README update only when normalized URL/status values changed.
+
+### Current target row
+
+| target | status | primary_url | additional_urls | evidence |
+|--------|--------|-------------|-----------------|----------|
+| github-pages | success/warning/failed | `<pages-url>` | `none` (or comma-separated URLs) | `deploy-pages.yml -> Deploy Pages -> steps.deployment.outputs.page_url` |
+
+### Future targets
+
+When new deployment targets are added, append new rows using the same schema.
+Do not rename or reorder columns.
+
 ## Manual Deploy Dispatch
 
 `Deploy Pages` supports manual dispatch with inputs:
@@ -203,6 +233,7 @@ Those are documented as future-facing guidance in `docs/adapter-contract.md`.
 
 - `README.md`
 - `docs/quickstart.md`
+- `docs/openclaw-bootstrap.md`
 - `docs/adapter-contract.md`
 
 ## Advanced Static Hosting (Best-Effort)
