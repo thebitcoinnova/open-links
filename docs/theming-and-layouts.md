@@ -249,3 +249,154 @@ Then manually verify:
 - keyboard tab order,
 - focus visibility,
 - card readability.
+
+## Extension Point Matrix
+
+Use this table to decide where a change belongs.
+
+| Extension Point | File(s) | Purpose | Risk |
+|-----------------|---------|---------|------|
+| Theme token edits | `src/styles/tokens.css` | Global visual tuning without changing structure | Low |
+| Theme-specific styling | `src/styles/themes/*.css` | Distinct visual identity per theme | Medium |
+| Theme registration | `src/lib/theme/theme-registry.ts` | Expose new theme IDs and labels | Medium |
+| Mode policy behavior | `src/lib/theme/mode-controller.ts` | Dark/light policy + persistence logic | Medium |
+| Composition logic | `src/lib/ui/composition.ts` | Profile/link ordering and grouping behavior | Medium |
+| Layout preferences mapping | `src/lib/ui/layout-preferences.ts` | Density, columns, target sizing behavior | Medium |
+| Route-level rendering | `src/routes/index.tsx` | Final block render order and class wiring | Medium-High |
+| Base/responsive style behavior | `src/styles/base.css`, `src/styles/responsive.css` | Shared component/layout rendering details | Medium-High |
+
+## Decision Tree: If You Want X, Change Y
+
+### If you want to change only colors/spacing
+
+Change:
+
+- `src/styles/tokens.css`
+
+Do not start in:
+
+- `src/routes/index.tsx`
+
+### If you want a new branded look without changing layout logic
+
+Change:
+
+- new file in `src/styles/themes/`
+- `src/lib/theme/theme-registry.ts`
+- `data/site.json` theme settings
+
+### If you want profile-first vs links-first page composition
+
+Change:
+
+- `data/site.json` -> `ui.compositionMode`
+
+If existing modes are insufficient, extend:
+
+- `src/lib/ui/composition.ts`
+
+### If you want grouped vs flat link presentation
+
+Change:
+
+- `data/site.json` -> `ui.groupingStyle`
+- `data/links.json` -> `group` + `groups` only when grouping is desired
+
+### If you want denser or larger interaction rhythm
+
+Change:
+
+- `data/site.json` -> `ui.density`
+- `data/site.json` -> `ui.targetSize`
+- optionally refine CSS in `src/styles/base.css`
+
+### If you want a two-column desktop layout
+
+Change:
+
+- `data/site.json` -> `ui.desktopColumns`
+
+Then verify in real breakpoints:
+
+- mobile,
+- tablet,
+- desktop.
+
+## Anti-Patterns to Avoid
+
+### 1) Deep selector overrides everywhere
+
+Problem:
+
+- brittle CSS that breaks on upstream merges.
+
+Safer approach:
+
+- use tokens first, then narrow scoped selectors.
+
+### 2) `!important`-heavy theming
+
+Problem:
+
+- hard-to-debug cascade behavior and mode regressions.
+
+Safer approach:
+
+- adjust variable layers and selector specificity gradually.
+
+### 3) Coupling data model to one visual branch
+
+Problem:
+
+- forks cannot switch composition/theme modes without editing app logic.
+
+Safer approach:
+
+- keep layout/theme decisions in `data/site.json` and resolver functions.
+
+### 4) Ignoring accessibility while restyling
+
+Problem:
+
+- contrast/focus regressions that pass visual review but fail real navigation.
+
+Safer approach:
+
+- verify with `npm run quality:check` and keyboard testing before merge.
+
+## Migration Notes for Fork Maintainers
+
+When pulling upstream updates:
+
+1. Rebase or merge upstream.
+2. Resolve conflicts in this order:
+   - `data/site.json`
+   - `src/lib/theme/theme-registry.ts`
+   - `src/lib/ui/composition.ts`
+   - theme/style files
+3. Re-run:
+
+```bash
+npm run validate:data
+npm run build
+npm run quality:check
+```
+
+4. Manually verify theme toggle and responsive layout behavior.
+
+If your fork added custom layout modes:
+
+- keep a short changelog section in your fork docs listing:
+  - custom mode IDs,
+  - files touched,
+  - known compatibility assumptions.
+
+## Maintainability Checklist
+
+Before merging theme/layout changes:
+
+- [ ] Change is mapped to the smallest viable extension point.
+- [ ] Config-driven behavior remains preferred over hardcoded branching.
+- [ ] Accessibility and quality checks were run.
+- [ ] New theme IDs are registered and documented.
+- [ ] Upstream merge impact was considered (especially on shared CSS files).
