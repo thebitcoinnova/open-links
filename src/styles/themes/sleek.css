@@ -58,10 +58,19 @@
 }
 
 :root[data-theme^="sleek"] .utility-pill,
-:root[data-theme^="sleek"] .theme-toggle {
+:root[data-theme^="sleek"] .theme-toggle,
+:root[data-theme^="sleek"] .utility-menu-button {
   border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent 10%);
   background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-panel) 10%);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset;
+}
+
+:root[data-theme^="sleek"] .utility-menu-panel {
+  border-color: color-mix(in srgb, var(--border-subtle) 88%, transparent 12%);
+  background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-pill) 4%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset,
+    0 18px 32px color-mix(in srgb, var(--surface-bg) 54%, black 46%);
 }
 
 :root[data-theme^="sleek"] .profile-header {
@@ -82,7 +91,8 @@
 
 :root[data-theme^="sleek"] .simple-link-card:hover,
 :root[data-theme^="sleek"] .rich-link-card:hover,
-:root[data-theme^="sleek"] .theme-toggle:hover {
+:root[data-theme^="sleek"] .theme-toggle:hover,
+:root[data-theme^="sleek"] .utility-menu-button:hover {
   transform: none;
   border-color: var(--border-strong);
   box-shadow:
@@ -92,14 +102,16 @@
 
 :root[data-theme^="sleek"] .simple-link-card:active,
 :root[data-theme^="sleek"] .rich-link-card:active,
-:root[data-theme^="sleek"] .theme-toggle:active {
+:root[data-theme^="sleek"] .theme-toggle:active,
+:root[data-theme^="sleek"] .utility-menu-button:active {
   transform: none;
   background: color-mix(in srgb, var(--surface-card) 86%, var(--accent) 14%);
 }
 
 :root[data-theme^="sleek"] .simple-link-card:focus-visible,
 :root[data-theme^="sleek"] .rich-link-card:focus-visible,
-:root[data-theme^="sleek"] .theme-toggle:focus-visible {
+:root[data-theme^="sleek"] .theme-toggle:focus-visible,
+:root[data-theme^="sleek"] .utility-menu-button:focus-visible {
   border-color: var(--accent-strong);
   box-shadow:
     var(--shadow-focus),

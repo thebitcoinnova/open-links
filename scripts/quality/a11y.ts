@@ -22,6 +22,7 @@ export const runA11yChecks = ({
   const simpleCard = readText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
   const richCard = readText(rootDir, "src/components/cards/RichLinkCard.tsx");
   const utilityBar = readText(rootDir, "src/components/layout/TopUtilityBar.tsx");
+  const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
   const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
   const styles = readText(rootDir, "src/styles/base.css");
   const tokens = readText(rootDir, "src/styles/tokens.css");
@@ -92,6 +93,32 @@ export const runA11yChecks = ({
     });
   }
 
+  if (!utilityMenu.includes("aria-expanded") || !utilityMenu.includes("aria-controls")) {
+    issues.push({
+      domain: "accessibility",
+      level: "error",
+      code: "A11Y_UTILITY_MENU_DISCLOSURE_MISSING",
+      scope: "src/components/layout/UtilityControlsMenu.tsx",
+      message: "Utility controls menu is missing disclosure linkage semantics.",
+      remediation: "Expose utility controls with aria-expanded state and aria-controls panel linkage."
+    });
+  }
+
+  if (
+    !utilityMenu.includes("onFocusOut") ||
+    !utilityMenu.includes("pointerdown") ||
+    !utilityMenu.includes("Escape")
+  ) {
+    issues.push({
+      domain: "accessibility",
+      level: "warning",
+      code: "A11Y_UTILITY_MENU_CLOSE_BEHAVIOR_WEAK",
+      scope: "src/components/layout/UtilityControlsMenu.tsx",
+      message: "Utility controls menu is missing one or more expected close interactions.",
+      remediation: "Support close-on-Escape, outside pointer interactions, and focus leaving the menu surface."
+    });
+  }
+
   if (!themeToggle.includes("aria-label") || !themeToggle.includes("aria-pressed")) {
     issues.push({
       domain: "accessibility",
@@ -106,7 +133,8 @@ export const runA11yChecks = ({
   const focusSelectors = [
     ".simple-link-card:focus-visible",
     ".rich-link-card:focus-visible",
-    ".theme-toggle:focus-visible"
+    ".theme-toggle:focus-visible",
+    ".utility-menu-button:focus-visible"
   ];
 
   focusSelectors.forEach((selector) => {

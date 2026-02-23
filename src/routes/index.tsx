@@ -3,6 +3,7 @@ import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
 import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
+import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import { loadContent } from "../lib/content/load-content";
 import ThemeToggle from "../components/theme/ThemeToggle";
@@ -195,22 +196,24 @@ export default function RouteIndex() {
       class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
     >
       <TopUtilityBar title={content.site.title} controlsLabel="Theme and mode controls">
-        <Show
-          when={canToggle()}
-          fallback={
-            <span class="utility-pill" aria-live="polite">
-              {modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
-            </span>
-          }
-        >
-          <ThemeToggle mode={mode()} onToggle={handleModeToggle} />
-        </Show>
-        <span class="utility-pill" aria-live="polite">
-          {themeDefinition?.label ?? themeSelection.active} · {themeDefinition?.intensity ?? "mild"}
-        </span>
-        <span class="utility-pill" aria-live="polite">
-          Cards: {richRenderMode === "simple" ? "simple only" : "rich + simple"}
-        </span>
+        <UtilityControlsMenu panelLabel="Theme and mode controls">
+          <Show
+            when={canToggle()}
+            fallback={
+              <span class="utility-pill" aria-live="polite">
+                {modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
+              </span>
+            }
+          >
+            <ThemeToggle mode={mode()} onToggle={handleModeToggle} />
+          </Show>
+          <span class="utility-pill" aria-live="polite">
+            {themeDefinition?.label ?? themeSelection.active} · {themeDefinition?.intensity ?? "mild"}
+          </span>
+          <span class="utility-pill" aria-live="polite">
+            Cards: {richRenderMode === "simple" ? "simple only" : "rich + simple"}
+          </span>
+        </UtilityControlsMenu>
       </TopUtilityBar>
 
       <For each={composition.blocks}>

@@ -18,6 +18,7 @@ export const runManualSmokeChecks = ({
   const simpleCard = readText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
   const richCard = readText(rootDir, "src/components/cards/RichLinkCard.tsx");
   const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
+  const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
 
   const checks: ManualSmokeCheckResult[] = [
     {
@@ -65,6 +66,25 @@ export const runManualSmokeChecks = ({
           ? "Rich card anchor and aria-label detected."
           : "Rich card anchor/label semantics are incomplete.",
       remediation: "Ensure rich cards are anchors with explicit destination labeling."
+    },
+    {
+      id: "utility-controls-menu",
+      label:
+        checklistLabels[4] ??
+        "Utility controls collapse into a disclosure menu that remains keyboard reachable.",
+      status:
+        routeIndex.includes("<UtilityControlsMenu") &&
+        utilityMenu.includes("aria-expanded") &&
+        utilityMenu.includes("aria-controls")
+          ? "pass"
+          : "warn",
+      details:
+        routeIndex.includes("<UtilityControlsMenu") &&
+        utilityMenu.includes("aria-expanded") &&
+        utilityMenu.includes("aria-controls")
+          ? "Utility controls menu integration and disclosure semantics detected."
+          : "Utility controls menu integration/disclosure semantics appear incomplete.",
+      remediation: "Render utility controls inside UtilityControlsMenu with aria-expanded and aria-controls linkage."
     }
   ];
 

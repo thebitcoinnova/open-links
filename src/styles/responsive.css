@@ -28,6 +28,16 @@
     gap: var(--space-1);
   }
 
+  body .utility-menu-button {
+    min-width: 0;
+    padding-inline: 0.75rem;
+  }
+
+  body .utility-menu-panel {
+    min-width: min(18rem, calc(100vw - var(--space-5)));
+    max-width: calc(100vw - var(--space-5));
+  }
+
   body .simple-link-card {
     padding-block: calc(var(--space-3) * var(--density-scale) + 0.1rem);
   }
