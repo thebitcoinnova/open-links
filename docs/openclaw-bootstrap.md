@@ -241,7 +241,7 @@ End run with a structured summary containing:
 Use this single-message prompt with OpenClaw:
 
 ```text
-Follow docs/openclaw-bootstrap.md exactly for this repository. Fork (if needed), clone my fork, first check whether I already appear to have a valid OpenLinks fork/local repo and ask one routing confirmation whether to continue bootstrap or switch to docs/openclaw-update-crud.md, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run validate/build/quality checks, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in the structured target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-bootstrap.md exactly for this repository. Execute Required Execution Policy, End-to-End OpenClaw Sequence, Automation and Identity Confirmation Rule, Social Discovery and Inference Contract, Deployment Verification Contract, Structured URL Reporting Schema, README Deploy URL Marker-Block Contract, and Final Output Contract exactly as written. If an existing setup is detected, ask the single route-confirmation and switch to docs/openclaw-update-crud.md when selected.
 ```
 
 ## Handoff to Day-2 Updates

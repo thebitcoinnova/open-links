@@ -15,6 +15,7 @@ Use `docs/openclaw-bootstrap.md` for first-time setup when no usable fork/local 
 In scope:
 
 - Day-2 CRUD updates for `data/profile.json`, `data/links.json`, and `data/site.json`.
+- Optional full customization-audit path across all data-driven knobs in `docs/customization-catalog.md`.
 - Startup interaction-level selection.
 - Identity-research on/off control.
 - Deterministic local/fork resolution.
@@ -33,16 +34,39 @@ OpenClaw must start every Update/CRUD session by asking for:
 1. `interaction_mode`: `guided`, `balanced`, or `autopilot`.
 2. `identity_research`: `on` or `off`.
 3. `seed_identities`: optional plain-text seed list (handles, profile URLs, usernames, emails).
+4. `customization_path`: `targeted-crud` or `customization-audit`.
 
-### Defaults
+If `customization_path=customization-audit`, OpenClaw must also ask for:
+
+1. `audit_scope`: `full` or `focused`.
+2. `focus_areas`: optional list used when `audit_scope=focused`.
+
+## Defaults
 
 If user does not choose explicitly:
 
 - `interaction_mode`: default to `balanced`.
 - `identity_research`: default to `on`.
 - `seed_identities`: default to none.
+- `customization_path`: default to `targeted-crud`.
+
+Conditional defaults when `customization_path=customization-audit`:
+
+- `audit_scope`: default to `full`.
+- `focus_areas`: default to none.
 
 If no seeds are provided and research is enabled, proceed with authoritative-chain identity discovery.
+
+## Customization Audit Path (Optional)
+
+When `customization_path=customization-audit`, OpenClaw must use `docs/customization-catalog.md` as a checklist source and allow user edits in any/all selected categories.
+
+### Required behavior
+
+1. Build an explicit category checklist from `docs/customization-catalog.md`.
+2. If `audit_scope=full`, review all categories.
+3. If `audit_scope=focused`, review only selected `focus_areas` and mark all others as skipped with reason `not_selected`.
+4. For runtime/code-level customization requests during the audit path, do not apply code changes; report as `out_of_scope_runtime_code` and point user to `docs/theming-and-layouts.md`.
 
 ## Repository Resolution (Deterministic Order)
 
@@ -75,6 +99,7 @@ If target local repo has uncommitted or untracked changes:
 - Confirm every CRUD action before write.
 - Confirm every deletion before write.
 - Confirm final apply batch before commit.
+- In `customization-audit`, confirm each selected category before write.
 
 ### `balanced` (default)
 
@@ -84,11 +109,13 @@ If target local repo has uncommitted or untracked changes:
   - site batch.
 - Confirm every deletion before write.
 - Skip confirmations for straightforward non-destructive field updates within approved batch.
+- In `customization-audit`, confirm per file-domain batch (`profile`, `links`, `site`) before write.
 
 ### `autopilot`
 
 - No per-change confirmations after startup handshake.
 - Continue autonomously unless blockers occur.
+- In `customization-audit`, no per-category confirmations after startup handshake.
 - Still surface final summary with exact applied/not-applied details.
 
 ## Identity and Discovery Policy
@@ -121,24 +148,27 @@ When `identity_research=off`:
 
 Execute in this exact order:
 
-1. Run startup handshake (`interaction_mode`, `identity_research`, `seed_identities`).
-2. Resolve repository target using deterministic order above.
-3. Handle dirty working tree according to one user choice.
-4. Build CRUD change plan from user request, mode, research setting, and seeds.
-5. Confirm CRUD plan according to selected interaction mode.
-6. Apply changes to:
+1. Run startup handshake (`interaction_mode`, `identity_research`, `seed_identities`, `customization_path`).
+2. If `customization_path=customization-audit`, run conditional selectors (`audit_scope`, `focus_areas`).
+3. Resolve repository target using deterministic order above.
+4. Handle dirty working tree according to one user choice.
+5. Branch flow by `customization_path`:
+   - `targeted-crud`: build CRUD change plan from user request, mode, research setting, and seeds.
+   - `customization-audit`: build category checklist and change plan from `docs/customization-catalog.md`, selected scope, and focus areas.
+6. Confirm change plan according to selected interaction mode.
+7. Apply approved changes to:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-7. Validate and build:
+8. Validate and build:
    - `npm run validate:data`
    - `npm run build`
    - `npm run quality:check`
-8. Commit and push directly to `main`.
-9. Verify CI + Deploy Pages success for pushed SHA.
-10. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
-11. Update README deployment URL marker block only when normalized URL/status values changed.
-12. Commit and push README URL update only if step 11 changed file content.
+9. Commit and push directly to `main`.
+10. Verify CI + Deploy Pages success for pushed SHA.
+11. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
+12. Update README deployment URL marker block only when normalized URL/status values changed.
+13. Commit and push README URL update only if step 12 changed file content.
 
 ## Final Output Contract (Chat)
 
@@ -149,32 +179,40 @@ End every run with:
   - checks executed,
   - commit SHA(s),
   - deployment URL rows.
+- `Customization Coverage`:
+  - one row per catalog area,
+  - status must be one of `changed`, `unchanged`, or `skipped`,
+  - short note for each row.
 - `Not Applied`:
   - skipped candidates and skipped requests with reason code.
 - `Blockers`:
   - exact failure point,
   - minimal remediation steps.
 
-### Required reason codes
+## Required reason codes
 
 Use these for skipped discovery/apply outcomes:
 
 - `low_confidence`
 - `explicit_request_required`
 - `research_disabled`
+- `not_selected`
+- `out_of_scope_runtime_code`
 
 ## Recommended Update/CRUD Prompt (for OpenClaw)
 
 Use this single-message prompt with OpenClaw:
 
 ```text
-Follow docs/openclaw-update-crud.md exactly for this repository. Start by asking for interaction_mode (guided|balanced|autopilot), identity_research (on|off, default on), and optional seed_identities. Resolve an existing repo by checking current local repo first, then candidate local paths, then my GitHub fork; if none exists, warn and ask once whether to run auto-bootstrap before continuing. If local repo is dirty, summarize changed files and ask once whether to continue in-place or require a clean tree. If identity research is off, run explicit-only CRUD; if on, use authoritative-chain discovery only. Treat upstream starter identity data (for example Peter Ryszkiewicz) as template data, not user truth. Do not infer payment links or crypto addresses unless explicitly requested. Apply CRUD to data/profile.json + data/links.json + data/site.json, run validate/build/quality checks, push directly to main, verify CI + deploy for pushed SHA, report deployment URLs, and update README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-update-crud.md exactly for this repository. Execute Required Startup Handshake (including conditional customization-audit selectors), Defaults, Customization Audit Path (Optional), Repository Resolution, Dirty Local Repository Handling, Interaction Modes, Identity and Discovery Policy, Update/CRUD Execution Sequence, Final Output Contract, and Required reason codes exactly as written. When customization_path=customization-audit, use docs/customization-catalog.md as the checklist source.
 ```
 
 ## Related Docs
 
+- `docs/customization-catalog.md`
 - `docs/openclaw-bootstrap.md`
 - `docs/quickstart.md`
 - `docs/deployment.md`
 - `docs/ai-guided-customization.md`
 - `docs/data-model.md`
+- `docs/theming-and-layouts.md`

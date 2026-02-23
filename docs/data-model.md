@@ -8,6 +8,8 @@ OpenLinks is driven by three JSON files:
 
 The app renders from these files after validation. This document explains what each file controls, what is required, and how to extend safely.
 
+For a complete day-2 audit checklist of every data-driven customization area, use `docs/customization-catalog.md`.
+
 ## Guiding Principles
 
 - Keep core fields in schema-defined keys.
@@ -534,3 +536,4 @@ You can use these ready presets directly:
 - Root overview: `README.md`
 - Fast setup and deployment path: `docs/quickstart.md`
 - AI-assisted change flow: `docs/ai-guided-customization.md`
+- Exhaustive customization checklist: `docs/customization-catalog.md`

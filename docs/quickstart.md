@@ -14,7 +14,7 @@ Choose the path that matches your current state:
 Paste this one-liner into OpenClaw:
 
 ```text
-Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, first check whether I already appear to have a valid OpenLinks fork/local repo and ask one routing confirmation whether to continue bootstrap or switch to docs/openclaw-update-crud.md, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-bootstrap.md exactly for this repository. Execute Required Execution Policy, End-to-End OpenClaw Sequence, Automation and Identity Confirmation Rule, Social Discovery and Inference Contract, Deployment Verification Contract, Structured URL Reporting Schema, README Deploy URL Marker-Block Contract, and Final Output Contract exactly as written. If an existing setup is detected, ask the single route-confirmation and switch to docs/openclaw-update-crud.md when selected.
 ```
 
 ### Path B: Update/CRUD (Existing Fork or Local Repo)
@@ -22,7 +22,7 @@ Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed),
 Paste this one-liner into OpenClaw:
 
 ```text
-Follow docs/openclaw-update-crud.md exactly for this repository: detect whether I already have a valid local OpenLinks repo first, then check candidate local paths, then check my GitHub fork; if neither local repo nor fork exists, warn and ask once to confirm auto-bootstrap mode before continuing. Start by asking interaction_mode (guided|balanced|autopilot), identity_research (on|off, default on), and optional seed_identities, defaulting interaction_mode to balanced if I do not specify. If identity_research is off, do explicit-only CRUD. If identity_research is on, use authoritative-chain discovery only. Treat upstream prefilled identity data (for example Peter Ryszkiewicz) as template data, not user truth. Do not infer payment links or crypto addresses unless I explicitly request them. If local repo is dirty, summarize changed/untracked files and ask once whether to continue in-place or require a clean tree. Apply approved CRUD to data/profile.json + data/links.json + data/site.json, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify CI and GitHub Pages deploy for the pushed SHA, report deployment URLs in target/status/primary_url/additional_urls/evidence format, and update README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-update-crud.md exactly for this repository. Execute Required Startup Handshake (including conditional customization-audit selectors), Defaults, Customization Audit Path (Optional), Repository Resolution, Dirty Local Repository Handling, Interaction Modes, Identity and Discovery Policy, Update/CRUD Execution Sequence, Final Output Contract, and Required reason codes exactly as written. When customization_path=customization-audit, use docs/customization-catalog.md as the checklist source.
 ```
 
 Use the manual steps below only when you are not using OpenClaw.
@@ -228,7 +228,7 @@ After initial publish, your normal update cycle is:
 4. Commit and push.
 5. Verify CI and deploy jobs.
 
-If you want OpenClaw to handle this update loop with interaction mode selection and optional identity-research opt-out, use:
+If you want OpenClaw to handle this update loop with interaction mode selection, optional identity-research opt-out, and a customization-audit branch, use:
 
 - `docs/openclaw-update-crud.md`
 
@@ -249,6 +249,7 @@ npm run images:sync -- --force
 - Root docs: `README.md`
 - OpenClaw bootstrap contract: `docs/openclaw-bootstrap.md`
 - OpenClaw update contract: `docs/openclaw-update-crud.md`
+- Customization catalog: `docs/customization-catalog.md`
 - Data model deep dive: `docs/data-model.md`
 - AI-guided customization wizard: `docs/ai-guided-customization.md`
 - Deployment operations: `docs/deployment.md`

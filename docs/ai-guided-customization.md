@@ -73,7 +73,7 @@ Validate using npm run validate:data and npm run build before finalizing.
 OpenClaw-specific starter prompt:
 
 ```text
-Follow docs/openclaw-update-crud.md exactly. Start by asking interaction_mode (guided|balanced|autopilot), identity_research (on|off, default on), and optional seed_identities. Detect existing local/fork targets before any bootstrap fallback. If identity_research is off, run explicit-only CRUD. Treat prefilled upstream identity as template data, not user truth. Do not infer or add payment links or crypto addresses unless explicitly requested. Apply CRUD, run validate/build/quality checks, push to main, verify deploy, report URL table, and update README OPENCLAW_DEPLOY_URLS only when normalized URL/status values changed.
+Follow docs/openclaw-update-crud.md exactly for this repository. Execute Required Startup Handshake (including conditional customization-audit selectors), Defaults, Customization Audit Path (Optional), Repository Resolution, Dirty Local Repository Handling, Interaction Modes, Identity and Discovery Policy, Update/CRUD Execution Sequence, Final Output Contract, and Required reason codes exactly as written. When customization_path=customization-audit, use docs/customization-catalog.md as the checklist source.
 ```
 
 ## Wizard Flow
@@ -82,15 +82,20 @@ Follow docs/openclaw-update-crud.md exactly. Start by asking interaction_mode (g
 
 Ask the user:
 
-- Do you want identity + links + theme + deploy review?
+- Do you want a full data-driven customization audit across all catalog categories?
 - Or only a focused subset?
 
 Options:
 
-1. Full setup (recommended for new fork)
-2. Content only
-3. Theme/layout only
-4. Deployment docs and settings only
+1. Full data-driven customization audit (recommended for day-2 maintenance)
+2. Standard full setup (identity + links + theme + deploy review)
+3. Content only
+4. Theme/layout only
+5. Deployment docs and settings only
+
+Reference:
+
+- `docs/customization-catalog.md` (canonical category list for full/focused audits)
 
 Opt-out:
 
@@ -169,6 +174,15 @@ Agent should capture:
 - grouping style (`subtle`, `none`, `bands`)
 - mode policy (`dark-toggle`, `static-dark`, `static-light`)
 - link target behavior (`new-tab-external`, `same-tab`, `new-tab-all`)
+- profile richness (`minimal`, `standard`, `rich`)
+- layout density (`compact`, `medium`, `spacious`)
+- desktop columns (`one`, `two`)
+- typography scale (`fixed`, `compact`, `expressive`)
+- target size (`comfortable`, `compact`, `large`)
+- typography overrides (`ui.typography.global`, `ui.typography.themes`)
+- brand icon policy (`ui.brandIcons.colorMode`, `contrastMode`, `minContrastRatio`, `sizeMode`, `iconOverrides`)
+- rich-card policy (`ui.richCards.renderMode`, `sourceLabelDefault`, `imageTreatment`, `mobile.imageLayout`, `enrichment.*`)
+- quality policy (`quality.reportPath`, `summaryPath`, `blockingDomains`, `seo.*`, `accessibility.*`, `performance.*`)
 
 Validation checkpoint:
 
@@ -183,6 +197,7 @@ Opt-out:
 References:
 
 - `docs/data-model.md` (`site.json` section)
+- `docs/customization-catalog.md` (`site-core-theme`, `site-ui-*`, `site-quality` categories)
 - `docs/theming-and-layouts.md`
 
 ### Step 5: Build and quality verification
@@ -264,6 +279,7 @@ You can leave the wizard at any point and continue manually:
 - `docs/quickstart.md`
 - `docs/openclaw-bootstrap.md`
 - `docs/openclaw-update-crud.md`
+- `docs/customization-catalog.md`
 - `docs/data-model.md`
 - `docs/theming-and-layouts.md`
 - `docs/deployment.md`

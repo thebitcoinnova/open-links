@@ -32,14 +32,14 @@ This project is developer-first: fork or template the repo, edit JSON, push, and
 
 ## Quickstart
 
-For full walkthrough and troubleshooting, see [Quickstart](docs/quickstart.md).
+For full walkthrough and troubleshooting, see [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md).
 
 ### 1) OpenClaw Bootstrap (Recommended)
 
 Paste this one-liner into your OpenClaw instance:
 
 ```text
-Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, first check whether I already appear to have a valid OpenLinks fork/local repo and ask one routing confirmation whether to continue bootstrap or switch to docs/openclaw-update-crud.md, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-bootstrap.md exactly for this repository. Execute Required Execution Policy, End-to-End OpenClaw Sequence, Automation and Identity Confirmation Rule, Social Discovery and Inference Contract, Deployment Verification Contract, Structured URL Reporting Schema, README Deploy URL Marker-Block Contract, and Final Output Contract exactly as written. If an existing setup is detected, ask the single route-confirmation and switch to docs/openclaw-update-crud.md when selected.
 ```
 
 Use this path when this is the first setup for a new fork or local clone.
@@ -49,7 +49,7 @@ Use this path when this is the first setup for a new fork or local clone.
 Paste this one-liner into your OpenClaw instance:
 
 ```text
-Follow docs/openclaw-update-crud.md exactly for this repository: detect whether I already have a valid local OpenLinks repo first, then check candidate local paths, then check my GitHub fork; if neither local repo nor fork exists, warn and ask once to confirm auto-bootstrap mode before continuing. Start by asking interaction_mode (guided|balanced|autopilot), identity_research (on|off, default on), and optional seed_identities, defaulting interaction_mode to balanced if I do not specify. If identity_research is off, do explicit-only CRUD. If identity_research is on, use authoritative-chain discovery only. Treat upstream prefilled identity data (for example Peter Ryszkiewicz) as template data, not user truth. Do not infer payment links or crypto addresses unless I explicitly request them. If local repo is dirty, summarize changed/untracked files and ask once whether to continue in-place or require a clean tree. Apply approved CRUD to data/profile.json + data/links.json + data/site.json, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify CI and GitHub Pages deploy for the pushed SHA, report deployment URLs in target/status/primary_url/additional_urls/evidence format, and update README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-update-crud.md exactly for this repository. Execute Required Startup Handshake (including conditional customization-audit selectors), Defaults, Customization Audit Path (Optional), Repository Resolution, Dirty Local Repository Handling, Interaction Modes, Identity and Discovery Policy, Update/CRUD Execution Sequence, Final Output Contract, and Required reason codes exactly as written. When customization_path=customization-audit, use docs/customization-catalog.md as the checklist source.
 ```
 
 Use this path for day-2 maintenance when the user likely already has a fork and/or local clone.
@@ -112,13 +112,14 @@ OPENCLAW_DEPLOY_URLS_END
 
 ## AI-Guided Path (Optional)
 
-If you want an AI agent workflow with explicit checkpoints and manual opt-outs, use the [AI-Guided Customization Wizard](docs/ai-guided-customization.md). For automation-first execution paths, use [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md) for first-time setup and [OpenClaw Update/CRUD Contract](docs/openclaw-update-crud.md) for day-2 changes.
+If you want an AI agent workflow with explicit checkpoints and manual opt-outs, use the [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md). For automation-first execution paths, use [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md) for first-time setup and [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md) for day-2 changes.
 
 Recommended flow:
 
-1. Start with [Quickstart](docs/quickstart.md).
-2. Use [Data Model](docs/data-model.md) while shaping content.
-3. Run the AI wizard to automate repeatable CRUD updates.
+1. Start with [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md).
+2. Use [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md) while shaping content.
+3. Use [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md) for complete day-2 data-driven audits.
+4. Run the AI wizard to automate repeatable CRUD updates.
 
 ## First GitHub Pages Deploy (Quick Path)
 
@@ -138,10 +139,10 @@ npm run ci:strict
 
 Then use:
 
-- [Deployment Operations Guide](docs/deployment.md) for full troubleshooting and diagnostics flow.
-- [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md) for deployment URL reporting and README marker-block updates.
-- [OpenClaw Update/CRUD Contract](docs/openclaw-update-crud.md) for existing repo update sessions and interaction-mode behavior.
-- [Adapter Contract Guide](docs/adapter-contract.md) for future non-GitHub host planning.
+- [Deployment Operations Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment.md) for full troubleshooting and diagnostics flow.
+- [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md) for deployment URL reporting and README marker-block updates.
+- [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md) for existing repo update sessions and interaction-mode behavior.
+- [Adapter Contract Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/adapter-contract.md) for future non-GitHub host planning.
 
 High-signal deployment checks:
 
@@ -197,7 +198,7 @@ Use `custom` for extension metadata:
 
 Unknown top-level keys are allowed but warned. `custom` keys that collide with core keys fail validation.
 
-For full data model details and examples, see [Data Model](docs/data-model.md).
+For full data model details and examples, see [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md).
 
 ## Troubleshooting (Quick)
 
@@ -224,14 +225,15 @@ For full data model details and examples, see [Data Model](docs/data-model.md).
 
 ## Docs Map
 
-- [Quickstart](docs/quickstart.md)
-- [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md)
-- [OpenClaw Update/CRUD Contract](docs/openclaw-update-crud.md)
-- [Data Model](docs/data-model.md)
-- [AI-Guided Customization Wizard](docs/ai-guided-customization.md)
-- [Theming and Layout Extensibility](docs/theming-and-layouts.md)
-- [Deployment Operations Guide](docs/deployment.md)
-- [Adapter Contract Guide](docs/adapter-contract.md)
+- [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md)
+- [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md)
+- [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md)
+- [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md)
+- [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md)
+- [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md)
+- [Theming and Layout Extensibility](https://raw.githubusercontent.com/pRizz/open-links/main/docs/theming-and-layouts.md)
+- [Deployment Operations Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment.md)
+- [Adapter Contract Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/adapter-contract.md)
 
 ## Repository Structure
 
