@@ -140,4 +140,5 @@ vite.config.ts.timestamp-*
 
 # OpenLinks generated enrichment artifacts
 data/generated/*.json
+data/generated/*.md
 !data/generated/.gitkeep
