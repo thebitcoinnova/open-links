@@ -27,9 +27,18 @@ const iconFor = (value?: string) => {
   }
 };
 
+const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+
 export const RichLinkCard = (props: RichLinkCardProps) => {
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? props.rel ?? "noopener noreferrer" : undefined);
+  const titleId = () => `rich-link-title-${safeId(props.link.id)}`;
+  const descriptionId = () => `rich-link-description-${safeId(props.link.id)}`;
+  const sourceId = () => `rich-link-source-${safeId(props.link.id)}`;
+  const ariaLabel = () =>
+    target() === "_blank"
+      ? `Open ${props.viewModel.title} in a new tab`
+      : `Open ${props.viewModel.title}`;
 
   return (
     <a
@@ -37,7 +46,9 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
       href={props.link.url}
       target={target()}
       rel={rel()}
-      aria-label={`Open ${props.viewModel.title}`}
+      aria-label={ariaLabel()}
+      aria-labelledby={titleId()}
+      aria-describedby={props.viewModel.showSourceLabel ? `${descriptionId()} ${sourceId()}` : descriptionId()}
       data-interaction={props.interaction ?? "minimal"}
       data-link-type={props.link.type}
     >
@@ -51,15 +62,21 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
       </Show>
 
       <span class="rich-card-body">
-        <strong class="rich-card-title">{props.viewModel.title}</strong>
-        <span class="rich-card-description">{props.viewModel.description}</span>
+        <strong class="rich-card-title" id={titleId()}>
+          {props.viewModel.title}
+        </strong>
+        <span class="rich-card-description" id={descriptionId()}>
+          {props.viewModel.description}
+        </span>
 
         <span class="rich-card-meta">
           <span class="card-icon" aria-hidden="true">
             {iconFor(props.link.icon)}
           </span>
           <Show when={props.viewModel.showSourceLabel}>
-            <span class="rich-card-source">{props.viewModel.sourceLabel}</span>
+            <span class="rich-card-source" id={sourceId()}>
+              {props.viewModel.sourceLabel}
+            </span>
           </Show>
         </span>
       </span>

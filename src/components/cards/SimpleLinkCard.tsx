@@ -24,10 +24,19 @@ const iconFor = (value?: string) => {
   }
 };
 
+const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+
 export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? props.rel ?? "noopener noreferrer" : undefined);
   const interaction = () => props.interaction ?? "minimal";
+  const titleId = () => `simple-link-title-${safeId(props.link.id)}`;
+  const descriptionId = () => `simple-link-description-${safeId(props.link.id)}`;
+  const description = () => props.link.description ?? props.link.url;
+  const ariaLabel = () =>
+    target() === "_blank"
+      ? `Open ${props.link.label} in a new tab`
+      : `Open ${props.link.label}`;
 
   return (
     <a
@@ -35,7 +44,9 @@ export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
       href={props.link.url}
       target={target()}
       rel={rel()}
-      aria-label={`Open ${props.link.label}`}
+      aria-label={ariaLabel()}
+      aria-labelledby={titleId()}
+      aria-describedby={descriptionId()}
       data-interaction={interaction()}
       data-link-type={props.link.type}
       data-card-variant="simple"
@@ -44,8 +55,8 @@ export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
         {iconFor(props.link.icon)}
       </span>
       <span class="card-copy">
-        <strong>{props.link.label}</strong>
-        <span>{props.link.description ?? props.link.url}</span>
+        <strong id={titleId()}>{props.link.label}</strong>
+        <span id={descriptionId()}>{description()}</span>
       </span>
     </a>
   );
