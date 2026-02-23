@@ -204,3 +204,69 @@ Those are documented as future-facing guidance in `docs/adapter-contract.md`.
 - `README.md`
 - `docs/quickstart.md`
 - `docs/adapter-contract.md`
+
+## Advanced Static Hosting (Best-Effort)
+
+These options are possible for adventurous maintainers, but they are not first-class supported in v1.
+
+### General approach
+
+1. Build locally or in CI:
+
+```bash
+npm run validate:data
+npm run build
+```
+
+2. Upload `dist/` to your chosen static host.
+3. Configure host path behavior to match your base-path strategy.
+4. Validate loaded assets, canonical metadata, and link behavior.
+
+### AWS S3 + CloudFront (high-level)
+
+- Upload contents of `dist/` to an S3 bucket.
+- Configure CloudFront origin to that bucket.
+- Handle SPA/static path behavior with index/error document settings.
+- Invalidate cache after deploy.
+
+### Cloudflare Pages (high-level)
+
+- Configure build command (`npm run build`) and output dir (`dist`).
+- Ensure environment and path assumptions match your repo mode.
+- Validate route and asset loading for project vs root paths.
+
+### Netlify (high-level)
+
+- Configure build command (`npm run build`) and publish dir (`dist`).
+- Use redirects/headers only when needed.
+- Confirm generated metadata and image paths remain valid.
+
+### Railway/static hosting variants (high-level)
+
+- Publish static `dist/` output using platform static-site settings.
+- Ensure fallback route behavior does not break asset serving.
+- Verify HTTPS endpoint and cache refresh behavior after updates.
+
+## Provisional Custom-Domain Guidance (v1)
+
+Custom domains are possible, but support in v1 is documentation-level only.
+
+Recommended baseline regardless of host:
+
+1. Configure DNS to point to your host endpoint.
+2. Enable HTTPS certificate management on the host/CDN.
+3. Update canonical metadata base URL in `data/site.json` under `quality.seo.canonicalBaseUrl`.
+4. Re-run:
+
+```bash
+npm run build
+npm run quality:check
+```
+
+5. Validate social preview and canonical URLs in deployed output.
+
+Caveats:
+
+- DNS propagation delays can look like deploy failures.
+- Cached metadata previews may lag after domain changes.
+- Host-specific domain validation steps vary and are not standardized here.
