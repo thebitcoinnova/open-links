@@ -44,7 +44,8 @@
         "jsBytes": { "$ref": "#/$defs/budgetThreshold" },
         "cssBytes": { "$ref": "#/$defs/budgetThreshold" },
         "htmlBytes": { "$ref": "#/$defs/budgetThreshold" },
-        "largestAssetBytes": { "$ref": "#/$defs/budgetThreshold" }
+        "largestAssetBytes": { "$ref": "#/$defs/budgetThreshold" },
+        "minimumScore": { "$ref": "#/$defs/budgetThreshold" }
       },
       "additionalProperties": true
     }

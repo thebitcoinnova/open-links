@@ -81,6 +81,7 @@ export interface PerformanceProfileBudget {
   cssBytes?: BudgetThreshold | number;
   htmlBytes?: BudgetThreshold | number;
   largestAssetBytes?: BudgetThreshold | number;
+  minimumScore?: BudgetThreshold | number;
 }
 
 export interface QualityPerformanceConfig {

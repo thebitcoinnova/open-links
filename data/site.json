@@ -62,14 +62,16 @@
           "jsBytes": { "warn": 200000, "fail": 280000 },
           "cssBytes": { "warn": 45000, "fail": 70000 },
           "htmlBytes": { "warn": 18000, "fail": 26000 },
-          "largestAssetBytes": { "warn": 160000, "fail": 220000 }
+          "largestAssetBytes": { "warn": 160000, "fail": 220000 },
+          "minimumScore": { "warn": 90, "fail": 75 }
         },
         "desktop": {
           "totalBytes": { "warn": 340000, "fail": 440000 },
           "jsBytes": { "warn": 240000, "fail": 320000 },
           "cssBytes": { "warn": 55000, "fail": 80000 },
           "htmlBytes": { "warn": 22000, "fail": 32000 },
-          "largestAssetBytes": { "warn": 210000, "fail": 290000 }
+          "largestAssetBytes": { "warn": 210000, "fail": 290000 },
+          "minimumScore": { "warn": 90, "fail": 75 }
         }
       }
     }

@@ -31,6 +31,11 @@ const DEFAULT_BUDGETS: Record<string, Record<string, BudgetThreshold>> = {
   }
 };
 
+const DEFAULT_MINIMUM_SCORE: BudgetThreshold = {
+  warn: 90,
+  fail: 75
+};
+
 const normalizeThreshold = (value: BudgetThreshold | number | undefined, fallback: BudgetThreshold) => {
   if (typeof value === "number") {
     return {
@@ -119,6 +124,7 @@ const evaluateProfile = (
     largestAssetBytes: number;
   }
 ) => {
+  const issueStartIndex = issues.length;
   const defaults = DEFAULT_BUDGETS[profileName];
   const thresholds = {
     totalBytes: normalizeThreshold(profileBudget?.totalBytes, defaults.totalBytes),
@@ -161,6 +167,41 @@ const evaluateProfile = (
       });
     }
   });
+
+  const profileIssues = issues.slice(issueStartIndex).filter((issue) => issue.scope === profileName);
+  const errorCount = profileIssues.filter((issue) => issue.level === "error").length;
+  const warningCount = profileIssues.filter((issue) => issue.level === "warning").length;
+  const score = Math.max(0, 100 - errorCount * 18 - warningCount * 7);
+  const minimumScoreThreshold = normalizeThreshold(profileBudget?.minimumScore, DEFAULT_MINIMUM_SCORE);
+
+  if (score < minimumScoreThreshold.fail) {
+    issues.push({
+      domain: "performance",
+      level: "error",
+      code: "PERF_PROFILE_SCORE_FAIL",
+      scope: profileName,
+      metric: "minimumScore",
+      actual: score,
+      expected: minimumScoreThreshold.fail,
+      message: `${profileName} aggregate performance score (${score}) is below fail threshold (${minimumScoreThreshold.fail}).`,
+      remediation: `Reduce performance-budget violations or lower quality.performance.profiles.${profileName}.minimumScore thresholds.`
+    });
+    return;
+  }
+
+  if (score < minimumScoreThreshold.warn) {
+    issues.push({
+      domain: "performance",
+      level: strict ? "error" : "warning",
+      code: strict ? "PERF_PROFILE_SCORE_WARN_ESCALATED" : "PERF_PROFILE_SCORE_WARN",
+      scope: profileName,
+      metric: "minimumScore",
+      actual: score,
+      expected: minimumScoreThreshold.warn,
+      message: `${profileName} aggregate performance score (${score}) is below warning threshold (${minimumScoreThreshold.warn}).`,
+      remediation: `Improve performance metrics or tune quality.performance.profiles.${profileName}.minimumScore thresholds.`
+    });
+  }
 };
 
 export const runPerformanceChecks = ({
