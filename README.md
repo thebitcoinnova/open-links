@@ -11,6 +11,7 @@ This project is developer-first: fork or template the repo, edit JSON, push, and
 - Schema + policy validation with actionable remediation output.
 - Rich and simple card support with build-time enrichment.
 - Build-time profile-avatar materialization with local fallback behavior.
+- Build-time rich/SEO image materialization with local-only runtime behavior.
 - GitHub Actions CI + GitHub Pages deploy pipeline already wired.
 - Theme and layout controls designed for forking and customization.
 - Data-driven typography overrides via `data/site.json` (`ui.typography`).
@@ -119,12 +120,13 @@ High-signal deployment checks:
 ### Core commands
 
 - `npm run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
+- `npm run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
 - `npm run dev` - start local dev server.
 - `npm run validate:data` - schema + policy checks (standard mode).
 - `npm run validate:data:strict` - fails on warnings and errors.
 - `npm run validate:data:json` - machine-readable validation output.
-- `npm run build` - avatar sync + enrichment + validation + production build.
-- `npm run build:strict` - avatar sync + strict enrichment + strict validation + build.
+- `npm run build` - avatar sync + enrichment + content-image sync + validation + production build.
+- `npm run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build.
 - `npm run preview` - serve built output.
 - `npm run typecheck` - TypeScript checks.
 
@@ -176,6 +178,7 @@ For full data model details and examples, see [Data Model](docs/data-model.md).
 - If strict mode fails, compare `npm run validate:data` vs `npm run validate:data:strict`.
 - Re-run rich enrichment: `npm run enrich:rich`.
 - Force-refresh avatar cache when needed: `npm run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
+- Force-refresh rich/SEO image cache when needed: `npm run images:sync -- --force` (or set `OPENLINKS_IMAGES_FORCE=1`).
 
 ### Pages deploy fails
 

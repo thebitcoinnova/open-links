@@ -36,6 +36,8 @@ const DEFAULT_MINIMUM_SCORE: BudgetThreshold = {
   fail: 75
 };
 
+const BAKED_IMAGE_WARN_BYTES = 5_000_000;
+
 const normalizeThreshold = (value: BudgetThreshold | number | undefined, fallback: BudgetThreshold) => {
   if (typeof value === "number") {
     return {
@@ -54,6 +56,7 @@ const normalizeThreshold = (value: BudgetThreshold | number | undefined, fallbac
 const collectBundleMetrics = (rootDir: string) => {
   const distDir = path.join(rootDir, "dist");
   const assetsDir = path.join(distDir, "assets");
+  const generatedImagesDir = path.join(distDir, "generated", "images");
   const indexPath = path.join(distDir, "index.html");
 
   if (!fs.existsSync(indexPath)) {
@@ -69,6 +72,7 @@ const collectBundleMetrics = (rootDir: string) => {
   let jsBytes = 0;
   let cssBytes = 0;
   let largestAssetBytes = 0;
+  let bakedImageBytes = 0;
 
   assetFiles.forEach((assetPath) => {
     const stats = fs.statSync(assetPath);
@@ -85,12 +89,23 @@ const collectBundleMetrics = (rootDir: string) => {
     }
   });
 
+  if (fs.existsSync(generatedImagesDir)) {
+    const generatedFiles = fs.readdirSync(generatedImagesDir).map((name) => path.join(generatedImagesDir, name));
+    generatedFiles.forEach((generatedFilePath) => {
+      if (!fs.statSync(generatedFilePath).isFile()) {
+        return;
+      }
+      bakedImageBytes += fs.statSync(generatedFilePath).size;
+    });
+  }
+
   return {
     totalBytes: htmlBytes + totalAssetBytes,
     htmlBytes,
     jsBytes,
     cssBytes,
-    largestAssetBytes
+    largestAssetBytes,
+    bakedImageBytes
   };
 };
 
@@ -122,6 +137,7 @@ const evaluateProfile = (
     jsBytes: number;
     cssBytes: number;
     largestAssetBytes: number;
+    bakedImageBytes: number;
   }
 ) => {
   const issueStartIndex = issues.length;
@@ -235,6 +251,20 @@ export const runPerformanceChecks = ({
 
   evaluateProfile(issues, strict, "mobile", mobileBudget, metrics);
   evaluateProfile(issues, strict, "desktop", desktopBudget, metrics);
+
+  if (metrics.bakedImageBytes > BAKED_IMAGE_WARN_BYTES) {
+    issues.push({
+      domain: "performance",
+      level: "warning",
+      code: "PERF_BAKED_IMAGE_BYTES_WARN",
+      metric: "bakedImageBytes",
+      actual: metrics.bakedImageBytes,
+      expected: BAKED_IMAGE_WARN_BYTES,
+      message: `Baked image bytes in dist/generated/images exceeded warning threshold (${metrics.bakedImageBytes} > ${BAKED_IMAGE_WARN_BYTES}).`,
+      remediation:
+        "Optimize remote image sources or reduce baked image count/size. This warning is non-blocking and does not escalate in strict mode."
+    });
+  }
 
   const hasError = issues.some((issue) => issue.level === "error");
   const hasWarning = issues.some((issue) => issue.level === "warning");

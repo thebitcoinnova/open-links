@@ -200,6 +200,16 @@ This supports:
 
 Rich links can include manual metadata and/or generated metadata.
 
+### Rich image materialization behavior
+
+- Remote rich-image URLs are source data, but runtime does not render raw remote URLs.
+- During `npm run dev` and `npm run build`, `images:sync` fetches remote rich-link and SEO image candidates and writes:
+  - baked files in `public/generated/images/<content-hash>.<ext>`
+  - manifest `data/generated/content-images.json`
+- Runtime rich-card `metadata.image` values resolve to baked local paths when available.
+- If remote image fetch fails and no cache exists, rich cards fall back to existing "No preview image" UI.
+- Force refresh is available via `npm run images:sync -- --force` or `OPENLINKS_IMAGES_FORCE=1`.
+
 #### Manual metadata (`links[].metadata`)
 
 Supported keys include:
@@ -266,6 +276,12 @@ Main presentation controls include:
 - `brandIcons.sizeMode`: `normal`, `large`
 
 Rich-card policy settings live under `ui.richCards`.
+
+#### `quality.seo` image materialization behavior
+
+- SEO image candidates (`socialImageFallback`, defaults, profile overrides) are included in `images:sync`.
+- Runtime SEO tags (`og:image`, `twitter:image`) use baked local assets when available.
+- Runtime never falls back to remote SEO image URLs; unresolved remote candidates fall back to `/openlinks-social-fallback.svg`.
 
 #### `ui.brandIcons`
 

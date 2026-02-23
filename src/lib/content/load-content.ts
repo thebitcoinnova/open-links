@@ -231,6 +231,25 @@ interface GeneratedProfileAvatarPayload {
   warning?: string;
 }
 
+interface GeneratedContentImageEntry {
+  sourceUrl?: string;
+  resolvedPath?: string;
+  status?: "fetched" | "not_modified" | "cache_fresh" | "cache_on_error" | "fallback_on_error";
+  etag?: string;
+  lastModified?: string;
+  cacheControl?: string;
+  expiresAt?: string;
+  contentType?: string;
+  bytes?: number;
+  warning?: string;
+  updatedAt?: string;
+}
+
+interface GeneratedContentImagesPayload {
+  generatedAt?: string;
+  byUrl?: Record<string, GeneratedContentImageEntry>;
+}
+
 const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetadataPayload }>(
   "../../../data/generated/rich-metadata.json",
   { eager: true }
@@ -238,6 +257,11 @@ const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetada
 
 const generatedProfileAvatarModules = import.meta.glob<{ default: GeneratedProfileAvatarPayload }>(
   "../../../data/generated/profile-avatar.json",
+  { eager: true }
+);
+
+const generatedContentImageModules = import.meta.glob<{ default: GeneratedContentImagesPayload }>(
+  "../../../data/generated/content-images.json",
   { eager: true }
 );
 
@@ -271,6 +295,72 @@ const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
   return mapped;
 };
 
+const resolveGeneratedContentImages = (): Record<string, GeneratedContentImageEntry> => {
+  const module = Object.values(generatedContentImageModules)[0];
+  const payload = module?.default;
+
+  if (!payload || !isRecord(payload.byUrl)) {
+    return {};
+  }
+
+  const mapped: Record<string, GeneratedContentImageEntry> = {};
+
+  for (const [url, value] of Object.entries(payload.byUrl)) {
+    if (!isRecord(value)) {
+      continue;
+    }
+    mapped[url] = value as GeneratedContentImageEntry;
+  }
+
+  return mapped;
+};
+
+const hasUrlScheme = (value: string): boolean => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value);
+
+const toCanonicalHttpUrl = (value: string): string | null => {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.toString();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const resolveImageFromGeneratedMap = (
+  candidate: string,
+  generatedByUrl: Record<string, GeneratedContentImageEntry>
+): string | undefined => {
+  const canonical = toCanonicalHttpUrl(candidate);
+  if (!canonical) {
+    return undefined;
+  }
+
+  const entry = generatedByUrl[canonical] ?? generatedByUrl[candidate];
+  if (!entry || typeof entry.resolvedPath !== "string" || entry.resolvedPath.trim().length === 0) {
+    return undefined;
+  }
+
+  return toLocalAssetUrl(entry.resolvedPath);
+};
+
+export const resolveGeneratedContentImageUrl = (candidate: string | undefined): string | undefined => {
+  if (typeof candidate !== "string" || candidate.trim().length === 0) {
+    return undefined;
+  }
+
+  const trimmed = candidate.trim();
+  const generatedByUrl = resolveGeneratedContentImages();
+
+  if (!hasUrlScheme(trimmed)) {
+    return toLocalAssetUrl(trimmed);
+  }
+
+  return resolveImageFromGeneratedMap(trimmed, generatedByUrl);
+};
+
 const resolveProfileAvatarPath = (): string => {
   const fallbackPath = "profile-avatar-fallback.svg";
   const module = Object.values(generatedProfileAvatarModules)[0];
@@ -282,6 +372,46 @@ const resolveProfileAvatarPath = (): string => {
 
   return toLocalAssetUrl(payload.resolvedPath);
 };
+
+const localizeRichMetadataImages = (
+  links: OpenLink[],
+  generatedByUrl: Record<string, GeneratedContentImageEntry>
+): OpenLink[] =>
+  links.map((link) => {
+    if (!link.metadata) {
+      return link;
+    }
+
+    const imageCandidate = link.metadata.image;
+    if (typeof imageCandidate !== "string" || imageCandidate.trim().length === 0) {
+      return link;
+    }
+
+    const trimmed = imageCandidate.trim();
+    let resolvedImage: string | undefined;
+
+    if (!hasUrlScheme(trimmed)) {
+      resolvedImage = toLocalAssetUrl(trimmed);
+    } else {
+      resolvedImage = resolveImageFromGeneratedMap(trimmed, generatedByUrl);
+    }
+
+    if (!resolvedImage) {
+      const { image: _image, ...metadataWithoutImage } = link.metadata;
+      return {
+        ...link,
+        metadata: metadataWithoutImage
+      };
+    }
+
+    return {
+      ...link,
+      metadata: {
+        ...link.metadata,
+        image: resolvedImage
+      }
+    };
+  });
 
 const mergeGeneratedMetadata = (
   links: OpenLink[],
@@ -329,9 +459,11 @@ export const loadContent = () => {
   const site = siteData as SiteData;
   const linksPayload = linksData as LinksData;
   const generatedMetadata = resolveGeneratedMetadata();
+  const generatedContentImages = resolveGeneratedContentImages();
 
   const mergedLinks = mergeGeneratedMetadata(linksPayload.links, generatedMetadata);
-  const enabledLinks = mergedLinks.filter((link) => link.enabled !== false);
+  const localizedLinks = localizeRichMetadataImages(mergedLinks, generatedContentImages);
+  const enabledLinks = localizedLinks.filter((link) => link.enabled !== false);
   const links = rankByExplicitOrder(enabledLinks, linksPayload.order);
 
   const groups = [...(linksPayload.groups ?? [])].sort(

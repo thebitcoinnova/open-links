@@ -64,7 +64,7 @@ npm run validate:data
 npm run dev
 ```
 
-`npm run dev` runs avatar sync first (`predev`) so profile avatar is baked into local assets.
+`npm run dev` runs `avatar:sync`, `enrich:rich`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into local assets.
 
 ### Build production output
 
@@ -73,7 +73,7 @@ npm run build
 npm run preview
 ```
 
-`npm run build` runs avatar sync before enrichment/validation/build.
+`npm run build` runs avatar sync, rich enrichment, and content-image sync before validation/build.
 
 ## First Deployment to GitHub Pages
 
@@ -207,6 +207,12 @@ If your avatar source changed but cache is still valid, force refresh with:
 
 ```bash
 npm run avatar:sync -- --force
+```
+
+If rich/SEO image sources changed but cache is still valid, force refresh with:
+
+```bash
+npm run images:sync -- --force
 ```
 
 ## Next Guides

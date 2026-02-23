@@ -5,7 +5,7 @@ import LinkSection, { type LinkSectionData } from "../components/layout/LinkSect
 import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
-import { loadContent } from "../lib/content/load-content";
+import { loadContent, resolveGeneratedContentImageUrl } from "../lib/content/load-content";
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
 import ThemeToggle from "../components/theme/ThemeToggle";
 import {
@@ -117,17 +117,21 @@ const applySeoMetadata = () => {
       seo?.socialImageFallback,
       "/openlinks-social-fallback.svg"
     ) ?? "/openlinks-social-fallback.svg";
+  const resolvedImagePath =
+    resolveGeneratedContentImageUrl(imagePath) ??
+    resolveGeneratedContentImageUrl("/openlinks-social-fallback.svg") ??
+    "/openlinks-social-fallback.svg";
 
   const ogTitle = firstString(overrides.ogTitle, defaults.ogTitle, title) ?? title;
   const ogDescription = firstString(overrides.ogDescription, defaults.ogDescription, description) ?? description;
   const ogUrl = toAbsoluteUrl(firstString(overrides.ogUrl, defaults.ogUrl, canonical) ?? canonical, baseOrigin);
-  const ogImage = toAbsoluteUrl(imagePath, baseOrigin);
+  const ogImage = toAbsoluteUrl(resolvedImagePath, baseOrigin);
 
   const twitterCard = firstString(overrides.twitterCard, defaults.twitterCard, "summary_large_image") ?? "summary_large_image";
   const twitterTitle = firstString(overrides.twitterTitle, defaults.twitterTitle, ogTitle) ?? ogTitle;
   const twitterDescription =
     firstString(overrides.twitterDescription, defaults.twitterDescription, ogDescription) ?? ogDescription;
-  const twitterImage = toAbsoluteUrl(imagePath, baseOrigin);
+  const twitterImage = toAbsoluteUrl(resolvedImagePath, baseOrigin);
 
   document.title = title;
   ensureCanonical(canonical);
