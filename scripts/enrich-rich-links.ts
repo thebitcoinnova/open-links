@@ -62,6 +62,9 @@ interface ResolvedConfig {
 
 const ROOT = process.cwd();
 
+const absolutePath = (value: string): string =>
+  path.isAbsolute(value) ? value : path.join(ROOT, value);
+
 const parseNumber = (value: string | undefined): number | undefined => {
   if (!value) {
     return undefined;
@@ -91,7 +94,7 @@ const parseArgs = (): CliArgs => {
 };
 
 const readJson = <T>(relativePath: string): T => {
-  const absolute = path.join(ROOT, relativePath);
+  const absolute = absolutePath(relativePath);
   return JSON.parse(fs.readFileSync(absolute, "utf8")) as T;
 };
 
@@ -108,7 +111,7 @@ const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
 };
 
 const ensureDirectory = (relativePath: string) => {
-  const absoluteDir = path.dirname(path.join(ROOT, relativePath));
+  const absoluteDir = path.dirname(absolutePath(relativePath));
   fs.mkdirSync(absoluteDir, { recursive: true });
 };
 
@@ -288,7 +291,7 @@ const run = async () => {
   };
 
   ensureDirectory(config.outputPath);
-  fs.writeFileSync(path.join(ROOT, config.outputPath), `${JSON.stringify(generated, null, 2)}\n`, "utf8");
+  fs.writeFileSync(absolutePath(config.outputPath), `${JSON.stringify(generated, null, 2)}\n`, "utf8");
 
   const report = writeEnrichmentReport({
     reportPath: config.reportPath,

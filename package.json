@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "prebuild": "npm run validate:data",
+    "build:strict": "npm run enrich:rich:strict && npm run validate:data:strict && vite build",
+    "prebuild": "npm run enrich:rich && npm run validate:data",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "enrich:rich": "tsx scripts/enrich-rich-links.ts",

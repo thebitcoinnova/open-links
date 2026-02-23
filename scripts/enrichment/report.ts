@@ -16,6 +16,9 @@ export interface WriteEnrichmentReportInput {
 
 const ROOT = process.cwd();
 
+const absolutePath = (value: string): string =>
+  path.isAbsolute(value) ? value : path.join(ROOT, value);
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -48,7 +51,7 @@ export const createEnrichmentReport = ({
 
 export const writeEnrichmentReport = (input: WriteEnrichmentReportInput): EnrichmentRunReport => {
   const report = createEnrichmentReport(input);
-  const outputPath = path.join(ROOT, input.reportPath);
+  const outputPath = absolutePath(input.reportPath);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   return report;
@@ -88,7 +91,7 @@ const toEntry = (value: unknown): EnrichmentRunEntry | null => {
 };
 
 export const readEnrichmentReport = (reportPath: string): EnrichmentRunReport | null => {
-  const absolute = path.join(ROOT, reportPath);
+  const absolute = absolutePath(reportPath);
 
   if (!fs.existsSync(absolute)) {
     return null;
