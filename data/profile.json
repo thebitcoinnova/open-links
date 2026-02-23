@@ -1,20 +1,16 @@
 {
-  "name": "OpenLinks Creator",
-  "headline": "Build your own link hub",
-  "avatar": "https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=320&q=80",
-  "bio": "A personal, open source, version-controlled static website for social links.",
-  "location": "Internet",
-  "pronouns": "they/them",
+  "name": "Peter Ryszkiewicz",
+  "headline": "Peter's OpenLinks",
+  "avatar": "https://avatars.githubusercontent.com/u/3519085?v=4",
+  "bio": "A curious software engineer, making things in the AI space, Bitcoin space, video gaming, and many others.",
+  "location": "Chicago",
   "status": "building-in-public",
   "profileLinks": [
     {
       "label": "GitHub",
-      "url": "https://github.com"
+      "url": "https://github.com/pRizz"
     }
   ],
-  "contact": {
-    "email": "hello@example.com"
-  },
   "custom": {
     "taglineColor": "mint"
   }
