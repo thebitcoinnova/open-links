@@ -17,7 +17,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **DATA-01**: User can define profile identity content (name, bio, avatar, social metadata) in JSON.
 - [ ] **DATA-02**: User can define links in JSON with required canonical fields (`id`, `label`, `url`, `type`, visibility/order controls).
-- [ ] **DATA-03**: User can choose card type per link (`simple` or `rich`) through JSON config.
+- [x] **DATA-03**: User can choose card type per link (`simple` or `rich`) through JSON config.
 - [ ] **DATA-04**: Build fails with actionable errors when JSON content violates schema.
 - [ ] **DATA-05**: URL fields are validated and restricted to approved schemes (`http`/`https`).
 - [ ] **DATA-06**: Unknown/extended metadata fields can be stored in a safe extension area without breaking core schema.
@@ -26,7 +26,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **UI-01**: Site renders a profile page with a sleek card-based layout from JSON data.
 - [x] **UI-02**: Simple cards render platform icon, label, and destination link.
-- [ ] **UI-03**: Rich cards render optional preview fields (for example title/description/image) with graceful fallback when absent.
+- [x] **UI-03**: Rich cards render optional preview fields (for example title/description/image) with graceful fallback when absent.
 - [x] **UI-04**: UI is fully responsive and usable on common mobile and desktop breakpoints.
 - [x] **UI-05**: Default visual mode is dark with a user-selectable light mode.
 - [x] **UI-06**: Theme choice persists across page reloads.
@@ -99,13 +99,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BOOT-03 | Phase 6 | Pending |
 | DATA-01 | Phase 1 | Complete |
 | DATA-02 | Phase 1 | Complete |
-| DATA-03 | Phase 3 | Pending |
+| DATA-03 | Phase 3 | Complete |
 | DATA-04 | Phase 1 | Complete |
 | DATA-05 | Phase 1 | Complete |
 | DATA-06 | Phase 1 | Complete |
 | UI-01 | Phase 2 | Complete |
 | UI-02 | Phase 2 | Complete |
-| UI-03 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Complete |
 | UI-04 | Phase 2 | Complete |
 | UI-05 | Phase 2 | Complete |
 | UI-06 | Phase 2 | Complete |
@@ -135,4 +135,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 after Phase 2 completion*
+*Last updated: 2026-02-23 after Phase 3 completion*
