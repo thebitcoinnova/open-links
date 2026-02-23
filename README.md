@@ -100,6 +100,18 @@ npm run ci:required
 npm run ci:strict
 ```
 
+Then use:
+
+- [Deployment Operations Guide](docs/deployment.md) for full troubleshooting and diagnostics flow.
+- [Adapter Contract Guide](docs/adapter-contract.md) for future non-GitHub host planning.
+
+High-signal deployment checks:
+
+1. `required-checks` job in `.github/workflows/ci.yml` is green.
+2. `deploy` job in `.github/workflows/deploy-pages.yml` is green.
+3. Deploy summary includes a published URL.
+4. If deploy fails, review workflow summary remediation and diagnostics artifacts.
+
 ## Validation and Build Commands
 
 ### Core commands
@@ -173,9 +185,9 @@ For full data model details and examples, see [Data Model](docs/data-model.md).
 - [Quickstart](docs/quickstart.md)
 - [Data Model](docs/data-model.md)
 - [AI-Guided Customization Wizard](docs/ai-guided-customization.md)
-- Theming and layout extensibility guide: to be added in this phase
-- Deployment operations guide: to be added in this phase
-- Adapter contract guide: to be added in this phase
+- [Theming and Layout Extensibility](docs/theming-and-layouts.md)
+- [Deployment Operations Guide](docs/deployment.md)
+- [Adapter Contract Guide](docs/adapter-contract.md)
 
 ## Repository Structure
 
