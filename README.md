@@ -2,21 +2,43 @@
 
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
 
-## What You Get
+This project is developer-first: fork or template the repo, edit JSON, push, and publish.
 
-- SolidJS static site scaffold.
-- JSON-backed profile + links content model.
-- Schema + policy validation before build.
-- Starter examples for minimal and grouped link layouts.
+## Why OpenLinks
 
-## Fork or Template This Repo
+- Static SolidJS site with minimal runtime complexity.
+- Version-controlled content in `data/*.json`.
+- Schema + policy validation with actionable remediation output.
+- Rich and simple card support with build-time enrichment.
+- GitHub Actions CI + GitHub Pages deploy pipeline already wired.
+- Theme and layout controls designed for forking and customization.
 
-Use one of these options:
+## Scope and Audience
 
-1. **Fork** the repository if you want to track upstream changes directly.
-2. **Use as template** if you want a clean standalone repo.
+### Intended audience
 
-After creating your repo copy:
+- Developers who are comfortable editing JSON and markdown.
+- Maintainers using AI agents to automate content updates.
+
+### Out of scope for v1
+
+- User auth/account system.
+- CMS or WYSIWYG editor.
+- Built-in analytics.
+- Plugin marketplace.
+
+## Quickstart
+
+For full walkthrough and troubleshooting, see [Quickstart](docs/quickstart.md).
+
+### 1) Create your own repository
+
+Use one of:
+
+1. Fork this repository.
+2. Use this repository as a template.
+
+### 2) Clone and install
 
 ```bash
 git clone <your-repo-url>
@@ -24,84 +46,135 @@ cd open-links
 npm install
 ```
 
-## Configure Your Data
+### 3) Update your data
 
-Edit the split data files in `data/`:
+Edit these files:
 
-- `data/profile.json`: identity, bio, profile metadata.
-- `data/links.json`: links array, optional groups, explicit order.
-- `data/site.json`: site-level metadata and active theme.
+- `data/profile.json` - identity and profile details.
+- `data/links.json` - simple/rich links, groups, ordering.
+- `data/site.json` - theme, UI, quality, and deployment-related config.
 
-You can also start from examples in `data/examples/`.
+Starter presets:
 
-## Local Validation and Build
+- `data/examples/minimal/`
+- `data/examples/grouped/`
+- `data/examples/invalid/` (intentional failures for testing)
 
-Run validation before building:
+### 4) Validate and run locally
 
 ```bash
 npm run validate:data
-npm run build
+npm run dev
 ```
 
-Useful validation commands:
+### 5) Build production output
 
 ```bash
-npm run validate:data:strict
-npm run validate:data:json
+npm run build
+npm run preview
 ```
 
-## Validation Modes and Data Contract Rules
+## First GitHub Pages Deploy (Quick Path)
 
-### Standard vs strict mode
+1. Push to `main`.
+2. In GitHub repository settings, set Pages source to **GitHub Actions**.
+3. Wait for:
+   - `.github/workflows/ci.yml` to succeed.
+   - `.github/workflows/deploy-pages.yml` to deploy.
+4. Open the published Pages URL from the deployment job.
 
-- `npm run validate:data`: fails on errors, allows warnings.
-- `npm run validate:data:strict`: fails on errors and warnings.
+Local parity commands:
 
-### URL policy
+```bash
+npm run ci:required
+npm run ci:strict
+```
 
-Link URLs must use one of these schemes:
+## Validation and Build Commands
+
+### Core commands
+
+- `npm run dev` - start local dev server.
+- `npm run validate:data` - schema + policy checks (standard mode).
+- `npm run validate:data:strict` - fails on warnings and errors.
+- `npm run validate:data:json` - machine-readable validation output.
+- `npm run build` - enrichment + validation + production build.
+- `npm run build:strict` - strict enrichment + strict validation + build.
+- `npm run preview` - serve built output.
+- `npm run typecheck` - TypeScript checks.
+
+### Quality commands
+
+- `npm run quality:check` - standard quality gate.
+- `npm run quality:strict` - strict quality gate.
+- `npm run quality:json` - standard quality JSON report.
+- `npm run quality:strict:json` - strict quality JSON report.
+
+### CI parity commands
+
+- `npm run ci:required` - required CI checks.
+- `npm run ci:strict` - strict CI signal checks.
+
+## Data Contract Rules (High-Level)
+
+### URL schemes
+
+Allowed URL schemes:
 
 - `http`
 - `https`
 - `mailto`
 - `tel`
 
-### Extension model
+### Extension namespace
 
-- Top-level unknown keys are allowed but reported as warnings.
-- Use `custom` objects for extension metadata:
-  - top-level `custom` in `profile`, `links`, and `site`
-  - per-link `custom` in each link object
-- Custom keys must not collide with reserved core keys. Conflicts fail validation.
-- Extension compatibility is best-effort, not guaranteed as a stable API contract.
+Use `custom` for extension metadata:
 
-## First Publish Checklist
+- top-level `custom` in `profile`, `links`, and `site`
+- per-link `custom` in each link object
 
-- [ ] Updated `data/profile.json`, `data/links.json`, and `data/site.json` with your content.
-- [ ] Ran `npm run validate:data` and resolved all errors.
-- [ ] Ran `npm run build` successfully.
-- [ ] Committed and pushed your changes.
-- [ ] Confirmed repository Pages/deploy workflow settings (added in Phase 4).
+Unknown top-level keys are allowed but warned. `custom` keys that collide with core keys fail validation.
 
-## Troubleshooting Validation
+For full data model details and examples, see the upcoming deep dive in Phase 6.
 
-- If validation reports schema errors, check the exact JSON path in the message and update that field.
-- If validation reports custom-key conflicts, rename keys under `custom` so they do not match reserved core fields.
-- If validation reports URL scheme errors, use one of `http`, `https`, `mailto`, or `tel`.
-- If strict mode fails on warnings, either resolve warnings or use standard mode during local iteration.
+## Troubleshooting (Quick)
 
-## Example Data Presets
+### Validation fails
 
-- `data/examples/minimal/`: fastest starter with three links.
-- `data/examples/grouped/`: grouped links plus explicit ordering.
-- `data/examples/invalid/`: fixtures that intentionally fail validation for testing.
+- Re-run `npm run validate:data` and inspect path-specific remediation lines.
+- Check URL schemes and required fields.
+- Move extension fields into `custom` and avoid reserved-key collisions.
 
-## Development Scripts
+### Build fails
 
-- `npm run dev` - start local dev server.
-- `npm run build` - production build (runs validation first).
-- `npm run preview` - preview production build.
-- `npm run typecheck` - TypeScript checks.
+- Re-run with `npm run build` and inspect first failing command output.
+- If strict mode fails, compare `npm run validate:data` vs `npm run validate:data:strict`.
+- Re-run rich enrichment: `npm run enrich:rich`.
+
+### Pages deploy fails
+
+- Confirm CI passed on `main`.
+- Confirm Pages source is GitHub Actions.
+- Check deploy workflow summary for remediation notes.
+- Verify base-path settings if publishing from a project page.
+
+## Docs Map
+
+- [Quickstart](docs/quickstart.md)
+- Data model deep dive: to be added in this phase
+- AI-guided customization wizard: to be added in this phase
+- Theming and layout extensibility guide: to be added in this phase
+- Deployment operations guide: to be added in this phase
+- Adapter contract guide: to be added in this phase
+
+## Repository Structure
+
+- `data/` - source content JSON and generated artifacts.
+- `schema/` - JSON schemas.
+- `scripts/` - validation, enrichment, and quality runners.
+- `src/` - SolidJS app.
+- `.github/workflows/` - CI and deploy automation.
+- `.planning/` - project planning and phase artifacts.
 
 ## License
 
