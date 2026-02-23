@@ -9,6 +9,8 @@
     "prebuild": "npm run validate:data",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "enrich:rich": "tsx scripts/enrich-rich-links.ts",
+    "enrich:rich:strict": "tsx scripts/enrich-rich-links.ts --strict",
     "validate:data": "tsx scripts/validate-data.ts",
     "validate:data:strict": "tsx scripts/validate-data.ts --strict",
     "validate:data:json": "tsx scripts/validate-data.ts --format json"
