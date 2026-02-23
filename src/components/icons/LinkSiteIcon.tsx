@@ -3,7 +3,7 @@ import type { JSX } from "solid-js";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { resolveIconPalette } from "../../lib/icons/icon-contrast";
 import { resolveKnownSiteIcon } from "../../lib/icons/known-site-icons";
-import { resolveKnownSite } from "../../lib/icons/known-sites-data";
+import { resolveKnownSite, resolveKnownSiteById } from "../../lib/icons/known-sites-data";
 
 export interface LinkSiteIconProps {
   icon?: string;
@@ -23,7 +23,19 @@ const readRootColorVar = (name: string, fallback: string): string => {
 };
 
 export const LinkSiteIcon = (props: LinkSiteIconProps) => {
-  const site = createMemo(() => resolveKnownSite(props.icon, props.url));
+  const site = createMemo(() => {
+    const baseSite = resolveKnownSite(props.icon, props.url);
+    if (!baseSite) {
+      return undefined;
+    }
+
+    const overrideSiteId = props.options.iconOverrides[baseSite.id];
+    if (!overrideSiteId) {
+      return baseSite;
+    }
+
+    return resolveKnownSiteById(overrideSiteId) ?? baseSite;
+  });
   const palette = createMemo(() => {
     // Dependency marker so icon palette recomputes on mode/theme changes.
     props.themeFingerprint;

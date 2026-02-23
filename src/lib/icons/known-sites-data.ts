@@ -330,12 +330,16 @@ export const KNOWN_SITES = [
 
 export type KnownSiteId = (typeof KNOWN_SITES)[number]["id"];
 export type KnownSite = (typeof KNOWN_SITES)[number];
+export type KnownSiteIconOverrides = Partial<Record<KnownSiteId, KnownSiteId>>;
 
 const aliasLookup = new Map<string, KnownSite>();
 const domainLookup = new Map<string, KnownSite>();
 const normalizedDomains: Array<{ domain: string; site: KnownSite }> = [];
+const idLookup = new Map<KnownSiteId, KnownSite>();
 
 for (const site of KNOWN_SITES) {
+  idLookup.set(site.id, site);
+
   for (const alias of site.aliases) {
     aliasLookup.set(normalizeKnownSiteAlias(alias), site);
   }
@@ -356,6 +360,38 @@ export const resolveKnownSiteFromIcon = (icon?: string): KnownSite | undefined =
     return undefined;
   }
   return aliasLookup.get(normalizeKnownSiteAlias(icon));
+};
+
+export const resolveKnownSiteById = (siteId: KnownSiteId): KnownSite | undefined => idLookup.get(siteId);
+
+export const resolveKnownSiteId = (value?: string): KnownSiteId | undefined => resolveKnownSiteFromIcon(value)?.id;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+export const normalizeKnownSiteIconOverrides = (value: unknown): KnownSiteIconOverrides => {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  const normalized: KnownSiteIconOverrides = {};
+
+  for (const [sourceAlias, targetAlias] of Object.entries(value)) {
+    if (typeof targetAlias !== "string") {
+      continue;
+    }
+
+    const sourceSiteId = resolveKnownSiteId(sourceAlias);
+    const targetSiteId = resolveKnownSiteId(targetAlias);
+
+    if (!sourceSiteId || !targetSiteId) {
+      continue;
+    }
+
+    normalized[sourceSiteId] = targetSiteId;
+  }
+
+  return normalized;
 };
 
 const extractHost = (url?: string): string | undefined => {

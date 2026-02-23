@@ -3,12 +3,17 @@ import type {
   BrandIconContrastMode,
   BrandIconSizeMode
 } from "../content/load-content";
+import {
+  normalizeKnownSiteIconOverrides,
+  type KnownSiteIconOverrides
+} from "./known-sites-data";
 
 export interface ResolvedBrandIconOptions {
   colorMode: BrandIconColorMode;
   contrastMode: BrandIconContrastMode;
   minContrastRatio: number;
   sizeMode: BrandIconSizeMode;
+  iconOverrides: KnownSiteIconOverrides;
 }
 
 interface BrandIconOptionsSiteLike {
@@ -18,6 +23,7 @@ interface BrandIconOptionsSiteLike {
       contrastMode?: unknown;
       minContrastRatio?: unknown;
       sizeMode?: unknown;
+      iconOverrides?: unknown;
     };
   };
 }
@@ -49,6 +55,7 @@ export const resolveBrandIconOptions = (site: BrandIconOptionsSiteLike): Resolve
     colorMode: normalizeColorMode(config?.colorMode),
     contrastMode: normalizeContrastMode(config?.contrastMode),
     minContrastRatio: normalizeMinContrastRatio(config?.minContrastRatio),
-    sizeMode: normalizeSizeMode(config?.sizeMode)
+    sizeMode: normalizeSizeMode(config?.sizeMode),
+    iconOverrides: normalizeKnownSiteIconOverrides(config?.iconOverrides)
   };
 };

@@ -163,6 +163,46 @@ const checkKnownIconAlias = (source: string, path: string, value: unknown): Vali
   ];
 };
 
+const checkIconOverrideAliases = (source: string, path: string, value: unknown): ValidationIssue[] => {
+  if (!isRecord(value)) {
+    return [];
+  }
+
+  const warnings: ValidationIssue[] = [];
+
+  for (const [sourceAliasRaw, targetAliasRaw] of Object.entries(value)) {
+    const sourceAlias = normalizeKnownSiteAlias(sourceAliasRaw);
+    if (!sourceAlias || !KNOWN_SITE_ALIASES.has(sourceAlias)) {
+      warnings.push({
+        level: "warning",
+        source,
+        path: `${path}.${sourceAliasRaw}`,
+        message: `Unknown icon override source alias '${sourceAliasRaw}'. Runtime remapping will ignore this entry.`,
+        remediation:
+          "Use a known source alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides."
+      });
+    }
+
+    if (typeof targetAliasRaw !== "string") {
+      continue;
+    }
+
+    const targetAlias = normalizeKnownSiteAlias(targetAliasRaw);
+    if (!targetAlias || !KNOWN_SITE_ALIASES.has(targetAlias)) {
+      warnings.push({
+        level: "warning",
+        source,
+        path: `${path}.${sourceAliasRaw}`,
+        message: `Unknown icon override target alias '${targetAliasRaw}'. Runtime remapping will ignore this entry.`,
+        remediation:
+          "Use a known target alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides."
+      });
+    }
+  }
+
+  return warnings;
+};
+
 export const runPolicyRules = ({ profile, links, site, sources: overrideSources }: PolicyInput): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const sources = {
@@ -179,6 +219,12 @@ export const runPolicyRules = ({ profile, links, site, sources: overrideSources 
   issues.push(...checkCustomConflicts(sources.profile, profile.custom, PROFILE_KEYS, "$.custom"));
   issues.push(...checkCustomConflicts(sources.links, links.custom, LINKS_ROOT_KEYS, "$.custom"));
   issues.push(...checkCustomConflicts(sources.site, site.custom, SITE_KEYS, "$.custom"));
+
+  const siteUi = isRecord(site.ui) ? site.ui : undefined;
+  const brandIcons = siteUi && isRecord(siteUi.brandIcons) ? siteUi.brandIcons : undefined;
+  issues.push(
+    ...checkIconOverrideAliases(sources.site, "$.ui.brandIcons.iconOverrides", brandIcons?.iconOverrides)
+  );
 
   const profileLinks = Array.isArray(profile.profileLinks) ? profile.profileLinks : [];
   profileLinks.forEach((link, index) => {

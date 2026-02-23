@@ -190,6 +190,7 @@ export interface SiteData {
       contrastMode?: BrandIconContrastMode;
       minContrastRatio?: number;
       sizeMode?: BrandIconSizeMode;
+      iconOverrides?: Record<string, string>;
     };
     richCards?: {
       renderMode?: RichCardRenderMode;

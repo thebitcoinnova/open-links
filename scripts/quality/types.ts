@@ -115,6 +115,7 @@ export interface QualitySiteInput {
       contrastMode?: "auto" | "always-theme" | "always-brand";
       minContrastRatio?: number;
       sizeMode?: "normal" | "large";
+      iconOverrides?: Record<string, string>;
     };
   };
   quality?: QualityPolicy;

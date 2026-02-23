@@ -118,7 +118,8 @@ Link icons resolve using this precedence:
 
 1. `links[].icon` alias match from `src/lib/icons/known-sites-data.ts`
 2. URL domain match (exact or subdomain) from the same static registry
-3. Generic fallback glyph
+3. Optional single-step remap through `site.ui.brandIcons.iconOverrides`
+4. Generic fallback glyph
 
 If `links[].icon` is unknown, validation emits a warning and runtime still attempts domain-based resolution.
 
@@ -275,6 +276,7 @@ Main presentation controls include:
 - `brandIcons.contrastMode`: `auto`, `always-theme`, `always-brand`
 - `brandIcons.minContrastRatio`: number between `1` and `21` (default `3`)
 - `brandIcons.sizeMode`: `normal`, `large`
+- `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.mobile.imageLayout`: `inline` (default), `full-width`
 
 Rich-card policy settings live under `ui.richCards`.
@@ -319,6 +321,22 @@ To keep the previous mobile style globally, set `site.ui.richCards.mobile.imageL
 
 - `normal`: baseline icon size
 - `large`: moderately larger icons (default)
+
+`ui.brandIcons.iconOverrides` lets you remap known-site icon identities globally. Remapping applies after base icon resolution and is single-step only.
+
+Example:
+
+```json
+{
+  "ui": {
+    "brandIcons": {
+      "iconOverrides": {
+        "x": "twitter"
+      }
+    }
+  }
+}
+```
 
 #### `ui.typography`
 
