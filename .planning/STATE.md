@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 5 - Quality Hardening (Perf/A11y/SEO)
+**Current focus:** Phase 6 - Docs + Extensibility Surface
 
 ## Current Position
 
-Phase: 5 of 6 (Quality Hardening (Perf/A11y/SEO))
+Phase: 6 of 6 (Docs + Extensibility Surface)
 Plan: 0 of 3 in current phase
 Status: Ready to discuss
-Last activity: 2026-02-23 - Completed Phase 4 CI/CD and GitHub Pages delivery with verification and requirement promotion for DEP-01..DEP-04.
+Last activity: 2026-02-23 - Completed Phase 5 quality hardening with SEO/a11y/performance gates and CI quality enforcement.
 
-Progress: [######----] 67%
+Progress: [########--] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 13
 - Average duration: 37 min
-- Total execution time: 6.1 hours
+- Total execution time: 8.0 hours
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: [######----] 67%
 | 2 | 3 | 115 min | 38 min |
 | 3 | 2 | 98 min | 49 min |
 | 4 | 2 | 60 min | 30 min |
+| 5 | 3 | 115 min | 38 min |
 
 **Recent Trend:**
-- Last 3 plans: 31 min, 29 min, 62 min
+- Last 3 plans: 52 min, 28 min, 35 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -51,6 +52,7 @@ Recent decisions affecting current work:
 - Phase 2 implementation: composition/grouping/theme/layout are policy-driven and configurable.
 - Phase 3 implementation: rich cards render fallback-first, enrichment runs at build-time, and strict mode fails fetch failures while standard mode warns.
 - Phase 4 implementation: CI required checks and non-blocking strict lane are in place; Pages deploy uses artifact-first promotion with rebuild fallback and configurable base-path modes.
+- Phase 5 implementation: SEO metadata policy, accessibility audits/smoke checks, and dual-profile performance budgets are enforced through unified quality commands and CI gating.
 
 ### Pending Todos
 
@@ -62,6 +64,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-23 01:21
-Stopped at: Phase 4 executed and verified; ready to start Phase 5 planning/discussion.
+Last session: 2026-02-23 21:58
+Stopped at: Phase 5 executed and verified; ready to start Phase 6 planning/discussion.
 Resume file: .planning/ROADMAP.md

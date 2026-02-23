@@ -48,11 +48,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Quality (Performance, Accessibility, SEO)
 
-- [ ] **QUAL-01**: Generated site includes strong page-level SEO metadata (title, description, canonical/social tags).
-- [ ] **QUAL-02**: Card interactions are keyboard accessible and screen-reader friendly.
-- [ ] **QUAL-03**: Color contrast and focus styles meet accessibility baseline.
-- [ ] **QUAL-04**: Production build is optimized for fast load and low client JS overhead.
-- [ ] **QUAL-05**: CI includes automated checks for at least baseline performance/accessibility/SEO regressions.
+- [x] **QUAL-01**: Generated site includes strong page-level SEO metadata (title, description, canonical/social tags).
+- [x] **QUAL-02**: Card interactions are keyboard accessible and screen-reader friendly.
+- [x] **QUAL-03**: Color contrast and focus styles meet accessibility baseline.
+- [x] **QUAL-04**: Production build is optimized for fast load and low client JS overhead.
+- [x] **QUAL-05**: CI includes automated checks for at least baseline performance/accessibility/SEO regressions.
 
 ### Documentation & Extensibility
 
@@ -118,11 +118,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEP-03 | Phase 4 | Complete |
 | DEP-04 | Phase 4 | Complete |
 | DEP-05 | Phase 6 | Pending |
-| QUAL-01 | Phase 5 | Pending |
-| QUAL-02 | Phase 5 | Pending |
-| QUAL-03 | Phase 5 | Pending |
-| QUAL-04 | Phase 5 | Pending |
-| QUAL-05 | Phase 5 | Pending |
+| QUAL-01 | Phase 5 | Complete |
+| QUAL-02 | Phase 5 | Complete |
+| QUAL-03 | Phase 5 | Complete |
+| QUAL-04 | Phase 5 | Complete |
+| QUAL-05 | Phase 5 | Complete |
 | DOC-01 | Phase 6 | Pending |
 | DOC-02 | Phase 6 | Pending |
 | DOC-03 | Phase 6 | Pending |
@@ -135,4 +135,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-23 after Phase 4 completion*
+*Last updated: 2026-02-23 after Phase 5 completion*

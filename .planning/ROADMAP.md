@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Core UI + Theme Foundation** - Deliver profile page, simple cards, responsive layout, and baseline theming. (completed 2026-02-22)
 - [x] **Phase 3: Rich Cards + Content Enrichment** - Add configurable rich card support with resilient fallback behavior. (completed 2026-02-23)
 - [x] **Phase 4: CI/CD + GitHub Pages Delivery** - Automate validation, build, and deployment on GitHub. (completed 2026-02-23)
-- [ ] **Phase 5: Quality Hardening (Perf/A11y/SEO)** - Add and enforce quality gates for production readiness.
+- [x] **Phase 5: Quality Hardening (Perf/A11y/SEO)** - Add and enforce quality gates for production readiness. (completed 2026-02-23)
 - [ ] **Phase 6: Docs + Extensibility Surface** - Finalize customization/deployment extension docs and onboarding guidance.
 
 ## Phase Details
@@ -97,9 +97,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: Add SEO metadata generation and verification checks.
-- [ ] 05-02: Implement accessibility audits and keyboard/screen-reader smoke coverage.
-- [ ] 05-03: Add performance budget checks and CI gating.
+- [x] 05-01: Add SEO metadata generation and verification checks.
+- [x] 05-02: Implement accessibility audits and keyboard/screen-reader smoke coverage.
+- [x] 05-03: Add performance budget checks and CI gating.
 
 ### Phase 6: Docs + Extensibility Surface
 **Goal**: Finish onboarding and extension guidance for themes, layouts, and future deploy targets.
@@ -121,7 +121,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -129,5 +129,5 @@ Phases execute in numeric order: 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4
 | 2. Core UI + Theme Foundation | 3/3 | Complete   | 2026-02-22 |
 | 3. Rich Cards + Content Enrichment | 2/2 | Complete | 2026-02-23 |
 | 4. CI/CD + GitHub Pages Delivery | 2/2 | Complete | 2026-02-23 |
-| 5. Quality Hardening (Perf/A11y/SEO) | 0/3 | Not started | - |
+| 5. Quality Hardening (Perf/A11y/SEO) | 3/3 | Complete | 2026-02-23 |
 | 6. Docs + Extensibility Surface | 0/3 | Not started | - |
