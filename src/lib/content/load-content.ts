@@ -13,6 +13,8 @@ export type DesktopColumnsMode = "one" | "two";
 export type TypographyScaleMode = "fixed" | "compact" | "expressive";
 export type TypographyTransformMode = "none" | "uppercase" | "lowercase" | "capitalize";
 export type BrandIconColorMode = "brand" | "theme";
+export type BrandIconContrastMode = "auto" | "always-theme" | "always-brand";
+export type BrandIconSizeMode = "normal" | "large";
 export type TargetSizeMode = "comfortable" | "compact" | "large";
 export type RichCardRenderMode = "auto" | "simple";
 export type SourceLabelDefault = "show" | "hide";
@@ -183,6 +185,9 @@ export interface SiteData {
     targetSize?: TargetSizeMode;
     brandIcons?: {
       colorMode?: BrandIconColorMode;
+      contrastMode?: BrandIconContrastMode;
+      minContrastRatio?: number;
+      sizeMode?: BrandIconSizeMode;
     };
     richCards?: {
       renderMode?: RichCardRenderMode;

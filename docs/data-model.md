@@ -111,6 +111,8 @@ Link icons resolve using this precedence:
 
 If `links[].icon` is unknown, validation emits a warning and runtime still attempts domain-based resolution.
 
+Known-site logo rendering is contrast-aware by default: brand color is preferred, and fallback palette adjustments are applied when needed to keep icons visible.
+
 ### Simple card example
 
 ```json
@@ -248,6 +250,9 @@ Main presentation controls include:
 - `typography`: optional global/per-theme typography overrides
 - `targetSize`: `comfortable`, `compact`, `large`
 - `brandIcons.colorMode`: `brand`, `theme`
+- `brandIcons.contrastMode`: `auto`, `always-theme`, `always-brand`
+- `brandIcons.minContrastRatio`: number between `1` and `21` (default `3`)
+- `brandIcons.sizeMode`: `normal`, `large`
 
 Rich-card policy settings live under `ui.richCards`.
 
@@ -257,6 +262,19 @@ Rich-card policy settings live under `ui.richCards`.
 
 - `brand`: uses the registry brand color (default)
 - `theme`: uses theme text/icon color
+
+`ui.brandIcons.contrastMode` controls fallback behavior:
+
+- `auto`: preserve brand where possible, then auto-adjust to satisfy contrast target
+- `always-theme`: always use theme-driven glyph color
+- `always-brand`: always force brand glyph color
+
+`ui.brandIcons.minContrastRatio` sets the contrast target for icon glyphs against icon chip backgrounds.
+
+`ui.brandIcons.sizeMode` controls default icon scale:
+
+- `normal`: baseline icon size
+- `large`: moderately larger icons (default)
 
 #### `ui.typography`
 

@@ -105,6 +105,18 @@ export interface QualitySiteInput {
   title: string;
   description: string;
   baseUrl?: string;
+  theme?: {
+    active?: string;
+    available?: string[];
+  };
+  ui?: {
+    brandIcons?: {
+      colorMode?: "brand" | "theme";
+      contrastMode?: "auto" | "always-theme" | "always-brand";
+      minContrastRatio?: number;
+      sizeMode?: "normal" | "large";
+    };
+  };
   quality?: QualityPolicy;
 }
 

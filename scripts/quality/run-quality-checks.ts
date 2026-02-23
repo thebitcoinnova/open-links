@@ -130,7 +130,8 @@ const run = () => {
   const a11yResult = runA11yChecks({
     rootDir: ROOT,
     strict: args.strict,
-    focusContrastStrict: qualityPolicy?.accessibility?.focusContrastStrict ?? true
+    focusContrastStrict: qualityPolicy?.accessibility?.focusContrastStrict ?? true,
+    site
   });
   const manualSmokeResult = runManualSmokeChecks({
     rootDir: ROOT,

@@ -1,5 +1,6 @@
 import { Show } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
+import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import type { RichCardViewModel } from "../../lib/ui/rich-card-policy";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 
@@ -9,7 +10,8 @@ export interface RichLinkCardProps {
   target?: "_blank" | "_self";
   rel?: string;
   interaction?: "minimal";
-  brandIconColorMode?: "brand" | "theme";
+  brandIconOptions: ResolvedBrandIconOptions;
+  themeFingerprint: string;
 }
 
 const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
@@ -59,7 +61,8 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
             icon={props.link.icon}
             url={props.link.url}
             label={props.link.label}
-            colorMode={props.brandIconColorMode ?? "brand"}
+            options={props.brandIconOptions}
+            themeFingerprint={props.themeFingerprint}
           />
           <Show when={props.viewModel.showSourceLabel}>
             <span class="rich-card-source" id={sourceId()}>

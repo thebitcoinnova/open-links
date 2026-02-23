@@ -6,6 +6,7 @@ import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import { loadContent } from "../lib/content/load-content";
+import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
 import ThemeToggle from "../components/theme/ThemeToggle";
 import {
   applyTypographyState,
@@ -31,7 +32,7 @@ const composition = resolveComposition(content.site);
 const layout = resolveLayoutPreferences(content.site);
 const richRenderMode = resolveRichRenderMode(content.site);
 const modePolicy = resolveModePolicy(content.site);
-const brandIconColorMode = content.site.ui?.brandIcons?.colorMode === "theme" ? "theme" : "brand";
+const brandIconOptions = resolveBrandIconOptions(content.site);
 const themeSelection = resolveThemeSelection(content.site);
 const themeDefinition = getThemeDefinition(themeSelection.active);
 const typography = resolveTypographyPreferences({
@@ -153,34 +154,37 @@ const targetForLink = (url: string): "_blank" | "_self" => {
   return url.startsWith("http://") || url.startsWith("https://") ? "_blank" : "_self";
 };
 
-const renderCard = (link: (typeof content.links)[number]) => {
-  const target = targetForLink(link.url);
-
-  if (resolveRichCardVariant(content.site, link) === "rich") {
-    return (
-      <RichLinkCard
-        link={link}
-        viewModel={buildRichCardViewModel(content.site, link)}
-        target={target}
-        interaction="minimal"
-        brandIconColorMode={brandIconColorMode}
-      />
-    );
-  }
-
-  return (
-    <SimpleLinkCard
-      link={link}
-      target={target}
-      interaction="minimal"
-      brandIconColorMode={brandIconColorMode}
-    />
-  );
-};
-
 export default function RouteIndex() {
   const [mode, setMode] = createSignal<UiMode>("dark");
   const canToggle = createMemo(() => canToggleMode(modePolicy));
+  const themeFingerprint = () => `${themeSelection.active}:${mode()}`;
+
+  const renderCard = (link: (typeof content.links)[number]) => {
+    const target = targetForLink(link.url);
+
+    if (resolveRichCardVariant(content.site, link) === "rich") {
+      return (
+        <RichLinkCard
+          link={link}
+          viewModel={buildRichCardViewModel(content.site, link)}
+          target={target}
+          interaction="minimal"
+          brandIconOptions={brandIconOptions}
+          themeFingerprint={themeFingerprint()}
+        />
+      );
+    }
+
+    return (
+      <SimpleLinkCard
+        link={link}
+        target={target}
+        interaction="minimal"
+        brandIconOptions={brandIconOptions}
+        themeFingerprint={themeFingerprint()}
+      />
+    );
+  };
 
   onMount(() => {
     setMode(resolveInitialMode(modePolicy));
@@ -192,7 +196,8 @@ export default function RouteIndex() {
       themeId: themeSelection.active,
       mode: mode(),
       policy: modePolicy,
-      density: layout.density
+      density: layout.density,
+      brandIconSizeMode: brandIconOptions.sizeMode
     });
     applyTypographyState(typography);
   });

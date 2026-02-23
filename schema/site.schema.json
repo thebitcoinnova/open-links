@@ -187,6 +187,19 @@
             "colorMode": {
               "type": "string",
               "enum": ["brand", "theme"]
+            },
+            "contrastMode": {
+              "type": "string",
+              "enum": ["auto", "always-theme", "always-brand"]
+            },
+            "minContrastRatio": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 21
+            },
+            "sizeMode": {
+              "type": "string",
+              "enum": ["normal", "large"]
             }
           },
           "additionalProperties": true

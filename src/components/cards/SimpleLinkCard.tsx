@@ -1,4 +1,5 @@
 import type { OpenLink } from "../../lib/content/load-content";
+import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 
 export interface SimpleLinkCardProps {
@@ -6,7 +7,8 @@ export interface SimpleLinkCardProps {
   target?: "_blank" | "_self";
   rel?: string;
   interaction?: "minimal";
-  brandIconColorMode?: "brand" | "theme";
+  brandIconOptions: ResolvedBrandIconOptions;
+  themeFingerprint: string;
 }
 
 const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
@@ -40,7 +42,8 @@ export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
         icon={props.link.icon}
         url={props.link.url}
         label={props.link.label}
-        colorMode={props.brandIconColorMode ?? "brand"}
+        options={props.brandIconOptions}
+        themeFingerprint={props.themeFingerprint}
       />
       <span class="card-copy">
         <strong id={titleId()}>{props.link.label}</strong>

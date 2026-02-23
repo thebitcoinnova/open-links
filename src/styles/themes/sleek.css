@@ -119,9 +119,9 @@
 }
 
 :root[data-theme^="sleek"] .card-icon {
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 86%, transparent 14%);
-  background: color-mix(in srgb, var(--surface-pill) 86%, var(--accent) 14%);
-  color: color-mix(in srgb, var(--text-primary) 90%, var(--accent) 10%);
+  --card-icon-border-default: color-mix(in srgb, var(--border-subtle) 86%, transparent 14%);
+  --card-icon-bg-default: color-mix(in srgb, var(--surface-pill) 86%, var(--accent) 14%);
+  --card-icon-fg-default: color-mix(in srgb, var(--text-primary) 90%, var(--accent) 10%);
 }
 
 :root[data-theme^="sleek"] .rich-card-media {

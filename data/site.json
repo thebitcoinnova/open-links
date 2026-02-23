@@ -26,7 +26,10 @@
     "typographyScale": "fixed",
     "targetSize": "comfortable",
     "brandIcons": {
-      "colorMode": "brand"
+      "colorMode": "brand",
+      "contrastMode": "auto",
+      "minContrastRatio": 3,
+      "sizeMode": "large"
     },
     "richCards": {
       "renderMode": "auto",

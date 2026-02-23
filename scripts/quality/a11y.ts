@@ -1,20 +1,136 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { QualityDomainResult, QualityIssue } from "./types";
+import { resolveBrandIconOptions } from "../../src/lib/icons/brand-icon-options";
+import { resolveIconPalette } from "../../src/lib/icons/icon-contrast";
+import { KNOWN_SITES } from "../../src/lib/icons/known-sites-data";
+import type { QualityDomainResult, QualityIssue, QualitySiteInput } from "./types";
 
 interface RunA11yChecksInput {
   rootDir: string;
   strict: boolean;
   focusContrastStrict: boolean;
+  site: QualitySiteInput;
 }
 
 const readText = (rootDir: string, relativePath: string): string =>
   fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 
+const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const extractCssBlock = (css: string, selector: string): string | undefined => {
+  const regex = new RegExp(`${escapeRegex(selector)}\\s*\\{([\\s\\S]*?)\\}`, "m");
+  const match = css.match(regex);
+  return match?.[1];
+};
+
+const parseCssVariables = (cssBlock?: string): Record<string, string> => {
+  if (!cssBlock) {
+    return {};
+  }
+
+  const parsed: Record<string, string> = {};
+  const declarationPattern = /--([\w-]+)\s*:\s*([^;]+);/g;
+
+  let match = declarationPattern.exec(cssBlock);
+  while (match) {
+    parsed[`--${match[1]}`] = match[2].trim();
+    match = declarationPattern.exec(cssBlock);
+  }
+
+  return parsed;
+};
+
+const resolveThemeModeVars = (
+  rootDir: string,
+  themeId: string,
+  mode: "dark" | "light"
+): {
+  surfacePill: string;
+  accent: string;
+  textPrimary: string;
+  borderSubtle: string;
+} => {
+  const tokenCss = readText(rootDir, "src/styles/tokens.css");
+  const tokenVars = parseCssVariables(extractCssBlock(tokenCss, ":root"));
+
+  const themePath = path.join(rootDir, "src/styles/themes", `${themeId}.css`);
+  let themeVars: Record<string, string> = {};
+
+  if (fs.existsSync(themePath)) {
+    const themeCss = fs.readFileSync(themePath, "utf8");
+    const themeBlock = extractCssBlock(
+      themeCss,
+      `:root[data-theme=\"${themeId}\"][data-mode=\"${mode}\"]`
+    );
+    themeVars = parseCssVariables(themeBlock);
+  }
+
+  const resolved = {
+    ...tokenVars,
+    ...themeVars
+  };
+
+  return {
+    surfacePill: resolved["--surface-pill"] ?? "#1A2232",
+    accent: resolved["--accent"] ?? "#50E3C2",
+    textPrimary: resolved["--text-primary"] ?? "#F5F7FB",
+    borderSubtle: resolved["--border-subtle"] ?? "#64748B"
+  };
+};
+
+const iconContrastIssues = (
+  rootDir: string,
+  strict: boolean,
+  site: QualitySiteInput
+): QualityIssue[] => {
+  const issues: QualityIssue[] = [];
+  const activeTheme = site.theme?.active ?? "sleek";
+  const options = resolveBrandIconOptions(site);
+
+  for (const mode of ["dark", "light"] as const) {
+    const vars = resolveThemeModeVars(rootDir, activeTheme, mode);
+
+    for (const knownSite of KNOWN_SITES) {
+      const palette = resolveIconPalette({
+        themeId: activeTheme,
+        colorMode: options.colorMode,
+        contrastMode: options.contrastMode,
+        minContrastRatio: options.minContrastRatio,
+        brandColor: knownSite.brandColor,
+        themeSurfacePillColor: vars.surfacePill,
+        themeAccentColor: vars.accent,
+        themeTextColor: vars.textPrimary,
+        themeBorderColor: vars.borderSubtle
+      });
+
+      if (palette.resolvedContrastRatio >= options.minContrastRatio) {
+        continue;
+      }
+
+      issues.push({
+        domain: "accessibility",
+        level: strict ? "error" : "warning",
+        code: "A11Y_ICON_CONTRAST_LOW",
+        scope: `${activeTheme}/${mode}/${knownSite.id}`,
+        metric: "icon-contrast-ratio",
+        actual: palette.resolvedContrastRatio,
+        expected: `>= ${options.minContrastRatio}`,
+        message:
+          `Resolved icon contrast for '${knownSite.id}' is below configured minimum in ${mode} mode.`,
+        remediation:
+          "Adjust ui.brandIcons policy (contrastMode/minContrastRatio/colorMode) or icon palette tuning to satisfy configured minimum contrast."
+      });
+    }
+  }
+
+  return issues;
+};
+
 export const runA11yChecks = ({
   rootDir,
   strict,
-  focusContrastStrict
+  focusContrastStrict,
+  site
 }: RunA11yChecksInput): QualityDomainResult => {
   const issues: QualityIssue[] = [];
 
@@ -171,6 +287,8 @@ export const runA11yChecks = ({
       remediation: "Define --shadow-focus token so focus states remain consistent across themes."
     });
   }
+
+  issues.push(...iconContrastIssues(rootDir, strict, site));
 
   const hasError = issues.some((issue) => issue.level === "error");
   const hasWarning = issues.some((issue) => issue.level === "warning");

@@ -1,4 +1,9 @@
-import type { ModePolicy, SiteData, DensityMode } from "../content/load-content";
+import type {
+  ModePolicy,
+  SiteData,
+  DensityMode,
+  BrandIconSizeMode
+} from "../content/load-content";
 
 export type UiMode = "dark" | "light";
 
@@ -56,6 +61,7 @@ interface ApplyThemeOptions {
   mode: UiMode;
   policy: ModePolicy;
   density?: DensityMode;
+  brandIconSizeMode?: BrandIconSizeMode;
 }
 
 export interface ApplyTypographyOptions {
@@ -63,7 +69,13 @@ export interface ApplyTypographyOptions {
   cssVars: Record<string, string>;
 }
 
-export const applyThemeState = ({ themeId, mode, policy, density }: ApplyThemeOptions): void => {
+export const applyThemeState = ({
+  themeId,
+  mode,
+  policy,
+  density,
+  brandIconSizeMode
+}: ApplyThemeOptions): void => {
   if (typeof document === "undefined") {
     return;
   }
@@ -73,6 +85,7 @@ export const applyThemeState = ({ themeId, mode, policy, density }: ApplyThemeOp
   root.dataset.mode = mode;
   root.dataset.modePolicy = policy;
   root.dataset.density = normalizeDensity(density);
+  root.dataset.brandIconSize = brandIconSizeMode === "normal" ? "normal" : "large";
   root.style.colorScheme = mode;
 };
 

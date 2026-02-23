@@ -40,6 +40,18 @@ a {
   outline-offset: 2px;
 }
 
+:root {
+  --card-icon-size-scale: 1.12;
+}
+
+:root[data-brand-icon-size="normal"] {
+  --card-icon-size-scale: 1;
+}
+
+:root[data-brand-icon-size="large"] {
+  --card-icon-size-scale: 1.12;
+}
+
 .page {
   --page-type-title: var(--type-title);
   --page-type-headline: var(--type-headline);
@@ -349,25 +361,28 @@ a {
 }
 
 .card-icon {
-  width: 2.15rem;
-  height: 2.15rem;
+  --card-icon-base-size: 2.15rem;
+  --card-icon-base-glyph-size: 1rem;
+  --card-icon-bg-default: color-mix(in srgb, var(--accent) 26%, var(--surface-pill) 74%);
+  --card-icon-fg-default: color-mix(in srgb, var(--accent-strong) 85%, white 15%);
+  --card-icon-border-default: color-mix(in srgb, var(--border-subtle) 80%, transparent 20%);
+
+  width: calc(var(--card-icon-base-size) * var(--card-icon-size-scale));
+  height: calc(var(--card-icon-base-size) * var(--card-icon-size-scale));
   border-radius: var(--radius-sm);
   display: inline-grid;
   place-items: center;
-  font-size: var(--type-icon);
+  font-size: calc(var(--type-icon) * var(--card-icon-size-scale));
   font-weight: var(--weight-icon);
   letter-spacing: var(--tracking-icon);
-  background: color-mix(in srgb, var(--accent) 26%, var(--surface-pill) 74%);
-  color: color-mix(in srgb, var(--accent-strong) 85%, white 15%);
-}
-
-:root .card-icon[data-color-mode="brand"] {
-  color: color-mix(in srgb, var(--site-brand-color) 72%, var(--text-primary) 28%);
+  border: 1px solid var(--card-icon-border, var(--card-icon-border-default));
+  background: var(--card-icon-bg, var(--card-icon-bg-default));
+  color: var(--card-icon-fg, var(--card-icon-fg-default));
 }
 
 .card-icon svg {
-  width: 1rem;
-  height: 1rem;
+  width: calc(var(--card-icon-base-glyph-size) * var(--card-icon-size-scale));
+  height: calc(var(--card-icon-base-glyph-size) * var(--card-icon-size-scale));
   display: block;
 }
 
