@@ -219,13 +219,37 @@ interface GeneratedRichMetadataPayload {
   links?: Record<string, { metadata?: RichLinkMetadata }>;
 }
 
+interface GeneratedProfileAvatarPayload {
+  sourceUrl?: string;
+  resolvedPath?: string;
+  status?: "fetched" | "not_modified" | "cache_fresh" | "cache_on_error" | "fallback_on_error";
+  etag?: string;
+  lastModified?: string;
+  cacheControl?: string;
+  expiresAt?: string;
+  updatedAt?: string;
+  warning?: string;
+}
+
 const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetadataPayload }>(
   "../../../data/generated/rich-metadata.json",
   { eager: true }
 );
 
+const generatedProfileAvatarModules = import.meta.glob<{ default: GeneratedProfileAvatarPayload }>(
+  "../../../data/generated/profile-avatar.json",
+  { eager: true }
+);
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toLocalAssetUrl = (assetPath: string): string => {
+  const base = import.meta.env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const trimmedPath = assetPath.replace(/^\/+/, "");
+  return `${normalizedBase}${trimmedPath}`;
+};
 
 const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
   const module = Object.values(generatedMetadataModules)[0];
@@ -245,6 +269,18 @@ const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
   }
 
   return mapped;
+};
+
+const resolveProfileAvatarPath = (): string => {
+  const fallbackPath = "profile-avatar-fallback.svg";
+  const module = Object.values(generatedProfileAvatarModules)[0];
+  const payload = module?.default;
+
+  if (!payload || typeof payload.resolvedPath !== "string" || payload.resolvedPath.trim().length === 0) {
+    return toLocalAssetUrl(fallbackPath);
+  }
+
+  return toLocalAssetUrl(payload.resolvedPath);
 };
 
 const mergeGeneratedMetadata = (
@@ -285,7 +321,11 @@ const rankByExplicitOrder = (links: OpenLink[], explicitOrder: string[] = []): O
 };
 
 export const loadContent = () => {
-  const profile = profileData as ProfileData;
+  const profileSource = profileData as ProfileData;
+  const profile: ProfileData = {
+    ...profileSource,
+    avatar: resolveProfileAvatarPath()
+  };
   const site = siteData as SiteData;
   const linksPayload = linksData as LinksData;
   const generatedMetadata = resolveGeneratedMetadata();

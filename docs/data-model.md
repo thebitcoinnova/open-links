@@ -35,6 +35,17 @@ Schema: `schema/profile.schema.json`
 - `avatar` (URI string)
 - `bio` (string, max 500)
 
+### Avatar materialization behavior
+
+- `profile.avatar` remains the source-of-truth URL in `data/profile.json`.
+- During `npm run dev` and `npm run build`, avatar sync fetches and stores a local copy at `public/generated/profile-avatar.<ext>`.
+- Avatar sync writes `data/generated/profile-avatar.json` with fetch/cache metadata.
+- Runtime rendering uses the local resolved path from the generated manifest, not the raw remote URL.
+- On fetch failure:
+  - cached local avatar is reused when available, or
+  - fallback file `public/profile-avatar-fallback.svg` is used.
+- Force refresh is available via `npm run avatar:sync -- --force` or `OPENLINKS_AVATAR_FORCE=1`.
+
 ### Common optional fields
 
 - `location`

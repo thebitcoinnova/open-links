@@ -64,12 +64,16 @@ npm run validate:data
 npm run dev
 ```
 
+`npm run dev` runs avatar sync first (`predev`) so profile avatar is baked into local assets.
+
 ### Build production output
 
 ```bash
 npm run build
 npm run preview
 ```
+
+`npm run build` runs avatar sync before enrichment/validation/build.
 
 ## First Deployment to GitHub Pages
 
@@ -198,6 +202,12 @@ After initial publish, your normal update cycle is:
 3. Run `npm run build`.
 4. Commit and push.
 5. Verify CI and deploy jobs.
+
+If your avatar source changed but cache is still valid, force refresh with:
+
+```bash
+npm run avatar:sync -- --force
+```
 
 ## Next Guides
 

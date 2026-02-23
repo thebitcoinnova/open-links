@@ -142,6 +142,8 @@ vite.config.ts.timestamp-*
 data/generated/*.json
 data/generated/*.md
 !data/generated/.gitkeep
+public/generated/*
+!public/generated/.gitkeep
 
 # Local browser automation artifacts
 .playwright-cli/
