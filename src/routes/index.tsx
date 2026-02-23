@@ -34,6 +34,107 @@ const themeDefinition = getThemeDefinition(themeSelection.active);
 const sections = resolveLinkSections(content.links, content.groups, composition.grouping) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
 
+const firstString = (...values: Array<string | undefined>): string | undefined => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+  return undefined;
+};
+
+const toAbsoluteUrl = (value: string, fallbackBase: string): string => {
+  try {
+    return new URL(value).toString();
+  } catch {
+    return new URL(value.startsWith("/") ? value : `/${value}`, fallbackBase).toString();
+  }
+};
+
+const ensureMetaTag = (attr: "name" | "property", key: string, contentValue: string) => {
+  const selector = `meta[${attr}=\"${key}\"]`;
+  let meta = document.head.querySelector<HTMLMetaElement>(selector);
+
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute(attr, key);
+    document.head.appendChild(meta);
+  }
+
+  meta.setAttribute("content", contentValue);
+};
+
+const ensureCanonical = (href: string) => {
+  let link = document.head.querySelector<HTMLLinkElement>("link[rel=\"canonical\"]");
+
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    document.head.appendChild(link);
+  }
+
+  link.setAttribute("href", href);
+};
+
+const applySeoMetadata = () => {
+  const seo = content.site.quality?.seo;
+  const defaults = seo?.defaults ?? {};
+  const overrides = seo?.overrides?.profile ?? {};
+
+  const baseOrigin = firstString(seo?.canonicalBaseUrl, window.location.origin) ?? window.location.origin;
+
+  const title =
+    firstString(
+      overrides.title,
+      defaults.title,
+      content.profile.name ? `${content.profile.name} | ${content.site.title}` : undefined,
+      content.site.title
+    ) ?? "OpenLinks";
+
+  const description =
+    firstString(overrides.description, defaults.description, content.profile.bio, content.site.description) ??
+    "OpenLinks profile";
+
+  const canonicalInput = firstString(overrides.canonical, defaults.canonical, content.site.baseUrl, "/") ?? "/";
+  const canonical = toAbsoluteUrl(canonicalInput, baseOrigin);
+
+  const imagePath =
+    firstString(
+      overrides.twitterImage,
+      overrides.ogImage,
+      defaults.twitterImage,
+      defaults.ogImage,
+      seo?.socialImageFallback,
+      "/openlinks-social-fallback.svg"
+    ) ?? "/openlinks-social-fallback.svg";
+
+  const ogTitle = firstString(overrides.ogTitle, defaults.ogTitle, title) ?? title;
+  const ogDescription = firstString(overrides.ogDescription, defaults.ogDescription, description) ?? description;
+  const ogUrl = toAbsoluteUrl(firstString(overrides.ogUrl, defaults.ogUrl, canonical) ?? canonical, baseOrigin);
+  const ogImage = toAbsoluteUrl(imagePath, baseOrigin);
+
+  const twitterCard = firstString(overrides.twitterCard, defaults.twitterCard, "summary_large_image") ?? "summary_large_image";
+  const twitterTitle = firstString(overrides.twitterTitle, defaults.twitterTitle, ogTitle) ?? ogTitle;
+  const twitterDescription =
+    firstString(overrides.twitterDescription, defaults.twitterDescription, ogDescription) ?? ogDescription;
+  const twitterImage = toAbsoluteUrl(imagePath, baseOrigin);
+
+  document.title = title;
+  ensureCanonical(canonical);
+
+  ensureMetaTag("name", "description", description);
+  ensureMetaTag("property", "og:title", ogTitle);
+  ensureMetaTag("property", "og:description", ogDescription);
+  ensureMetaTag("property", "og:type", firstString(overrides.ogType, defaults.ogType, "website") ?? "website");
+  ensureMetaTag("property", "og:url", ogUrl);
+  ensureMetaTag("property", "og:image", ogImage);
+
+  ensureMetaTag("name", "twitter:card", twitterCard);
+  ensureMetaTag("name", "twitter:title", twitterTitle);
+  ensureMetaTag("name", "twitter:description", twitterDescription);
+  ensureMetaTag("name", "twitter:image", twitterImage);
+};
+
 const targetForLink = (url: string): "_blank" | "_self" => {
   const mode = content.site.ui?.linkTarget ?? "new-tab-external";
 
@@ -66,6 +167,7 @@ export default function RouteIndex() {
 
   onMount(() => {
     setMode(resolveInitialMode(modePolicy));
+    applySeoMetadata();
   });
 
   createEffect(() => {
@@ -89,6 +191,7 @@ export default function RouteIndex() {
 
   return (
     <main
+      aria-label="OpenLinks profile and links"
       class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
     >
       <TopUtilityBar title={content.site.title} controlsLabel="Theme and mode controls">

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">OpenLinks social preview fallback</title>
+  <desc id="desc">Fallback social preview image used when no custom preview image is configured.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090b10" />
+      <stop offset="100%" stop-color="#172235" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" rx="24" />
+  <circle cx="920" cy="110" r="140" fill="#50e3c2" fill-opacity="0.25" />
+  <g fill="#f5f7fb">
+    <text x="96" y="260" font-size="98" font-family="'Space Grotesk', 'Avenir Next', sans-serif" font-weight="700">OpenLinks</text>
+    <text x="96" y="330" font-size="38" font-family="'Manrope', 'Segoe UI', sans-serif" fill="#b7c2db">
+      Personal, free, open source links page
+    </text>
+  </g>
+  <rect x="96" y="394" width="640" height="2" fill="#50e3c2" fill-opacity="0.7" />
+</svg>
