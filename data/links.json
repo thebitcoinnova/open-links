@@ -15,30 +15,28 @@
     {
       "id": "x",
       "label": "X",
-      "url": "https://x.com",
-      "type": "simple",
+      "url": "https://x.com/pryszkie",
+      "type": "rich",
       "icon": "x",
       "description": "Short updates and project notes",
       "group": "social",
       "order": 2,
       "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
       "custom": {}
     },
     {
       "id": "linkedin",
       "label": "LinkedIn",
-      "url": "https://linkedin.com",
+      "url": "https://www.linkedin.com/in/peter-ryszkiewicz/",
       "type": "rich",
       "icon": "linkedin",
       "description": "Professional profile and recent work",
       "group": "work",
       "order": 3,
       "enabled": true,
-      "metadata": {
-        "title": "OpenLinks on LinkedIn",
-        "description": "Profile and shipping updates",
-        "sourceLabel": "linkedin.com"
-      },
       "enrichment": {
         "enabled": true
       },
@@ -47,7 +45,7 @@
     {
       "id": "openlinks-home",
       "label": "OpenLinks",
-      "url": "https://open-links.dev",
+      "url": "https://openlinks.us",
       "type": "rich",
       "icon": "github",
       "description": "Project homepage preview card with fallback defaults",
