@@ -74,6 +74,16 @@ npm run build
 npm run preview
 ```
 
+## AI-Guided Path (Optional)
+
+If you want an AI agent to drive setup and updates with opt-out checkpoints, use the [AI-Guided Customization Wizard](docs/ai-guided-customization.md).
+
+Recommended flow:
+
+1. Start with [Quickstart](docs/quickstart.md).
+2. Use [Data Model](docs/data-model.md) while shaping content.
+3. Run the AI wizard to automate repeatable CRUD updates.
+
 ## First GitHub Pages Deploy (Quick Path)
 
 1. Push to `main`.
@@ -135,7 +145,7 @@ Use `custom` for extension metadata:
 
 Unknown top-level keys are allowed but warned. `custom` keys that collide with core keys fail validation.
 
-For full data model details and examples, see the upcoming deep dive in Phase 6.
+For full data model details and examples, see [Data Model](docs/data-model.md).
 
 ## Troubleshooting (Quick)
 
@@ -161,8 +171,8 @@ For full data model details and examples, see the upcoming deep dive in Phase 6.
 ## Docs Map
 
 - [Quickstart](docs/quickstart.md)
-- Data model deep dive: to be added in this phase
-- AI-guided customization wizard: to be added in this phase
+- [Data Model](docs/data-model.md)
+- [AI-Guided Customization Wizard](docs/ai-guided-customization.md)
 - Theming and layout extensibility guide: to be added in this phase
 - Deployment operations guide: to be added in this phase
 - Adapter contract guide: to be added in this phase
