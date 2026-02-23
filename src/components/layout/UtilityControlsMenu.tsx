@@ -1,3 +1,4 @@
+import { IconMenu2 } from "@tabler/icons-solidjs";
 import { Show, createSignal, createUniqueId, onCleanup, onMount, type JSX } from "solid-js";
 
 export interface UtilityControlsMenuProps {
@@ -9,6 +10,8 @@ export interface UtilityControlsMenuProps {
 export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
   const [isOpen, setIsOpen] = createSignal(false);
   const panelId = `utility-controls-panel-${createUniqueId()}`;
+  const triggerLabel = () => props.label ?? "controls menu";
+  const triggerAriaLabel = () => `${isOpen() ? "Close" : "Open"} ${triggerLabel()}`;
   let containerRef: HTMLDivElement | undefined;
   let triggerRef: HTMLButtonElement | undefined;
 
@@ -76,11 +79,12 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
         ref={triggerRef}
         type="button"
         class="utility-menu-button"
+        aria-label={triggerAriaLabel()}
         aria-expanded={isOpen() ? "true" : "false"}
         aria-controls={panelId}
         onClick={handleToggle}
       >
-        {props.label ?? "Controls"}
+        <IconMenu2 aria-hidden="true" />
       </button>
       <Show when={isOpen()}>
         <div id={panelId} class="utility-menu-panel" role="group" aria-label={props.panelLabel ?? "Theme and mode controls"}>

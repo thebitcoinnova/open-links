@@ -29,8 +29,9 @@
   }
 
   body .utility-menu-button {
-    min-width: 0;
-    padding-inline: 0.75rem;
+    width: var(--page-target-size);
+    min-width: var(--page-target-size);
+    padding: 0;
   }
 
   body .utility-menu-panel {

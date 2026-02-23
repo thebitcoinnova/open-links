@@ -393,17 +393,37 @@ a {
 
 .theme-toggle,
 .utility-menu-button {
-  border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: var(--surface-pill);
   color: var(--text-primary);
   min-height: var(--page-target-size);
-  min-width: 5.5rem;
-  padding: 0.35rem 0.8rem;
   font: inherit;
   font-size: var(--page-type-caption);
   cursor: pointer;
   transition: border-color var(--motion-fast), transform var(--motion-fast);
+}
+
+.theme-toggle {
+  border-radius: 999px;
+  min-width: 5.5rem;
+  padding: 0.35rem 0.8rem;
+}
+
+.utility-menu-button {
+  border-radius: var(--radius-sm);
+  width: var(--page-target-size);
+  height: var(--page-target-size);
+  min-width: var(--page-target-size);
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.utility-menu-button svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  display: block;
 }
 
 .theme-toggle:hover,
