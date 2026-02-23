@@ -69,7 +69,12 @@ Confirm:
 
 ## URL Reporting Contract (OpenClaw)
 
-For OpenClaw-managed runs, use `docs/openclaw-bootstrap.md` as the canonical behavior contract.
+For OpenClaw-managed runs, use:
+
+- `docs/openclaw-bootstrap.md` for first-time setup runs,
+- `docs/openclaw-update-crud.md` for day-2 update/CRUD runs.
+
+Both paths must follow the same deployment verification and README URL-marker update rules in this section.
 
 After a successful deploy, OpenClaw should:
 
@@ -234,6 +239,7 @@ Those are documented as future-facing guidance in `docs/adapter-contract.md`.
 - `README.md`
 - `docs/quickstart.md`
 - `docs/openclaw-bootstrap.md`
+- `docs/openclaw-update-crud.md`
 - `docs/adapter-contract.md`
 
 ## Advanced Static Hosting (Best-Effort)

@@ -11,6 +11,8 @@ Use this contract as authoritative behavior for:
 - URL reporting,
 - README deployment URL block updates.
 
+After first successful deploy, use `docs/openclaw-update-crud.md` for ongoing day-2 maintenance and CRUD sessions.
+
 ## Scope and Non-Goals
 
 In scope:
@@ -23,12 +25,16 @@ Out of scope:
 
 - Runtime app code changes.
 - New CI/CD workflows.
-- Interactive checkpoints or approval pauses other than a single identity-confirmation prompt when confidence is low.
+- Interactive checkpoints or approval pauses other than:
+  - a single route-confirmation prompt when an existing setup is detected,
+  - a single identity-confirmation prompt when confidence is low.
 
 ## Required Execution Policy
 
 - Git flow: commit and push directly to `main`.
-- Pause policy: no pauses by default; allow a single identity-confirmation prompt only when identity confidence is low.
+- Pause policy: no pauses by default; allow:
+  - one route-confirmation prompt if existing fork/local setup is detected,
+  - one identity-confirmation prompt only when identity confidence is low.
 - Retry policy: bounded deployment verification retries only.
 - Source trust policy: high-confidence social discovery from authoritative-chain sources only.
 - Payment/crypto policy: do not infer or add payment links or crypto addresses unless the user explicitly requests them.
@@ -39,33 +45,39 @@ If auth/permission or environment blockers occur, fail fast with remediation ins
 
 Execute in this exact order.
 
-1. Ensure user fork exists.
-2. Clone user fork and enter repository root.
-3. Install dependencies (`npm install` or `npm ci`).
-4. Resolve user identity using the precedence rules in this document.
-5. Personalize data files:
+1. Check whether user already appears to have an existing OpenLinks fork and/or local repository.
+2. If existing setup is detected, ask one route-confirmation question:
+   - continue bootstrap, or
+   - switch to `docs/openclaw-update-crud.md` for day-2 maintenance.
+3. If user selects day-2 maintenance, stop bootstrap and hand off to `docs/openclaw-update-crud.md`.
+4. Ensure user fork exists.
+5. Clone user fork and enter repository root.
+6. Install dependencies (`npm install` or `npm ci`).
+7. Resolve user identity using the precedence rules in this document.
+8. Personalize data files:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-6. Validate and build:
+9. Validate and build:
    - `npm run validate:data`
    - `npm run build`
    - `npm run quality:check`
-7. Commit and push directly to `main`.
-8. Verify GitHub Pages source is set to **GitHub Actions**.
-9. Poll CI and Deploy Pages workflow status for the pushed SHA.
-10. On success, collect deployment URLs.
-11. Post structured URL summary in chat using the schema in this file.
-12. Update the README deploy URL marker block only if normalized URL/status values changed.
-13. Commit/push README update if and only if step 12 changed file content.
+10. Commit and push directly to `main`.
+11. Verify GitHub Pages source is set to **GitHub Actions**.
+12. Poll CI and Deploy Pages workflow status for the pushed SHA.
+13. On success, collect deployment URLs.
+14. Post structured URL summary in chat using the schema in this file.
+15. Update the README deploy URL marker block only if normalized URL/status values changed.
+16. Commit/push README update if and only if step 15 changed file content.
 
 ## Automation and Identity Confirmation Rule
 
-OpenClaw should not request user confirmation mid-run except for identity ambiguity.
+OpenClaw should not request user confirmation mid-run except for setup routing and identity ambiguity.
 
 - Low-confidence social candidates: skip and report in `Not Applied` section.
 - Missing credentials/permissions: stop run, report blocker, provide concrete remediation.
 - Validation/build/deploy failures: follow retry policy where applicable, then exit with terminal summary.
+- If an existing fork/local repo is detected during bootstrap, ask one route-confirmation question about switching to `docs/openclaw-update-crud.md`.
 - If identity confidence is low, ask one explicit identity confirmation question before writing identity fields.
 - If identity cannot be confirmed (no response channel), stop with a blocker summary instead of assuming.
 
@@ -229,5 +241,13 @@ End run with a structured summary containing:
 Use this single-message prompt with OpenClaw:
 
 ```text
-Follow docs/openclaw-bootstrap.md exactly for this repository. Fork (if needed), clone my fork, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run validate/build/quality checks, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in the structured target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-bootstrap.md exactly for this repository. Fork (if needed), clone my fork, first check whether I already appear to have a valid OpenLinks fork/local repo and ask one routing confirmation whether to continue bootstrap or switch to docs/openclaw-update-crud.md, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run validate/build/quality checks, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in the structured target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
 ```
+
+## Handoff to Day-2 Updates
+
+Once bootstrap is complete and the first deployment is successful, switch to:
+
+- `docs/openclaw-update-crud.md`
+
+This keeps first-time setup and recurring CRUD workflows separate and predictable.

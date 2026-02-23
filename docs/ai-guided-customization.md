@@ -4,7 +4,10 @@ This guide is for developers who want an AI agent to help customize their OpenLi
 
 Use it as a step-by-step checklist. Every step includes an opt-out path so you can stop automation and edit manually.
 
-For OpenClaw automation-first execution (with one identity confirmation only when confidence is low), use `docs/openclaw-bootstrap.md` as the canonical contract.
+For OpenClaw automation-first execution, use:
+
+- `docs/openclaw-bootstrap.md` for first-time setup,
+- `docs/openclaw-update-crud.md` for day-2 update/CRUD sessions.
 
 ## When to Use This
 
@@ -16,12 +19,23 @@ Use this wizard when you want to:
 
 Do not use this as a replacement for understanding your repository. Keep final review human-owned.
 
-## OpenClaw Execution Contract (No-Pause Mode)
+## Relationship to OpenClaw Update/CRUD
 
-If you are running OpenClaw in this repository, prefer `docs/openclaw-bootstrap.md` and apply these rules:
+Use the right tool for the job:
+
+1. This wizard (`docs/ai-guided-customization.md`) is conversational and checkpoint-heavy.
+2. `docs/openclaw-update-crud.md` is an operational day-2 contract with startup mode selection (`guided`, `balanced`, `autopilot`) and deterministic repo-resolution behavior.
+
+If your goal is repeatable maintenance on an existing fork/local clone, prefer `docs/openclaw-update-crud.md`.
+
+## OpenClaw Bootstrap Contract (Automation-First)
+
+If you are running OpenClaw bootstrap flow in this repository, use `docs/openclaw-bootstrap.md` and apply these rules:
 
 1. Push directly to `main` after checks pass.
-2. Do not pause for user confirmation mid-run, except for one identity confirmation when confidence is low.
+2. Do not pause for user confirmation mid-run, except:
+   - one route-confirmation when existing setup is detected (bootstrap vs day-2 update),
+   - one identity confirmation when confidence is low.
 3. Treat fork prefilled identity (for example Peter Ryszkiewicz) as starter data, not user truth.
 4. Resolve identity from fork owner GitHub profile and explicit user-provided identity first.
 5. If identity confidence is low, ask one identity confirmation question before writing identity fields.
@@ -32,6 +46,8 @@ If you are running OpenClaw in this repository, prefer `docs/openclaw-bootstrap.
 10. Update the `README.md` `OPENCLAW_DEPLOY_URLS` marker block only when normalized URL/status values changed.
 
 If a blocker occurs (auth, permissions, failing checks after retries), stop and return a terminal remediation summary instead of asking interactive questions.
+
+For day-2 update sessions with selectable interaction levels, use `docs/openclaw-update-crud.md`.
 
 ## Inputs You Should Prepare
 
@@ -57,7 +73,7 @@ Validate using npm run validate:data and npm run build before finalizing.
 OpenClaw-specific starter prompt:
 
 ```text
-Follow docs/openclaw-bootstrap.md exactly. Run fully autonomously by default, but if identity confidence is low ask one identity confirmation question. Treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data, not user truth. Do not infer or add payment links or crypto addresses unless explicitly requested. Push directly to main after checks pass, verify Pages deployment for the pushed SHA, report deployment URLs using target/status/primary_url/additional_urls/evidence, and update README OPENCLAW_DEPLOY_URLS only when normalized URL/status values changed.
+Follow docs/openclaw-update-crud.md exactly. Start by asking interaction_mode (guided|balanced|autopilot), identity_research (on|off, default on), and optional seed_identities. Detect existing local/fork targets before any bootstrap fallback. If identity_research is off, run explicit-only CRUD. Treat prefilled upstream identity as template data, not user truth. Do not infer or add payment links or crypto addresses unless explicitly requested. Apply CRUD, run validate/build/quality checks, push to main, verify deploy, report URL table, and update README OPENCLAW_DEPLOY_URLS only when normalized URL/status values changed.
 ```
 
 ## Wizard Flow
@@ -247,6 +263,7 @@ You can leave the wizard at any point and continue manually:
 - `README.md`
 - `docs/quickstart.md`
 - `docs/openclaw-bootstrap.md`
+- `docs/openclaw-update-crud.md`
 - `docs/data-model.md`
 - `docs/theming-and-layouts.md`
 - `docs/deployment.md`

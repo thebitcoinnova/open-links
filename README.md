@@ -39,17 +39,29 @@ For full walkthrough and troubleshooting, see [Quickstart](docs/quickstart.md).
 Paste this one-liner into your OpenClaw instance:
 
 ```text
-Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, first check whether I already appear to have a valid OpenLinks fork/local repo and ask one routing confirmation whether to continue bootstrap or switch to docs/openclaw-update-crud.md, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
 ```
 
-### 2) Create your own repository (Manual Path)
+Use this path when this is the first setup for a new fork or local clone.
+
+### 2) OpenClaw Update/CRUD (Existing Fork or Local Repo)
+
+Paste this one-liner into your OpenClaw instance:
+
+```text
+Follow docs/openclaw-update-crud.md exactly for this repository: detect whether I already have a valid local OpenLinks repo first, then check candidate local paths, then check my GitHub fork; if neither local repo nor fork exists, warn and ask once to confirm auto-bootstrap mode before continuing. Start by asking interaction_mode (guided|balanced|autopilot), identity_research (on|off, default on), and optional seed_identities, defaulting interaction_mode to balanced if I do not specify. If identity_research is off, do explicit-only CRUD. If identity_research is on, use authoritative-chain discovery only. Treat upstream prefilled identity data (for example Peter Ryszkiewicz) as template data, not user truth. Do not infer payment links or crypto addresses unless I explicitly request them. If local repo is dirty, summarize changed/untracked files and ask once whether to continue in-place or require a clean tree. Apply approved CRUD to data/profile.json + data/links.json + data/site.json, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify CI and GitHub Pages deploy for the pushed SHA, report deployment URLs in target/status/primary_url/additional_urls/evidence format, and update README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+```
+
+Use this path for day-2 maintenance when the user likely already has a fork and/or local clone.
+
+### 3) Create your own repository (Manual Path)
 
 Use one of:
 
 1. Fork this repository.
 2. Use this repository as a template.
 
-### 3) Clone and install
+### 4) Clone and install
 
 ```bash
 git clone <your-repo-url>
@@ -57,7 +69,7 @@ cd open-links
 npm install
 ```
 
-### 4) Update your data
+### 5) Update your data
 
 Edit these files:
 
@@ -71,14 +83,14 @@ Starter presets:
 - `data/examples/grouped/`
 - `data/examples/invalid/` (intentional failures for testing)
 
-### 5) Validate and run locally
+### 6) Validate and run locally
 
 ```bash
 npm run validate:data
 npm run dev
 ```
 
-### 6) Build production output
+### 7) Build production output
 
 ```bash
 npm run build
@@ -100,7 +112,7 @@ OPENCLAW_DEPLOY_URLS_END
 
 ## AI-Guided Path (Optional)
 
-If you want an AI agent workflow with explicit checkpoints and manual opt-outs, use the [AI-Guided Customization Wizard](docs/ai-guided-customization.md). For automation-first execution (with one identity confirmation only when confidence is low), use [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md).
+If you want an AI agent workflow with explicit checkpoints and manual opt-outs, use the [AI-Guided Customization Wizard](docs/ai-guided-customization.md). For automation-first execution paths, use [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md) for first-time setup and [OpenClaw Update/CRUD Contract](docs/openclaw-update-crud.md) for day-2 changes.
 
 Recommended flow:
 
@@ -128,6 +140,7 @@ Then use:
 
 - [Deployment Operations Guide](docs/deployment.md) for full troubleshooting and diagnostics flow.
 - [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md) for deployment URL reporting and README marker-block updates.
+- [OpenClaw Update/CRUD Contract](docs/openclaw-update-crud.md) for existing repo update sessions and interaction-mode behavior.
 - [Adapter Contract Guide](docs/adapter-contract.md) for future non-GitHub host planning.
 
 High-signal deployment checks:
@@ -213,6 +226,7 @@ For full data model details and examples, see [Data Model](docs/data-model.md).
 
 - [Quickstart](docs/quickstart.md)
 - [OpenClaw Bootstrap Contract](docs/openclaw-bootstrap.md)
+- [OpenClaw Update/CRUD Contract](docs/openclaw-update-crud.md)
 - [Data Model](docs/data-model.md)
 - [AI-Guided Customization Wizard](docs/ai-guided-customization.md)
 - [Theming and Layout Extensibility](docs/theming-and-layouts.md)

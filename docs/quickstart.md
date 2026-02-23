@@ -2,16 +2,27 @@
 
 This guide is the fastest path from fork/template to first successful local run and GitHub Pages deployment.
 
-## Preferred: OpenClaw One-Message Bootstrap
+## Preferred: OpenClaw One-Message Paths
 
-Use the canonical OpenClaw contract:
+Choose the path that matches your current state:
 
-- `docs/openclaw-bootstrap.md`
+- Use `docs/openclaw-bootstrap.md` if you are doing first-time setup.
+- Use `docs/openclaw-update-crud.md` if you already have a fork and/or local clone.
+
+### Path A: Bootstrap (First-Time Setup)
 
 Paste this one-liner into OpenClaw:
 
 ```text
-Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+Follow docs/openclaw-bootstrap.md exactly for this repository: fork (if needed), clone my fork, first check whether I already appear to have a valid OpenLinks fork/local repo and ask one routing confirmation whether to continue bootstrap or switch to docs/openclaw-update-crud.md, treat any prefilled upstream identity (for example Peter Ryszkiewicz) as template data not user truth, resolve identity from my GitHub profile and explicit user statements, ask one identity confirmation question only if confidence is low, do not infer or add payment links or crypto addresses unless I explicitly request them, personalize data/profile.json + data/links.json + data/site.json using high-confidence authoritative-chain social discovery only, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify GitHub Pages deployment success for the pushed SHA, report deployment URLs in a target/status/primary_url/additional_urls/evidence table, and update the README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
+```
+
+### Path B: Update/CRUD (Existing Fork or Local Repo)
+
+Paste this one-liner into OpenClaw:
+
+```text
+Follow docs/openclaw-update-crud.md exactly for this repository: detect whether I already have a valid local OpenLinks repo first, then check candidate local paths, then check my GitHub fork; if neither local repo nor fork exists, warn and ask once to confirm auto-bootstrap mode before continuing. Start by asking interaction_mode (guided|balanced|autopilot), identity_research (on|off, default on), and optional seed_identities, defaulting interaction_mode to balanced if I do not specify. If identity_research is off, do explicit-only CRUD. If identity_research is on, use authoritative-chain discovery only. Treat upstream prefilled identity data (for example Peter Ryszkiewicz) as template data, not user truth. Do not infer payment links or crypto addresses unless I explicitly request them. If local repo is dirty, summarize changed/untracked files and ask once whether to continue in-place or require a clean tree. Apply approved CRUD to data/profile.json + data/links.json + data/site.json, run npm run validate:data && npm run build && npm run quality:check, push directly to main, verify CI and GitHub Pages deploy for the pushed SHA, report deployment URLs in target/status/primary_url/additional_urls/evidence format, and update README OPENCLAW_DEPLOY_URLS marker block only when normalized URL/status values changed.
 ```
 
 Use the manual steps below only when you are not using OpenClaw.
@@ -217,6 +228,10 @@ After initial publish, your normal update cycle is:
 4. Commit and push.
 5. Verify CI and deploy jobs.
 
+If you want OpenClaw to handle this update loop with interaction mode selection and optional identity-research opt-out, use:
+
+- `docs/openclaw-update-crud.md`
+
 If your avatar source changed but cache is still valid, force refresh with:
 
 ```bash
@@ -232,7 +247,8 @@ npm run images:sync -- --force
 ## Next Guides
 
 - Root docs: `README.md`
-- OpenClaw contract: `docs/openclaw-bootstrap.md`
+- OpenClaw bootstrap contract: `docs/openclaw-bootstrap.md`
+- OpenClaw update contract: `docs/openclaw-update-crud.md`
 - Data model deep dive: `docs/data-model.md`
 - AI-guided customization wizard: `docs/ai-guided-customization.md`
 - Deployment operations: `docs/deployment.md`
