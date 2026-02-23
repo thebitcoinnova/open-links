@@ -137,3 +137,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# OpenLinks generated enrichment artifacts
+data/generated/*.json
+!data/generated/.gitkeep
