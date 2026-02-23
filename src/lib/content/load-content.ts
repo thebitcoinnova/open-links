@@ -15,6 +15,59 @@ export type TargetSizeMode = "comfortable" | "compact" | "large";
 export type RichCardRenderMode = "auto" | "simple";
 export type SourceLabelDefault = "show" | "hide";
 export type RichImageTreatment = "cover" | "thumbnail" | "off";
+export type QualityDomain = "seo" | "accessibility" | "performance" | "manual-smoke";
+
+export interface QualitySeoMetadata {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogType?: string;
+  ogImage?: string;
+  ogUrl?: string;
+  twitterCard?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+}
+
+export interface BudgetThreshold {
+  warn: number;
+  fail: number;
+}
+
+export interface PerformanceProfileBudget {
+  totalBytes?: BudgetThreshold | number;
+  jsBytes?: BudgetThreshold | number;
+  cssBytes?: BudgetThreshold | number;
+  htmlBytes?: BudgetThreshold | number;
+  largestAssetBytes?: BudgetThreshold | number;
+}
+
+export interface SiteQualityConfig {
+  reportPath?: string;
+  blockingDomains?: QualityDomain[];
+  seo?: {
+    canonicalBaseUrl?: string;
+    socialImageFallback?: string;
+    defaults?: QualitySeoMetadata;
+    overrides?: {
+      profile?: QualitySeoMetadata;
+    };
+  };
+  accessibility?: {
+    focusContrastStrict?: boolean;
+    manualSmokeChecks?: string[];
+  };
+  performance?: {
+    routes?: string[];
+    profiles?: {
+      mobile?: PerformanceProfileBudget;
+      desktop?: PerformanceProfileBudget;
+    };
+  };
+}
 
 export interface RichLinkMetadata {
   title?: string;
@@ -75,6 +128,7 @@ export interface SiteData {
   title: string;
   description: string;
   baseUrl?: string;
+  quality?: SiteQualityConfig;
   theme: {
     active: string;
     available: string[];

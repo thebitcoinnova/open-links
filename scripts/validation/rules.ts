@@ -47,7 +47,7 @@ const LINK_KEYS = new Set([
   "custom"
 ]);
 
-const SITE_KEYS = new Set(["title", "description", "baseUrl", "theme", "ui", "custom"]);
+const SITE_KEYS = new Set(["title", "description", "baseUrl", "theme", "ui", "quality", "custom"]);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
