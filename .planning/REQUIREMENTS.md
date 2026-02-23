@@ -11,7 +11,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **BOOT-01**: Developer can create a personal OpenLinks project by forking or templating the repository.
 - [ ] **BOOT-02**: Repository provides starter data/theme files that render a working site without additional setup.
-- [ ] **BOOT-03**: README documents bootstrap flow from fork/template to first deploy.
+- [x] **BOOT-03**: README documents bootstrap flow from fork/template to first deploy.
 
 ### Data Model & Validation
 
@@ -35,8 +35,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **THEME-01**: Project includes at least two starter themes selectable by configuration.
 - [x] **THEME-02**: Theme system uses tokens/variables so forks can add new themes without rewriting core card logic.
-- [ ] **THEME-03**: Project exposes a documented path for custom CSS overrides.
-- [ ] **THEME-04**: Project exposes documented layout template hooks for deeper UI customization.
+- [x] **THEME-03**: Project exposes a documented path for custom CSS overrides.
+- [x] **THEME-04**: Project exposes documented layout template hooks for deeper UI customization.
 
 ### Deployment & CI
 
@@ -44,7 +44,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DEP-02**: GitHub Actions builds the static SolidJS site on mainline changes.
 - [x] **DEP-03**: GitHub Actions deploys build artifacts to GitHub Pages automatically.
 - [x] **DEP-04**: Deployment configuration supports repository/project-page base path handling.
-- [ ] **DEP-05**: Deployment workflow is structured so non-GitHub target adapters can be added later without app-code rewrites.
+- [x] **DEP-05**: Deployment workflow is structured so non-GitHub target adapters can be added later without app-code rewrites.
 
 ### Quality (Performance, Accessibility, SEO)
 
@@ -56,10 +56,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Documentation & Extensibility
 
-- [ ] **DOC-01**: README documents JSON schema model with examples for simple and rich links.
-- [ ] **DOC-02**: README documents theming and customization extension points for fork maintainers.
-- [ ] **DOC-03**: README documents GitHub Pages deploy flow and troubleshooting basics.
-- [ ] **DOC-04**: Project documents future deployment adapter interface expectations.
+- [x] **DOC-01**: README documents JSON schema model with examples for simple and rich links.
+- [x] **DOC-02**: README documents theming and customization extension points for fork maintainers.
+- [x] **DOC-03**: README documents GitHub Pages deploy flow and troubleshooting basics.
+- [x] **DOC-04**: Project documents future deployment adapter interface expectations.
 
 ## v2 Requirements
 
@@ -96,7 +96,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | BOOT-01 | Phase 1 | Complete |
 | BOOT-02 | Phase 1 | Complete |
-| BOOT-03 | Phase 6 | Pending |
+| BOOT-03 | Phase 6 | Complete |
 | DATA-01 | Phase 1 | Complete |
 | DATA-02 | Phase 1 | Complete |
 | DATA-03 | Phase 3 | Complete |
@@ -111,22 +111,22 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-06 | Phase 2 | Complete |
 | THEME-01 | Phase 2 | Complete |
 | THEME-02 | Phase 2 | Complete |
-| THEME-03 | Phase 6 | Pending |
-| THEME-04 | Phase 6 | Pending |
+| THEME-03 | Phase 6 | Complete |
+| THEME-04 | Phase 6 | Complete |
 | DEP-01 | Phase 4 | Complete |
 | DEP-02 | Phase 4 | Complete |
 | DEP-03 | Phase 4 | Complete |
 | DEP-04 | Phase 4 | Complete |
-| DEP-05 | Phase 6 | Pending |
+| DEP-05 | Phase 6 | Complete |
 | QUAL-01 | Phase 5 | Complete |
 | QUAL-02 | Phase 5 | Complete |
 | QUAL-03 | Phase 5 | Complete |
 | QUAL-04 | Phase 5 | Complete |
 | QUAL-05 | Phase 5 | Complete |
-| DOC-01 | Phase 6 | Pending |
-| DOC-02 | Phase 6 | Pending |
-| DOC-03 | Phase 6 | Pending |
-| DOC-04 | Phase 6 | Pending |
+| DOC-01 | Phase 6 | Complete |
+| DOC-02 | Phase 6 | Complete |
+| DOC-03 | Phase 6 | Complete |
+| DOC-04 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 33 total
@@ -135,4 +135,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-23 after Phase 5 completion*
+*Last updated: 2026-02-23 after Phase 6 completion*

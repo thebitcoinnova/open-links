@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Rich Cards + Content Enrichment** - Add configurable rich card support with resilient fallback behavior. (completed 2026-02-23)
 - [x] **Phase 4: CI/CD + GitHub Pages Delivery** - Automate validation, build, and deployment on GitHub. (completed 2026-02-23)
 - [x] **Phase 5: Quality Hardening (Perf/A11y/SEO)** - Add and enforce quality gates for production readiness. (completed 2026-02-23)
-- [ ] **Phase 6: Docs + Extensibility Surface** - Finalize customization/deployment extension docs and onboarding guidance.
+- [x] **Phase 6: Docs + Extensibility Surface** - Finalize customization/deployment extension docs and onboarding guidance. (completed 2026-02-23)
 
 ## Phase Details
 
@@ -114,9 +114,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: Write complete bootstrap/data model documentation with examples.
-- [ ] 06-02: Document theme and layout extension APIs with practical customization steps.
-- [ ] 06-03: Document deployment flow, troubleshooting, and host adapter strategy.
+- [x] 06-01: Write complete bootstrap/data model documentation with examples.
+- [x] 06-02: Document theme and layout extension APIs with practical customization steps.
+- [x] 06-03: Document deployment flow, troubleshooting, and host adapter strategy.
 
 ## Progress
 
@@ -130,4 +130,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Rich Cards + Content Enrichment | 2/2 | Complete | 2026-02-23 |
 | 4. CI/CD + GitHub Pages Delivery | 2/2 | Complete | 2026-02-23 |
 | 5. Quality Hardening (Perf/A11y/SEO) | 3/3 | Complete | 2026-02-23 |
-| 6. Docs + Extensibility Surface | 0/3 | Not started | - |
+| 6. Docs + Extensibility Surface | 3/3 | Complete   | 2026-02-23 |
