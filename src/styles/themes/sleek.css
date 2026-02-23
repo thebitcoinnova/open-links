@@ -1,0 +1,122 @@
+:root[data-theme="sleek"][data-mode="dark"] {
+  --font-display: "Geist", "Space Grotesk", "Avenir Next", sans-serif;
+  --font-body: "Geist", "Manrope", "Segoe UI", sans-serif;
+  --surface-bg: #090d16;
+  --surface-panel: #101625;
+  --surface-card: #141c2d;
+  --surface-pill: #1a2338;
+  --text-primary: #f8fafc;
+  --text-muted: #96a4bc;
+  --accent: #3b82f6;
+  --accent-strong: #60a5fa;
+  --border-subtle: rgb(148 163 184 / 0.24);
+  --border-strong: rgb(96 165 250 / 0.48);
+}
+
+:root[data-theme="sleek"][data-mode="light"] {
+  --font-display: "Geist", "Space Grotesk", "Avenir Next", sans-serif;
+  --font-body: "Geist", "Manrope", "Segoe UI", sans-serif;
+  --surface-bg: #f7f9fc;
+  --surface-panel: #ffffff;
+  --surface-card: #f2f6fb;
+  --surface-pill: #e9eef6;
+  --text-primary: #0f172a;
+  --text-muted: #4d5f78;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --border-subtle: rgb(30 41 59 / 0.2);
+  --border-strong: rgb(37 99 235 / 0.44);
+}
+
+:root[data-theme^="sleek"] {
+  --radius-sm: 0.45rem;
+  --radius-md: 0.78rem;
+  --radius-lg: 1.05rem;
+  --motion-fast: 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-mid: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--accent-strong) 72%, transparent);
+}
+
+:root[data-theme^="sleek"][data-mode="dark"] {
+  --shadow-soft: 0 18px 34px rgb(2 6 23 / 0.44);
+}
+
+:root[data-theme^="sleek"][data-mode="light"] {
+  --shadow-soft: 0 14px 30px rgb(15 23 42 / 0.13);
+}
+
+:root[data-theme^="sleek"][data-mode="dark"] body {
+  background:
+    radial-gradient(120% 105% at 100% 0%, color-mix(in srgb, var(--accent) 24%, transparent) 0%, transparent 62%),
+    linear-gradient(180deg, #060911 0%, var(--surface-bg) 46%, #090f1a 100%);
+}
+
+:root[data-theme^="sleek"][data-mode="light"] body {
+  background:
+    radial-gradient(120% 110% at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 62%),
+    linear-gradient(180deg, #fbfdff 0%, var(--surface-bg) 52%, #f2f5fa 100%);
+}
+
+:root[data-theme^="sleek"] .utility-pill,
+:root[data-theme^="sleek"] .theme-toggle {
+  border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent 10%);
+  background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-panel) 10%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset;
+}
+
+:root[data-theme^="sleek"] .profile-header {
+  border-color: color-mix(in srgb, var(--border-subtle) 88%, transparent 12%);
+  background: color-mix(in srgb, var(--surface-panel) 94%, white 6%);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(6px);
+}
+
+:root[data-theme^="sleek"] .simple-link-card,
+:root[data-theme^="sleek"] .rich-link-card {
+  border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent 10%);
+  background: color-mix(in srgb, var(--surface-card) 94%, var(--surface-panel) 6%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset,
+    0 10px 24px color-mix(in srgb, var(--surface-bg) 62%, black 38%);
+}
+
+:root[data-theme^="sleek"] .simple-link-card:hover,
+:root[data-theme^="sleek"] .rich-link-card:hover,
+:root[data-theme^="sleek"] .theme-toggle:hover {
+  transform: none;
+  border-color: var(--border-strong);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent),
+    0 14px 30px color-mix(in srgb, var(--surface-bg) 56%, black 44%);
+}
+
+:root[data-theme^="sleek"] .simple-link-card:active,
+:root[data-theme^="sleek"] .rich-link-card:active,
+:root[data-theme^="sleek"] .theme-toggle:active {
+  transform: none;
+  background: color-mix(in srgb, var(--surface-card) 86%, var(--accent) 14%);
+}
+
+:root[data-theme^="sleek"] .simple-link-card:focus-visible,
+:root[data-theme^="sleek"] .rich-link-card:focus-visible,
+:root[data-theme^="sleek"] .theme-toggle:focus-visible {
+  border-color: var(--accent-strong);
+  box-shadow:
+    var(--shadow-focus),
+    0 12px 26px color-mix(in srgb, var(--surface-bg) 58%, black 42%);
+}
+
+:root[data-theme^="sleek"] .card-icon {
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 86%, transparent 14%);
+  background: color-mix(in srgb, var(--surface-pill) 86%, var(--accent) 14%);
+  color: color-mix(in srgb, var(--text-primary) 90%, var(--accent) 10%);
+}
+
+:root[data-theme^="sleek"] .rich-card-media {
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 84%, transparent 16%);
+  background: color-mix(in srgb, var(--surface-pill) 92%, var(--accent) 8%);
+}
+
+:root[data-theme^="sleek"] .rich-card-media-fallback {
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--text-primary) 8%);
+}

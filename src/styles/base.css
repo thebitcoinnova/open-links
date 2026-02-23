@@ -5,6 +5,9 @@
 @import "./themes/editorial.css";
 @import "./themes/futuristic.css";
 @import "./themes/humanist.css";
+@import "./themes/sleek.css";
+@import "./themes/sleek-emerald.css";
+@import "./themes/sleek-mono.css";
 @import "./responsive.css";
 
 * {

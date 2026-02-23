@@ -7,6 +7,9 @@ export interface ThemeDefinition {
 }
 
 const ALL_THEMES: ThemeDefinition[] = [
+  { id: "sleek", label: "Sleek Blue", intensity: "mild" },
+  { id: "sleek-emerald", label: "Sleek Emerald", intensity: "mild" },
+  { id: "sleek-mono", label: "Sleek Mono", intensity: "mild" },
   { id: "midnight", label: "Midnight", intensity: "mild" },
   { id: "daybreak", label: "Daybreak", intensity: "mild" },
   { id: "neutral", label: "Neutral", intensity: "mild" },
@@ -25,7 +28,7 @@ const normalizeAvailableThemes = (site: SiteData): string[] => {
     return [...new Set(valid)];
   }
 
-  return ["midnight", "daybreak"];
+  return ["sleek", "daybreak"];
 };
 
 export interface ThemeSelection {
@@ -38,7 +41,7 @@ export const resolveThemeSelection = (site: SiteData): ThemeSelection => {
   const available = normalizeAvailableThemes(site);
   const requestedActive = site.theme?.active;
   const active = requestedActive && available.includes(requestedActive) ? requestedActive : available[0];
-  const activeDefinition = REGISTRY.get(active) ?? REGISTRY.get("midnight")!;
+  const activeDefinition = REGISTRY.get(active) ?? REGISTRY.get("sleek")!;
 
   return {
     active,

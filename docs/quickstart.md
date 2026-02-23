@@ -48,7 +48,7 @@ Recommended first pass:
 1. Set your `profile.name`, `profile.headline`, `profile.bio`.
 2. Replace starter links in `data/links.json`.
 3. Set `site.title` and `site.description`.
-4. Pick an initial theme in `site.theme.active`.
+4. Pick an initial theme in `site.theme.active` (default recommendation: `sleek`).
 
 ## Run Locally
 

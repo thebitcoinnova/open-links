@@ -28,6 +28,7 @@ OpenLinks theme selection is data-driven:
 
 - `data/site.json` controls `theme.active` and `theme.available`.
 - Runtime selection resolves through `src/lib/theme/theme-registry.ts`.
+- If `theme.active`/`theme.available` are invalid, runtime falls back to `sleek` then `daybreak`.
 - Theme mode behavior is controlled by `site.ui.modePolicy`.
 
 ## Level 1: Token-Only Customization (Low Risk)
@@ -109,6 +110,9 @@ Current theme files include:
 - `humanist.css`
 - `midnight.css`
 - `neutral.css`
+- `sleek.css`
+- `sleek-emerald.css`
+- `sleek-mono.css`
 
 ### Step C: Add metadata to theme registry
 

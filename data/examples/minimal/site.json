@@ -2,8 +2,8 @@
   "title": "Minimal OpenLinks",
   "description": "Minimal starter for OpenLinks",
   "theme": {
-    "active": "midnight",
-    "available": ["midnight", "daybreak"]
+    "active": "sleek",
+    "available": ["sleek", "sleek-emerald", "sleek-mono", "daybreak"]
   },
   "baseUrl": "/",
   "custom": {}

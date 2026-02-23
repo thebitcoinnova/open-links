@@ -1,9 +1,9 @@
 {
   "title": "Grouped OpenLinks",
-  "description": "Grouped example with two starter themes",
+  "description": "Grouped example with sleek starter themes",
   "theme": {
-    "active": "daybreak",
-    "available": ["midnight", "daybreak"]
+    "active": "sleek",
+    "available": ["sleek", "sleek-emerald", "sleek-mono", "daybreak"]
   },
   "baseUrl": "/",
   "custom": {}
