@@ -7,6 +7,24 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      base_mode:
+        description: "Base path mode (project | root | auto)"
+        required: false
+        default: project
+        type: choice
+        options:
+          - project
+          - root
+          - auto
+      base_path:
+        description: "Optional explicit BASE_PATH override (must start and end with /)"
+        required: false
+        type: string
+      repo_name_override:
+        description: "Optional repository name override for project mode"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -33,8 +51,34 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: Validate deployment configuration
+        shell: bash
+        env:
+          DISPATCH_BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
+          DISPATCH_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$DISPATCH_BASE_MODE" != "project" && "$DISPATCH_BASE_MODE" != "root" && "$DISPATCH_BASE_MODE" != "auto" ]]; then
+            echo "::error::Invalid base_mode '$DISPATCH_BASE_MODE'. Use one of: project, root, auto."
+            exit 1
+          fi
+
+          if [[ -n "$DISPATCH_BASE_PATH" ]]; then
+            if [[ "$DISPATCH_BASE_PATH" != /* ]]; then
+              echo "::error::base_path must start with '/'. Example: /open-links/"
+              exit 1
+            fi
+            if [[ "$DISPATCH_BASE_PATH" != */ ]]; then
+              echo "::error::base_path must end with '/'. Example: /open-links/"
+              exit 1
+            fi
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Attempt CI artifact reuse
         id: download_ci_artifact
@@ -68,6 +112,24 @@ jobs:
             echo "- CI artifact reuse preferred; rebuild used only when artifact is unavailable."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Capture deploy diagnostics context
+        shell: bash
+        env:
+          DISPATCH_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
+          DISPATCH_BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
+          DISPATCH_REPO_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_name_override || '' }}
+        run: |
+          mkdir -p .deploy-diagnostics
+          {
+            echo "event_name=${{ github.event_name }}"
+            echo "ref=${{ github.ref }}"
+            echo "head_branch=${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}"
+            echo "artifact_strategy=${{ steps.artifact_strategy.outputs.reason }}"
+            echo "base_mode=${DISPATCH_BASE_MODE}"
+            echo "base_path=${DISPATCH_BASE_PATH}"
+            echo "repo_override=${DISPATCH_REPO_OVERRIDE}"
+          } > .deploy-diagnostics/context.txt
+
       - name: Setup Node
         if: steps.artifact_strategy.outputs.reuse != 'true'
         uses: actions/setup-node@v4
@@ -81,7 +143,20 @@ jobs:
 
       - name: Build site
         if: steps.artifact_strategy.outputs.reuse != 'true'
+        env:
+          PAGES_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
+          BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
+          REPO_NAME_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_name_override || '' }}
         run: npm run build
+
+      - name: Verify deployable artifact
+        shell: bash
+        run: |
+          if [ ! -d dist ] || [ -z "$(find dist -mindepth 1 -print -quit)" ]; then
+            echo "::error::No deployable dist artifact found."
+            echo "::error::Remediation: ensure CI uploaded 'openlinks-dist' or rerun manual deploy to trigger rebuild fallback."
+            exit 1
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -94,3 +169,23 @@ jobs:
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Upload deploy diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-pages-diagnostics
+          path: .deploy-diagnostics
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Deployment remediation summary
+        if: failure()
+        run: |
+          {
+            echo "### ❌ GitHub Pages deployment failed"
+            echo "- Verify repository Pages settings use **GitHub Actions** as source."
+            echo "- Confirm CI workflow succeeded on \`main\` and produced artifact \`openlinks-dist\`."
+            echo "- If dispatching manually, ensure \`base_path\` starts and ends with \`/\` when provided."
+            echo "- Download \`deploy-pages-diagnostics\` artifact for deployment context details."
+          } >> "$GITHUB_STEP_SUMMARY"
