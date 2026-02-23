@@ -97,6 +97,8 @@ export interface SiteData {
         enabledByDefault?: boolean;
         timeoutMs?: number;
         retries?: number;
+        metadataPath?: string;
+        reportPath?: string;
       };
     };
   };
@@ -111,6 +113,58 @@ export interface LinksData {
   custom?: Record<string, unknown>;
   [key: string]: unknown;
 }
+
+interface GeneratedRichMetadataPayload {
+  generatedAt?: string;
+  links?: Record<string, { metadata?: RichLinkMetadata }>;
+}
+
+const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetadataPayload }>(
+  "../../../data/generated/rich-metadata.json",
+  { eager: true }
+);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
+  const module = Object.values(generatedMetadataModules)[0];
+  const payload = module?.default;
+
+  if (!payload?.links || !isRecord(payload.links)) {
+    return {};
+  }
+
+  const mapped: Record<string, RichLinkMetadata> = {};
+
+  for (const [linkId, value] of Object.entries(payload.links)) {
+    if (!isRecord(value) || !isRecord(value.metadata)) {
+      continue;
+    }
+    mapped[linkId] = value.metadata as RichLinkMetadata;
+  }
+
+  return mapped;
+};
+
+const mergeGeneratedMetadata = (
+  links: OpenLink[],
+  generatedByLink: Record<string, RichLinkMetadata>
+): OpenLink[] =>
+  links.map((link) => {
+    const generated = generatedByLink[link.id];
+    if (!generated) {
+      return link;
+    }
+
+    return {
+      ...link,
+      metadata: {
+        ...(link.metadata ?? {}),
+        ...generated
+      }
+    };
+  });
 
 const rankByExplicitOrder = (links: OpenLink[], explicitOrder: string[] = []): OpenLink[] => {
   const orderIndex = new Map(explicitOrder.map((id, index) => [id, index]));
@@ -134,8 +188,10 @@ export const loadContent = () => {
   const profile = profileData as ProfileData;
   const site = siteData as SiteData;
   const linksPayload = linksData as LinksData;
+  const generatedMetadata = resolveGeneratedMetadata();
 
-  const enabledLinks = linksPayload.links.filter((link) => link.enabled !== false);
+  const mergedLinks = mergeGeneratedMetadata(linksPayload.links, generatedMetadata);
+  const enabledLinks = mergedLinks.filter((link) => link.enabled !== false);
   const links = rankByExplicitOrder(enabledLinks, linksPayload.order);
 
   const groups = [...(linksPayload.groups ?? [])].sort(

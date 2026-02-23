@@ -33,6 +33,16 @@
                 "type": "string",
                 "enum": ["fetched", "partial", "failed", "skipped"]
               },
+              "enrichmentReason": {
+                "type": "string",
+                "enum": [
+                  "metadata_complete",
+                  "metadata_partial",
+                  "metadata_missing",
+                  "fetch_failed",
+                  "enrichment_disabled"
+                ]
+              },
               "enrichedAt": { "type": "string", "format": "date-time" },
               "custom": {
                 "type": "object",

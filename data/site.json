@@ -22,7 +22,9 @@
       "enrichment": {
         "enabledByDefault": true,
         "timeoutMs": 4000,
-        "retries": 1
+        "retries": 1,
+        "metadataPath": "data/generated/rich-metadata.json",
+        "reportPath": "data/generated/rich-enrichment-report.json"
       }
     }
   },

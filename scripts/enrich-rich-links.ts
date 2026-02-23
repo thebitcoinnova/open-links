@@ -3,11 +3,11 @@ import path from "node:path";
 import process from "node:process";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
+import { writeEnrichmentReport } from "./enrichment/report";
 import type {
   EnrichmentMetadata,
   EnrichmentReason,
   EnrichmentRunEntry,
-  EnrichmentRunSummary,
   GeneratedRichMetadata
 } from "./enrichment/types";
 
@@ -15,7 +15,8 @@ interface CliArgs {
   strict: boolean;
   linksPath: string;
   sitePath: string;
-  outputPath: string;
+  outputPath?: string;
+  reportPath?: string;
   timeoutMs?: number;
   retries?: number;
 }
@@ -44,6 +45,8 @@ interface SitePayload {
         enabledByDefault?: boolean;
         timeoutMs?: number;
         retries?: number;
+        metadataPath?: string;
+        reportPath?: string;
       };
     };
   };
@@ -53,6 +56,8 @@ interface ResolvedConfig {
   enabledByDefault: boolean;
   timeoutMs: number;
   retries: number;
+  outputPath: string;
+  reportPath: string;
 }
 
 const ROOT = process.cwd();
@@ -61,6 +66,7 @@ const parseNumber = (value: string | undefined): number | undefined => {
   if (!value) {
     return undefined;
   }
+
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : undefined;
 };
@@ -77,7 +83,8 @@ const parseArgs = (): CliArgs => {
     strict: args.includes("--strict"),
     linksPath: valueOf("--links") ?? "data/links.json",
     sitePath: valueOf("--site") ?? "data/site.json",
-    outputPath: valueOf("--out") ?? "data/generated/rich-metadata.json",
+    outputPath: valueOf("--out"),
+    reportPath: valueOf("--report"),
     timeoutMs: parseNumber(valueOf("--timeout")),
     retries: parseNumber(valueOf("--retries"))
   };
@@ -94,7 +101,9 @@ const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
   return {
     enabledByDefault: defaults?.enabledByDefault ?? true,
     timeoutMs: Math.max(500, args.timeoutMs ?? defaults?.timeoutMs ?? 4000),
-    retries: Math.max(0, args.retries ?? defaults?.retries ?? 1)
+    retries: Math.max(0, args.retries ?? defaults?.retries ?? 1),
+    outputPath: args.outputPath ?? defaults?.metadataPath ?? "data/generated/rich-metadata.json",
+    reportPath: args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json"
   };
 };
 
@@ -135,7 +144,7 @@ const makeEntryMessage = (status: EnrichmentRunEntry["status"], reason: Enrichme
   }
 
   if (reason === "metadata_missing") {
-    return "No preview metadata found; rich card fallback shell will be used.";
+    return "No preview metadata found; rich-card fallback shell will be used.";
   }
 
   if (reason === "metadata_partial") {
@@ -163,22 +172,6 @@ const remediationFor = (status: EnrichmentRunEntry["status"], reason: Enrichment
   }
 
   return "No action required.";
-};
-
-const summarize = (entries: EnrichmentRunEntry[]): EnrichmentRunSummary => {
-  const summary: EnrichmentRunSummary = {
-    total: entries.length,
-    fetched: 0,
-    partial: 0,
-    failed: 0,
-    skipped: 0
-  };
-
-  for (const entry of entries) {
-    summary[entry.status] += 1;
-  }
-
-  return summary;
 };
 
 const run = async () => {
@@ -294,19 +287,25 @@ const run = async () => {
     links: generatedLinks
   };
 
-  ensureDirectory(args.outputPath);
-  fs.writeFileSync(path.join(ROOT, args.outputPath), `${JSON.stringify(generated, null, 2)}\n`, "utf8");
+  ensureDirectory(config.outputPath);
+  fs.writeFileSync(path.join(ROOT, config.outputPath), `${JSON.stringify(generated, null, 2)}\n`, "utf8");
 
-  const summary = summarize(entries);
+  const report = writeEnrichmentReport({
+    reportPath: config.reportPath,
+    generatedAt,
+    strict: args.strict,
+    entries
+  });
 
   console.log("OpenLinks rich enrichment run");
-  console.log(`Links processed: ${summary.total}`);
+  console.log(`Links processed: ${report.summary.total}`);
   console.log(
-    `Results: fetched=${summary.fetched}, partial=${summary.partial}, failed=${summary.failed}, skipped=${summary.skipped}`
+    `Results: fetched=${report.summary.fetched}, partial=${report.summary.partial}, failed=${report.summary.failed}, skipped=${report.summary.skipped}`
   );
-  console.log(`Generated metadata: ${args.outputPath}`);
+  console.log(`Generated metadata: ${config.outputPath}`);
+  console.log(`Enrichment report: ${config.reportPath}`);
 
-  for (const entry of entries) {
+  for (const entry of report.entries) {
     console.log(
       `- ${entry.linkId}: ${entry.status} (${entry.reason})${
         entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""
@@ -314,7 +313,7 @@ const run = async () => {
     );
   }
 
-  const shouldFail = args.strict && summary.failed > 0;
+  const shouldFail = args.strict && report.summary.failed > 0;
   if (shouldFail) {
     console.error("Strict mode enabled: failing because one or more metadata fetches failed.");
   }
