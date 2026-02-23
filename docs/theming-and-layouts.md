@@ -168,7 +168,84 @@ Before merging visual changes:
 - [ ] Contrast remains acceptable for text and interactive elements.
 - [ ] `npm run quality:check` completes successfully.
 
-## Next Sections
+## Layout Extension Points
 
-- Layout extension points and add-layout-mode recipe (next section in this file).
-- Guardrails, anti-patterns, and decision matrix (next section in this file).
+Layout behavior is composed from site config values and resolver utilities.
+
+Primary layout files:
+
+- `src/lib/ui/composition.ts`
+- `src/lib/ui/layout-preferences.ts`
+- `src/components/layout/LinkSection.tsx`
+- `src/routes/index.tsx`
+
+### Config fields that shape layout
+
+In `data/site.json` under `ui`:
+
+- `compositionMode`: profile-vs-links ordering strategy
+- `groupingStyle`: grouped vs flat presentation
+- `desktopColumns`: one/two column page layout
+- `density`: compact/medium/spacious spacing
+- `typographyScale`: fixed/compact/expressive typography tuning
+- `targetSize`: comfortable/compact/large interaction footprint
+
+### How layout resolution works
+
+1. `load-content.ts` reads site config.
+2. `resolveComposition()` maps composition mode and grouping style.
+3. `resolveLayoutPreferences()` maps density/columns/type scale/target size.
+4. `src/routes/index.tsx` applies these decisions through page class names and section rendering.
+
+## Recipe: Add or Change a Layout Mode
+
+Use this for advanced forks that want behavior beyond existing `compositionMode` options.
+
+### Step 1: Add mode value to type contract
+
+Update union type in `src/lib/content/load-content.ts`:
+
+- extend `CompositionMode` with new ID (example: `magazine`).
+
+### Step 2: Extend resolver logic
+
+Update `src/lib/ui/composition.ts`:
+
+- include new mode in `getMode()`,
+- define block ordering in `blocksForMode()`,
+- define emphasis in `emphasisForMode()`.
+
+### Step 3: Apply view behavior
+
+Update `src/routes/index.tsx` and related layout components:
+
+- ensure class naming and render flow handle the new mode,
+- verify profile and links sections still render accessibly.
+
+### Step 4: Add style support
+
+Update style files:
+
+- `src/styles/base.css` for new mode class behavior,
+- optionally `src/styles/responsive.css` for breakpoint-specific adjustments.
+
+### Step 5: Add data example
+
+Update `data/site.json` (and optionally `data/examples/*/site.json`) with the new mode to keep examples aligned.
+
+### Step 6: Validate and test
+
+Run:
+
+```bash
+npm run validate:data
+npm run build
+npm run quality:check
+```
+
+Then manually verify:
+
+- mobile/desktop responsiveness,
+- keyboard tab order,
+- focus visibility,
+- card readability.
