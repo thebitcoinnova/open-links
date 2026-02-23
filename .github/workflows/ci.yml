@@ -40,6 +40,7 @@ jobs:
             echo "  - \`npm run validate:data\`"
             echo "  - \`npm run typecheck\`"
             echo "  - \`npm run build\`"
+            echo "  - \`npm run quality:check\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run required checks
@@ -64,6 +65,7 @@ jobs:
           run_check "validate_data" npm run validate:data || failures+=("validate:data")
           run_check "typecheck" npm run typecheck || failures+=("typecheck")
           run_check "build" npm run build || failures+=("build")
+          run_check "quality_check" npm run quality:check || failures+=("quality:check")
 
           if ((${#failures[@]} > 0)); then
             echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
@@ -83,6 +85,7 @@ jobs:
             echo "  - \`npm run validate:data\`"
             echo "  - \`npm run typecheck\`"
             echo "  - \`npm run build\`"
+            echo "  - \`npm run quality:check\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Replay required raw logs
@@ -149,7 +152,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - required-checks
-    if: needs.required-checks.result == 'success'
+    if: needs.required-checks.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     continue-on-error: true
 
     steps:
@@ -168,10 +171,11 @@ jobs:
       - name: Strict checks summary
         run: |
           {
-            echo "## Strict Signal Lane (Phase 4 Non-Blocking)"
+            echo "## Strict Signal Lane (Phase 5 Non-Blocking)"
             echo "- Commands:"
             echo "  - \`npm run validate:data:strict\`"
             echo "  - \`npm run build:strict\`"
+            echo "  - \`npm run quality:strict\`"
             echo "- Policy: strict failures are warning signals in this phase."
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -196,6 +200,7 @@ jobs:
           failures=()
           run_check "validate_data_strict" npm run validate:data:strict || failures+=("validate:data:strict")
           run_check "build_strict" npm run build:strict || failures+=("build:strict")
+          run_check "quality_strict" npm run quality:strict || failures+=("quality:strict")
 
           if ((${#failures[@]} > 0)); then
             echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
@@ -210,8 +215,8 @@ jobs:
           {
             echo "### ⚠ Strict checks reported failures (non-blocking)"
             echo "- Failed strict commands: \`${{ steps.run_strict.outputs.failures }}\`"
-            echo "- Required checks passed, so this does not block merge/deploy in Phase 4."
-            echo "- Address strict diagnostics before Phase 5 hardening."
+            echo "- Required checks passed, so this does not block merge/deploy in Phase 5."
+            echo "- Address strict diagnostics before advancing quality gates."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Replay strict raw logs
@@ -241,7 +246,7 @@ jobs:
             const failed = `${{ steps.run_strict.outputs.failures }}` || 'unknown';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const body = [
-              '### ⚠ OpenLinks strict checks failed (non-blocking in Phase 4)',
+              '### ⚠ OpenLinks strict checks failed (non-blocking in Phase 5)',
               `- Failed commands: \`${failed}\``,
               '- Required checks passed; this signal does not block merge/deploy in this phase.',
               '- Artifact: `ci-diagnostics-strict` (uploaded on strict failure).',
