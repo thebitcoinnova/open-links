@@ -35,6 +35,9 @@
       "renderMode": "auto",
       "sourceLabelDefault": "show",
       "imageTreatment": "cover",
+      "mobile": {
+        "imageLayout": "inline"
+      },
       "enrichment": {
         "enabledByDefault": true,
         "timeoutMs": 4000,

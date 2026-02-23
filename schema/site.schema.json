@@ -203,6 +203,59 @@
             }
           },
           "additionalProperties": true
+        },
+        "richCards": {
+          "type": "object",
+          "properties": {
+            "renderMode": {
+              "type": "string",
+              "enum": ["auto", "simple"]
+            },
+            "sourceLabelDefault": {
+              "type": "string",
+              "enum": ["show", "hide"]
+            },
+            "imageTreatment": {
+              "type": "string",
+              "enum": ["cover", "thumbnail", "off"]
+            },
+            "mobile": {
+              "type": "object",
+              "properties": {
+                "imageLayout": {
+                  "type": "string",
+                  "enum": ["inline", "full-width"]
+                }
+              },
+              "additionalProperties": true
+            },
+            "enrichment": {
+              "type": "object",
+              "properties": {
+                "enabledByDefault": {
+                  "type": "boolean"
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retries": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "metadataPath": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "reportPath": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true

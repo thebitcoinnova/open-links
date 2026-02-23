@@ -217,6 +217,7 @@ Supported keys include:
 - `title`
 - `description`
 - `image`
+- `mobileImageLayout`
 - `sourceLabel`
 - `sourceLabelVisible`
 - `enrichmentStatus`
@@ -274,8 +275,24 @@ Main presentation controls include:
 - `brandIcons.contrastMode`: `auto`, `always-theme`, `always-brand`
 - `brandIcons.minContrastRatio`: number between `1` and `21` (default `3`)
 - `brandIcons.sizeMode`: `normal`, `large`
+- `richCards.mobile.imageLayout`: `inline` (default), `full-width`
 
 Rich-card policy settings live under `ui.richCards`.
+
+#### `ui.richCards.mobile.imageLayout`
+
+Controls mobile rich-card image placement when rich-card images are present.
+
+- `inline` (default): compact square image (~quarter viewport width) with wrapped text/content flow.
+- `full-width`: stacked full-width square image (legacy mobile behavior).
+
+Resolution precedence:
+
+1. `links[].metadata.mobileImageLayout`
+2. `site.ui.richCards.mobile.imageLayout`
+3. fallback default: `inline`
+
+To keep the previous mobile style globally, set `site.ui.richCards.mobile.imageLayout` to `full-width`.
 
 #### `quality.seo` image materialization behavior
 

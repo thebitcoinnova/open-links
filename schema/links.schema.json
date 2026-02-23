@@ -27,6 +27,10 @@
               "title": { "type": "string" },
               "description": { "type": "string" },
               "image": { "type": "string", "format": "uri" },
+              "mobileImageLayout": {
+                "type": "string",
+                "enum": ["inline", "full-width"]
+              },
               "sourceLabel": { "type": "string" },
               "sourceLabelVisible": { "type": "boolean" },
               "enrichmentStatus": {

@@ -50,6 +50,42 @@
   body .rich-card-media {
     min-height: 7rem;
   }
+
+  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] {
+    display: block;
+  }
+
+  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"]::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+
+  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-media {
+    float: inline-start;
+    width: clamp(4.75rem, 25vw, 6.5rem);
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    margin-inline-end: var(--space-3);
+    margin-block-end: var(--space-2);
+  }
+
+  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-body {
+    display: block;
+  }
+
+  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-title {
+    display: block;
+  }
+
+  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-description {
+    display: block;
+    margin-top: var(--space-1);
+  }
+
+  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-meta {
+    margin-top: var(--space-2);
+  }
 }
 
 @media (min-width: 980px) {
