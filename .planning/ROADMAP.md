@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Bootstrap + Data Contract** - Establish template-ready repository setup and schema-validated JSON model.
 - [x] **Phase 2: Core UI + Theme Foundation** - Deliver profile page, simple cards, responsive layout, and baseline theming. (completed 2026-02-22)
 - [x] **Phase 3: Rich Cards + Content Enrichment** - Add configurable rich card support with resilient fallback behavior. (completed 2026-02-23)
-- [ ] **Phase 4: CI/CD + GitHub Pages Delivery** - Automate validation, build, and deployment on GitHub.
+- [x] **Phase 4: CI/CD + GitHub Pages Delivery** - Automate validation, build, and deployment on GitHub. (completed 2026-02-23)
 - [ ] **Phase 5: Quality Hardening (Perf/A11y/SEO)** - Add and enforce quality gates for production readiness.
 - [ ] **Phase 6: Docs + Extensibility Surface** - Finalize customization/deployment extension docs and onboarding guidance.
 
@@ -81,8 +81,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Implement CI workflow for validation, tests, and static build.
-- [ ] 04-02: Implement Pages deployment workflow with environment/path handling.
+- [x] 04-01: Implement CI workflow for validation, tests, and static build.
+- [x] 04-02: Implement Pages deployment workflow with environment/path handling.
 
 ### Phase 5: Quality Hardening (Perf/A11y/SEO)
 **Goal**: Enforce measurable quality gates so generated sites are fast, accessible, and discoverable.
@@ -128,6 +128,6 @@ Phases execute in numeric order: 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4
 | 1. Bootstrap + Data Contract | 3/3 | Complete | 2026-02-22 |
 | 2. Core UI + Theme Foundation | 3/3 | Complete   | 2026-02-22 |
 | 3. Rich Cards + Content Enrichment | 2/2 | Complete | 2026-02-23 |
-| 4. CI/CD + GitHub Pages Delivery | 0/2 | Not started | - |
+| 4. CI/CD + GitHub Pages Delivery | 2/2 | Complete | 2026-02-23 |
 | 5. Quality Hardening (Perf/A11y/SEO) | 0/3 | Not started | - |
 | 6. Docs + Extensibility Surface | 0/3 | Not started | - |

@@ -40,10 +40,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Deployment & CI
 
-- [ ] **DEP-01**: GitHub Actions validates schema and content on pull requests and pushes.
-- [ ] **DEP-02**: GitHub Actions builds the static SolidJS site on mainline changes.
-- [ ] **DEP-03**: GitHub Actions deploys build artifacts to GitHub Pages automatically.
-- [ ] **DEP-04**: Deployment configuration supports repository/project-page base path handling.
+- [x] **DEP-01**: GitHub Actions validates schema and content on pull requests and pushes.
+- [x] **DEP-02**: GitHub Actions builds the static SolidJS site on mainline changes.
+- [x] **DEP-03**: GitHub Actions deploys build artifacts to GitHub Pages automatically.
+- [x] **DEP-04**: Deployment configuration supports repository/project-page base path handling.
 - [ ] **DEP-05**: Deployment workflow is structured so non-GitHub target adapters can be added later without app-code rewrites.
 
 ### Quality (Performance, Accessibility, SEO)
@@ -113,10 +113,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | THEME-02 | Phase 2 | Complete |
 | THEME-03 | Phase 6 | Pending |
 | THEME-04 | Phase 6 | Pending |
-| DEP-01 | Phase 4 | Pending |
-| DEP-02 | Phase 4 | Pending |
-| DEP-03 | Phase 4 | Pending |
-| DEP-04 | Phase 4 | Pending |
+| DEP-01 | Phase 4 | Complete |
+| DEP-02 | Phase 4 | Complete |
+| DEP-03 | Phase 4 | Complete |
+| DEP-04 | Phase 4 | Complete |
 | DEP-05 | Phase 6 | Pending |
 | QUAL-01 | Phase 5 | Pending |
 | QUAL-02 | Phase 5 | Pending |
@@ -135,4 +135,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-23 after Phase 3 completion*
+*Last updated: 2026-02-23 after Phase 4 completion*

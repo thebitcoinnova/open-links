@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 4 - CI/CD + GitHub Pages Delivery
+**Current focus:** Phase 5 - Quality Hardening (Perf/A11y/SEO)
 
 ## Current Position
 
-Phase: 4 of 6 (CI/CD + GitHub Pages Delivery)
-Plan: 0 of 2 in current phase
+Phase: 5 of 6 (Quality Hardening (Perf/A11y/SEO))
+Plan: 0 of 3 in current phase
 Status: Ready to discuss
-Last activity: 2026-02-23 - Completed Phase 3 plans, verification, and requirement promotion for DATA-03/UI-03.
+Last activity: 2026-02-23 - Completed Phase 4 CI/CD and GitHub Pages delivery with verification and requirement promotion for DEP-01..DEP-04.
 
-Progress: [#####-----] 50%
+Progress: [######----] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 38 min
-- Total execution time: 5.1 hours
+- Total plans completed: 10
+- Average duration: 37 min
+- Total execution time: 6.1 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [#####-----] 50%
 | 1 | 3 | 92 min | 31 min |
 | 2 | 3 | 115 min | 38 min |
 | 3 | 2 | 98 min | 49 min |
+| 4 | 2 | 60 min | 30 min |
 
 **Recent Trend:**
-- Last 3 plans: 62 min, 36 min, 34 min
-- Trend: Increasing complexity
+- Last 3 plans: 31 min, 29 min, 62 min
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -49,6 +50,7 @@ Recent decisions affecting current work:
 - Data model: split files with optional grouping/order and explicit extension pathways.
 - Phase 2 implementation: composition/grouping/theme/layout are policy-driven and configurable.
 - Phase 3 implementation: rich cards render fallback-first, enrichment runs at build-time, and strict mode fails fetch failures while standard mode warns.
+- Phase 4 implementation: CI required checks and non-blocking strict lane are in place; Pages deploy uses artifact-first promotion with rebuild fallback and configurable base-path modes.
 
 ### Pending Todos
 
@@ -60,6 +62,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-23 00:08
-Stopped at: Phase 3 executed and verified; ready to start Phase 4 planning/discussion.
+Last session: 2026-02-23 01:21
+Stopped at: Phase 4 executed and verified; ready to start Phase 5 planning/discussion.
 Resume file: .planning/ROADMAP.md
