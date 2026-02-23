@@ -24,6 +24,27 @@
   --type-headline: clamp(1.05rem, 2.3vw, 1.2rem);
   --type-body: 1rem;
   --type-caption: 0.88rem;
+  --type-card-title: 1.02rem;
+  --type-link-title: 0.98rem;
+  --type-icon: 0.74rem;
+
+  --line-height-title: 1.05;
+  --line-height-body: 1.55;
+  --line-height-card-title: 1.2;
+  --line-height-card-description: 1.45;
+
+  --weight-card-title: 700;
+  --weight-link-title: 700;
+  --weight-icon: 700;
+
+  --tracking-utility-title: 0.05em;
+  --tracking-section-heading: 0.11em;
+  --tracking-card-source: 0.03em;
+  --tracking-icon: 0.05em;
+
+  --transform-utility-title: uppercase;
+  --transform-section-heading: uppercase;
+  --transform-contact-label: capitalize;
 
   --motion-fast: 140ms cubic-bezier(0.2, 0.72, 0.2, 1);
   --motion-mid: 220ms cubic-bezier(0.2, 0.72, 0.2, 1);

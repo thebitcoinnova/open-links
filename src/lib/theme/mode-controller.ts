@@ -58,6 +58,11 @@ interface ApplyThemeOptions {
   density?: DensityMode;
 }
 
+export interface ApplyTypographyOptions {
+  managedVars: string[];
+  cssVars: Record<string, string>;
+}
+
 export const applyThemeState = ({ themeId, mode, policy, density }: ApplyThemeOptions): void => {
   if (typeof document === "undefined") {
     return;
@@ -69,4 +74,20 @@ export const applyThemeState = ({ themeId, mode, policy, density }: ApplyThemeOp
   root.dataset.modePolicy = policy;
   root.dataset.density = normalizeDensity(density);
   root.style.colorScheme = mode;
+};
+
+export const applyTypographyState = ({ managedVars, cssVars }: ApplyTypographyOptions): void => {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const rootStyle = document.documentElement.style;
+
+  for (const variable of managedVars) {
+    rootStyle.removeProperty(variable);
+  }
+
+  for (const [variable, value] of Object.entries(cssVars)) {
+    rootStyle.setProperty(variable, value);
+  }
 };

@@ -192,6 +192,7 @@ In `data/site.json` under `ui`:
 - `desktopColumns`: one/two column page layout
 - `density`: compact/medium/spacious spacing
 - `typographyScale`: fixed/compact/expressive typography tuning
+- `typography`: global and per-theme typography token overrides
 - `targetSize`: comfortable/compact/large interaction footprint
 
 ### How layout resolution works
@@ -200,6 +201,46 @@ In `data/site.json` under `ui`:
 2. `resolveComposition()` maps composition mode and grouping style.
 3. `resolveLayoutPreferences()` maps density/columns/type scale/target size.
 4. `src/routes/index.tsx` applies these decisions through page class names and section rendering.
+
+### Typography Overrides via `site.ui.typography`
+
+Use `site.ui.typography` when preset scaling is not enough and you want explicit token-level typography control.
+
+Precedence:
+
+1. Built-in defaults in `src/styles/tokens.css`
+2. `site.ui.typographyScale` preset baseline
+3. `site.ui.typography.global`
+4. `site.ui.typography.themes[site.theme.active]`
+
+Example:
+
+```json
+{
+  "ui": {
+    "typographyScale": "fixed",
+    "typography": {
+      "global": {
+        "fontBody": "\"IBM Plex Sans\", \"Segoe UI\", sans-serif",
+        "sizeBody": "1rem",
+        "lineHeightBody": 1.6
+      },
+      "themes": {
+        "editorial": {
+          "fontDisplay": "\"Fraunces\", \"Iowan Old Style\", serif",
+          "trackingSectionHeading": "0.14em"
+        }
+      }
+    }
+  }
+}
+```
+
+Use this for:
+
+- role-specific font stacks
+- theme-specific heading typography
+- line-height and tracking adjustments without custom CSS edits
 
 ## Recipe: Add or Change a Layout Mode
 

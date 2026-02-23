@@ -48,6 +48,63 @@
         "minimumScore": { "$ref": "#/$defs/budgetThreshold" }
       },
       "additionalProperties": true
+    },
+    "typographyTokenValue": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "number" }
+      ]
+    },
+    "typographyOverrides": {
+      "type": "object",
+      "properties": {
+        "fontDisplay": { "type": "string", "minLength": 1 },
+        "fontBody": { "type": "string", "minLength": 1 },
+        "sizeTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "sizeHeadline": { "$ref": "#/$defs/typographyTokenValue" },
+        "sizeBody": { "$ref": "#/$defs/typographyTokenValue" },
+        "sizeCaption": { "$ref": "#/$defs/typographyTokenValue" },
+        "sizeCardTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "sizeLinkTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "sizeIcon": { "$ref": "#/$defs/typographyTokenValue" },
+        "lineHeightTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "lineHeightBody": { "$ref": "#/$defs/typographyTokenValue" },
+        "lineHeightCardTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "lineHeightCardDescription": { "$ref": "#/$defs/typographyTokenValue" },
+        "weightCardTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "weightLinkTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "weightIcon": { "$ref": "#/$defs/typographyTokenValue" },
+        "trackingUtilityTitle": { "$ref": "#/$defs/typographyTokenValue" },
+        "trackingSectionHeading": { "$ref": "#/$defs/typographyTokenValue" },
+        "trackingCardSource": { "$ref": "#/$defs/typographyTokenValue" },
+        "trackingIcon": { "$ref": "#/$defs/typographyTokenValue" },
+        "transformUtilityTitle": {
+          "type": "string",
+          "enum": ["none", "uppercase", "lowercase", "capitalize"]
+        },
+        "transformSectionHeading": {
+          "type": "string",
+          "enum": ["none", "uppercase", "lowercase", "capitalize"]
+        },
+        "transformContactLabel": {
+          "type": "string",
+          "enum": ["none", "uppercase", "lowercase", "capitalize"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "typographyConfig": {
+      "type": "object",
+      "properties": {
+        "global": { "$ref": "#/$defs/typographyOverrides" },
+        "themes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/typographyOverrides"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -116,6 +173,9 @@
         "typographyScale": {
           "type": "string",
           "enum": ["fixed", "compact", "expressive"]
+        },
+        "typography": {
+          "$ref": "#/$defs/typographyConfig"
         },
         "targetSize": {
           "type": "string",

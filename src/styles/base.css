@@ -53,18 +53,6 @@ a {
   gap: calc(var(--space-5) * var(--density-scale));
 }
 
-.page.typography-compact {
-  --page-type-title: clamp(1.5rem, 3.2vw, 2.05rem);
-  --page-type-headline: clamp(0.95rem, 2vw, 1.08rem);
-  --page-type-caption: 0.82rem;
-}
-
-.page.typography-expressive {
-  --page-type-title: clamp(1.9rem, 4.5vw, 2.75rem);
-  --page-type-headline: clamp(1.15rem, 2.4vw, 1.3rem);
-  --page-type-caption: 0.93rem;
-}
-
 .page.targets-compact {
   --page-target-size: 40px;
 }
@@ -83,8 +71,8 @@ a {
 .utility-title {
   margin: 0;
   font-family: var(--font-display);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: var(--tracking-utility-title);
+  text-transform: var(--transform-utility-title);
   color: var(--text-muted);
   font-size: var(--page-type-caption);
 }
@@ -162,7 +150,7 @@ a {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--page-type-title);
-  line-height: 1.05;
+  line-height: var(--line-height-title);
 }
 
 .profile-headline {
@@ -174,7 +162,7 @@ a {
 .profile-bio {
   margin: 0;
   color: var(--text-muted);
-  line-height: 1.55;
+  line-height: var(--line-height-body);
 }
 
 .profile-meta {
@@ -209,14 +197,14 @@ a {
 }
 
 .profile-contact-list span:first-child {
-  text-transform: capitalize;
+  text-transform: var(--transform-contact-label);
 }
 
 .section-heading {
   margin: 0 0 var(--space-2);
   font-size: var(--page-type-caption);
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+  letter-spacing: var(--tracking-section-heading);
+  text-transform: var(--transform-section-heading);
   color: color-mix(in srgb, var(--accent) 66%, var(--text-primary) 34%);
 }
 
@@ -322,14 +310,15 @@ a {
 
 .rich-card-title {
   font-family: var(--font-display);
-  font-size: 1.02rem;
-  line-height: 1.2;
+  font-size: var(--type-card-title);
+  line-height: var(--line-height-card-title);
+  font-weight: var(--weight-card-title);
 }
 
 .rich-card-description {
   color: var(--text-muted);
   font-size: var(--page-type-caption);
-  line-height: 1.45;
+  line-height: var(--line-height-card-description);
 }
 
 .rich-card-meta {
@@ -341,7 +330,7 @@ a {
 .rich-card-source {
   color: color-mix(in srgb, var(--text-muted) 86%, var(--accent) 14%);
   font-size: var(--page-type-caption);
-  letter-spacing: 0.03em;
+  letter-spacing: var(--tracking-card-source);
 }
 
 .simple-link-card:hover {
@@ -365,9 +354,9 @@ a {
   border-radius: var(--radius-sm);
   display: inline-grid;
   place-items: center;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: var(--type-icon);
+  font-weight: var(--weight-icon);
+  letter-spacing: var(--tracking-icon);
   background: color-mix(in srgb, var(--accent) 26%, var(--surface-pill) 74%);
   color: color-mix(in srgb, var(--accent-strong) 85%, white 15%);
 }
@@ -380,7 +369,8 @@ a {
 
 .card-copy strong {
   font-family: var(--font-display);
-  font-size: 0.98rem;
+  font-size: var(--type-link-title);
+  font-weight: var(--weight-link-title);
 }
 
 .card-copy span {

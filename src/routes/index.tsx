@@ -8,6 +8,7 @@ import ProfileHeader from "../components/profile/ProfileHeader";
 import { loadContent } from "../lib/content/load-content";
 import ThemeToggle from "../components/theme/ThemeToggle";
 import {
+  applyTypographyState,
   applyThemeState,
   canToggleMode,
   persistModePreference,
@@ -18,6 +19,7 @@ import {
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
+import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
 import {
   buildRichCardViewModel,
   resolveRichCardVariant,
@@ -31,6 +33,11 @@ const richRenderMode = resolveRichRenderMode(content.site);
 const modePolicy = resolveModePolicy(content.site);
 const themeSelection = resolveThemeSelection(content.site);
 const themeDefinition = getThemeDefinition(themeSelection.active);
+const typography = resolveTypographyPreferences({
+  site: content.site,
+  activeTheme: themeSelection.active,
+  typographyScale: layout.typographyScale
+});
 
 const sections = resolveLinkSections(content.links, content.groups, composition.grouping) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
@@ -178,6 +185,7 @@ export default function RouteIndex() {
       policy: modePolicy,
       density: layout.density
     });
+    applyTypographyState(typography);
   });
 
   const handleModeToggle = () => {

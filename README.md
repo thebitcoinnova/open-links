@@ -12,6 +12,7 @@ This project is developer-first: fork or template the repo, edit JSON, push, and
 - Rich and simple card support with build-time enrichment.
 - GitHub Actions CI + GitHub Pages deploy pipeline already wired.
 - Theme and layout controls designed for forking and customization.
+- Data-driven typography overrides via `data/site.json` (`ui.typography`).
 
 ## Scope and Audience
 

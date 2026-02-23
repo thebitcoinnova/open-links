@@ -11,6 +11,7 @@ export type ModePolicy = "dark-toggle" | "static-dark" | "static-light";
 export type LinkTargetMode = "new-tab-external" | "same-tab" | "new-tab-all";
 export type DesktopColumnsMode = "one" | "two";
 export type TypographyScaleMode = "fixed" | "compact" | "expressive";
+export type TypographyTransformMode = "none" | "uppercase" | "lowercase" | "capitalize";
 export type TargetSizeMode = "comfortable" | "compact" | "large";
 export type RichCardRenderMode = "auto" | "simple";
 export type SourceLabelDefault = "show" | "hide";
@@ -126,6 +127,39 @@ export interface ProfileData {
   [key: string]: unknown;
 }
 
+type TypographyTokenValue = string | number;
+
+export interface TypographyOverrides {
+  fontDisplay?: string;
+  fontBody?: string;
+  sizeTitle?: TypographyTokenValue;
+  sizeHeadline?: TypographyTokenValue;
+  sizeBody?: TypographyTokenValue;
+  sizeCaption?: TypographyTokenValue;
+  sizeCardTitle?: TypographyTokenValue;
+  sizeLinkTitle?: TypographyTokenValue;
+  sizeIcon?: TypographyTokenValue;
+  lineHeightTitle?: TypographyTokenValue;
+  lineHeightBody?: TypographyTokenValue;
+  lineHeightCardTitle?: TypographyTokenValue;
+  lineHeightCardDescription?: TypographyTokenValue;
+  weightCardTitle?: TypographyTokenValue;
+  weightLinkTitle?: TypographyTokenValue;
+  weightIcon?: TypographyTokenValue;
+  trackingUtilityTitle?: TypographyTokenValue;
+  trackingSectionHeading?: TypographyTokenValue;
+  trackingCardSource?: TypographyTokenValue;
+  trackingIcon?: TypographyTokenValue;
+  transformUtilityTitle?: TypographyTransformMode;
+  transformSectionHeading?: TypographyTransformMode;
+  transformContactLabel?: TypographyTransformMode;
+}
+
+export interface TypographyConfig {
+  global?: TypographyOverrides;
+  themes?: Record<string, TypographyOverrides>;
+}
+
 export interface SiteData {
   title: string;
   description: string;
@@ -144,6 +178,7 @@ export interface SiteData {
     linkTarget?: LinkTargetMode;
     desktopColumns?: DesktopColumnsMode;
     typographyScale?: TypographyScaleMode;
+    typography?: TypographyConfig;
     targetSize?: TargetSizeMode;
     richCards?: {
       renderMode?: RichCardRenderMode;

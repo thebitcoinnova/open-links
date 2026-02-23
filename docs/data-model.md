@@ -235,9 +235,59 @@ Main presentation controls include:
 - `desktopColumns`: `one`, `two`
 - `density`: `compact`, `medium`, `spacious`
 - `typographyScale`: `fixed`, `compact`, `expressive`
+- `typography`: optional global/per-theme typography overrides
 - `targetSize`: `comfortable`, `compact`, `large`
 
 Rich-card policy settings live under `ui.richCards`.
+
+#### `ui.typography`
+
+`ui.typography` provides data-driven typography overrides without editing CSS files.
+
+Precedence order:
+
+1. Built-in token defaults
+2. `ui.typographyScale` preset baseline (`fixed`, `compact`, `expressive`)
+3. `ui.typography.global`
+4. `ui.typography.themes[theme.active]`
+
+Supported keys in each override object:
+
+- Font families: `fontDisplay`, `fontBody`
+- Type sizes: `sizeTitle`, `sizeHeadline`, `sizeBody`, `sizeCaption`, `sizeCardTitle`, `sizeLinkTitle`, `sizeIcon`
+- Line heights: `lineHeightTitle`, `lineHeightBody`, `lineHeightCardTitle`, `lineHeightCardDescription`
+- Font weights: `weightCardTitle`, `weightLinkTitle`, `weightIcon`
+- Letter spacing: `trackingUtilityTitle`, `trackingSectionHeading`, `trackingCardSource`, `trackingIcon`
+- Text transforms: `transformUtilityTitle`, `transformSectionHeading`, `transformContactLabel`
+
+Valid transform values:
+
+- `none`
+- `uppercase`
+- `lowercase`
+- `capitalize`
+
+Example:
+
+```json
+{
+  "ui": {
+    "typographyScale": "compact",
+    "typography": {
+      "global": {
+        "fontBody": "\"IBM Plex Sans\", \"Segoe UI\", sans-serif",
+        "sizeBody": "1.02rem",
+        "lineHeightBody": 1.6
+      },
+      "themes": {
+        "editorial": {
+          "fontDisplay": "\"Fraunces\", \"Iowan Old Style\", serif"
+        }
+      }
+    }
+  }
+}
+```
 
 #### `quality`
 
