@@ -47,7 +47,7 @@ export const runManualSmokeChecks = ({
       label:
         checklistLabels[2] ??
         "Simple cards expose meaningful action labels and are keyboard activatable.",
-      status: simpleCard.includes("<a") && simpleCard.includes("aria-label") ? "pass" : "warn",
+      status: simpleCard.includes("<a") && simpleCard.includes("aria-label") ? "pass" : "fail",
       details:
         simpleCard.includes("<a") && simpleCard.includes("aria-label")
           ? "Simple card anchor and aria-label detected."
@@ -59,7 +59,7 @@ export const runManualSmokeChecks = ({
       label:
         checklistLabels[3] ??
         "Rich cards expose meaningful action labels and are keyboard activatable.",
-      status: richCard.includes("<a") && richCard.includes("aria-label") ? "pass" : "warn",
+      status: richCard.includes("<a") && richCard.includes("aria-label") ? "pass" : "fail",
       details:
         richCard.includes("<a") && richCard.includes("aria-label")
           ? "Rich card anchor and aria-label detected."
@@ -72,7 +72,7 @@ export const runManualSmokeChecks = ({
     .filter((check) => check.status !== "pass")
     .map((check) => ({
       domain: "manual-smoke",
-      level: "warning",
+      level: check.status === "fail" ? "error" : "warning",
       code: "MANUAL_SMOKE_INCOMPLETE",
       scope: check.id,
       message: check.details,

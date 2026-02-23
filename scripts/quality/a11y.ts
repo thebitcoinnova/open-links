@@ -22,7 +22,9 @@ export const runA11yChecks = ({
   const simpleCard = readText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
   const richCard = readText(rootDir, "src/components/cards/RichLinkCard.tsx");
   const utilityBar = readText(rootDir, "src/components/layout/TopUtilityBar.tsx");
+  const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
   const styles = readText(rootDir, "src/styles/base.css");
+  const tokens = readText(rootDir, "src/styles/tokens.css");
 
   if (!routeIndex.includes("<main")) {
     issues.push({
@@ -46,6 +48,17 @@ export const runA11yChecks = ({
     });
   }
 
+  if (!simpleCard.includes("aria-describedby")) {
+    issues.push({
+      domain: "accessibility",
+      level: "warning",
+      code: "A11Y_SIMPLE_CARD_DESCRIPTION_MISSING",
+      scope: "src/components/cards/SimpleLinkCard.tsx",
+      message: "Simple link cards are missing aria-describedby semantics.",
+      remediation: "Add aria-describedby for destination/context detail text on simple cards."
+    });
+  }
+
   if (!richCard.includes("aria-label")) {
     issues.push({
       domain: "accessibility",
@@ -57,6 +70,17 @@ export const runA11yChecks = ({
     });
   }
 
+  if (!richCard.includes("aria-describedby")) {
+    issues.push({
+      domain: "accessibility",
+      level: "warning",
+      code: "A11Y_RICH_CARD_DESCRIPTION_MISSING",
+      scope: "src/components/cards/RichLinkCard.tsx",
+      message: "Rich link cards are missing aria-describedby semantics.",
+      remediation: "Add aria-describedby pointing to rich-card description/source content."
+    });
+  }
+
   if (!utilityBar.includes('role="group"') || !utilityBar.includes("aria-label")) {
     issues.push({
       domain: "accessibility",
@@ -65,6 +89,17 @@ export const runA11yChecks = ({
       scope: "src/components/layout/TopUtilityBar.tsx",
       message: "Top utility controls lack role/group labeling semantics.",
       remediation: "Expose utility controls inside a labeled group so screen readers announce control context."
+    });
+  }
+
+  if (!themeToggle.includes("aria-label") || !themeToggle.includes("aria-pressed")) {
+    issues.push({
+      domain: "accessibility",
+      level: "error",
+      code: "A11Y_TOGGLE_SEMANTICS_MISSING",
+      scope: "src/components/theme/ThemeToggle.tsx",
+      message: "Theme toggle requires aria-label and aria-pressed semantics.",
+      remediation: "Keep theme toggle state and action messaging explicit for assistive technologies."
     });
   }
 
@@ -86,6 +121,28 @@ export const runA11yChecks = ({
       });
     }
   });
+
+  if (!styles.includes(":focus-visible")) {
+    issues.push({
+      domain: "accessibility",
+      level: strict && focusContrastStrict ? "error" : "warning",
+      code: "A11Y_GLOBAL_FOCUS_MISSING",
+      scope: "src/styles/base.css",
+      message: "Global :focus-visible style is missing.",
+      remediation: "Define a global :focus-visible baseline to improve keyboard focus discoverability."
+    });
+  }
+
+  if (!tokens.includes("--shadow-focus")) {
+    issues.push({
+      domain: "accessibility",
+      level: strict && focusContrastStrict ? "error" : "warning",
+      code: "A11Y_FOCUS_TOKEN_MISSING",
+      scope: "src/styles/tokens.css",
+      message: "Focus-shadow token is missing from token palette.",
+      remediation: "Define --shadow-focus token so focus states remain consistent across themes."
+    });
+  }
 
   const hasError = issues.some((issue) => issue.level === "error");
   const hasWarning = issues.some((issue) => issue.level === "warning");
