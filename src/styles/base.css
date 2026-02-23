@@ -32,6 +32,11 @@ a {
   color: inherit;
 }
 
+:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
 .page {
   --page-type-title: var(--type-title);
   --page-type-headline: var(--type-headline);
@@ -91,7 +96,7 @@ a {
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: var(--surface-pill);
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-primary) 84%, var(--text-muted) 16%);
   padding: 0.35rem 0.7rem;
   font-size: var(--page-type-caption);
 }
@@ -249,7 +254,6 @@ a {
 }
 
 .rich-link-card:focus-visible {
-  outline: none;
   box-shadow: var(--shadow-focus);
   border-color: var(--accent-strong);
 }
@@ -319,7 +323,6 @@ a {
 }
 
 .simple-link-card:focus-visible {
-  outline: none;
   box-shadow: var(--shadow-focus);
   border-color: var(--accent-strong);
 }
@@ -349,7 +352,7 @@ a {
 }
 
 .card-copy span {
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-primary) 75%, var(--text-muted) 25%);
   font-size: var(--page-type-caption);
   white-space: nowrap;
   overflow: hidden;
@@ -380,8 +383,8 @@ a {
 }
 
 .theme-toggle:focus-visible {
-  outline: none;
   box-shadow: var(--shadow-focus);
+  border-color: var(--accent-strong);
 }
 
 .theme-toggle:disabled {
