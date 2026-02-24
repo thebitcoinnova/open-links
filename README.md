@@ -117,7 +117,7 @@ OpenClaw should update only the rows between the exact marker lines below:
 OPENCLAW_DEPLOY_URLS_START
 | target | status | primary_url | additional_urls | evidence |
 |--------|--------|-------------|-----------------|----------|
-| github-pages | pending | TBD | none | waiting for first successful deploy |
+| github-pages | active | https://prizz.github.io/open-links/ | none | Deploy Pages succeeded for b6340cc |
 OPENCLAW_DEPLOY_URLS_END
 
 ## AI-Guided Path (Optional)
