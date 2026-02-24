@@ -310,6 +310,7 @@ Supported keys include:
 Per-link controls:
 
 - `enabled`
+- `allowKnownBlocker`: explicit override to force-attempt enrichment for a known blocked domain
 - `sourceLabel`
 - `sourceLabelVisible`
 - `custom`
@@ -329,7 +330,14 @@ Site-level default enrichment behavior is defined in `site.ui.richCards.enrichme
 - `failOn`: blocking reasons for strict enrichment. Default: `["fetch_failed", "metadata_missing"]`.
 - `allowManualMetadataFallback`: default `true`. When `metadata_missing` occurs, any manual `links[].metadata.title|description|image` downgrades to warning.
 
-`npm run dev` and `npm run build` run strict enrichment pre-steps and fail on configured blocking reasons.  
+Canonical known-blocker policy registry:
+
+- `data/policy/rich-enrichment-blockers.json`
+- Schema: `schema/rich-enrichment-blockers.schema.json`
+
+When an enrichment-enabled rich link URL matches a `status=blocked` registry entry, enrichment fails early with reason `known_blocker` unless `links[].enrichment.allowKnownBlocker=true` is set for that link.
+
+`npm run dev` and `npm run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations.  
 Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 
 ## `site.json`

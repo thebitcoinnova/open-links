@@ -194,7 +194,7 @@ Fix:
 Symptoms:
 
 - `npm run dev` or `npm run build` stops during `enrich:rich:strict`.
-- Output includes `fetch_failed` or `metadata_missing` diagnostics for one or more links.
+- Output includes `fetch_failed`, `metadata_missing`, or `known_blocker` diagnostics for one or more links.
 
 Fix:
 
@@ -208,8 +208,10 @@ npm run enrich:rich:strict
    - `failureMode` (`immediate` or `aggregate`)
    - `failOn` (`fetch_failed`, `metadata_missing`)
    - `allowManualMetadataFallback`
-3. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata.
-4. Temporary emergency local bypass:
+3. Review canonical known-blocker policy in `data/policy/rich-enrichment-blockers.json` (see `docs/rich-enrichment-blockers-registry.md`).
+4. If a known blocked domain must be tested intentionally, set per-link override: `links[].enrichment.allowKnownBlocker=true`.
+5. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata.
+6. Temporary emergency local bypass:
 
 ```bash
 OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build
@@ -277,5 +279,6 @@ npm run images:sync -- --force
 - OpenClaw update contract: `docs/openclaw-update-crud.md`
 - Customization catalog: `docs/customization-catalog.md`
 - Data model deep dive: `docs/data-model.md`
+- Blockers registry guide: `docs/rich-enrichment-blockers-registry.md`
 - AI-guided customization wizard: `docs/ai-guided-customization.md`
 - Deployment operations: `docs/deployment.md`

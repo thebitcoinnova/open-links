@@ -111,6 +111,7 @@ export interface RichLinkMetadata {
 
 export interface LinkEnrichmentPolicy {
   enabled?: boolean;
+  allowKnownBlocker?: boolean;
   sourceLabel?: string;
   sourceLabelVisible?: boolean;
   custom?: Record<string, unknown>;

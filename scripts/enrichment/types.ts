@@ -5,6 +5,7 @@ export type EnrichmentReason =
   | "metadata_partial"
   | "metadata_missing"
   | "fetch_failed"
+  | "known_blocker"
   | "enrichment_disabled";
 
 export type EnrichmentFailureReason = "fetch_failed" | "metadata_missing";

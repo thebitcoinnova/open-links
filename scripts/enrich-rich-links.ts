@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import {
+  DEFAULT_BLOCKERS_REGISTRY_PATH,
+  resolveKnownBlockerMatch,
+  loadRichEnrichmentBlockersRegistry,
+  type KnownBlockerMatch
+} from "./enrichment/blockers-registry";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
 import { writeEnrichmentReport } from "./enrichment/report";
@@ -31,6 +37,7 @@ interface LinkInput {
   metadata?: EnrichmentMetadata;
   enrichment?: {
     enabled?: boolean;
+    allowKnownBlocker?: boolean;
     sourceLabel?: string;
     sourceLabelVisible?: boolean;
   };
@@ -192,6 +199,10 @@ const makeEntryMessage = (
     return "Enrichment skipped by configuration.";
   }
 
+  if (reason === "known_blocker") {
+    return "Known blocked domain matched the rich-link URL for direct metadata fetch.";
+  }
+
   if (status === "failed") {
     return "Metadata fetch failed for this link.";
   }
@@ -220,6 +231,10 @@ const remediationFor = (
     return "Set enrichment.enabled=true on this rich link or adjust site.ui.richCards.enrichment.enabledByDefault.";
   }
 
+  if (reason === "known_blocker") {
+    return "Disable enrichment for this link, set enrichment.allowKnownBlocker=true to force-attempt anyway, or provide manual metadata under links[].metadata.";
+  }
+
   if (status === "failed") {
     return "Check URL/network availability, provide metadata manually under link.metadata, or disable enrichment for this link.";
   }
@@ -243,6 +258,26 @@ const isBlockingReason = (reason: EnrichmentReason, failOn: EnrichmentFailureRea
   isFailureReason(reason) && failOn.includes(reason);
 
 const formatDurationMs = (durationMs: number): string => `${Math.max(0, Math.round(durationMs))}ms`;
+
+const knownBlockerMessageFor = (match: KnownBlockerMatch): string =>
+  `Known direct-fetch blocker '${match.blocker.id}' matched host '${match.host}' via domain '${match.matchedDomain}'. ${match.blocker.summary}`;
+
+const knownBlockerRemediationFor = (match: KnownBlockerMatch): string => {
+  const parts: string[] = [];
+
+  parts.push(...match.blocker.remediation);
+  parts.push(
+    "Disable enrichment for this link, or set links[].enrichment.allowKnownBlocker=true to override and attempt enrichment anyway."
+  );
+  if (match.blocker.plannedSupportNote) {
+    parts.push(match.blocker.plannedSupportNote);
+  }
+  if (match.blocker.docs.length > 0) {
+    parts.push(`Docs: ${match.blocker.docs.join(", ")}`);
+  }
+
+  return parts.join(" ");
+};
 
 const printBlockingDiagnostics = (
   entries: EnrichmentRunEntry[],
@@ -288,12 +323,16 @@ const run = async () => {
   const linksPayload = readJson<LinksPayload>(args.linksPath);
   const sitePayload = readJson<SitePayload>(args.sitePath);
   const config = resolveConfig(sitePayload, args);
+  const blockersRegistry = loadRichEnrichmentBlockersRegistry({
+    registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH
+  });
   const generatedAt = new Date().toISOString();
-  const enforceBlocking = args.strict && !config.bypassActive;
+  const enforceStrictBlocking = args.strict && !config.bypassActive;
+  const enforceKnownBlockers = !config.bypassActive;
 
-  if (args.strict && config.bypassActive) {
+  if (config.bypassActive) {
     console.warn(
-      `Warning: ${ENRICHMENT_BYPASS_ENV}=1 is active. Blocking enrichment failures will be reported but will not fail this run.`
+      `Warning: ${ENRICHMENT_BYPASS_ENV}=1 is active. Blocking enrichment failures (including known blocked domains) will be reported but will not fail this run.`
     );
   }
 
@@ -335,6 +374,44 @@ const run = async () => {
       continue;
     }
 
+    const knownBlockerMatch = resolveKnownBlockerMatch(link.url, blockersRegistry, "direct_fetch");
+    const allowKnownBlocker = link.enrichment?.allowKnownBlocker === true;
+    if (knownBlockerMatch && !allowKnownBlocker) {
+      const reason: EnrichmentReason = "known_blocker";
+      const metadata = mergeMetadata(link.metadata, {
+        sourceLabel: link.enrichment?.sourceLabel,
+        sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+        enrichmentStatus: "failed",
+        enrichmentReason: reason,
+        enrichedAt: generatedAt
+      });
+
+      entries.push({
+        linkId: link.id,
+        url: link.url,
+        status: "failed",
+        reason,
+        attempts: 0,
+        durationMs: 0,
+        message: knownBlockerMessageFor(knownBlockerMatch),
+        remediation: knownBlockerRemediationFor(knownBlockerMatch),
+        metadata,
+        blocking: true
+      });
+      generatedLinks[link.id] = { metadata };
+      continue;
+    }
+
+    if (knownBlockerMatch && allowKnownBlocker) {
+      console.warn(
+        [
+          `Warning: link '${link.id}' matches known blocker '${knownBlockerMatch.blocker.id}'`,
+          "because enrichment.allowKnownBlocker=true is set, enrichment fetch will proceed anyway.",
+          `Host: ${knownBlockerMatch.host} (matched: ${knownBlockerMatch.matchedDomain})`
+        ].join(" ")
+      );
+    }
+
     const fetched = await fetchMetadata(link.url, {
       timeoutMs: config.timeoutMs,
       retries: config.retries
@@ -367,7 +444,7 @@ const run = async () => {
 
       generatedLinks[link.id] = { metadata };
 
-      if (enforceBlocking && config.failureMode === "immediate" && blocking) {
+      if (enforceStrictBlocking && config.failureMode === "immediate" && blocking) {
         abortedEarly = true;
         break;
       }
@@ -418,7 +495,7 @@ const run = async () => {
 
     generatedLinks[link.id] = { metadata };
 
-    if (enforceBlocking && config.failureMode === "immediate" && blocking) {
+    if (enforceStrictBlocking && config.failureMode === "immediate" && blocking) {
       abortedEarly = true;
       break;
     }
@@ -453,6 +530,10 @@ const run = async () => {
   console.log(
     `Policy: failureMode=${config.failureMode}, failOn=${config.failOn.join(", ")}, allowManualMetadataFallback=${config.allowManualMetadataFallback}`
   );
+  console.log(`Known blockers registry: ${DEFAULT_BLOCKERS_REGISTRY_PATH}`);
+  console.log(
+    `Known blocker policy: ${enforceKnownBlockers ? "enforced" : "bypassed"} (override per link: enrichment.allowKnownBlocker=true)`
+  );
   console.log(`Bypass active: ${config.bypassActive ? "yes" : "no"} (${ENRICHMENT_BYPASS_ENV})`);
   console.log(`Generated metadata: ${config.outputPath}`);
   console.log(`Enrichment report: ${config.reportPath}`);
@@ -468,7 +549,13 @@ const run = async () => {
     );
   }
 
-  const shouldFail = enforceBlocking && blockingEntries.length > 0;
+  const knownBlockerEntries = blockingEntries.filter((entry) => entry.reason === "known_blocker");
+  const strictPolicyEntries = blockingEntries.filter((entry) => entry.reason !== "known_blocker");
+  const entriesToFailOn = [
+    ...(enforceKnownBlockers ? knownBlockerEntries : []),
+    ...(enforceStrictBlocking ? strictPolicyEntries : [])
+  ];
+  const shouldFail = entriesToFailOn.length > 0;
 
   if (config.bypassActive && blockingEntries.length > 0) {
     console.warn(
@@ -477,7 +564,7 @@ const run = async () => {
   }
 
   if (shouldFail) {
-    printBlockingDiagnostics(blockingEntries, config, config.reportPath, abortedEarly);
+    printBlockingDiagnostics(entriesToFailOn, config, config.reportPath, abortedEarly);
   }
 
   process.exit(shouldFail ? 1 : 0);

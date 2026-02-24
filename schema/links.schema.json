@@ -188,6 +188,7 @@
                 "metadata_partial",
                 "metadata_missing",
                 "fetch_failed",
+                "known_blocker",
                 "enrichment_disabled"
               ]
             },
@@ -203,6 +204,7 @@
           "type": "object",
           "properties": {
             "enabled": { "type": "boolean" },
+            "allowKnownBlocker": { "type": "boolean" },
             "sourceLabel": { "type": "string" },
             "sourceLabelVisible": { "type": "boolean" },
             "custom": {

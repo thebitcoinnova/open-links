@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schema/rich-enrichment-blockers.schema.json",
+  "version": 1,
+  "updatedAt": "2026-02-24T12:15:00Z",
+  "blockers": [
+    {
+      "id": "linkedin-direct-fetch",
+      "status": "blocked",
+      "scope": "direct_fetch",
+      "domains": ["linkedin.com", "lnkd.in"],
+      "matchSubdomains": true,
+      "reasonCategory": "authwall",
+      "lastVerifiedAt": "2026-02-24T11:45:37Z",
+      "summary": "Direct fetch returns HTTP 999 and/or authwall placeholder metadata instead of profile metadata.",
+      "remediation": [
+        "Disable enrichment for affected links.",
+        "Use manual links[].metadata fields for rich cards."
+      ],
+      "plannedSupportNote": "Authenticated session-based workaround is planned (coming soon).",
+      "docs": [
+        "docs/rich-metadata-fetch-blockers.md",
+        "docs/linkedin-authenticated-metadata-poc.md"
+      ]
+    },
+    {
+      "id": "medium-direct-fetch",
+      "status": "blocked",
+      "scope": "direct_fetch",
+      "domains": ["medium.com"],
+      "matchSubdomains": true,
+      "reasonCategory": "challenge",
+      "lastVerifiedAt": "2026-02-24T11:45:59Z",
+      "summary": "Direct fetch returns challenge pages (HTTP 403 / anti-bot) instead of article/profile metadata.",
+      "remediation": [
+        "Disable enrichment for affected links.",
+        "Use manual links[].metadata fields for rich cards."
+      ],
+      "plannedSupportNote": "Authenticated/session-aware workaround investigation is planned (coming soon).",
+      "docs": ["docs/rich-metadata-fetch-blockers.md"]
+    }
+  ]
+}

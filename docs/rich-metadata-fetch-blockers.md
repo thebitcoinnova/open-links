@@ -4,6 +4,12 @@ This document tracks rich metadata fetch failures caused by anti-automation prot
 
 `npm run dev` and `npm run build` now run strict rich enrichment before app build, so unresolved blockers can fail local and CI builds.
 
+Canonical machine-readable blocker policy:
+
+- `data/policy/rich-enrichment-blockers.json`
+- Schema: `schema/rich-enrichment-blockers.schema.json`
+- Registry guide: `docs/rich-enrichment-blockers-registry.md`
+
 LinkedIn authenticated one-off validation runbook:
 
 - `docs/linkedin-authenticated-metadata-poc.md`
@@ -12,12 +18,13 @@ LinkedIn authenticated one-off validation runbook:
 
 When you find a new rich metadata fetch failure:
 
-1. Add a new finding section with a UTC ISO-8601 timestamp (`YYYY-MM-DDTHH:MM:SSZ`).
-2. Record the exact URL and link id.
-3. Record every meaningful fetch attempt and outcome (status code + any body clues).
-4. Record the chosen workaround/remediation.
-5. Update `data/links.json` and/or manual metadata if needed.
-6. Keep historical attempts; append updates instead of replacing old entries.
+1. Update `data/policy/rich-enrichment-blockers.json` first (canonical policy source).
+2. Add/update a finding section here with UTC ISO-8601 timestamps (`YYYY-MM-DDTHH:MM:SSZ`).
+3. Record the exact URL and link id.
+4. Record every meaningful fetch attempt and outcome (status code + any body clues).
+5. Record the chosen workaround/remediation.
+6. Update `data/links.json` and/or manual metadata if needed.
+7. Keep historical attempts; append updates instead of replacing old entries.
 
 If a previously blocked domain becomes fetchable, add a timestamped verification entry and update the status table below.
 

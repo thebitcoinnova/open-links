@@ -3,6 +3,12 @@ import path from "node:path";
 import process from "node:process";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import addFormats from "ajv-formats";
+import {
+  DEFAULT_BLOCKERS_REGISTRY_PATH,
+  loadRichEnrichmentBlockersRegistry,
+  resolveKnownBlockerMatch,
+  type RichEnrichmentBlockersRegistry
+} from "./enrichment/blockers-registry";
 import { readEnrichmentReport } from "./enrichment/report";
 import type {
   EnrichmentFailureReason,
@@ -29,6 +35,7 @@ type ArgMap = {
 };
 
 const ROOT = process.cwd();
+const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -62,6 +69,9 @@ const parseArgs = (): ArgMap => {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toStringOrUndefined = (value: unknown): string | undefined =>
+  typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 
 const resolveEnrichmentReportPath = (
   site: Record<string, unknown>,
@@ -136,10 +146,95 @@ const isBlockingEntry = (entry: EnrichmentRunEntry, failOn: EnrichmentFailureRea
   return isFailureReason(entry.reason) && failOn.includes(entry.reason);
 };
 
+const resolveEnabledByDefault = (site: Record<string, unknown>): boolean => {
+  const ui = isRecord(site.ui) ? site.ui : undefined;
+  const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
+  const enrichment = richCards && isRecord(richCards.enrichment) ? richCards.enrichment : undefined;
+  return typeof enrichment?.enabledByDefault === "boolean" ? enrichment.enabledByDefault : true;
+};
+
+const knownBlockerConfigIssues = (
+  linksSource: string,
+  linksData: Record<string, unknown>,
+  siteData: Record<string, unknown>,
+  registry: RichEnrichmentBlockersRegistry,
+  bypassActive: boolean
+): { issues: ValidationIssue[]; suppressedKnownBlockerLinkIds: Set<string> } => {
+  const issues: ValidationIssue[] = [];
+  const suppressedKnownBlockerLinkIds = new Set<string>();
+  const links = Array.isArray(linksData.links) ? linksData.links : [];
+  const enabledByDefault = resolveEnabledByDefault(siteData);
+
+  links.forEach((rawLink, index) => {
+    if (!isRecord(rawLink)) {
+      return;
+    }
+
+    if (rawLink.type !== "rich") {
+      return;
+    }
+
+    const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
+    const url = toStringOrUndefined(rawLink.url);
+    if (!url) {
+      return;
+    }
+
+    const enrichment = isRecord(rawLink.enrichment) ? rawLink.enrichment : undefined;
+    const enabled =
+      typeof enrichment?.enabled === "boolean" ? enrichment.enabled : enabledByDefault;
+    if (!enabled) {
+      return;
+    }
+
+    const match = resolveKnownBlockerMatch(url, registry, "direct_fetch");
+    if (!match) {
+      return;
+    }
+
+    const allowKnownBlocker = enrichment?.allowKnownBlocker === true;
+    const docsHint = match.blocker.docs.length > 0 ? ` Docs: ${match.blocker.docs.join(", ")}.` : "";
+    const supportHint = match.blocker.plannedSupportNote
+      ? ` ${match.blocker.plannedSupportNote}`
+      : "";
+    const path = `$.links[${index}].enrichment`;
+
+    if (allowKnownBlocker) {
+      suppressedKnownBlockerLinkIds.add(linkId);
+      issues.push({
+        level: "warning",
+        source: linksSource,
+        path,
+        message: `Known blocker override enabled for rich link '${linkId}' (${url}). Matched blocker '${match.blocker.id}' on '${match.matchedDomain}'.`,
+        remediation:
+          "This link is allowed to attempt direct-fetch enrichment despite known blocker policy. Keep this override temporary and monitor enrichment outcomes."
+      });
+      return;
+    }
+
+    suppressedKnownBlockerLinkIds.add(linkId);
+    issues.push({
+      level: bypassActive ? "warning" : "error",
+      source: linksSource,
+      path,
+      message: `Blocked rich-enrichment target for link '${linkId}' (${url}). Matched blocker '${match.blocker.id}' on '${match.matchedDomain}'.${supportHint}`,
+      remediation: [
+        ...match.blocker.remediation,
+        "Set links[].enrichment.enabled=false for this link or set links[].enrichment.allowKnownBlocker=true to explicitly override.",
+        `Emergency local bypass: ${ENRICHMENT_BYPASS_ENV}=1 npm run build.${docsHint}`
+      ].join(" ")
+    });
+  });
+
+  return { issues, suppressedKnownBlockerLinkIds };
+};
+
 const enrichmentIssues = (
   reportPath: string,
   report: EnrichmentRunReport | null,
-  strict: boolean
+  strict: boolean,
+  bypassActive: boolean,
+  suppressedKnownBlockerLinkIds: Set<string>
 ): ValidationIssue[] => {
   if (!report) {
     return [
@@ -159,6 +254,10 @@ const enrichmentIssues = (
   const failureMode = report.failureMode ?? "immediate";
 
   report.entries.forEach((entry, index) => {
+    if (entry.reason === "known_blocker" && suppressedKnownBlockerLinkIds.has(entry.linkId)) {
+      return;
+    }
+
     const blocking = isBlockingEntry(entry, failOn);
     const shouldReport =
       blocking || entry.status === "failed" || entry.status === "partial" || entry.manualFallbackUsed === true;
@@ -167,7 +266,7 @@ const enrichmentIssues = (
       return;
     }
 
-    const level: ValidationIssue["level"] = strict && blocking ? "error" : "warning";
+    const level: ValidationIssue["level"] = strict && blocking && !bypassActive ? "error" : "warning";
     const diagnosticClass = blocking
       ? "blocking"
       : entry.manualFallbackUsed
@@ -207,6 +306,8 @@ const run = () => {
   const siteData = readJsonFile<Record<string, unknown>>(args.sitePath);
   const enrichmentReportPath = resolveEnrichmentReportPath(siteData, args.enrichmentReportPath);
   const enrichmentReport = readEnrichmentReport(enrichmentReportPath);
+  const bypassActive =
+    process.env[ENRICHMENT_BYPASS_ENV] === "1" || enrichmentReport?.bypassActive === true;
 
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
@@ -218,6 +319,7 @@ const run = () => {
   ];
 
   const issues: ValidationIssue[] = [];
+  const suppressedKnownBlockerLinkIds = new Set<string>();
 
   for (const check of schemaChecks) {
     const validate = ajv.compile(check.schema);
@@ -241,7 +343,43 @@ const run = () => {
       }
     })
   );
-  issues.push(...enrichmentIssues(enrichmentReportPath, enrichmentReport, args.strict));
+
+  try {
+    const blockersRegistry = loadRichEnrichmentBlockersRegistry({
+      registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH
+    });
+    const blockerConfigResult = knownBlockerConfigIssues(
+      args.linksPath,
+      linksData,
+      siteData,
+      blockersRegistry,
+      bypassActive
+    );
+    issues.push(...blockerConfigResult.issues);
+    blockerConfigResult.suppressedKnownBlockerLinkIds.forEach((linkId) =>
+      suppressedKnownBlockerLinkIds.add(linkId)
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push({
+      level: "error",
+      source: DEFAULT_BLOCKERS_REGISTRY_PATH,
+      path: "$",
+      message: `Failed to load rich-enrichment blockers registry. ${message}`,
+      remediation:
+        "Restore data/policy/rich-enrichment-blockers.json and ensure it validates against schema/rich-enrichment-blockers.schema.json."
+    });
+  }
+
+  issues.push(
+    ...enrichmentIssues(
+      enrichmentReportPath,
+      enrichmentReport,
+      args.strict,
+      bypassActive,
+      suppressedKnownBlockerLinkIds
+    )
+  );
 
   const errors = sortIssues(issues.filter((issue) => issue.level === "error"));
   const warnings = sortIssues(issues.filter((issue) => issue.level === "warning"));
@@ -266,7 +404,7 @@ const run = () => {
       summary: enrichmentSummary,
       failureMode: enrichmentReport?.failureMode,
       failOn: enrichmentReport?.failOn,
-      bypassActive: enrichmentReport?.bypassActive,
+      bypassActive,
       abortedEarly: enrichmentReport?.abortedEarly
     }
   };

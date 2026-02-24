@@ -82,6 +82,7 @@ Coverage:
 Coverage:
 
 - `enabled`
+- `allowKnownBlocker`
 - `sourceLabel`
 - `sourceLabelVisible`
 - `custom`
@@ -181,6 +182,10 @@ Coverage:
 - `enrichment.failureMode`
 - `enrichment.failOn`
 - `enrichment.allowManualMetadataFallback`
+
+Related policy source:
+
+- `data/policy/rich-enrichment-blockers.json`
 
 ## 11) `site.quality` (`site-quality`)
 
