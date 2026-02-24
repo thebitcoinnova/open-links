@@ -57,6 +57,60 @@
         "sourceLabelVisible": true
       },
       "custom": {}
+    },
+    {
+      "id": "facebook",
+      "label": "Facebook",
+      "url": "https://www.facebook.com/peter.ryszkiewicz",
+      "type": "simple",
+      "icon": "facebook",
+      "description": "Personal Facebook profile",
+      "group": "social",
+      "order": 5,
+      "enabled": true,
+      "custom": {}
+    },
+    {
+      "id": "instagram",
+      "label": "Instagram",
+      "url": "https://www.instagram.com/peterryszkiewicz/",
+      "type": "simple",
+      "icon": "instagram",
+      "description": "Photos and stories",
+      "group": "social",
+      "order": 6,
+      "enabled": true,
+      "custom": {}
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "url": "https://medium.com/@peterryszkiewicz",
+      "type": "rich",
+      "icon": "medium",
+      "description": "Articles and blog posts",
+      "group": "content",
+      "order": 7,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
+    },
+    {
+      "id": "substack",
+      "label": "Substack",
+      "url": "https://peter.ryszkiewicz.us/",
+      "type": "rich",
+      "icon": "substack",
+      "description": "Newsletter and long-form writing",
+      "group": "content",
+      "order": 8,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
     }
   ],
   "groups": [
@@ -69,8 +123,13 @@
       "id": "work",
       "label": "Work",
       "order": 2
+    },
+    {
+      "id": "content",
+      "label": "Content",
+      "order": 3
     }
   ],
-  "order": ["github", "x", "linkedin", "openlinks-home"],
+  "order": ["github", "x", "linkedin", "openlinks-home", "facebook", "instagram", "medium", "substack"],
   "custom": {}
 }
