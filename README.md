@@ -254,6 +254,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md)
 - [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md)
 - [Rich Metadata Fetch Blockers](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-metadata-fetch-blockers.md)
+- [LinkedIn Authenticated Metadata PoC](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linkedin-authenticated-metadata-poc.md)
 - [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md)
 - [Theming and Layout Extensibility](https://raw.githubusercontent.com/pRizz/open-links/main/docs/theming-and-layouts.md)
 - [Deployment Operations Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment.md)

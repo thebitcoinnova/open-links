@@ -4,6 +4,10 @@ This document tracks rich metadata fetch failures caused by anti-automation prot
 
 `npm run dev` and `npm run build` now run strict rich enrichment before app build, so unresolved blockers can fail local and CI builds.
 
+LinkedIn authenticated one-off validation runbook:
+
+- `docs/linkedin-authenticated-metadata-poc.md`
+
 ## Maintenance Rules (Required)
 
 When you find a new rich metadata fetch failure:
@@ -71,3 +75,10 @@ These domains are currently treated as unsupported for direct unauthenticated me
 2. If rich display is still desired, set manual `links[].metadata` fields (`title`, `description`, `image`).
 3. Keep this file updated whenever blockers are confirmed, changed, or removed.
 
+## Authenticated PoC Log Template
+
+When running the LinkedIn authenticated PoC, append entries using this template:
+
+| Timestamp (UTC) | Site | Session Mode | Result | Extracted Quality | Cookie-Bridge Result | Notes / Next Action |
+|---|---|---|---|---|---|---|
+| `YYYY-MM-DDTHH:MM:SSZ` | LinkedIn | `manual` / `hybrid` / `automated` | `pass` / `fail` | `full` / `partial` / `none` + placeholder signals | `status=<code>, placeholder=<yes/no>` or `not-run` | Short remediation or follow-up |
