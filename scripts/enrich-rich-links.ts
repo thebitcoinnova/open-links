@@ -5,6 +5,8 @@ import { fetchMetadata } from "./enrichment/fetch-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
 import { writeEnrichmentReport } from "./enrichment/report";
 import type {
+  EnrichmentFailureMode,
+  EnrichmentFailureReason,
   EnrichmentMetadata,
   EnrichmentReason,
   EnrichmentRunEntry,
@@ -47,6 +49,9 @@ interface SitePayload {
         retries?: number;
         metadataPath?: string;
         reportPath?: string;
+        failureMode?: EnrichmentFailureMode;
+        failOn?: EnrichmentFailureReason[];
+        allowManualMetadataFallback?: boolean;
       };
     };
   };
@@ -58,9 +63,16 @@ interface ResolvedConfig {
   retries: number;
   outputPath: string;
   reportPath: string;
+  failureMode: EnrichmentFailureMode;
+  failOn: EnrichmentFailureReason[];
+  allowManualMetadataFallback: boolean;
+  bypassActive: boolean;
 }
 
 const ROOT = process.cwd();
+const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
+const DEFAULT_FAILURE_MODE: EnrichmentFailureMode = "immediate";
+const DEFAULT_FAIL_ON: EnrichmentFailureReason[] = ["fetch_failed", "metadata_missing"];
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -98,6 +110,27 @@ const readJson = <T>(relativePath: string): T => {
   return JSON.parse(fs.readFileSync(absolute, "utf8")) as T;
 };
 
+const isFailureReason = (value: unknown): value is EnrichmentFailureReason =>
+  value === "fetch_failed" || value === "metadata_missing";
+
+const resolveFailOn = (value: unknown): EnrichmentFailureReason[] => {
+  if (!Array.isArray(value)) {
+    return [...DEFAULT_FAIL_ON];
+  }
+
+  const resolved: EnrichmentFailureReason[] = [];
+  for (const item of value) {
+    if (isFailureReason(item) && !resolved.includes(item)) {
+      resolved.push(item);
+    }
+  }
+
+  return resolved.length > 0 ? resolved : [...DEFAULT_FAIL_ON];
+};
+
+const resolveFailureMode = (value: unknown): EnrichmentFailureMode =>
+  value === "aggregate" ? "aggregate" : DEFAULT_FAILURE_MODE;
+
 const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
   const defaults = site.ui?.richCards?.enrichment;
 
@@ -106,7 +139,11 @@ const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
     timeoutMs: Math.max(500, args.timeoutMs ?? defaults?.timeoutMs ?? 4000),
     retries: Math.max(0, args.retries ?? defaults?.retries ?? 1),
     outputPath: args.outputPath ?? defaults?.metadataPath ?? "data/generated/rich-metadata.json",
-    reportPath: args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json"
+    reportPath: args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json",
+    failureMode: resolveFailureMode(defaults?.failureMode),
+    failOn: resolveFailOn(defaults?.failOn),
+    allowManualMetadataFallback: defaults?.allowManualMetadataFallback ?? true,
+    bypassActive: process.env[ENRICHMENT_BYPASS_ENV] === "1"
   };
 };
 
@@ -137,13 +174,30 @@ const mergeMetadata = (
   enriched: EnrichmentMetadata
 ): EnrichmentMetadata => pickDefined({ ...(original ?? {}), ...enriched });
 
-const makeEntryMessage = (status: EnrichmentRunEntry["status"], reason: EnrichmentReason): string => {
+const hasManualMetadataFallback = (metadata: EnrichmentMetadata | undefined): boolean => {
+  if (!metadata) {
+    return false;
+  }
+
+  const candidates = [metadata.title, metadata.description, metadata.image];
+  return candidates.some((value) => typeof value === "string" && value.trim().length > 0);
+};
+
+const makeEntryMessage = (
+  status: EnrichmentRunEntry["status"],
+  reason: EnrichmentReason,
+  manualFallbackUsed = false
+): string => {
   if (status === "skipped") {
     return "Enrichment skipped by configuration.";
   }
 
   if (status === "failed") {
     return "Metadata fetch failed for this link.";
+  }
+
+  if (reason === "metadata_missing" && manualFallbackUsed) {
+    return "No remote preview metadata found; using manual link.metadata fallback.";
   }
 
   if (reason === "metadata_missing") {
@@ -157,13 +211,21 @@ const makeEntryMessage = (status: EnrichmentRunEntry["status"], reason: Enrichme
   return "Preview metadata fetched successfully.";
 };
 
-const remediationFor = (status: EnrichmentRunEntry["status"], reason: EnrichmentReason): string => {
+const remediationFor = (
+  status: EnrichmentRunEntry["status"],
+  reason: EnrichmentReason,
+  manualFallbackUsed = false
+): string => {
   if (status === "skipped") {
     return "Set enrichment.enabled=true on this rich link or adjust site.ui.richCards.enrichment.enabledByDefault.";
   }
 
   if (status === "failed") {
     return "Check URL/network availability, provide metadata manually under link.metadata, or disable enrichment for this link.";
+  }
+
+  if (reason === "metadata_missing" && manualFallbackUsed) {
+    return "Manual metadata fallback is active. Optional: improve target-site Open Graph/Twitter metadata to clear this warning.";
   }
 
   if (reason === "metadata_missing") {
@@ -177,12 +239,63 @@ const remediationFor = (status: EnrichmentRunEntry["status"], reason: Enrichment
   return "No action required.";
 };
 
+const isBlockingReason = (reason: EnrichmentReason, failOn: EnrichmentFailureReason[]): boolean =>
+  isFailureReason(reason) && failOn.includes(reason);
+
+const formatDurationMs = (durationMs: number): string => `${Math.max(0, Math.round(durationMs))}ms`;
+
+const printBlockingDiagnostics = (
+  entries: EnrichmentRunEntry[],
+  config: ResolvedConfig,
+  reportPath: string,
+  abortedEarly: boolean
+) => {
+  console.error("");
+  console.error("OpenLinks rich enrichment failed due to blocking metadata issues.");
+  console.error(`Policy: failureMode=${config.failureMode}, failOn=${config.failOn.join(", ")}`);
+  if (abortedEarly) {
+    console.error("Processing stopped early after the first blocking failure (failureMode=immediate).");
+  }
+  console.error(`Report path: ${reportPath}`);
+  console.error("");
+
+  for (const [index, entry] of entries.entries()) {
+    console.error(`${index + 1}. linkId='${entry.linkId}'`);
+    console.error(`   url: ${entry.url}`);
+    console.error(`   reason: ${entry.reason}`);
+    console.error(`   attempts: ${entry.attempts}`);
+    console.error(`   durationMs: ${formatDurationMs(entry.durationMs)}`);
+    if (typeof entry.statusCode === "number") {
+      console.error(`   statusCode: ${entry.statusCode}`);
+    }
+    if (entry.reason === "metadata_missing" && entry.missingFields && entry.missingFields.length > 0) {
+      console.error(`   missingFields: ${entry.missingFields.join(", ")}`);
+    }
+    console.error(`   message: ${entry.message}`);
+    console.error(`   remediation: ${entry.remediation}`);
+    console.error("");
+  }
+
+  console.error("Suggested commands:");
+  console.error("  - Re-run diagnostics: npm run enrich:rich:strict");
+  console.error(
+    `  - Temporary bypass (local/emergency only): ${ENRICHMENT_BYPASS_ENV}=1 npm run build`
+  );
+};
+
 const run = async () => {
   const args = parseArgs();
   const linksPayload = readJson<LinksPayload>(args.linksPath);
   const sitePayload = readJson<SitePayload>(args.sitePath);
   const config = resolveConfig(sitePayload, args);
   const generatedAt = new Date().toISOString();
+  const enforceBlocking = args.strict && !config.bypassActive;
+
+  if (args.strict && config.bypassActive) {
+    console.warn(
+      `Warning: ${ENRICHMENT_BYPASS_ENV}=1 is active. Blocking enrichment failures will be reported but will not fail this run.`
+    );
+  }
 
   const richLinks = (linksPayload.links ?? []).filter(
     (link): link is LinkInput & { type: "rich"; url: string } =>
@@ -190,6 +303,7 @@ const run = async () => {
   );
   const entries: EnrichmentRunEntry[] = [];
   const generatedLinks: GeneratedRichMetadata["links"] = {};
+  let abortedEarly = false;
 
   for (const link of richLinks) {
     const linkEnabled = link.enrichment?.enabled ?? config.enabledByDefault;
@@ -213,7 +327,8 @@ const run = async () => {
         durationMs: 0,
         message: makeEntryMessage("skipped", reason),
         remediation: remediationFor("skipped", reason),
-        metadata
+        metadata,
+        blocking: false
       });
 
       generatedLinks[link.id] = { metadata };
@@ -234,6 +349,7 @@ const run = async () => {
         enrichmentReason: reason,
         enrichedAt: generatedAt
       });
+      const blocking = isBlockingReason(reason, config.failOn);
 
       entries.push({
         linkId: link.id,
@@ -245,10 +361,17 @@ const run = async () => {
         statusCode: fetched.statusCode,
         message: fetched.error ?? makeEntryMessage("failed", reason),
         remediation: remediationFor("failed", reason),
-        metadata
+        metadata,
+        blocking
       });
 
       generatedLinks[link.id] = { metadata };
+
+      if (enforceBlocking && config.failureMode === "immediate" && blocking) {
+        abortedEarly = true;
+        break;
+      }
+
       continue;
     }
 
@@ -262,6 +385,11 @@ const run = async () => {
           : "metadata_missing";
 
     const status: EnrichmentRunEntry["status"] = parsed.completeness === "full" ? "fetched" : "partial";
+    const manualFallbackUsed =
+      reason === "metadata_missing" &&
+      config.allowManualMetadataFallback &&
+      hasManualMetadataFallback(link.metadata);
+    const blocking = isBlockingReason(reason, config.failOn) && !manualFallbackUsed;
 
     const metadata = mergeMetadata(link.metadata, {
       ...parsed.metadata,
@@ -280,12 +408,20 @@ const run = async () => {
       attempts: fetched.attempts,
       durationMs: fetched.durationMs,
       statusCode: fetched.statusCode,
-      message: makeEntryMessage(status, reason),
-      remediation: remediationFor(status, reason),
-      metadata
+      message: makeEntryMessage(status, reason, manualFallbackUsed),
+      remediation: remediationFor(status, reason, manualFallbackUsed),
+      metadata,
+      blocking,
+      manualFallbackUsed: manualFallbackUsed || undefined,
+      missingFields: reason === "metadata_missing" ? parsed.missing : undefined
     });
 
     generatedLinks[link.id] = { metadata };
+
+    if (enforceBlocking && config.failureMode === "immediate" && blocking) {
+      abortedEarly = true;
+      break;
+    }
   }
 
   const generated: GeneratedRichMetadata = {
@@ -300,28 +436,48 @@ const run = async () => {
     reportPath: config.reportPath,
     generatedAt,
     strict: args.strict,
-    entries
+    entries,
+    failureMode: config.failureMode,
+    failOn: config.failOn,
+    bypassActive: config.bypassActive,
+    abortedEarly
   });
+
+  const blockingEntries = report.entries.filter((entry) => entry.blocking === true);
 
   console.log("OpenLinks rich enrichment run");
   console.log(`Links processed: ${report.summary.total}`);
   console.log(
     `Results: fetched=${report.summary.fetched}, partial=${report.summary.partial}, failed=${report.summary.failed}, skipped=${report.summary.skipped}`
   );
+  console.log(
+    `Policy: failureMode=${config.failureMode}, failOn=${config.failOn.join(", ")}, allowManualMetadataFallback=${config.allowManualMetadataFallback}`
+  );
+  console.log(`Bypass active: ${config.bypassActive ? "yes" : "no"} (${ENRICHMENT_BYPASS_ENV})`);
   console.log(`Generated metadata: ${config.outputPath}`);
   console.log(`Enrichment report: ${config.reportPath}`);
+  if (abortedEarly) {
+    console.log("Run status: aborted early due to blocking failure and failureMode=immediate.");
+  }
 
   for (const entry of report.entries) {
     console.log(
-      `- ${entry.linkId}: ${entry.status} (${entry.reason})${
-        entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""
-      }`
+      `- ${entry.linkId}: ${entry.status} (${entry.reason})${entry.blocking ? " [blocking]" : ""}${
+        entry.manualFallbackUsed ? " [manual-fallback]" : ""
+      }${entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""}`
     );
   }
 
-  const shouldFail = args.strict && report.summary.failed > 0;
+  const shouldFail = enforceBlocking && blockingEntries.length > 0;
+
+  if (config.bypassActive && blockingEntries.length > 0) {
+    console.warn(
+      `Warning: ${blockingEntries.length} blocking enrichment issue(s) were detected but bypassed due to ${ENRICHMENT_BYPASS_ENV}=1.`
+    );
+  }
+
   if (shouldFail) {
-    console.error("Strict mode enabled: failing because one or more metadata fetches failed.");
+    printBlockingDiagnostics(blockingEntries, config, config.reportPath, abortedEarly);
   }
 
   process.exit(shouldFail ? 1 : 0);

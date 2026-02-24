@@ -178,6 +178,9 @@ Coverage:
 - `enrichment.retries`
 - `enrichment.metadataPath`
 - `enrichment.reportPath`
+- `enrichment.failureMode`
+- `enrichment.failOn`
+- `enrichment.allowManualMetadataFallback`
 
 ## 11) `site.quality` (`site-quality`)
 

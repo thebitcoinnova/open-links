@@ -7,6 +7,10 @@ export type EnrichmentReason =
   | "fetch_failed"
   | "enrichment_disabled";
 
+export type EnrichmentFailureReason = "fetch_failed" | "metadata_missing";
+export type EnrichmentFailureMode = "immediate" | "aggregate";
+export type EnrichmentMissingField = "title" | "description" | "image";
+
 export interface EnrichmentMetadata {
   title?: string;
   description?: string;
@@ -34,6 +38,9 @@ export interface EnrichmentRunEntry {
   remediation: string;
   statusCode?: number;
   metadata?: EnrichmentMetadata;
+  blocking?: boolean;
+  missingFields?: EnrichmentMissingField[];
+  manualFallbackUsed?: boolean;
 }
 
 export interface EnrichmentRunSummary {
@@ -49,4 +56,8 @@ export interface EnrichmentRunReport {
   strict: boolean;
   summary: EnrichmentRunSummary;
   entries: EnrichmentRunEntry[];
+  failureMode?: EnrichmentFailureMode;
+  failOn?: EnrichmentFailureReason[];
+  bypassActive?: boolean;
+  abortedEarly?: boolean;
 }

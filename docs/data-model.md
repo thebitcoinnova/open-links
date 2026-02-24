@@ -316,6 +316,22 @@ Per-link controls:
 
 Site-level default enrichment behavior is defined in `site.ui.richCards.enrichment`.
 
+`site.ui.richCards.enrichment` supports:
+
+- `enabledByDefault`: whether rich links attempt enrichment when link-level `enrichment.enabled` is omitted.
+- `timeoutMs`: per-attempt request timeout.
+- `retries`: retry count after the first attempt.
+- `metadataPath`: generated metadata output path.
+- `reportPath`: generated enrichment report path.
+- `failureMode`: `immediate` (default) or `aggregate`.
+  - `immediate`: stop strict enrichment on first blocking failure.
+  - `aggregate`: process all eligible links, then fail after reporting all blockers.
+- `failOn`: blocking reasons for strict enrichment. Default: `["fetch_failed", "metadata_missing"]`.
+- `allowManualMetadataFallback`: default `true`. When `metadata_missing` occurs, any manual `links[].metadata.title|description|image` downgrades to warning.
+
+`npm run dev` and `npm run build` run strict enrichment pre-steps and fail on configured blocking reasons.  
+Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
+
 ## `site.json`
 
 Schema: `schema/site.schema.json`
@@ -358,6 +374,9 @@ Main presentation controls include:
 - `brandIcons.sizeMode`: `normal`, `large`
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.mobile.imageLayout`: `inline` (default), `full-width`
+- `richCards.enrichment.failureMode`: `immediate` (default), `aggregate`
+- `richCards.enrichment.failOn`: blocking reasons (`fetch_failed`, `metadata_missing`)
+- `richCards.enrichment.allowManualMetadataFallback`: use manual metadata as warning-level fallback when remote metadata is missing
 - `payments.qr.displayDefault`: `always`, `toggle`, `hidden`
 - `payments.qr.styleDefault`: `square`, `rounded`, `dots`
 - `payments.qr.foregroundColorDefault`, `payments.qr.backgroundColorDefault`

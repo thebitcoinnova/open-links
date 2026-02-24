@@ -4,7 +4,12 @@ import process from "node:process";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import { readEnrichmentReport } from "./enrichment/report";
-import type { EnrichmentRunEntry, EnrichmentRunReport, EnrichmentRunSummary } from "./enrichment/types";
+import type {
+  EnrichmentFailureReason,
+  EnrichmentRunEntry,
+  EnrichmentRunReport,
+  EnrichmentRunSummary
+} from "./enrichment/types";
 import { runPolicyRules, type ValidationIssue } from "./validation/rules";
 import {
   formatHumanOutput,
@@ -101,15 +106,34 @@ const sortIssues = (issues: ValidationIssue[]): ValidationIssue[] =>
     return left.message.localeCompare(right.message);
   });
 
-const enrichmentIssueLevel = (
-  strict: boolean,
-  status: EnrichmentRunEntry["status"]
-): ValidationIssue["level"] => {
-  if (status === "failed" && strict) {
-    return "error";
+const DEFAULT_ENRICHMENT_FAIL_ON: EnrichmentFailureReason[] = ["fetch_failed", "metadata_missing"];
+
+const isFailureReason = (value: unknown): value is EnrichmentFailureReason =>
+  value === "fetch_failed" || value === "metadata_missing";
+
+const resolveEnrichmentFailOn = (report: EnrichmentRunReport): EnrichmentFailureReason[] => {
+  if (!Array.isArray(report.failOn)) {
+    return [...DEFAULT_ENRICHMENT_FAIL_ON];
   }
 
-  return "warning";
+  const resolved: EnrichmentFailureReason[] = [];
+  for (const value of report.failOn) {
+    if (isFailureReason(value) && !resolved.includes(value)) {
+      resolved.push(value);
+    }
+  }
+
+  return resolved.length > 0 ? resolved : [...DEFAULT_ENRICHMENT_FAIL_ON];
+};
+
+const isBlockingEntry = (entry: EnrichmentRunEntry, failOn: EnrichmentFailureReason[]): boolean => {
+  if (typeof entry.blocking === "boolean") {
+    return entry.blocking;
+  }
+  if (entry.manualFallbackUsed) {
+    return false;
+  }
+  return isFailureReason(entry.reason) && failOn.includes(entry.reason);
 };
 
 const enrichmentIssues = (
@@ -124,27 +148,46 @@ const enrichmentIssues = (
         source: reportPath,
         path: "$",
         message: "Rich enrichment report not found.",
-        remediation: "Run `npm run enrich:rich` before validation/build so strict-mode policy can evaluate rich-link enrichment outcomes."
+        remediation:
+          "Run `npm run enrich:rich:strict` before validation/build so policy-based rich-link enrichment outcomes are available."
       }
     ];
   }
 
   const issues: ValidationIssue[] = [];
+  const failOn = resolveEnrichmentFailOn(report);
+  const failureMode = report.failureMode ?? "immediate";
 
   report.entries.forEach((entry, index) => {
-    if (entry.status !== "failed" && entry.status !== "partial") {
-      return;
-    }
-    if (entry.status === "partial" && strict) {
+    const blocking = isBlockingEntry(entry, failOn);
+    const shouldReport =
+      blocking || entry.status === "failed" || entry.status === "partial" || entry.manualFallbackUsed === true;
+
+    if (!shouldReport) {
       return;
     }
 
-    const severityLabel = entry.status === "failed" ? "failed" : "partial";
+    const level: ValidationIssue["level"] = strict && blocking ? "error" : "warning";
+    const diagnosticClass = blocking
+      ? "blocking"
+      : entry.manualFallbackUsed
+        ? "manual-fallback"
+        : entry.status === "failed"
+          ? "fetch-warning"
+          : "partial-warning";
+
+    const missingFields =
+      entry.reason === "metadata_missing" && entry.missingFields && entry.missingFields.length > 0
+        ? ` Missing fields: ${entry.missingFields.join(", ")}.`
+        : "";
+
     issues.push({
-      level: enrichmentIssueLevel(strict, entry.status),
+      level,
       source: reportPath,
       path: `$.entries[${index}]`,
-      message: `Rich enrichment ${severityLabel} for link '${entry.linkId}' (${entry.reason}). ${entry.message}`,
+      message:
+        `Rich enrichment ${diagnosticClass} for link '${entry.linkId}' (${entry.reason}). ${entry.message}` +
+        `${missingFields} Policy: failureMode=${failureMode}, failOn=${failOn.join(", ")}.`,
       remediation: entry.remediation
     });
   });
@@ -220,7 +263,11 @@ const run = () => {
       reportPath: enrichmentReportPath,
       found: enrichmentReport !== null,
       generatedAt: enrichmentReport?.generatedAt,
-      summary: enrichmentSummary
+      summary: enrichmentSummary,
+      failureMode: enrichmentReport?.failureMode,
+      failOn: enrichmentReport?.failOn,
+      bypassActive: enrichmentReport?.bypassActive,
+      abortedEarly: enrichmentReport?.abortedEarly
     }
   };
 

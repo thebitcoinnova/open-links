@@ -166,12 +166,14 @@ High-signal deployment checks:
 ### Core commands
 
 - `npm run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
+- `npm run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode).
+- `npm run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode).
 - `npm run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
-- `npm run dev` - start local dev server.
+- `npm run dev` - start local dev server (predev runs strict enrichment and fails on blocking enrichment policy issues).
 - `npm run validate:data` - schema + policy checks (standard mode).
 - `npm run validate:data:strict` - fails on warnings and errors.
 - `npm run validate:data:json` - machine-readable validation output.
-- `npm run build` - avatar sync + enrichment + content-image sync + validation + production build.
+- `npm run build` - avatar sync + strict enrichment + content-image sync + validation + production build.
 - `npm run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build.
 - `npm run preview` - serve built output.
 - `npm run typecheck` - TypeScript checks.
@@ -229,7 +231,10 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 
 - Re-run with `npm run build` and inspect first failing command output.
 - If strict mode fails, compare `npm run validate:data` vs `npm run validate:data:strict`.
-- Re-run rich enrichment: `npm run enrich:rich`.
+- Re-run blocking enrichment diagnostics: `npm run enrich:rich:strict`.
+- Check `site.ui.richCards.enrichment` policy (`failureMode`, `failOn`, `allowManualMetadataFallback`) in `data/site.json`.
+- If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
+- Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build`.
 - Force-refresh avatar cache when needed: `npm run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
 - Force-refresh rich/SEO image cache when needed: `npm run images:sync -- --force` (or set `OPENLINKS_IMAGES_FORCE=1`).
 

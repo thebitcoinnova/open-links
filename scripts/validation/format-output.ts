@@ -15,6 +15,10 @@ export interface ValidationResult {
     reportPath: string;
     found: boolean;
     generatedAt?: string;
+    failureMode?: "immediate" | "aggregate";
+    failOn?: Array<"fetch_failed" | "metadata_missing">;
+    bypassActive?: boolean;
+    abortedEarly?: boolean;
     summary?: {
       total: number;
       fetched: number;
@@ -42,6 +46,17 @@ export const formatHumanOutput = (result: ValidationResult): string => {
     lines.push(
       `Enrichment summary: total=${summary.total}, fetched=${summary.fetched}, partial=${summary.partial}, failed=${summary.failed}, skipped=${summary.skipped}`
     );
+  }
+  if (result.enrichment.failureMode || result.enrichment.failOn) {
+    const failureMode = result.enrichment.failureMode ?? "immediate";
+    const failOn = result.enrichment.failOn?.join(", ") ?? "fetch_failed, metadata_missing";
+    lines.push(`Enrichment policy: failureMode=${failureMode}, failOn=${failOn}`);
+  }
+  if (typeof result.enrichment.bypassActive === "boolean") {
+    lines.push(`Enrichment bypass active: ${result.enrichment.bypassActive ? "yes" : "no"}`);
+  }
+  if (result.enrichment.abortedEarly) {
+    lines.push("Enrichment run aborted early due to immediate failure mode.");
   }
   lines.push(`Errors: ${totalErrors} | Warnings: ${totalWarnings}`);
 

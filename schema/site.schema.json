@@ -333,6 +333,25 @@
                 "reportPath": {
                   "type": "string",
                   "minLength": 1
+                },
+                "failureMode": {
+                  "type": "string",
+                  "enum": ["immediate", "aggregate"],
+                  "default": "immediate"
+                },
+                "failOn": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["fetch_failed", "metadata_missing"]
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1,
+                  "default": ["fetch_failed", "metadata_missing"]
+                },
+                "allowManualMetadataFallback": {
+                  "type": "boolean",
+                  "default": true
                 }
               },
               "additionalProperties": true

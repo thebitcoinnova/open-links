@@ -89,7 +89,7 @@ npm run validate:data
 npm run dev
 ```
 
-`npm run dev` runs `avatar:sync`, `enrich:rich`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into local assets.
+`npm run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into local assets and blocking enrichment issues fail early.
 
 ### Build production output
 
@@ -98,7 +98,7 @@ npm run build
 npm run preview
 ```
 
-`npm run build` runs avatar sync, rich enrichment, and content-image sync before validation/build.
+`npm run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build.
 
 ## First Deployment to GitHub Pages
 
@@ -188,6 +188,32 @@ Fix:
 
 1. Rename conflicting key under `custom`.
 2. Keep core fields in their dedicated schema properties.
+
+### Problem: Build/dev fails on rich metadata enrichment
+
+Symptoms:
+
+- `npm run dev` or `npm run build` stops during `enrich:rich:strict`.
+- Output includes `fetch_failed` or `metadata_missing` diagnostics for one or more links.
+
+Fix:
+
+1. Re-run strict enrichment diagnostics:
+
+```bash
+npm run enrich:rich:strict
+```
+
+2. Review `site.ui.richCards.enrichment` in `data/site.json`:
+   - `failureMode` (`immediate` or `aggregate`)
+   - `failOn` (`fetch_failed`, `metadata_missing`)
+   - `allowManualMetadataFallback`
+3. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata.
+4. Temporary emergency local bypass:
+
+```bash
+OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build
+```
 
 ### Problem: Build passes locally but Pages path is wrong
 

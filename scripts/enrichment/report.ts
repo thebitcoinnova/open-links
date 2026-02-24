@@ -2,6 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import type {
+  EnrichmentFailureMode,
+  EnrichmentFailureReason,
+  EnrichmentMissingField,
   EnrichmentRunEntry,
   EnrichmentRunReport,
   EnrichmentRunSummary
@@ -12,6 +15,10 @@ export interface WriteEnrichmentReportInput {
   generatedAt: string;
   strict: boolean;
   entries: EnrichmentRunEntry[];
+  failureMode?: EnrichmentFailureMode;
+  failOn?: EnrichmentFailureReason[];
+  bypassActive?: boolean;
+  abortedEarly?: boolean;
 }
 
 const ROOT = process.cwd();
@@ -21,6 +28,43 @@ const absolutePath = (value: string): string =>
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const FAILURE_REASONS: EnrichmentFailureReason[] = ["fetch_failed", "metadata_missing"];
+const FAILURE_MODES: EnrichmentFailureMode[] = ["immediate", "aggregate"];
+const MISSING_FIELDS: EnrichmentMissingField[] = ["title", "description", "image"];
+
+const isFailureReason = (value: unknown): value is EnrichmentFailureReason =>
+  typeof value === "string" && FAILURE_REASONS.includes(value as EnrichmentFailureReason);
+
+const isFailureMode = (value: unknown): value is EnrichmentFailureMode =>
+  typeof value === "string" && FAILURE_MODES.includes(value as EnrichmentFailureMode);
+
+const isMissingField = (value: unknown): value is EnrichmentMissingField =>
+  typeof value === "string" && MISSING_FIELDS.includes(value as EnrichmentMissingField);
+
+const toFailOn = (value: unknown): EnrichmentFailureReason[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const unique: EnrichmentFailureReason[] = [];
+  for (const item of value) {
+    if (isFailureReason(item) && !unique.includes(item)) {
+      unique.push(item);
+    }
+  }
+
+  return unique.length > 0 ? unique : undefined;
+};
+
+const toMissingFields = (value: unknown): EnrichmentMissingField[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const fields = value.filter(isMissingField);
+  return fields.length > 0 ? fields : undefined;
+};
 
 export const summarizeEntries = (entries: EnrichmentRunEntry[]): EnrichmentRunSummary => {
   const summary: EnrichmentRunSummary = {
@@ -41,12 +85,20 @@ export const summarizeEntries = (entries: EnrichmentRunEntry[]): EnrichmentRunSu
 export const createEnrichmentReport = ({
   generatedAt,
   strict,
-  entries
+  entries,
+  failureMode,
+  failOn,
+  bypassActive,
+  abortedEarly
 }: Omit<WriteEnrichmentReportInput, "reportPath">): EnrichmentRunReport => ({
   generatedAt,
   strict,
   summary: summarizeEntries(entries),
-  entries
+  entries,
+  failureMode,
+  failOn,
+  bypassActive,
+  abortedEarly
 });
 
 export const writeEnrichmentReport = (input: WriteEnrichmentReportInput): EnrichmentRunReport => {
@@ -86,7 +138,10 @@ const toEntry = (value: unknown): EnrichmentRunEntry | null => {
     message: typeof value.message === "string" ? value.message : "",
     remediation: typeof value.remediation === "string" ? value.remediation : "",
     statusCode: typeof value.statusCode === "number" ? value.statusCode : undefined,
-    metadata: isRecord(value.metadata) ? (value.metadata as EnrichmentRunEntry["metadata"]) : undefined
+    metadata: isRecord(value.metadata) ? (value.metadata as EnrichmentRunEntry["metadata"]) : undefined,
+    blocking: typeof value.blocking === "boolean" ? value.blocking : undefined,
+    missingFields: toMissingFields(value.missingFields),
+    manualFallbackUsed: typeof value.manualFallbackUsed === "boolean" ? value.manualFallbackUsed : undefined
   };
 };
 
@@ -110,7 +165,11 @@ export const readEnrichmentReport = (reportPath: string): EnrichmentRunReport | 
       generatedAt: typeof parsed.generatedAt === "string" ? parsed.generatedAt : new Date(0).toISOString(),
       strict: parsed.strict === true,
       summary: summarizeEntries(entries),
-      entries
+      entries,
+      failureMode: isFailureMode(parsed.failureMode) ? parsed.failureMode : undefined,
+      failOn: toFailOn(parsed.failOn),
+      bypassActive: typeof parsed.bypassActive === "boolean" ? parsed.bypassActive : undefined,
+      abortedEarly: typeof parsed.abortedEarly === "boolean" ? parsed.abortedEarly : undefined
     };
   } catch {
     return null;

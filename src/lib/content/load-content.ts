@@ -234,6 +234,9 @@ export interface SiteData {
         retries?: number;
         metadataPath?: string;
         reportPath?: string;
+        failureMode?: "immediate" | "aggregate";
+        failOn?: Array<"fetch_failed" | "metadata_missing">;
+        allowManualMetadataFallback?: boolean;
       };
     };
     payments?: SitePaymentsConfig;
