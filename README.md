@@ -1,5 +1,14 @@
 # OpenLinks
 
+[![GitHub Stars](https://img.shields.io/github/stars/pRizz/open-links)](https://github.com/pRizz/open-links)
+[![CI](https://github.com/pRizz/open-links/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pRizz/open-links/actions/workflows/ci.yml)
+[![Deploy Pages](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml/badge.svg?branch=main)](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml)
+[![License](https://img.shields.io/github/license/pRizz/open-links?s)](https://github.com/pRizz/open-links/blob/main/LICENSE)
+[![Node.js 22](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)](https://github.com/pRizz/open-links/blob/main/.github/workflows/ci.yml)
+[![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![SolidJS 1.9](https://img.shields.io/badge/SolidJS-1.9-2C4F7C?logo=solid&logoColor=white)](https://www.solidjs.com/)
+[![Vite 7.3](https://img.shields.io/badge/Vite-7.3-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
 
 This project is developer-first: fork or template the repo, edit JSON, push, and publish.
