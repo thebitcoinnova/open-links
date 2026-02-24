@@ -1,4 +1,4 @@
-import { IconMenu2 } from "@tabler/icons-solidjs";
+import { IconMenu } from "../../lib/icons/custom-icons";
 import { Show, createSignal, createUniqueId, onCleanup, onMount, type JSX } from "solid-js";
 
 export interface UtilityControlsMenuProps {
@@ -84,7 +84,7 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
         aria-controls={panelId}
         onClick={handleToggle}
       >
-        <IconMenu2 aria-hidden="true" />
+        <IconMenu aria-hidden="true" />
       </button>
       <Show when={isOpen()}>
         <div id={panelId} class="utility-menu-panel" role="group" aria-label={props.panelLabel ?? "Theme and mode controls"}>
