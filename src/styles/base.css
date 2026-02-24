@@ -25,8 +25,8 @@ body {
   font-family: var(--font-body);
   font-size: var(--type-body);
   background:
-    radial-gradient(110% 90% at 100% 0%, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 58%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-bg) 92%, black 8%), var(--surface-bg));
+    radial-gradient(110% 90% at 100% 0%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 72%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-bg) 97%, black 3%), var(--surface-bg));
   color: var(--text-primary);
   transition: background-color var(--motion-mid), color var(--motion-mid);
 }
@@ -294,9 +294,9 @@ a:focus-visible {
   gap: var(--space-3);
   min-height: var(--page-target-size);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
   padding: calc(var(--space-3) * var(--density-scale));
-  background: color-mix(in srgb, var(--surface-card) 90%, white 10%);
+  background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
   text-decoration: none;
   transition:
     border-color var(--motion-fast),
@@ -312,9 +312,9 @@ a:focus-visible {
   gap: var(--space-3);
   min-height: var(--page-target-size);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
   padding: calc(var(--space-3) * var(--density-scale));
-  background: color-mix(in srgb, var(--surface-card) 90%, white 10%);
+  background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
   text-decoration: none;
   transition:
     border-color var(--motion-fast),
@@ -332,7 +332,7 @@ a:focus-visible {
 }
 
 .rich-link-card:hover {
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--border-strong) 65%, transparent 35%);
   transform: translateY(-1px);
 }
 
@@ -406,9 +406,9 @@ a:focus-visible {
   gap: var(--space-3);
   min-height: var(--page-target-size);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
   padding: calc(var(--space-3) * var(--density-scale));
-  background: color-mix(in srgb, var(--surface-card) 90%, white 10%);
+  background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
   transition:
     border-color var(--motion-fast),
     transform var(--motion-fast),
@@ -417,7 +417,7 @@ a:focus-visible {
 }
 
 .payment-link-card:hover {
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--border-strong) 65%, transparent 35%);
   transform: translateY(-1px);
 }
 
@@ -505,10 +505,10 @@ a:focus-visible {
 .payment-rail-item {
   display: grid;
   gap: var(--space-2);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
   border-radius: calc(var(--radius-md) - 0.2rem);
   padding: calc(var(--space-2) * var(--density-scale));
-  background: color-mix(in srgb, var(--surface-panel) 84%, transparent 16%);
+  background: color-mix(in srgb, var(--surface-panel) 92%, var(--surface-bg) 8%);
 }
 
 .payment-rail-top-row {
@@ -675,7 +675,7 @@ a:focus-visible {
 }
 
 .simple-link-card:hover {
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--border-strong) 65%, transparent 35%);
   transform: translateY(-1px);
 }
 
@@ -735,8 +735,7 @@ a:focus-visible {
   text-overflow: ellipsis;
 }
 
-.theme-toggle,
-.utility-menu-button {
+.theme-toggle {
   border: 1px solid var(--border-subtle);
   background: var(--surface-pill);
   color: var(--text-primary);
@@ -745,15 +744,20 @@ a:focus-visible {
   font-size: var(--page-type-caption);
   cursor: pointer;
   transition: border-color var(--motion-fast), transform var(--motion-fast);
-}
-
-.theme-toggle {
   border-radius: 999px;
   min-width: 5.5rem;
   padding: 0.35rem 0.8rem;
 }
 
 .utility-menu-button {
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  min-height: var(--page-target-size);
+  font: inherit;
+  font-size: var(--page-type-caption);
+  cursor: pointer;
+  transition: transform var(--motion-fast);
   border-radius: var(--radius-sm);
   width: var(--page-target-size);
   height: var(--page-target-size);
@@ -781,15 +785,15 @@ a:focus-visible {
   transform: translateY(0);
 }
 
-.theme-toggle:focus-visible,
-.utility-menu-button:focus-visible {
+.theme-toggle:focus-visible {
   box-shadow: var(--shadow-focus);
   border-color: var(--accent-strong);
 }
 
-.utility-menu-button[aria-expanded="true"] {
-  border-color: var(--border-strong);
+.utility-menu-button:focus-visible {
+  box-shadow: none;
 }
+
 
 .theme-toggle:disabled {
   cursor: not-allowed;

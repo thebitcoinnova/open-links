@@ -3,14 +3,14 @@
   --font-body: "Geist", "Manrope", "Segoe UI", sans-serif;
   --surface-bg: #090d16;
   --surface-panel: #101625;
-  --surface-card: #141c2d;
-  --surface-pill: #1a2338;
+  --surface-card: #101624;
+  --surface-pill: #121827;
   --text-primary: #f8fafc;
   --text-muted: #96a4bc;
-  --accent: #3b82f6;
-  --accent-strong: #60a5fa;
+  --accent: #0f2547;
+  --accent-strong: #182b42;
   --border-subtle: rgb(148 163 184 / 0.24);
-  --border-strong: rgb(96 165 250 / 0.48);
+  --border-strong: rgb(19 33 50 / 0.48);
 }
 
 :root[data-theme="sleek"][data-mode="light"] {
@@ -58,11 +58,16 @@
 }
 
 :root[data-theme^="sleek"] .utility-pill,
-:root[data-theme^="sleek"] .theme-toggle,
-:root[data-theme^="sleek"] .utility-menu-button {
+:root[data-theme^="sleek"] .theme-toggle {
   border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent 10%);
   background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-panel) 10%);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset;
+}
+
+:root[data-theme^="sleek"] .utility-menu-button {
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 :root[data-theme^="sleek"] .utility-menu-panel {
@@ -82,8 +87,8 @@
 
 :root[data-theme^="sleek"] .simple-link-card,
 :root[data-theme^="sleek"] .rich-link-card {
-  border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent 10%);
-  background: color-mix(in srgb, var(--surface-card) 94%, var(--surface-panel) 6%);
+  border-color: color-mix(in srgb, var(--border-subtle) 45%, transparent 55%);
+  background: color-mix(in srgb, var(--surface-card) 82%, var(--surface-panel) 18%);
   box-shadow:
     0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset,
     0 10px 24px color-mix(in srgb, var(--surface-bg) 62%, black 38%);
@@ -91,31 +96,45 @@
 
 :root[data-theme^="sleek"] .simple-link-card:hover,
 :root[data-theme^="sleek"] .rich-link-card:hover,
-:root[data-theme^="sleek"] .theme-toggle:hover,
-:root[data-theme^="sleek"] .utility-menu-button:hover {
+:root[data-theme^="sleek"] .theme-toggle:hover {
   transform: none;
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--border-strong) 60%, transparent 40%);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent),
     0 14px 30px color-mix(in srgb, var(--surface-bg) 56%, black 44%);
 }
 
+:root[data-theme^="sleek"] .utility-menu-button:hover {
+  transform: none;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
 :root[data-theme^="sleek"] .simple-link-card:active,
 :root[data-theme^="sleek"] .rich-link-card:active,
-:root[data-theme^="sleek"] .theme-toggle:active,
-:root[data-theme^="sleek"] .utility-menu-button:active {
+:root[data-theme^="sleek"] .theme-toggle:active {
   transform: none;
   background: color-mix(in srgb, var(--surface-card) 86%, var(--accent) 14%);
 }
 
+:root[data-theme^="sleek"] .utility-menu-button:active {
+  transform: none;
+  background: transparent;
+}
+
 :root[data-theme^="sleek"] .simple-link-card:focus-visible,
 :root[data-theme^="sleek"] .rich-link-card:focus-visible,
-:root[data-theme^="sleek"] .theme-toggle:focus-visible,
-:root[data-theme^="sleek"] .utility-menu-button:focus-visible {
+:root[data-theme^="sleek"] .theme-toggle:focus-visible {
   border-color: var(--accent-strong);
   box-shadow:
     var(--shadow-focus),
     0 12px 26px color-mix(in srgb, var(--surface-bg) 58%, black 42%);
+}
+
+:root[data-theme^="sleek"] .utility-menu-button:focus-visible {
+  border: none;
+  box-shadow: none;
 }
 
 :root[data-theme^="sleek"] .card-icon {
@@ -125,7 +144,7 @@
 }
 
 :root[data-theme^="sleek"] .rich-card-media {
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 84%, transparent 16%);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent 45%);
   background: color-mix(in srgb, var(--surface-pill) 92%, var(--accent) 8%);
 }
 
