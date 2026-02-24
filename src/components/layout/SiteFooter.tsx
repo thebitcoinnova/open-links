@@ -6,10 +6,9 @@ export interface SiteFooterProps {
   buildTimestampIso?: string;
 }
 
-const utcFormatter = new Intl.DateTimeFormat("en-US", {
+const localFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC"
+  timeStyle: "short"
 });
 
 export const SiteFooter = (props: SiteFooterProps) => {
@@ -29,7 +28,7 @@ export const SiteFooter = (props: SiteFooterProps) => {
     if (!parsed) {
       return "";
     }
-    return `${utcFormatter.format(parsed)} UTC`;
+    return localFormatter.format(parsed);
   });
 
   return (
@@ -53,4 +52,3 @@ export const SiteFooter = (props: SiteFooterProps) => {
 };
 
 export default SiteFooter;
-
