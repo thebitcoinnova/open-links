@@ -38,7 +38,7 @@
       "order": 3,
       "enabled": true,
       "enrichment": {
-        "enabled": true
+        "enabled": false
       },
       "custom": {}
     },

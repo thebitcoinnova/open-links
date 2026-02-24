@@ -232,6 +232,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - Re-run with `npm run build` and inspect first failing command output.
 - If strict mode fails, compare `npm run validate:data` vs `npm run validate:data:strict`.
 - Re-run blocking enrichment diagnostics: `npm run enrich:rich:strict`.
+- Review known blocked rich-metadata domains and timestamped attempt history: `docs/rich-metadata-fetch-blockers.md`.
 - Check `site.ui.richCards.enrichment` policy (`failureMode`, `failOn`, `allowManualMetadataFallback`) in `data/site.json`.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
 - Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build`.
@@ -252,6 +253,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md)
 - [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md)
 - [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md)
+- [Rich Metadata Fetch Blockers](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-metadata-fetch-blockers.md)
 - [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md)
 - [Theming and Layout Extensibility](https://raw.githubusercontent.com/pRizz/open-links/main/docs/theming-and-layouts.md)
 - [Deployment Operations Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment.md)
