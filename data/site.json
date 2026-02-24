@@ -25,6 +25,7 @@
     "desktopColumns": "one",
     "typographyScale": "fixed",
     "targetSize": "comfortable",
+    "profileAvatarScale": 1.5,
     "brandIcons": {
       "colorMode": "brand",
       "contrastMode": "auto",

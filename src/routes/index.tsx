@@ -240,6 +240,7 @@ export default function RouteIndex() {
     <main
       aria-label="OpenLinks profile and links"
       class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
+      style={{ "--profile-avatar-scale": String(layout.profileAvatarScale) } as Record<string, string>}
     >
       <TopUtilityBar title={content.site.title} controlsLabel="Theme and mode controls">
         <UtilityControlsMenu panelLabel="Theme and mode controls">

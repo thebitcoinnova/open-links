@@ -110,6 +110,7 @@ Coverage:
 - `typographyScale`
 - `typography`
 - `targetSize`
+- `profileAvatarScale`
 - `footer.description`
 - `footer.ctaLabel`
 - `footer.ctaUrl`

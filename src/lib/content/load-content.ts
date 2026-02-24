@@ -213,6 +213,7 @@ export interface SiteData {
     typographyScale?: TypographyScaleMode;
     typography?: TypographyConfig;
     targetSize?: TargetSizeMode;
+    profileAvatarScale?: number;
     brandIcons?: {
       colorMode?: BrandIconColorMode;
       contrastMode?: BrandIconContrastMode;

@@ -157,8 +157,9 @@ a:focus-visible {
 }
 
 .profile-avatar {
-  width: 76px;
-  height: 76px;
+  --profile-avatar-base: 76px;
+  width: calc(var(--profile-avatar-base) * var(--profile-avatar-scale, 1.5));
+  height: calc(var(--profile-avatar-base) * var(--profile-avatar-scale, 1.5));
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid color-mix(in srgb, var(--accent) 60%, var(--border-subtle));
@@ -690,8 +691,8 @@ a:focus-visible {
 }
 
 .card-icon {
-  --card-icon-base-size: 2.15rem;
-  --card-icon-base-glyph-size: 1rem;
+  --card-icon-base-size: 4.3rem;
+  --card-icon-base-glyph-size: 2rem;
   --card-icon-bg-default: color-mix(in srgb, var(--accent) 26%, var(--surface-pill) 74%);
   --card-icon-fg-default: color-mix(in srgb, var(--accent-strong) 85%, white 15%);
   --card-icon-border-default: color-mix(in srgb, var(--border-subtle) 80%, transparent 20%);
@@ -769,8 +770,8 @@ a:focus-visible {
 }
 
 .utility-menu-button svg {
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 2.4rem;
+  height: 2.4rem;
   display: block;
 }
 

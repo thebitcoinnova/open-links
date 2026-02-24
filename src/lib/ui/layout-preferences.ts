@@ -11,6 +11,7 @@ export interface LayoutPreferences {
   desktopColumns: DesktopColumnsMode;
   typographyScale: TypographyScaleMode;
   targetSize: TargetSizeMode;
+  profileAvatarScale: number;
 }
 
 const density = (site: SiteData): DensityMode => {
@@ -42,9 +43,18 @@ const targetSize = (site: SiteData): TargetSizeMode => {
   return "comfortable";
 };
 
+const profileAvatarScale = (site: SiteData): number => {
+  const value = site.ui?.profileAvatarScale;
+  if (typeof value === "number" && value > 0 && value <= 4) {
+    return value;
+  }
+  return 1.5;
+};
+
 export const resolveLayoutPreferences = (site: SiteData): LayoutPreferences => ({
   density: density(site),
   desktopColumns: desktopColumns(site),
   typographyScale: typographyScale(site),
-  targetSize: targetSize(site)
+  targetSize: targetSize(site),
+  profileAvatarScale: profileAvatarScale(site)
 });

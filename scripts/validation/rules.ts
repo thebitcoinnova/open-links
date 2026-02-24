@@ -679,6 +679,16 @@ export const runPolicyRules = ({ profile, links, site, sources: overrideSources 
   issues.push(...checkCustomConflicts(sources.site, site.custom, SITE_KEYS, "$.custom"));
 
   const siteUi = isRecord(site.ui) ? site.ui : undefined;
+  const maybeScale = siteUi && typeof siteUi.profileAvatarScale === "number" ? siteUi.profileAvatarScale : undefined;
+  if (maybeScale !== undefined && (maybeScale <= 0 || maybeScale > 4)) {
+    issues.push({
+      level: "warning",
+      source: sources.site,
+      path: "$.ui.profileAvatarScale",
+      message: `profileAvatarScale ${maybeScale} is outside the recommended 0–4 range.`,
+      remediation: "Use a value between 0 and 4 (default 1.5) for avatar size multiplier."
+    });
+  }
   const brandIcons = siteUi && isRecord(siteUi.brandIcons) ? siteUi.brandIcons : undefined;
   issues.push(
     ...checkIconOverrideAliases(sources.site, "$.ui.brandIcons.iconOverrides", brandIcons?.iconOverrides)

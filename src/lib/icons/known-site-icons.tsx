@@ -45,7 +45,7 @@ import {
   IconBrandVimeoFilled,
   IconBrandWechat,
   IconBrandWhatsappFilled,
-  IconBrandXFilled,
+  IconBrandX,
   IconBrandYarn,
   IconBrandYoutubeFilled,
   IconBoltFilled,
@@ -63,7 +63,7 @@ export type KnownSiteIconComponent = Component<Record<string, unknown>>;
 const knownSiteIcons: Record<KnownSiteId, KnownSiteIconComponent> = {
   github: IconBrandGithubFilled,
   linkedin: IconBrandLinkedinFilled,
-  x: IconBrandXFilled,
+  x: IconBrandX,
   twitter: IconBrandTwitterFilled,
   youtube: IconBrandYoutubeFilled,
   instagram: IconBrandInstagramFilled,

@@ -351,6 +351,7 @@ Main presentation controls include:
 - `typographyScale`: `fixed`, `compact`, `expressive`
 - `typography`: optional global/per-theme typography overrides
 - `targetSize`: `comfortable`, `compact`, `large`
+- `profileAvatarScale`: number between `0` and `4`; default `1.5` (avatar size multiplier)
 - `brandIcons.colorMode`: `brand`, `theme`
 - `brandIcons.contrastMode`: `auto`, `always-theme`, `always-brand`
 - `brandIcons.minContrastRatio`: number between `1` and `21` (default `3`)
