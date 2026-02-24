@@ -74,10 +74,10 @@
 }
 
 :root[data-theme^="sleek"] .profile-header {
-  border-color: color-mix(in srgb, var(--border-subtle) 88%, transparent 12%);
-  background: color-mix(in srgb, var(--surface-panel) 94%, white 6%);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(6px);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 :root[data-theme^="sleek"] .simple-link-card,
