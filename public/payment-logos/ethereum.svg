@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Ethereum">
+  <circle cx="64" cy="64" r="58" fill="#627EEA"/>
+  <path fill="#fff" d="M64 16 34 66l30 18 30-18-30-50z"/>
+  <path fill="#DCE4FF" d="M64 87 34 70l30 42 30-42-30 17z"/>
+</svg>

@@ -2,6 +2,8 @@ import {
   IconBrandBehance,
   IconBrandBitbucketFilled,
   IconBrandBluesky,
+  IconBrandCashapp,
+  IconBrandCoinbase,
   IconBrandCodepen,
   IconBrandDiscordFilled,
   IconBrandDocker,
@@ -25,6 +27,7 @@ import {
   IconBrandPinterestFilled,
   IconBrandPnpm,
   IconBrandProducthunt,
+  IconBrandPaypalFilled,
   IconBrandReddit,
   IconBrandSkype,
   IconBrandSlack,
@@ -32,6 +35,7 @@ import {
   IconBrandSoundcloud,
   IconBrandSpotifyFilled,
   IconBrandStackoverflow,
+  IconBrandStripeFilled,
   IconBrandTelegram,
   IconBrandThreads,
   IconBrandTiktokFilled,
@@ -43,7 +47,13 @@ import {
   IconBrandWhatsappFilled,
   IconBrandXFilled,
   IconBrandYarn,
-  IconBrandYoutubeFilled
+  IconBrandYoutubeFilled,
+  IconBoltFilled,
+  IconCoffee,
+  IconCurrencyBitcoin,
+  IconCurrencyEthereum,
+  IconVectorTriangle,
+  IconWallet
 } from "@tabler/icons-solidjs";
 import type { Component } from "solid-js";
 import type { KnownSiteId } from "./known-sites-data";
@@ -94,6 +104,16 @@ const knownSiteIcons: Record<KnownSiteId, KnownSiteIconComponent> = {
   docker: IconBrandDocker,
   linktree: IconBrandLinktree,
   patreon: IconBrandPatreonFilled,
+  kofi: IconCoffee,
+  paypal: IconBrandPaypalFilled,
+  cashapp: IconBrandCashapp,
+  stripe: IconBrandStripeFilled,
+  coinbase: IconBrandCoinbase,
+  bitcoin: IconCurrencyBitcoin,
+  lightning: IconBoltFilled,
+  ethereum: IconCurrencyEthereum,
+  solana: IconVectorTriangle,
+  wallet: IconWallet,
   google: IconBrandGoogleFilled,
   openai: IconBrandOpenai
 };

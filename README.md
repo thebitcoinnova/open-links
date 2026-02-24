@@ -10,6 +10,7 @@ This project is developer-first: fork or template the repo, edit JSON, push, and
 - Version-controlled content in `data/*.json`.
 - Schema + policy validation with actionable remediation output.
 - Rich and simple card support with build-time enrichment.
+- Payments and tips links with multi-rail support, styled QR codes, and fullscreen scan mode.
 - Build-time profile-avatar materialization with local fallback behavior.
 - Build-time rich/SEO image materialization with local-only runtime behavior.
 - GitHub Actions CI + GitHub Pages deploy pipeline already wired.
@@ -74,7 +75,7 @@ npm install
 Edit these files:
 
 - `data/profile.json` - identity and profile details.
-- `data/links.json` - simple/rich links, groups, ordering.
+- `data/links.json` - simple/rich/payment links, groups, ordering.
 - `data/site.json` - theme, UI, quality, and deployment-related config.
 
 Starter presets:
@@ -188,6 +189,13 @@ Allowed URL schemes:
 - `https`
 - `mailto`
 - `tel`
+
+Payment-enabled links and payment rails additionally support:
+
+- `bitcoin`
+- `lightning`
+- `ethereum`
+- `solana`
 
 ### Extension namespace
 

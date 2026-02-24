@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Lightning">
+  <circle cx="64" cy="64" r="58" fill="#F2A900"/>
+  <path fill="#111827" d="M74 14 34 72h24l-6 42 42-58H70l4-42z"/>
+</svg>

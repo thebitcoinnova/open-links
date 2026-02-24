@@ -7,7 +7,7 @@ import { resolveKnownSite, resolveKnownSiteById } from "../../lib/icons/known-si
 
 export interface LinkSiteIconProps {
   icon?: string;
-  url: string;
+  url?: string;
   label: string;
   options: ResolvedBrandIconOptions;
   themeFingerprint: string;

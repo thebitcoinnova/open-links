@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
 import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
@@ -7,6 +8,7 @@ import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import { loadContent, resolveGeneratedContentImageUrl } from "../lib/content/load-content";
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
+import { isPaymentCapableLink } from "../lib/payments/types";
 import ThemeToggle from "../components/theme/ThemeToggle";
 import {
   applyTypographyState,
@@ -149,11 +151,13 @@ const applySeoMetadata = () => {
   ensureMetaTag("name", "twitter:image", twitterImage);
 };
 
-const targetForLink = (url: string): "_blank" | "_self" => {
+const targetForLink = (url?: string): "_blank" | "_self" => {
   const mode = content.site.ui?.linkTarget ?? "new-tab-external";
 
   if (mode === "same-tab") return "_self";
   if (mode === "new-tab-all") return "_blank";
+
+  if (!url) return "_self";
 
   return url.startsWith("http://") || url.startsWith("https://") ? "_blank" : "_self";
 };
@@ -165,6 +169,19 @@ export default function RouteIndex() {
 
   const renderCard = (link: (typeof content.links)[number]) => {
     const target = targetForLink(link.url);
+
+    if (isPaymentCapableLink(link)) {
+      return (
+        <PaymentLinkCard
+          link={link}
+          site={content.site}
+          target={target}
+          interaction="minimal"
+          brandIconOptions={brandIconOptions}
+          themeFingerprint={themeFingerprint()}
+        />
+      );
+    }
 
     if (resolveRichCardVariant(content.site, link) === "rich") {
       return (

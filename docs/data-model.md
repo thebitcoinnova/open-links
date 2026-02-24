@@ -23,7 +23,7 @@ For a complete day-2 audit checklist of every data-driven customization area, us
 | File | Purpose | Required for build | Notes |
 |------|---------|--------------------|-------|
 | `data/profile.json` | Identity, bio, profile metadata | Yes | Primary hero/profile content |
-| `data/links.json` | All rendered links + groups + order | Yes | Supports `simple` and `rich` cards |
+| `data/links.json` | All rendered links + groups + order | Yes | Supports `simple`, `rich`, and `payment` cards |
 | `data/site.json` | Theme, UI preferences, quality policy | Yes | Also controls quality and deploy-relevant behavior |
 
 ## `profile.json`
@@ -100,8 +100,9 @@ Every item in `links` must include:
 
 - `id`
 - `label`
-- `url`
-- `type` (`simple` or `rich`)
+- `type` (`simple`, `rich`, or `payment`)
+
+`url` is required for `simple` and `rich` links. `payment` links may omit `url` if `payment.rails` is configured.
 
 ### Link object optional fields
 
@@ -112,6 +113,7 @@ Every item in `links` must include:
 - `enabled`
 - `metadata` (rich card metadata)
 - `enrichment` (build-time enrichment policy)
+- `payment` (tips/payment rails + QR settings)
 - `custom`
 
 #### Icon resolution behavior
@@ -203,6 +205,81 @@ This supports:
 
 Rich links can include manual metadata and/or generated metadata.
 
+### Payment links and rails
+
+Payment support is available in two ways:
+
+1. Dedicated payment cards with `type: "payment"`.
+2. Payment metadata on regular `simple`/`rich` links via `payment` (the link upgrades to payment-card rendering at runtime).
+
+`payment` supports:
+
+- `qrDisplay`: `always`, `toggle`, `hidden`
+- `primaryRailId`
+- `rails`: array of rail objects
+
+Supported rail values:
+
+- `patreon`
+- `kofi`
+- `paypal`
+- `cashapp`
+- `stripe`
+- `coinbase`
+- `bitcoin`
+- `lightning`
+- `ethereum`
+- `solana`
+- `custom-crypto`
+
+Per-rail QR settings (`payment.rails[].qr`) support:
+
+- `enabled`
+- `fullscreen`: `enabled`, `disabled`
+- `style`: `square`, `rounded`, `dots`
+- `foregroundColor`, `backgroundColor`
+- `logoMode`: `rail-default`, `custom`, `none`
+- `logoUrl` (required when `logoMode` is `custom`)
+- `logoSize`
+- `payload` (optional explicit QR payload override)
+
+Payment rails can include explicit app links via `payment.rails[].appLinks` for wallet/app-specific deep links.
+
+#### Payment example
+
+```json
+{
+  "id": "support",
+  "label": "Support My Work",
+  "type": "payment",
+  "description": "Tips help me ship more features",
+  "payment": {
+    "qrDisplay": "always",
+    "primaryRailId": "btc",
+    "rails": [
+      {
+        "id": "btc",
+        "rail": "bitcoin",
+        "address": "bc1qexampleaddress",
+        "amount": "0.0005",
+        "message": "Thanks for the support",
+        "qr": {
+          "style": "dots",
+          "logoMode": "rail-default",
+          "fullscreen": "enabled"
+        }
+      },
+      {
+        "id": "patreon",
+        "rail": "patreon",
+        "url": "https://patreon.com/example"
+      }
+    ]
+  },
+  "custom": {}
+}
+```
+
 ### Rich image materialization behavior
 
 - Remote rich-image URLs are source data, but runtime does not render raw remote URLs.
@@ -280,6 +357,12 @@ Main presentation controls include:
 - `brandIcons.sizeMode`: `normal`, `large`
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.mobile.imageLayout`: `inline` (default), `full-width`
+- `payments.qr.displayDefault`: `always`, `toggle`, `hidden`
+- `payments.qr.styleDefault`: `square`, `rounded`, `dots`
+- `payments.qr.foregroundColorDefault`, `payments.qr.backgroundColorDefault`
+- `payments.qr.logoModeDefault`: `rail-default`, `custom`, `none`
+- `payments.qr.logoSizeDefault`
+- `payments.qr.fullscreenDefault`: `enabled`, `disabled`
 
 Rich-card policy settings live under `ui.richCards`.
 

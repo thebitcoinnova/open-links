@@ -105,6 +105,56 @@
         }
       },
       "additionalProperties": false
+    },
+    "paymentQrDisplayMode": {
+      "type": "string",
+      "enum": ["always", "toggle", "hidden"]
+    },
+    "paymentQrStyle": {
+      "type": "string",
+      "enum": ["square", "rounded", "dots"]
+    },
+    "paymentQrLogoMode": {
+      "type": "string",
+      "enum": ["rail-default", "custom", "none"]
+    },
+    "paymentQrFullscreenMode": {
+      "type": "string",
+      "enum": ["enabled", "disabled"]
+    },
+    "sitePaymentQrDefaults": {
+      "type": "object",
+      "properties": {
+        "displayDefault": { "$ref": "#/$defs/paymentQrDisplayMode" },
+        "styleDefault": { "$ref": "#/$defs/paymentQrStyle" },
+        "foregroundColorDefault": {
+          "type": "string",
+          "minLength": 1
+        },
+        "backgroundColorDefault": {
+          "type": "string",
+          "minLength": 1
+        },
+        "logoModeDefault": { "$ref": "#/$defs/paymentQrLogoMode" },
+        "logoSizeDefault": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 0.5
+        },
+        "fullscreenDefault": { "$ref": "#/$defs/paymentQrFullscreenMode" }
+      },
+      "additionalProperties": true
+    },
+    "sitePaymentsConfig": {
+      "type": "object",
+      "properties": {
+        "qr": { "$ref": "#/$defs/sitePaymentQrDefaults" },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
     }
   },
   "properties": {
@@ -267,6 +317,9 @@
             }
           },
           "additionalProperties": true
+        },
+        "payments": {
+          "$ref": "#/$defs/sitePaymentsConfig"
         }
       },
       "additionalProperties": true

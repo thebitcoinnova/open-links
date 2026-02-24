@@ -313,6 +313,76 @@ export const KNOWN_SITES = [
     brandColor: "#FF424D"
   },
   {
+    id: "kofi",
+    label: "Ko-fi",
+    aliases: ["kofi", "ko-fi"],
+    domains: ["ko-fi.com"],
+    brandColor: "#29ABE0"
+  },
+  {
+    id: "paypal",
+    label: "PayPal",
+    aliases: ["paypal", "pp"],
+    domains: ["paypal.com", "paypal.me"],
+    brandColor: "#003087"
+  },
+  {
+    id: "cashapp",
+    label: "Cash App",
+    aliases: ["cashapp", "cash-app"],
+    domains: ["cash.app", "cashapp.com"],
+    brandColor: "#00D64B"
+  },
+  {
+    id: "stripe",
+    label: "Stripe",
+    aliases: ["stripe"],
+    domains: ["stripe.com", "buy.stripe.com"],
+    brandColor: "#635BFF"
+  },
+  {
+    id: "coinbase",
+    label: "Coinbase",
+    aliases: ["coinbase", "cb"],
+    domains: ["coinbase.com", "commerce.coinbase.com"],
+    brandColor: "#0052FF"
+  },
+  {
+    id: "bitcoin",
+    label: "Bitcoin",
+    aliases: ["bitcoin", "btc"],
+    domains: [],
+    brandColor: "#F7931A"
+  },
+  {
+    id: "lightning",
+    label: "Lightning",
+    aliases: ["lightning", "ln"],
+    domains: [],
+    brandColor: "#F2A900"
+  },
+  {
+    id: "ethereum",
+    label: "Ethereum",
+    aliases: ["ethereum", "eth"],
+    domains: [],
+    brandColor: "#627EEA"
+  },
+  {
+    id: "solana",
+    label: "Solana",
+    aliases: ["solana", "sol"],
+    domains: [],
+    brandColor: "#14F195"
+  },
+  {
+    id: "wallet",
+    label: "Wallet",
+    aliases: ["wallet", "crypto"],
+    domains: [],
+    brandColor: "#6B7280"
+  },
+  {
     id: "google",
     label: "Google",
     aliases: ["google"],

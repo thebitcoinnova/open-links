@@ -1,8 +1,28 @@
 import linksData from "../../../data/links.json";
 import profileData from "../../../data/profile.json";
 import siteData from "../../../data/site.json";
+import { resolvePrimaryPaymentHref } from "../payments/rails";
+import {
+  isPaymentCapableLink,
+  type LinkPaymentConfig,
+  type SitePaymentsConfig
+} from "../payments/types";
 
-export type LinkType = "simple" | "rich";
+export type {
+  LinkPaymentConfig,
+  PaymentAppLink,
+  PaymentQrConfig,
+  PaymentQrDisplayMode,
+  PaymentQrFullscreenMode,
+  PaymentQrLogoMode,
+  PaymentQrStyle,
+  PaymentRail,
+  PaymentRailType,
+  SitePaymentQrDefaults,
+  SitePaymentsConfig
+} from "../payments/types";
+
+export type LinkType = "simple" | "rich" | "payment";
 export type CompositionMode = "balanced" | "identity-first" | "links-first" | "links-only";
 export type GroupingStyle = "subtle" | "none" | "bands";
 export type ProfileRichness = "minimal" | "standard" | "rich";
@@ -100,7 +120,7 @@ export interface LinkEnrichmentPolicy {
 export interface OpenLink {
   id: string;
   label: string;
-  url: string;
+  url?: string;
   type: LinkType;
   icon?: string;
   description?: string;
@@ -109,6 +129,7 @@ export interface OpenLink {
   enabled?: boolean;
   metadata?: RichLinkMetadata;
   enrichment?: LinkEnrichmentPolicy;
+  payment?: LinkPaymentConfig;
   custom?: Record<string, unknown>;
 }
 
@@ -207,6 +228,7 @@ export interface SiteData {
         reportPath?: string;
       };
     };
+    payments?: SitePaymentsConfig;
   };
   custom?: Record<string, unknown>;
   [key: string]: unknown;
@@ -279,6 +301,59 @@ const toLocalAssetUrl = (assetPath: string): string => {
   const normalizedBase = base.endsWith("/") ? base : `${base}/`;
   const trimmedPath = assetPath.replace(/^\/+/, "");
   return `${normalizedBase}${trimmedPath}`;
+};
+
+const trimToUndefined = (value: string | undefined): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const PAYMENT_SUPPORT_GROUP: LinkGroup = {
+  id: "support",
+  label: "Support",
+  order: 999
+};
+
+const applyPaymentDefaults = (links: OpenLink[]): OpenLink[] =>
+  links.map((link) => {
+    const isPaymentLink = isPaymentCapableLink(link);
+    const currentUrl = trimToUndefined(link.url);
+    const currentGroup = trimToUndefined(link.group);
+    const updates: Partial<OpenLink> = {};
+
+    if (isPaymentLink && !currentGroup) {
+      updates.group = PAYMENT_SUPPORT_GROUP.id;
+    }
+
+    if (link.type === "payment" && !currentUrl) {
+      updates.url = resolvePrimaryPaymentHref(link.payment) ?? "";
+    } else if (currentUrl !== undefined && currentUrl !== link.url) {
+      updates.url = currentUrl;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return link;
+    }
+
+    return {
+      ...link,
+      ...updates
+    };
+  });
+
+const ensureSupportGroup = (groups: LinkGroup[], links: OpenLink[]): LinkGroup[] => {
+  const hasSupportLinks = links.some((link) => trimToUndefined(link.group) === PAYMENT_SUPPORT_GROUP.id);
+  const hasSupportGroup = groups.some((group) => group.id === PAYMENT_SUPPORT_GROUP.id);
+
+  if (!hasSupportLinks || hasSupportGroup) {
+    return groups;
+  }
+
+  return [...groups, PAYMENT_SUPPORT_GROUP];
 };
 
 const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
@@ -469,10 +544,11 @@ export const loadContent = () => {
 
   const mergedLinks = mergeGeneratedMetadata(linksPayload.links, generatedMetadata);
   const localizedLinks = localizeRichMetadataImages(mergedLinks, generatedContentImages);
-  const enabledLinks = localizedLinks.filter((link) => link.enabled !== false);
+  const paymentReadyLinks = applyPaymentDefaults(localizedLinks);
+  const enabledLinks = paymentReadyLinks.filter((link) => link.enabled !== false);
   const links = rankByExplicitOrder(enabledLinks, linksPayload.order);
 
-  const groups = [...(linksPayload.groups ?? [])].sort(
+  const groups = ensureSupportGroup([...(linksPayload.groups ?? [])], links).sort(
     (left, right) => (left.order ?? Number.MAX_SAFE_INTEGER) - (right.order ?? Number.MAX_SAFE_INTEGER)
   );
 

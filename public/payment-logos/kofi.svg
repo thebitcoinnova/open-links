@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Ko-fi">
+  <circle cx="64" cy="64" r="58" fill="#29ABE0"/>
+  <path fill="#fff" d="M36 46h50a8 8 0 0 1 8 8v18a18 18 0 0 1-18 18H52a16 16 0 0 1-16-16V46z"/>
+  <path fill="#29ABE0" d="M81 56h9a7 7 0 0 1 0 14h-9V56z"/>
+  <path fill="#FF4F5A" d="M57 63c0-4 3-7 7-7 4 0 7 3 7 7 0 3-2 5-4 7l-3 3-3-3c-2-2-4-4-4-7z"/>
+</svg>

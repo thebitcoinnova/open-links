@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="PayPal">
+  <circle cx="64" cy="64" r="58" fill="#003087"/>
+  <path fill="#fff" d="M45 30h24c15 0 24 8 22 21-2 13-12 21-27 21h-8l-4 26H36l11-68z"/>
+  <path fill="#59A8FF" d="M57 36h22c12 0 19 6 17 17-2 11-10 17-23 17h-7l-3 20h-11l5-32h10c13 0 20-6 21-15 1-5-2-7-8-7H59l-2 12h-10l2-12z"/>
+</svg>

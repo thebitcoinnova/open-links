@@ -24,8 +24,8 @@ interface CliArgs {
 interface LinkInput {
   id: string;
   label: string;
-  url: string;
-  type: "simple" | "rich";
+  url?: string;
+  type: "simple" | "rich" | "payment";
   metadata?: EnrichmentMetadata;
   enrichment?: {
     enabled?: boolean;
@@ -184,7 +184,10 @@ const run = async () => {
   const config = resolveConfig(sitePayload, args);
   const generatedAt = new Date().toISOString();
 
-  const richLinks = (linksPayload.links ?? []).filter((link) => link.type === "rich");
+  const richLinks = (linksPayload.links ?? []).filter(
+    (link): link is LinkInput & { type: "rich"; url: string } =>
+      link.type === "rich" && typeof link.url === "string" && link.url.length > 0
+  );
   const entries: EnrichmentRunEntry[] = [];
   const generatedLinks: GeneratedRichMetadata["links"] = {};
 

@@ -47,6 +47,44 @@
     grid-template-columns: 1fr;
   }
 
+  body .payment-card-header,
+  body .payment-rail-top-row {
+    flex-wrap: wrap;
+  }
+
+  body .payment-card-primary-action {
+    width: 100%;
+  }
+
+  body .payment-rail-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  body .payment-rail-button {
+    flex: 1 1 auto;
+  }
+
+  body .payment-rail-qr-canvas {
+    width: min(100%, 210px);
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  body .payment-rail-fullscreen {
+    width: 100%;
+  }
+
+  body .payment-qr-fullscreen-dialog {
+    width: calc(100vw - var(--space-4));
+  }
+
+  body .payment-qr-fullscreen-canvas {
+    width: min(360px, calc(100vw - var(--space-6)));
+    height: min(360px, calc(100vw - var(--space-6)));
+  }
+
   body .rich-card-media {
     min-height: 7rem;
   }

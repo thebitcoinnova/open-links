@@ -45,6 +45,17 @@
         "metadataPath": "data/generated/rich-metadata.json",
         "reportPath": "data/generated/rich-enrichment-report.json"
       }
+    },
+    "payments": {
+      "qr": {
+        "displayDefault": "always",
+        "styleDefault": "dots",
+        "foregroundColorDefault": "#111827",
+        "backgroundColorDefault": "#FFFFFF",
+        "logoModeDefault": "rail-default",
+        "logoSizeDefault": 0.24,
+        "fullscreenDefault": "enabled"
+      }
     }
   },
   "quality": {

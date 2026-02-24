@@ -32,6 +32,37 @@
       "order": 2,
       "enabled": true,
       "custom": {}
+    },
+    {
+      "id": "support",
+      "label": "Support",
+      "type": "payment",
+      "group": "support",
+      "order": 1,
+      "enabled": true,
+      "payment": {
+        "qrDisplay": "always",
+        "primaryRailId": "btc",
+        "rails": [
+          {
+            "id": "btc",
+            "rail": "bitcoin",
+            "address": "bc1qexampletestaddress3w6x34",
+            "amount": "0.0005",
+            "message": "Thanks for the support",
+            "qr": {
+              "style": "dots",
+              "logoMode": "rail-default"
+            }
+          },
+          {
+            "id": "patreon",
+            "rail": "patreon",
+            "url": "https://patreon.com/example"
+          }
+        ]
+      },
+      "custom": {}
     }
   ],
   "groups": [
@@ -44,8 +75,13 @@
       "id": "work",
       "label": "Work",
       "order": 2
+    },
+    {
+      "id": "support",
+      "label": "Support",
+      "order": 3
     }
   ],
-  "order": ["github", "linkedin", "portfolio"],
+  "order": ["github", "linkedin", "portfolio", "support"],
   "custom": {}
 }

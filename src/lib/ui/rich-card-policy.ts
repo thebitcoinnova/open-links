@@ -49,7 +49,11 @@ const resolveMobileImageLayout = (site: SiteData, link: OpenLink): RichCardMobil
   return "inline";
 };
 
-const urlDomain = (url: string): string => {
+const urlDomain = (url: string | undefined): string => {
+  if (!url) {
+    return "link";
+  }
+
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {

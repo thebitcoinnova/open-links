@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@tabler/icons-solidjs": "^3.37.1",
+    "qr-code-styling": "^1.9.2",
     "solid-js": "^1.9.11"
   },
   "devDependencies": {

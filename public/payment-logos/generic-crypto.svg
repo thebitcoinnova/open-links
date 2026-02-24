@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Crypto">
+  <circle cx="64" cy="64" r="58" fill="#111827"/>
+  <path fill="#34D399" d="M64 28 38 42v30c0 16 10 25 26 28 16-3 26-12 26-28V42L64 28zm0 12 15 8v22c0 9-5 15-15 18-10-3-15-9-15-18V48l15-8z"/>
+</svg>
