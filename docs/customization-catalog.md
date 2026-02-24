@@ -110,6 +110,10 @@ Coverage:
 - `typographyScale`
 - `typography`
 - `targetSize`
+- `footer.description`
+- `footer.ctaLabel`
+- `footer.ctaUrl`
+- `footer.showLastUpdated`
 
 ## 8) `site.ui.typography` (`site-ui-typography`)
 

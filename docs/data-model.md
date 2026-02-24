@@ -363,6 +363,10 @@ Main presentation controls include:
 - `payments.qr.logoModeDefault`: `rail-default`, `custom`, `none`
 - `payments.qr.logoSizeDefault`
 - `payments.qr.fullscreenDefault`: `enabled`, `disabled`
+- `footer.description`: optional descriptive footer text
+- `footer.ctaLabel`: optional CTA button label
+- `footer.ctaUrl`: optional CTA target URL
+- `footer.showLastUpdated`: toggle subtle build-time UTC timestamp display
 
 Rich-card policy settings live under `ui.richCards`.
 
@@ -418,6 +422,30 @@ Example:
       "iconOverrides": {
         "x": "twitter"
       }
+    }
+  }
+}
+```
+
+#### `ui.footer`
+
+Footer content and CTA are configurable from `data/site.json`.
+
+- `description`: descriptive body copy shown in the footer.
+- `ctaLabel`: button text for the footer CTA.
+- `ctaUrl`: CTA destination URL (when omitted, runtime uses repo default).
+- `showLastUpdated`: controls rendering of a subtle build-time UTC "Last updated" line.
+
+Example:
+
+```json
+{
+  "ui": {
+    "footer": {
+      "description": "OpenLinks is a personal, free, open source, version-controlled links site. Fork it, customize JSON, and publish fast.",
+      "ctaLabel": "Create Your OpenLinks",
+      "ctaUrl": "https://github.com/pRizz/open-links",
+      "showLastUpdated": true
     }
   }
 }

@@ -106,6 +106,28 @@
       },
       "additionalProperties": false
     },
+    "siteFooterConfig": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ctaLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ctaUrl": {
+          "type": "string",
+          "minLength": 1,
+          "format": "uri"
+        },
+        "showLastUpdated": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
     "paymentQrDisplayMode": {
       "type": "string",
       "enum": ["always", "toggle", "hidden"]
@@ -320,6 +342,9 @@
         },
         "payments": {
           "$ref": "#/$defs/sitePaymentsConfig"
+        },
+        "footer": {
+          "$ref": "#/$defs/siteFooterConfig"
         }
       },
       "additionalProperties": true

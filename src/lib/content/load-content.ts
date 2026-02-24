@@ -186,6 +186,13 @@ export interface TypographyConfig {
   themes?: Record<string, TypographyOverrides>;
 }
 
+export interface SiteFooterConfig {
+  description?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  showLastUpdated?: boolean;
+}
+
 export interface SiteData {
   title: string;
   description: string;
@@ -229,6 +236,7 @@ export interface SiteData {
       };
     };
     payments?: SitePaymentsConfig;
+    footer?: SiteFooterConfig;
   };
   custom?: Record<string, unknown>;
   [key: string]: unknown;

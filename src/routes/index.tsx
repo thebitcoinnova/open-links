@@ -3,6 +3,7 @@ import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
 import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
+import SiteFooter from "../components/layout/SiteFooter";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
@@ -21,6 +22,7 @@ import {
 } from "../lib/theme/mode-controller";
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
+import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
 import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
 import {
@@ -32,6 +34,7 @@ import {
 const content = loadContent();
 const composition = resolveComposition(content.site);
 const layout = resolveLayoutPreferences(content.site);
+const footerPreferences = resolveFooterPreferences(content.site);
 const richRenderMode = resolveRichRenderMode(content.site);
 const modePolicy = resolveModePolicy(content.site);
 const brandIconOptions = resolveBrandIconOptions(content.site);
@@ -281,6 +284,8 @@ export default function RouteIndex() {
           </Switch>
         )}
       </For>
+
+      <SiteFooter preferences={footerPreferences} buildTimestampIso={__OPENLINKS_BUILD_TIMESTAMP__} />
     </main>
   );
 }

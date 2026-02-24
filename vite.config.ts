@@ -30,11 +30,15 @@ const resolveBasePath = (): string => {
 };
 
 const base = resolveBasePath();
+const buildTimestamp = process.env.OPENLINKS_BUILD_TIMESTAMP ?? new Date().toISOString();
 
 export default defineConfig({
   plugins: [solidPlugin()],
   build: {
     target: "esnext"
+  },
+  define: {
+    __OPENLINKS_BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp)
   },
   base
 });

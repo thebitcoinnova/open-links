@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { For, Show, createSignal, onCleanup } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
 
 export interface ProfileHeaderProps {
@@ -9,9 +9,117 @@ export interface ProfileHeaderProps {
 const orderedContactEntries = (contact?: Record<string, string>) =>
   Object.entries(contact ?? {}).sort((left, right) => left[0].localeCompare(right[0]));
 
+const STATUS_RESET_DELAY_MS = 3000;
+
+const resolveShareUrl = (): string => {
+  if (typeof window === "undefined") {
+    return "/";
+  }
+
+  const canonicalHref = document
+    .querySelector<HTMLLinkElement>('link[rel="canonical"]')
+    ?.getAttribute("href")
+    ?.trim();
+
+  if (!canonicalHref) {
+    return window.location.href;
+  }
+
+  try {
+    return new URL(canonicalHref, window.location.href).toString();
+  } catch {
+    return window.location.href;
+  }
+};
+
+const fallbackCopyText = (value: string): boolean => {
+  if (typeof document === "undefined") {
+    return false;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "true");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  textarea.style.pointerEvents = "none";
+  textarea.style.inset = "0";
+
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch {
+    copied = false;
+  }
+
+  document.body.removeChild(textarea);
+  return copied;
+};
+
+const copyToClipboard = async (value: string): Promise<boolean> => {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      return fallbackCopyText(value);
+    }
+  }
+
+  return fallbackCopyText(value);
+};
+
 export const ProfileHeader = (props: ProfileHeaderProps) => {
   const richness = () => props.richness ?? "standard";
   const contacts = () => orderedContactEntries(props.profile.contact);
+  const [shareStatus, setShareStatus] = createSignal("");
+  let resetTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const setTimedShareStatus = (message: string) => {
+    setShareStatus(message);
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+    }
+    resetTimer = setTimeout(() => setShareStatus(""), STATUS_RESET_DELAY_MS);
+  };
+
+  const handleCopyLink = async () => {
+    const copied = await copyToClipboard(resolveShareUrl());
+    setTimedShareStatus(copied ? "Copied" : "Copy failed");
+  };
+
+  const handleShareProfile = async () => {
+    const shareUrl = resolveShareUrl();
+
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: props.profile.name,
+          text: props.profile.headline,
+          url: shareUrl
+        });
+        setTimedShareStatus("Share opened");
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    const copied = await copyToClipboard(shareUrl);
+    setTimedShareStatus(copied ? "Copied" : "Copy failed");
+  };
+
+  onCleanup(() => {
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+    }
+  });
 
   return (
     <section class="profile-header" aria-label="Profile">
@@ -27,6 +135,24 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         <Show when={props.profile.bio && richness() !== "minimal"}>
           <p class="profile-bio">{props.profile.bio}</p>
         </Show>
+
+        <div class="profile-actions" role="group" aria-label="Profile sharing actions">
+          <button type="button" class="profile-share-button" onClick={() => handleShareProfile()}>
+            Share profile
+          </button>
+          <button
+            type="button"
+            class="profile-share-button secondary"
+            onClick={() => handleCopyLink()}
+          >
+            Copy link
+          </button>
+          <Show when={shareStatus()}>
+            <p class="profile-share-status" role="status" aria-live="polite">
+              {shareStatus()}
+            </p>
+          </Show>
+        </div>
 
         <Show when={richness() === "rich"}>
           <div class="profile-meta" role="list">
