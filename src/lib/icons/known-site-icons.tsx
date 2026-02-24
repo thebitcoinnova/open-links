@@ -57,6 +57,7 @@ import {
 } from "@tabler/icons-solidjs";
 import type { Component } from "solid-js";
 import type { KnownSiteId } from "./known-sites-data";
+import { IconBrandSubstack } from "./custom-icons";
 
 export type KnownSiteIconComponent = Component<Record<string, unknown>>;
 
@@ -114,6 +115,7 @@ const knownSiteIcons: Record<KnownSiteId, KnownSiteIconComponent> = {
   ethereum: IconCurrencyEthereum,
   solana: IconVectorTriangle,
   wallet: IconWallet,
+  substack: IconBrandSubstack,
   google: IconBrandGoogleFilled,
   openai: IconBrandOpenai
 };

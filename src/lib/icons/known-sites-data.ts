@@ -383,6 +383,13 @@ export const KNOWN_SITES = [
     brandColor: "#6B7280"
   },
   {
+    id: "substack",
+    label: "Substack",
+    aliases: ["substack"],
+    domains: ["substack.com"],
+    brandColor: "#FF6719"
+  },
+  {
     id: "google",
     label: "Google",
     aliases: ["google"],
