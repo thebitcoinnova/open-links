@@ -68,6 +68,9 @@ npm run linkedin:debug:validate
    - `docs/create-new-rich-content-extractor.md`
    - site-specific debug/runbook docs
 
+8. Share back (recommended).
+   - If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.
+
 ## Required Acceptance Gates
 
 - No bypass env var required for green build.

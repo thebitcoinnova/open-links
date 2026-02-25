@@ -203,3 +203,5 @@ Then complete implementation using:
 
 - `docs/create-new-rich-content-extractor.md`
 - `skills/create-new-rich-content-extractor/SKILL.md`
+
+If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.

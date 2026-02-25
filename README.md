@@ -317,6 +317,11 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - `.github/workflows/` - CI and deploy automation.
 - `.planning/` - project planning and phase artifacts.
 
+## Contributions and Feedback
+
+If extractor workflows helped you build new or improved extractors, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit.
+Feedback on extractor workflows and docs is appreciated.
+
 ## License
 
 MIT (see `LICENSE`).

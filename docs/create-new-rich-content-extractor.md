@@ -124,6 +124,10 @@ Include:
 - remediation and operator workflow
 - any extractor-specific caveats.
 
+## Step 8: Share Back (Recommended)
+
+If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.
+
 ## AI + Human Autonomous Workflow
 
 For repeatable agent execution, use:
