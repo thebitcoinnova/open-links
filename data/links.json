@@ -38,7 +38,8 @@
       "order": 3,
       "enabled": true,
       "enrichment": {
-        "enabled": false
+        "enabled": true,
+        "authenticatedExtractor": "linkedin-auth-browser"
       },
       "custom": {}
     },
@@ -130,6 +131,15 @@
       "order": 3
     }
   ],
-  "order": ["github", "x", "linkedin", "openlinks-home", "facebook", "instagram", "medium", "substack"],
+  "order": [
+    "github",
+    "x",
+    "linkedin",
+    "openlinks-home",
+    "facebook",
+    "instagram",
+    "medium",
+    "substack"
+  ],
   "custom": {}
 }
