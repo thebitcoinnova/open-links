@@ -19,7 +19,7 @@
       "plannedSupportNote": "Authenticated session-based workaround is planned (coming soon).",
       "docs": [
         "docs/rich-metadata-fetch-blockers.md",
-        "docs/linkedin-authenticated-metadata-poc.md"
+        "docs/linkedin-authenticated-metadata-debug-runbook.md"
       ]
     },
     {

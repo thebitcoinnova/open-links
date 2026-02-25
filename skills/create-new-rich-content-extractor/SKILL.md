@@ -55,10 +55,18 @@ npm run enrich:rich:strict
 npm run build
 ```
 
+Optional LinkedIn-specific diagnostics:
+
+```bash
+npm run linkedin:debug:bootstrap
+npm run linkedin:debug:login
+npm run linkedin:debug:validate
+```
+
 7. Update docs.
    - `docs/authenticated-rich-extractors.md`
    - `docs/create-new-rich-content-extractor.md`
-   - site-specific runbook/PoC docs
+   - site-specific debug/runbook docs
 
 ## Required Acceptance Gates
 

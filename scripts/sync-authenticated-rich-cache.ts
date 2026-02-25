@@ -188,13 +188,30 @@ const run = async () => {
   const sessionChecks: SessionArtifact[] = [];
   const captures: CaptureArtifact[] = [];
   const skippedValidCacheKeys: string[] = [];
+  const forcedRefreshCacheKeys: string[] = [];
   let cacheMutated = false;
+  const onlyMissingSkipMode = args.onlyMissing && !args.force;
+  const runMode = args.onlyMissing ? (args.force ? "only-missing-force-refresh" : "only-missing") : "full";
+
+  if (args.onlyMissing) {
+    if (args.force) {
+      console.log(
+        "Authenticated rich cache sync mode: --only-missing with --force (valid cache entries for selected links will be refreshed)."
+      );
+    } else {
+      console.log(
+        "Authenticated rich cache sync mode: --only-missing (idempotent; valid cache entries are skipped)."
+      );
+    }
+  } else {
+    console.log("Authenticated rich cache sync mode: full (selected links are re-captured).");
+  }
 
   if (candidates.length === 0) {
     const artifactPath = writeOutputArtifact({
       startedAt,
       completedAt: nowIso(),
-      mode: args.onlyMissing ? "only-missing" : "full",
+      mode: runMode,
       args,
       selectedLinks: [],
       warnings,
@@ -224,7 +241,9 @@ const run = async () => {
       });
 
       const hasErrors = validation.issues.some((issue) => issue.level === "error");
-      if (!hasErrors && validation.valid && validation.metadata) {
+      const hasValidEntry = !hasErrors && validation.valid && validation.metadata;
+
+      if (hasValidEntry && onlyMissingSkipMode) {
         skippedValidCacheKeys.push(candidate.cacheKey);
         captures.push({
           linkId: candidate.link.id,
@@ -234,6 +253,10 @@ const run = async () => {
           details: "Existing authenticated cache entry is valid; skipping due to --only-missing."
         });
         continue;
+      }
+
+      if (hasValidEntry && args.force) {
+        forcedRefreshCacheKeys.push(candidate.cacheKey);
       }
 
       selectedCandidates.push(candidate);
@@ -379,7 +402,7 @@ const run = async () => {
   const artifactPayload = {
     startedAt,
     completedAt: nowIso(),
-    mode: args.onlyMissing ? "only-missing" : "full",
+    mode: runMode,
     args,
     selectedLinks: candidates.map((candidate) => ({
       linkId: candidate.link.id,
@@ -393,6 +416,7 @@ const run = async () => {
       cacheKey: candidate.cacheKey
     })),
     skippedValidCacheKeys,
+    forcedRefreshCacheKeys,
     cachePath: args.cachePath,
     cacheWritten: cacheMutated,
     assetDirectory: `public/${DEFAULT_PUBLIC_ASSET_DIR_RELATIVE}`,
@@ -409,6 +433,9 @@ const run = async () => {
   console.log(`Links selected: ${candidates.length}`);
   if (args.onlyMissing) {
     console.log(`Skipped valid cache entries: ${skippedValidCacheKeys.length}`);
+    if (args.force) {
+      console.log(`Force-refreshed valid cache entries: ${forcedRefreshCacheKeys.length}`);
+    }
   }
   console.log(`Links processed: ${selectedCandidates.length}`);
   console.log(`Captured: ${capturedCount}`);
@@ -440,7 +467,7 @@ const run = async () => {
   }
 
   if (args.onlyMissing && selectedCandidates.length === 0) {
-    console.log("No missing/invalid authenticated cache entries detected. Setup is already complete.");
+    console.log("No missing/invalid authenticated cache entries detected. Setup is already complete and idempotent.");
   }
 
   console.log(

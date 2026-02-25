@@ -1,6 +1,6 @@
-# LinkedIn Authenticated Metadata PoC
+# LinkedIn Authenticated Metadata Debug Runbook
 
-This runbook validates a local-only workaround for LinkedIn rich metadata by using an authenticated browser session.
+This runbook is the ongoing local debug workflow for LinkedIn authenticated rich metadata extraction using browser session state.
 
 Scope:
 
@@ -22,7 +22,7 @@ Production workflow now uses authenticated extractor cache integration:
 - Use encrypted agent-browser session persistence:
   - `AGENT_BROWSER_SESSION_NAME`
   - `AGENT_BROWSER_ENCRYPTION_KEY` (64-char hex)
-- Artifacts are written under `output/playwright/linkedin-poc/` (gitignored).
+- Artifacts are written under `output/playwright/linkedin-debug/` (gitignored).
 
 ## Preconditions
 
@@ -38,8 +38,8 @@ Optional auth wait tuning:
 Example local shell setup:
 
 ```bash
-export AGENT_BROWSER_SESSION="openlinks-linkedin-poc"
-export AGENT_BROWSER_SESSION_NAME="openlinks-linkedin-poc"
+export AGENT_BROWSER_SESSION="openlinks-linkedin-debug"
+export AGENT_BROWSER_SESSION_NAME="openlinks-linkedin-debug"
 export AGENT_BROWSER_ENCRYPTION_KEY="<64-char-hex>"
 ```
 
@@ -48,45 +48,46 @@ export AGENT_BROWSER_ENCRYPTION_KEY="<64-char-hex>"
 1. Bootstrap and install binaries if needed:
 
 ```bash
-npm run poc:linkedin:bootstrap
+npm run linkedin:debug:bootstrap
 ```
 
 2. Start autonomous headed login watcher:
 
 ```bash
-npm run poc:linkedin:login
+npm run linkedin:debug:login
 ```
 
 Optional overrides:
 
 ```bash
-npm run poc:linkedin:login -- --url "https://www.linkedin.com/in/your-profile/"
-npm run poc:linkedin:login -- --auth-timeout-ms 900000 --poll-ms 1500
+npm run linkedin:debug:login -- --url "https://www.linkedin.com/in/your-profile/"
+npm run linkedin:debug:login -- --auth-timeout-ms 900000 --poll-ms 1500
 ```
 
 This command opens a browser and waits for auth progression (`login`/`mfa_challenge`/`authwall`/`authenticated`) automatically.
+Multi-factor authentication is optional; the flow continues as soon as authenticated state is detected.
 No Enter checkpoint is required.
 
 3. Run authenticated metadata validation:
 
 ```bash
-npm run poc:linkedin:validate
+npm run linkedin:debug:validate
 ```
 
 Optional diagnostics:
 
 ```bash
-npm run poc:linkedin:validate -- --headed
-npm run poc:linkedin:validate -- --auth-timeout-ms 900000 --poll-ms 1500
-npm run poc:linkedin:validate:cookie-bridge
+npm run linkedin:debug:validate -- --headed
+npm run linkedin:debug:validate -- --auth-timeout-ms 900000 --poll-ms 1500
+npm run linkedin:debug:validate:cookie-bridge
 ```
 
 4. Review artifacts:
 
-- `output/playwright/linkedin-poc/session-check-<timestamp>.json`
-- `output/playwright/linkedin-poc/page-<timestamp>.html`
-- `output/playwright/linkedin-poc/metadata-<timestamp>.json`
-- `output/playwright/linkedin-poc/summary-<timestamp>.json`
+- `output/playwright/linkedin-debug/session-check-<timestamp>.json`
+- `output/playwright/linkedin-debug/page-<timestamp>.html`
+- `output/playwright/linkedin-debug/metadata-<timestamp>.json`
+- `output/playwright/linkedin-debug/summary-<timestamp>.json`
 
 5. Promote validated extraction into committed cache:
 
@@ -100,10 +101,22 @@ Optional one-link capture:
 npm run auth:rich:sync -- --only-link linkedin
 ```
 
+Optional forced refresh (even when cache is already valid):
+
+```bash
+npm run auth:rich:sync -- --only-link linkedin --force
+```
+
+Optional cache clear before recapture:
+
+```bash
+npm run auth:rich:clear -- --only-link linkedin
+```
+
 6. Cleanup (optional):
 
 ```bash
-npx --yes agent-browser --session "${AGENT_BROWSER_SESSION:-openlinks-linkedin-poc}" close --json
+npx --yes agent-browser --session "${AGENT_BROWSER_SESSION:-openlinks-linkedin-debug}" close --json
 ```
 
 ## Pass / Fail Criteria
@@ -123,9 +136,9 @@ Fail:
 
 | Symptom | Likely Cause | Remediation |
 |---|---|---|
-| Bootstrap reports missing browser executable | Browser binaries not installed | Re-run `npm run poc:linkedin:bootstrap` (auto-installs) |
-| Login script times out | Login or MFA/challenge not completed | Re-run `npm run poc:linkedin:login`, finish prompts in browser, or increase `--auth-timeout-ms` |
-| Validator fails with `reauth_required` | Session expired or auth not established | Run `npm run poc:linkedin:login` first, then re-run validator |
+| Bootstrap reports missing browser executable | Browser binaries not installed | Re-run `npm run linkedin:debug:bootstrap` (auto-installs) |
+| Login script times out | Login or challenge not completed before timeout | Re-run `npm run linkedin:debug:login`, finish prompts in browser, or increase `--auth-timeout-ms` |
+| Validator fails with `reauth_required` | Session expired or auth not established | Run `npm run linkedin:debug:login` first, then re-run validator |
 | Validator returns placeholder signals | Session redirected to authwall/signup or non-profile target | Re-run login, verify final URL, then re-run validator |
 | Cookie-bridge check fails but browser parse succeeds | Cookies do not translate to raw HTTP fetch path | Use browser-session extraction as source of truth |
 

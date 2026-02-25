@@ -90,6 +90,13 @@ npm run setup:rich-auth
 
 4. Commit changed manifest/assets.
 
+If debugging LinkedIn-specific auth/session behavior, use:
+
+- `npm run linkedin:debug:bootstrap`
+- `npm run linkedin:debug:login`
+- `npm run linkedin:debug:validate`
+- `npm run linkedin:debug:validate:cookie-bridge`
+
 ## Step 6: Validate and Build
 
 Run:
@@ -108,7 +115,7 @@ Update all relevant docs:
 
 - `docs/authenticated-rich-extractors.md`
 - `docs/rich-metadata-fetch-blockers.md`
-- site-specific PoC/runbook docs (if present)
+- site-specific debug/runbook docs (if present)
 
 Include:
 

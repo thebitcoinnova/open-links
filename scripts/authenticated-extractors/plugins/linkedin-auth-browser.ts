@@ -8,11 +8,11 @@ import {
   resolveAuthWaitSettings,
   resolveSessionConfig,
   runAgentBrowserJson,
+  summarizeLinkedinAuthTransitions,
   summarizeLinkedinAuthResult,
   waitForLinkedinAuthenticatedSession,
-  type SessionConfig,
-  type WaitForLinkedinAuthResult
-} from "../../oneoff/linkedin-poc-common";
+  type SessionConfig
+} from "../../oneoff/linkedin-debug-common";
 import type {
   AuthenticatedExtractorEnsureSessionResult,
   AuthenticatedExtractorExtractContext,
@@ -131,11 +131,6 @@ const resolveSourceLabel = (sourceUrl: string): string => {
 };
 
 const resolveAgentConfig = (): SessionConfig => resolveSessionConfig();
-
-const authTransitionsSummary = (result: WaitForLinkedinAuthResult): string =>
-  result.transitions
-    .map((snapshot) => `${snapshot.state}@${snapshot.currentUrl ?? "unknown"}`)
-    .join(" -> ");
 
 const extractLinkedinProfilePayload = async (
   config: SessionConfig,
@@ -398,7 +393,7 @@ const ensureSession = async (
   console.log("");
   console.log(`[${context.extractorId}] LinkedIn login required.`);
   console.log(
-    `[${context.extractorId}] A headed browser will open. Complete credentials and any MFA/challenge; extraction will continue automatically once authenticated.`
+    `[${context.extractorId}] A headed browser will open. Complete login credentials, and if your account has multi-factor authentication or a challenge step complete it there; extraction continues automatically once authenticated.`
   );
   console.log(
     `[${context.extractorId}] Waiting up to ${settings.timeoutMs}ms (poll ${settings.pollMs}ms).`
@@ -417,7 +412,7 @@ const ensureSession = async (
 
   if (!authResult.verified) {
     throw new Error(
-      `LinkedIn login verification failed. ${summarizeLinkedinAuthResult(authResult)}. transitions=${authTransitionsSummary(
+      `LinkedIn login verification failed. ${summarizeLinkedinAuthResult(authResult)}. transitions=${summarizeLinkedinAuthTransitions(
         authResult
       )}`
     );
@@ -425,7 +420,7 @@ const ensureSession = async (
 
   return {
     verified: true,
-    details: `${summarizeLinkedinAuthResult(authResult)}; transitions=${authTransitionsSummary(authResult)}`
+    details: `${summarizeLinkedinAuthResult(authResult)}; transitions=${summarizeLinkedinAuthTransitions(authResult)}`
   };
 };
 

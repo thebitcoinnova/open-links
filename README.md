@@ -176,7 +176,12 @@ High-signal deployment checks:
 - `npm run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
 - `npm run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
 - `npm run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
+- `npm run auth:rich:clear` - clear authenticated cache entries and unreferenced local assets (selector-driven; supports `--dry-run`).
 - `npm run auth:extractor:new -- --id <id> --domains <csv> --summary "<summary>"` - scaffold a new authenticated extractor plugin + policy + registry wiring.
+- `npm run linkedin:debug:bootstrap` - LinkedIn debug bootstrap (agent-browser checks + browser binary install check).
+- `npm run linkedin:debug:login` - LinkedIn debug login watcher (autonomous auth-state polling; multi-factor authentication optional).
+- `npm run linkedin:debug:validate` - LinkedIn authenticated metadata debug validator.
+- `npm run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
 - `npm run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
 - `npm run dev` - start local dev server (predev runs strict enrichment and fails on blocking enrichment policy issues).
 - `npm run validate:data` - schema + policy checks (standard mode).
@@ -186,6 +191,27 @@ High-signal deployment checks:
 - `npm run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build.
 - `npm run preview` - serve built output.
 - `npm run typecheck` - TypeScript checks.
+
+### Authenticated Cache Lifecycle
+
+Canonical paths:
+
+- `data/cache/rich-authenticated-cache.json`
+- `public/cache/rich-authenticated/`
+- `output/playwright/auth-rich-sync/`
+
+Setup/refresh flow:
+
+- First-run idempotent setup (only missing/invalid cache entries): `npm run setup:rich-auth`
+- Targeted refresh: `npm run auth:rich:sync -- --only-link <link-id>`
+- Forced refresh (even when cache is already valid): `npm run auth:rich:sync -- --only-link <link-id> --force`
+
+Clear flow:
+
+- Dry run clear for one link: `npm run auth:rich:clear -- --only-link <link-id> --dry-run`
+- Apply clear for one link: `npm run auth:rich:clear -- --only-link <link-id>`
+- Apply clear for all authenticated cache entries: `npm run auth:rich:clear -- --all`
+- Recapture after clear: `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`)
 
 ### Quality commands
 
@@ -250,6 +276,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - If rich-card images look clipped, set `site.ui.richCards.imageFit=contain` (or per-link override with `links[].metadata.imageFit`).
 - If a blocked domain must be tested anyway, set explicit override on that link: `links[].enrichment.allowKnownBlocker=true`.
 - If `authenticated_cache_missing` is reported, run `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`) and commit cache manifest/assets.
+- To reset stale/bad authenticated cache data, clear entries first with `npm run auth:rich:clear -- --only-link <link-id>` (or `--all`), then recapture with `npm run setup:rich-auth`.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
 - Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build`.
 - Force-refresh avatar cache when needed: `npm run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
@@ -273,7 +300,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [Rich Enrichment Blockers Registry](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-enrichment-blockers-registry.md)
 - [Authenticated Rich Extractors](https://raw.githubusercontent.com/pRizz/open-links/main/docs/authenticated-rich-extractors.md)
 - [Create New Rich Content Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/create-new-rich-content-extractor.md)
-- [LinkedIn Authenticated Metadata PoC](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linkedin-authenticated-metadata-poc.md)
+- [LinkedIn Authenticated Metadata Debug Runbook](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linkedin-authenticated-metadata-debug-runbook.md)
 - Extractor authoring skill: `skills/create-new-rich-content-extractor/SKILL.md`
 - [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md)
 - [Theming and Layout Extensibility](https://raw.githubusercontent.com/pRizz/open-links/main/docs/theming-and-layouts.md)

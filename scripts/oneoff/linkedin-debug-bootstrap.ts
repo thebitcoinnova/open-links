@@ -7,7 +7,7 @@ import {
   runAgentBrowserJson,
   runRawCommand,
   type SessionConfig
-} from "./linkedin-poc-common";
+} from "./linkedin-debug-common";
 
 const installAgentBrowserBinaries = () => {
   console.log("Installing browser binaries via agent-browser...");
@@ -43,7 +43,7 @@ const run = () => {
   });
   if (npxCheck.status !== 0) {
     throw new Error(
-      "npx is required for the LinkedIn authenticated PoC. Install Node.js/npm and retry."
+      "npx is required for LinkedIn authenticated debug tooling. Install Node.js/npm and retry."
     );
   }
 
@@ -92,19 +92,19 @@ const run = () => {
     }
   }
 
-  console.log("LinkedIn authenticated metadata PoC bootstrap complete.");
+  console.log("LinkedIn authenticated metadata debug bootstrap complete.");
   console.log(`Started at: ${startedAt}`);
   console.log(`Session: ${config.session}`);
   console.log(`Session name: ${config.sessionName}`);
   console.log(`Encryption key: ${redactSecret(config.encryptionKey)}`);
   console.log(`Browser install attempted: ${installAttempted ? "yes" : "no"}`);
-  console.log("Next step: npm run poc:linkedin:login");
+  console.log("Next step: npm run linkedin:debug:login");
 };
 
 try {
   run();
 } catch (error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`LinkedIn PoC bootstrap failed: ${message}`);
+  console.error(`LinkedIn debug bootstrap failed: ${message}`);
   process.exit(1);
 }

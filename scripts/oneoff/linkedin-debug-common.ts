@@ -3,8 +3,8 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 
-export const DEFAULT_LINKEDIN_POC_SESSION = "openlinks-linkedin-poc";
-export const LINKEDIN_POC_OUTPUT_DIR = path.join("output", "playwright", "linkedin-poc");
+export const DEFAULT_LINKEDIN_DEBUG_SESSION = "openlinks-linkedin-debug";
+export const LINKEDIN_DEBUG_OUTPUT_DIRECTORY = path.join("output", "playwright", "linkedin-debug");
 
 export const OPENLINKS_AUTH_SESSION_TIMEOUT_ENV = "OPENLINKS_AUTH_SESSION_TIMEOUT_MS";
 export const OPENLINKS_AUTH_SESSION_POLL_ENV = "OPENLINKS_AUTH_SESSION_POLL_MS";
@@ -122,8 +122,8 @@ export const fileTimestamp = (): string => nowIso().replaceAll(":", "-");
 
 export const toAbsoluteFromRoot = (...segments: string[]): string => path.join(process.cwd(), ...segments);
 
-export const ensureLinkedinPocOutputDirectory = (): string => {
-  const outputDir = toAbsoluteFromRoot(LINKEDIN_POC_OUTPUT_DIR);
+export const ensureLinkedinDebugOutputDirectory = (): string => {
+  const outputDir = toAbsoluteFromRoot(LINKEDIN_DEBUG_OUTPUT_DIRECTORY);
   fs.mkdirSync(outputDir, { recursive: true });
   return outputDir;
 };
@@ -146,13 +146,13 @@ export const redactSecret = (value: string): string => {
 };
 
 export const resolveSessionConfig = (): SessionConfig => {
-  const session = process.env.AGENT_BROWSER_SESSION?.trim() || DEFAULT_LINKEDIN_POC_SESSION;
+  const session = process.env.AGENT_BROWSER_SESSION?.trim() || DEFAULT_LINKEDIN_DEBUG_SESSION;
   const sessionName = process.env.AGENT_BROWSER_SESSION_NAME?.trim() || session;
   const encryptionKey = process.env.AGENT_BROWSER_ENCRYPTION_KEY?.trim() ?? "";
 
   if (!/^[a-fA-F0-9]{64}$/.test(encryptionKey)) {
     throw new Error(
-      "AGENT_BROWSER_ENCRYPTION_KEY is required and must be a 64-character hex value for this PoC."
+      "AGENT_BROWSER_ENCRYPTION_KEY is required and must be a 64-character hex value for LinkedIn authenticated debug tooling."
     );
   }
 
@@ -499,6 +499,11 @@ export const summarizeLinkedinAuthResult = (result: WaitForLinkedinAuthResult): 
   ].join("; ");
 };
 
+export const summarizeLinkedinAuthTransitions = (result: WaitForLinkedinAuthResult): string =>
+  result.transitions
+    .map((snapshot) => `${snapshot.state}@${snapshot.currentUrl ?? "unknown"}`)
+    .join(" -> ");
+
 export const waitForLinkedinAuthenticatedSession = async (
   config: SessionConfig,
   input: WaitForLinkedinAuthInput
@@ -517,6 +522,12 @@ export const waitForLinkedinAuthenticatedSession = async (
 
   if (emitStateLogs && openResult.response?.success === false) {
     console.warn(`${logPrefix} open warning: ${openResult.response.error ?? "unknown"}`);
+  }
+
+  if (emitStateLogs) {
+    console.log(
+      `${logPrefix} waiting for authenticated session. Multi-factor authentication or challenge steps are optional; flow continues automatically once authenticated is detected.`
+    );
   }
 
   runAgentBrowserJson(["wait", "1000"], config, { allowFailure: true });

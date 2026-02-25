@@ -346,6 +346,8 @@ Canonical authenticated extractor + cache registries:
 - `schema/rich-authenticated-extractors.schema.json`
 - `data/cache/rich-authenticated-cache.json`
 - `schema/rich-authenticated-cache.schema.json`
+- `public/cache/rich-authenticated/` (committed local assets)
+- `output/playwright/auth-rich-sync/` (diagnostics, gitignored)
 
 When an enrichment-enabled rich link URL matches a `status=blocked` registry entry, enrichment fails early with reason `known_blocker` unless `links[].enrichment.allowKnownBlocker=true` is set for that link.
 
@@ -358,6 +360,8 @@ First-run authenticated setup command:
 
 - `npm run setup:rich-auth` (captures only missing/invalid authenticated cache entries)
 - Optional one-link capture: `npm run auth:rich:sync -- --only-link <link-id>`
+- Force one-link refresh even when cache is valid: `npm run auth:rich:sync -- --only-link <link-id> --force`
+- Clear cache entries/assets before recapture: `npm run auth:rich:clear -- --only-link <link-id>` (or `--all`)
 
 Extractor scaffolding command:
 
@@ -367,6 +371,13 @@ Local auth wait tuning for one-off LinkedIn flows:
 
 - `OPENLINKS_AUTH_SESSION_TIMEOUT_MS` (default `600000`)
 - `OPENLINKS_AUTH_SESSION_POLL_MS` (default `2000`)
+
+LinkedIn debug commands:
+
+- `npm run linkedin:debug:bootstrap`
+- `npm run linkedin:debug:login`
+- `npm run linkedin:debug:validate`
+- `npm run linkedin:debug:validate:cookie-bridge`
 
 ## `site.json`
 

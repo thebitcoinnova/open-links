@@ -10,9 +10,9 @@ Canonical machine-readable blocker policy:
 - Schema: `schema/rich-enrichment-blockers.schema.json`
 - Registry guide: `docs/rich-enrichment-blockers-registry.md`
 
-LinkedIn authenticated one-off validation runbook:
+LinkedIn authenticated debug runbook:
 
-- `docs/linkedin-authenticated-metadata-poc.md`
+- `docs/linkedin-authenticated-metadata-debug-runbook.md`
 
 Authenticated extractor framework guide:
 
@@ -95,9 +95,9 @@ Operator setup command:
 2. If rich display is still desired, set manual `links[].metadata` fields (`title`, `description`, `image`).
 3. Keep this file updated whenever blockers are confirmed, changed, or removed.
 
-## Authenticated PoC Log Template
+## Authenticated Debug Log Template
 
-When running the LinkedIn authenticated PoC, append entries using this template:
+When running LinkedIn authenticated debug commands, append entries using this template:
 
 | Timestamp (UTC) | Site | Session Mode | Result | Extracted Quality | Cookie-Bridge Result | Notes / Next Action |
 |---|---|---|---|---|---|---|

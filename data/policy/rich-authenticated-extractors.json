@@ -10,11 +10,11 @@
       "domains": ["linkedin.com", "lnkd.in"],
       "matchSubdomains": true,
       "summary": "Uses an authenticated browser session to extract LinkedIn rich metadata and cache local assets.",
-      "loginInstructions": "Sign into LinkedIn in the opened browser session and complete any challenge/MFA; sync continues automatically once authenticated state is detected.",
+      "loginInstructions": "Sign into LinkedIn in the opened browser session and complete any challenge or multi-factor authentication step; sync continues automatically once authenticated state is detected.",
       "docs": [
         "docs/authenticated-rich-extractors.md",
         "docs/create-new-rich-content-extractor.md",
-        "docs/linkedin-authenticated-metadata-poc.md",
+        "docs/linkedin-authenticated-metadata-debug-runbook.md",
         "docs/rich-metadata-fetch-blockers.md"
       ]
     }

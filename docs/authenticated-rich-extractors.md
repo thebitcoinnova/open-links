@@ -18,6 +18,10 @@ Build/dev remain non-interactive and do not auto-open browsers.
 - Authenticated cache schema: `schema/rich-authenticated-cache.schema.json`
 - Local committed assets directory: `public/cache/rich-authenticated/`
 
+Diagnostics artifacts (gitignored):
+
+- `output/playwright/auth-rich-sync/`
+
 ## Link and Site Configuration
 
 ### Per-link
@@ -52,6 +56,8 @@ npm run setup:rich-auth
 
 If no configured authenticated links are missing cache data, it exits 0 as a no-op.
 
+`setup:rich-auth` is idempotent by design.
+
 ## Full Sync Workflow
 
 Manual/full capture command:
@@ -67,7 +73,33 @@ npm run auth:rich:sync -- --only-link linkedin
 npm run auth:rich:sync -- --only-extractor linkedin-auth-browser
 npm run auth:rich:sync -- --only-missing
 npm run auth:rich:sync -- --force
+npm run auth:rich:sync -- --only-link linkedin --only-missing --force
 ```
+
+Behavior notes:
+
+- Full sync (`auth:rich:sync`) re-captures selected links.
+- `--only-missing` skips valid cache entries.
+- `--only-missing --force` refreshes selected links even when cache is valid.
+
+## Clear Authenticated Cache
+
+Use `auth:rich:clear` when cache entries or assets should be reset before recapture.
+
+```bash
+npm run auth:rich:clear -- --only-link linkedin --dry-run
+npm run auth:rich:clear -- --only-link linkedin
+npm run auth:rich:clear -- --only-extractor linkedin-auth-browser
+npm run auth:rich:clear -- --cache-key linkedin
+npm run auth:rich:clear -- --all
+```
+
+Safety rules:
+
+- one selector is required (`--only-link`, `--only-extractor`, or `--cache-key`) unless `--all` is explicitly set
+- dry-run mode reports changes without modifying files
+- only unreferenced assets under `public/cache/rich-authenticated/` are removed
+- run `npm run setup:rich-auth` after clear to repopulate cache
 
 Commit both manifest and assets after successful sync.
 
@@ -101,10 +133,19 @@ LinkedIn extractor session handling is autonomous after browser launch:
 - opens headed browser when auth is required
 - watches URL + cookies + DOM markers
 - classifies state transitions (`login`, `mfa_challenge`, `authwall`, `authenticated`, `unknown`)
-- proceeds automatically once authenticated
-- times out with explicit diagnostics if login/MFA is not completed
+- proceeds automatically once authenticated (MFA is optional)
+- times out with explicit diagnostics if login or challenge flow is not completed
 
 No Enter key checkpoint is required.
+
+LinkedIn debug commands:
+
+```bash
+npm run linkedin:debug:bootstrap
+npm run linkedin:debug:login
+npm run linkedin:debug:validate
+npm run linkedin:debug:validate:cookie-bridge
+```
 
 ## Local Auth Wait Controls
 

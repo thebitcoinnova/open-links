@@ -61,6 +61,12 @@ If your configuration uses authenticated rich extractors (`links[].enrichment.au
 npm run setup:rich-auth
 ```
 
+Authenticated rich cache paths:
+
+- `data/cache/rich-authenticated-cache.json`
+- `public/cache/rich-authenticated/`
+- `output/playwright/auth-rich-sync/` (diagnostics, gitignored)
+
 ## Configure Your First Site
 
 Edit the three primary content files:
@@ -234,6 +240,20 @@ Or for one link only:
 npm run auth:rich:sync -- --only-link <link-id>
 ```
 
+Force refresh for one link (even if cache is valid):
+
+```bash
+npm run auth:rich:sync -- --only-link <link-id> --force
+```
+
+Clear cache entries/assets before recapture:
+
+```bash
+npm run auth:rich:clear -- --only-link <link-id>
+# or clear all
+npm run auth:rich:clear -- --all
+```
+
 Then commit cache manifest/assets and rerun build.
 6. If a known blocked domain must be tested intentionally, set per-link override: `links[].enrichment.allowKnownBlocker=true`.
 7. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata.
@@ -296,6 +316,20 @@ If rich/SEO image sources changed but cache is still valid, force refresh with:
 
 ```bash
 npm run images:sync -- --force
+```
+
+If authenticated rich metadata should be refreshed even with valid cache, run:
+
+```bash
+npm run auth:rich:sync -- --only-link <link-id> --force
+```
+
+If authenticated rich cache is corrupted or needs a clean reset, run:
+
+```bash
+npm run auth:rich:clear -- --only-link <link-id> --dry-run
+npm run auth:rich:clear -- --only-link <link-id>
+npm run setup:rich-auth
 ```
 
 ## Next Guides

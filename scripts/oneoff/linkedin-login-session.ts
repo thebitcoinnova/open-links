@@ -8,12 +8,13 @@ import {
   resolveLinkedinUrl,
   resolveSessionConfig,
   runAgentBrowserJson,
+  summarizeLinkedinAuthTransitions,
   summarizeLinkedinAuthResult,
   toAbsoluteFromRoot,
   valueForFlag,
   waitForLinkedinAuthenticatedSession,
   writeJsonFile
-} from "./linkedin-poc-common";
+} from "./linkedin-debug-common";
 
 const run = async () => {
   const args = process.argv.slice(2);
@@ -30,7 +31,7 @@ const run = async () => {
   console.log(`Auth timeout (ms): ${authSettings.timeoutMs}`);
   console.log(`Auth poll interval (ms): ${authSettings.pollMs}`);
   console.log(
-    "A headed browser will open. Complete login + MFA/challenge in the browser; this script will continue automatically when authenticated."
+    "A headed browser will open. Complete login in the browser; if your account has multi-factor authentication or a challenge step, finish it there. This script continues automatically once authenticated."
   );
 
   const authResult = await waitForLinkedinAuthenticatedSession(config, {
@@ -38,7 +39,7 @@ const run = async () => {
     headed: true,
     timeoutMs: authSettings.timeoutMs,
     pollMs: authSettings.pollMs,
-    logPrefix: "[poc:linkedin:login]",
+    logPrefix: "[linkedin:debug:login]",
     emitStateLogs: true
   });
 
@@ -53,6 +54,7 @@ const run = async () => {
     timedOut: authResult.timedOut,
     finalSnapshot: authResult.finalSnapshot,
     transitions: authResult.transitions,
+    transitionsSummary: summarizeLinkedinAuthTransitions(authResult),
     notes: authResult.verified
       ? ["Authenticated session detected automatically."]
       : [
@@ -64,7 +66,7 @@ const run = async () => {
   const artifactPath = toAbsoluteFromRoot(
     "output",
     "playwright",
-    "linkedin-poc",
+    "linkedin-debug",
     `session-check-${fileTimestamp()}.json`
   );
   writeJsonFile(artifactPath, summary);
@@ -74,11 +76,12 @@ const run = async () => {
   console.log("");
   console.log(`Verification: ${authResult.verified ? "PASS" : "FAIL"}`);
   console.log(`Session summary: ${summarizeLinkedinAuthResult(authResult)}`);
+  console.log(`Transitions: ${summarizeLinkedinAuthTransitions(authResult) || "none"}`);
   console.log(`Artifact: ${path.relative(process.cwd(), artifactPath)}`);
   console.log(
     authResult.verified
-      ? "Next step: npm run poc:linkedin:validate"
-      : "Re-run: npm run poc:linkedin:login"
+      ? "Next step: npm run linkedin:debug:validate"
+      : "Re-run: npm run linkedin:debug:login"
   );
 
   process.exit(authResult.verified ? 0 : 1);

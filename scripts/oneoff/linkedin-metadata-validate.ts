@@ -11,6 +11,7 @@ import {
   resolveLinkedinUrl,
   resolveSessionConfig,
   runAgentBrowserJson,
+  summarizeLinkedinAuthTransitions,
   summarizeLinkedinAuthResult,
   toAbsoluteFromRoot,
   toBooleanFlag,
@@ -18,7 +19,7 @@ import {
   waitForLinkedinAuthenticatedSession,
   writeJsonFile,
   writeTextFile
-} from "./linkedin-poc-common";
+} from "./linkedin-debug-common";
 
 interface CookieBridgeDiagnostic {
   enabled: boolean;
@@ -176,7 +177,7 @@ const run = async () => {
     headed,
     timeoutMs: precheckTimeoutMs,
     pollMs: authSettings.pollMs,
-    logPrefix: "[poc:linkedin:validate-auth]",
+    logPrefix: "[linkedin:debug:validate-auth]",
     emitStateLogs: headed
   });
 
@@ -184,7 +185,7 @@ const run = async () => {
   const summaryArtifactPath = toAbsoluteFromRoot(
     "output",
     "playwright",
-    "linkedin-poc",
+    "linkedin-debug",
     `summary-${stamp}.json`
   );
 
@@ -199,6 +200,7 @@ const run = async () => {
         precheckTimeoutMs,
         settings: authResult.settings,
         summary: summarizeLinkedinAuthResult(authResult),
+        transitionsSummary: summarizeLinkedinAuthTransitions(authResult),
         transitions: authResult.transitions,
         finalSnapshot: authResult.finalSnapshot
       },
@@ -257,13 +259,13 @@ const run = async () => {
   const htmlArtifactPath = toAbsoluteFromRoot(
     "output",
     "playwright",
-    "linkedin-poc",
+    "linkedin-debug",
     `page-${stamp}.html`
   );
   const metadataArtifactPath = toAbsoluteFromRoot(
     "output",
     "playwright",
-    "linkedin-poc",
+    "linkedin-debug",
     `metadata-${stamp}.json`
   );
 
@@ -308,6 +310,7 @@ const run = async () => {
       precheckTimeoutMs,
       settings: authResult.settings,
       summary: summarizeLinkedinAuthResult(authResult),
+      transitionsSummary: summarizeLinkedinAuthTransitions(authResult),
       transitions: authResult.transitions,
       finalSnapshot: authResult.finalSnapshot
     },
@@ -321,6 +324,7 @@ const run = async () => {
   console.log(`Target URL: ${targetUrl}`);
   console.log(`Current URL: ${currentUrl ?? "unknown"}`);
   console.log(`Completeness: ${parsed.completeness}`);
+  console.log(`Auth transitions: ${summarizeLinkedinAuthTransitions(authResult) || "none"}`);
   console.log(`Placeholder signals: ${placeholderSignals.length > 0 ? placeholderSignals.join(", ") : "none"}`);
   if (cookieBridgeCheck) {
     if ("error" in cookieBridgeDiagnostic && cookieBridgeDiagnostic.error) {
@@ -338,7 +342,9 @@ const run = async () => {
   if (pass) {
     console.log("Next step: use parsed metadata as candidate manual metadata for data/links.json.");
   } else {
-    console.log("Next step: re-run login flow or keep enrichment disabled/manual for LinkedIn.");
+    console.log(
+      "Next step: re-run linkedin:debug:login (multi-factor authentication is optional) or keep enrichment disabled/manual for LinkedIn."
+    );
   }
 
   process.exit(pass ? 0 : 1);
