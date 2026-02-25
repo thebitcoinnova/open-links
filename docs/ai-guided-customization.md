@@ -284,6 +284,7 @@ You can leave the wizard at any point and continue manually:
 - `docs/quickstart.md`
 - `docs/openclaw-bootstrap.md`
 - `docs/openclaw-update-crud.md`
+- `AGENTS.md`
 - `docs/customization-catalog.md`
 - `docs/data-model.md`
 - `docs/theming-and-layouts.md`

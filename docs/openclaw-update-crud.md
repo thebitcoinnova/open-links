@@ -214,6 +214,7 @@ Follow docs/openclaw-update-crud.md exactly for this repository. Execute Require
 - `docs/quickstart.md`
 - `docs/deployment.md`
 - `docs/ai-guided-customization.md`
+- `AGENTS.md`
 - `docs/data-model.md`
 - `docs/theming-and-layouts.md`
 - `docs/create-new-rich-content-extractor.md`

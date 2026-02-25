@@ -294,6 +294,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md)
 - [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md)
 - [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md)
+- [Agent Triage Contract](https://raw.githubusercontent.com/pRizz/open-links/main/AGENTS.md)
 - [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md)
 - [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md)
 - [Rich Metadata Fetch Blockers](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-metadata-fetch-blockers.md)
