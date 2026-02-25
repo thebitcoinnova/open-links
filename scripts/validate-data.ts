@@ -4,6 +4,18 @@ import process from "node:process";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import {
+  DEFAULT_AUTH_CACHE_PATH,
+  loadAuthenticatedCacheRegistry,
+  resolveAuthenticatedCacheKey,
+  validateAuthenticatedCacheEntry
+} from "./authenticated-extractors/cache";
+import {
+  DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
+  loadAuthenticatedExtractorsPolicy,
+  resolveAuthenticatedExtractorById,
+  resolveAuthenticatedExtractorDomainMatch
+} from "./authenticated-extractors/policy";
+import {
   DEFAULT_BLOCKERS_REGISTRY_PATH,
   loadRichEnrichmentBlockersRegistry,
   resolveKnownBlockerMatch,
@@ -36,6 +48,7 @@ type ArgMap = {
 
 const ROOT = process.cwd();
 const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
+const DEFAULT_AUTH_CACHE_WARN_AGE_DAYS = 30;
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -153,6 +166,219 @@ const resolveEnabledByDefault = (site: Record<string, unknown>): boolean => {
   return typeof enrichment?.enabledByDefault === "boolean" ? enrichment.enabledByDefault : true;
 };
 
+const resolveAuthenticatedCacheConfig = (
+  site: Record<string, unknown>
+): { cachePath: string; warnAgeDays: number } => {
+  const ui = isRecord(site.ui) ? site.ui : undefined;
+  const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
+  const enrichment = richCards && isRecord(richCards.enrichment) ? richCards.enrichment : undefined;
+
+  const configuredPath =
+    typeof enrichment?.authenticatedCachePath === "string"
+      ? enrichment.authenticatedCachePath.trim()
+      : "";
+  const rawWarnAge =
+    typeof enrichment?.authenticatedCacheWarnAgeDays === "number"
+      ? enrichment.authenticatedCacheWarnAgeDays
+      : DEFAULT_AUTH_CACHE_WARN_AGE_DAYS;
+  const warnAgeDays = Number.isFinite(rawWarnAge)
+    ? Math.max(1, Math.round(rawWarnAge))
+    : DEFAULT_AUTH_CACHE_WARN_AGE_DAYS;
+
+  return {
+    cachePath: configuredPath.length > 0 ? configuredPath : DEFAULT_AUTH_CACHE_PATH,
+    warnAgeDays
+  };
+};
+
+interface AuthenticatedExtractorTarget {
+  index: number;
+  linkId: string;
+  url: string;
+  extractorId: string;
+  cacheKey: string;
+}
+
+const collectAuthenticatedExtractorTargets = (
+  linksData: Record<string, unknown>,
+  siteData: Record<string, unknown>
+): AuthenticatedExtractorTarget[] => {
+  const links = Array.isArray(linksData.links) ? linksData.links : [];
+  const enabledByDefault = resolveEnabledByDefault(siteData);
+  const targets: AuthenticatedExtractorTarget[] = [];
+
+  links.forEach((rawLink, index) => {
+    if (!isRecord(rawLink) || rawLink.type !== "rich") {
+      return;
+    }
+
+    const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
+    const url = toStringOrUndefined(rawLink.url);
+    if (!url) {
+      return;
+    }
+
+    const enrichment = isRecord(rawLink.enrichment) ? rawLink.enrichment : undefined;
+    const enabled =
+      typeof enrichment?.enabled === "boolean" ? enrichment.enabled : enabledByDefault;
+    if (!enabled) {
+      return;
+    }
+
+    const extractorId = toStringOrUndefined(enrichment?.authenticatedExtractor);
+    if (!extractorId) {
+      return;
+    }
+
+    const cacheKey = resolveAuthenticatedCacheKey(
+      toStringOrUndefined(enrichment?.authenticatedCacheKey),
+      linkId
+    );
+
+    targets.push({
+      index,
+      linkId,
+      url,
+      extractorId,
+      cacheKey
+    });
+  });
+
+  return targets;
+};
+
+const authenticatedExtractorConfigIssues = (
+  linksSource: string,
+  linksData: Record<string, unknown>,
+  siteData: Record<string, unknown>,
+  bypassActive: boolean
+): { issues: ValidationIssue[]; suppressedAuthenticatedCacheLinkIds: Set<string> } => {
+  const issues: ValidationIssue[] = [];
+  const suppressedAuthenticatedCacheLinkIds = new Set<string>();
+  const targets = collectAuthenticatedExtractorTargets(linksData, siteData);
+
+  if (targets.length === 0) {
+    return { issues, suppressedAuthenticatedCacheLinkIds };
+  }
+
+  const { cachePath, warnAgeDays } = resolveAuthenticatedCacheConfig(siteData);
+
+  let policy: ReturnType<typeof loadAuthenticatedExtractorsPolicy>;
+  try {
+    policy = loadAuthenticatedExtractorsPolicy({
+      policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push({
+      level: "error",
+      source: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
+      path: "$",
+      message: `Failed to load authenticated extractors policy. ${message}`,
+      remediation:
+        "Restore data/policy/rich-authenticated-extractors.json and ensure it validates against schema/rich-authenticated-extractors.schema.json."
+    });
+    targets.forEach((target) => suppressedAuthenticatedCacheLinkIds.add(target.linkId));
+    return { issues, suppressedAuthenticatedCacheLinkIds };
+  }
+
+  let cacheRegistry: ReturnType<typeof loadAuthenticatedCacheRegistry>;
+  try {
+    cacheRegistry = loadAuthenticatedCacheRegistry({
+      cachePath
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push({
+      level: bypassActive ? "warning" : "error",
+      source: cachePath,
+      path: "$",
+      message: `Failed to load authenticated rich cache. ${message}`,
+      remediation:
+        "Restore/fix data/cache/rich-authenticated-cache.json and ensure it validates against schema/rich-authenticated-cache.schema.json, then run npm run auth:rich:sync."
+    });
+    targets.forEach((target) => suppressedAuthenticatedCacheLinkIds.add(target.linkId));
+    return { issues, suppressedAuthenticatedCacheLinkIds };
+  }
+
+  for (const target of targets) {
+    const extractorPath = `$.links[${target.index}].enrichment.authenticatedExtractor`;
+    const cacheKeyPath = `$.links[${target.index}].enrichment.authenticatedCacheKey`;
+
+    const extractor = resolveAuthenticatedExtractorById(target.extractorId, policy);
+    if (!extractor) {
+      suppressedAuthenticatedCacheLinkIds.add(target.linkId);
+      issues.push({
+        level: bypassActive ? "warning" : "error",
+        source: linksSource,
+        path: extractorPath,
+        message: `Unknown authenticated extractor '${target.extractorId}' for link '${target.linkId}'.`,
+        remediation:
+          "Use a valid extractor id from data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link."
+      });
+      continue;
+    }
+
+    if (extractor.status === "disabled") {
+      suppressedAuthenticatedCacheLinkIds.add(target.linkId);
+      issues.push({
+        level: bypassActive ? "warning" : "error",
+        source: linksSource,
+        path: extractorPath,
+        message: `Authenticated extractor '${target.extractorId}' is disabled for link '${target.linkId}'.`,
+        remediation:
+          "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link."
+      });
+      continue;
+    }
+
+    const domainMatch = resolveAuthenticatedExtractorDomainMatch(target.url, extractor);
+    if (!domainMatch) {
+      suppressedAuthenticatedCacheLinkIds.add(target.linkId);
+      issues.push({
+        level: bypassActive ? "warning" : "error",
+        source: linksSource,
+        path: extractorPath,
+        message: `Link '${target.linkId}' URL host is not allowed by extractor '${target.extractorId}'.`,
+        remediation: `Allowed domains: ${extractor.domains.join(
+          ", "
+        )}. Fix links[].enrichment.authenticatedExtractor or the link URL.`
+      });
+      continue;
+    }
+
+    const validation = validateAuthenticatedCacheEntry({
+      cacheKey: target.cacheKey,
+      expectedLinkId: target.linkId,
+      expectedExtractorId: target.extractorId,
+      expectedUrl: target.url,
+      warnAgeDays,
+      registry: cacheRegistry
+    });
+
+    if (validation.issues.length > 0) {
+      suppressedAuthenticatedCacheLinkIds.add(target.linkId);
+    }
+
+    for (const issue of validation.issues) {
+      issues.push({
+        level:
+          issue.level === "error"
+            ? bypassActive
+              ? "warning"
+              : "error"
+            : "warning",
+        source: cachePath,
+        path: issue.level === "error" ? cacheKeyPath : `$.entries.${target.cacheKey}`,
+        message: `Authenticated cache check for link '${target.linkId}' failed: ${issue.message}`,
+        remediation: issue.remediation
+      });
+    }
+  }
+
+  return { issues, suppressedAuthenticatedCacheLinkIds };
+};
+
 const knownBlockerConfigIssues = (
   linksSource: string,
   linksData: Record<string, unknown>,
@@ -184,6 +410,11 @@ const knownBlockerConfigIssues = (
     const enabled =
       typeof enrichment?.enabled === "boolean" ? enrichment.enabled : enabledByDefault;
     if (!enabled) {
+      return;
+    }
+
+    const authenticatedExtractor = toStringOrUndefined(enrichment?.authenticatedExtractor);
+    if (authenticatedExtractor) {
       return;
     }
 
@@ -234,7 +465,8 @@ const enrichmentIssues = (
   report: EnrichmentRunReport | null,
   strict: boolean,
   bypassActive: boolean,
-  suppressedKnownBlockerLinkIds: Set<string>
+  suppressedKnownBlockerLinkIds: Set<string>,
+  suppressedAuthenticatedCacheLinkIds: Set<string>
 ): ValidationIssue[] => {
   if (!report) {
     return [
@@ -257,10 +489,20 @@ const enrichmentIssues = (
     if (entry.reason === "known_blocker" && suppressedKnownBlockerLinkIds.has(entry.linkId)) {
       return;
     }
+    if (
+      entry.reason === "authenticated_cache_missing" &&
+      suppressedAuthenticatedCacheLinkIds.has(entry.linkId)
+    ) {
+      return;
+    }
 
     const blocking = isBlockingEntry(entry, failOn);
     const shouldReport =
-      blocking || entry.status === "failed" || entry.status === "partial" || entry.manualFallbackUsed === true;
+      blocking ||
+      entry.status === "failed" ||
+      entry.status === "partial" ||
+      entry.manualFallbackUsed === true ||
+      entry.staleCache === true;
 
     if (!shouldReport) {
       return;
@@ -269,6 +511,8 @@ const enrichmentIssues = (
     const level: ValidationIssue["level"] = strict && blocking && !bypassActive ? "error" : "warning";
     const diagnosticClass = blocking
       ? "blocking"
+      : entry.staleCache
+        ? "stale-cache"
       : entry.manualFallbackUsed
         ? "manual-fallback"
         : entry.status === "failed"
@@ -320,6 +564,7 @@ const run = () => {
 
   const issues: ValidationIssue[] = [];
   const suppressedKnownBlockerLinkIds = new Set<string>();
+  const suppressedAuthenticatedCacheLinkIds = new Set<string>();
 
   for (const check of schemaChecks) {
     const validate = ajv.compile(check.schema);
@@ -343,6 +588,29 @@ const run = () => {
       }
     })
   );
+
+  try {
+    const authenticatedConfigResult = authenticatedExtractorConfigIssues(
+      args.linksPath,
+      linksData,
+      siteData,
+      bypassActive
+    );
+    issues.push(...authenticatedConfigResult.issues);
+    authenticatedConfigResult.suppressedAuthenticatedCacheLinkIds.forEach((linkId) =>
+      suppressedAuthenticatedCacheLinkIds.add(linkId)
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push({
+      level: "error",
+      source: args.linksPath,
+      path: "$.links",
+      message: `Failed to evaluate authenticated extractor policy checks. ${message}`,
+      remediation:
+        "Fix authenticated extractor link configuration and policy/cache files, then rerun validation."
+    });
+  }
 
   try {
     const blockersRegistry = loadRichEnrichmentBlockersRegistry({
@@ -377,7 +645,8 @@ const run = () => {
       enrichmentReport,
       args.strict,
       bypassActive,
-      suppressedKnownBlockerLinkIds
+      suppressedKnownBlockerLinkIds,
+      suppressedAuthenticatedCacheLinkIds
     )
   );
 

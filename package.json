@@ -21,6 +21,7 @@
     "poc:linkedin:login": "tsx scripts/oneoff/linkedin-login-session.ts",
     "poc:linkedin:validate": "tsx scripts/oneoff/linkedin-metadata-validate.ts",
     "poc:linkedin:validate:cookie-bridge": "tsx scripts/oneoff/linkedin-metadata-validate.ts --cookie-bridge-check",
+    "auth:rich:sync": "tsx scripts/sync-authenticated-rich-cache.ts",
     "quality:check": "tsx scripts/quality/run-quality-checks.ts",
     "quality:required": "npm run quality:check",
     "quality:strict": "tsx scripts/quality/run-quality-checks.ts --strict",

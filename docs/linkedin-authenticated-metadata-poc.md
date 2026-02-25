@@ -6,8 +6,15 @@ Scope:
 
 - LinkedIn only
 - one-off/manual workflow
-- no default build pipeline integration
+- local validation and selector/debug iteration path
 - no CI usage in this phase
+
+Production workflow now uses authenticated extractor cache integration:
+
+- configure `links[].enrichment.authenticatedExtractor`
+- capture with `npm run auth:rich:sync`
+- commit `data/cache/rich-authenticated-cache.json` and `public/cache/rich-authenticated/*`
+- enrichment/build consumes cache (no direct LinkedIn fetch for that link)
 
 ## Security and Handling Policy
 
@@ -72,7 +79,13 @@ npm run poc:linkedin:validate:cookie-bridge
 - `output/playwright/linkedin-poc/metadata-<timestamp>.json`
 - `output/playwright/linkedin-poc/summary-<timestamp>.json`
 
-5. Cleanup (optional):
+5. (Optional) promote validated extraction into committed cache:
+
+```bash
+npm run auth:rich:sync -- --only-link linkedin
+```
+
+6. Cleanup (optional):
 
 ```bash
 npx --yes agent-browser --session "${AGENT_BROWSER_SESSION:-openlinks-linkedin-poc}" close --json

@@ -141,7 +141,11 @@ const toEntry = (value: unknown): EnrichmentRunEntry | null => {
     metadata: isRecord(value.metadata) ? (value.metadata as EnrichmentRunEntry["metadata"]) : undefined,
     blocking: typeof value.blocking === "boolean" ? value.blocking : undefined,
     missingFields: toMissingFields(value.missingFields),
-    manualFallbackUsed: typeof value.manualFallbackUsed === "boolean" ? value.manualFallbackUsed : undefined
+    manualFallbackUsed: typeof value.manualFallbackUsed === "boolean" ? value.manualFallbackUsed : undefined,
+    extractorId: typeof value.extractorId === "string" ? value.extractorId : undefined,
+    cacheKey: typeof value.cacheKey === "string" ? value.cacheKey : undefined,
+    cacheCapturedAt: typeof value.cacheCapturedAt === "string" ? value.cacheCapturedAt : undefined,
+    staleCache: typeof value.staleCache === "boolean" ? value.staleCache : undefined
   };
 };
 

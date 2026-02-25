@@ -334,6 +334,16 @@
                   "type": "string",
                   "minLength": 1
                 },
+                "authenticatedCachePath": {
+                  "type": "string",
+                  "minLength": 1,
+                  "default": "data/cache/rich-authenticated-cache.json"
+                },
+                "authenticatedCacheWarnAgeDays": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "default": 30
+                },
                 "failureMode": {
                   "type": "string",
                   "enum": ["immediate", "aggregate"],

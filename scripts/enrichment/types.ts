@@ -5,6 +5,8 @@ export type EnrichmentReason =
   | "metadata_partial"
   | "metadata_missing"
   | "fetch_failed"
+  | "authenticated_cache"
+  | "authenticated_cache_missing"
   | "known_blocker"
   | "enrichment_disabled";
 
@@ -42,6 +44,10 @@ export interface EnrichmentRunEntry {
   blocking?: boolean;
   missingFields?: EnrichmentMissingField[];
   manualFallbackUsed?: boolean;
+  extractorId?: string;
+  cacheKey?: string;
+  cacheCapturedAt?: string;
+  staleCache?: boolean;
 }
 
 export interface EnrichmentRunSummary {

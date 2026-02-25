@@ -83,6 +83,8 @@ Coverage:
 
 - `enabled`
 - `allowKnownBlocker`
+- `authenticatedExtractor`
+- `authenticatedCacheKey`
 - `sourceLabel`
 - `sourceLabelVisible`
 - `custom`
@@ -179,6 +181,8 @@ Coverage:
 - `enrichment.retries`
 - `enrichment.metadataPath`
 - `enrichment.reportPath`
+- `enrichment.authenticatedCachePath`
+- `enrichment.authenticatedCacheWarnAgeDays`
 - `enrichment.failureMode`
 - `enrichment.failOn`
 - `enrichment.allowManualMetadataFallback`
@@ -186,6 +190,8 @@ Coverage:
 Related policy source:
 
 - `data/policy/rich-enrichment-blockers.json`
+- `data/policy/rich-authenticated-extractors.json`
+- `data/cache/rich-authenticated-cache.json`
 
 ## 11) `site.quality` (`site-quality`)
 

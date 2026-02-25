@@ -14,6 +14,10 @@ LinkedIn authenticated one-off validation runbook:
 
 - `docs/linkedin-authenticated-metadata-poc.md`
 
+Authenticated extractor framework guide:
+
+- `docs/authenticated-rich-extractors.md`
+
 ## Maintenance Rules (Required)
 
 When you find a new rich metadata fetch failure:
@@ -24,7 +28,11 @@ When you find a new rich metadata fetch failure:
 4. Record every meaningful fetch attempt and outcome (status code + any body clues).
 5. Record the chosen workaround/remediation.
 6. Update `data/links.json` and/or manual metadata if needed.
-7. Keep historical attempts; append updates instead of replacing old entries.
+7. If moving a blocked domain to authenticated extraction, update:
+   - `data/policy/rich-authenticated-extractors.json`
+   - `data/cache/rich-authenticated-cache.json`
+   - committed assets under `public/cache/rich-authenticated/`
+8. Keep historical attempts; append updates instead of replacing old entries.
 
 If a previously blocked domain becomes fetchable, add a timestamped verification entry and update the status table below.
 
@@ -34,7 +42,7 @@ These domains are currently treated as unsupported for direct unauthenticated me
 
 | Site | Example URL | First Recorded (UTC) | Last Verified (UTC) | Typical Response | Current Status | Current Workaround |
 |---|---|---|---|---|---|---|
-| LinkedIn | `https://www.linkedin.com/in/peter-ryszkiewicz/` | `2026-02-24T11:29:52Z` | `2026-02-24T11:45:37Z` | `HTTP 999`, authwall redirect script | Unsupported direct fetch | `enrichment.enabled=false` for `linkedin`; use manual `links[].metadata` if rich fields are needed |
+| LinkedIn | `https://www.linkedin.com/in/peter-ryszkiewicz/` | `2026-02-24T11:29:52Z` | `2026-02-24T11:45:37Z` | `HTTP 999`, authwall redirect script | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor`) or keep direct enrichment disabled/manual metadata |
 | Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-02-24T11:45:59Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Disable enrichment for affected links or provide manual `links[].metadata` |
 
 ## Findings Log

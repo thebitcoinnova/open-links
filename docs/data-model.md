@@ -311,6 +311,8 @@ Per-link controls:
 
 - `enabled`
 - `allowKnownBlocker`: explicit override to force-attempt enrichment for a known blocked domain
+- `authenticatedExtractor`: use committed authenticated cache instead of direct fetch (for blocked domains)
+- `authenticatedCacheKey`: optional cache-key override (default uses `link.id`)
 - `sourceLabel`
 - `sourceLabelVisible`
 - `custom`
@@ -324,6 +326,8 @@ Site-level default enrichment behavior is defined in `site.ui.richCards.enrichme
 - `retries`: retry count after the first attempt.
 - `metadataPath`: generated metadata output path.
 - `reportPath`: generated enrichment report path.
+- `authenticatedCachePath`: authenticated cache manifest path (default `data/cache/rich-authenticated-cache.json`).
+- `authenticatedCacheWarnAgeDays`: stale-cache warning threshold in days (default `30`, warning-only).
 - `failureMode`: `immediate` (default) or `aggregate`.
   - `immediate`: stop strict enrichment on first blocking failure.
   - `aggregate`: process all eligible links, then fail after reporting all blockers.
@@ -335,7 +339,16 @@ Canonical known-blocker policy registry:
 - `data/policy/rich-enrichment-blockers.json`
 - Schema: `schema/rich-enrichment-blockers.schema.json`
 
+Canonical authenticated extractor + cache registries:
+
+- `data/policy/rich-authenticated-extractors.json`
+- `schema/rich-authenticated-extractors.schema.json`
+- `data/cache/rich-authenticated-cache.json`
+- `schema/rich-authenticated-cache.schema.json`
+
 When an enrichment-enabled rich link URL matches a `status=blocked` registry entry, enrichment fails early with reason `known_blocker` unless `links[].enrichment.allowKnownBlocker=true` is set for that link.
+
+When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 
 `npm run dev` and `npm run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations.  
 Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
@@ -382,6 +395,8 @@ Main presentation controls include:
 - `brandIcons.sizeMode`: `normal`, `large`
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.mobile.imageLayout`: `inline` (default), `full-width`
+- `richCards.enrichment.authenticatedCachePath`: path to authenticated rich-cache manifest
+- `richCards.enrichment.authenticatedCacheWarnAgeDays`: stale warning threshold for authenticated cache entries
 - `richCards.enrichment.failureMode`: `immediate` (default), `aggregate`
 - `richCards.enrichment.failOn`: blocking reasons (`fetch_failed`, `metadata_missing`)
 - `richCards.enrichment.allowManualMetadataFallback`: use manual metadata as warning-level fallback when remote metadata is missing

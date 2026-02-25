@@ -166,8 +166,9 @@ High-signal deployment checks:
 ### Core commands
 
 - `npm run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
-- `npm run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker registry enforcement.
-- `npm run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker registry enforcement.
+- `npm run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
+- `npm run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
+- `npm run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
 - `npm run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
 - `npm run dev` - start local dev server (predev runs strict enrichment and fails on blocking enrichment policy issues).
 - `npm run validate:data` - schema + policy checks (standard mode).
@@ -233,9 +234,13 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - If strict mode fails, compare `npm run validate:data` vs `npm run validate:data:strict`.
 - Re-run blocking enrichment diagnostics: `npm run enrich:rich:strict`.
 - Check canonical blocker registry: `data/policy/rich-enrichment-blockers.json`.
+- Check authenticated extractor policy: `data/policy/rich-authenticated-extractors.json`.
+- Check authenticated cache manifest: `data/cache/rich-authenticated-cache.json`.
 - Review known blocked rich-metadata domains and timestamped attempt history: `docs/rich-metadata-fetch-blockers.md`.
+- Review authenticated extractor architecture/workflow: `docs/authenticated-rich-extractors.md`.
 - Check `site.ui.richCards.enrichment` policy (`failureMode`, `failOn`, `allowManualMetadataFallback`) in `data/site.json`.
 - If a blocked domain must be tested anyway, set explicit override on that link: `links[].enrichment.allowKnownBlocker=true`.
+- If `authenticated_cache_missing` is reported, run `npm run auth:rich:sync -- --only-link <link-id>` and commit cache manifest/assets.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
 - Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build`.
 - Force-refresh avatar cache when needed: `npm run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
@@ -257,6 +262,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md)
 - [Rich Metadata Fetch Blockers](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-metadata-fetch-blockers.md)
 - [Rich Enrichment Blockers Registry](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-enrichment-blockers-registry.md)
+- [Authenticated Rich Extractors](https://raw.githubusercontent.com/pRizz/open-links/main/docs/authenticated-rich-extractors.md)
 - [LinkedIn Authenticated Metadata PoC](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linkedin-authenticated-metadata-poc.md)
 - [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md)
 - [Theming and Layout Extensibility](https://raw.githubusercontent.com/pRizz/open-links/main/docs/theming-and-layouts.md)

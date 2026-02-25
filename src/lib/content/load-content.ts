@@ -104,6 +104,15 @@ export interface RichLinkMetadata {
   sourceLabel?: string;
   sourceLabelVisible?: boolean;
   enrichmentStatus?: "fetched" | "partial" | "failed" | "skipped";
+  enrichmentReason?:
+    | "metadata_complete"
+    | "metadata_partial"
+    | "metadata_missing"
+    | "fetch_failed"
+    | "authenticated_cache"
+    | "authenticated_cache_missing"
+    | "known_blocker"
+    | "enrichment_disabled";
   enrichedAt?: string;
   custom?: Record<string, unknown>;
   [key: string]: unknown;
@@ -112,6 +121,8 @@ export interface RichLinkMetadata {
 export interface LinkEnrichmentPolicy {
   enabled?: boolean;
   allowKnownBlocker?: boolean;
+  authenticatedExtractor?: string;
+  authenticatedCacheKey?: string;
   sourceLabel?: string;
   sourceLabelVisible?: boolean;
   custom?: Record<string, unknown>;
@@ -235,6 +246,8 @@ export interface SiteData {
         retries?: number;
         metadataPath?: string;
         reportPath?: string;
+        authenticatedCachePath?: string;
+        authenticatedCacheWarnAgeDays?: number;
         failureMode?: "immediate" | "aggregate";
         failOn?: Array<"fetch_failed" | "metadata_missing">;
         allowManualMetadataFallback?: boolean;

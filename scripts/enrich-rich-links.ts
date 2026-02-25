@@ -2,6 +2,18 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import {
+  DEFAULT_AUTH_CACHE_PATH,
+  loadAuthenticatedCacheRegistry,
+  resolveAuthenticatedCacheKey,
+  validateAuthenticatedCacheEntry
+} from "./authenticated-extractors/cache";
+import {
+  DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
+  loadAuthenticatedExtractorsPolicy,
+  resolveAuthenticatedExtractorById,
+  resolveAuthenticatedExtractorDomainMatch
+} from "./authenticated-extractors/policy";
+import {
   DEFAULT_BLOCKERS_REGISTRY_PATH,
   resolveKnownBlockerMatch,
   loadRichEnrichmentBlockersRegistry,
@@ -38,6 +50,8 @@ interface LinkInput {
   enrichment?: {
     enabled?: boolean;
     allowKnownBlocker?: boolean;
+    authenticatedExtractor?: string;
+    authenticatedCacheKey?: string;
     sourceLabel?: string;
     sourceLabelVisible?: boolean;
   };
@@ -56,6 +70,8 @@ interface SitePayload {
         retries?: number;
         metadataPath?: string;
         reportPath?: string;
+        authenticatedCachePath?: string;
+        authenticatedCacheWarnAgeDays?: number;
         failureMode?: EnrichmentFailureMode;
         failOn?: EnrichmentFailureReason[];
         allowManualMetadataFallback?: boolean;
@@ -70,6 +86,8 @@ interface ResolvedConfig {
   retries: number;
   outputPath: string;
   reportPath: string;
+  authenticatedCachePath: string;
+  authenticatedCacheWarnAgeDays: number;
   failureMode: EnrichmentFailureMode;
   failOn: EnrichmentFailureReason[];
   allowManualMetadataFallback: boolean;
@@ -80,6 +98,7 @@ const ROOT = process.cwd();
 const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
 const DEFAULT_FAILURE_MODE: EnrichmentFailureMode = "immediate";
 const DEFAULT_FAIL_ON: EnrichmentFailureReason[] = ["fetch_failed", "metadata_missing"];
+const DEFAULT_AUTH_CACHE_WARN_AGE_DAYS = 30;
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -147,6 +166,12 @@ const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
     retries: Math.max(0, args.retries ?? defaults?.retries ?? 1),
     outputPath: args.outputPath ?? defaults?.metadataPath ?? "data/generated/rich-metadata.json",
     reportPath: args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json",
+    authenticatedCachePath:
+      defaults?.authenticatedCachePath ?? DEFAULT_AUTH_CACHE_PATH,
+    authenticatedCacheWarnAgeDays: Math.max(
+      1,
+      defaults?.authenticatedCacheWarnAgeDays ?? DEFAULT_AUTH_CACHE_WARN_AGE_DAYS
+    ),
     failureMode: resolveFailureMode(defaults?.failureMode),
     failOn: resolveFailOn(defaults?.failOn),
     allowManualMetadataFallback: defaults?.allowManualMetadataFallback ?? true,
@@ -203,6 +228,14 @@ const makeEntryMessage = (
     return "Known blocked domain matched the rich-link URL for direct metadata fetch.";
   }
 
+  if (reason === "authenticated_cache") {
+    return "Using committed authenticated cache metadata for this link.";
+  }
+
+  if (reason === "authenticated_cache_missing") {
+    return "Authenticated cache entry was missing or invalid for this link.";
+  }
+
   if (status === "failed") {
     return "Metadata fetch failed for this link.";
   }
@@ -235,6 +268,14 @@ const remediationFor = (
     return "Disable enrichment for this link, set enrichment.allowKnownBlocker=true to force-attempt anyway, or provide manual metadata under links[].metadata.";
   }
 
+  if (reason === "authenticated_cache") {
+    return "No action required. Keep cache fresh with `npm run auth:rich:sync` when metadata changes.";
+  }
+
+  if (reason === "authenticated_cache_missing") {
+    return "Run `npm run auth:rich:sync -- --only-link <link-id>`, commit `data/cache/rich-authenticated-cache.json` and `public/cache/rich-authenticated/*`, then rerun build.";
+  }
+
   if (status === "failed") {
     return "Check URL/network availability, provide metadata manually under link.metadata, or disable enrichment for this link.";
   }
@@ -256,6 +297,9 @@ const remediationFor = (
 
 const isBlockingReason = (reason: EnrichmentReason, failOn: EnrichmentFailureReason[]): boolean =>
   isFailureReason(reason) && failOn.includes(reason);
+
+const isAlwaysBlockingReason = (reason: EnrichmentReason): boolean =>
+  reason === "known_blocker" || reason === "authenticated_cache_missing";
 
 const formatDurationMs = (durationMs: number): string => `${Math.max(0, Math.round(durationMs))}ms`;
 
@@ -303,8 +347,20 @@ const printBlockingDiagnostics = (
     if (typeof entry.statusCode === "number") {
       console.error(`   statusCode: ${entry.statusCode}`);
     }
+    if (entry.extractorId) {
+      console.error(`   extractorId: ${entry.extractorId}`);
+    }
+    if (entry.cacheKey) {
+      console.error(`   cacheKey: ${entry.cacheKey}`);
+    }
+    if (entry.cacheCapturedAt) {
+      console.error(`   cacheCapturedAt: ${entry.cacheCapturedAt}`);
+    }
     if (entry.reason === "metadata_missing" && entry.missingFields && entry.missingFields.length > 0) {
       console.error(`   missingFields: ${entry.missingFields.join(", ")}`);
+    }
+    if (entry.staleCache) {
+      console.error("   staleCache: true");
     }
     console.error(`   message: ${entry.message}`);
     console.error(`   remediation: ${entry.remediation}`);
@@ -323,6 +379,22 @@ const run = async () => {
   const linksPayload = readJson<LinksPayload>(args.linksPath);
   const sitePayload = readJson<SitePayload>(args.sitePath);
   const config = resolveConfig(sitePayload, args);
+  const hasAuthenticatedExtractorConfig = (linksPayload.links ?? []).some(
+    (link) => link.type === "rich" && typeof link.enrichment?.authenticatedExtractor === "string"
+  );
+
+  const authenticatedExtractorsPolicy = hasAuthenticatedExtractorConfig
+    ? loadAuthenticatedExtractorsPolicy({
+        policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH
+      })
+    : null;
+
+  const authenticatedCacheRegistry = hasAuthenticatedExtractorConfig
+    ? loadAuthenticatedCacheRegistry({
+        cachePath: config.authenticatedCachePath
+      })
+    : null;
+
   const blockersRegistry = loadRichEnrichmentBlockersRegistry({
     registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH
   });
@@ -346,6 +418,7 @@ const run = async () => {
 
   for (const link of richLinks) {
     const linkEnabled = link.enrichment?.enabled ?? config.enabledByDefault;
+    const authenticatedExtractorId = link.enrichment?.authenticatedExtractor?.trim();
 
     if (!linkEnabled) {
       const reason: EnrichmentReason = "enrichment_disabled";
@@ -370,6 +443,196 @@ const run = async () => {
         blocking: false
       });
 
+      generatedLinks[link.id] = { metadata };
+      continue;
+    }
+
+    if (authenticatedExtractorId) {
+      if (!authenticatedExtractorsPolicy || !authenticatedCacheRegistry) {
+        throw new Error(
+          "Authenticated extractor is configured but policy/cache registry was not initialized."
+        );
+      }
+
+      const extractor = resolveAuthenticatedExtractorById(
+        authenticatedExtractorId,
+        authenticatedExtractorsPolicy
+      );
+      const cacheKey = resolveAuthenticatedCacheKey(
+        link.enrichment?.authenticatedCacheKey,
+        link.id
+      );
+
+      if (!extractor) {
+        const reason: EnrichmentReason = "authenticated_cache_missing";
+        const metadata = mergeMetadata(link.metadata, {
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "failed",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt
+        });
+
+        entries.push({
+          linkId: link.id,
+          url: link.url,
+          status: "failed",
+          reason,
+          attempts: 0,
+          durationMs: 0,
+          message: `Authenticated extractor '${authenticatedExtractorId}' is not defined in ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}.`,
+          remediation:
+            "Fix links[].enrichment.authenticatedExtractor or add the extractor to the authenticated policy registry.",
+          metadata,
+          blocking: true,
+          extractorId: authenticatedExtractorId,
+          cacheKey
+        });
+        generatedLinks[link.id] = { metadata };
+        continue;
+      }
+
+      if (extractor.status === "disabled") {
+        const reason: EnrichmentReason = "authenticated_cache_missing";
+        const metadata = mergeMetadata(link.metadata, {
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "failed",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt
+        });
+
+        entries.push({
+          linkId: link.id,
+          url: link.url,
+          status: "failed",
+          reason,
+          attempts: 0,
+          durationMs: 0,
+          message: `Authenticated extractor '${authenticatedExtractorId}' is disabled in policy.`,
+          remediation:
+            "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove it from this link configuration.",
+          metadata,
+          blocking: true,
+          extractorId: authenticatedExtractorId,
+          cacheKey
+        });
+        generatedLinks[link.id] = { metadata };
+        continue;
+      }
+
+      const domainMatch = resolveAuthenticatedExtractorDomainMatch(link.url, extractor);
+      if (!domainMatch) {
+        const reason: EnrichmentReason = "authenticated_cache_missing";
+        const metadata = mergeMetadata(link.metadata, {
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "failed",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt
+        });
+
+        entries.push({
+          linkId: link.id,
+          url: link.url,
+          status: "failed",
+          reason,
+          attempts: 0,
+          durationMs: 0,
+          message: `Link URL host does not match authenticated extractor '${authenticatedExtractorId}' policy domains.`,
+          remediation: `Allowed domains: ${extractor.domains.join(
+            ", "
+          )}. Fix links[].enrichment.authenticatedExtractor or link URL.`,
+          metadata,
+          blocking: true,
+          extractorId: authenticatedExtractorId,
+          cacheKey
+        });
+        generatedLinks[link.id] = { metadata };
+        continue;
+      }
+
+      const cacheValidation = validateAuthenticatedCacheEntry({
+        cacheKey,
+        expectedLinkId: link.id,
+        expectedExtractorId: authenticatedExtractorId,
+        expectedUrl: link.url,
+        warnAgeDays: config.authenticatedCacheWarnAgeDays,
+        registry: authenticatedCacheRegistry
+      });
+
+      const cacheErrors = cacheValidation.issues.filter((issue) => issue.level === "error");
+      const cacheWarnings = cacheValidation.issues.filter((issue) => issue.level === "warning");
+      const staleCache = cacheValidation.entry?.stale === true;
+
+      if (cacheErrors.length > 0 || !cacheValidation.metadata || !cacheValidation.valid) {
+        const reason: EnrichmentReason = "authenticated_cache_missing";
+        const metadata = mergeMetadata(link.metadata, {
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "failed",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt
+        });
+
+        entries.push({
+          linkId: link.id,
+          url: link.url,
+          status: "failed",
+          reason,
+          attempts: 0,
+          durationMs: 0,
+          message: cacheErrors.map((issue) => issue.message).join(" "),
+          remediation: cacheErrors.map((issue) => issue.remediation).join(" "),
+          metadata,
+          blocking: true,
+          extractorId: authenticatedExtractorId,
+          cacheKey,
+          cacheCapturedAt: cacheValidation.entry?.entry.capturedAt
+        });
+        generatedLinks[link.id] = { metadata };
+        continue;
+      }
+
+      if (cacheWarnings.length > 0) {
+        for (const warning of cacheWarnings) {
+          console.warn(`Warning [${link.id}][${cacheKey}]: ${warning.message}`);
+        }
+      }
+
+      const reason: EnrichmentReason = "authenticated_cache";
+      const metadata = mergeMetadata(link.metadata, {
+        ...cacheValidation.metadata,
+        sourceLabel:
+          link.enrichment?.sourceLabel ??
+          cacheValidation.metadata.sourceLabel ??
+          extractor.domains[0],
+        sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+        enrichmentStatus: "fetched",
+        enrichmentReason: reason,
+        enrichedAt: generatedAt
+      });
+
+      entries.push({
+        linkId: link.id,
+        url: link.url,
+        status: "fetched",
+        reason,
+        attempts: 0,
+        durationMs: 0,
+        message: staleCache
+          ? "Using authenticated cache metadata (stale warning threshold exceeded)."
+          : "Using authenticated cache metadata.",
+        remediation: staleCache
+          ? `Refresh cache with \`npm run auth:rich:sync -- --only-link ${link.id}\`.`
+          : remediationFor("fetched", reason),
+        metadata,
+        blocking: false,
+        extractorId: authenticatedExtractorId,
+        cacheKey,
+        cacheCapturedAt: cacheValidation.entry?.entry.capturedAt,
+        staleCache: staleCache || undefined
+      });
       generatedLinks[link.id] = { metadata };
       continue;
     }
@@ -534,6 +797,11 @@ const run = async () => {
   console.log(
     `Known blocker policy: ${enforceKnownBlockers ? "enforced" : "bypassed"} (override per link: enrichment.allowKnownBlocker=true)`
   );
+  if (hasAuthenticatedExtractorConfig) {
+    console.log(`Authenticated extractor policy: ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}`);
+    console.log(`Authenticated cache: ${config.authenticatedCachePath}`);
+    console.log(`Authenticated cache warn age days: ${config.authenticatedCacheWarnAgeDays}`);
+  }
   console.log(`Bypass active: ${config.bypassActive ? "yes" : "no"} (${ENRICHMENT_BYPASS_ENV})`);
   console.log(`Generated metadata: ${config.outputPath}`);
   console.log(`Enrichment report: ${config.reportPath}`);
@@ -545,14 +813,18 @@ const run = async () => {
     console.log(
       `- ${entry.linkId}: ${entry.status} (${entry.reason})${entry.blocking ? " [blocking]" : ""}${
         entry.manualFallbackUsed ? " [manual-fallback]" : ""
-      }${entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""}`
+      }${entry.staleCache ? " [stale-cache]" : ""}${entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""}`
     );
   }
 
-  const knownBlockerEntries = blockingEntries.filter((entry) => entry.reason === "known_blocker");
-  const strictPolicyEntries = blockingEntries.filter((entry) => entry.reason !== "known_blocker");
+  const alwaysBlockingEntries = blockingEntries.filter((entry) =>
+    isAlwaysBlockingReason(entry.reason)
+  );
+  const strictPolicyEntries = blockingEntries.filter(
+    (entry) => !isAlwaysBlockingReason(entry.reason)
+  );
   const entriesToFailOn = [
-    ...(enforceKnownBlockers ? knownBlockerEntries : []),
+    ...(!config.bypassActive ? alwaysBlockingEntries : []),
     ...(enforceStrictBlocking ? strictPolicyEntries : [])
   ];
   const shouldFail = entriesToFailOn.length > 0;

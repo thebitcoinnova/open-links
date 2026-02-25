@@ -194,7 +194,7 @@ Fix:
 Symptoms:
 
 - `npm run dev` or `npm run build` stops during `enrich:rich:strict`.
-- Output includes `fetch_failed`, `metadata_missing`, or `known_blocker` diagnostics for one or more links.
+- Output includes `fetch_failed`, `metadata_missing`, `known_blocker`, or `authenticated_cache_missing` diagnostics for one or more links.
 
 Fix:
 
@@ -209,9 +209,20 @@ npm run enrich:rich:strict
    - `failOn` (`fetch_failed`, `metadata_missing`)
    - `allowManualMetadataFallback`
 3. Review canonical known-blocker policy in `data/policy/rich-enrichment-blockers.json` (see `docs/rich-enrichment-blockers-registry.md`).
-4. If a known blocked domain must be tested intentionally, set per-link override: `links[].enrichment.allowKnownBlocker=true`.
-5. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata.
-6. Temporary emergency local bypass:
+4. If using authenticated extractors, verify:
+   - `data/policy/rich-authenticated-extractors.json`
+   - `data/cache/rich-authenticated-cache.json`
+   - committed local assets under `public/cache/rich-authenticated/`
+5. For `authenticated_cache_missing`, run:
+
+```bash
+npm run auth:rich:sync -- --only-link <link-id>
+```
+
+Then commit cache manifest/assets and rerun build.
+6. If a known blocked domain must be tested intentionally, set per-link override: `links[].enrichment.allowKnownBlocker=true`.
+7. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata.
+8. Temporary emergency local bypass:
 
 ```bash
 OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build
