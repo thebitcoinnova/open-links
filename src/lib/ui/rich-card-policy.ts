@@ -1,5 +1,6 @@
 import type {
   OpenLink,
+  RichCardImageFit,
   RichCardMobileImageLayout,
   RichImageTreatment,
   SiteData,
@@ -13,6 +14,7 @@ export interface RichCardViewModel {
   description: string;
   imageUrl?: string;
   imageTreatment: RichImageTreatment;
+  imageFit: RichCardImageFit;
   mobileImageLayout: RichCardMobileImageLayout;
   sourceLabel?: string;
   showSourceLabel: boolean;
@@ -30,6 +32,24 @@ const resolveImageTreatment = (site: SiteData): RichImageTreatment => {
     return value;
   }
   return "cover";
+};
+
+const isImageFit = (value: unknown): value is RichCardImageFit =>
+  value === "cover" || value === "contain";
+
+const resolveImageFit = (site: SiteData, link: OpenLink): RichCardImageFit => {
+  const linkValue = link.metadata?.imageFit;
+  if (isImageFit(linkValue)) {
+    return linkValue;
+  }
+
+  const siteValue = site.ui?.richCards?.imageFit;
+  if (isImageFit(siteValue)) {
+    return siteValue;
+  }
+
+  // Preserve image content by default to avoid clipping wide social preview assets.
+  return "contain";
 };
 
 const isMobileImageLayout = (value: unknown): value is RichCardMobileImageLayout =>
@@ -77,12 +97,14 @@ export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCard
   const metadata = link.metadata ?? {};
   const sourceDefault = resolveSourceDefault(site);
   const imageTreatment = resolveImageTreatment(site);
+  const imageFit = resolveImageFit(site, link);
 
   return {
     title: metadata.title ?? link.label,
     description: metadata.description ?? link.description ?? urlDomain(link.url),
     imageUrl: imageTreatment === "off" ? undefined : metadata.image,
     imageTreatment,
+    imageFit,
     mobileImageLayout: resolveMobileImageLayout(site, link),
     sourceLabel: metadata.sourceLabel ?? link.enrichment?.sourceLabel ?? urlDomain(link.url),
     showSourceLabel:

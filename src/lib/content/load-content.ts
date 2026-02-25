@@ -39,6 +39,7 @@ export type TargetSizeMode = "comfortable" | "compact" | "large";
 export type RichCardRenderMode = "auto" | "simple";
 export type SourceLabelDefault = "show" | "hide";
 export type RichImageTreatment = "cover" | "thumbnail" | "off";
+export type RichCardImageFit = "cover" | "contain";
 export type RichCardMobileImageLayout = "inline" | "full-width";
 export type QualityDomain = "seo" | "accessibility" | "performance" | "manual-smoke";
 
@@ -100,6 +101,7 @@ export interface RichLinkMetadata {
   title?: string;
   description?: string;
   image?: string;
+  imageFit?: RichCardImageFit;
   mobileImageLayout?: RichCardMobileImageLayout;
   sourceLabel?: string;
   sourceLabelVisible?: boolean;
@@ -237,6 +239,7 @@ export interface SiteData {
       renderMode?: RichCardRenderMode;
       sourceLabelDefault?: SourceLabelDefault;
       imageTreatment?: RichImageTreatment;
+      imageFit?: RichCardImageFit;
       mobile?: {
         imageLayout?: RichCardMobileImageLayout;
       };

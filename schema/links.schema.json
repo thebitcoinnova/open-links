@@ -171,6 +171,10 @@
             "title": { "type": "string" },
             "description": { "type": "string" },
             "image": { "type": "string", "format": "uri" },
+            "imageFit": {
+              "type": "string",
+              "enum": ["cover", "contain"]
+            },
             "mobileImageLayout": {
               "type": "string",
               "enum": ["inline", "full-width"]

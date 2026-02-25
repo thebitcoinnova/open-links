@@ -239,6 +239,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - Review known blocked rich-metadata domains and timestamped attempt history: `docs/rich-metadata-fetch-blockers.md`.
 - Review authenticated extractor architecture/workflow: `docs/authenticated-rich-extractors.md`.
 - Check `site.ui.richCards.enrichment` policy (`failureMode`, `failOn`, `allowManualMetadataFallback`) in `data/site.json`.
+- If rich-card images look clipped, set `site.ui.richCards.imageFit=contain` (or per-link override with `links[].metadata.imageFit`).
 - If a blocked domain must be tested anyway, set explicit override on that link: `links[].enrichment.allowKnownBlocker=true`.
 - If `authenticated_cache_missing` is reported, run `npm run auth:rich:sync -- --only-link <link-id>` and commit cache manifest/assets.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.

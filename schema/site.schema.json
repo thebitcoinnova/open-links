@@ -302,6 +302,11 @@
               "type": "string",
               "enum": ["cover", "thumbnail", "off"]
             },
+            "imageFit": {
+              "type": "string",
+              "enum": ["cover", "contain"],
+              "default": "contain"
+            },
             "mobile": {
               "type": "object",
               "properties": {

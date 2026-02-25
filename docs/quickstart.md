@@ -74,6 +74,9 @@ Recommended first pass:
 2. Replace starter links in `data/links.json`.
 3. Set `site.title` and `site.description`.
 4. Pick an initial theme in `site.theme.active` (default recommendation: `sleek`).
+5. Set rich-card image fit in `site.ui.richCards.imageFit`:
+   - `contain` (default, preserves full preview image content)
+   - `cover` (fills media tile, may clip wide images)
 
 ## Run Locally
 

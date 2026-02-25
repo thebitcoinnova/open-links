@@ -297,6 +297,7 @@ Supported keys include:
 - `title`
 - `description`
 - `image`
+- `imageFit`
 - `mobileImageLayout`
 - `sourceLabel`
 - `sourceLabelVisible`
@@ -394,6 +395,7 @@ Main presentation controls include:
 - `brandIcons.minContrastRatio`: number between `1` and `21` (default `3`)
 - `brandIcons.sizeMode`: `normal`, `large`
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
+- `richCards.imageFit`: `contain` (default preserve mode), `cover`
 - `richCards.mobile.imageLayout`: `inline` (default), `full-width`
 - `richCards.enrichment.authenticatedCachePath`: path to authenticated rich-cache manifest
 - `richCards.enrichment.authenticatedCacheWarnAgeDays`: stale warning threshold for authenticated cache entries
@@ -412,6 +414,21 @@ Main presentation controls include:
 - `footer.showLastUpdated`: toggle subtle build-time UTC timestamp display
 
 Rich-card policy settings live under `ui.richCards`.
+
+#### `ui.richCards.imageFit`
+
+Controls how rich-card preview images fill media tiles.
+
+- `contain` (default): preserves full image content and avoids clipping.
+- `cover`: fills the media tile and may crop edges.
+
+Resolution precedence:
+
+1. `links[].metadata.imageFit`
+2. `site.ui.richCards.imageFit`
+3. fallback default: `contain`
+
+Migration note: previous behavior was effectively crop-first (`cover`). If you want that look globally, set `site.ui.richCards.imageFit` to `cover`.
 
 #### `ui.richCards.mobile.imageLayout`
 

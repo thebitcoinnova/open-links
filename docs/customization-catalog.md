@@ -69,6 +69,7 @@ Coverage:
 - `title`
 - `description`
 - `image`
+- `imageFit`
 - `mobileImageLayout`
 - `sourceLabel`
 - `sourceLabelVisible`
@@ -175,6 +176,7 @@ Coverage:
 - `renderMode`
 - `sourceLabelDefault`
 - `imageTreatment`
+- `imageFit`
 - `mobile.imageLayout`
 - `enrichment.enabledByDefault`
 - `enrichment.timeoutMs`

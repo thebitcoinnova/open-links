@@ -36,6 +36,7 @@
       "renderMode": "auto",
       "sourceLabelDefault": "show",
       "imageTreatment": "cover",
+      "imageFit": "contain",
       "mobile": {
         "imageLayout": "inline"
       },
