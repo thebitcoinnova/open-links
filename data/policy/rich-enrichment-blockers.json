@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-enrichment-blockers.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-24T12:15:00Z",
+  "updatedAt": "2026-02-25T12:39:14Z",
   "blockers": [
     {
       "id": "linkedin-direct-fetch",
@@ -29,14 +29,18 @@
       "domains": ["medium.com"],
       "matchSubdomains": true,
       "reasonCategory": "challenge",
-      "lastVerifiedAt": "2026-02-24T11:45:59Z",
-      "summary": "Direct fetch returns challenge pages (HTTP 403 / anti-bot) instead of article/profile metadata.",
+      "lastVerifiedAt": "2026-02-25T12:39:14Z",
+      "summary": "Direct fetch returns challenge pages (HTTP 403 / anti-bot) and browser automation is redirected to Cloudflare verification instead of profile metadata.",
       "remediation": [
         "Disable enrichment for affected links.",
-        "Use manual links[].metadata fields for rich cards."
+        "Use manual links[].metadata fields for rich cards.",
+        "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='medium-auth-browser' and run npm run setup:rich-auth."
       ],
-      "plannedSupportNote": "Authenticated/session-aware workaround investigation is planned (coming soon).",
-      "docs": ["docs/rich-metadata-fetch-blockers.md"]
+      "plannedSupportNote": "Authenticated extractor workaround is available via medium-auth-browser (RSS feed capture).",
+      "docs": [
+        "docs/rich-metadata-fetch-blockers.md",
+        "docs/authenticated-rich-extractors.md"
+      ]
     }
   ]
 }

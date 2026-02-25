@@ -94,7 +94,8 @@
       "order": 7,
       "enabled": true,
       "enrichment": {
-        "enabled": true
+        "enabled": true,
+        "authenticatedExtractor": "medium-auth-browser"
       },
       "custom": {}
     },

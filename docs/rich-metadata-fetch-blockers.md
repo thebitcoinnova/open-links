@@ -44,7 +44,7 @@ These domains are currently treated as unsupported for direct unauthenticated me
 | Site | Example URL | First Recorded (UTC) | Last Verified (UTC) | Typical Response | Current Status | Current Workaround |
 |---|---|---|---|---|---|---|
 | LinkedIn | `https://www.linkedin.com/in/peter-ryszkiewicz/` | `2026-02-24T11:29:52Z` | `2026-02-24T11:45:37Z` | `HTTP 999`, authwall redirect script | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor`) or keep direct enrichment disabled/manual metadata |
-| Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-02-24T11:45:59Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Disable enrichment for affected links or provide manual `links[].metadata` |
+| Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-02-25T12:39:14Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=medium-auth-browser`), fallback to manual metadata |
 
 ## Findings Log
 
@@ -75,8 +75,12 @@ Operator setup command:
 
 - Link id: `medium`
 - URL: `https://medium.com/@peterryszkiewicz`
-- Latest decision: Domain is currently treated as unsupported for direct unauthenticated fetch.
-- Reason: Requests consistently return challenge-protected responses (`HTTP 403`).
+- Latest decision: Use authenticated extractor cache (`links[].enrichment.authenticatedExtractor=medium-auth-browser`).
+- Reason: Direct profile fetch remains challenge-protected (`HTTP 403`) and browser automation still lands on Cloudflare verification pages.
+
+Operator setup command:
+
+- `npm run setup:rich-auth`
 
 #### Attempt History
 
@@ -88,6 +92,11 @@ Operator setup command:
 | `2026-02-24T11:45:53Z` | Full browser-like header set (`Sec-Fetch-*`, cache headers, etc.) | `HTTP 403` |
 | `2026-02-24T11:45:53Z` | Mobile Safari user-agent | `HTTP 403` |
 | `2026-02-24T11:45:59Z` | Body inspection | Cloudflare challenge page (`"Just a moment..."`, JS/cookie challenge) |
+| `2026-02-25T12:36:25Z` | Auth extractor (`medium-auth-browser`) first implementation using browser DOM selectors | Session verification failed; `title` present but `description`/`image` missing |
+| `2026-02-25T12:37:21Z` | `agent-browser` probe of profile URL (5s wait) | Challenge page persisted (`title=Just a moment...`, Cloudflare verification text) |
+| `2026-02-25T12:37:35Z` | `agent-browser` probe of profile URL (20s wait) | Challenge page persisted after longer wait |
+| `2026-02-25T12:37:45Z` | Fetch Medium feed endpoint `https://medium.com/feed/@peterryszkiewicz` | `HTTP 200` RSS XML with usable channel title/description/image |
+| `2026-02-25T12:38:57Z` | `npm run setup:rich-auth` with feed-based `medium-auth-browser` extractor | Cache entry captured (`cacheKey=medium`) and local asset committed under `public/cache/rich-authenticated/` |
 
 ## Recommended Handling for Blocked Domains
 

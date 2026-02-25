@@ -1,13 +1,16 @@
 {
   "$schema": "../../schema/rich-authenticated-extractors.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-25T18:20:00Z",
+  "updatedAt": "2026-02-25T12:39:14Z",
   "extractors": [
     {
       "id": "linkedin-auth-browser",
       "status": "active",
       "method": "manual_browser_session",
-      "domains": ["linkedin.com", "lnkd.in"],
+      "domains": [
+        "linkedin.com",
+        "lnkd.in"
+      ],
       "matchSubdomains": true,
       "summary": "Uses an authenticated browser session to extract LinkedIn rich metadata and cache local assets.",
       "loginInstructions": "Sign into LinkedIn in the opened browser session and complete any challenge or multi-factor authentication step; sync continues automatically once authenticated state is detected.",
@@ -15,6 +18,22 @@
         "docs/authenticated-rich-extractors.md",
         "docs/create-new-rich-content-extractor.md",
         "docs/linkedin-authenticated-metadata-debug-runbook.md",
+        "docs/rich-metadata-fetch-blockers.md"
+      ]
+    },
+    {
+      "id": "medium-auth-browser",
+      "status": "active",
+      "method": "manual_browser_session",
+      "domains": [
+        "medium.com"
+      ],
+      "matchSubdomains": true,
+      "summary": "Uses Medium's public RSS feed endpoint to capture profile metadata and cache local image assets when direct profile fetch is challenge-protected.",
+      "loginInstructions": "No interactive login is currently required; extractor captures metadata from https://medium.com/feed/<target> and writes authenticated-cache artifacts.",
+      "docs": [
+        "docs/authenticated-rich-extractors.md",
+        "docs/create-new-rich-content-extractor.md",
         "docs/rich-metadata-fetch-blockers.md"
       ]
     }

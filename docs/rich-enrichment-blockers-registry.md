@@ -74,4 +74,4 @@ npm run enrich:rich
 ## Current Scope Limits
 
 - Scope is currently `direct_fetch` only.
-- Authenticated/session-based enrichment is tracked separately and is not wired into default enrichment yet.
+- Authenticated/session-based enrichment is tracked separately in extractor/cache registries and is used when links configure `links[].enrichment.authenticatedExtractor`.

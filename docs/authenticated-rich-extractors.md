@@ -31,6 +31,11 @@ Under `links[].enrichment`:
 - `authenticatedExtractor`: extractor id (for example `linkedin-auth-browser`)
 - `authenticatedCacheKey`: optional cache key override (defaults to `link.id`)
 
+Current extractor ids in this repository:
+
+- `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session)
+- `medium-auth-browser` (Medium profile extraction via RSS feed capture path)
+
 ### Site-level
 
 Under `site.ui.richCards.enrichment`:
@@ -70,7 +75,9 @@ Useful filters:
 
 ```bash
 npm run auth:rich:sync -- --only-link linkedin
+npm run auth:rich:sync -- --only-link medium
 npm run auth:rich:sync -- --only-extractor linkedin-auth-browser
+npm run auth:rich:sync -- --only-extractor medium-auth-browser
 npm run auth:rich:sync -- --only-missing
 npm run auth:rich:sync -- --force
 npm run auth:rich:sync -- --only-link linkedin --only-missing --force
@@ -137,6 +144,18 @@ LinkedIn extractor session handling is autonomous after browser launch:
 - times out with explicit diagnostics if login or challenge flow is not completed
 
 No Enter key checkpoint is required.
+
+## Medium Extractor Behavior
+
+The Medium extractor (`medium-auth-browser`) uses a feed capture path:
+
+- resolves feed URL from profile URL (`https://medium.com/feed/<target>`)
+- parses feed channel metadata (`title`, `description`, image URL)
+- rejects challenge/placeholder responses
+- downloads image asset to `public/cache/rich-authenticated/`
+- writes cache entry with diagnostics notes (`feedUrl`, `cacheKey`)
+
+No interactive login is currently required for the Medium extractor path.
 
 LinkedIn debug commands:
 

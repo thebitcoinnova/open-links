@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-cache.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-25T10:19:54.477Z",
+  "updatedAt": "2026-02-25T12:38:57.601Z",
   "entries": {
     "linkedin": {
       "extractorId": "linkedin-auth-browser",
@@ -32,6 +32,37 @@
           "session=openlinks-linkedin-cache-validate",
           "sessionName=openlinks-linkedin-cache-validate",
           "cacheKey=linkedin"
+        ]
+      }
+    },
+    "medium": {
+      "extractorId": "medium-auth-browser",
+      "linkId": "medium",
+      "sourceUrl": "https://medium.com/@peterryszkiewicz",
+      "capturedAt": "2026-02-25T12:38:57.601Z",
+      "metadata": {
+        "title": "Stories by Peter Ryszkiewicz on Medium",
+        "description": "Stories by Peter Ryszkiewicz on Medium",
+        "image": "cache/rich-authenticated/a4a1b204da65e0b1a284dd5d5afc8520156ddf4b58df1ae2035bd580c58aedec.jpg",
+        "sourceLabel": "medium.com"
+      },
+      "assets": {
+        "image": {
+          "path": "cache/rich-authenticated/a4a1b204da65e0b1a284dd5d5afc8520156ddf4b58df1ae2035bd580c58aedec.jpg",
+          "sourceUrl": "https://cdn-images-1.medium.com/fit/c/150/150/0*_SAmj5J9y1Pv5Ri0.",
+          "contentType": "image/jpeg",
+          "bytes": 7058,
+          "sha256": "a4a1b204da65e0b1a284dd5d5afc8520156ddf4b58df1ae2035bd580c58aedec"
+        }
+      },
+      "diagnostics": {
+        "extractorVersion": "2026-02-25.1",
+        "selectorProfile": "medium-rss-v1",
+        "placeholderSignals": [],
+        "capturedFromUrl": "https://medium.com/@peterryszkiewicz?source=rss-5695106bc7f5------2",
+        "notes": [
+          "cacheKey=medium",
+          "feedUrl=https://medium.com/feed/@peterryszkiewicz"
         ]
       }
     }
