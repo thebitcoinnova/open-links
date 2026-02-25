@@ -77,12 +77,15 @@ export const runRawCommand = (
     cwd?: string;
     env?: NodeJS.ProcessEnv;
     allowFailure?: boolean;
+    maxBufferBytes?: number;
   }
 ): SpawnSyncReturns<string> => {
+  const maxBuffer = options?.maxBufferBytes ?? 20 * 1024 * 1024;
   const result = spawnSync(command, args, {
     cwd: options?.cwd ?? process.cwd(),
     env: options?.env ?? process.env,
-    encoding: "utf8"
+    encoding: "utf8",
+    maxBuffer
   });
 
   const status = result.status;
