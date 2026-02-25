@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-extractors.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-25T00:40:00Z",
+  "updatedAt": "2026-02-25T18:20:00Z",
   "extractors": [
     {
       "id": "linkedin-auth-browser",
@@ -10,9 +10,10 @@
       "domains": ["linkedin.com", "lnkd.in"],
       "matchSubdomains": true,
       "summary": "Uses an authenticated browser session to extract LinkedIn rich metadata and cache local assets.",
-      "loginInstructions": "Sign into LinkedIn in the opened browser session and complete any challenge/MFA before continuing.",
+      "loginInstructions": "Sign into LinkedIn in the opened browser session and complete any challenge/MFA; sync continues automatically once authenticated state is detected.",
       "docs": [
         "docs/authenticated-rich-extractors.md",
+        "docs/create-new-rich-content-extractor.md",
         "docs/linkedin-authenticated-metadata-poc.md",
         "docs/rich-metadata-fetch-blockers.md"
       ]

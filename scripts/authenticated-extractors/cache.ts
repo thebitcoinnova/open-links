@@ -179,7 +179,7 @@ export const validateAuthenticatedCacheEntry = (
     issues.push({
       level: "error",
       message: `Authenticated cache entry '${input.cacheKey}' is missing.`,
-      remediation: `Run npm run auth:rich:sync -- --only-link ${input.expectedLinkId} and commit updated cache/assets.`
+      remediation: `Run npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${input.expectedLinkId}) and commit updated cache/assets.`
     });
 
     return {
@@ -192,7 +192,7 @@ export const validateAuthenticatedCacheEntry = (
     issues.push({
       level: "error",
       message: `Cache entry '${input.cacheKey}' extractorId '${rawEntry.extractorId}' does not match expected '${input.expectedExtractorId}'.`,
-      remediation: `Refresh cache with extractor '${input.expectedExtractorId}' for link '${input.expectedLinkId}'.`
+      remediation: `Run npm run setup:rich-auth (or refresh with extractor '${input.expectedExtractorId}' for link '${input.expectedLinkId}').`
     });
   }
 
@@ -200,7 +200,7 @@ export const validateAuthenticatedCacheEntry = (
     issues.push({
       level: "error",
       message: `Cache entry '${input.cacheKey}' linkId '${rawEntry.linkId}' does not match expected '${input.expectedLinkId}'.`,
-      remediation: `Fix links[].enrichment.authenticatedCacheKey or regenerate the authenticated cache entry for '${input.expectedLinkId}'.`
+      remediation: `Fix links[].enrichment.authenticatedCacheKey or run npm run setup:rich-auth to regenerate the cache entry for '${input.expectedLinkId}'.`
     });
   }
 
@@ -209,7 +209,7 @@ export const validateAuthenticatedCacheEntry = (
     issues.push({
       level: "error",
       message: `Cache entry '${input.cacheKey}' is missing required metadata title/description/image fields.`,
-      remediation: `Re-run authenticated capture for '${input.expectedLinkId}' so full metadata is cached.`
+      remediation: `Run npm run setup:rich-auth (or re-run authenticated capture for '${input.expectedLinkId}') so full metadata is cached.`
     });
   }
 
@@ -228,7 +228,7 @@ export const validateAuthenticatedCacheEntry = (
     issues.push({
       level: "error",
       message: `Cache entry '${input.cacheKey}' image asset is missing at '${path.relative(ROOT, imageAbsolutePath)}'.`,
-      remediation: `Run npm run auth:rich:sync -- --only-link ${input.expectedLinkId} and commit generated assets under public/cache/rich-authenticated/.`
+      remediation: `Run npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${input.expectedLinkId}) and commit generated assets under public/cache/rich-authenticated/.`
     });
   }
 
@@ -265,7 +265,7 @@ export const validateAuthenticatedCacheEntry = (
     issues.push({
       level: "warning",
       message: `Authenticated cache entry '${input.cacheKey}' is stale (${ageDays.toFixed(1)} days old; warn threshold ${input.warnAgeDays} days).`,
-      remediation: `Refresh cache with npm run auth:rich:sync -- --only-link ${input.expectedLinkId}.`
+      remediation: `Refresh cache with npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${input.expectedLinkId}).`
     });
   }
 

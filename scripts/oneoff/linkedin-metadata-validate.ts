@@ -6,12 +6,16 @@ import {
   extractCookieNames,
   fileTimestamp,
   nowIso,
+  resolveAuthWaitOverridesFromArgs,
+  resolveAuthWaitSettings,
   resolveLinkedinUrl,
   resolveSessionConfig,
   runAgentBrowserJson,
+  summarizeLinkedinAuthResult,
   toAbsoluteFromRoot,
   toBooleanFlag,
   valueForFlag,
+  waitForLinkedinAuthenticatedSession,
   writeJsonFile,
   writeTextFile
 } from "./linkedin-poc-common";
@@ -158,17 +162,60 @@ const run = async () => {
   const maxHtmlBytes = parseMaxHtmlBytes(args);
   const urlOverride = valueForFlag(args, "--url");
 
+  const authOverrides = resolveAuthWaitOverridesFromArgs(args);
+  const authSettings = resolveAuthWaitSettings(authOverrides);
+  const precheckTimeoutMs = headed
+    ? authSettings.timeoutMs
+    : Math.min(authSettings.timeoutMs, 15_000);
+
   const config = resolveSessionConfig();
   const targetUrl = resolveLinkedinUrl(urlOverride);
 
-  const openResult = runAgentBrowserJson(["open", targetUrl], config, {
-    extraArgs: headed ? ["--headed"] : [],
-    allowFailure: true
+  const authResult = await waitForLinkedinAuthenticatedSession(config, {
+    targetUrl,
+    headed,
+    timeoutMs: precheckTimeoutMs,
+    pollMs: authSettings.pollMs,
+    logPrefix: "[poc:linkedin:validate-auth]",
+    emitStateLogs: headed
   });
-  if (openResult.response?.success === false) {
-    console.warn(`agent-browser open returned a warning: ${openResult.response.error ?? "unknown error"}`);
-    console.warn("Continuing with wait/get/eval checks.");
+
+  const stamp = fileTimestamp();
+  const summaryArtifactPath = toAbsoluteFromRoot(
+    "output",
+    "playwright",
+    "linkedin-poc",
+    `summary-${stamp}.json`
+  );
+
+  if (!authResult.verified) {
+    const summary = {
+      timestamp: nowIso(),
+      mode: headed ? "headed" : "headless",
+      targetUrl,
+      pass: false,
+      failureReasons: ["reauth_required"],
+      auth: {
+        precheckTimeoutMs,
+        settings: authResult.settings,
+        summary: summarizeLinkedinAuthResult(authResult),
+        transitions: authResult.transitions,
+        finalSnapshot: authResult.finalSnapshot
+      },
+      cookieBridgeDiagnostic: { enabled: false }
+    };
+
+    writeJsonFile(summaryArtifactPath, summary);
+    runAgentBrowserJson(["close"], config, { allowFailure: true });
+
+    console.log("LinkedIn metadata validation: FAIL");
+    console.log(`Target URL: ${targetUrl}`);
+    console.log(`Session precheck: ${summarizeLinkedinAuthResult(authResult)}`);
+    console.log("Reason: authenticated session not available; rerun login initializer.");
+    console.log(`Summary artifact: ${path.relative(process.cwd(), summaryArtifactPath)}`);
+    process.exit(1);
   }
+
   runAgentBrowserJson(["wait", "--load", "networkidle"], config, { allowFailure: true });
   runAgentBrowserJson(["wait", "2000"], config, { allowFailure: true });
 
@@ -207,7 +254,6 @@ const run = async () => {
   const cookieNames = extractCookieNames(cookiesPayload);
 
   const htmlWrite = truncateHtmlIfNeeded(html, maxHtmlBytes);
-  const stamp = fileTimestamp();
   const htmlArtifactPath = toAbsoluteFromRoot(
     "output",
     "playwright",
@@ -219,12 +265,6 @@ const run = async () => {
     "playwright",
     "linkedin-poc",
     `metadata-${stamp}.json`
-  );
-  const summaryArtifactPath = toAbsoluteFromRoot(
-    "output",
-    "playwright",
-    "linkedin-poc",
-    `summary-${stamp}.json`
   );
 
   writeTextFile(htmlArtifactPath, htmlWrite.html);
@@ -264,6 +304,13 @@ const run = async () => {
     metadataArtifact: path.relative(process.cwd(), metadataArtifactPath),
     htmlTruncated: htmlWrite.truncated,
     observedCookieNames: cookieNames,
+    auth: {
+      precheckTimeoutMs,
+      settings: authResult.settings,
+      summary: summarizeLinkedinAuthResult(authResult),
+      transitions: authResult.transitions,
+      finalSnapshot: authResult.finalSnapshot
+    },
     cookieBridgeDiagnostic
   };
 

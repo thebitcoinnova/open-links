@@ -17,6 +17,7 @@ LinkedIn authenticated one-off validation runbook:
 Authenticated extractor framework guide:
 
 - `docs/authenticated-rich-extractors.md`
+- `docs/create-new-rich-content-extractor.md`
 
 ## Maintenance Rules (Required)
 
@@ -51,8 +52,12 @@ These domains are currently treated as unsupported for direct unauthenticated me
 
 - Link id: `linkedin`
 - URL: `https://www.linkedin.com/in/peter-ryszkiewicz/`
-- Latest decision: Keep enrichment disabled (`data/links.json` has `enrichment.enabled=false`).
-- Reason: Requests consistently return `HTTP 999` and redirect/authwall behavior; browser-style headers did not change outcome.
+- Latest decision: Use authenticated extractor cache (`links[].enrichment.authenticatedExtractor=linkedin-auth-browser`).
+- Reason: Direct fetch remains blocked (`HTTP 999`/authwall). Authenticated browser-session extraction is now the supported path.
+
+Operator setup command:
+
+- `npm run setup:rich-auth`
 
 #### Attempt History
 

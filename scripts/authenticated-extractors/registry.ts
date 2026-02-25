@@ -1,8 +1,12 @@
 import type { AuthenticatedExtractorPlugin, AuthenticatedExtractorsPolicyRegistry } from "./types";
 import { linkedinAuthBrowserExtractor } from "./plugins/linkedin-auth-browser";
+// AUTH_EXTRACTOR_IMPORTS_START
+// AUTH_EXTRACTOR_IMPORTS_END
 
 const EXTRACTORS: Record<string, AuthenticatedExtractorPlugin> = {
-  [linkedinAuthBrowserExtractor.id]: linkedinAuthBrowserExtractor
+  [linkedinAuthBrowserExtractor.id]: linkedinAuthBrowserExtractor,
+  // AUTH_EXTRACTOR_MAP_START
+  // AUTH_EXTRACTOR_MAP_END
 };
 
 export const getAuthenticatedExtractorPlugin = (

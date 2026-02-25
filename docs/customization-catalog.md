@@ -195,6 +195,12 @@ Related policy source:
 - `data/policy/rich-authenticated-extractors.json`
 - `data/cache/rich-authenticated-cache.json`
 
+Operational commands tied to this category:
+
+- `npm run setup:rich-auth` (first-run capture for missing/invalid authenticated cache entries)
+- `npm run auth:rich:sync -- --only-link <link-id>` (single-link capture)
+- `npm run auth:extractor:new -- --id <id> --domains <csv> --summary \"<summary>\"` (new extractor scaffold)
+
 ## 11) `site.quality` (`site-quality`)
 
 Coverage:

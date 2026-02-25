@@ -28,6 +28,11 @@ Use the right tool for the job:
 
 If your goal is repeatable maintenance on an existing fork/local clone, prefer `docs/openclaw-update-crud.md`.
 
+If your goal is adding a brand-new authenticated rich extractor, use:
+
+- `docs/create-new-rich-content-extractor.md`
+- `skills/create-new-rich-content-extractor/SKILL.md`
+
 ## OpenClaw Bootstrap Contract (Automation-First)
 
 If you are running OpenClaw bootstrap flow in this repository, use `docs/openclaw-bootstrap.md` and apply these rules:
@@ -283,3 +288,5 @@ You can leave the wizard at any point and continue manually:
 - `docs/data-model.md`
 - `docs/theming-and-layouts.md`
 - `docs/deployment.md`
+- `docs/create-new-rich-content-extractor.md`
+- `skills/create-new-rich-content-extractor/SKILL.md`

@@ -5,14 +5,13 @@ This runbook validates a local-only workaround for LinkedIn rich metadata by usi
 Scope:
 
 - LinkedIn only
-- one-off/manual workflow
-- local validation and selector/debug iteration path
+- one-off/local workflow
 - no CI usage in this phase
 
 Production workflow now uses authenticated extractor cache integration:
 
 - configure `links[].enrichment.authenticatedExtractor`
-- capture with `npm run auth:rich:sync`
+- capture with `npm run setup:rich-auth` (or `npm run auth:rich:sync`)
 - commit `data/cache/rich-authenticated-cache.json` and `public/cache/rich-authenticated/*`
 - enrichment/build consumes cache (no direct LinkedIn fetch for that link)
 
@@ -23,13 +22,18 @@ Production workflow now uses authenticated extractor cache integration:
 - Use encrypted agent-browser session persistence:
   - `AGENT_BROWSER_SESSION_NAME`
   - `AGENT_BROWSER_ENCRYPTION_KEY` (64-char hex)
-- Artifacts are written under `output/playwright/linkedin-poc/` (already gitignored).
+- Artifacts are written under `output/playwright/linkedin-poc/` (gitignored).
 
 ## Preconditions
 
 1. `npx` is available.
 2. `agent-browser` can be executed through `npx`.
 3. `AGENT_BROWSER_ENCRYPTION_KEY` is set to a 64-character hex value.
+
+Optional auth wait tuning:
+
+- `OPENLINKS_AUTH_SESSION_TIMEOUT_MS` (default `600000`)
+- `OPENLINKS_AUTH_SESSION_POLL_MS` (default `2000`)
 
 Example local shell setup:
 
@@ -47,17 +51,21 @@ export AGENT_BROWSER_ENCRYPTION_KEY="<64-char-hex>"
 npm run poc:linkedin:bootstrap
 ```
 
-2. Start headed browser and complete manual login/MFA:
+2. Start autonomous headed login watcher:
 
 ```bash
 npm run poc:linkedin:login
 ```
 
-Optional URL override:
+Optional overrides:
 
 ```bash
 npm run poc:linkedin:login -- --url "https://www.linkedin.com/in/your-profile/"
+npm run poc:linkedin:login -- --auth-timeout-ms 900000 --poll-ms 1500
 ```
+
+This command opens a browser and waits for auth progression (`login`/`mfa_challenge`/`authwall`/`authenticated`) automatically.
+No Enter checkpoint is required.
 
 3. Run authenticated metadata validation:
 
@@ -69,6 +77,7 @@ Optional diagnostics:
 
 ```bash
 npm run poc:linkedin:validate -- --headed
+npm run poc:linkedin:validate -- --auth-timeout-ms 900000 --poll-ms 1500
 npm run poc:linkedin:validate:cookie-bridge
 ```
 
@@ -79,7 +88,13 @@ npm run poc:linkedin:validate:cookie-bridge
 - `output/playwright/linkedin-poc/metadata-<timestamp>.json`
 - `output/playwright/linkedin-poc/summary-<timestamp>.json`
 
-5. (Optional) promote validated extraction into committed cache:
+5. Promote validated extraction into committed cache:
+
+```bash
+npm run setup:rich-auth
+```
+
+Optional one-link capture:
 
 ```bash
 npm run auth:rich:sync -- --only-link linkedin
@@ -101,41 +116,26 @@ Pass:
 Fail:
 
 - parser completeness is `none`, or
-- placeholder signals are detected (`Sign Up | LinkedIn`, authwall/challenge indicators, etc.)
+- placeholder signals are detected (`Sign Up | LinkedIn`, authwall/challenge indicators, etc.), or
+- session auth precheck times out without `authenticated` state
 
 ## Troubleshooting Matrix
 
 | Symptom | Likely Cause | Remediation |
 |---|---|---|
 | Bootstrap reports missing browser executable | Browser binaries not installed | Re-run `npm run poc:linkedin:bootstrap` (auto-installs) |
-| Login script fails verification (`li_at` missing) | Login incomplete or challenge not finished | Re-run login script, complete all prompts/MFA, verify signed-in landing page |
-| Validator returns placeholder signals | Session is unauthenticated or redirected to authwall/signup | Re-run login session, then re-run validator |
-| Validator fails with metadata missing | Authenticated page still lacks OG metadata | Treat LinkedIn as blocked for direct enrichment, keep manual metadata fallback |
-| Cookie-bridge check fails but browser parse succeeds | Cookies do not translate to raw HTTP fetch path | Use browser-session extraction as PoC source of truth |
+| Login script times out | Login or MFA/challenge not completed | Re-run `npm run poc:linkedin:login`, finish prompts in browser, or increase `--auth-timeout-ms` |
+| Validator fails with `reauth_required` | Session expired or auth not established | Run `npm run poc:linkedin:login` first, then re-run validator |
+| Validator returns placeholder signals | Session redirected to authwall/signup or non-profile target | Re-run login, verify final URL, then re-run validator |
+| Cookie-bridge check fails but browser parse succeeds | Cookies do not translate to raw HTTP fetch path | Use browser-session extraction as source of truth |
 
 ## Updating Findings
 
 After each meaningful run, update `docs/rich-metadata-fetch-blockers.md` with:
 
 1. UTC timestamp.
-2. Session mode (`manual`, `hybrid`, or future `automated`).
+2. Session mode (`manual`, `hybrid`, or `automated`).
 3. Result (`pass`/`fail`).
 4. Metadata quality (`full`/`partial`/`none`, placeholder signals).
 5. Cookie-bridge result (if run).
 6. Next action/remediation.
-
-## Future Phases (Not Implemented Here)
-
-### Phase 2: Credential Fill + Hybrid MFA
-
-- Add local-only env vars:
-  - `LINKEDIN_USERNAME`
-  - `LINKEDIN_PASSWORD`
-- Attempt automated credential fill first.
-- If MFA/challenge detected, pause for manual completion and continue in hybrid mode.
-
-### Phase 3: CI Targeting (Opt-in, Not Default)
-
-- Add explicit gated workflow for authenticated metadata collection.
-- Use ephemeral secret injection and strict secret handling boundaries.
-- Require compliance/risk review before enabling for shared CI.

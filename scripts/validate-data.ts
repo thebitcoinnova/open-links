@@ -276,7 +276,7 @@ const authenticatedExtractorConfigIssues = (
       path: "$",
       message: `Failed to load authenticated extractors policy. ${message}`,
       remediation:
-        "Restore data/policy/rich-authenticated-extractors.json and ensure it validates against schema/rich-authenticated-extractors.schema.json."
+        "Restore data/policy/rich-authenticated-extractors.json, ensure it validates against schema/rich-authenticated-extractors.schema.json, then run npm run setup:rich-auth."
     });
     targets.forEach((target) => suppressedAuthenticatedCacheLinkIds.add(target.linkId));
     return { issues, suppressedAuthenticatedCacheLinkIds };
@@ -295,7 +295,7 @@ const authenticatedExtractorConfigIssues = (
       path: "$",
       message: `Failed to load authenticated rich cache. ${message}`,
       remediation:
-        "Restore/fix data/cache/rich-authenticated-cache.json and ensure it validates against schema/rich-authenticated-cache.schema.json, then run npm run auth:rich:sync."
+        "Restore/fix data/cache/rich-authenticated-cache.json, ensure it validates against schema/rich-authenticated-cache.schema.json, then run npm run setup:rich-auth."
     });
     targets.forEach((target) => suppressedAuthenticatedCacheLinkIds.add(target.linkId));
     return { issues, suppressedAuthenticatedCacheLinkIds };
@@ -314,7 +314,7 @@ const authenticatedExtractorConfigIssues = (
         path: extractorPath,
         message: `Unknown authenticated extractor '${target.extractorId}' for link '${target.linkId}'.`,
         remediation:
-          "Use a valid extractor id from data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link."
+          "Use a valid extractor id from data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link, then run npm run setup:rich-auth."
       });
       continue;
     }
@@ -327,7 +327,7 @@ const authenticatedExtractorConfigIssues = (
         path: extractorPath,
         message: `Authenticated extractor '${target.extractorId}' is disabled for link '${target.linkId}'.`,
         remediation:
-          "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link."
+          "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link, then run npm run setup:rich-auth."
       });
       continue;
     }
@@ -342,7 +342,7 @@ const authenticatedExtractorConfigIssues = (
         message: `Link '${target.linkId}' URL host is not allowed by extractor '${target.extractorId}'.`,
         remediation: `Allowed domains: ${extractor.domains.join(
           ", "
-        )}. Fix links[].enrichment.authenticatedExtractor or the link URL.`
+        )}. Fix links[].enrichment.authenticatedExtractor or the link URL, then run npm run setup:rich-auth.`
       });
       continue;
     }
@@ -608,7 +608,7 @@ const run = () => {
       path: "$.links",
       message: `Failed to evaluate authenticated extractor policy checks. ${message}`,
       remediation:
-        "Fix authenticated extractor link configuration and policy/cache files, then rerun validation."
+        "Fix authenticated extractor link configuration and policy/cache files, run npm run setup:rich-auth, then rerun validation."
     });
   }
 
@@ -652,6 +652,15 @@ const run = () => {
 
   const errors = sortIssues(issues.filter((issue) => issue.level === "error"));
   const warnings = sortIssues(issues.filter((issue) => issue.level === "warning"));
+  const hasAuthenticatedSetupIssue = [...errors, ...warnings].some((issue) => {
+    const normalizedMessage = issue.message.toLowerCase();
+    const normalizedSource = issue.source.toLowerCase();
+    return (
+      normalizedMessage.includes("authenticated extractor") ||
+      normalizedMessage.includes("authenticated cache") ||
+      normalizedSource.includes("rich-authenticated")
+    );
+  });
 
   const enrichmentSummary: EnrichmentRunSummary | undefined = enrichmentReport?.summary;
 
@@ -677,6 +686,13 @@ const run = () => {
       abortedEarly: enrichmentReport?.abortedEarly
     }
   };
+
+  if (args.format === "human" && hasAuthenticatedSetupIssue && !bypassActive) {
+    console.log(
+      "Hint: authenticated rich cache setup is required. Run `npm run setup:rich-auth`, commit updated cache/assets, then rerun validation/build."
+    );
+    console.log("");
+  }
 
   if (args.format === "json") {
     console.log(formatJsonOutput(result));

@@ -55,6 +55,12 @@ cd open-links
 npm install
 ```
 
+If your configuration uses authenticated rich extractors (`links[].enrichment.authenticatedExtractor`), complete first-run cache setup before `dev`/`build`:
+
+```bash
+npm run setup:rich-auth
+```
+
 ## Configure Your First Site
 
 Edit the three primary content files:
@@ -217,6 +223,12 @@ npm run enrich:rich:strict
    - `data/cache/rich-authenticated-cache.json`
    - committed local assets under `public/cache/rich-authenticated/`
 5. For `authenticated_cache_missing`, run:
+
+```bash
+npm run setup:rich-auth
+```
+
+Or for one link only:
 
 ```bash
 npm run auth:rich:sync -- --only-link <link-id>

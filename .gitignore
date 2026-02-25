@@ -148,3 +148,4 @@ public/generated/*
 # Local browser automation artifacts
 .playwright-cli/
 output/playwright/
+output/playwright/auth-rich-sync/

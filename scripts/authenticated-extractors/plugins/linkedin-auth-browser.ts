@@ -1,15 +1,17 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import process from "node:process";
-import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import {
   classifyPlaceholderSignals,
   extractCookieNames,
+  resolveAuthWaitSettings,
   resolveSessionConfig,
   runAgentBrowserJson,
-  type SessionConfig
+  summarizeLinkedinAuthResult,
+  waitForLinkedinAuthenticatedSession,
+  type SessionConfig,
+  type WaitForLinkedinAuthResult
 } from "../../oneoff/linkedin-poc-common";
 import type {
   AuthenticatedExtractorEnsureSessionResult,
@@ -20,9 +22,9 @@ import type {
 } from "../types";
 
 const EXTRACTOR_ID = "linkedin-auth-browser";
-const EXTRACTOR_VERSION = "2026-02-25.1";
+const EXTRACTOR_VERSION = "2026-02-25.2";
 const SELECTOR_PROFILE = "linkedin-profile-v1";
-const AUTH_COOKIE_CANDIDATES = ["li_at", "liap"];
+const SHORT_VERIFY_TIMEOUT_MS = 8_000;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -47,25 +49,6 @@ const resolveCurrentUrl = (value: unknown): string | undefined => {
 
 const isAuthwallUrl = (value: string | undefined): boolean =>
   typeof value === "string" && /linkedin\.com\/(authwall|signup|checkpoint|uas\/login)/i.test(value);
-
-const isAuthenticatedContext = (currentUrl: string | undefined, cookieNames: string[]): boolean => {
-  if (!currentUrl || isAuthwallUrl(currentUrl)) {
-    return false;
-  }
-
-  let host: string;
-  try {
-    host = new URL(currentUrl).hostname;
-  } catch {
-    return false;
-  }
-
-  if (!host.includes("linkedin.com")) {
-    return false;
-  }
-
-  return AUTH_COOKIE_CANDIDATES.some((cookieName) => cookieNames.includes(cookieName));
-};
 
 const requireInteractiveTerminal = () => {
   if (!stdin.isTTY || !stdout.isTTY) {
@@ -148,6 +131,11 @@ const resolveSourceLabel = (sourceUrl: string): string => {
 };
 
 const resolveAgentConfig = (): SessionConfig => resolveSessionConfig();
+
+const authTransitionsSummary = (result: WaitForLinkedinAuthResult): string =>
+  result.transitions
+    .map((snapshot) => `${snapshot.state}@${snapshot.currentUrl ?? "unknown"}`)
+    .join(" -> ");
 
 const extractLinkedinProfilePayload = async (
   config: SessionConfig,
@@ -378,24 +366,20 @@ const verifySession = async (
   config: SessionConfig,
   targetUrl: string
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
-  runAgentBrowserJson(["open", targetUrl], config, {
-    allowFailure: true
+  const settings = resolveAuthWaitSettings();
+  const authResult = await waitForLinkedinAuthenticatedSession(config, {
+    targetUrl,
+    timeoutMs: Math.min(settings.timeoutMs, SHORT_VERIFY_TIMEOUT_MS),
+    pollMs: Math.min(settings.pollMs, 1_000),
+    logPrefix: `[${EXTRACTOR_ID}]`,
+    emitStateLogs: false
   });
-  runAgentBrowserJson(["wait", "1500"], config, { allowFailure: true });
 
-  const currentUrl = resolveCurrentUrl(
-    runAgentBrowserJson(["get", "url"], config, { allowFailure: true }).response?.data
-  );
-  const cookieNames = extractCookieNames(
-    runAgentBrowserJson(["cookies", "get"], config, { allowFailure: true }).response?.data
-  );
-
-  const verified = isAuthenticatedContext(currentUrl, cookieNames);
   runAgentBrowserJson(["close"], config, { allowFailure: true });
 
   return {
-    verified,
-    details: `currentUrl=${currentUrl ?? "unknown"}; cookies=${cookieNames.length}`
+    verified: authResult.verified,
+    details: summarizeLinkedinAuthResult(authResult)
   };
 };
 
@@ -410,30 +394,39 @@ const ensureSession = async (
 
   requireInteractiveTerminal();
 
+  const settings = resolveAuthWaitSettings();
   console.log("");
   console.log(`[${context.extractorId}] LinkedIn login required.`);
-  console.log("A headed browser will open. Complete login and any challenge/MFA, then press Enter here.");
+  console.log(
+    `[${context.extractorId}] A headed browser will open. Complete credentials and any MFA/challenge; extraction will continue automatically once authenticated.`
+  );
+  console.log(
+    `[${context.extractorId}] Waiting up to ${settings.timeoutMs}ms (poll ${settings.pollMs}ms).`
+  );
 
-  const openResult = runAgentBrowserJson(["open", context.targetUrl], config, {
-    extraArgs: ["--headed"],
-    allowFailure: true
+  const authResult = await waitForLinkedinAuthenticatedSession(config, {
+    targetUrl: context.targetUrl,
+    headed: true,
+    timeoutMs: settings.timeoutMs,
+    pollMs: settings.pollMs,
+    logPrefix: `[${context.extractorId}]`,
+    emitStateLogs: true
   });
-  if (openResult.response?.success === false) {
-    console.warn(`[${context.extractorId}] open warning: ${openResult.response.error ?? "unknown"}`);
-  }
 
-  const rl = createInterface({ input: stdin, output: stdout });
-  await rl.question("Press Enter after LinkedIn login is complete: ");
-  rl.close();
+  runAgentBrowserJson(["close"], config, { allowFailure: true });
 
-  const verifiedAfterLogin = await verifySession(config, context.targetUrl);
-  if (!verifiedAfterLogin.verified) {
+  if (!authResult.verified) {
     throw new Error(
-      `LinkedIn login verification failed. ${verifiedAfterLogin.details ?? "No details."}`
+      `LinkedIn login verification failed. ${summarizeLinkedinAuthResult(authResult)}. transitions=${authTransitionsSummary(
+        authResult
+      )}`
     );
   }
 
-  return verifiedAfterLogin;
+  return {
+    verified: true,
+    details: `${summarizeLinkedinAuthResult(authResult)}; transitions=${authTransitionsSummary(authResult)}`
+  };
 };
 
 const extract = async (

@@ -354,6 +354,20 @@ When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses 
 `npm run dev` and `npm run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations.  
 Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 
+First-run authenticated setup command:
+
+- `npm run setup:rich-auth` (captures only missing/invalid authenticated cache entries)
+- Optional one-link capture: `npm run auth:rich:sync -- --only-link <link-id>`
+
+Extractor scaffolding command:
+
+- `npm run auth:extractor:new -- --id <extractor-id> --domains <csv> --summary \"<summary>\"`
+
+Local auth wait tuning for one-off LinkedIn flows:
+
+- `OPENLINKS_AUTH_SESSION_TIMEOUT_MS` (default `600000`)
+- `OPENLINKS_AUTH_SESSION_POLL_MS` (default `2000`)
+
 ## `site.json`
 
 Schema: `schema/site.schema.json`
@@ -708,3 +722,5 @@ You can use these ready presets directly:
 - Fast setup and deployment path: `docs/quickstart.md`
 - AI-assisted change flow: `docs/ai-guided-customization.md`
 - Exhaustive customization checklist: `docs/customization-catalog.md`
+- Authenticated extractor architecture/workflow: `docs/authenticated-rich-extractors.md`
+- New extractor implementation workflow: `docs/create-new-rich-content-extractor.md`

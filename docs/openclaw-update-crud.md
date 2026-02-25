@@ -25,7 +25,7 @@ Out of scope:
 
 - Runtime app code changes.
 - Workflow file changes.
-- Repo-local executable skill packages.
+- New authenticated extractor development (use dedicated authoring workflow).
 
 ## Required Startup Handshake (First Step)
 
@@ -216,3 +216,5 @@ Follow docs/openclaw-update-crud.md exactly for this repository. Execute Require
 - `docs/ai-guided-customization.md`
 - `docs/data-model.md`
 - `docs/theming-and-layouts.md`
+- `docs/create-new-rich-content-extractor.md`
+- `skills/create-new-rich-content-extractor/SKILL.md`

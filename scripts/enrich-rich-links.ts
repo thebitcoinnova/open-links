@@ -269,11 +269,11 @@ const remediationFor = (
   }
 
   if (reason === "authenticated_cache") {
-    return "No action required. Keep cache fresh with `npm run auth:rich:sync` when metadata changes.";
+    return "No action required. Keep cache fresh with `npm run setup:rich-auth` (or `npm run auth:rich:sync`) when metadata changes.";
   }
 
   if (reason === "authenticated_cache_missing") {
-    return "Run `npm run auth:rich:sync -- --only-link <link-id>`, commit `data/cache/rich-authenticated-cache.json` and `public/cache/rich-authenticated/*`, then rerun build.";
+    return "Run `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`), commit `data/cache/rich-authenticated-cache.json` and `public/cache/rich-authenticated/*`, then rerun build.";
   }
 
   if (status === "failed") {
@@ -368,6 +368,7 @@ const printBlockingDiagnostics = (
   }
 
   console.error("Suggested commands:");
+  console.error("  - First-time authenticated cache setup: npm run setup:rich-auth");
   console.error("  - Re-run diagnostics: npm run enrich:rich:strict");
   console.error(
     `  - Temporary bypass (local/emergency only): ${ENRICHMENT_BYPASS_ENV}=1 npm run build`
@@ -482,7 +483,7 @@ const run = async () => {
           durationMs: 0,
           message: `Authenticated extractor '${authenticatedExtractorId}' is not defined in ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}.`,
           remediation:
-            "Fix links[].enrichment.authenticatedExtractor or add the extractor to the authenticated policy registry.",
+            "Fix links[].enrichment.authenticatedExtractor or add the extractor to the authenticated policy registry, then run npm run setup:rich-auth.",
           metadata,
           blocking: true,
           extractorId: authenticatedExtractorId,
@@ -511,7 +512,7 @@ const run = async () => {
           durationMs: 0,
           message: `Authenticated extractor '${authenticatedExtractorId}' is disabled in policy.`,
           remediation:
-            "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove it from this link configuration.",
+            "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove it from this link configuration, then run npm run setup:rich-auth.",
           metadata,
           blocking: true,
           extractorId: authenticatedExtractorId,
@@ -542,7 +543,7 @@ const run = async () => {
           message: `Link URL host does not match authenticated extractor '${authenticatedExtractorId}' policy domains.`,
           remediation: `Allowed domains: ${extractor.domains.join(
             ", "
-          )}. Fix links[].enrichment.authenticatedExtractor or link URL.`,
+          )}. Fix links[].enrichment.authenticatedExtractor or link URL, then run npm run setup:rich-auth.`,
           metadata,
           blocking: true,
           extractorId: authenticatedExtractorId,
@@ -624,7 +625,7 @@ const run = async () => {
           ? "Using authenticated cache metadata (stale warning threshold exceeded)."
           : "Using authenticated cache metadata.",
         remediation: staleCache
-          ? `Refresh cache with \`npm run auth:rich:sync -- --only-link ${link.id}\`.`
+          ? `Refresh cache with \`npm run setup:rich-auth\` (or \`npm run auth:rich:sync -- --only-link ${link.id}\`).`
           : remediationFor("fetched", reason),
         metadata,
         blocking: false,
@@ -784,6 +785,9 @@ const run = async () => {
   });
 
   const blockingEntries = report.entries.filter((entry) => entry.blocking === true);
+  const hasAuthenticatedCacheBlockingEntries = blockingEntries.some(
+    (entry) => entry.reason === "authenticated_cache_missing"
+  );
 
   console.log("OpenLinks rich enrichment run");
   console.log(`Links processed: ${report.summary.total}`);
@@ -832,6 +836,13 @@ const run = async () => {
   if (config.bypassActive && blockingEntries.length > 0) {
     console.warn(
       `Warning: ${blockingEntries.length} blocking enrichment issue(s) were detected but bypassed due to ${ENRICHMENT_BYPASS_ENV}=1.`
+    );
+  }
+
+  if (!config.bypassActive && hasAuthenticatedCacheBlockingEntries) {
+    console.error("");
+    console.error(
+      "Authenticated rich cache setup is required for one or more configured extractors. Run `npm run setup:rich-auth`, commit cache/assets, then rerun build."
     );
   }
 

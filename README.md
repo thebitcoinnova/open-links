@@ -79,6 +79,12 @@ cd open-links
 npm install
 ```
 
+If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
+
+```bash
+npm run setup:rich-auth
+```
+
 ### 5) Update your data
 
 Edit these files:
@@ -168,7 +174,9 @@ High-signal deployment checks:
 - `npm run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
 - `npm run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
 - `npm run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
+- `npm run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
 - `npm run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
+- `npm run auth:extractor:new -- --id <id> --domains <csv> --summary "<summary>"` - scaffold a new authenticated extractor plugin + policy + registry wiring.
 - `npm run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
 - `npm run dev` - start local dev server (predev runs strict enrichment and fails on blocking enrichment policy issues).
 - `npm run validate:data` - schema + policy checks (standard mode).
@@ -241,7 +249,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - Check `site.ui.richCards.enrichment` policy (`failureMode`, `failOn`, `allowManualMetadataFallback`) in `data/site.json`.
 - If rich-card images look clipped, set `site.ui.richCards.imageFit=contain` (or per-link override with `links[].metadata.imageFit`).
 - If a blocked domain must be tested anyway, set explicit override on that link: `links[].enrichment.allowKnownBlocker=true`.
-- If `authenticated_cache_missing` is reported, run `npm run auth:rich:sync -- --only-link <link-id>` and commit cache manifest/assets.
+- If `authenticated_cache_missing` is reported, run `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`) and commit cache manifest/assets.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
 - Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build`.
 - Force-refresh avatar cache when needed: `npm run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
@@ -264,7 +272,9 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [Rich Metadata Fetch Blockers](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-metadata-fetch-blockers.md)
 - [Rich Enrichment Blockers Registry](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-enrichment-blockers-registry.md)
 - [Authenticated Rich Extractors](https://raw.githubusercontent.com/pRizz/open-links/main/docs/authenticated-rich-extractors.md)
+- [Create New Rich Content Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/create-new-rich-content-extractor.md)
 - [LinkedIn Authenticated Metadata PoC](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linkedin-authenticated-metadata-poc.md)
+- Extractor authoring skill: `skills/create-new-rich-content-extractor/SKILL.md`
 - [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md)
 - [Theming and Layout Extensibility](https://raw.githubusercontent.com/pRizz/open-links/main/docs/theming-and-layouts.md)
 - [Deployment Operations Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment.md)
