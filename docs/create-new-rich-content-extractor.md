@@ -49,6 +49,11 @@ Implement both functions:
 - `ensureSession(context)`
 - `extract(context)`
 
+Prefer shared helpers for new extractors:
+
+- `scripts/authenticated-extractors/browser-session.ts`
+- `scripts/authenticated-extractors/auth-flow-runtime.ts`
+
 ### `ensureSession` requirements
 
 - must support headed local flow when auth/session missing
@@ -56,6 +61,47 @@ Implement both functions:
 - must continue automatically when authenticated
 - must timeout with actionable diagnostics
 - must not require build-time interactive flow (`build` remains non-interactive)
+
+### Generic Auth-State Taxonomy (Required)
+
+New extractors must classify each inspected screen into one of:
+
+- `login`
+- `mfa_challenge`
+- `post_auth_consent`
+- `authenticated`
+- `blocked`
+- `unknown`
+
+These states power transition logs, operator prompts, and timeout diagnostics.
+
+### Action Safety Model (Required)
+
+For actionable consent screens (for example trust-device prompts):
+
+1. Propose action candidates with:
+   - `actionId`
+   - `label`
+   - `kind`
+   - `risk`
+   - `confidence`
+2. Require explicit operator confirmation before any click.
+3. Record proposed/executed/declined actions in diagnostics artifacts.
+4. Never auto-click high-risk actions.
+5. In non-interactive mode, fail with actionable error if action confirmation is required.
+
+### Unknown-State Handling (Required)
+
+When state is `unknown`:
+
+1. Pause and prompt user to continue waiting or abort.
+2. If non-interactive, fail immediately with clear remediation.
+3. Include minimal metadata in diagnostics:
+   - state
+   - URL host/path
+   - short title
+   - signal labels
+   - action labels (if any)
 
 ### `extract` requirements
 
@@ -77,6 +123,7 @@ Implement both functions:
   - selector profile
   - placeholder signals
   - captured URL.
+- Keep diagnostics metadata-only; do not persist raw HTML/body dumps to tracked files.
 
 ## Step 5: Configure Links and Capture Cache
 
@@ -96,6 +143,10 @@ If debugging LinkedIn-specific auth/session behavior, use:
 - `npm run linkedin:debug:login`
 - `npm run linkedin:debug:validate`
 - `npm run linkedin:debug:validate:cookie-bridge`
+
+Generic auth-flow assistance for any extractor:
+
+- `npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url>`
 
 ## Step 6: Validate and Build
 
@@ -123,6 +174,8 @@ Include:
 - known limitations
 - remediation and operator workflow
 - any extractor-specific caveats.
+- auth transition checkpoints (for example MFA reached, trust-device prompt reached)
+- action decisions (proposed/executed/declined)
 
 ## Step 8: Share Back (Recommended)
 

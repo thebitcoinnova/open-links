@@ -21,6 +21,7 @@
     "linkedin:debug:login": "tsx scripts/oneoff/linkedin-login-session.ts",
     "linkedin:debug:validate": "tsx scripts/oneoff/linkedin-metadata-validate.ts",
     "linkedin:debug:validate:cookie-bridge": "tsx scripts/oneoff/linkedin-metadata-validate.ts --cookie-bridge-check",
+    "auth:flow:assist": "tsx scripts/oneoff/auth-flow-assist.ts",
     "auth:rich:sync": "tsx scripts/sync-authenticated-rich-cache.ts",
     "auth:rich:clear": "tsx scripts/clear-authenticated-rich-cache.ts",
     "setup:rich-auth": "tsx scripts/sync-authenticated-rich-cache.ts --only-missing",

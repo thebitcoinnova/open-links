@@ -17,6 +17,7 @@ import {
   getAuthenticatedExtractorPlugin,
   validateRegisteredExtractorsAgainstPolicy
 } from "./authenticated-extractors/registry";
+import type { AuthFlowSessionReport } from "./authenticated-extractors/types";
 
 interface LinkInput {
   id: string;
@@ -56,6 +57,7 @@ interface SessionArtifact {
   extractorId: string;
   verified: boolean;
   details?: string;
+  report?: AuthFlowSessionReport;
 }
 
 interface CaptureArtifact {
@@ -325,7 +327,8 @@ const run = async () => {
       sessionChecks.push({
         extractorId,
         verified: sessionResult.verified,
-        details: sessionResult.details
+        details: sessionResult.details,
+        report: sessionResult.report
       });
 
       if (!sessionResult.verified) {

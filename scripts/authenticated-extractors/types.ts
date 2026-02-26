@@ -2,6 +2,14 @@ import type { EnrichmentMetadata } from "../enrichment/types";
 
 export type AuthenticatedExtractorStatus = "active" | "experimental" | "disabled";
 export type AuthenticatedExtractorMethod = "manual_browser_session";
+export type AuthFlowState =
+  | "login"
+  | "mfa_challenge"
+  | "post_auth_consent"
+  | "authenticated"
+  | "blocked"
+  | "unknown";
+export type AuthFlowActionRisk = "low" | "medium" | "high";
 
 export interface AuthenticatedExtractorPolicyEntry {
   id: string;
@@ -61,6 +69,47 @@ export interface AuthenticatedCacheRegistry {
   entries: Record<string, AuthenticatedCacheEntry>;
 }
 
+export interface AuthFlowActionCandidate {
+  actionId: string;
+  label: string;
+  kind: string;
+  risk: AuthFlowActionRisk;
+  confidence: number;
+  details?: string;
+}
+
+export interface AuthFlowSnapshot {
+  timestamp: string;
+  state: AuthFlowState;
+  currentUrl?: string;
+  title?: string;
+  signals: string[];
+  actionCandidates: AuthFlowActionCandidate[];
+}
+
+export interface AuthFlowTransition {
+  timestamp: string;
+  state: AuthFlowState;
+  host?: string;
+  path?: string;
+  title?: string;
+  signals: string[];
+  actionLabels: string[];
+}
+
+export interface AuthFlowSessionReport {
+  startedAt: string;
+  completedAt: string;
+  timedOut: boolean;
+  finalState: AuthFlowState;
+  finalUrl?: string;
+  transitions: AuthFlowTransition[];
+  actionsProposed: string[];
+  actionsExecuted: string[];
+  actionsDeclined: string[];
+  heartbeats: number;
+}
+
 export interface ResolvedAuthenticatedCacheEntry {
   cacheKey: string;
   entry: AuthenticatedCacheEntry;
@@ -95,6 +144,7 @@ export interface AuthenticatedExtractorExtractResult {
 export interface AuthenticatedExtractorEnsureSessionResult {
   verified: boolean;
   details?: string;
+  report?: AuthFlowSessionReport;
 }
 
 export interface AuthenticatedExtractorPlugin {

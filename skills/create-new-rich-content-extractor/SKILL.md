@@ -13,6 +13,7 @@ Use this skill when a site blocks direct rich metadata fetch and needs authentic
 2. Keep build/dev fail-fast and non-interactive.
 3. Produce committed cache + assets that pass validation/build.
 4. Leave complete timestamped documentation.
+5. Enforce explicit transition monitoring and ask-first action confirmation during auth flows.
 
 ## Inputs to collect
 
@@ -34,20 +35,45 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
 ```
 
 3. Implement plugin in `scripts/authenticated-extractors/plugins/<extractor-id>.ts`.
-   - Implement `ensureSession` with autonomous login/MFA wait.
+   - Use shared auth runtime (`scripts/authenticated-extractors/auth-flow-runtime.ts`) and browser session helper (`scripts/authenticated-extractors/browser-session.ts`) when possible.
+   - Implement `ensureSession` with transition monitoring + ask-first action confirmation.
    - Implement `extract` with metadata quality checks and local asset download.
 
-4. Configure links.
+4. Implement mandatory auth-state loop behavior.
+   - Required state taxonomy:
+     - `login`
+     - `mfa_challenge`
+     - `post_auth_consent`
+     - `authenticated`
+     - `blocked`
+     - `unknown`
+   - Emit transition logs when state signature changes.
+   - Emit heartbeat logs while unchanged.
+   - For actionable consent screens (for example "Trust this device"):
+     - propose candidate action(s),
+     - ask user for explicit confirmation before click,
+     - log proposed/executed/declined actions.
+   - For unknown states:
+     - pause and prompt user to continue waiting or abort,
+     - fail with actionable diagnostics when non-interactive.
+
+5. Configure links.
    - Set `links[].enrichment.authenticatedExtractor`.
    - Optionally set `authenticatedCacheKey`.
 
-5. Capture cache.
+6. (Optional but recommended) run generic auth-flow helper.
+
+```bash
+npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url>
+```
+
+7. Capture cache.
 
 ```bash
 npm run setup:rich-auth
 ```
 
-6. Validate.
+8. Validate.
 
 ```bash
 npm run validate:data
@@ -63,13 +89,35 @@ npm run linkedin:debug:login
 npm run linkedin:debug:validate
 ```
 
-7. Update docs.
+9. Update docs.
    - `docs/authenticated-rich-extractors.md`
    - `docs/create-new-rich-content-extractor.md`
    - site-specific debug/runbook docs
 
-8. Share back (recommended).
+10. Share back (recommended).
    - If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.
+
+## Required Prompt Language (Auth Actions)
+
+When the flow detects an actionable consent screen, use this confirmation format:
+
+- `Action candidate '<label>' detected (risk=<risk>, confidence=<0-1>). Execute now? [y/N]`
+
+When the flow reaches an unknown screen:
+
+- `Unknown state detected (<state>). Continue waiting? [y=continue / n=abort]`
+
+Do not auto-click consent actions without explicit confirmation.
+
+## Required Blocker Log Format (Auth Transitions)
+
+For each meaningful auth-run update in `docs/rich-metadata-fetch-blockers.md`, record:
+
+- UTC timestamp
+- command executed
+- observed state transition or checkpoint (for example MFA challenge reached)
+- action decision (proposed/executed/declined)
+- outcome/remediation
 
 ## Required Acceptance Gates
 
@@ -77,6 +125,7 @@ npm run linkedin:debug:validate
 - Cache manifest + assets committed.
 - Enrichment reason for extractor links is `authenticated_cache`.
 - No placeholder/authwall metadata in committed cache entries.
+- Transition/action diagnostics captured in gitignored auth-flow or sync artifacts.
 
 ## Stop Conditions
 

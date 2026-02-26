@@ -21,6 +21,7 @@ Build/dev remain non-interactive and do not auto-open browsers.
 Diagnostics artifacts (gitignored):
 
 - `output/playwright/auth-rich-sync/`
+- `output/playwright/auth-flow/`
 
 ## Link and Site Configuration
 
@@ -95,6 +96,22 @@ Behavior notes:
 - `--only-missing` skips valid cache entries.
 - `--only-missing --force` refreshes selected links even when cache is valid.
 
+## Generic Auth Flow Assist
+
+Reusable helper command for transition-driven auth debugging:
+
+```bash
+npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url>
+```
+
+Optional wait overrides:
+
+```bash
+npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url> --auth-timeout-ms 900000 --poll-ms 1500
+```
+
+The command delegates to extractor `ensureSession`, captures structured transition/action reports when available, and writes gitignored artifacts under `output/playwright/auth-flow/`.
+
 ## Clear Authenticated Cache
 
 Use `auth:rich:clear` when cache entries or assets should be reset before recapture.
@@ -139,6 +156,30 @@ Global bypass (local emergency use only):
 OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build
 ```
 
+## Generic Auth Flow Runtime
+
+New extractors should use shared auth-flow helpers:
+
+- `scripts/authenticated-extractors/browser-session.ts`
+- `scripts/authenticated-extractors/auth-flow-runtime.ts`
+
+Required auth-state taxonomy:
+
+- `login`
+- `mfa_challenge`
+- `post_auth_consent`
+- `authenticated`
+- `blocked`
+- `unknown`
+
+Runtime guarantees:
+
+- transition logs on state-signature changes
+- heartbeat logs while state is unchanged
+- ask-first confirmation for action candidates (per action)
+- unknown-state pause + operator choice (continue/abort)
+- actionable failure in non-interactive mode when user confirmation is required
+
 ## LinkedIn Auth Session Behavior
 
 LinkedIn extractor session handling is autonomous after browser launch:
@@ -181,10 +222,13 @@ The Facebook extractor (`facebook-auth-browser`) uses an authenticated browser-s
 
 - opens the target profile and verifies authenticated session state
 - requires local interactive login when session cookies are missing or expired
+- classifies login, MFA/challenge, trust-device consent, blocked, and authenticated states
+- proposes trust-device action candidate(s) and asks for explicit confirmation before click
+- pauses and prompts on unknown states
 - extracts title/description/profile-image candidates from authenticated DOM content
-- rejects login-wall and content-unavailable placeholder states
+- rejects login-wall, challenge placeholders, and generic non-profile image assets
 - downloads the detected profile image with current browser cookies and writes a local cached asset
-- writes cache diagnostics including `identifier`, `loginRequired`, and captured URL/session context
+- writes cache diagnostics including state signals and captured URL/session context
 
 LinkedIn debug commands:
 
@@ -193,6 +237,7 @@ npm run linkedin:debug:bootstrap
 npm run linkedin:debug:login
 npm run linkedin:debug:validate
 npm run linkedin:debug:validate:cookie-bridge
+npm run auth:flow:assist -- --extractor facebook-auth-browser --url https://www.facebook.com/<profile>
 ```
 
 ## Local Auth Wait Controls

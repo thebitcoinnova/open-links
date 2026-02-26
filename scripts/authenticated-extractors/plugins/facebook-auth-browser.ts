@@ -3,11 +3,18 @@ import fs from "node:fs";
 import path from "node:path";
 import { stdin, stdout } from "node:process";
 import {
+  summarizeAuthFlowResult,
+  waitForAuthenticatedSession
+} from "../auth-flow-runtime";
+import {
   resolveAuthWaitSettings,
+  resolveBrowserSessionConfig,
   runAgentBrowserJson,
-  type SessionConfig
-} from "../../oneoff/linkedin-debug-common";
+  type BrowserSessionConfig
+} from "../browser-session";
 import type {
+  AuthFlowActionCandidate,
+  AuthFlowSnapshot,
   AuthenticatedExtractorEnsureSessionResult,
   AuthenticatedExtractorExtractContext,
   AuthenticatedExtractorExtractResult,
@@ -16,28 +23,22 @@ import type {
 } from "../types";
 
 const EXTRACTOR_ID = "facebook-auth-browser";
-const EXTRACTOR_VERSION = "2026-02-26.2";
-const SELECTOR_PROFILE = "facebook-profile-auth-v2";
+const EXTRACTOR_VERSION = "2026-02-26.3";
+const SELECTOR_PROFILE = "facebook-profile-auth-v3";
 const DEFAULT_FACEBOOK_AGENT_BROWSER_SESSION = "openlinks-facebook-auth";
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 const SHORT_VERIFY_TIMEOUT_MS = 8_000;
 
-interface FacebookSessionSnapshot {
-  verified: boolean;
-  loginRequired: boolean;
-  currentUrl?: string;
-  title?: string;
-  heading?: string;
-  imageUrl?: string;
-  metaImageUrl?: string;
-  placeholderSignals: string[];
-  bodySnippet?: string;
-}
-
 interface ResolvedProfileTarget {
   identifier: string;
   canonicalUrl: string;
+}
+
+interface FacebookInspection {
+  snapshot: AuthFlowSnapshot;
+  heading?: string;
+  imageUrl?: string;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -96,20 +97,11 @@ const requireInteractiveTerminal = () => {
   }
 };
 
-const resolveAgentConfig = (): SessionConfig => {
-  const session = process.env.AGENT_BROWSER_SESSION?.trim() || DEFAULT_FACEBOOK_AGENT_BROWSER_SESSION;
-  const sessionName = process.env.AGENT_BROWSER_SESSION_NAME?.trim() || session;
-  const providedKey = process.env.AGENT_BROWSER_ENCRYPTION_KEY?.trim() ?? "";
-  const encryptionKey = /^[a-fA-F0-9]{64}$/.test(providedKey)
-    ? providedKey
-    : "0000000000000000000000000000000000000000000000000000000000000000";
-
-  return {
-    session,
-    sessionName,
-    encryptionKey
-  };
-};
+const resolveAgentConfig = (): BrowserSessionConfig =>
+  resolveBrowserSessionConfig({
+    defaultSession: DEFAULT_FACEBOOK_AGENT_BROWSER_SESSION,
+    requireEncryptionKey: false
+  });
 
 const toCookieHeader = (value: unknown): string | undefined => {
   const cookies = Array.isArray(value)
@@ -213,14 +205,21 @@ const extractEvalPayload = (value: unknown): Record<string, unknown> | null => {
   return null;
 };
 
-const readFacebookSnapshot = (config: SessionConfig): FacebookSessionSnapshot => {
+const extractStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((item) => safeTrim(item))
+    .filter((item): item is string => Boolean(item));
+};
+
+const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<FacebookInspection> => {
   const evalResult = runAgentBrowserJson<unknown>(
     [
       "eval",
       `(() => {
         const normalize = (value) => (value || "").replace(/\\s+/g, " ").trim();
-        const lower = (value) => normalize(value).toLowerCase();
-
         const title = normalize(document.title || "");
         const currentUrl = window.location.href;
         const bodyText = normalize(document.body?.innerText || "");
@@ -264,7 +263,25 @@ const readFacebookSnapshot = (config: SessionConfig): FacebookSessionSnapshot =>
             return { src, alt, score };
           })
           .filter(Boolean)
-          .sort((left, right) => (right?.score || 0) - (left?.score || 0));
+          .sort((left, right) => (right?.score || 0) - (left?.score || 0))
+          .slice(0, 40);
+
+        const controls = Array.from(
+          document.querySelectorAll("button, [role='button'], input[type='submit'], input[type='button'], div[role='button']")
+        )
+          .map((node) => {
+            const text = normalize(
+              node.textContent ||
+                node.getAttribute("aria-label") ||
+                (node instanceof HTMLInputElement ? node.value : "")
+            );
+            if (!text) {
+              return null;
+            }
+            return text;
+          })
+          .filter(Boolean)
+          .slice(0, 80);
 
         return {
           title,
@@ -275,7 +292,8 @@ const readFacebookSnapshot = (config: SessionConfig): FacebookSessionSnapshot =>
           hasLoginForm,
           heading,
           metaImage,
-          imageCandidates
+          imageCandidates,
+          controls
         };
       })()`
     ],
@@ -289,6 +307,7 @@ const readFacebookSnapshot = (config: SessionConfig): FacebookSessionSnapshot =>
   const bodySnippet = safeTrim(payload?.bodySnippet);
   const heading = safeTrim(payload?.heading);
   const metaImageUrl = safeTrim(payload?.metaImage);
+  const controls = extractStringArray(payload?.controls);
 
   const imageCandidates = Array.isArray(payload?.imageCandidates) ? payload?.imageCandidates : [];
   const imageUrls: string[] = [];
@@ -305,39 +324,116 @@ const readFacebookSnapshot = (config: SessionConfig): FacebookSessionSnapshot =>
   const imageUrl =
     imageUrls.find((value) => isLikelyProfileImageUrl(value)) ??
     (isLikelyProfileImageUrl(metaImageUrl) ? metaImageUrl : undefined);
+  const lowerCombined = [
+    title ?? "",
+    bodySnippet ?? "",
+    currentUrl ?? "",
+    controls.join("\n")
+  ]
+    .join("\n")
+    .toLowerCase();
 
-  const lowerText = `${title ?? ""}\n${bodySnippet ?? ""}\n${currentUrl ?? ""}`.toLowerCase();
-  const loginRequired =
+  const hasLoginSignals =
     payload?.hasPasswordField === true ||
     payload?.hasEmailField === true ||
     payload?.hasLoginForm === true ||
-    /\/login|checkpoint|recover/i.test(currentUrl ?? "") ||
-    /log in|forgot account\?/i.test(lowerText);
+    /\/login|recover/i.test(currentUrl ?? "") ||
+    /log in|forgot account\?/i.test(lowerCombined);
+
+  const hasMfaSignals =
+    /\/checkpoint|\/two_factor|remember_browser\/login_approvals|approvals_code/i.test(
+      currentUrl ?? ""
+    ) ||
+    /two-factor|two factor|security code|authentication app|approve your login|enter the code/i.test(
+      lowerCombined
+    );
+
+  const hasTrustDeviceSignals =
+    /\/remember_browser/i.test(currentUrl ?? "") ||
+    /trust this device|remember browser|save browser|yes, trust/i.test(lowerCombined);
+
+  const hasBlockedSignals =
+    /temporarily blocked|account restricted|security check required/i.test(lowerCombined);
 
   const placeholderSignals = detectPlaceholderSignals(bodySnippet ?? "");
-  if (loginRequired) {
-    placeholderSignals.push("login_required");
+  const signals = [...placeholderSignals];
+  if (hasLoginSignals) {
+    signals.push("login_required");
+  }
+  if (hasMfaSignals) {
+    signals.push("mfa_challenge");
+  }
+  if (hasTrustDeviceSignals) {
+    signals.push("trust_device_prompt");
   }
   if (!imageUrl) {
-    placeholderSignals.push("profile_image_missing");
+    signals.push("profile_image_missing");
+  }
+  if (hasBlockedSignals) {
+    signals.push("blocked_state");
   }
 
-  const verified = !loginRequired && Boolean(imageUrl) && !placeholderSignals.includes("content_unavailable");
+  const actionCandidates: AuthFlowActionCandidate[] = [];
+  if (hasTrustDeviceSignals) {
+    const trustControl = controls.find((value) =>
+      /trust this device|trust device|save browser|remember browser|yes, trust/i.test(
+        value.toLowerCase()
+      )
+    );
+    actionCandidates.push({
+      actionId: "facebook.trust_device.confirm",
+      label: trustControl ?? "Trust this device",
+      kind: "click_button",
+      risk: "low",
+      confidence: trustControl ? 0.95 : 0.4,
+      details: trustControl
+        ? "Matched consent control text on trust-device screen."
+        : "Detected trust-device screen but no exact button match was found."
+    });
+  }
+
+  const hasAuthenticatedMarkers =
+    Boolean(heading) &&
+    Boolean(imageUrl) &&
+    !hasLoginSignals &&
+    !hasMfaSignals &&
+    !hasTrustDeviceSignals &&
+    !hasBlockedSignals;
+
+  const state = (() => {
+    if (hasBlockedSignals) {
+      return "blocked";
+    }
+    if (hasAuthenticatedMarkers) {
+      return "authenticated";
+    }
+    if (hasTrustDeviceSignals) {
+      return "post_auth_consent";
+    }
+    if (hasMfaSignals) {
+      return "mfa_challenge";
+    }
+    if (hasLoginSignals) {
+      return "login";
+    }
+    return "unknown";
+  })();
 
   return {
-    verified,
-    loginRequired,
-    currentUrl,
-    title,
+    snapshot: {
+      timestamp: new Date().toISOString(),
+      state,
+      currentUrl,
+      title,
+      signals: [...new Set(signals)],
+      actionCandidates
+    },
     heading,
-    imageUrl,
-    metaImageUrl,
-    placeholderSignals: [...new Set(placeholderSignals)],
-    bodySnippet
+    imageUrl
   };
 };
 
-const openFacebookTarget = (config: SessionConfig, sourceUrl: string, headed: boolean) => {
+const openFacebookTarget = (config: BrowserSessionConfig, sourceUrl: string, headed: boolean) => {
   runAgentBrowserJson(["open", sourceUrl], config, {
     extraArgs: headed ? ["--headed"] : [],
     allowFailure: true
@@ -345,27 +441,74 @@ const openFacebookTarget = (config: SessionConfig, sourceUrl: string, headed: bo
   runAgentBrowserJson(["wait", "1500"], config, { allowFailure: true });
 };
 
-const summarizeSnapshot = (snapshot: FacebookSessionSnapshot): string =>
-  [
-    `verified=${snapshot.verified ? "yes" : "no"}`,
-    `loginRequired=${snapshot.loginRequired ? "yes" : "no"}`,
-    `url=${snapshot.currentUrl ?? "unknown"}`,
-    `title=${snapshot.title ?? "unknown"}`,
-    `image=${snapshot.imageUrl ? "present" : "missing"}`,
-    `signals=${snapshot.placeholderSignals.join(",") || "none"}`
-  ].join("; ");
+const waitForMs = (config: BrowserSessionConfig, durationMs: number): Promise<void> => {
+  runAgentBrowserJson(["wait", String(Math.max(250, durationMs))], config, { allowFailure: true });
+  return Promise.resolve();
+};
 
-const verifySession = (
-  config: SessionConfig,
-  targetUrl: string
-): AuthenticatedExtractorEnsureSessionResult => {
-  openFacebookTarget(config, targetUrl, false);
-  const snapshot = readFacebookSnapshot(config);
-  runAgentBrowserJson(["close"], config, { allowFailure: true });
+const executeFacebookAction = async (
+  config: BrowserSessionConfig,
+  candidate: AuthFlowActionCandidate
+): Promise<{ success: boolean; details?: string }> => {
+  if (candidate.actionId !== "facebook.trust_device.confirm") {
+    return {
+      success: false,
+      details: `Unsupported action '${candidate.actionId}'.`
+    };
+  }
+
+  const result = runAgentBrowserJson<unknown>(
+    [
+      "eval",
+      `(() => {
+        const normalize = (value) => (value || "").replace(/\\s+/g, " ").trim();
+        const controls = Array.from(
+          document.querySelectorAll("button, [role='button'], input[type='submit'], input[type='button'], div[role='button']")
+        );
+        const matcher = /trust this device|trust device|save browser|remember browser|yes, trust/i;
+        const target = controls.find((node) => {
+          const text = normalize(
+            node.textContent ||
+              node.getAttribute("aria-label") ||
+              (node instanceof HTMLInputElement ? node.value : "")
+          );
+          return matcher.test(text);
+        });
+
+        if (!target) {
+          return {
+            clicked: false,
+            reason: "no_matching_control"
+          };
+        }
+
+        const label = normalize(
+          target.textContent ||
+            target.getAttribute("aria-label") ||
+            (target instanceof HTMLInputElement ? target.value : "")
+        );
+        target.click();
+        return {
+          clicked: true,
+          label
+        };
+      })()`
+    ],
+    config,
+    { allowFailure: true }
+  );
+
+  const payload = extractEvalPayload(result.response?.data);
+  if (payload?.clicked === true) {
+    return {
+      success: true,
+      details: `clicked '${safeTrim(payload.label) ?? "trust_device"}'`
+    };
+  }
 
   return {
-    verified: snapshot.verified,
-    details: summarizeSnapshot(snapshot)
+    success: false,
+    details: safeTrim(payload?.reason) ?? "no_matching_control"
   };
 };
 
@@ -411,7 +554,7 @@ const resolveProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
 };
 
 const downloadImageAsset = async (
-  config: SessionConfig,
+  config: BrowserSessionConfig,
   context: AuthenticatedExtractorExtractContext,
   sourceUrl: string
 ): Promise<{ path: string; sourceUrl: string; contentType: string; bytes: number; sha256: string }> => {
@@ -466,13 +609,42 @@ const downloadImageAsset = async (
   };
 };
 
+const verifySession = async (
+  config: BrowserSessionConfig,
+  targetUrl: string
+): Promise<AuthenticatedExtractorEnsureSessionResult> => {
+  openFacebookTarget(config, targetUrl, false);
+
+  try {
+    const settings = resolveAuthWaitSettings();
+    const result = await waitForAuthenticatedSession({
+      timeoutMs: Math.min(settings.timeoutMs, SHORT_VERIFY_TIMEOUT_MS),
+      pollMs: Math.min(settings.pollMs, 1_000),
+      heartbeatMs: 4_000,
+      logPrefix: `[${EXTRACTOR_ID}]`,
+      promptOnActions: false,
+      pauseOnUnknown: false,
+      inspect: async () => (await inspectFacebookFlow(config)).snapshot,
+      wait: async (durationMs) => waitForMs(config, durationMs)
+    });
+
+    return {
+      verified: result.verified,
+      details: summarizeAuthFlowResult(result),
+      report: result.report
+    };
+  } finally {
+    runAgentBrowserJson(["close"], config, { allowFailure: true });
+  }
+};
+
 const ensureSession = async (
   context: AuthenticatedExtractorSessionContext
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
   const target = resolveProfileTarget(context.targetUrl);
   const config = resolveAgentConfig();
 
-  const initialCheck = verifySession(config, target.canonicalUrl);
+  const initialCheck = await verifySession(config, target.canonicalUrl);
   if (initialCheck.verified) {
     return initialCheck;
   }
@@ -483,38 +655,37 @@ const ensureSession = async (
   console.log("");
   console.log(`[${context.extractorId}] Facebook login required.`);
   console.log(
-    `[${context.extractorId}] A headed browser will open. Log in to Facebook, open the target profile, and leave the tab on the profile page.`
+    `[${context.extractorId}] A headed browser will open. Complete login and any MFA/challenge screens.`
+  );
+  console.log(
+    `[${context.extractorId}] Consent actions (for example trust-device) are ask-first and require your confirmation.`
   );
   console.log(
     `[${context.extractorId}] Waiting up to ${settings.timeoutMs}ms (poll ${settings.pollMs}ms).`
   );
 
   openFacebookTarget(config, target.canonicalUrl, true);
-
-  const started = Date.now();
-  let latest = readFacebookSnapshot(config);
-
-  while (Date.now() - started <= settings.timeoutMs) {
-    if (latest.verified) {
-      runAgentBrowserJson(["close"], config, { allowFailure: true });
-      return {
-        verified: true,
-        details: summarizeSnapshot(latest)
-      };
-    }
-
-    runAgentBrowserJson(["wait", String(Math.min(settings.pollMs, 2_000))], config, {
-      allowFailure: true
+  try {
+    const result = await waitForAuthenticatedSession({
+      timeoutMs: settings.timeoutMs,
+      pollMs: settings.pollMs,
+      heartbeatMs: 15_000,
+      logPrefix: `[${context.extractorId}]`,
+      promptOnActions: true,
+      pauseOnUnknown: true,
+      inspect: async () => (await inspectFacebookFlow(config)).snapshot,
+      wait: async (durationMs) => waitForMs(config, durationMs),
+      executeAction: async (candidate) => executeFacebookAction(config, candidate)
     });
-    latest = readFacebookSnapshot(config);
+
+    return {
+      verified: result.verified,
+      details: summarizeAuthFlowResult(result),
+      report: result.report
+    };
+  } finally {
+    runAgentBrowserJson(["close"], config, { allowFailure: true });
   }
-
-  runAgentBrowserJson(["close"], config, { allowFailure: true });
-
-  return {
-    verified: false,
-    details: `timed_out; ${summarizeSnapshot(latest)}`
-  };
 };
 
 const extract = async (
@@ -523,7 +694,7 @@ const extract = async (
   const config = resolveAgentConfig();
   const target = resolveProfileTarget(context.sourceUrl);
 
-  const preCheck = verifySession(config, target.canonicalUrl);
+  const preCheck = await verifySession(config, target.canonicalUrl);
   if (!preCheck.verified) {
     const ensured = await ensureSession({
       extractorId: context.extractorId,
@@ -535,52 +706,55 @@ const extract = async (
   }
 
   openFacebookTarget(config, target.canonicalUrl, false);
-  const snapshot = readFacebookSnapshot(config);
-  if (!snapshot.verified || !snapshot.imageUrl) {
-    runAgentBrowserJson(["close"], config, { allowFailure: true });
-    throw new Error(
-      `Facebook extractor could not capture authenticated profile image. ${summarizeSnapshot(snapshot)}`
-    );
-  }
-
-  const imageAsset = await downloadImageAsset(config, context, snapshot.imageUrl);
-  runAgentBrowserJson(["close"], config, { allowFailure: true });
-
-  const displayName = snapshot.heading ?? target.identifier;
-  const title = `${decodeHtmlEntities(displayName)} on Facebook`;
-  const description = `Profile and updates from ${decodeHtmlEntities(displayName)} on Facebook.`;
-
-  return {
-    capturedAt: new Date().toISOString(),
-    metadata: {
-      title,
-      description,
-      image: imageAsset.path,
-      sourceLabel: resolveSourceLabel(context.sourceUrl)
-    },
-    assets: {
-      image: {
-        path: imageAsset.path,
-        sourceUrl: imageAsset.sourceUrl,
-        contentType: imageAsset.contentType,
-        bytes: imageAsset.bytes,
-        sha256: imageAsset.sha256
-      }
-    },
-    diagnostics: {
-      extractorVersion: EXTRACTOR_VERSION,
-      selectorProfile: SELECTOR_PROFILE,
-      placeholderSignals: snapshot.placeholderSignals,
-      capturedFromUrl: snapshot.currentUrl ?? target.canonicalUrl,
-      notes: [
-        `cacheKey=${context.cacheKey}`,
-        `identifier=${target.identifier}`,
-        `loginRequired=${snapshot.loginRequired ? "yes" : "no"}`,
-        `session=${config.session}`,
-        `sessionName=${config.sessionName}`
-      ]
+  try {
+    const inspection = await inspectFacebookFlow(config);
+    if (inspection.snapshot.state !== "authenticated" || !inspection.imageUrl) {
+      throw new Error(
+        `Facebook extractor could not capture authenticated profile image. state=${inspection.snapshot.state}; signals=${inspection.snapshot.signals.join(
+          ","
+        ) || "none"}; url=${inspection.snapshot.currentUrl ?? "unknown"}`
+      );
     }
-  };
+
+    const imageAsset = await downloadImageAsset(config, context, inspection.imageUrl);
+    const displayName = inspection.heading ?? target.identifier;
+    const title = `${decodeHtmlEntities(displayName)} on Facebook`;
+    const description = `Profile and updates from ${decodeHtmlEntities(displayName)} on Facebook.`;
+
+    return {
+      capturedAt: new Date().toISOString(),
+      metadata: {
+        title,
+        description,
+        image: imageAsset.path,
+        sourceLabel: resolveSourceLabel(context.sourceUrl)
+      },
+      assets: {
+        image: {
+          path: imageAsset.path,
+          sourceUrl: imageAsset.sourceUrl,
+          contentType: imageAsset.contentType,
+          bytes: imageAsset.bytes,
+          sha256: imageAsset.sha256
+        }
+      },
+      diagnostics: {
+        extractorVersion: EXTRACTOR_VERSION,
+        selectorProfile: SELECTOR_PROFILE,
+        placeholderSignals: inspection.snapshot.signals,
+        capturedFromUrl: inspection.snapshot.currentUrl ?? target.canonicalUrl,
+        notes: [
+          `cacheKey=${context.cacheKey}`,
+          `identifier=${target.identifier}`,
+          `authState=${inspection.snapshot.state}`,
+          `session=${config.session}`,
+          `sessionName=${config.sessionName}`
+        ]
+      }
+    };
+  } finally {
+    runAgentBrowserJson(["close"], config, { allowFailure: true });
+  }
 };
 
 export const facebookAuthBrowserExtractor: AuthenticatedExtractorPlugin = {
