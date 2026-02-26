@@ -124,7 +124,7 @@ Operator setup command:
 - Link id: `facebook`
 - URL: `https://www.facebook.com/peter.ryszkiewicz`
 - Latest decision: Use authenticated extractor cache (`links[].enrichment.authenticatedExtractor=facebook-auth-browser`).
-- Reason: Direct fetch reproducibly returns `metadata_partial` and misses required rich-card image metadata for validation.
+- Reason: Direct fetch reproducibly returns `metadata_partial` and misses required rich-card image metadata; deterministic fallback capture produced a generic Facebook icon instead of profile image, so extractor now requires authenticated DOM capture.
 
 Operator setup command:
 
@@ -138,6 +138,11 @@ Operator setup command:
 | `2026-02-26T10:06:49Z` | `npm run enrich:rich:strict` (repro run) | `facebook` returned `metadata_partial` (`HTTP 200`) again; reproducible second signal |
 | `2026-02-26T10:06:07Z` | `npm run validate:data` | Blocking validation error: `$.links[4].metadata.image` missing for rich-card rendering |
 | `2026-02-26T10:10:04Z` | `npm run auth:rich:sync -- --only-link facebook --force` | Cache entry captured (`cacheKey=facebook`) and local asset committed under `public/cache/rich-authenticated/` |
+| `2026-02-26T10:19:02Z` | `npm run auth:rich:sync -- --only-link facebook --force` with first auth-browser implementation | Session init failed due LinkedIn debug helper dependency requiring `AGENT_BROWSER_ENCRYPTION_KEY`; not acceptable for Facebook flow |
+| `2026-02-26T10:20:09Z` | `npm run auth:rich:sync -- --only-link facebook --force` after config patch | Session init now correctly prompts local interactive login (`Interactive terminal is required for Facebook login`) |
+| `2026-02-26T10:22:13Z` | `OPENLINKS_AUTH_SESSION_TIMEOUT_MS=5000 npm run auth:rich:sync -- --only-link facebook --force` in interactive mode | Session reached auth polling and timed out as expected when not logged in; signals included `content_unavailable`, `login_wall`, `login_required`, `profile_image_missing` |
+| `2026-02-26T10:34:33Z` | `npm run auth:rich:sync -- --only-link facebook --force` interactive run | Reached MFA challenge state in headed login flow; waiting for verification completion before authenticated profile capture |
+| `2026-02-26T10:37:36Z` | `npm run auth:rich:sync -- --only-link facebook --force` after MFA + trust-device approval | Capture succeeded with authenticated profile image (`sourceUrl` on `scontent-ord5-2.xx.fbcdn.net`), cache key `facebook` refreshed with extractor `facebook-profile-auth-v2` |
 
 ## Recommended Handling for Blocked Domains
 

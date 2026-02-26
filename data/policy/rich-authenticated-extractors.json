@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-extractors.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-26T10:10:18Z",
+  "updatedAt": "2026-02-26T10:22:30Z",
   "extractors": [
     {
       "id": "linkedin-auth-browser",
@@ -62,8 +62,8 @@
         "facebook.com"
       ],
       "matchSubdomains": true,
-      "summary": "Uses deterministic Facebook profile URL parsing and local avatar fallback cache when direct metadata is partial or missing.",
-      "loginInstructions": "No interactive login is currently required; extractor captures deterministic metadata and caches a local Facebook image asset.",
+      "summary": "Uses an authenticated browser session to capture Facebook profile metadata and profile image assets from the real profile page.",
+      "loginInstructions": "If not already authenticated, run sync in a local interactive terminal, sign into Facebook in the opened browser, navigate to the target profile, and wait for session verification to complete.",
       "docs": [
         "docs/authenticated-rich-extractors.md",
         "docs/create-new-rich-content-extractor.md",

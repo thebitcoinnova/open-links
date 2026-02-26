@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-cache.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-26T10:10:04.308Z",
+  "updatedAt": "2026-02-26T10:37:36.783Z",
   "entries": {
     "linkedin": {
       "extractorId": "linkedin-auth-browser",
@@ -102,31 +102,33 @@
       "extractorId": "facebook-auth-browser",
       "linkId": "facebook",
       "sourceUrl": "https://www.facebook.com/peter.ryszkiewicz",
-      "capturedAt": "2026-02-26T10:10:04.308Z",
+      "capturedAt": "2026-02-26T10:37:36.783Z",
       "metadata": {
-        "title": "peter.ryszkiewicz on Facebook",
-        "description": "Profile and updates from peter.ryszkiewicz on Facebook.",
-        "image": "cache/rich-authenticated/a3c4f14c54929f56a44c8d7a551ad1b40c3f9fa8369da3a7a2b218f9d9831597.png",
+        "title": "Peter Ryszkiewicz on Facebook",
+        "description": "Profile and updates from Peter Ryszkiewicz on Facebook.",
+        "image": "cache/rich-authenticated/8645603267e2c0b6be1270b0bd8f64a6ca991108d127ba152079bb6a24764661.jpg",
         "sourceLabel": "facebook.com"
       },
       "assets": {
         "image": {
-          "path": "cache/rich-authenticated/a3c4f14c54929f56a44c8d7a551ad1b40c3f9fa8369da3a7a2b218f9d9831597.png",
-          "sourceUrl": "https://www.facebook.com/images/fb_icon_325x325.png",
-          "contentType": "image/png",
-          "bytes": 2998,
-          "sha256": "a3c4f14c54929f56a44c8d7a551ad1b40c3f9fa8369da3a7a2b218f9d9831597"
+          "path": "cache/rich-authenticated/8645603267e2c0b6be1270b0bd8f64a6ca991108d127ba152079bb6a24764661.jpg",
+          "sourceUrl": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/508208280_10237911416433412_7086145684614844393_n.jpg?stp=cp6_dst-jpg_fb50_s320x320_tt6&_nc_cat=105&ccb=1-7&_nc_sid=2a1932&_nc_ohc=KNVZ6IorB10Q7kNvwGGhVOY&_nc_oc=AdmhEWklbktRBgV5T_33NcRB07ymopE6UM2gXE415sdS7S04wduZ9UlYDQKNwThizcE&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=ZS2C09n_3Zh4oywu152Yxg&oh=00_AfsuyTk516XXQM5Hc2nSyoX4NyUz0hR6H9R0qALD8PauzA&oe=69A5FB25",
+          "contentType": "image/jpeg",
+          "bytes": 3153,
+          "sha256": "8645603267e2c0b6be1270b0bd8f64a6ca991108d127ba152079bb6a24764661"
         }
       },
       "diagnostics": {
-        "extractorVersion": "2026-02-26.1",
-        "selectorProfile": "facebook-profile-fallback-v1",
+        "extractorVersion": "2026-02-26.2",
+        "selectorProfile": "facebook-profile-auth-v2",
         "placeholderSignals": [],
         "capturedFromUrl": "https://www.facebook.com/peter.ryszkiewicz",
         "notes": [
           "cacheKey=facebook",
           "identifier=peter.ryszkiewicz",
-          "profileFetchStatus=400"
+          "loginRequired=no",
+          "session=openlinks-facebook-auth",
+          "sessionName=openlinks-facebook-auth"
         ]
       }
     }

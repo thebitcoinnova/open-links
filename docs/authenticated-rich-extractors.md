@@ -36,7 +36,7 @@ Current extractor ids in this repository:
 - `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session)
 - `medium-auth-browser` (Medium profile extraction via RSS feed capture path)
 - `x-auth-browser` (X profile extraction via oEmbed + avatar capture path)
-- `facebook-auth-browser` (Facebook profile extraction via deterministic metadata + cached local image fallback)
+- `facebook-auth-browser` (Facebook profile extraction via authenticated browser session + profile image capture)
 
 ### Site-level
 
@@ -177,15 +177,14 @@ No interactive login is currently required for the X extractor path.
 
 ## Facebook Extractor Behavior
 
-The Facebook extractor (`facebook-auth-browser`) uses a deterministic profile + image fallback path:
+The Facebook extractor (`facebook-auth-browser`) uses an authenticated browser-session path:
 
-- normalizes profile identifier from `facebook.com/<identifier>` URLs
-- captures deterministic metadata title/description from the resolved identifier
-- attempts profile page fetch for diagnostics context (without requiring interactive login)
-- downloads local image asset from stable Facebook-hosted image endpoints
-- writes cache diagnostics including `identifier` and observed profile fetch status
-
-No interactive login is currently required for the Facebook extractor path.
+- opens the target profile and verifies authenticated session state
+- requires local interactive login when session cookies are missing or expired
+- extracts title/description/profile-image candidates from authenticated DOM content
+- rejects login-wall and content-unavailable placeholder states
+- downloads the detected profile image with current browser cookies and writes a local cached asset
+- writes cache diagnostics including `identifier`, `loginRequired`, and captured URL/session context
 
 LinkedIn debug commands:
 
@@ -198,7 +197,7 @@ npm run linkedin:debug:validate:cookie-bridge
 
 ## Local Auth Wait Controls
 
-For LinkedIn one-off scripts and extractor auth waiting:
+For interactive authenticated extractor waiting (LinkedIn/Facebook):
 
 - `OPENLINKS_AUTH_SESSION_TIMEOUT_MS` (default `600000`)
 - `OPENLINKS_AUTH_SESSION_POLL_MS` (default `2000`)
