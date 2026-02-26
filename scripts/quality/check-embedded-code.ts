@@ -13,6 +13,7 @@ interface Finding {
 const ROOT = process.cwd();
 const SCRIPTS_DIR = path.join(ROOT, "scripts");
 const EMBEDDED_CODE_DIR = path.join(SCRIPTS_DIR, "embedded-code");
+const TEMPLATE_TEXT_SUFFIX = ".template.ts.txt";
 
 const INLINE_EVAL_LITERAL_PATTERN =
   /runAgentBrowserJson(?:<[^>]+>)?\s*\(\s*\[\s*["']eval["']\s*,\s*(`(?:[\s\S]*?)`|"(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*')/g;
@@ -48,6 +49,28 @@ const listScriptTypeScriptFiles = (directory: string): string[] => {
     }
 
     if (absolutePath.endsWith(".ts") || absolutePath.endsWith(".tsx")) {
+      results.push(absolutePath);
+    }
+  }
+
+  return results;
+};
+
+const listFilesBySuffix = (directory: string, suffix: string): string[] => {
+  const results: string[] = [];
+  const entries = fs.readdirSync(directory, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const absolutePath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === "node_modules" || entry.name === ".git") {
+        continue;
+      }
+      results.push(...listFilesBySuffix(absolutePath, suffix));
+      continue;
+    }
+
+    if (entry.isFile() && absolutePath.endsWith(suffix)) {
       results.push(absolutePath);
     }
   }
@@ -97,7 +120,7 @@ const checkLargeInlineTemplates = (absolutePath: string, content: string): Findi
       line,
       column,
       message:
-        "Large inline scaffold template detected. Move template into scripts/embedded-code/templates/ and render through embedded-code-loader."
+        "Large inline scaffold template detected. Move template into scripts/authenticated-extractors/plugins/*.template.ts and render via shared token replacement."
     });
   }
 
@@ -112,6 +135,17 @@ const run = (): void => {
     const content = fs.readFileSync(absolutePath, "utf8");
     findings.push(...checkInlineEvalLiterals(absolutePath, content));
     findings.push(...checkLargeInlineTemplates(absolutePath, content));
+  }
+
+  for (const legacyTemplatePath of listFilesBySuffix(SCRIPTS_DIR, TEMPLATE_TEXT_SUFFIX)) {
+    findings.push({
+      rule: "legacy_template_extension",
+      file: toRelative(legacyTemplatePath),
+      line: 1,
+      column: 1,
+      message:
+        "Legacy scaffold template extension '.template.ts.txt' is not allowed. Rename/migrate to '.template.ts'."
+    });
   }
 
   if (findings.length === 0) {

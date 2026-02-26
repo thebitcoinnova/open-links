@@ -128,7 +128,8 @@ For each meaningful auth-run update in `docs/rich-metadata-fetch-blockers.md`, r
 - Enrichment reason for extractor links is `authenticated_cache`.
 - No placeholder/authwall metadata in committed cache entries.
 - Transition/action diagnostics captured in gitignored auth-flow or sync artifacts.
-- Browser eval payloads and scaffold code templates are sourced from `scripts/embedded-code/*` files (no large inline literals).
+- Browser eval payloads are sourced from `scripts/embedded-code/browser/*` files (no large inline literals).
+- Scaffold code template source is a typed file at `scripts/authenticated-extractors/plugins/*.template.ts` with explicit replacement tokens.
 
 ## Stop Conditions
 

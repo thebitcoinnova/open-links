@@ -5,6 +5,7 @@ import process from "node:process";
 const ROOT = process.cwd();
 const EMBEDDED_CODE_ROOT = path.resolve(ROOT, "scripts", "embedded-code");
 const embeddedCodeCache = new Map<string, string>();
+const TOKEN_PATTERN = /__[A-Za-z0-9_]+__/g;
 
 const resolveEmbeddedCodePath = (relativePath: string): string => {
   if (path.isAbsolute(relativePath)) {
@@ -54,17 +55,23 @@ export const renderEmbeddedCode = (
   relativePath: string,
   replacements: Record<string, string>
 ): string => {
-  let rendered = loadEmbeddedCode(relativePath);
+  return renderTemplateTokens(loadEmbeddedCode(relativePath), replacements, `embedded code '${relativePath}'`);
+};
+
+export const renderTemplateTokens = (
+  template: string,
+  replacements: Record<string, string>,
+  sourceLabel = "template"
+): string => {
+  let rendered = template;
 
   for (const [token, replacement] of Object.entries(replacements)) {
     rendered = rendered.split(token).join(replacement);
   }
 
-  const unresolved = Array.from(new Set(rendered.match(/__[A-Za-z0-9_]+__/g) ?? []));
+  const unresolved = Array.from(new Set(rendered.match(TOKEN_PATTERN) ?? []));
   if (unresolved.length > 0) {
-    throw new Error(
-      `Embedded code template '${relativePath}' has unresolved tokens: ${unresolved.join(", ")}`
-    );
+    throw new Error(`${sourceLabel} has unresolved tokens: ${unresolved.join(", ")}`);
   }
 
   return rendered;

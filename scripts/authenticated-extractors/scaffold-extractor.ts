@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { renderEmbeddedCode } from "../shared/embedded-code-loader";
+import { renderTemplateTokens } from "../shared/embedded-code-loader";
 import {
   DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
   loadAuthenticatedExtractorsPolicy
@@ -16,7 +16,8 @@ interface CliArgs {
 const ROOT = process.cwd();
 const REGISTRY_PATH = "scripts/authenticated-extractors/registry.ts";
 const PLUGIN_DIR = "scripts/authenticated-extractors/plugins";
-const PLUGIN_TEMPLATE_PATH = "templates/authenticated-extractor-plugin.template.ts.txt";
+const PLUGIN_TEMPLATE_PATH =
+  "scripts/authenticated-extractors/plugins/authenticated-extractor-plugin.template.ts";
 const DEFAULT_DOCS = [
   "docs/authenticated-rich-extractors.md",
   "docs/create-new-rich-content-extractor.md",
@@ -135,12 +136,16 @@ const scaffoldPlugin = (args: CliArgs): { pluginPath: string; exportName: string
     throw new Error(`Plugin file already exists at ${pluginPath}.`);
   }
 
-  const template = renderEmbeddedCode(PLUGIN_TEMPLATE_PATH, {
-    __EXTRACTOR_ID__: args.id,
-    __EXTRACTOR_VERSION__: `${new Date().toISOString().slice(0, 10)}.1`,
-    __DEFAULT_SESSION__: `openlinks-${args.id}`,
-    __EXPORT_NAME__: exportName
-  });
+  const template = renderTemplateTokens(
+    readText(PLUGIN_TEMPLATE_PATH),
+    {
+      __EXTRACTOR_ID__: args.id,
+      __EXTRACTOR_VERSION__: `${new Date().toISOString().slice(0, 10)}.1`,
+      __DEFAULT_SESSION__: `openlinks-${args.id}`,
+      __EXPORT_NAME__: exportName
+    },
+    `scaffold template '${PLUGIN_TEMPLATE_PATH}'`
+  );
 
   writeText(pluginPath, template);
   return { pluginPath, exportName };

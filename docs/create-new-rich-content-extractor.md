@@ -40,6 +40,17 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
 
 This scaffolds plugin + registry + policy entry (`experimental`).
 
+Scaffold template source is a typed file at:
+
+- `scripts/authenticated-extractors/plugins/authenticated-extractor-plugin.template.ts`
+
+Required replacement tokens in that template:
+
+- `__EXTRACTOR_ID__`
+- `__EXTRACTOR_VERSION__`
+- `__DEFAULT_SESSION__`
+- `__EXPORT_NAME__`
+
 ## Step 3: Implement Plugin Contract
 
 File: `scripts/authenticated-extractors/plugins/<extractor-id>.ts`

@@ -187,7 +187,12 @@ Do not inline browser `eval` payloads in extractor/debug TypeScript files.
 
 - Store browser snippets under `scripts/embedded-code/browser/<provider>/`.
 - Load snippet text via `loadEmbeddedCode(...)` from `scripts/shared/embedded-code-loader.ts`.
-- For scaffold templates, store source in `scripts/embedded-code/templates/` and render with `renderEmbeddedCode(...)`.
+- For scaffold templates, store source in `scripts/authenticated-extractors/plugins/*.template.ts` and render tokens via shared template replacement helpers.
+- Scaffold token placeholders are intentionally named and must be replaced by the scaffold script:
+  - `__EXTRACTOR_ID__`
+  - `__EXTRACTOR_VERSION__`
+  - `__DEFAULT_SESSION__`
+  - `__EXPORT_NAME__`
 
 Guardrail command:
 

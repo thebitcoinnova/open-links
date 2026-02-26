@@ -1,3 +1,12 @@
+/**
+ * Authenticated extractor scaffold template.
+ *
+ * Replacement tokens (required, replaced by scaffold-extractor.ts):
+ * - __EXTRACTOR_ID__
+ * - __EXTRACTOR_VERSION__
+ * - __DEFAULT_SESSION__
+ * - __EXPORT_NAME__
+ */
 import {
   summarizeAuthFlowResult,
   waitForAuthenticatedSession
