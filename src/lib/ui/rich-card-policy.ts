@@ -96,13 +96,19 @@ export const resolveRichCardVariant = (site: SiteData, link: OpenLink): Resolved
 export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCardViewModel => {
   const metadata = link.metadata ?? {};
   const sourceDefault = resolveSourceDefault(site);
-  const imageTreatment = resolveImageTreatment(site);
+  const configuredImageTreatment = resolveImageTreatment(site);
+  const imageUrl =
+    typeof metadata.image === "string" && metadata.image.trim().length > 0 ? metadata.image : undefined;
+  const enrichmentDisabled =
+    link.enrichment?.enabled === false || metadata.enrichmentReason === "enrichment_disabled";
+  const imageTreatment: RichImageTreatment =
+    configuredImageTreatment === "off" || (enrichmentDisabled && !imageUrl) ? "off" : configuredImageTreatment;
   const imageFit = resolveImageFit(site, link);
 
   return {
     title: metadata.title ?? link.label,
     description: metadata.description ?? link.description ?? urlDomain(link.url),
-    imageUrl: imageTreatment === "off" ? undefined : metadata.image,
+    imageUrl: imageTreatment === "off" ? undefined : imageUrl,
     imageTreatment,
     imageFit,
     mobileImageLayout: resolveMobileImageLayout(site, link),

@@ -26,6 +26,7 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
     target() === "_blank"
       ? `Open ${props.viewModel.title} in a new tab`
       : `Open ${props.viewModel.title}`;
+  const showMediaSlot = () => props.viewModel.imageTreatment !== "off";
 
   return (
     <a
@@ -42,13 +43,15 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
       data-mobile-image-layout={props.viewModel.mobileImageLayout}
       data-has-image={props.viewModel.imageUrl ? "true" : "false"}
     >
-      <Show
-        when={props.viewModel.imageUrl}
-        fallback={<span class="rich-card-media rich-card-media-fallback">No preview image</span>}
-      >
-        <span class="rich-card-media" aria-hidden="true">
-          <img src={props.viewModel.imageUrl} alt="" loading="lazy" />
-        </span>
+      <Show when={showMediaSlot()}>
+        <Show
+          when={props.viewModel.imageUrl}
+          fallback={<span class="rich-card-media rich-card-media-fallback">No preview image</span>}
+        >
+          <span class="rich-card-media" aria-hidden="true">
+            <img src={props.viewModel.imageUrl} alt="" loading="lazy" />
+          </span>
+        </Show>
       </Show>
 
       <span class="rich-card-body">
