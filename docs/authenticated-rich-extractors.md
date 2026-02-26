@@ -162,6 +162,7 @@ New extractors should use shared auth-flow helpers:
 
 - `scripts/authenticated-extractors/browser-session.ts`
 - `scripts/authenticated-extractors/auth-flow-runtime.ts`
+- `scripts/shared/embedded-code-loader.ts`
 
 Required auth-state taxonomy:
 
@@ -179,6 +180,22 @@ Runtime guarantees:
 - ask-first confirmation for action candidates (per action)
 - unknown-state pause + operator choice (continue/abort)
 - actionable failure in non-interactive mode when user confirmation is required
+
+## Embedded Browser Code Files
+
+Do not inline browser `eval` payloads in extractor/debug TypeScript files.
+
+- Store browser snippets under `scripts/embedded-code/browser/<provider>/`.
+- Load snippet text via `loadEmbeddedCode(...)` from `scripts/shared/embedded-code-loader.ts`.
+- For scaffold templates, store source in `scripts/embedded-code/templates/` and render with `renderEmbeddedCode(...)`.
+
+Guardrail command:
+
+```bash
+npm run quality:embedded-code
+```
+
+This check is enforced in strict/CI flows.
 
 ## LinkedIn Auth Session Behavior
 

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { renderEmbeddedCode } from "../shared/embedded-code-loader";
 import {
   DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
   loadAuthenticatedExtractorsPolicy
@@ -15,6 +16,7 @@ interface CliArgs {
 const ROOT = process.cwd();
 const REGISTRY_PATH = "scripts/authenticated-extractors/registry.ts";
 const PLUGIN_DIR = "scripts/authenticated-extractors/plugins";
+const PLUGIN_TEMPLATE_PATH = "templates/authenticated-extractor-plugin.template.ts.txt";
 const DEFAULT_DOCS = [
   "docs/authenticated-rich-extractors.md",
   "docs/create-new-rich-content-extractor.md",
@@ -133,104 +135,12 @@ const scaffoldPlugin = (args: CliArgs): { pluginPath: string; exportName: string
     throw new Error(`Plugin file already exists at ${pluginPath}.`);
   }
 
-  const template = `import {
-  summarizeAuthFlowResult,
-  waitForAuthenticatedSession
-} from "../auth-flow-runtime";
-import {
-  resolveAuthWaitSettings,
-  resolveBrowserSessionConfig,
-  runAgentBrowserJson
-} from "../browser-session";
-import type {
-  AuthFlowActionCandidate,
-  AuthFlowSnapshot,
-  AuthenticatedExtractorEnsureSessionResult,
-  AuthenticatedExtractorExtractContext,
-  AuthenticatedExtractorExtractResult,
-  AuthenticatedExtractorPlugin,
-  AuthenticatedExtractorSessionContext
-} from "../types";
-
-const EXTRACTOR_ID = "${args.id}";
-const EXTRACTOR_VERSION = "${new Date().toISOString().slice(0, 10)}.1";
-const SELECTOR_PROFILE = "TODO-selector-profile";
-const DEFAULT_SESSION = "openlinks-${args.id}";
-
-const inspectTODO = async (): Promise<AuthFlowSnapshot> => {
-  // TODO: replace with extractor-specific DOM inspection and state classifier.
-  // Required states: login, mfa_challenge, post_auth_consent, authenticated, blocked, unknown.
-  return {
-    timestamp: new Date().toISOString(),
-    state: "unknown",
-    currentUrl: undefined,
-    title: undefined,
-    signals: ["todo_state_classifier_not_implemented"],
-    actionCandidates: []
-  };
-};
-
-const executeActionTODO = async (
-  _candidate: AuthFlowActionCandidate
-): Promise<{ success: boolean; details?: string }> => {
-  // TODO: allowlist safe actions (ask-first confirmation is handled by auth runtime).
-  return {
-    success: false,
-    details: "no_actions_configured"
-  };
-};
-
-const ensureSession = async (
-  context: AuthenticatedExtractorSessionContext
-): Promise<AuthenticatedExtractorEnsureSessionResult> => {
-  const config = resolveBrowserSessionConfig({
-    defaultSession: DEFAULT_SESSION
+  const template = renderEmbeddedCode(PLUGIN_TEMPLATE_PATH, {
+    __EXTRACTOR_ID__: args.id,
+    __EXTRACTOR_VERSION__: `${new Date().toISOString().slice(0, 10)}.1`,
+    __DEFAULT_SESSION__: `openlinks-${args.id}`,
+    __EXPORT_NAME__: exportName
   });
-  const settings = resolveAuthWaitSettings();
-  runAgentBrowserJson(["open", context.targetUrl], config, {
-    extraArgs: ["--headed"],
-    allowFailure: true
-  });
-
-  const authResult = await waitForAuthenticatedSession({
-    timeoutMs: settings.timeoutMs,
-    pollMs: settings.pollMs,
-    logPrefix: \`[\${context.extractorId}]\`,
-    promptOnActions: true,
-    pauseOnUnknown: true,
-    inspect: inspectTODO,
-    wait: async (durationMs) => {
-      runAgentBrowserJson(["wait", String(Math.max(250, durationMs))], config, {
-        allowFailure: true
-      });
-    },
-    executeAction: executeActionTODO
-  });
-
-  runAgentBrowserJson(["close"], config, { allowFailure: true });
-  return {
-    verified: authResult.verified,
-    details: summarizeAuthFlowResult(authResult),
-    report: authResult.report
-  };
-};
-
-const extract = async (
-  context: AuthenticatedExtractorExtractContext
-): Promise<AuthenticatedExtractorExtractResult> => {
-  // TODO: replace with extractor-specific metadata + image capture.
-  // Required: reject placeholder/authwall outputs and write local committed assets.
-  throw new Error(
-    \`Extractor '\${EXTRACTOR_ID}' extraction is not implemented yet. selectorProfile=\${SELECTOR_PROFILE}; linkId=\${context.linkId}\`
-  );
-};
-
-export const ${exportName}: AuthenticatedExtractorPlugin = {
-  id: EXTRACTOR_ID,
-  ensureSession,
-  extract
-};
-`;
 
   writeText(pluginPath, template);
   return { pluginPath, exportName };

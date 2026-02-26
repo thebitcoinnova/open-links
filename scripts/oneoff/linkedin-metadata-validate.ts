@@ -1,6 +1,7 @@
 import path from "node:path";
 import process from "node:process";
 import { parseMetadata } from "../enrichment/parse-metadata";
+import { loadEmbeddedCode } from "../shared/embedded-code-loader";
 import {
   classifyPlaceholderSignals,
   extractCookieNames,
@@ -32,6 +33,7 @@ interface CookieBridgeDiagnostic {
 }
 
 const DEFAULT_MAX_HTML_BYTES = 1_000_000;
+const LINKEDIN_READ_OUTER_HTML_SNIPPET = loadEmbeddedCode("browser/linkedin/read-outer-html.js");
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -225,7 +227,7 @@ const run = async () => {
     allowFailure: true
   });
   const htmlResult = runAgentBrowserJson<unknown>(
-    ["eval", "document.documentElement.outerHTML"],
+    ["eval", LINKEDIN_READ_OUTER_HTML_SNIPPET],
     config,
     { allowFailure: false }
   );

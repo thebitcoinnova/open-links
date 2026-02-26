@@ -53,6 +53,7 @@ Prefer shared helpers for new extractors:
 
 - `scripts/authenticated-extractors/browser-session.ts`
 - `scripts/authenticated-extractors/auth-flow-runtime.ts`
+- `scripts/shared/embedded-code-loader.ts`
 
 ### `ensureSession` requirements
 
@@ -61,6 +62,7 @@ Prefer shared helpers for new extractors:
 - must continue automatically when authenticated
 - must timeout with actionable diagnostics
 - must not require build-time interactive flow (`build` remains non-interactive)
+- must load browser `eval` snippets from `scripts/embedded-code/browser/...` (no inline payload literals)
 
 ### Generic Auth-State Taxonomy (Required)
 
@@ -110,6 +112,7 @@ When state is `unknown`:
 - reject placeholder/authwall outputs
 - download image to `public/cache/rich-authenticated/`
 - return metadata with local asset path
+- keep browser DOM extraction snippets in dedicated files under `scripts/embedded-code/browser/...`
 
 ## Step 4: Selector and Quality Strategy
 
@@ -159,6 +162,12 @@ npm run build
 ```
 
 If failures occur, fix extractor/cache/config instead of using bypass.
+
+Guardrail for embedded snippet enforcement:
+
+```bash
+npm run quality:embedded-code
+```
 
 ## Step 7: Documentation Updates (Required)
 

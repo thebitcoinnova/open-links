@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
+import { loadEmbeddedCode } from "../shared/embedded-code-loader";
 
 export const DEFAULT_LINKEDIN_DEBUG_SESSION = "openlinks-linkedin-debug";
 export const LINKEDIN_DEBUG_OUTPUT_DIRECTORY = path.join("output", "playwright", "linkedin-debug");
@@ -12,6 +13,9 @@ export const DEFAULT_AUTH_SESSION_TIMEOUT_MS = 600_000;
 export const DEFAULT_AUTH_SESSION_POLL_MS = 2_000;
 
 const AUTH_COOKIE_CANDIDATES = ["li_at", "liap"];
+const LINKEDIN_INSPECT_AUTH_SNAPSHOT_SNIPPET = loadEmbeddedCode(
+  "browser/linkedin/inspect-auth-snapshot.js"
+);
 
 export interface SessionConfig {
   session: string;
@@ -397,23 +401,7 @@ const inspectLinkedinAuthSnapshot = (config: SessionConfig): LinkedinAuthSnapsho
 
   const evalData = readEvalRecord(
     runAgentBrowserJson<unknown>(
-      [
-        "eval",
-        `(() => {
-          const text = (document.body?.innerText || "")
-            .replace(/\\s+/g, " ")
-            .trim()
-            .toLowerCase();
-          return {
-            title: (document.title || "").toLowerCase(),
-            body: text.slice(0, 5000),
-            hasPasswordField: Boolean(document.querySelector("input[type='password'], input[name='session_password'], #password")),
-            hasUsernameField: Boolean(document.querySelector("input[type='email'], input[name='session_key'], #username")),
-            hasOtpField: Boolean(document.querySelector("input[autocomplete='one-time-code'], input[name*='pin'], input[id*='challenge']")),
-            hasGlobalNav: Boolean(document.querySelector(".global-nav, #global-nav, header nav"))
-          };
-        })()`
-      ],
+      ["eval", LINKEDIN_INSPECT_AUTH_SNAPSHOT_SNIPPET],
       config,
       { allowFailure: true }
     ).response?.data

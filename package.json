@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "ci:required": "npm run validate:data && npm run typecheck && npm run build && npm run quality:check",
+    "ci:required": "npm run validate:data && npm run typecheck && npm run quality:embedded-code && npm run build && npm run quality:check",
     "ci:strict": "npm run validate:data:strict && npm run build:strict && npm run quality:strict",
     "avatar:sync": "tsx scripts/sync-profile-avatar.ts",
     "images:sync": "tsx scripts/sync-content-images.ts",
@@ -28,7 +28,8 @@
     "auth:extractor:new": "tsx scripts/authenticated-extractors/scaffold-extractor.ts",
     "quality:check": "tsx scripts/quality/run-quality-checks.ts",
     "quality:required": "npm run quality:check",
-    "quality:strict": "tsx scripts/quality/run-quality-checks.ts --strict",
+    "quality:embedded-code": "tsx scripts/quality/check-embedded-code.ts",
+    "quality:strict": "npm run quality:embedded-code && tsx scripts/quality/run-quality-checks.ts --strict",
     "quality:signal": "npm run quality:strict",
     "quality:json": "tsx scripts/quality/run-quality-checks.ts --format json",
     "quality:strict:json": "tsx scripts/quality/run-quality-checks.ts --strict --format json",

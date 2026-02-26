@@ -1,0 +1,97 @@
+import {
+  summarizeAuthFlowResult,
+  waitForAuthenticatedSession
+} from "../auth-flow-runtime";
+import {
+  resolveAuthWaitSettings,
+  resolveBrowserSessionConfig,
+  runAgentBrowserJson
+} from "../browser-session";
+import type {
+  AuthFlowActionCandidate,
+  AuthFlowSnapshot,
+  AuthenticatedExtractorEnsureSessionResult,
+  AuthenticatedExtractorExtractContext,
+  AuthenticatedExtractorExtractResult,
+  AuthenticatedExtractorPlugin,
+  AuthenticatedExtractorSessionContext
+} from "../types";
+
+const EXTRACTOR_ID = "__EXTRACTOR_ID__";
+const EXTRACTOR_VERSION = "__EXTRACTOR_VERSION__";
+const SELECTOR_PROFILE = "TODO-selector-profile";
+const DEFAULT_SESSION = "__DEFAULT_SESSION__";
+
+const inspectTODO = async (): Promise<AuthFlowSnapshot> => {
+  // TODO: replace with extractor-specific DOM inspection and state classifier.
+  // Required states: login, mfa_challenge, post_auth_consent, authenticated, blocked, unknown.
+  return {
+    timestamp: new Date().toISOString(),
+    state: "unknown",
+    currentUrl: undefined,
+    title: undefined,
+    signals: ["todo_state_classifier_not_implemented"],
+    actionCandidates: []
+  };
+};
+
+const executeActionTODO = async (
+  _candidate: AuthFlowActionCandidate
+): Promise<{ success: boolean; details?: string }> => {
+  // TODO: allowlist safe actions (ask-first confirmation is handled by auth runtime).
+  return {
+    success: false,
+    details: "no_actions_configured"
+  };
+};
+
+const ensureSession = async (
+  context: AuthenticatedExtractorSessionContext
+): Promise<AuthenticatedExtractorEnsureSessionResult> => {
+  const config = resolveBrowserSessionConfig({
+    defaultSession: DEFAULT_SESSION
+  });
+  const settings = resolveAuthWaitSettings();
+  runAgentBrowserJson(["open", context.targetUrl], config, {
+    extraArgs: ["--headed"],
+    allowFailure: true
+  });
+
+  const authResult = await waitForAuthenticatedSession({
+    timeoutMs: settings.timeoutMs,
+    pollMs: settings.pollMs,
+    logPrefix: `[${context.extractorId}]`,
+    promptOnActions: true,
+    pauseOnUnknown: true,
+    inspect: inspectTODO,
+    wait: async (durationMs) => {
+      runAgentBrowserJson(["wait", String(Math.max(250, durationMs))], config, {
+        allowFailure: true
+      });
+    },
+    executeAction: executeActionTODO
+  });
+
+  runAgentBrowserJson(["close"], config, { allowFailure: true });
+  return {
+    verified: authResult.verified,
+    details: summarizeAuthFlowResult(authResult),
+    report: authResult.report
+  };
+};
+
+const extract = async (
+  context: AuthenticatedExtractorExtractContext
+): Promise<AuthenticatedExtractorExtractResult> => {
+  // TODO: replace with extractor-specific metadata + image capture.
+  // Required: reject placeholder/authwall outputs and write local committed assets.
+  throw new Error(
+    `Extractor '${EXTRACTOR_ID}' extraction is not implemented yet. selectorProfile=${SELECTOR_PROFILE}; linkId=${context.linkId}`
+  );
+};
+
+export const __EXPORT_NAME__: AuthenticatedExtractorPlugin = {
+  id: EXTRACTOR_ID,
+  ensureSession,
+  extract
+};

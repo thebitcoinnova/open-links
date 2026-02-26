@@ -36,6 +36,7 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
 
 3. Implement plugin in `scripts/authenticated-extractors/plugins/<extractor-id>.ts`.
    - Use shared auth runtime (`scripts/authenticated-extractors/auth-flow-runtime.ts`) and browser session helper (`scripts/authenticated-extractors/browser-session.ts`) when possible.
+   - Load browser `eval` snippets from dedicated files via `scripts/shared/embedded-code-loader.ts`.
    - Implement `ensureSession` with transition monitoring + ask-first action confirmation.
    - Implement `extract` with metadata quality checks and local asset download.
 
@@ -79,6 +80,7 @@ npm run setup:rich-auth
 npm run validate:data
 npm run enrich:rich:strict
 npm run build
+npm run quality:embedded-code
 ```
 
 Optional LinkedIn-specific diagnostics:
@@ -126,6 +128,7 @@ For each meaningful auth-run update in `docs/rich-metadata-fetch-blockers.md`, r
 - Enrichment reason for extractor links is `authenticated_cache`.
 - No placeholder/authwall metadata in committed cache entries.
 - Transition/action diagnostics captured in gitignored auth-flow or sync artifacts.
+- Browser eval payloads and scaffold code templates are sourced from `scripts/embedded-code/*` files (no large inline literals).
 
 ## Stop Conditions
 
