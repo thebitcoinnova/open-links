@@ -36,6 +36,7 @@ Current extractor ids in this repository:
 - `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session)
 - `medium-auth-browser` (Medium profile extraction via RSS feed capture path)
 - `x-auth-browser` (X profile extraction via oEmbed + avatar capture path)
+- `facebook-auth-browser` (Facebook profile extraction via deterministic metadata + cached local image fallback)
 
 ### Site-level
 
@@ -78,9 +79,11 @@ Useful filters:
 npm run auth:rich:sync -- --only-link linkedin
 npm run auth:rich:sync -- --only-link medium
 npm run auth:rich:sync -- --only-link x
+npm run auth:rich:sync -- --only-link facebook
 npm run auth:rich:sync -- --only-extractor linkedin-auth-browser
 npm run auth:rich:sync -- --only-extractor medium-auth-browser
 npm run auth:rich:sync -- --only-extractor x-auth-browser
+npm run auth:rich:sync -- --only-extractor facebook-auth-browser
 npm run auth:rich:sync -- --only-missing
 npm run auth:rich:sync -- --force
 npm run auth:rich:sync -- --only-link linkedin --only-missing --force
@@ -171,6 +174,18 @@ The X extractor (`x-auth-browser`) uses an oEmbed + avatar path:
 - writes cache diagnostics including `handle`, `oembedUrl`, and placeholder checks
 
 No interactive login is currently required for the X extractor path.
+
+## Facebook Extractor Behavior
+
+The Facebook extractor (`facebook-auth-browser`) uses a deterministic profile + image fallback path:
+
+- normalizes profile identifier from `facebook.com/<identifier>` URLs
+- captures deterministic metadata title/description from the resolved identifier
+- attempts profile page fetch for diagnostics context (without requiring interactive login)
+- downloads local image asset from stable Facebook-hosted image endpoints
+- writes cache diagnostics including `identifier` and observed profile fetch status
+
+No interactive login is currently required for the Facebook extractor path.
 
 LinkedIn debug commands:
 

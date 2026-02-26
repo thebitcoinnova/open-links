@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-extractors.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-26T09:56:41Z",
+  "updatedAt": "2026-02-26T10:10:18Z",
   "extractors": [
     {
       "id": "linkedin-auth-browser",
@@ -48,6 +48,22 @@
       "matchSubdomains": true,
       "summary": "Uses X oEmbed plus avatar fetch fallback to produce cacheable profile metadata when direct page metadata is unavailable.",
       "loginInstructions": "No interactive login is currently required; extractor captures profile metadata via oEmbed and caches local image assets.",
+      "docs": [
+        "docs/authenticated-rich-extractors.md",
+        "docs/create-new-rich-content-extractor.md",
+        "docs/rich-metadata-fetch-blockers.md"
+      ]
+    },
+    {
+      "id": "facebook-auth-browser",
+      "status": "active",
+      "method": "manual_browser_session",
+      "domains": [
+        "facebook.com"
+      ],
+      "matchSubdomains": true,
+      "summary": "Uses deterministic Facebook profile URL parsing and local avatar fallback cache when direct metadata is partial or missing.",
+      "loginInstructions": "No interactive login is currently required; extractor captures deterministic metadata and caches a local Facebook image asset.",
       "docs": [
         "docs/authenticated-rich-extractors.md",
         "docs/create-new-rich-content-extractor.md",

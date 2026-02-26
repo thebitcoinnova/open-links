@@ -3,6 +3,7 @@ import { linkedinAuthBrowserExtractor } from "./plugins/linkedin-auth-browser";
 // AUTH_EXTRACTOR_IMPORTS_START
 import { mediumAuthBrowserExtractor } from "./plugins/medium-auth-browser";
 import { xAuthBrowserExtractor } from "./plugins/x-auth-browser";
+import { facebookAuthBrowserExtractor } from "./plugins/facebook-auth-browser";
 // AUTH_EXTRACTOR_IMPORTS_END
 
 const EXTRACTORS: Record<string, AuthenticatedExtractorPlugin> = {
@@ -10,6 +11,7 @@ const EXTRACTORS: Record<string, AuthenticatedExtractorPlugin> = {
   // AUTH_EXTRACTOR_MAP_START
   [mediumAuthBrowserExtractor.id]: mediumAuthBrowserExtractor,
   [xAuthBrowserExtractor.id]: xAuthBrowserExtractor,
+  [facebookAuthBrowserExtractor.id]: facebookAuthBrowserExtractor,
   // AUTH_EXTRACTOR_MAP_END
 };
 

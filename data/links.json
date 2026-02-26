@@ -63,12 +63,16 @@
       "id": "facebook",
       "label": "Facebook",
       "url": "https://www.facebook.com/peter.ryszkiewicz",
-      "type": "simple",
+      "type": "rich",
       "icon": "facebook",
       "description": "Personal Facebook profile",
       "group": "social",
       "order": 5,
       "enabled": true,
+      "enrichment": {
+        "enabled": true,
+        "authenticatedExtractor": "facebook-auth-browser"
+      },
       "custom": {}
     },
     {

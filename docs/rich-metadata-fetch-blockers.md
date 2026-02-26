@@ -46,6 +46,7 @@ These domains are currently treated as unsupported for direct unauthenticated me
 | LinkedIn | `https://www.linkedin.com/in/peter-ryszkiewicz/` | `2026-02-24T11:29:52Z` | `2026-02-24T11:45:37Z` | `HTTP 999`, authwall redirect script | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor`) or keep direct enrichment disabled/manual metadata |
 | Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-02-25T12:39:14Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=medium-auth-browser`), fallback to manual metadata |
 | X | `https://x.com/pryszkie` | `2026-02-26T09:55:42Z` | `2026-02-26T09:55:47Z` | `HTTP 200` shell response with missing `title`, `description`, and `image` | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=x-auth-browser`), fallback to manual metadata |
+| Facebook | `https://www.facebook.com/peter.ryszkiewicz` | `2026-02-26T10:06:38Z` | `2026-02-26T10:06:49Z` | `HTTP 200` response with generic title and missing image metadata | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=facebook-auth-browser`), fallback to manual metadata |
 
 ## Findings Log
 
@@ -117,6 +118,26 @@ Operator setup command:
 | `2026-02-26T09:55:42Z` | `npm run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-1.json --report /tmp/rich-report-x-direct-1.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
 | `2026-02-26T09:55:47Z` | `npm run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-2.json --report /tmp/rich-report-x-direct-2.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
 | `2026-02-26T09:54:24Z` | `npm run setup:rich-auth` with `x-auth-browser` configured on link `x` | Cache entry captured (`cacheKey=x`) and local asset committed under `public/cache/rich-authenticated/` |
+
+### Facebook
+
+- Link id: `facebook`
+- URL: `https://www.facebook.com/peter.ryszkiewicz`
+- Latest decision: Use authenticated extractor cache (`links[].enrichment.authenticatedExtractor=facebook-auth-browser`).
+- Reason: Direct fetch reproducibly returns `metadata_partial` and misses required rich-card image metadata for validation.
+
+Operator setup command:
+
+- `npm run setup:rich-auth`
+
+#### Attempt History
+
+| Timestamp (UTC) | Attempt | Outcome |
+|---|---|---|
+| `2026-02-26T10:06:38Z` | `npm run enrich:rich:strict` | `facebook` returned `metadata_partial` (`HTTP 200`) with only generic title and missing image |
+| `2026-02-26T10:06:49Z` | `npm run enrich:rich:strict` (repro run) | `facebook` returned `metadata_partial` (`HTTP 200`) again; reproducible second signal |
+| `2026-02-26T10:06:07Z` | `npm run validate:data` | Blocking validation error: `$.links[4].metadata.image` missing for rich-card rendering |
+| `2026-02-26T10:10:04Z` | `npm run auth:rich:sync -- --only-link facebook --force` | Cache entry captured (`cacheKey=facebook`) and local asset committed under `public/cache/rich-authenticated/` |
 
 ## Recommended Handling for Blocked Domains
 

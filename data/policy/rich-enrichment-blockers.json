@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-enrichment-blockers.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-26T09:55:47Z",
+  "updatedAt": "2026-02-26T10:06:49Z",
   "blockers": [
     {
       "id": "linkedin-direct-fetch",
@@ -60,6 +60,28 @@
         "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='x-auth-browser' and run npm run setup:rich-auth."
       ],
       "plannedSupportNote": "Authenticated extractor workaround is available via x-auth-browser (oEmbed + avatar capture).",
+      "docs": [
+        "docs/rich-metadata-fetch-blockers.md",
+        "docs/authenticated-rich-extractors.md"
+      ]
+    },
+    {
+      "id": "facebook-direct-fetch",
+      "status": "blocked",
+      "scope": "direct_fetch",
+      "domains": [
+        "facebook.com"
+      ],
+      "matchSubdomains": true,
+      "reasonCategory": "authwall",
+      "lastVerifiedAt": "2026-02-26T10:06:49Z",
+      "summary": "Direct fetch returns only generic Facebook metadata and omits required rich-card fields (description/image) for profile URLs.",
+      "remediation": [
+        "Disable enrichment for affected links.",
+        "Use manual links[].metadata fields for rich cards.",
+        "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='facebook-auth-browser' and run npm run setup:rich-auth."
+      ],
+      "plannedSupportNote": "Authenticated extractor workaround is available via facebook-auth-browser (profile URL normalization + local cached image asset).",
       "docs": [
         "docs/rich-metadata-fetch-blockers.md",
         "docs/authenticated-rich-extractors.md"
