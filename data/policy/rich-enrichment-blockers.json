@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-enrichment-blockers.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-25T12:39:14Z",
+  "updatedAt": "2026-02-26T09:55:47Z",
   "blockers": [
     {
       "id": "linkedin-direct-fetch",
@@ -37,6 +37,29 @@
         "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='medium-auth-browser' and run npm run setup:rich-auth."
       ],
       "plannedSupportNote": "Authenticated extractor workaround is available via medium-auth-browser (RSS feed capture).",
+      "docs": [
+        "docs/rich-metadata-fetch-blockers.md",
+        "docs/authenticated-rich-extractors.md"
+      ]
+    },
+    {
+      "id": "x-direct-fetch",
+      "status": "blocked",
+      "scope": "direct_fetch",
+      "domains": [
+        "x.com",
+        "twitter.com"
+      ],
+      "matchSubdomains": true,
+      "reasonCategory": "unknown",
+      "lastVerifiedAt": "2026-02-26T09:55:47Z",
+      "summary": "Direct fetch returns HTTP 200 but no usable profile metadata (title, description, image).",
+      "remediation": [
+        "Disable enrichment for affected links.",
+        "Use manual links[].metadata fields for rich cards.",
+        "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='x-auth-browser' and run npm run setup:rich-auth."
+      ],
+      "plannedSupportNote": "Authenticated extractor workaround is available via x-auth-browser (oEmbed + avatar capture).",
       "docs": [
         "docs/rich-metadata-fetch-blockers.md",
         "docs/authenticated-rich-extractors.md"

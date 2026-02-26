@@ -35,6 +35,7 @@ Current extractor ids in this repository:
 
 - `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session)
 - `medium-auth-browser` (Medium profile extraction via RSS feed capture path)
+- `x-auth-browser` (X profile extraction via oEmbed + avatar capture path)
 
 ### Site-level
 
@@ -76,8 +77,10 @@ Useful filters:
 ```bash
 npm run auth:rich:sync -- --only-link linkedin
 npm run auth:rich:sync -- --only-link medium
+npm run auth:rich:sync -- --only-link x
 npm run auth:rich:sync -- --only-extractor linkedin-auth-browser
 npm run auth:rich:sync -- --only-extractor medium-auth-browser
+npm run auth:rich:sync -- --only-extractor x-auth-browser
 npm run auth:rich:sync -- --only-missing
 npm run auth:rich:sync -- --force
 npm run auth:rich:sync -- --only-link linkedin --only-missing --force
@@ -156,6 +159,18 @@ The Medium extractor (`medium-auth-browser`) uses a feed capture path:
 - writes cache entry with diagnostics notes (`feedUrl`, `cacheKey`)
 
 No interactive login is currently required for the Medium extractor path.
+
+## X Extractor Behavior
+
+The X extractor (`x-auth-browser`) uses an oEmbed + avatar path:
+
+- resolves handle from `x.com/<handle>` (or `twitter.com/<handle>`)
+- verifies profile availability via `https://publish.twitter.com/oembed`
+- generates stable title/description when oEmbed title is blank
+- captures image asset from `https://unavatar.io/x/<handle>` (fallback to X icon asset)
+- writes cache diagnostics including `handle`, `oembedUrl`, and placeholder checks
+
+No interactive login is currently required for the X extractor path.
 
 LinkedIn debug commands:
 

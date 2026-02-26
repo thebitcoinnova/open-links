@@ -23,7 +23,8 @@
       "order": 2,
       "enabled": true,
       "enrichment": {
-        "enabled": false
+        "enabled": true,
+        "authenticatedExtractor": "x-auth-browser"
       },
       "custom": {}
     },
@@ -47,16 +48,12 @@
       "id": "openlinks-home",
       "label": "OpenLinks",
       "url": "https://openlinks.us",
-      "type": "rich",
+      "type": "simple",
       "icon": "github",
       "description": "Project homepage preview card with fallback defaults",
       "group": "work",
       "order": 4,
       "enabled": true,
-      "enrichment": {
-        "enabled": false,
-        "sourceLabelVisible": true
-      },
       "custom": {}
     },
     {

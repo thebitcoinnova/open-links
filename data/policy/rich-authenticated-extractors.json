@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-extractors.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-25T12:39:14Z",
+  "updatedAt": "2026-02-26T09:56:41Z",
   "extractors": [
     {
       "id": "linkedin-auth-browser",
@@ -31,6 +31,23 @@
       "matchSubdomains": true,
       "summary": "Uses Medium's public RSS feed endpoint to capture profile metadata and cache local image assets when direct profile fetch is challenge-protected.",
       "loginInstructions": "No interactive login is currently required; extractor captures metadata from https://medium.com/feed/<target> and writes authenticated-cache artifacts.",
+      "docs": [
+        "docs/authenticated-rich-extractors.md",
+        "docs/create-new-rich-content-extractor.md",
+        "docs/rich-metadata-fetch-blockers.md"
+      ]
+    },
+    {
+      "id": "x-auth-browser",
+      "status": "active",
+      "method": "manual_browser_session",
+      "domains": [
+        "x.com",
+        "twitter.com"
+      ],
+      "matchSubdomains": true,
+      "summary": "Uses X oEmbed plus avatar fetch fallback to produce cacheable profile metadata when direct page metadata is unavailable.",
+      "loginInstructions": "No interactive login is currently required; extractor captures profile metadata via oEmbed and caches local image assets.",
       "docs": [
         "docs/authenticated-rich-extractors.md",
         "docs/create-new-rich-content-extractor.md",

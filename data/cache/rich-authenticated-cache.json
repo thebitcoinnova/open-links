@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-cache.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-25T12:38:57.601Z",
+  "updatedAt": "2026-02-26T09:54:24.303Z",
   "entries": {
     "linkedin": {
       "extractorId": "linkedin-auth-browser",
@@ -63,6 +63,38 @@
         "notes": [
           "cacheKey=medium",
           "feedUrl=https://medium.com/feed/@peterryszkiewicz"
+        ]
+      }
+    },
+    "x": {
+      "extractorId": "x-auth-browser",
+      "linkId": "x",
+      "sourceUrl": "https://x.com/pryszkie",
+      "capturedAt": "2026-02-26T09:54:24.303Z",
+      "metadata": {
+        "title": "@pryszkie on X",
+        "description": "Posts and updates from @pryszkie on X.",
+        "image": "cache/rich-authenticated/9e6ec297e6edc4d9f6a44efb9b00f5e6808772d37b043347e3d7c5fdf77358b0.jpg",
+        "sourceLabel": "x.com"
+      },
+      "assets": {
+        "image": {
+          "path": "cache/rich-authenticated/9e6ec297e6edc4d9f6a44efb9b00f5e6808772d37b043347e3d7c5fdf77358b0.jpg",
+          "sourceUrl": "https://unavatar.io/x/pryszkie",
+          "contentType": "image/jpeg",
+          "bytes": 24018,
+          "sha256": "9e6ec297e6edc4d9f6a44efb9b00f5e6808772d37b043347e3d7c5fdf77358b0"
+        }
+      },
+      "diagnostics": {
+        "extractorVersion": "2026-02-26.1",
+        "selectorProfile": "x-oembed-unavatar-v1",
+        "placeholderSignals": [],
+        "capturedFromUrl": "https://twitter.com/pryszkie",
+        "notes": [
+          "cacheKey=x",
+          "handle=pryszkie",
+          "oembedUrl=https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true"
         ]
       }
     }
