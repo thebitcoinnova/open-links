@@ -287,7 +287,7 @@ Payment rails can include explicit app links via `payment.rails[].appLinks` for 
   - baked files in `public/generated/images/<content-hash>.<ext>`
   - manifest `data/generated/content-images.json`
 - Runtime rich-card `metadata.image` values resolve to baked local paths when available.
-- If remote image fetch fails and no cache exists, rich cards fall back to existing "No preview image" UI.
+- If a link would render as a rich card without a materialized preview image, `npm run validate:data` (and therefore `npm run build`/`npm run dev`) now fails with remediation guidance.
 - Force refresh is available via `npm run images:sync -- --force` or `OPENLINKS_IMAGES_FORCE=1`.
 
 #### Manual metadata (`links[].metadata`)

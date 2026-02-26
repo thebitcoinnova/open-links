@@ -49,6 +49,16 @@ type ArgMap = {
 const ROOT = process.cwd();
 const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
 const DEFAULT_AUTH_CACHE_WARN_AGE_DAYS = 30;
+const DEFAULT_ENRICHMENT_METADATA_PATH = "data/generated/rich-metadata.json";
+const DEFAULT_CONTENT_IMAGES_MANIFEST_PATH = "data/generated/content-images.json";
+
+interface GeneratedRichMetadataPayload {
+  links?: Record<string, { metadata?: Record<string, unknown> }>;
+}
+
+interface GeneratedContentImagesPayload {
+  byUrl?: Record<string, { resolvedPath?: string }>;
+}
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -100,6 +110,25 @@ const resolveEnrichmentReportPath = (
   const reportPath = enrichment && typeof enrichment.reportPath === "string" ? enrichment.reportPath : undefined;
 
   return reportPath ?? "data/generated/rich-enrichment-report.json";
+};
+
+const resolveEnrichmentMetadataPath = (site: Record<string, unknown>): string => {
+  const ui = isRecord(site.ui) ? site.ui : undefined;
+  const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
+  const enrichment = richCards && isRecord(richCards.enrichment) ? richCards.enrichment : undefined;
+  const metadataPath =
+    enrichment && typeof enrichment.metadataPath === "string" ? enrichment.metadataPath.trim() : "";
+
+  return metadataPath.length > 0 ? metadataPath : DEFAULT_ENRICHMENT_METADATA_PATH;
+};
+
+const tryReadJsonFile = <T>(relativePath: string): { value: T | null; errorMessage?: string } => {
+  try {
+    return { value: readJsonFile<T>(relativePath) };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { value: null, errorMessage: message };
+  }
 };
 
 const normalizePath = (instancePath: string): string => {
@@ -189,6 +218,194 @@ const resolveAuthenticatedCacheConfig = (
     cachePath: configuredPath.length > 0 ? configuredPath : DEFAULT_AUTH_CACHE_PATH,
     warnAgeDays
   };
+};
+
+const resolveRichRenderMode = (site: Record<string, unknown>): "auto" | "simple" => {
+  const ui = isRecord(site.ui) ? site.ui : undefined;
+  const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
+  return richCards?.renderMode === "simple" ? "simple" : "auto";
+};
+
+const hasRichRenderCandidates = (
+  linksData: Record<string, unknown>,
+  siteData: Record<string, unknown>
+): boolean => {
+  if (resolveRichRenderMode(siteData) === "simple") {
+    return false;
+  }
+
+  const links = Array.isArray(linksData.links) ? linksData.links : [];
+  return links.some(
+    (rawLink) => isRecord(rawLink) && rawLink.type === "rich" && rawLink.enabled !== false
+  );
+};
+
+const hasUrlScheme = (value: string): boolean => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value);
+
+const toCanonicalHttpUrl = (value: string): string | null => {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.toString();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const resolveGeneratedMetadataByLink = (
+  payload: GeneratedRichMetadataPayload
+): Record<string, Record<string, unknown>> => {
+  if (!isRecord(payload) || !isRecord(payload.links)) {
+    return {};
+  }
+
+  const byLink: Record<string, Record<string, unknown>> = {};
+
+  for (const [linkId, value] of Object.entries(payload.links)) {
+    if (isRecord(value) && isRecord(value.metadata)) {
+      byLink[linkId] = value.metadata;
+    }
+  }
+
+  return byLink;
+};
+
+const resolveGeneratedContentImagesByUrl = (
+  payload: GeneratedContentImagesPayload
+): Record<string, { resolvedPath?: string }> => {
+  if (!isRecord(payload) || !isRecord(payload.byUrl)) {
+    return {};
+  }
+
+  const byUrl: Record<string, { resolvedPath?: string }> = {};
+
+  for (const [url, value] of Object.entries(payload.byUrl)) {
+    if (isRecord(value)) {
+      byUrl[url] = {
+        resolvedPath: typeof value.resolvedPath === "string" ? value.resolvedPath : undefined
+      };
+    }
+  }
+
+  return byUrl;
+};
+
+const resolvePreviewImageAvailability = (
+  imageCandidate: string | undefined,
+  generatedContentImagesByUrl: Record<string, { resolvedPath?: string }>,
+  contentImagesPath: string
+): { hasImage: boolean; detail: string } => {
+  if (!imageCandidate) {
+    return {
+      hasImage: false,
+      detail: "No metadata.image value was found."
+    };
+  }
+
+  const trimmed = imageCandidate.trim();
+  if (trimmed.length === 0) {
+    return {
+      hasImage: false,
+      detail: "metadata.image is an empty string."
+    };
+  }
+
+  if (!hasUrlScheme(trimmed)) {
+    return { hasImage: true, detail: "" };
+  }
+
+  const canonical = toCanonicalHttpUrl(trimmed);
+  if (!canonical) {
+    return {
+      hasImage: false,
+      detail: `metadata.image uses an unsupported URL scheme (${trimmed}).`
+    };
+  }
+
+  const entry = generatedContentImagesByUrl[canonical] ?? generatedContentImagesByUrl[trimmed];
+  if (entry && typeof entry.resolvedPath === "string" && entry.resolvedPath.trim().length > 0) {
+    return { hasImage: true, detail: "" };
+  }
+
+  return {
+    hasImage: false,
+    detail:
+      `metadata.image points to a remote URL that was not materialized in ${contentImagesPath}. ` +
+      "Runtime strips that image before rendering."
+  };
+};
+
+const richCardPreviewImageIssues = (
+  linksSource: string,
+  linksData: Record<string, unknown>,
+  siteData: Record<string, unknown>,
+  generatedMetadataByLink: Record<string, Record<string, unknown>>,
+  generatedContentImagesByUrl: Record<string, { resolvedPath?: string }>,
+  metadataPath: string,
+  contentImagesPath: string
+): ValidationIssue[] => {
+  if (resolveRichRenderMode(siteData) === "simple") {
+    return [];
+  }
+
+  const links = Array.isArray(linksData.links) ? linksData.links : [];
+  const enabledByDefault = resolveEnabledByDefault(siteData);
+  const issues: ValidationIssue[] = [];
+
+  links.forEach((rawLink, index) => {
+    if (!isRecord(rawLink) || rawLink.type !== "rich" || rawLink.enabled === false) {
+      return;
+    }
+
+    const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
+    const metadata = isRecord(rawLink.metadata) ? rawLink.metadata : {};
+    const generatedMetadata = generatedMetadataByLink[linkId] ?? {};
+    const mergedMetadata: Record<string, unknown> = {
+      ...metadata,
+      ...generatedMetadata
+    };
+    const previewImage = toStringOrUndefined(mergedMetadata.image);
+    const imageAvailability = resolvePreviewImageAvailability(
+      previewImage,
+      generatedContentImagesByUrl,
+      contentImagesPath
+    );
+
+    if (imageAvailability.hasImage) {
+      return;
+    }
+
+    const enrichment = isRecord(rawLink.enrichment) ? rawLink.enrichment : undefined;
+    const enrichmentEnabled =
+      typeof enrichment?.enabled === "boolean" ? enrichment.enabled : enabledByDefault;
+    const url = toStringOrUndefined(rawLink.url);
+    const linkPath = `$.links[${index}]`;
+    const imagePath = `${linkPath}.metadata.image`;
+
+    const remediationBase =
+      `Add a preview image at ${imagePath} (for example a local ` +
+      "'generated/images/<hash>.jpg' asset or a remote URL that resolves into " +
+      `${contentImagesPath}).`;
+    const enrichmentRemediation = enrichmentEnabled
+      ? `If this rich link should use enrichment, rerun npm run enrich:rich:strict && npm run images:sync and verify ${metadataPath} has metadata.image for '${linkId}'.`
+      : "This link has enrichment disabled; either add manual metadata.image, switch the link type to 'simple', or re-enable enrichment and rerun npm run enrich:rich:strict && npm run images:sync.";
+
+    issues.push({
+      level: "error",
+      source: linksSource,
+      path: imagePath,
+      message:
+        `Rich-card rendering is enabled for link '${linkId}'${url ? ` (${url})` : ""}, ` +
+        `but no renderable preview image is available. ${imageAvailability.detail}`,
+      remediation:
+        `${remediationBase} ${enrichmentRemediation} If this link should never use a rich card, ` +
+        `${linkPath}.type can be set to 'simple' (or set site.ui.richCards.renderMode='simple' globally).`
+    });
+  });
+
+  return issues;
 };
 
 interface AuthenticatedExtractorTarget {
@@ -637,6 +854,54 @@ const run = () => {
       remediation:
         "Restore data/policy/rich-enrichment-blockers.json and ensure it validates against schema/rich-enrichment-blockers.schema.json."
     });
+  }
+
+  if (hasRichRenderCandidates(linksData, siteData)) {
+    const metadataPath = resolveEnrichmentMetadataPath(siteData);
+    const metadataRead = tryReadJsonFile<GeneratedRichMetadataPayload>(metadataPath);
+    const contentImagesRead = tryReadJsonFile<GeneratedContentImagesPayload>(
+      DEFAULT_CONTENT_IMAGES_MANIFEST_PATH
+    );
+
+    if (!metadataRead.value) {
+      issues.push({
+        level: "error",
+        source: metadataPath,
+        path: "$",
+        message:
+          "Generated rich metadata is required to validate rich-card preview images, but it could not be loaded.",
+        remediation:
+          `Run npm run enrich:rich:strict to regenerate ${metadataPath}. ` +
+          `Then rerun npm run validate:data. ${metadataRead.errorMessage ?? ""}`.trim()
+      });
+    }
+
+    if (!contentImagesRead.value) {
+      issues.push({
+        level: "error",
+        source: DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+        path: "$",
+        message:
+          "Generated content-image manifest is required to validate rich-card preview images, but it could not be loaded.",
+        remediation:
+          `Run npm run images:sync to regenerate ${DEFAULT_CONTENT_IMAGES_MANIFEST_PATH}. ` +
+          `Then rerun npm run validate:data. ${contentImagesRead.errorMessage ?? ""}`.trim()
+      });
+    }
+
+    if (metadataRead.value && contentImagesRead.value) {
+      issues.push(
+        ...richCardPreviewImageIssues(
+          args.linksPath,
+          linksData,
+          siteData,
+          resolveGeneratedMetadataByLink(metadataRead.value),
+          resolveGeneratedContentImagesByUrl(contentImagesRead.value),
+          metadataPath,
+          DEFAULT_CONTENT_IMAGES_MANIFEST_PATH
+        )
+      );
+    }
   }
 
   issues.push(
