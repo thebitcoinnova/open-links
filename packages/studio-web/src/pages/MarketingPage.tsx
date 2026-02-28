@@ -1,24 +1,24 @@
-import { A } from "@solidjs/router";
-import { For } from "solid-js";
-import { CheckCircle2, Rocket, ShieldCheck, WandSparkles } from "lucide-solid";
+import PageShell from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import PageShell from "@/components/layout/PageShell";
+import { A } from "@solidjs/router";
+import { CheckCircle2, Rocket, ShieldCheck, WandSparkles } from "lucide-solid";
+import { For } from "solid-js";
 
 const features = [
   {
-    title: "Guided GitHub onboarding",
-    body: "Walk non-technical creators through account signup, app install, and fork provisioning.",
+    title: "Free Linktree alternative",
+    body: "Build a clean link-in-bio page without monthly fees or complicated setup.",
     icon: Rocket,
   },
   {
-    title: "Visual OpenLinks editor",
-    body: "Edit profile, links, and site settings with validation-aware forms and save feedback.",
+    title: "Simple drag-and-edit flow",
+    body: "Update your profile, links, and look in a visual editor designed for non-technical users.",
     icon: WandSparkles,
   },
   {
-    title: "Safe sync and publish",
-    body: "Scheduled upstream sync with conflict signals and deploy status visibility after every save.",
+    title: "Publish with confidence",
+    body: "Save changes, see status clearly, and keep your page up to date without guesswork.",
     icon: ShieldCheck,
   },
 ];
@@ -31,29 +31,29 @@ export default function MarketingPage() {
         <div class="absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
         <div class="relative z-10 max-w-3xl space-y-6">
           <p class="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-4 py-1 text-xs uppercase tracking-[0.2em] text-cyan-100">
-            <CheckCircle2 size={14} /> Public self-serve onboarding
+            <CheckCircle2 size={14} /> OpenLinks Studio
           </p>
           <h1 class="font-display text-4xl font-extrabold tracking-tight text-white md:text-6xl">
-            Launch an OpenLinks site without touching local git.
+            Your free Linktree alternative.
           </h1>
           <p class="max-w-2xl text-base text-slate-100/90 md:text-lg">
-            OpenLinks Studio provisions your fork, guides setup, and gives you a polished browser
-            editor that commits directly to your repository.
+            Create a polished link-in-bio page in minutes. No coding, no subscriptions, just one
+            simple place for all your links.
           </p>
           <div class="flex flex-wrap items-center gap-3">
             <A href="/onboarding">
               <Button size="lg" class="bg-white text-ink hover:bg-slate-100">
-                Start onboarding
+                Get started free
               </Button>
             </A>
             <A href="/roadmap">
               <Button size="lg" variant="outline">
-                View phase checklist
+                View product roadmap
               </Button>
             </A>
             <a href="https://github.com/pRizz/open-links" target="_blank" rel="noreferrer">
               <Button variant="ghost" size="lg">
-                View upstream template
+                Learn more
               </Button>
             </a>
           </div>
@@ -76,16 +76,16 @@ export default function MarketingPage() {
         <h2 class="font-display text-2xl font-bold text-white">How it works</h2>
         <ol class="mt-4 grid gap-3 text-sm text-slate-200 md:grid-cols-2">
           <li class="rounded-xl border border-white/15 bg-white/5 p-4">
-            1. Create or connect your GitHub account.
+            1. Sign in and answer a few quick setup questions.
           </li>
           <li class="rounded-xl border border-white/15 bg-white/5 p-4">
-            2. Install your GitHub App permissions.
+            2. Pick your style and add your links.
           </li>
           <li class="rounded-xl border border-white/15 bg-white/5 p-4">
-            3. Provision your OpenLinks fork in one click.
+            3. Preview your page before you publish.
           </li>
           <li class="rounded-xl border border-white/15 bg-white/5 p-4">
-            4. Edit content and publish with live status.
+            4. Publish and share your new link-in-bio.
           </li>
         </ol>
       </section>
