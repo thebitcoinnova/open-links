@@ -101,6 +101,12 @@ export const phaseChecklist: PhaseChecklist[] = [
       { id: "p7-1", label: "Captcha and anti-abuse controls", status: "done", priority: "P0" },
       { id: "p7-2", label: "Webhook verification hardening", status: "done", priority: "P0" },
       { id: "p7-3", label: "Integration test suite", status: "done", priority: "P0" },
+      {
+        id: "p7-4",
+        label: "Production env placeholder fail-fast preflight",
+        status: "done",
+        priority: "P0",
+      },
     ],
   },
 ];

@@ -6,13 +6,41 @@ const envSchema = z.object({
   INTERNAL_CRON_SECRET: z.string().min(16),
 });
 
-const parsed = envSchema.safeParse(process.env);
-if (!parsed.success) {
-  console.error("Invalid worker environment", parsed.error.flatten().fieldErrors);
+const exitInvalidEnv = (issues: Record<string, string[] | undefined>): never => {
+  console.error("Studio worker environment validation failed.");
+  console.error("Detected issues:");
+  for (const [key, messages] of Object.entries(issues)) {
+    if (!messages || messages.length === 0) {
+      console.error(`- ${key}: Invalid value`);
+      continue;
+    }
+    for (const message of messages) {
+      console.error(`- ${key}: ${message}`);
+    }
+  }
+  console.error("");
+  console.error("How to fix:");
+  console.error("- Set each variable above to a valid non-placeholder value.");
+  console.error("- For production builds, run: bun run studio:env:check:prod -- --target worker");
   process.exit(1);
-}
+};
 
-const env = parsed.data;
+const loadEnv = (): z.infer<typeof envSchema> => {
+  try {
+    return envSchema.parse(process.env);
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      exitInvalidEnv(error.flatten().fieldErrors);
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    exitInvalidEnv({
+      ENVIRONMENT: [message],
+    });
+  }
+  throw new Error("Unreachable environment parse state");
+};
+
+const env = loadEnv();
 
 const run = async () => {
   const response = await fetch(`${env.STUDIO_API_URL}/api/v1/internal/sync/run`, {

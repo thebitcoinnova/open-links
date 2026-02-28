@@ -26,19 +26,46 @@ const envSchema = z.object({
   TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
-const parsed = envSchema.safeParse(process.env);
-if (!parsed.success) {
-  console.error("Invalid environment configuration", parsed.error.flatten().fieldErrors);
+const exitInvalidEnv = (issues: Record<string, string[] | undefined>): never => {
+  console.error("Studio API environment validation failed.");
+  console.error("Detected issues:");
+  for (const [key, messages] of Object.entries(issues)) {
+    if (!messages || messages.length === 0) {
+      console.error(`- ${key}: Invalid value`);
+      continue;
+    }
+    for (const message of messages) {
+      console.error(`- ${key}: ${message}`);
+    }
+  }
+  console.error("");
+  console.error("How to fix:");
+  console.error("- Set each variable above to a valid non-placeholder value.");
+  console.error("- For production builds, run: bun run studio:env:check:prod -- --target api");
   process.exit(1);
-}
+};
 
-const env = parsed.data;
+const loadEnv = (): z.infer<typeof envSchema> => {
+  try {
+    return envSchema.parse(process.env);
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      exitInvalidEnv(error.flatten().fieldErrors);
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    exitInvalidEnv({
+      ENVIRONMENT: [message],
+    });
+  }
+  throw new Error("Unreachable environment parse state");
+};
+
+const env = loadEnv();
 
 if (env.NODE_ENV === "production" && !env.TURNSTILE_SECRET_KEY) {
-  console.error("Invalid environment configuration", {
-    TURNSTILE_SECRET_KEY: ["Required in production"],
+  exitInvalidEnv({
+    TURNSTILE_SECRET_KEY: ["Required in production builds"],
   });
-  process.exit(1);
 }
 
 export const config = {

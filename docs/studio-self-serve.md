@@ -127,6 +127,50 @@ Target for phase 1 is Railway with four components:
 - `VITE_GITHUB_APP_INSTALL_URL`
 - `VITE_TURNSTILE_SITE_KEY`
 
+### Production Env Preflight
+
+Studio production builds now support a fail-fast preflight that validates required env values and blocks known placeholder values before the build starts.
+
+Run the full Studio preflight:
+
+```bash
+bun run studio:env:check:prod
+```
+
+Run all Studio production builds with preflight checks:
+
+```bash
+bun run studio:build:prod
+```
+
+Target-specific checks:
+
+```bash
+bun run studio:env:check:prod -- --target web
+bun run studio:env:check:prod -- --target api
+bun run studio:env:check:prod -- --target worker
+```
+
+Example failure output:
+
+```text
+Studio production environment preflight
+Target: api
+Source: /path/to/.env.studio + process.env overrides
+
+Status: FAIL (2 issue(s))
+Detected issues:
+- [api] SESSION_SECRET (placeholder): SESSION_SECRET contains placeholder token "replace".
+- [api] TURNSTILE_SECRET_KEY (missing): TURNSTILE_SECRET_KEY is required for api production builds but is missing or empty.
+
+How to fix:
+- [api] Replace SESSION_SECRET with a non-placeholder value.
+- [api] Set TURNSTILE_SECRET_KEY to a real value in your env source and rerun the preflight.
+- Rerun: bun run studio:env:check:prod
+```
+
+The existing non-production build scripts (`studio:web:build`, `studio:api:build`, `studio:worker:build`) are intentionally unchanged. Use `studio:*:build:prod` when you want enforced production env validation.
+
 ## Manual GitHub App Setup
 
 Set in GitHub App settings:
