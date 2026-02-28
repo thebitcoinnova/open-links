@@ -16,7 +16,7 @@ Phase tracking lives in:
 
 ## API Endpoints
 
-- `GET /api/v1/auth/github/start`
+- `POST /api/v1/auth/github/start`
 - `GET /api/v1/auth/github/callback`
 - `GET /api/v1/onboarding/status`
 - `POST /api/v1/repos/provision`
@@ -114,6 +114,7 @@ Target for phase 1 is Railway with four components:
 - `GITHUB_APP_CLIENT_SECRET`
 - `GITHUB_APP_PRIVATE_KEY`
 - `GITHUB_WEBHOOK_SECRET`
+- `TURNSTILE_SECRET_KEY`
 - `DATABASE_URL`
 - `SESSION_SECRET`
 - `ENCRYPTION_KEY`
@@ -124,6 +125,7 @@ Target for phase 1 is Railway with four components:
 - `STUDIO_WEB_URL`
 - `VITE_STUDIO_API_URL`
 - `VITE_GITHUB_APP_INSTALL_URL`
+- `VITE_TURNSTILE_SITE_KEY`
 
 ## Manual GitHub App Setup
 
@@ -142,6 +144,7 @@ Required app permissions:
 ## Notes
 
 - This implementation is strict `fork-first` and defaults to `public` repository visibility.
+- Production onboarding requires a valid Cloudflare Turnstile token before starting GitHub OAuth.
 - Content saves commit directly to fork default branch (`main` by default).
 - Upstream sync conflicts disable auto-sync for the affected repo and require manual intervention.
 - Update `docs/studio-phase-checklist.md` whenever Studio scope/status changes.

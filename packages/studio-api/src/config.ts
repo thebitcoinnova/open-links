@@ -23,6 +23,7 @@ const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(14),
   SYNC_INTERVAL_HOURS: z.coerce.number().int().positive().default(12),
   GITHUB_TOKEN_REFRESH_MARGIN_SECONDS: z.coerce.number().int().nonnegative().default(300),
+  TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -32,6 +33,13 @@ if (!parsed.success) {
 }
 
 const env = parsed.data;
+
+if (env.NODE_ENV === "production" && !env.TURNSTILE_SECRET_KEY) {
+  console.error("Invalid environment configuration", {
+    TURNSTILE_SECRET_KEY: ["Required in production"],
+  });
+  process.exit(1);
+}
 
 export const config = {
   nodeEnv: env.NODE_ENV,
@@ -51,6 +59,10 @@ export const config = {
     privateKey: env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, "\n"),
     webhookSecret: env.GITHUB_WEBHOOK_SECRET,
     tokenRefreshMarginSeconds: env.GITHUB_TOKEN_REFRESH_MARGIN_SECONDS,
+  },
+  turnstile: {
+    secretKey: env.TURNSTILE_SECRET_KEY ?? null,
+    expectedHostname: new URL(env.STUDIO_WEB_URL).hostname.toLowerCase(),
   },
   upstreamRepo: {
     owner: env.UPSTREAM_REPO_OWNER,

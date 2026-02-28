@@ -1,9 +1,11 @@
+import { authStartRequestSchema } from "@openlinks/studio-shared";
 import type { FastifyPluginAsync } from "fastify";
 import { config } from "../config.js";
 import { SESSION_COOKIE_NAME, requireSession } from "../lib/auth.js";
 import { newId } from "../lib/ids.js";
 import { db } from "../services/database.js";
 import { githubAuthService } from "../services/github-auth.js";
+import { turnstileService } from "../services/turnstile.js";
 
 const OAUTH_STATE_COOKIE = "studio_oauth_state";
 
@@ -16,46 +18,108 @@ const cookieOptions = {
 };
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/api/v1/auth/github/start", async (_request, reply) => {
-    const state = newId();
-    const url = githubAuthService.createAuthorizationUrl(state);
+  app.post(
+    "/api/v1/auth/github/start",
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      const parsed = authStartRequestSchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        reply.code(400).send({
+          message: "Invalid auth start request",
+          issues: parsed.error.flatten(),
+        });
+        return;
+      }
 
-    reply.setCookie(OAUTH_STATE_COOKIE, state, {
-      ...cookieOptions,
-      maxAge: 60 * 10,
-    });
+      if (config.nodeEnv === "production" && !parsed.data.captchaToken) {
+        reply.code(400).send({
+          message: "Missing CAPTCHA token",
+          reason: "captcha_missing",
+        });
+        return;
+      }
 
-    reply.redirect(url);
-  });
+      if (parsed.data.captchaToken) {
+        const verification = await turnstileService.verifyToken({
+          token: parsed.data.captchaToken,
+          remoteIp: request.ip,
+        });
 
-  app.get("/api/v1/auth/github/callback", async (request, reply) => {
-    const query = request.query as { code?: string; state?: string };
+        if (verification.status === "unavailable") {
+          reply.code(503).send({
+            message: "CAPTCHA verification unavailable",
+            reason: verification.reason,
+          });
+          return;
+        }
 
-    if (!query.code || !query.state) {
-      reply.code(400).send({ message: "Missing OAuth callback parameters" });
-      return;
-    }
+        if (verification.status === "failed") {
+          reply.code(403).send({
+            message: "CAPTCHA verification failed",
+            reason: verification.reason,
+          });
+          return;
+        }
+      }
 
-    const expectedState = request.cookies[OAUTH_STATE_COOKIE];
-    if (!expectedState || expectedState !== query.state) {
-      reply.code(400).send({ message: "OAuth state mismatch" });
-      return;
-    }
+      const state = newId();
+      const url = githubAuthService.createAuthorizationUrl(state);
 
-    const session = await githubAuthService.exchangeCodeForSession({ code: query.code });
+      reply.setCookie(OAUTH_STATE_COOKIE, state, {
+        ...cookieOptions,
+        maxAge: 60 * 10,
+      });
 
-    const ttlMs = config.sessionTtlDays * 24 * 60 * 60 * 1000;
-    const expiresAt = new Date(Date.now() + ttlMs);
-    const sessionId = await db.createSession({ userId: session.user.id, expiresAt });
+      reply.send({ authorizeUrl: url });
+    },
+  );
 
-    reply.clearCookie(OAUTH_STATE_COOKIE, cookieOptions);
-    reply.setCookie(SESSION_COOKIE_NAME, sessionId, {
-      ...cookieOptions,
-      expires: expiresAt,
-    });
+  app.get(
+    "/api/v1/auth/github/callback",
+    {
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      const query = request.query as { code?: string; state?: string };
 
-    reply.redirect(`${config.studioWebUrl}/onboarding?github=connected`);
-  });
+      if (!query.code || !query.state) {
+        reply.code(400).send({ message: "Missing OAuth callback parameters" });
+        return;
+      }
+
+      const expectedState = request.cookies[OAUTH_STATE_COOKIE];
+      if (!expectedState || expectedState !== query.state) {
+        reply.code(400).send({ message: "OAuth state mismatch" });
+        return;
+      }
+
+      const session = await githubAuthService.exchangeCodeForSession({ code: query.code });
+
+      const ttlMs = config.sessionTtlDays * 24 * 60 * 60 * 1000;
+      const expiresAt = new Date(Date.now() + ttlMs);
+      const sessionId = await db.createSession({ userId: session.user.id, expiresAt });
+
+      reply.clearCookie(OAUTH_STATE_COOKIE, cookieOptions);
+      reply.setCookie(SESSION_COOKIE_NAME, sessionId, {
+        ...cookieOptions,
+        expires: expiresAt,
+      });
+
+      reply.redirect(`${config.studioWebUrl}/onboarding?github=connected`);
+    },
+  );
 
   app.get("/api/v1/auth/me", { preHandler: requireSession }, async (request) => {
     return {

@@ -1,4 +1,5 @@
 import type {
+  AuthStartResponse,
   CommitResult,
   OnboardingStatus,
   RepoContentPayload,
@@ -37,6 +38,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   baseUrl: API_BASE,
+
+  startGithubAuth(captchaToken?: string): Promise<AuthStartResponse> {
+    return request<AuthStartResponse>("/api/v1/auth/github/start", {
+      method: "POST",
+      body: JSON.stringify(captchaToken ? { captchaToken } : {}),
+    });
+  },
 
   async getMe(): Promise<{
     authenticated: true;

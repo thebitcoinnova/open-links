@@ -6,6 +6,14 @@ export const repoFileShaSchema = z.object({
   site: z.string().optional(),
 });
 
+export const authStartRequestSchema = z.object({
+  captchaToken: z.string().min(1).optional(),
+});
+
+export const authStartResponseSchema = z.object({
+  authorizeUrl: z.string().url(),
+});
+
 export const onboardingStatusSchema = z.object({
   githubConnected: z.boolean(),
   appInstalled: z.boolean(),
@@ -56,6 +64,8 @@ export const syncResultSchema = z.object({
 });
 
 export type OnboardingStatus = z.infer<typeof onboardingStatusSchema>;
+export type AuthStartRequest = z.infer<typeof authStartRequestSchema>;
+export type AuthStartResponse = z.infer<typeof authStartResponseSchema>;
 export type RepoContentPayload = z.infer<typeof repoContentPayloadSchema>;
 export type ValidationResult = z.infer<typeof validationResultSchema>;
 export type CommitResult = z.infer<typeof commitResultSchema>;

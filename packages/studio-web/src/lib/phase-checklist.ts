@@ -98,7 +98,7 @@ export const phaseChecklist: PhaseChecklist[] = [
     title: "Phase 7: Security + Launch",
     summary: "Hardening, anti-abuse, tests, and operational readiness.",
     tasks: [
-      { id: "p7-1", label: "Captcha and anti-abuse controls", status: "todo", priority: "P0" },
+      { id: "p7-1", label: "Captcha and anti-abuse controls", status: "done", priority: "P0" },
       { id: "p7-2", label: "Webhook verification hardening", status: "todo", priority: "P0" },
       { id: "p7-3", label: "Integration test suite", status: "todo", priority: "P0" },
     ],

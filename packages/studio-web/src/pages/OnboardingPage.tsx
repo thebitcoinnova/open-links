@@ -1,13 +1,41 @@
-import { createResource, createSignal, Show } from "solid-js";
-import { A } from "@solidjs/router";
+import PageShell from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import PageShell from "@/components/layout/PageShell";
 import { api } from "@/lib/api";
+import { A } from "@solidjs/router";
+import { Show, createResource, createSignal, onCleanup, onMount } from "solid-js";
 
 const githubInstallUrl =
   import.meta.env.VITE_GITHUB_APP_INSTALL_URL ??
   "https://github.com/apps/YOUR_APP_NAME/installations/new";
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+const captchaRequired = import.meta.env.PROD;
+
+const formatAuthStartError = (error: unknown): string => {
+  if (!(error instanceof Error)) {
+    return "Failed to start GitHub authentication";
+  }
+
+  try {
+    const parsed = JSON.parse(error.message) as { message?: string; reason?: string };
+    if (parsed.reason === "captcha_missing") {
+      return "Complete the security check to continue.";
+    }
+    if (parsed.reason === "captcha_failed") {
+      return "Security check failed. Please try again.";
+    }
+    if (parsed.reason === "captcha_unavailable") {
+      return "Security check service is unavailable. Please retry shortly.";
+    }
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // Fallback for non-JSON API errors.
+  }
+
+  return error.message;
+};
 
 export default function OnboardingPage() {
   const [me, { refetch: refetchMe }] = createResource(() => api.getMe());
@@ -16,10 +44,102 @@ export default function OnboardingPage() {
   );
   const [repos, { refetch: refetchRepos }] = createResource(() => (me() ? api.listRepos() : null));
   const [provisioning, setProvisioning] = createSignal(false);
+  const [authStarting, setAuthStarting] = createSignal(false);
   const [message, setMessage] = createSignal<string | null>(null);
+  const [captchaToken, setCaptchaToken] = createSignal<string | null>(null);
+  const [captchaError, setCaptchaError] = createSignal<string | null>(null);
+  let turnstileContainer: HTMLDivElement | undefined;
+  let turnstileWidgetId: string | null = null;
+  let turnstilePollHandle: number | null = null;
 
-  const startGitHubAuth = () => {
-    window.location.href = `${api.baseUrl}/api/v1/auth/github/start`;
+  onMount(() => {
+    if (!captchaRequired) {
+      return;
+    }
+
+    if (!turnstileSiteKey) {
+      setCaptchaError("Security check is not configured. Please contact support.");
+      return;
+    }
+
+    const renderWidget = () => {
+      if (!turnstileContainer || !window.turnstile || turnstileWidgetId) {
+        return false;
+      }
+
+      turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+        sitekey: turnstileSiteKey,
+        callback: (token) => {
+          setCaptchaToken(token);
+          setCaptchaError(null);
+        },
+        "expired-callback": () => {
+          setCaptchaToken(null);
+          setCaptchaError("Security check expired. Please complete it again.");
+        },
+        "error-callback": () => {
+          setCaptchaToken(null);
+          setCaptchaError("Security check failed to load. Please try again.");
+        },
+      });
+      return true;
+    };
+
+    if (!renderWidget()) {
+      turnstilePollHandle = window.setInterval(() => {
+        if (renderWidget() && turnstilePollHandle !== null) {
+          window.clearInterval(turnstilePollHandle);
+          turnstilePollHandle = null;
+        }
+      }, 100);
+    }
+
+    onCleanup(() => {
+      if (turnstilePollHandle !== null) {
+        window.clearInterval(turnstilePollHandle);
+        turnstilePollHandle = null;
+      }
+      if (turnstileWidgetId && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetId);
+        turnstileWidgetId = null;
+      }
+    });
+  });
+
+  const startGitHubAuth = async () => {
+    if (captchaRequired && !turnstileSiteKey) {
+      setMessage("Security check is not configured.");
+      return;
+    }
+
+    setAuthStarting(true);
+    setMessage(null);
+
+    try {
+      const response = await api.startGithubAuth(captchaToken() ?? undefined);
+      window.location.assign(response.authorizeUrl);
+    } catch (error) {
+      setMessage(formatAuthStartError(error));
+      setCaptchaToken(null);
+      if (captchaRequired && turnstileWidgetId && window.turnstile) {
+        window.turnstile.reset(turnstileWidgetId);
+      }
+    } finally {
+      setAuthStarting(false);
+    }
+  };
+
+  const canStartGitHubAuth = () => {
+    if (authStarting()) {
+      return false;
+    }
+    if (!captchaRequired) {
+      return true;
+    }
+    if (!turnstileSiteKey) {
+      return false;
+    }
+    return Boolean(captchaToken());
   };
 
   const provision = async () => {
@@ -78,12 +198,35 @@ export default function OnboardingPage() {
           <p class="text-sm text-slate-600">
             If you don’t have an account yet, create one and return here.
           </p>
+          <Show when={captchaRequired}>
+            <div class="space-y-2">
+              <p class="text-xs text-slate-600">Complete the security check before connecting.</p>
+              <Show
+                when={turnstileSiteKey}
+                fallback={
+                  <p class="text-xs text-rose-700">
+                    Security check is unavailable because site key is missing.
+                  </p>
+                }
+              >
+                <div
+                  class="min-h-[68px] rounded-md border border-slate-200 bg-slate-50 p-2"
+                  ref={(element) => {
+                    turnstileContainer = element;
+                  }}
+                />
+              </Show>
+              <Show when={captchaError()}>
+                <p class="text-xs text-rose-700">{captchaError()}</p>
+              </Show>
+            </div>
+          </Show>
           <div class="flex gap-2">
             <a href="https://github.com/signup" target="_blank" rel="noreferrer">
               <Button variant="outline">Create GitHub account</Button>
             </a>
-            <Button variant="primary" onClick={startGitHubAuth}>
-              Connect GitHub
+            <Button variant="primary" onClick={startGitHubAuth} disabled={!canStartGitHubAuth()}>
+              {authStarting() ? "Connecting..." : "Connect GitHub"}
             </Button>
           </div>
         </Card>

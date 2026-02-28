@@ -3,14 +3,15 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
 import { config } from "./config.js";
-import { healthRoutes } from "./routes/health.js";
 import { authRoutes } from "./routes/auth.js";
+import { healthRoutes } from "./routes/health.js";
+import { internalRoutes } from "./routes/internal.js";
 import { onboardingRoutes } from "./routes/onboarding.js";
 import { repoRoutes } from "./routes/repos.js";
 import { webhookRoutes } from "./routes/webhooks.js";
-import { internalRoutes } from "./routes/internal.js";
 
 const server = Fastify({
+  trustProxy: config.nodeEnv === "production",
   logger: {
     level: config.nodeEnv === "production" ? "info" : "debug",
   },

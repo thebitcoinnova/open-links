@@ -73,7 +73,7 @@ Use this file as the source of truth for implementation status, priorities, and 
 
 ## Phase 7: Security, Quality, Launch Readiness
 
-- [ ] `P0` CAPTCHA/anti-abuse on public onboarding entry points
+- [x] `P0` CAPTCHA/anti-abuse on public onboarding entry points
 - [ ] `P0` Webhook raw-body verification hardening
 - [ ] `P0` End-to-end integration tests for auth/provision/save/sync
 - [ ] `P1` Security review checklist and runbook completion
