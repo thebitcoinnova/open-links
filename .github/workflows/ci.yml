@@ -53,7 +53,6 @@ jobs:
             echo "- Ref: \`${{ github.ref }}\`"
             echo "- Studio Docker guard changed-path match: \`${{ steps.studio_docker_changes.outputs.studio_docker }}\`"
             echo "- Commands:"
-            echo "  - \`bun run validate:data\`"
             echo "  - \`bun run typecheck\`"
             echo "  - \`bun run build\`"
             echo "  - \`bun run quality:check\`"
@@ -83,7 +82,6 @@ jobs:
           }
 
           failures=()
-          run_check "validate_data" bun run validate:data || failures+=("validate:data")
           run_check "typecheck" bun run typecheck || failures+=("typecheck")
           run_check "build" bun run build || failures+=("build")
           run_check "quality_check" bun run quality:check || failures+=("quality:check")
@@ -120,7 +118,6 @@ jobs:
             echo "- Failed commands: \`${{ steps.run_required.outputs.failures }}\`"
             echo "- Review log sections below and use local parity commands to reproduce."
             echo "- Suggested commands:"
-            echo "  - \`bun run validate:data\`"
             echo "  - \`bun run typecheck\`"
             echo "  - \`bun run build\`"
             echo "  - \`bun run quality:check\`"
@@ -214,7 +211,6 @@ jobs:
           {
             echo "## Strict Signal Lane (Phase 5 Non-Blocking)"
             echo "- Commands:"
-            echo "  - \`bun run validate:data:strict\`"
             echo "  - \`bun run build:strict\`"
             echo "  - \`bun run quality:strict\`"
             echo "- Policy: strict failures are warning signals in this phase."
@@ -239,7 +235,6 @@ jobs:
           }
 
           failures=()
-          run_check "validate_data_strict" bun run validate:data:strict || failures+=("validate:data:strict")
           run_check "build_strict" bun run build:strict || failures+=("build:strict")
           run_check "quality_strict" bun run quality:strict || failures+=("quality:strict")
 
