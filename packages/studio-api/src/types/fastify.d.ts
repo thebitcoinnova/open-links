@@ -10,6 +10,7 @@ export interface SessionUser {
 
 declare module "fastify" {
   interface FastifyRequest {
+    rawBody?: Buffer;
     sessionUser?: SessionUser;
   }
 }

@@ -2,6 +2,7 @@ import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
+import rawBody from "fastify-raw-body";
 import { config } from "./config.js";
 import { authRoutes } from "./routes/auth.js";
 import { healthRoutes } from "./routes/health.js";
@@ -30,6 +31,12 @@ await server.register(rateLimit, {
   global: true,
   max: 200,
   timeWindow: "1 minute",
+});
+
+await server.register(rawBody, {
+  field: "rawBody",
+  encoding: false,
+  global: false,
 });
 
 await server.register(healthRoutes);

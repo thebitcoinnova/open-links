@@ -145,6 +145,7 @@ Required app permissions:
 
 - This implementation is strict `fork-first` and defaults to `public` repository visibility.
 - Production onboarding requires a valid Cloudflare Turnstile token before starting GitHub OAuth.
+- GitHub webhook verification validates `x-hub-signature-256` against exact raw payload bytes.
 - Content saves commit directly to fork default branch (`main` by default).
 - Upstream sync conflicts disable auto-sync for the affected repo and require manual intervention.
 - Update `docs/studio-phase-checklist.md` whenever Studio scope/status changes.
