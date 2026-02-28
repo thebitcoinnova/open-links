@@ -16,6 +16,13 @@ if [ -z "$staged_files" ]; then
   exit 0
 fi
 
+echo "pre-commit: running lockfile sync guard"
+if ! bun scripts/hooks/check-lockfile-sync.ts; then
+  echo "pre-commit: lockfile sync guard failed."
+  echo "Action: update lockfile with 'bun install', stage bun.lock, and retry commit."
+  exit 1
+fi
+
 matches_paths() {
   pattern="$1"
   if printf "%s\n" "$staged_files" | rg -q "$pattern"; then

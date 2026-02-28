@@ -25,6 +25,12 @@ export const phaseChecklist: PhaseChecklist[] = [
       { id: "p1-2", label: "Database schema + migrations", status: "done", priority: "P0" },
       { id: "p1-3", label: "Docker + compose development setup", status: "done", priority: "P1" },
       { id: "p1-4", label: "Bun-first workspace + checks", status: "done", priority: "P1" },
+      {
+        id: "p1-5",
+        label: "Docker dependency-drift guardrails (lockfile + CI path gate)",
+        status: "done",
+        priority: "P1",
+      },
     ],
   },
   {

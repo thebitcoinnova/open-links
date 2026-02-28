@@ -2,9 +2,12 @@ FROM oven/bun:1.3.9
 WORKDIR /app
 
 COPY bun.lock package.json ./
+COPY packages/studio-api/package.json packages/studio-api/package.json
+COPY packages/studio-web/package.json packages/studio-web/package.json
 COPY packages/studio-worker/package.json packages/studio-worker/package.json
+COPY packages/studio-shared/package.json packages/studio-shared/package.json
 
-RUN bun install --frozen-lockfile
+RUN HUSKY=0 bun install --frozen-lockfile
 
 COPY packages/studio-worker ./packages/studio-worker
 

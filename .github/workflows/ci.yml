@@ -20,6 +20,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect Studio Docker-related changes
+        id: studio_docker_changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            studio_docker:
+              - 'bun.lock'
+              - 'package.json'
+              - 'packages/**/package.json'
+              - 'packages/studio-api/Dockerfile'
+              - 'packages/studio-web/Dockerfile'
+              - 'packages/studio-worker/Dockerfile'
+              - 'docker-compose.studio.yml'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -35,16 +51,22 @@ jobs:
             echo "## CI Required Checks"
             echo "- Event: \`${{ github.event_name }}\`"
             echo "- Ref: \`${{ github.ref }}\`"
+            echo "- Studio Docker guard changed-path match: \`${{ steps.studio_docker_changes.outputs.studio_docker }}\`"
             echo "- Commands:"
             echo "  - \`bun run validate:data\`"
             echo "  - \`bun run typecheck\`"
             echo "  - \`bun run build\`"
             echo "  - \`bun run quality:check\`"
+            echo "  - \`docker build -f packages/studio-api/Dockerfile .\` (conditional)"
+            echo "  - \`docker build -f packages/studio-web/Dockerfile .\` (conditional)"
+            echo "  - \`docker build -f packages/studio-worker/Dockerfile .\` (conditional)"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run required checks
         id: run_required
         shell: bash
+        env:
+          STUDIO_DOCKER_CHANGED: ${{ steps.studio_docker_changes.outputs.studio_docker }}
         run: |
           set -o pipefail
           mkdir -p .ci-diagnostics/required
@@ -66,6 +88,23 @@ jobs:
           run_check "build" bun run build || failures+=("build")
           run_check "quality_check" bun run quality:check || failures+=("quality:check")
 
+          if [[ "$STUDIO_DOCKER_CHANGED" == "true" ]]; then
+            {
+              echo "### Studio Docker Guard"
+              echo "- Triggered by path changes."
+              echo "- Running Studio Docker image builds in required lane."
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            run_check "studio_docker_api_build" docker build -f packages/studio-api/Dockerfile . || failures+=("studio:docker:api")
+            run_check "studio_docker_web_build" docker build -f packages/studio-web/Dockerfile . || failures+=("studio:docker:web")
+            run_check "studio_docker_worker_build" docker build -f packages/studio-worker/Dockerfile . || failures+=("studio:docker:worker")
+          else
+            {
+              echo "### Studio Docker Guard"
+              echo "- Skipped by path filter (no Studio Docker/dependency file changes)."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           if ((${#failures[@]} > 0)); then
             echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
             exit 1
@@ -85,6 +124,10 @@ jobs:
             echo "  - \`bun run typecheck\`"
             echo "  - \`bun run build\`"
             echo "  - \`bun run quality:check\`"
+            echo "  - \`docker build -f packages/studio-api/Dockerfile .\`"
+            echo "  - \`docker build -f packages/studio-web/Dockerfile .\`"
+            echo "  - \`docker build -f packages/studio-worker/Dockerfile .\`"
+            echo "- If Docker builds failed with frozen lockfile errors, run \`bun install\` and commit updated \`bun.lock\`."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Replay required raw logs

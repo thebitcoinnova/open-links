@@ -63,6 +63,41 @@ bun run studio:typecheck
 bun run studio:lint
 ```
 
+## Troubleshooting: Frozen Lockfile Docker Build Errors
+
+If Docker build fails with:
+
+- `error: lockfile had changes, but lockfile is frozen`
+
+the usual cause is dependency manifest changes without a matching committed `bun.lock`.
+
+Remediation:
+
+1. Refresh dependencies and lockfile at repo root:
+
+```bash
+bun install
+```
+
+2. Commit updated lockfile and manifests:
+
+```bash
+git add bun.lock package.json packages/*/package.json
+git commit -m "chore: sync lockfile"
+```
+
+3. Retry Studio Docker build:
+
+```bash
+docker compose -f docker-compose.studio.yml up --build
+```
+
+Guardrails now in place:
+
+- Pre-commit blocks manifest dependency changes when `bun.lock` is not staged.
+- CI required lane runs path-scoped Studio Docker builds when Docker/dependency files change.
+- Studio Dockerfiles copy all workspace manifests before `bun install --frozen-lockfile` for deterministic installs.
+
 ## Railway Deployment Model
 
 Target for phase 1 is Railway with four components:

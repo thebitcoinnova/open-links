@@ -3,9 +3,11 @@ WORKDIR /app
 
 COPY bun.lock package.json ./
 COPY packages/studio-api/package.json packages/studio-api/package.json
+COPY packages/studio-web/package.json packages/studio-web/package.json
+COPY packages/studio-worker/package.json packages/studio-worker/package.json
 COPY packages/studio-shared/package.json packages/studio-shared/package.json
 
-RUN bun install --frozen-lockfile
+RUN HUSKY=0 bun install --frozen-lockfile
 
 COPY packages/studio-api ./packages/studio-api
 COPY packages/studio-shared ./packages/studio-shared
