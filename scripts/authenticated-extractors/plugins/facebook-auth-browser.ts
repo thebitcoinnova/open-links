@@ -2,16 +2,13 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { stdin, stdout } from "node:process";
-import {
-  summarizeAuthFlowResult,
-  waitForAuthenticatedSession
-} from "../auth-flow-runtime";
 import { loadEmbeddedCode } from "../../shared/embedded-code-loader";
+import { summarizeAuthFlowResult, waitForAuthenticatedSession } from "../auth-flow-runtime";
 import {
+  type BrowserSessionConfig,
   resolveAuthWaitSettings,
   resolveBrowserSessionConfig,
   runAgentBrowserJson,
-  type BrowserSessionConfig
 } from "../browser-session";
 import type {
   AuthFlowActionCandidate,
@@ -20,18 +17,18 @@ import type {
   AuthenticatedExtractorExtractContext,
   AuthenticatedExtractorExtractResult,
   AuthenticatedExtractorPlugin,
-  AuthenticatedExtractorSessionContext
+  AuthenticatedExtractorSessionContext,
 } from "../types";
 
 const EXTRACTOR_ID = "facebook-auth-browser";
-const EXTRACTOR_VERSION = "2026-02-26.3";
-const SELECTOR_PROFILE = "facebook-profile-auth-v3";
+const EXTRACTOR_VERSION = "2026-02-28.3";
+const SELECTOR_PROFILE = "facebook-profile-auth-v5";
 const DEFAULT_FACEBOOK_AGENT_BROWSER_SESSION = "openlinks-facebook-auth";
 const FACEBOOK_INSPECT_AUTH_FLOW_SNIPPET = loadEmbeddedCode(
-  "browser/facebook/inspect-auth-flow.js"
+  "browser/facebook/inspect-auth-flow.js",
 );
 const FACEBOOK_CLICK_TRUST_DEVICE_SNIPPET = loadEmbeddedCode(
-  "browser/facebook/click-trust-device.js"
+  "browser/facebook/click-trust-device.js",
 );
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -46,6 +43,16 @@ interface FacebookInspection {
   snapshot: AuthFlowSnapshot;
   heading?: string;
   imageUrl?: string;
+}
+
+interface FacebookImageCandidate {
+  src: string;
+  alt?: string;
+  domScore?: number;
+  width?: number;
+  height?: number;
+  sourceType?: string;
+  ariaLabel?: string;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -99,7 +106,7 @@ const safeTrim = (value: unknown): string | undefined => {
 const requireInteractiveTerminal = () => {
   if (!stdin.isTTY || !stdout.isTTY) {
     throw new Error(
-      "Interactive terminal is required for Facebook login. Run this command in a local TTY and retry."
+      "Interactive terminal is required for Facebook login. Run this command in a local TTY and retry.",
     );
   }
 };
@@ -107,7 +114,7 @@ const requireInteractiveTerminal = () => {
 const resolveAgentConfig = (): BrowserSessionConfig =>
   resolveBrowserSessionConfig({
     defaultSession: DEFAULT_FACEBOOK_AGENT_BROWSER_SESSION,
-    requireEncryptionKey: false
+    requireEncryptionKey: false,
   });
 
 const toCookieHeader = (value: unknown): string | undefined => {
@@ -146,16 +153,38 @@ const decodeHtmlEntities = (value: string): string =>
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", "\"")
+    .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
     .trim();
+
+const formatIdentifierDisplayName = (identifier: string): string => {
+  const parts = identifier
+    .split(/[._-]+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+
+  if (parts.length === 0) {
+    return identifier;
+  }
+
+  if (parts.every((part) => /^\d+$/.test(part))) {
+    return identifier;
+  }
+
+  return parts.map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" ");
+};
+
+const isGenericHeading = (heading: string): boolean =>
+  /^(new|notifications?|friends?|messages?|menu|search|home|watch|marketplace|reels)$/i.test(
+    heading.trim(),
+  );
 
 const detectPlaceholderSignals = (body: string): string[] => {
   const normalized = body.toLowerCase();
   const checks: Array<{ label: string; pattern: RegExp }> = [
     { label: "content_unavailable", pattern: /this content isn't available right now/i },
     { label: "login_wall", pattern: /log in|sign up for facebook/i },
-    { label: "temporarily_blocked", pattern: /temporarily blocked|security check/i }
+    { label: "temporarily_blocked", pattern: /temporarily blocked|security check/i },
   ];
 
   const findings: string[] = [];
@@ -179,11 +208,13 @@ const isLikelyProfileImageUrl = (value: string | undefined): boolean => {
   }
 
   const blockedPatterns = [
+    /\/images\/emoji\.php/i,
+    /\/emoji\.php/i,
     /\/images\/fb_icon_325x325\.png/i,
     /\/favicon\.ico/i,
     /static\.xx\.fbcdn\.net\/rsrc\.php/i,
     /facebook\.com\/rsrc\.php/i,
-    /\/logos?\//i
+    /\/logos?\//i,
   ];
 
   if (blockedPatterns.some((pattern) => pattern.test(normalized))) {
@@ -193,10 +224,10 @@ const isLikelyProfileImageUrl = (value: string | undefined): boolean => {
   const positivePatterns = [
     /scontent/i,
     /lookaside/i,
-    /fbcdn\.net/i,
+    /\/v\/t39\./i,
     /profile/i,
     /photo/i,
-    /picture/i
+    /picture/i,
   ];
 
   return positivePatterns.some((pattern) => pattern.test(normalized));
@@ -216,16 +247,225 @@ const extractStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) {
     return [];
   }
-  return value
-    .map((item) => safeTrim(item))
-    .filter((item): item is string => Boolean(item));
+  return value.map((item) => safeTrim(item)).filter((item): item is string => Boolean(item));
+};
+
+const toFiniteNumber = (value: unknown): number | undefined => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : undefined;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const extractAreaHintFromUrl = (sourceUrl: string): number => {
+  try {
+    const parsed = new URL(sourceUrl);
+    const stp = parsed.searchParams.get("stp")?.toLowerCase() ?? "";
+    if (!stp) {
+      return 0;
+    }
+
+    let maxArea = 0;
+    for (const token of stp.split("_")) {
+      const match = token.match(/^([sp])(\d{2,4})x(\d{2,4})$/i);
+      if (!match) {
+        continue;
+      }
+
+      const width = Number.parseInt(match[2], 10);
+      const height = Number.parseInt(match[3], 10);
+      if (!Number.isFinite(width) || !Number.isFinite(height)) {
+        continue;
+      }
+      maxArea = Math.max(maxArea, width * height);
+    }
+
+    return maxArea;
+  } catch {
+    return 0;
+  }
+};
+
+const hasFbCompressionHint = (sourceUrl: string): boolean => {
+  const normalized = sourceUrl.toLowerCase();
+  try {
+    const parsed = new URL(sourceUrl);
+    const stp = parsed.searchParams.get("stp")?.toLowerCase() ?? "";
+    if (/(^|_)fb\d{1,3}(_|$)/.test(stp)) {
+      return true;
+    }
+  } catch {
+    return /(^|[_?&=-])fb\d{1,3}([_&]|$)/.test(normalized);
+  }
+  return false;
+};
+
+const extractMaxSideHintFromUrl = (sourceUrl: string): number => {
+  try {
+    const parsed = new URL(sourceUrl);
+    const stp = parsed.searchParams.get("stp")?.toLowerCase() ?? "";
+    if (!stp) {
+      return 0;
+    }
+
+    let maxSide = 0;
+    for (const token of stp.split("_")) {
+      const match = token.match(/^([sp])(\d{2,4})x(\d{2,4})$/i);
+      if (!match) {
+        continue;
+      }
+
+      const width = Number.parseInt(match[2], 10);
+      const height = Number.parseInt(match[3], 10);
+      if (!Number.isFinite(width) || !Number.isFinite(height)) {
+        continue;
+      }
+
+      maxSide = Math.max(maxSide, width, height);
+    }
+
+    return maxSide;
+  } catch {
+    return 0;
+  }
+};
+
+const scoreProfileImageCandidate = (candidate: FacebookImageCandidate): number => {
+  if (!isLikelyProfileImageUrl(candidate.src)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const normalized = candidate.src.toLowerCase();
+  let score = candidate.domScore ?? 0;
+
+  if (/scontent/.test(normalized)) {
+    score += 40;
+  }
+  if (/lookaside/.test(normalized)) {
+    score += 20;
+  }
+  if (/\/v\/t39\./.test(normalized)) {
+    score += 20;
+  }
+  if (/profile|photo|picture/.test(normalized)) {
+    score += 15;
+  }
+  if (/profile picture|profile/i.test(candidate.alt ?? "")) {
+    score += 25;
+  }
+  if (candidate.sourceType === "role-img") {
+    score += 45;
+  }
+  if (/profile|picture|avatar/i.test(candidate.ariaLabel ?? "")) {
+    score += 50;
+  }
+
+  const domArea = Math.max(0, (candidate.width ?? 0) * (candidate.height ?? 0));
+  if (domArea >= 250_000) {
+    score += 30;
+  } else if (domArea >= 65_536) {
+    score += 10;
+  }
+  if (domArea > 700_000 || (candidate.width ?? 0) > 700 || (candidate.height ?? 0) > 700) {
+    score -= 90;
+  }
+  const aspectRatio =
+    candidate.width && candidate.height
+      ? candidate.width / Math.max(candidate.height, 1)
+      : undefined;
+  if (aspectRatio && aspectRatio >= 0.85 && aspectRatio <= 1.2) {
+    score += 25;
+  } else if (aspectRatio) {
+    score -= 15;
+  }
+
+  const areaHint = extractAreaHintFromUrl(candidate.src);
+  if (areaHint >= 250_000) {
+    score += 25;
+  } else if (areaHint > 0 && areaHint < 65_536) {
+    score -= 30;
+  }
+
+  const maxSideHint = extractMaxSideHintFromUrl(candidate.src);
+  if (maxSideHint > 0 && maxSideHint <= 320) {
+    score -= 110;
+  } else if (maxSideHint >= 400) {
+    score += 20;
+  }
+
+  if (hasFbCompressionHint(candidate.src)) {
+    score -= 180;
+  }
+  if (/\/images\/emoji\.php|\/emoji\.php/.test(normalized)) {
+    score -= 400;
+  }
+
+  return score;
+};
+
+const resolvePreferredProfileImage = (
+  payload: Record<string, unknown> | null,
+  explicitProfileImageUrl: string | undefined,
+  metaImageUrl: string | undefined,
+): string | undefined => {
+  if (isLikelyProfileImageUrl(explicitProfileImageUrl)) {
+    return explicitProfileImageUrl;
+  }
+
+  const imageCandidates = Array.isArray(payload?.imageCandidates) ? payload.imageCandidates : [];
+  const candidates: FacebookImageCandidate[] = [];
+  for (const candidate of imageCandidates) {
+    if (!isRecord(candidate)) {
+      continue;
+    }
+
+    const src = safeTrim(candidate.src);
+    if (!src) {
+      continue;
+    }
+
+    candidates.push({
+      src,
+      alt: safeTrim(candidate.alt),
+      domScore: toFiniteNumber(candidate.score),
+      width: toFiniteNumber(candidate.width),
+      height: toFiniteNumber(candidate.height),
+      sourceType: safeTrim(candidate.sourceType),
+      ariaLabel: safeTrim(candidate.ariaLabel),
+    });
+  }
+
+  const ranked = candidates
+    .map((candidate) => ({
+      candidate,
+      score: scoreProfileImageCandidate(candidate),
+    }))
+    .filter((entry) => Number.isFinite(entry.score))
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+      const leftArea = (left.candidate.width ?? 0) * (left.candidate.height ?? 0);
+      const rightArea = (right.candidate.width ?? 0) * (right.candidate.height ?? 0);
+      return rightArea - leftArea;
+    });
+
+  if (ranked.length > 0) {
+    return ranked[0]?.candidate.src;
+  }
+
+  return isLikelyProfileImageUrl(metaImageUrl) ? metaImageUrl : undefined;
 };
 
 const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<FacebookInspection> => {
   const evalResult = runAgentBrowserJson<unknown>(
     ["eval", FACEBOOK_INSPECT_AUTH_FLOW_SNIPPET],
     config,
-    { allowFailure: true }
+    { allowFailure: true },
   );
 
   const payload = extractEvalPayload(evalResult.response?.data);
@@ -233,30 +473,11 @@ const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<Facebo
   const currentUrl = safeTrim(payload?.currentUrl);
   const bodySnippet = safeTrim(payload?.bodySnippet);
   const heading = safeTrim(payload?.heading);
+  const profileImageUrl = safeTrim(payload?.profileImage);
   const metaImageUrl = safeTrim(payload?.metaImage);
   const controls = extractStringArray(payload?.controls);
-
-  const imageCandidates = Array.isArray(payload?.imageCandidates) ? payload?.imageCandidates : [];
-  const imageUrls: string[] = [];
-  for (const candidate of imageCandidates) {
-    if (!isRecord(candidate)) {
-      continue;
-    }
-    const src = safeTrim(candidate.src);
-    if (src) {
-      imageUrls.push(src);
-    }
-  }
-
-  const imageUrl =
-    imageUrls.find((value) => isLikelyProfileImageUrl(value)) ??
-    (isLikelyProfileImageUrl(metaImageUrl) ? metaImageUrl : undefined);
-  const lowerCombined = [
-    title ?? "",
-    bodySnippet ?? "",
-    currentUrl ?? "",
-    controls.join("\n")
-  ]
+  const imageUrl = resolvePreferredProfileImage(payload, profileImageUrl, metaImageUrl);
+  const lowerCombined = [title ?? "", bodySnippet ?? "", currentUrl ?? "", controls.join("\n")]
     .join("\n")
     .toLowerCase();
 
@@ -269,18 +490,19 @@ const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<Facebo
 
   const hasMfaSignals =
     /\/checkpoint|\/two_factor|remember_browser\/login_approvals|approvals_code/i.test(
-      currentUrl ?? ""
+      currentUrl ?? "",
     ) ||
     /two-factor|two factor|security code|authentication app|approve your login|enter the code/i.test(
-      lowerCombined
+      lowerCombined,
     );
 
   const hasTrustDeviceSignals =
     /\/remember_browser/i.test(currentUrl ?? "") ||
     /trust this device|remember browser|save browser|yes, trust/i.test(lowerCombined);
 
-  const hasBlockedSignals =
-    /temporarily blocked|account restricted|security check required/i.test(lowerCombined);
+  const hasBlockedSignals = /temporarily blocked|account restricted|security check required/i.test(
+    lowerCombined,
+  );
 
   const placeholderSignals = detectPlaceholderSignals(bodySnippet ?? "");
   const signals = [...placeholderSignals];
@@ -304,8 +526,8 @@ const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<Facebo
   if (hasTrustDeviceSignals) {
     const trustControl = controls.find((value) =>
       /trust this device|trust device|save browser|remember browser|yes, trust/i.test(
-        value.toLowerCase()
-      )
+        value.toLowerCase(),
+      ),
     );
     actionCandidates.push({
       actionId: "facebook.trust_device.confirm",
@@ -315,7 +537,7 @@ const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<Facebo
       confidence: trustControl ? 0.95 : 0.4,
       details: trustControl
         ? "Matched consent control text on trust-device screen."
-        : "Detected trust-device screen but no exact button match was found."
+        : "Detected trust-device screen but no exact button match was found.",
     });
   }
 
@@ -353,17 +575,17 @@ const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<Facebo
       currentUrl,
       title,
       signals: [...new Set(signals)],
-      actionCandidates
+      actionCandidates,
     },
     heading,
-    imageUrl
+    imageUrl,
   };
 };
 
 const openFacebookTarget = (config: BrowserSessionConfig, sourceUrl: string, headed: boolean) => {
   runAgentBrowserJson(["open", sourceUrl], config, {
     extraArgs: headed ? ["--headed"] : [],
-    allowFailure: true
+    allowFailure: true,
   });
   runAgentBrowserJson(["wait", "1500"], config, { allowFailure: true });
 };
@@ -375,32 +597,32 @@ const waitForMs = (config: BrowserSessionConfig, durationMs: number): Promise<vo
 
 const executeFacebookAction = async (
   config: BrowserSessionConfig,
-  candidate: AuthFlowActionCandidate
+  candidate: AuthFlowActionCandidate,
 ): Promise<{ success: boolean; details?: string }> => {
   if (candidate.actionId !== "facebook.trust_device.confirm") {
     return {
       success: false,
-      details: `Unsupported action '${candidate.actionId}'.`
+      details: `Unsupported action '${candidate.actionId}'.`,
     };
   }
 
   const result = runAgentBrowserJson<unknown>(
     ["eval", FACEBOOK_CLICK_TRUST_DEVICE_SNIPPET],
     config,
-    { allowFailure: true }
+    { allowFailure: true },
   );
 
   const payload = extractEvalPayload(result.response?.data);
   if (payload?.clicked === true) {
     return {
       success: true,
-      details: `clicked '${safeTrim(payload.label) ?? "trust_device"}'`
+      details: `clicked '${safeTrim(payload.label) ?? "trust_device"}'`,
     };
   }
 
   return {
     success: false,
-    details: safeTrim(payload?.reason) ?? "no_matching_control"
+    details: safeTrim(payload?.reason) ?? "no_matching_control",
   };
 };
 
@@ -415,7 +637,7 @@ const resolveProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
   const hostname = parsed.hostname.replace(/^www\./, "").toLowerCase();
   if (hostname !== "facebook.com" && !hostname.endsWith(".facebook.com")) {
     throw new Error(
-      `Facebook extractor only supports facebook.com hosts. Got '${parsed.hostname}' for '${sourceUrl}'.`
+      `Facebook extractor only supports facebook.com hosts. Got '${parsed.hostname}' for '${sourceUrl}'.`,
     );
   }
 
@@ -441,24 +663,30 @@ const resolveProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
 
   return {
     identifier,
-    canonicalUrl: `https://www.facebook.com/${identifier}`
+    canonicalUrl: `https://www.facebook.com/${identifier}`,
   };
 };
 
 const downloadImageAsset = async (
   config: BrowserSessionConfig,
   context: AuthenticatedExtractorExtractContext,
-  sourceUrl: string
-): Promise<{ path: string; sourceUrl: string; contentType: string; bytes: number; sha256: string }> => {
+  sourceUrl: string,
+): Promise<{
+  path: string;
+  sourceUrl: string;
+  contentType: string;
+  bytes: number;
+  sha256: string;
+}> => {
   const cookiesPayload = runAgentBrowserJson(["cookies", "get"], config, {
-    allowFailure: true
+    allowFailure: true,
   }).response?.data;
   const cookieHeader = toCookieHeader(cookiesPayload);
 
   const headers: Record<string, string> = {
     "user-agent": USER_AGENT,
     accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-    "accept-language": "en-US,en;q=0.9"
+    "accept-language": "en-US,en;q=0.9",
   };
   if (cookieHeader) {
     headers.cookie = cookieHeader;
@@ -467,11 +695,13 @@ const downloadImageAsset = async (
   const response = await fetch(sourceUrl, {
     method: "GET",
     redirect: "follow",
-    headers
+    headers,
   });
 
   if (!response.ok) {
-    throw new Error(`Facebook extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`);
+    throw new Error(
+      `Facebook extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`,
+    );
   }
 
   const bytes = Buffer.from(await response.arrayBuffer());
@@ -489,21 +719,25 @@ const downloadImageAsset = async (
   fs.mkdirSync(context.publicAssetDirAbsolute, { recursive: true });
   fs.writeFileSync(path.join(context.publicAssetDirAbsolute, fileName), bytes);
 
-  const relativePath = path.posix.join(context.publicAssetDirRelative.replaceAll("\\", "/"), fileName);
-  const contentType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream";
+  const relativePath = path.posix.join(
+    context.publicAssetDirRelative.replaceAll("\\", "/"),
+    fileName,
+  );
+  const contentType =
+    response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream";
 
   return {
     path: relativePath,
     sourceUrl,
     contentType,
     bytes: bytes.byteLength,
-    sha256
+    sha256,
   };
 };
 
 const verifySession = async (
   config: BrowserSessionConfig,
-  targetUrl: string
+  targetUrl: string,
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
   openFacebookTarget(config, targetUrl, false);
 
@@ -517,13 +751,13 @@ const verifySession = async (
       promptOnActions: false,
       pauseOnUnknown: false,
       inspect: async () => (await inspectFacebookFlow(config)).snapshot,
-      wait: async (durationMs) => waitForMs(config, durationMs)
+      wait: async (durationMs) => waitForMs(config, durationMs),
     });
 
     return {
       verified: result.verified,
       details: summarizeAuthFlowResult(result),
-      report: result.report
+      report: result.report,
     };
   } finally {
     runAgentBrowserJson(["close"], config, { allowFailure: true });
@@ -531,7 +765,7 @@ const verifySession = async (
 };
 
 const ensureSession = async (
-  context: AuthenticatedExtractorSessionContext
+  context: AuthenticatedExtractorSessionContext,
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
   const target = resolveProfileTarget(context.targetUrl);
   const config = resolveAgentConfig();
@@ -547,13 +781,13 @@ const ensureSession = async (
   console.log("");
   console.log(`[${context.extractorId}] Facebook login required.`);
   console.log(
-    `[${context.extractorId}] A headed browser will open. Complete login and any MFA/challenge screens.`
+    `[${context.extractorId}] A headed browser will open. Complete login and any MFA/challenge screens.`,
   );
   console.log(
-    `[${context.extractorId}] Consent actions (for example trust-device) are ask-first and require your confirmation.`
+    `[${context.extractorId}] Consent actions (for example trust-device) are ask-first and require your confirmation.`,
   );
   console.log(
-    `[${context.extractorId}] Waiting up to ${settings.timeoutMs}ms (poll ${settings.pollMs}ms).`
+    `[${context.extractorId}] Waiting up to ${settings.timeoutMs}ms (poll ${settings.pollMs}ms).`,
   );
 
   openFacebookTarget(config, target.canonicalUrl, true);
@@ -567,13 +801,13 @@ const ensureSession = async (
       pauseOnUnknown: true,
       inspect: async () => (await inspectFacebookFlow(config)).snapshot,
       wait: async (durationMs) => waitForMs(config, durationMs),
-      executeAction: async (candidate) => executeFacebookAction(config, candidate)
+      executeAction: async (candidate) => executeFacebookAction(config, candidate),
     });
 
     return {
       verified: result.verified,
       details: summarizeAuthFlowResult(result),
-      report: result.report
+      report: result.report,
     };
   } finally {
     runAgentBrowserJson(["close"], config, { allowFailure: true });
@@ -581,7 +815,7 @@ const ensureSession = async (
 };
 
 const extract = async (
-  context: AuthenticatedExtractorExtractContext
+  context: AuthenticatedExtractorExtractContext,
 ): Promise<AuthenticatedExtractorExtractResult> => {
   const config = resolveAgentConfig();
   const target = resolveProfileTarget(context.sourceUrl);
@@ -590,7 +824,7 @@ const extract = async (
   if (!preCheck.verified) {
     const ensured = await ensureSession({
       extractorId: context.extractorId,
-      targetUrl: target.canonicalUrl
+      targetUrl: target.canonicalUrl,
     });
     if (!ensured.verified) {
       throw new Error(`Facebook login verification failed. ${ensured.details ?? "unknown error"}`);
@@ -602,16 +836,19 @@ const extract = async (
     const inspection = await inspectFacebookFlow(config);
     if (inspection.snapshot.state !== "authenticated" || !inspection.imageUrl) {
       throw new Error(
-        `Facebook extractor could not capture authenticated profile image. state=${inspection.snapshot.state}; signals=${inspection.snapshot.signals.join(
-          ","
-        ) || "none"}; url=${inspection.snapshot.currentUrl ?? "unknown"}`
+        `Facebook extractor could not capture authenticated profile image. state=${inspection.snapshot.state}; signals=${
+          inspection.snapshot.signals.join(",") || "none"
+        }; url=${inspection.snapshot.currentUrl ?? "unknown"}`,
       );
     }
 
     const imageAsset = await downloadImageAsset(config, context, inspection.imageUrl);
-    const displayName = inspection.heading ?? target.identifier;
-    const title = `${decodeHtmlEntities(displayName)} on Facebook`;
-    const description = `Profile and updates from ${decodeHtmlEntities(displayName)} on Facebook.`;
+    const decodedHeading = inspection.heading ? decodeHtmlEntities(inspection.heading) : undefined;
+    const fallbackDisplayName = formatIdentifierDisplayName(target.identifier);
+    const displayName =
+      decodedHeading && !isGenericHeading(decodedHeading) ? decodedHeading : fallbackDisplayName;
+    const title = `${displayName} on Facebook`;
+    const description = `Profile and updates from ${displayName} on Facebook.`;
 
     return {
       capturedAt: new Date().toISOString(),
@@ -619,7 +856,7 @@ const extract = async (
         title,
         description,
         image: imageAsset.path,
-        sourceLabel: resolveSourceLabel(context.sourceUrl)
+        sourceLabel: resolveSourceLabel(context.sourceUrl),
       },
       assets: {
         image: {
@@ -627,8 +864,8 @@ const extract = async (
           sourceUrl: imageAsset.sourceUrl,
           contentType: imageAsset.contentType,
           bytes: imageAsset.bytes,
-          sha256: imageAsset.sha256
-        }
+          sha256: imageAsset.sha256,
+        },
       },
       diagnostics: {
         extractorVersion: EXTRACTOR_VERSION,
@@ -640,9 +877,9 @@ const extract = async (
           `identifier=${target.identifier}`,
           `authState=${inspection.snapshot.state}`,
           `session=${config.session}`,
-          `sessionName=${config.sessionName}`
-        ]
-      }
+          `sessionName=${config.sessionName}`,
+        ],
+      },
     };
   } finally {
     runAgentBrowserJson(["close"], config, { allowFailure: true });
@@ -652,5 +889,5 @@ const extract = async (
 export const facebookAuthBrowserExtractor: AuthenticatedExtractorPlugin = {
   id: EXTRACTOR_ID,
   ensureSession,
-  extract
+  extract,
 };
