@@ -1,6 +1,6 @@
-import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
-import { z } from "zod";
 import type { RepoContentPayload } from "@openlinks/studio-shared";
+import type { FastifyPluginAsync, FastifyRequest } from "fastify";
+import { z } from "zod";
 import { config } from "../config.js";
 import { requireSession } from "../lib/auth.js";
 import { db } from "../services/database.js";
@@ -8,6 +8,7 @@ import { githubAuthService } from "../services/github-auth.js";
 import { githubRepoService } from "../services/github-repo.js";
 import { syncRepo } from "../services/sync.js";
 import { validateRepoContent } from "../services/validation.js";
+import type { StudioApiDependencies } from "../types/studio-api-dependencies.js";
 
 const provisionBodySchema = z.object({
   visibility: z.enum(["public", "private"]).optional(),
@@ -26,290 +27,316 @@ const contentBodySchema = z.object({
     .optional(),
 });
 
-const resolveSessionUser = (request: FastifyRequest, reply: FastifyReply) => {
-  const user = request.sessionUser;
-  if (!user) {
-    reply.code(401).send({ message: "Authentication required" });
-    return null;
-  }
-  return user;
-};
+const resolveSessionUser = (request: FastifyRequest) => request.sessionUser ?? null;
 
-export const repoRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/api/v1/repos", { preHandler: requireSession }, async (request, reply) => {
-    const user = resolveSessionUser(request, reply);
-    if (!user) {
-      return;
-    }
-    const repos = await db.listReposForUser(user.id);
-    return { repos };
-  });
+type RepoRouteDeps = Pick<
+  StudioApiDependencies,
+  | "config"
+  | "requireSession"
+  | "db"
+  | "githubAuthService"
+  | "githubRepoService"
+  | "syncRepo"
+  | "validateRepoContent"
+>;
 
-  app.post("/api/v1/repos/provision", { preHandler: requireSession }, async (request, reply) => {
-    const user = resolveSessionUser(request, reply);
-    if (!user) {
-      return;
-    }
-    const parsed = provisionBodySchema.safeParse(request.body ?? {});
-    if (!parsed.success) {
-      reply
-        .code(400)
-        .send({ message: "Invalid provision request", issues: parsed.error.flatten() });
-      return;
-    }
-
-    const hasInstall = await githubAuthService.hasRequiredInstallation(user.id).catch(() => false);
-    if (!hasInstall) {
-      reply.code(409).send({
-        message: "GitHub App installation missing. Install the app before provisioning a fork.",
-        reason: "github_app_not_installed",
-      });
-      return;
-    }
-
-    const token = await githubAuthService.getUserToken(user.id);
-
-    try {
-      const fork = await githubRepoService.createFork({
-        accessToken: token,
-        upstreamOwner: config.upstreamRepo.owner,
-        upstreamRepo: config.upstreamRepo.name,
-      });
-
-      const repo = await db.upsertRepo({
-        userId: user.id,
-        owner: fork.owner,
-        name: fork.name,
-        defaultBranch: fork.defaultBranch,
-        visibility: parsed.data.visibility ?? fork.visibility,
-        upstreamOwner: config.upstreamRepo.owner,
-        upstreamName: config.upstreamRepo.name,
-        syncIntervalHours: config.syncIntervalHours,
-      });
-
-      await db.logOperation({
-        repoId: repo.id,
-        userId: user.id,
-        operation: "provision_fork",
-        status: "ok",
-        detail: { owner: fork.owner, name: fork.name },
-      });
-
-      reply.code(201).send({ repo });
-    } catch (error: unknown) {
-      await db.logOperation({
-        userId: user.id,
-        operation: "provision_fork",
-        status: "error",
-        detail: { message: error instanceof Error ? error.message : "unknown" },
-      });
-
-      reply.code(500).send({
-        message: error instanceof Error ? error.message : "Failed to provision repository",
-      });
-    }
-  });
-
-  app.get(
-    "/api/v1/repos/:repoId/content",
-    { preHandler: requireSession },
-    async (request, reply) => {
-      const user = resolveSessionUser(request, reply);
+export const createRepoRoutes =
+  (deps: RepoRouteDeps): FastifyPluginAsync =>
+  async (app) => {
+    app.get("/api/v1/repos", { preHandler: deps.requireSession }, async (request) => {
+      const user = resolveSessionUser(request);
       if (!user) {
         return;
       }
-      const { repoId } = request.params as { repoId: string };
+      const repos = await deps.db.listReposForUser(user.id);
+      return { repos };
+    });
 
-      const repo = await db.getRepoByIdForUser(repoId, user.id);
-      if (!repo) {
-        reply.code(404).send({ message: "Repository not found" });
-        return;
-      }
+    app.post(
+      "/api/v1/repos/provision",
+      { preHandler: deps.requireSession },
+      async (request, reply) => {
+        const user = resolveSessionUser(request);
+        if (!user) {
+          return;
+        }
+        const parsed = provisionBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          reply
+            .code(400)
+            .send({ message: "Invalid provision request", issues: parsed.error.flatten() });
+          return;
+        }
 
-      const token = await githubAuthService.getUserToken(user.id);
-      const content = await githubRepoService.getOpenLinksContent({
-        accessToken: token,
-        owner: repo.owner,
-        repo: repo.name,
-      });
+        const hasInstall = await deps.githubAuthService
+          .hasRequiredInstallation(user.id)
+          .catch(() => false);
+        if (!hasInstall) {
+          reply.code(409).send({
+            message: "GitHub App installation missing. Install the app before provisioning a fork.",
+            reason: "github_app_not_installed",
+          });
+          return;
+        }
 
-      await db.upsertRepoFileSha(repo.id, "data/profile.json", content.sha.profile ?? "");
-      await db.upsertRepoFileSha(repo.id, "data/links.json", content.sha.links ?? "");
-      await db.upsertRepoFileSha(repo.id, "data/site.json", content.sha.site ?? "");
+        const token = await deps.githubAuthService.getUserToken(user.id);
 
-      reply.send(content);
-    },
-  );
+        try {
+          const fork = await deps.githubRepoService.createFork({
+            accessToken: token,
+            upstreamOwner: deps.config.upstreamRepo.owner,
+            upstreamRepo: deps.config.upstreamRepo.name,
+          });
 
-  app.post(
-    "/api/v1/repos/:repoId/validate",
-    { preHandler: requireSession },
-    async (request, reply) => {
-      const parsed = contentBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        reply.code(400).send({ message: "Invalid payload", issues: parsed.error.flatten() });
-        return;
-      }
+          const repo = await deps.db.upsertRepo({
+            userId: user.id,
+            owner: fork.owner,
+            name: fork.name,
+            defaultBranch: fork.defaultBranch,
+            visibility: parsed.data.visibility ?? fork.visibility,
+            upstreamOwner: deps.config.upstreamRepo.owner,
+            upstreamName: deps.config.upstreamRepo.name,
+            syncIntervalHours: deps.config.syncIntervalHours,
+          });
 
-      const payload: RepoContentPayload = {
-        profile: parsed.data.profile,
-        links: parsed.data.links,
-        site: parsed.data.site,
-        sha: parsed.data.sha ?? {},
-      };
+          await deps.db.logOperation({
+            repoId: repo.id,
+            userId: user.id,
+            operation: "provision_fork",
+            status: "ok",
+            detail: { owner: fork.owner, name: fork.name },
+          });
 
-      const result = await validateRepoContent(payload);
-      reply.send(result);
-    },
-  );
+          reply.code(201).send({ repo });
+        } catch (error: unknown) {
+          await deps.db.logOperation({
+            userId: user.id,
+            operation: "provision_fork",
+            status: "error",
+            detail: { message: error instanceof Error ? error.message : "unknown" },
+          });
 
-  app.put(
-    "/api/v1/repos/:repoId/content",
-    { preHandler: requireSession },
-    async (request, reply) => {
-      const user = resolveSessionUser(request, reply);
-      if (!user) {
-        return;
-      }
-      const { repoId } = request.params as { repoId: string };
-      const parsed = contentBodySchema.safeParse(request.body ?? {});
+          reply.code(500).send({
+            message: error instanceof Error ? error.message : "Failed to provision repository",
+          });
+        }
+      },
+    );
 
-      if (!parsed.success) {
-        reply.code(400).send({ message: "Invalid payload", issues: parsed.error.flatten() });
-        return;
-      }
+    app.get(
+      "/api/v1/repos/:repoId/content",
+      { preHandler: deps.requireSession },
+      async (request, reply) => {
+        const user = resolveSessionUser(request);
+        if (!user) {
+          return;
+        }
+        const { repoId } = request.params as { repoId: string };
 
-      const repo = await db.getRepoByIdForUser(repoId, user.id);
-      if (!repo) {
-        reply.code(404).send({ message: "Repository not found" });
-        return;
-      }
+        const repo = await deps.db.getRepoByIdForUser(repoId, user.id);
+        if (!repo) {
+          reply.code(404).send({ message: "Repository not found" });
+          return;
+        }
 
-      const payload: RepoContentPayload = {
-        profile: parsed.data.profile,
-        links: parsed.data.links,
-        site: parsed.data.site,
-        sha: parsed.data.sha ?? {},
-      };
-
-      const validation = await validateRepoContent(payload);
-      if (!validation.valid) {
-        reply.code(422).send(validation);
-        return;
-      }
-
-      const token = await githubAuthService.getUserToken(user.id);
-
-      if (!payload.sha.profile || !payload.sha.links || !payload.sha.site) {
-        const current = await githubRepoService.getOpenLinksContent({
+        const token = await deps.githubAuthService.getUserToken(user.id);
+        const content = await deps.githubRepoService.getOpenLinksContent({
           accessToken: token,
           owner: repo.owner,
           repo: repo.name,
         });
-        payload.sha = {
-          profile: payload.sha.profile ?? current.sha.profile,
-          links: payload.sha.links ?? current.sha.links,
-          site: payload.sha.site ?? current.sha.site,
+
+        await deps.db.upsertRepoFileSha(repo.id, "data/profile.json", content.sha.profile ?? "");
+        await deps.db.upsertRepoFileSha(repo.id, "data/links.json", content.sha.links ?? "");
+        await deps.db.upsertRepoFileSha(repo.id, "data/site.json", content.sha.site ?? "");
+
+        reply.send(content);
+      },
+    );
+
+    app.post(
+      "/api/v1/repos/:repoId/validate",
+      { preHandler: deps.requireSession },
+      async (request, reply) => {
+        const parsed = contentBodySchema.safeParse(request.body ?? {});
+        if (!parsed.success) {
+          reply.code(400).send({ message: "Invalid payload", issues: parsed.error.flatten() });
+          return;
+        }
+
+        const payload: RepoContentPayload = {
+          profile: parsed.data.profile,
+          links: parsed.data.links,
+          site: parsed.data.site,
+          sha: parsed.data.sha ?? {},
         };
-      }
 
-      const committed = await githubRepoService.commitOpenLinksContent({
-        accessToken: token,
-        owner: repo.owner,
-        repo: repo.name,
-        branch: repo.default_branch,
-        payload,
-        messagePrefix: "chore(studio)",
-      });
+        const result = await deps.validateRepoContent(payload);
+        reply.send(result);
+      },
+    );
 
-      for (const commit of committed.commits) {
-        await db.upsertRepoFileSha(repo.id, commit.filePath, commit.sha);
-      }
+    app.put(
+      "/api/v1/repos/:repoId/content",
+      { preHandler: deps.requireSession },
+      async (request, reply) => {
+        const user = resolveSessionUser(request);
+        if (!user) {
+          return;
+        }
+        const { repoId } = request.params as { repoId: string };
+        const parsed = contentBodySchema.safeParse(request.body ?? {});
 
-      await db.updateRepoSyncState(repo.id, {
-        pagesUrl: committed.deployStatus.pagesUrl,
-        lastSyncStatus: "content_saved",
-        lastSyncMessage: "Content saved from studio editor",
-      });
+        if (!parsed.success) {
+          reply.code(400).send({ message: "Invalid payload", issues: parsed.error.flatten() });
+          return;
+        }
 
-      await db.logOperation({
-        repoId: repo.id,
-        userId: user.id,
-        operation: "save_content",
-        status: "ok",
-        detail: committed,
-      });
+        const repo = await deps.db.getRepoByIdForUser(repoId, user.id);
+        if (!repo) {
+          reply.code(404).send({ message: "Repository not found" });
+          return;
+        }
 
-      reply.send(committed);
-    },
-  );
+        const payload: RepoContentPayload = {
+          profile: parsed.data.profile,
+          links: parsed.data.links,
+          site: parsed.data.site,
+          sha: parsed.data.sha ?? {},
+        };
 
-  app.get(
-    "/api/v1/repos/:repoId/deploy-status",
-    { preHandler: requireSession },
-    async (request, reply) => {
-      const user = resolveSessionUser(request, reply);
-      if (!user) {
-        return;
-      }
-      const { repoId } = request.params as { repoId: string };
+        const validation = await deps.validateRepoContent(payload);
+        if (!validation.valid) {
+          reply.code(422).send(validation);
+          return;
+        }
 
-      const repo = await db.getRepoByIdForUser(repoId, user.id);
-      if (!repo) {
-        reply.code(404).send({ message: "Repository not found" });
-        return;
-      }
+        const token = await deps.githubAuthService.getUserToken(user.id);
 
-      const token = await githubAuthService.getUserToken(user.id);
-      const deployStatus = await githubRepoService.getDeployStatus({
-        accessToken: token,
-        owner: repo.owner,
-        repo: repo.name,
-        branch: repo.default_branch,
-      });
+        if (!payload.sha.profile || !payload.sha.links || !payload.sha.site) {
+          const current = await deps.githubRepoService.getOpenLinksContent({
+            accessToken: token,
+            owner: repo.owner,
+            repo: repo.name,
+          });
+          payload.sha = {
+            profile: payload.sha.profile ?? current.sha.profile,
+            links: payload.sha.links ?? current.sha.links,
+            site: payload.sha.site ?? current.sha.site,
+          };
+        }
 
-      await db.updateRepoSyncState(repo.id, {
-        pagesUrl: deployStatus.pagesUrl,
-      });
+        const committed = await deps.githubRepoService.commitOpenLinksContent({
+          accessToken: token,
+          owner: repo.owner,
+          repo: repo.name,
+          branch: repo.default_branch,
+          payload,
+          messagePrefix: "chore(studio)",
+        });
 
-      reply.send(deployStatus);
-    },
-  );
+        for (const commit of committed.commits) {
+          await deps.db.upsertRepoFileSha(repo.id, commit.filePath, commit.sha);
+        }
 
-  app.post("/api/v1/repos/:repoId/sync", { preHandler: requireSession }, async (request, reply) => {
-    const user = resolveSessionUser(request, reply);
-    if (!user) {
-      return;
-    }
-    const { repoId } = request.params as { repoId: string };
+        await deps.db.updateRepoSyncState(repo.id, {
+          pagesUrl: committed.deployStatus.pagesUrl,
+          lastSyncStatus: "content_saved",
+          lastSyncMessage: "Content saved from studio editor",
+        });
 
-    const repo = await db.getRepoByIdForUser(repoId, user.id);
-    if (!repo) {
-      reply.code(404).send({ message: "Repository not found" });
-      return;
-    }
+        await deps.db.logOperation({
+          repoId: repo.id,
+          userId: user.id,
+          operation: "save_content",
+          status: "ok",
+          detail: committed,
+        });
 
-    const result = await syncRepo(repo);
-    reply.send(result);
-  });
+        reply.send(committed);
+      },
+    );
 
-  app.get(
-    "/api/v1/repos/:repoId/operations",
-    { preHandler: requireSession },
-    async (request, reply) => {
-      const user = resolveSessionUser(request, reply);
-      if (!user) {
-        return;
-      }
-      const { repoId } = request.params as { repoId: string };
-      const repo = await db.getRepoByIdForUser(repoId, user.id);
-      if (!repo) {
-        reply.code(404).send({ message: "Repository not found" });
-        return;
-      }
+    app.get(
+      "/api/v1/repos/:repoId/deploy-status",
+      { preHandler: deps.requireSession },
+      async (request, reply) => {
+        const user = resolveSessionUser(request);
+        if (!user) {
+          return;
+        }
+        const { repoId } = request.params as { repoId: string };
 
-      const operations = await db.listOperationsForRepo(repo.id, 50);
-      reply.send({ operations });
-    },
-  );
-};
+        const repo = await deps.db.getRepoByIdForUser(repoId, user.id);
+        if (!repo) {
+          reply.code(404).send({ message: "Repository not found" });
+          return;
+        }
+
+        const token = await deps.githubAuthService.getUserToken(user.id);
+        const deployStatus = await deps.githubRepoService.getDeployStatus({
+          accessToken: token,
+          owner: repo.owner,
+          repo: repo.name,
+          branch: repo.default_branch,
+        });
+
+        await deps.db.updateRepoSyncState(repo.id, {
+          pagesUrl: deployStatus.pagesUrl,
+        });
+
+        reply.send(deployStatus);
+      },
+    );
+
+    app.post(
+      "/api/v1/repos/:repoId/sync",
+      { preHandler: deps.requireSession },
+      async (request, reply) => {
+        const user = resolveSessionUser(request);
+        if (!user) {
+          return;
+        }
+        const { repoId } = request.params as { repoId: string };
+
+        const repo = await deps.db.getRepoByIdForUser(repoId, user.id);
+        if (!repo) {
+          reply.code(404).send({ message: "Repository not found" });
+          return;
+        }
+
+        const result = await deps.syncRepo(repo);
+        reply.send(result);
+      },
+    );
+
+    app.get(
+      "/api/v1/repos/:repoId/operations",
+      { preHandler: deps.requireSession },
+      async (request, reply) => {
+        const user = resolveSessionUser(request);
+        if (!user) {
+          return;
+        }
+        const { repoId } = request.params as { repoId: string };
+        const repo = await deps.db.getRepoByIdForUser(repoId, user.id);
+        if (!repo) {
+          reply.code(404).send({ message: "Repository not found" });
+          return;
+        }
+
+        const operations = await deps.db.listOperationsForRepo(repo.id, 50);
+        reply.send({ operations });
+      },
+    );
+  };
+
+export const repoRoutes = createRepoRoutes({
+  config,
+  requireSession,
+  db,
+  githubAuthService,
+  githubRepoService,
+  syncRepo,
+  validateRepoContent,
+});

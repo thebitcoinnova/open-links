@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "bun dist/server.js",
     "test": "bun test",
+    "test:integration": "bun test test/integration",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:migrate": "bun src/db/migrate.ts",
     "lint": "biome check src",

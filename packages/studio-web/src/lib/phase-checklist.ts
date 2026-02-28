@@ -100,7 +100,7 @@ export const phaseChecklist: PhaseChecklist[] = [
     tasks: [
       { id: "p7-1", label: "Captcha and anti-abuse controls", status: "done", priority: "P0" },
       { id: "p7-2", label: "Webhook verification hardening", status: "done", priority: "P0" },
-      { id: "p7-3", label: "Integration test suite", status: "todo", priority: "P0" },
+      { id: "p7-3", label: "Integration test suite", status: "done", priority: "P0" },
     ],
   },
 ];

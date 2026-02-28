@@ -48,12 +48,13 @@
     "studio:api:build": "bun run --filter @openlinks/studio-api build",
     "studio:worker:build": "bun run --filter @openlinks/studio-worker build",
     "studio:db:migrate": "bun run --filter @openlinks/studio-api db:migrate",
+    "studio:test:integration": "bun run --filter @openlinks/studio-api test:integration",
     "studio:typecheck": "bun run --filter @openlinks/studio-shared typecheck && bun run --filter @openlinks/studio-api typecheck && bun run --filter @openlinks/studio-web typecheck && bun run --filter @openlinks/studio-worker typecheck",
     "studio:lint": "bunx @biomejs/biome lint packages docs/studio-self-serve.md",
     "studio:format": "bunx @biomejs/biome format --write packages docs/studio-self-serve.md",
     "studio:format:check": "bunx @biomejs/biome format packages docs/studio-self-serve.md",
     "studio:fix": "bunx @biomejs/biome check --write packages docs/studio-self-serve.md",
-    "studio:check": "bun run studio:typecheck && bun run studio:lint && bun run studio:format:check"
+    "studio:check": "bun run studio:typecheck && bun run studio:lint && bun run studio:format:check && bun run studio:test:integration"
   },
   "dependencies": {
     "qr-code-styling": "^1.9.2",

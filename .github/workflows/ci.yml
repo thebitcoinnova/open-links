@@ -56,6 +56,7 @@ jobs:
             echo "  - \`bun run typecheck\`"
             echo "  - \`bun run build\`"
             echo "  - \`bun run quality:check\`"
+            echo "  - \`bun run studio:test:integration\`"
             echo "  - \`docker build -f packages/studio-api/Dockerfile .\` (conditional)"
             echo "  - \`docker build -f packages/studio-web/Dockerfile .\` (conditional)"
             echo "  - \`docker build -f packages/studio-worker/Dockerfile .\` (conditional)"
@@ -85,6 +86,7 @@ jobs:
           run_check "typecheck" bun run typecheck || failures+=("typecheck")
           run_check "build" bun run build || failures+=("build")
           run_check "quality_check" bun run quality:check || failures+=("quality:check")
+          run_check "studio_integration" bun run studio:test:integration || failures+=("studio:test:integration")
 
           if [[ "$STUDIO_DOCKER_CHANGED" == "true" ]]; then
             {
@@ -121,6 +123,7 @@ jobs:
             echo "  - \`bun run typecheck\`"
             echo "  - \`bun run build\`"
             echo "  - \`bun run quality:check\`"
+            echo "  - \`bun run studio:test:integration\`"
             echo "  - \`docker build -f packages/studio-api/Dockerfile .\`"
             echo "  - \`docker build -f packages/studio-web/Dockerfile .\`"
             echo "  - \`docker build -f packages/studio-worker/Dockerfile .\`"
