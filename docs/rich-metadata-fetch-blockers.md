@@ -2,7 +2,7 @@
 
 This document tracks rich metadata fetch failures caused by anti-automation protections (authwalls, bot filters, challenge pages).
 
-`npm run dev` and `npm run build` now run strict rich enrichment before app build, so unresolved blockers can fail local and CI builds.
+`bun run dev` and `bun run build` now run strict rich enrichment before app build, so unresolved blockers can fail local and CI builds.
 
 Canonical machine-readable blocker policy:
 
@@ -59,7 +59,7 @@ These domains are currently treated as unsupported for direct unauthenticated me
 
 Operator setup command:
 
-- `npm run setup:rich-auth`
+- `bun run setup:rich-auth`
 
 #### Attempt History
 
@@ -82,7 +82,7 @@ Operator setup command:
 
 Operator setup command:
 
-- `npm run setup:rich-auth`
+- `bun run setup:rich-auth`
 
 #### Attempt History
 
@@ -98,7 +98,7 @@ Operator setup command:
 | `2026-02-25T12:37:21Z` | `agent-browser` probe of profile URL (5s wait) | Challenge page persisted (`title=Just a moment...`, Cloudflare verification text) |
 | `2026-02-25T12:37:35Z` | `agent-browser` probe of profile URL (20s wait) | Challenge page persisted after longer wait |
 | `2026-02-25T12:37:45Z` | Fetch Medium feed endpoint `https://medium.com/feed/@peterryszkiewicz` | `HTTP 200` RSS XML with usable channel title/description/image |
-| `2026-02-25T12:38:57Z` | `npm run setup:rich-auth` with feed-based `medium-auth-browser` extractor | Cache entry captured (`cacheKey=medium`) and local asset committed under `public/cache/rich-authenticated/` |
+| `2026-02-25T12:38:57Z` | `bun run setup:rich-auth` with feed-based `medium-auth-browser` extractor | Cache entry captured (`cacheKey=medium`) and local asset committed under `public/cache/rich-authenticated/` |
 
 ### X
 
@@ -109,15 +109,15 @@ Operator setup command:
 
 Operator setup command:
 
-- `npm run setup:rich-auth`
+- `bun run setup:rich-auth`
 
 #### Attempt History
 
 | Timestamp (UTC) | Attempt | Outcome |
 |---|---|---|
-| `2026-02-26T09:55:42Z` | `npm run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-1.json --report /tmp/rich-report-x-direct-1.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
-| `2026-02-26T09:55:47Z` | `npm run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-2.json --report /tmp/rich-report-x-direct-2.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
-| `2026-02-26T09:54:24Z` | `npm run setup:rich-auth` with `x-auth-browser` configured on link `x` | Cache entry captured (`cacheKey=x`) and local asset committed under `public/cache/rich-authenticated/` |
+| `2026-02-26T09:55:42Z` | `bun run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-1.json --report /tmp/rich-report-x-direct-1.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
+| `2026-02-26T09:55:47Z` | `bun run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-2.json --report /tmp/rich-report-x-direct-2.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
+| `2026-02-26T09:54:24Z` | `bun run setup:rich-auth` with `x-auth-browser` configured on link `x` | Cache entry captured (`cacheKey=x`) and local asset committed under `public/cache/rich-authenticated/` |
 
 ### Facebook
 
@@ -128,21 +128,21 @@ Operator setup command:
 
 Operator setup command:
 
-- `npm run setup:rich-auth`
+- `bun run setup:rich-auth`
 
 #### Attempt History
 
 | Timestamp (UTC) | Attempt | Outcome |
 |---|---|---|
-| `2026-02-26T10:06:38Z` | `npm run enrich:rich:strict` | `facebook` returned `metadata_partial` (`HTTP 200`) with only generic title and missing image |
-| `2026-02-26T10:06:49Z` | `npm run enrich:rich:strict` (repro run) | `facebook` returned `metadata_partial` (`HTTP 200`) again; reproducible second signal |
-| `2026-02-26T10:06:07Z` | `npm run validate:data` | Blocking validation error: `$.links[4].metadata.image` missing for rich-card rendering |
-| `2026-02-26T10:10:04Z` | `npm run auth:rich:sync -- --only-link facebook --force` | Cache entry captured (`cacheKey=facebook`) and local asset committed under `public/cache/rich-authenticated/` |
-| `2026-02-26T10:19:02Z` | `npm run auth:rich:sync -- --only-link facebook --force` with first auth-browser implementation | Session init failed due LinkedIn debug helper dependency requiring `AGENT_BROWSER_ENCRYPTION_KEY`; not acceptable for Facebook flow |
-| `2026-02-26T10:20:09Z` | `npm run auth:rich:sync -- --only-link facebook --force` after config patch | Session init now correctly prompts local interactive login (`Interactive terminal is required for Facebook login`) |
-| `2026-02-26T10:22:13Z` | `OPENLINKS_AUTH_SESSION_TIMEOUT_MS=5000 npm run auth:rich:sync -- --only-link facebook --force` in interactive mode | Session reached auth polling and timed out as expected when not logged in; signals included `content_unavailable`, `login_wall`, `login_required`, `profile_image_missing` |
-| `2026-02-26T10:34:33Z` | `npm run auth:rich:sync -- --only-link facebook --force` interactive run | Reached MFA challenge state in headed login flow; waiting for verification completion before authenticated profile capture |
-| `2026-02-26T10:37:36Z` | `npm run auth:rich:sync -- --only-link facebook --force` after MFA + trust-device approval | Capture succeeded with authenticated profile image (`sourceUrl` on `scontent-ord5-2.xx.fbcdn.net`), cache key `facebook` refreshed with extractor `facebook-profile-auth-v2` |
+| `2026-02-26T10:06:38Z` | `bun run enrich:rich:strict` | `facebook` returned `metadata_partial` (`HTTP 200`) with only generic title and missing image |
+| `2026-02-26T10:06:49Z` | `bun run enrich:rich:strict` (repro run) | `facebook` returned `metadata_partial` (`HTTP 200`) again; reproducible second signal |
+| `2026-02-26T10:06:07Z` | `bun run validate:data` | Blocking validation error: `$.links[4].metadata.image` missing for rich-card rendering |
+| `2026-02-26T10:10:04Z` | `bun run auth:rich:sync -- --only-link facebook --force` | Cache entry captured (`cacheKey=facebook`) and local asset committed under `public/cache/rich-authenticated/` |
+| `2026-02-26T10:19:02Z` | `bun run auth:rich:sync -- --only-link facebook --force` with first auth-browser implementation | Session init failed due LinkedIn debug helper dependency requiring `AGENT_BROWSER_ENCRYPTION_KEY`; not acceptable for Facebook flow |
+| `2026-02-26T10:20:09Z` | `bun run auth:rich:sync -- --only-link facebook --force` after config patch | Session init now correctly prompts local interactive login (`Interactive terminal is required for Facebook login`) |
+| `2026-02-26T10:22:13Z` | `OPENLINKS_AUTH_SESSION_TIMEOUT_MS=5000 bun run auth:rich:sync -- --only-link facebook --force` in interactive mode | Session reached auth polling and timed out as expected when not logged in; signals included `content_unavailable`, `login_wall`, `login_required`, `profile_image_missing` |
+| `2026-02-26T10:34:33Z` | `bun run auth:rich:sync -- --only-link facebook --force` interactive run | Reached MFA challenge state in headed login flow; waiting for verification completion before authenticated profile capture |
+| `2026-02-26T10:37:36Z` | `bun run auth:rich:sync -- --only-link facebook --force` after MFA + trust-device approval | Capture succeeded with authenticated profile image (`sourceUrl` on `scontent-ord5-2.xx.fbcdn.net`), cache key `facebook` refreshed with extractor `facebook-profile-auth-v2` |
 
 ## Recommended Handling for Blocked Domains
 

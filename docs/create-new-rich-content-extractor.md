@@ -11,8 +11,8 @@ A new extractor is complete only when all of these are true:
 1. Policy entry exists in `data/policy/rich-authenticated-extractors.json`.
 2. Plugin exists and is registered in `scripts/authenticated-extractors/registry.ts`.
 3. Target links are configured with `links[].enrichment.authenticatedExtractor`.
-4. `npm run setup:rich-auth` captures valid cache entries and assets.
-5. `npm run build` passes without bypass.
+4. `bun run setup:rich-auth` captures valid cache entries and assets.
+5. `bun run build` passes without bypass.
 6. Blocker and findings docs are updated with UTC timestamps.
 
 ## Required Security Boundaries
@@ -35,7 +35,7 @@ A new extractor is complete only when all of these are true:
 Run:
 
 ```bash
-npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --summary "<summary>"
+bun run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --summary "<summary>"
 ```
 
 This scaffolds plugin + registry + policy entry (`experimental`).
@@ -146,30 +146,30 @@ When state is `unknown`:
 3. Run setup:
 
 ```bash
-npm run setup:rich-auth
+bun run setup:rich-auth
 ```
 
 4. Commit changed manifest/assets.
 
 If debugging LinkedIn-specific auth/session behavior, use:
 
-- `npm run linkedin:debug:bootstrap`
-- `npm run linkedin:debug:login`
-- `npm run linkedin:debug:validate`
-- `npm run linkedin:debug:validate:cookie-bridge`
+- `bun run linkedin:debug:bootstrap`
+- `bun run linkedin:debug:login`
+- `bun run linkedin:debug:validate`
+- `bun run linkedin:debug:validate:cookie-bridge`
 
 Generic auth-flow assistance for any extractor:
 
-- `npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url>`
+- `bun run auth:flow:assist -- --extractor <extractor-id> --url <target-url>`
 
 ## Step 6: Validate and Build
 
 Run:
 
 ```bash
-npm run validate:data
-npm run enrich:rich:strict
-npm run build
+bun run validate:data
+bun run enrich:rich:strict
+bun run build
 ```
 
 If failures occur, fix extractor/cache/config instead of using bypass.
@@ -177,7 +177,7 @@ If failures occur, fix extractor/cache/config instead of using bypass.
 Guardrail for embedded snippet enforcement:
 
 ```bash
-npm run quality:embedded-code
+bun run quality:embedded-code
 ```
 
 ## Step 7: Documentation Updates (Required)

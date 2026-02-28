@@ -34,7 +34,7 @@ Deploy workflow behavior:
 Before expecting a successful deploy:
 
 - [ ] `main` branch contains your latest content.
-- [ ] `npm run ci:required` passes locally.
+- [ ] `bun run ci:required` passes locally.
 - [ ] GitHub Pages source is set to GitHub Actions.
 - [ ] `data/site.json` validates and builds.
 - [ ] Required CI checks are passing in GitHub.
@@ -131,19 +131,19 @@ Base path resolution is controlled by `vite.config.ts` and workflow env vars.
 Project mode (default):
 
 ```bash
-npm run build
+bun run build
 ```
 
 Root mode test:
 
 ```bash
-PAGES_BASE_MODE=root npm run build
+PAGES_BASE_MODE=root bun run build
 ```
 
 Explicit path test:
 
 ```bash
-BASE_PATH=/custom-links/ npm run build
+BASE_PATH=/custom-links/ bun run build
 ```
 
 ## Diagnostics Command Flow
@@ -151,17 +151,17 @@ BASE_PATH=/custom-links/ npm run build
 Run these in order when troubleshooting deployment failures:
 
 ```bash
-npm run validate:data
-npm run typecheck
-npm run build
-npm run quality:check
+bun run validate:data
+bun run typecheck
+bun run build
+bun run quality:check
 ```
 
 Then strict parity:
 
 ```bash
-npm run ci:required
-npm run ci:strict
+bun run ci:required
+bun run ci:strict
 ```
 
 If required lane fails locally, resolve before re-running CI.
@@ -185,9 +185,9 @@ Also inspect workflow step summaries for remediation suggestions.
 
 | Symptom | Likely Cause | Fix |
 |--------|--------------|-----|
-| CI fails on `validate:data` | schema/policy mismatch in `data/*.json` | run `npm run validate:data`, fix path-specific errors, commit |
-| CI fails on `build` | enrichment/validation/build issue | run `npm run build` locally, fix first failing command |
-| CI strict lane reports warnings | strict mode escalates warnings | run `npm run ci:strict`, resolve warning-level issues |
+| CI fails on `validate:data` | schema/policy mismatch in `data/*.json` | run `bun run validate:data`, fix path-specific errors, commit |
+| CI fails on `build` | enrichment/validation/build issue | run `bun run build` locally, fix first failing command |
+| CI strict lane reports warnings | strict mode escalates warnings | run `bun run ci:strict`, resolve warning-level issues |
 | Deploy workflow does not trigger | CI did not succeed on `main` | ensure successful CI run on `main`, then re-push or re-run |
 | Deploy fails: invalid `base_path` | missing leading/trailing slash | use `/value/` format in manual dispatch |
 | Deployed page loads without CSS/JS | base path mismatch | test `PAGES_BASE_MODE`/`BASE_PATH`, rebuild and redeploy |
@@ -251,8 +251,8 @@ These options are possible for adventurous maintainers, but they are not first-c
 1. Build locally or in CI:
 
 ```bash
-npm run validate:data
-npm run build
+bun run validate:data
+bun run build
 ```
 
 2. Upload `dist/` to your chosen static host.
@@ -268,13 +268,13 @@ npm run build
 
 ### Cloudflare Pages (high-level)
 
-- Configure build command (`npm run build`) and output dir (`dist`).
+- Configure build command (`bun run build`) and output dir (`dist`).
 - Ensure environment and path assumptions match your repo mode.
 - Validate route and asset loading for project vs root paths.
 
 ### Netlify (high-level)
 
-- Configure build command (`npm run build`) and publish dir (`dist`).
+- Configure build command (`bun run build`) and publish dir (`dist`).
 - Use redirects/headers only when needed.
 - Confirm generated metadata and image paths remain valid.
 
@@ -296,8 +296,8 @@ Recommended baseline regardless of host:
 4. Re-run:
 
 ```bash
-npm run build
-npm run quality:check
+bun run build
+bun run quality:check
 ```
 
 5. Validate social preview and canonical URLs in deployed output.

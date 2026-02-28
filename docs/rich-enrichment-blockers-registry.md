@@ -65,8 +65,8 @@ When confirming a new blocker or changing status:
 4. Run:
 
 ```bash
-npm run validate:data
-npm run enrich:rich
+bun run validate:data
+bun run enrich:rich
 ```
 
 5. Confirm diagnostics/remediation text is still accurate.

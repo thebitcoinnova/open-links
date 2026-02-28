@@ -72,7 +72,7 @@ Follow docs/ai-guided-customization.md as a strict wizard.
 At each step, present options and let me choose.
 Always offer an opt-out to manual edits.
 Apply changes in small commits with clear messages.
-Validate using npm run validate:data and npm run build before finalizing.
+Validate using bun run validate:data and bun run build before finalizing.
 ```
 
 OpenClaw-specific starter prompt:
@@ -121,7 +121,7 @@ Agent should:
 Validation checkpoint:
 
 ```bash
-npm run validate:data
+bun run validate:data
 ```
 
 Opt-out:
@@ -155,7 +155,7 @@ Agent should:
 Validation checkpoint:
 
 ```bash
-npm run validate:data
+bun run validate:data
 ```
 
 Opt-out:
@@ -192,7 +192,7 @@ Agent should capture:
 Validation checkpoint:
 
 ```bash
-npm run validate:data
+bun run validate:data
 ```
 
 Opt-out:
@@ -210,15 +210,15 @@ References:
 Agent should run:
 
 ```bash
-npm run build
-npm run quality:check
+bun run build
+bun run quality:check
 ```
 
 If strict verification requested:
 
 ```bash
-npm run build:strict
-npm run quality:strict
+bun run build:strict
+bun run quality:strict
 ```
 
 Agent should summarize failures as:
@@ -275,8 +275,8 @@ You can leave the wizard at any point and continue manually:
 
 1. Follow `docs/quickstart.md`.
 2. Use `docs/data-model.md` for field-level references.
-3. Validate with `npm run validate:data`.
-4. Build with `npm run build`.
+3. Validate with `bun run validate:data`.
+4. Build with `bun run build`.
 
 ## Related Docs
 

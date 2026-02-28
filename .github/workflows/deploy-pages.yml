@@ -130,16 +130,15 @@ jobs:
             echo "repo_override=${DISPATCH_REPO_OVERRIDE}"
           } > .deploy-diagnostics/context.txt
 
-      - name: Setup Node
+      - name: Setup Bun
         if: steps.artifact_strategy.outputs.reuse != 'true'
-        uses: actions/setup-node@v4
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: 1.3.9
 
       - name: Install dependencies
         if: steps.artifact_strategy.outputs.reuse != 'true'
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build site
         if: steps.artifact_strategy.outputs.reuse != 'true'
@@ -147,7 +146,7 @@ jobs:
           PAGES_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
           BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
           REPO_NAME_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_name_override || '' }}
-        run: npm run build
+        run: bun run build
 
       - name: Verify deployable artifact
         shell: bash

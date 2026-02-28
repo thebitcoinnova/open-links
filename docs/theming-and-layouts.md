@@ -50,9 +50,9 @@ Typical token updates:
 Recommended workflow:
 
 1. Update token values in `tokens.css`.
-2. Run `npm run dev`.
+2. Run `bun run dev`.
 3. Verify dark/light readability and focus visibility.
-4. Run `npm run quality:check` before commit.
+4. Run `bun run quality:check` before commit.
 
 Why this is preferred:
 
@@ -133,9 +133,9 @@ Update `data/site.json`:
 Run:
 
 ```bash
-npm run validate:data
-npm run dev
-npm run quality:check
+bun run validate:data
+bun run dev
+bun run quality:check
 ```
 
 ## Mode Policy Configuration
@@ -170,7 +170,7 @@ Before merging visual changes:
 - [ ] Dark/light behavior matches `modePolicy` intent.
 - [ ] Focus styles remain visible.
 - [ ] Contrast remains acceptable for text and interactive elements.
-- [ ] `npm run quality:check` completes successfully.
+- [ ] `bun run quality:check` completes successfully.
 
 ## Layout Extension Points
 
@@ -283,9 +283,9 @@ Update `data/site.json` (and optionally `data/examples/*/site.json`) with the ne
 Run:
 
 ```bash
-npm run validate:data
-npm run build
-npm run quality:check
+bun run validate:data
+bun run build
+bun run quality:check
 ```
 
 Then manually verify:
@@ -407,7 +407,7 @@ Problem:
 
 Safer approach:
 
-- verify with `npm run quality:check` and keyboard testing before merge.
+- verify with `bun run quality:check` and keyboard testing before merge.
 
 ## Migration Notes for Fork Maintainers
 
@@ -422,9 +422,9 @@ When pulling upstream updates:
 3. Re-run:
 
 ```bash
-npm run validate:data
-npm run build
-npm run quality:check
+bun run validate:data
+bun run build
+bun run quality:check
 ```
 
 4. Manually verify theme toggle and responsive layout behavior.

@@ -51,7 +51,7 @@ Under `site.ui.richCards.enrichment`:
 Primary onboarding command:
 
 ```bash
-npm run setup:rich-auth
+bun run setup:rich-auth
 ```
 
 `setup:rich-auth` runs authenticated capture in `--only-missing` mode:
@@ -71,23 +71,23 @@ If no configured authenticated links are missing cache data, it exits 0 as a no-
 Manual/full capture command:
 
 ```bash
-npm run auth:rich:sync
+bun run auth:rich:sync
 ```
 
 Useful filters:
 
 ```bash
-npm run auth:rich:sync -- --only-link linkedin
-npm run auth:rich:sync -- --only-link medium
-npm run auth:rich:sync -- --only-link x
-npm run auth:rich:sync -- --only-link facebook
-npm run auth:rich:sync -- --only-extractor linkedin-auth-browser
-npm run auth:rich:sync -- --only-extractor medium-auth-browser
-npm run auth:rich:sync -- --only-extractor x-auth-browser
-npm run auth:rich:sync -- --only-extractor facebook-auth-browser
-npm run auth:rich:sync -- --only-missing
-npm run auth:rich:sync -- --force
-npm run auth:rich:sync -- --only-link linkedin --only-missing --force
+bun run auth:rich:sync -- --only-link linkedin
+bun run auth:rich:sync -- --only-link medium
+bun run auth:rich:sync -- --only-link x
+bun run auth:rich:sync -- --only-link facebook
+bun run auth:rich:sync -- --only-extractor linkedin-auth-browser
+bun run auth:rich:sync -- --only-extractor medium-auth-browser
+bun run auth:rich:sync -- --only-extractor x-auth-browser
+bun run auth:rich:sync -- --only-extractor facebook-auth-browser
+bun run auth:rich:sync -- --only-missing
+bun run auth:rich:sync -- --force
+bun run auth:rich:sync -- --only-link linkedin --only-missing --force
 ```
 
 Behavior notes:
@@ -101,13 +101,13 @@ Behavior notes:
 Reusable helper command for transition-driven auth debugging:
 
 ```bash
-npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url>
+bun run auth:flow:assist -- --extractor <extractor-id> --url <target-url>
 ```
 
 Optional wait overrides:
 
 ```bash
-npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url> --auth-timeout-ms 900000 --poll-ms 1500
+bun run auth:flow:assist -- --extractor <extractor-id> --url <target-url> --auth-timeout-ms 900000 --poll-ms 1500
 ```
 
 The command delegates to extractor `ensureSession`, captures structured transition/action reports when available, and writes gitignored artifacts under `output/playwright/auth-flow/`.
@@ -117,11 +117,11 @@ The command delegates to extractor `ensureSession`, captures structured transiti
 Use `auth:rich:clear` when cache entries or assets should be reset before recapture.
 
 ```bash
-npm run auth:rich:clear -- --only-link linkedin --dry-run
-npm run auth:rich:clear -- --only-link linkedin
-npm run auth:rich:clear -- --only-extractor linkedin-auth-browser
-npm run auth:rich:clear -- --cache-key linkedin
-npm run auth:rich:clear -- --all
+bun run auth:rich:clear -- --only-link linkedin --dry-run
+bun run auth:rich:clear -- --only-link linkedin
+bun run auth:rich:clear -- --only-extractor linkedin-auth-browser
+bun run auth:rich:clear -- --cache-key linkedin
+bun run auth:rich:clear -- --all
 ```
 
 Safety rules:
@@ -129,16 +129,16 @@ Safety rules:
 - one selector is required (`--only-link`, `--only-extractor`, or `--cache-key`) unless `--all` is explicitly set
 - dry-run mode reports changes without modifying files
 - only unreferenced assets under `public/cache/rich-authenticated/` are removed
-- run `npm run setup:rich-auth` after clear to repopulate cache
+- run `bun run setup:rich-auth` after clear to repopulate cache
 
 Commit both manifest and assets after successful sync.
 
 ## Build and Validation Enforcement
 
-- `npm run enrich:rich` and `npm run enrich:rich:strict`:
+- `bun run enrich:rich` and `bun run enrich:rich:strict`:
   - use cache for authenticated links (`reason=authenticated_cache`)
   - fail on missing/invalid cache (`reason=authenticated_cache_missing`)
-- `npm run validate:data` and `npm run validate:data:strict`:
+- `bun run validate:data` and `bun run validate:data:strict`:
   - verify extractor id exists and domain policy matches
   - verify cache entry exists and required fields are present
   - verify local asset file exists
@@ -147,13 +147,13 @@ Commit both manifest and assets after successful sync.
 When setup is missing, diagnostics should first point to:
 
 ```bash
-npm run setup:rich-auth
+bun run setup:rich-auth
 ```
 
 Global bypass (local emergency use only):
 
 ```bash
-OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build
+OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build
 ```
 
 ## Generic Auth Flow Runtime
@@ -197,7 +197,7 @@ Do not inline browser `eval` payloads in extractor/debug TypeScript files.
 Guardrail command:
 
 ```bash
-npm run quality:embedded-code
+bun run quality:embedded-code
 ```
 
 This check is enforced in strict/CI flows.
@@ -255,11 +255,11 @@ The Facebook extractor (`facebook-auth-browser`) uses an authenticated browser-s
 LinkedIn debug commands:
 
 ```bash
-npm run linkedin:debug:bootstrap
-npm run linkedin:debug:login
-npm run linkedin:debug:validate
-npm run linkedin:debug:validate:cookie-bridge
-npm run auth:flow:assist -- --extractor facebook-auth-browser --url https://www.facebook.com/<profile>
+bun run linkedin:debug:bootstrap
+bun run linkedin:debug:login
+bun run linkedin:debug:validate
+bun run linkedin:debug:validate:cookie-bridge
+bun run auth:flow:assist -- --extractor facebook-auth-browser --url https://www.facebook.com/<profile>
 ```
 
 ## Local Auth Wait Controls
@@ -286,7 +286,7 @@ One-off overrides:
 Scaffold command:
 
 ```bash
-npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --summary "<summary>"
+bun run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --summary "<summary>"
 ```
 
 The command creates:

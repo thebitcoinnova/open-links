@@ -1,0 +1,33 @@
+{
+  "name": "@openlinks/studio-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 4173",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome check src index.html vite.config.ts tailwind.config.ts",
+    "format": "biome format --write src index.html vite.config.ts tailwind.config.ts",
+    "format:check": "biome format --write=false src index.html vite.config.ts tailwind.config.ts"
+  },
+  "dependencies": {
+    "@openlinks/studio-shared": "file:../studio-shared",
+    "@solidjs/router": "^0.15.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-solid": "^0.542.0",
+    "solid-js": "^1.9.11",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-solid": "^2.11.10"
+  }
+}

@@ -1,0 +1,54 @@
+services:
+  studio-postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: openlinks_studio
+      POSTGRES_USER: studio
+      POSTGRES_PASSWORD: studio
+    ports:
+      - "5435:5432"
+    volumes:
+      - studio_pg_data:/var/lib/postgresql/data
+
+  studio-api:
+    build:
+      context: .
+      dockerfile: packages/studio-api/Dockerfile
+    depends_on:
+      - studio-postgres
+    env_file:
+      - .env.studio
+    environment:
+      DATABASE_URL: postgresql://studio:studio@studio-postgres:5432/openlinks_studio
+      STUDIO_API_URL: http://localhost:4000
+      STUDIO_WEB_URL: http://localhost:4173
+    ports:
+      - "4000:4000"
+
+  studio-web:
+    build:
+      context: .
+      dockerfile: packages/studio-web/Dockerfile
+    depends_on:
+      - studio-api
+    env_file:
+      - .env.studio
+    environment:
+      VITE_STUDIO_API_URL: http://localhost:4000
+    ports:
+      - "4173:4173"
+
+  studio-worker:
+    build:
+      context: .
+      dockerfile: packages/studio-worker/Dockerfile
+    depends_on:
+      - studio-api
+    env_file:
+      - .env.studio
+    environment:
+      STUDIO_API_URL: http://studio-api:4000
+
+volumes:
+  studio_pg_data:

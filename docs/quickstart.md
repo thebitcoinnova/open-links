@@ -31,8 +31,8 @@ Use the manual steps below only when you are not using OpenClaw.
 
 ### Prerequisites
 
-- Node.js 22.x (matches CI workflow).
-- npm (bundled with Node).
+- Bun 1.3+ (matches CI runtime).
+- Node.js 22.x (optional compatibility runtime for ecosystem tooling).
 - A GitHub account with permission to create repositories.
 
 ### Project assumptions
@@ -52,13 +52,13 @@ After repo creation:
 ```bash
 git clone <your-repo-url>
 cd open-links
-npm install
+bun install
 ```
 
 If your configuration uses authenticated rich extractors (`links[].enrichment.authenticatedExtractor`), complete first-run cache setup before `dev`/`build`:
 
 ```bash
-npm run setup:rich-auth
+bun run setup:rich-auth
 ```
 
 Authenticated rich cache paths:
@@ -95,25 +95,25 @@ Recommended first pass:
 ### Validate data
 
 ```bash
-npm run validate:data
+bun run validate:data
 ```
 
 ### Start dev server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
-`npm run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into local assets and blocking enrichment issues fail early.
+`bun run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into local assets and blocking enrichment issues fail early.
 
 ### Build production output
 
 ```bash
-npm run build
-npm run preview
+bun run build
+bun run preview
 ```
 
-`npm run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build.
+`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build.
 
 ## First Deployment to GitHub Pages
 
@@ -156,17 +156,17 @@ Use manual dispatch if you need to test base path behavior before changing defau
 Run these before opening a CI/deploy issue:
 
 ```bash
-npm run validate:data
-npm run typecheck
-npm run build
-npm run quality:check
+bun run validate:data
+bun run typecheck
+bun run build
+bun run quality:check
 ```
 
 For strict parity:
 
 ```bash
-npm run ci:required
-npm run ci:strict
+bun run ci:required
+bun run ci:strict
 ```
 
 ## Common Setup Problems
@@ -175,13 +175,13 @@ npm run ci:strict
 
 Symptoms:
 
-- `npm run validate:data` exits non-zero.
+- `bun run validate:data` exits non-zero.
 - Error paths point to missing values in `data/*.json`.
 
 Fix:
 
 1. Fill required fields (`name`, `headline`, `bio`, link `id/label/url/type`, etc.).
-2. Re-run `npm run validate:data`.
+2. Re-run `bun run validate:data`.
 
 ### Problem: URL scheme rejected
 
@@ -208,7 +208,7 @@ Fix:
 
 Symptoms:
 
-- `npm run dev` or `npm run build` stops during `enrich:rich:strict`.
+- `bun run dev` or `bun run build` stops during `enrich:rich:strict`.
 - Output includes `fetch_failed`, `metadata_missing`, `known_blocker`, or `authenticated_cache_missing` diagnostics for one or more links.
 
 Fix:
@@ -216,7 +216,7 @@ Fix:
 1. Re-run strict enrichment diagnostics:
 
 ```bash
-npm run enrich:rich:strict
+bun run enrich:rich:strict
 ```
 
 2. Review `site.ui.richCards.enrichment` in `data/site.json`:
@@ -231,27 +231,27 @@ npm run enrich:rich:strict
 5. For `authenticated_cache_missing`, run:
 
 ```bash
-npm run setup:rich-auth
+bun run setup:rich-auth
 ```
 
 Or for one link only:
 
 ```bash
-npm run auth:rich:sync -- --only-link <link-id>
+bun run auth:rich:sync -- --only-link <link-id>
 ```
 
 Force refresh for one link (even if cache is valid):
 
 ```bash
-npm run auth:rich:sync -- --only-link <link-id> --force
+bun run auth:rich:sync -- --only-link <link-id> --force
 ```
 
 Clear cache entries/assets before recapture:
 
 ```bash
-npm run auth:rich:clear -- --only-link <link-id>
+bun run auth:rich:clear -- --only-link <link-id>
 # or clear all
-npm run auth:rich:clear -- --all
+bun run auth:rich:clear -- --all
 ```
 
 Then commit cache manifest/assets and rerun build.
@@ -260,7 +260,7 @@ Then commit cache manifest/assets and rerun build.
 8. Temporary emergency local bypass:
 
 ```bash
-OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build
+OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build
 ```
 
 ### Problem: Build passes locally but Pages path is wrong
@@ -276,7 +276,7 @@ Fix:
 2. Rebuild with alternate mode locally:
 
 ```bash
-PAGES_BASE_MODE=root npm run build
+PAGES_BASE_MODE=root bun run build
 ```
 
 3. If needed, set explicit `BASE_PATH` during manual deploy dispatch.
@@ -297,8 +297,8 @@ Fix:
 After initial publish, your normal update cycle is:
 
 1. Edit `data/*.json`.
-2. Run `npm run validate:data`.
-3. Run `npm run build`.
+2. Run `bun run validate:data`.
+3. Run `bun run build`.
 4. Commit and push.
 5. Verify CI and deploy jobs.
 
@@ -309,27 +309,27 @@ If you want OpenClaw to handle this update loop with interaction mode selection,
 If your avatar source changed but cache is still valid, force refresh with:
 
 ```bash
-npm run avatar:sync -- --force
+bun run avatar:sync -- --force
 ```
 
 If rich/SEO image sources changed but cache is still valid, force refresh with:
 
 ```bash
-npm run images:sync -- --force
+bun run images:sync -- --force
 ```
 
 If authenticated rich metadata should be refreshed even with valid cache, run:
 
 ```bash
-npm run auth:rich:sync -- --only-link <link-id> --force
+bun run auth:rich:sync -- --only-link <link-id> --force
 ```
 
 If authenticated rich cache is corrupted or needs a clean reset, run:
 
 ```bash
-npm run auth:rich:clear -- --only-link <link-id> --dry-run
-npm run auth:rich:clear -- --only-link <link-id>
-npm run setup:rich-auth
+bun run auth:rich:clear -- --only-link <link-id> --dry-run
+bun run auth:rich:clear -- --only-link <link-id>
+bun run setup:rich-auth
 ```
 
 ## Next Guides

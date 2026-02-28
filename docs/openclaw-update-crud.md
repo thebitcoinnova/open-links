@@ -161,9 +161,9 @@ Execute in this exact order:
    - `data/links.json`
    - `data/site.json`
 8. Validate and build:
-   - `npm run validate:data`
-   - `npm run build`
-   - `npm run quality:check`
+   - `bun run validate:data`
+   - `bun run build`
+   - `bun run quality:check`
 9. Commit and push directly to `main`.
 10. Verify CI + Deploy Pages success for pushed SHA.
 11. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).

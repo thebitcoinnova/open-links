@@ -11,7 +11,7 @@ Scope:
 Production workflow now uses authenticated extractor cache integration:
 
 - configure `links[].enrichment.authenticatedExtractor`
-- capture with `npm run setup:rich-auth` (or `npm run auth:rich:sync`)
+- capture with `bun run setup:rich-auth` (or `bun run auth:rich:sync`)
 - commit `data/cache/rich-authenticated-cache.json` and `public/cache/rich-authenticated/*`
 - enrichment/build consumes cache (no direct LinkedIn fetch for that link)
 
@@ -48,20 +48,20 @@ export AGENT_BROWSER_ENCRYPTION_KEY="<64-char-hex>"
 1. Bootstrap and install binaries if needed:
 
 ```bash
-npm run linkedin:debug:bootstrap
+bun run linkedin:debug:bootstrap
 ```
 
 2. Start autonomous headed login watcher:
 
 ```bash
-npm run linkedin:debug:login
+bun run linkedin:debug:login
 ```
 
 Optional overrides:
 
 ```bash
-npm run linkedin:debug:login -- --url "https://www.linkedin.com/in/your-profile/"
-npm run linkedin:debug:login -- --auth-timeout-ms 900000 --poll-ms 1500
+bun run linkedin:debug:login -- --url "https://www.linkedin.com/in/your-profile/"
+bun run linkedin:debug:login -- --auth-timeout-ms 900000 --poll-ms 1500
 ```
 
 This command opens a browser and waits for auth progression (`login`/`mfa_challenge`/`authwall`/`authenticated`) automatically.
@@ -71,15 +71,15 @@ No Enter checkpoint is required.
 3. Run authenticated metadata validation:
 
 ```bash
-npm run linkedin:debug:validate
+bun run linkedin:debug:validate
 ```
 
 Optional diagnostics:
 
 ```bash
-npm run linkedin:debug:validate -- --headed
-npm run linkedin:debug:validate -- --auth-timeout-ms 900000 --poll-ms 1500
-npm run linkedin:debug:validate:cookie-bridge
+bun run linkedin:debug:validate -- --headed
+bun run linkedin:debug:validate -- --auth-timeout-ms 900000 --poll-ms 1500
+bun run linkedin:debug:validate:cookie-bridge
 ```
 
 4. Review artifacts:
@@ -92,25 +92,25 @@ npm run linkedin:debug:validate:cookie-bridge
 5. Promote validated extraction into committed cache:
 
 ```bash
-npm run setup:rich-auth
+bun run setup:rich-auth
 ```
 
 Optional one-link capture:
 
 ```bash
-npm run auth:rich:sync -- --only-link linkedin
+bun run auth:rich:sync -- --only-link linkedin
 ```
 
 Optional forced refresh (even when cache is already valid):
 
 ```bash
-npm run auth:rich:sync -- --only-link linkedin --force
+bun run auth:rich:sync -- --only-link linkedin --force
 ```
 
 Optional cache clear before recapture:
 
 ```bash
-npm run auth:rich:clear -- --only-link linkedin
+bun run auth:rich:clear -- --only-link linkedin
 ```
 
 6. Cleanup (optional):
@@ -136,9 +136,9 @@ Fail:
 
 | Symptom | Likely Cause | Remediation |
 |---|---|---|
-| Bootstrap reports missing browser executable | Browser binaries not installed | Re-run `npm run linkedin:debug:bootstrap` (auto-installs) |
-| Login script times out | Login or challenge not completed before timeout | Re-run `npm run linkedin:debug:login`, finish prompts in browser, or increase `--auth-timeout-ms` |
-| Validator fails with `reauth_required` | Session expired or auth not established | Run `npm run linkedin:debug:login` first, then re-run validator |
+| Bootstrap reports missing browser executable | Browser binaries not installed | Re-run `bun run linkedin:debug:bootstrap` (auto-installs) |
+| Login script times out | Login or challenge not completed before timeout | Re-run `bun run linkedin:debug:login`, finish prompts in browser, or increase `--auth-timeout-ms` |
+| Validator fails with `reauth_required` | Session expired or auth not established | Run `bun run linkedin:debug:login` first, then re-run validator |
 | Validator returns placeholder signals | Session redirected to authwall/signup or non-profile target | Re-run login, verify final URL, then re-run validator |
 | Cookie-bridge check fails but browser parse succeeds | Cookies do not translate to raw HTTP fetch path | Use browser-session extraction as source of truth |
 

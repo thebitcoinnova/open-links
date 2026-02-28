@@ -76,13 +76,13 @@ Use one of:
 ```bash
 git clone <your-repo-url>
 cd open-links
-npm install
+bun install
 ```
 
 If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
 
 ```bash
-npm run setup:rich-auth
+bun run setup:rich-auth
 ```
 
 ### 5) Update your data
@@ -102,15 +102,15 @@ Starter presets:
 ### 6) Validate and run locally
 
 ```bash
-npm run validate:data
-npm run dev
+bun run validate:data
+bun run dev
 ```
 
 ### 7) Build production output
 
 ```bash
-npm run build
-npm run preview
+bun run build
+bun run preview
 ```
 
 ## OpenClaw Deployment URLs
@@ -149,8 +149,8 @@ Recommended flow:
 Local parity commands:
 
 ```bash
-npm run ci:required
-npm run ci:strict
+bun run ci:required
+bun run ci:strict
 ```
 
 Then use:
@@ -159,6 +159,25 @@ Then use:
 - [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md) for deployment URL reporting and README marker-block updates.
 - [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md) for existing repo update sessions and interaction-mode behavior.
 - [Adapter Contract Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/adapter-contract.md) for future non-GitHub host planning.
+
+## OpenLinks Studio (Experimental Control Plane)
+
+This repository now includes a multi-service self-serve control plane for non-technical onboarding and browser-based CRUD edits:
+
+- `packages/studio-web` - marketing + onboarding + editor (Solid + Tailwind + shadcn-solid style components)
+- `packages/studio-api` - GitHub auth/app workflows, fork provisioning, content validation/commit, deploy status, sync endpoints
+- `packages/studio-worker` - scheduled sync trigger worker
+- `packages/studio-shared` - shared contracts
+
+See [docs/studio-self-serve.md](docs/studio-self-serve.md) for local setup, Railway deployment, env variables, and GitHub App setup.
+Track implementation phases in [docs/studio-phase-checklist.md](docs/studio-phase-checklist.md).
+
+Studio workspace tooling is Bun-first:
+
+- `bun install`
+- `bun run studio:typecheck`
+- `bun run studio:lint`
+- `bun run studio:format`
 
 High-signal deployment checks:
 
@@ -171,26 +190,26 @@ High-signal deployment checks:
 
 ### Core commands
 
-- `npm run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
-- `npm run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
-- `npm run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
-- `npm run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
-- `npm run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
-- `npm run auth:rich:clear` - clear authenticated cache entries and unreferenced local assets (selector-driven; supports `--dry-run`).
-- `npm run auth:extractor:new -- --id <id> --domains <csv> --summary "<summary>"` - scaffold a new authenticated extractor plugin + policy + registry wiring.
-- `npm run linkedin:debug:bootstrap` - LinkedIn debug bootstrap (agent-browser checks + browser binary install check).
-- `npm run linkedin:debug:login` - LinkedIn debug login watcher (autonomous auth-state polling; multi-factor authentication optional).
-- `npm run linkedin:debug:validate` - LinkedIn authenticated metadata debug validator.
-- `npm run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
-- `npm run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
-- `npm run dev` - start local dev server (predev runs strict enrichment and fails on blocking enrichment policy issues).
-- `npm run validate:data` - schema + policy checks (standard mode).
-- `npm run validate:data:strict` - fails on warnings and errors.
-- `npm run validate:data:json` - machine-readable validation output.
-- `npm run build` - avatar sync + strict enrichment + content-image sync + validation + production build.
-- `npm run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build.
-- `npm run preview` - serve built output.
-- `npm run typecheck` - TypeScript checks.
+- `bun run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
+- `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
+- `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
+- `bun run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
+- `bun run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
+- `bun run auth:rich:clear` - clear authenticated cache entries and unreferenced local assets (selector-driven; supports `--dry-run`).
+- `bun run auth:extractor:new -- --id <id> --domains <csv> --summary "<summary>"` - scaffold a new authenticated extractor plugin + policy + registry wiring.
+- `bun run linkedin:debug:bootstrap` - LinkedIn debug bootstrap (agent-browser checks + browser binary install check).
+- `bun run linkedin:debug:login` - LinkedIn debug login watcher (autonomous auth-state polling; multi-factor authentication optional).
+- `bun run linkedin:debug:validate` - LinkedIn authenticated metadata debug validator.
+- `bun run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
+- `bun run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
+- `bun run dev` - start local dev server (predev runs strict enrichment and fails on blocking enrichment policy issues).
+- `bun run validate:data` - schema + policy checks (standard mode).
+- `bun run validate:data:strict` - fails on warnings and errors.
+- `bun run validate:data:json` - machine-readable validation output.
+- `bun run build` - avatar sync + strict enrichment + content-image sync + validation + production build.
+- `bun run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build.
+- `bun run preview` - serve built output.
+- `bun run typecheck` - TypeScript checks.
 
 ### Authenticated Cache Lifecycle
 
@@ -202,28 +221,28 @@ Canonical paths:
 
 Setup/refresh flow:
 
-- First-run idempotent setup (only missing/invalid cache entries): `npm run setup:rich-auth`
-- Targeted refresh: `npm run auth:rich:sync -- --only-link <link-id>`
-- Forced refresh (even when cache is already valid): `npm run auth:rich:sync -- --only-link <link-id> --force`
+- First-run idempotent setup (only missing/invalid cache entries): `bun run setup:rich-auth`
+- Targeted refresh: `bun run auth:rich:sync -- --only-link <link-id>`
+- Forced refresh (even when cache is already valid): `bun run auth:rich:sync -- --only-link <link-id> --force`
 
 Clear flow:
 
-- Dry run clear for one link: `npm run auth:rich:clear -- --only-link <link-id> --dry-run`
-- Apply clear for one link: `npm run auth:rich:clear -- --only-link <link-id>`
-- Apply clear for all authenticated cache entries: `npm run auth:rich:clear -- --all`
-- Recapture after clear: `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`)
+- Dry run clear for one link: `bun run auth:rich:clear -- --only-link <link-id> --dry-run`
+- Apply clear for one link: `bun run auth:rich:clear -- --only-link <link-id>`
+- Apply clear for all authenticated cache entries: `bun run auth:rich:clear -- --all`
+- Recapture after clear: `bun run setup:rich-auth` (or `bun run auth:rich:sync -- --only-link <link-id>`)
 
 ### Quality commands
 
-- `npm run quality:check` - standard quality gate.
-- `npm run quality:strict` - strict quality gate.
-- `npm run quality:json` - standard quality JSON report.
-- `npm run quality:strict:json` - strict quality JSON report.
+- `bun run quality:check` - standard quality gate.
+- `bun run quality:strict` - strict quality gate.
+- `bun run quality:json` - standard quality JSON report.
+- `bun run quality:strict:json` - strict quality JSON report.
 
 ### CI parity commands
 
-- `npm run ci:required` - required CI checks.
-- `npm run ci:strict` - strict CI signal checks.
+- `bun run ci:required` - required CI checks.
+- `bun run ci:strict` - strict CI signal checks.
 
 ## Data Contract Rules (High-Level)
 
@@ -258,15 +277,15 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 
 ### Validation fails
 
-- Re-run `npm run validate:data` and inspect path-specific remediation lines.
+- Re-run `bun run validate:data` and inspect path-specific remediation lines.
 - Check URL schemes and required fields.
 - Move extension fields into `custom` and avoid reserved-key collisions.
 
 ### Build fails
 
-- Re-run with `npm run build` and inspect first failing command output.
-- If strict mode fails, compare `npm run validate:data` vs `npm run validate:data:strict`.
-- Re-run blocking enrichment diagnostics: `npm run enrich:rich:strict`.
+- Re-run with `bun run build` and inspect first failing command output.
+- If strict mode fails, compare `bun run validate:data` vs `bun run validate:data:strict`.
+- Re-run blocking enrichment diagnostics: `bun run enrich:rich:strict`.
 - Check canonical blocker registry: `data/policy/rich-enrichment-blockers.json`.
 - Check authenticated extractor policy: `data/policy/rich-authenticated-extractors.json`.
 - Check authenticated cache manifest: `data/cache/rich-authenticated-cache.json`.
@@ -275,12 +294,12 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - Check `site.ui.richCards.enrichment` policy (`failureMode`, `failOn`, `allowManualMetadataFallback`) in `data/site.json`.
 - If rich-card images look clipped, set `site.ui.richCards.imageFit=contain` (or per-link override with `links[].metadata.imageFit`).
 - If a blocked domain must be tested anyway, set explicit override on that link: `links[].enrichment.allowKnownBlocker=true`.
-- If `authenticated_cache_missing` is reported, run `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`) and commit cache manifest/assets.
-- To reset stale/bad authenticated cache data, clear entries first with `npm run auth:rich:clear -- --only-link <link-id>` (or `--all`), then recapture with `npm run setup:rich-auth`.
+- If `authenticated_cache_missing` is reported, run `bun run setup:rich-auth` (or `bun run auth:rich:sync -- --only-link <link-id>`) and commit cache manifest/assets.
+- To reset stale/bad authenticated cache data, clear entries first with `bun run auth:rich:clear -- --only-link <link-id>` (or `--all`), then recapture with `bun run setup:rich-auth`.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
-- Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 npm run build`.
-- Force-refresh avatar cache when needed: `npm run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
-- Force-refresh rich/SEO image cache when needed: `npm run images:sync -- --force` (or set `OPENLINKS_IMAGES_FORCE=1`).
+- Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build`.
+- Force-refresh avatar cache when needed: `bun run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
+- Force-refresh rich/SEO image cache when needed: `bun run images:sync -- --force` (or set `OPENLINKS_IMAGES_FORCE=1`).
 
 ### Pages deploy fails
 

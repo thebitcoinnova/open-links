@@ -197,11 +197,11 @@ Related policy source:
 
 Operational commands tied to this category:
 
-- `npm run setup:rich-auth` (first-run capture for missing/invalid authenticated cache entries)
-- `npm run auth:rich:sync -- --only-link <link-id>` (single-link capture)
-- `npm run auth:rich:sync -- --only-link <link-id> --force` (force refresh even when cache is valid)
-- `npm run auth:rich:clear -- --only-link <link-id>` (clear cache entry + unreferenced asset before recapture)
-- `npm run auth:extractor:new -- --id <id> --domains <csv> --summary \"<summary>\"` (new extractor scaffold)
+- `bun run setup:rich-auth` (first-run capture for missing/invalid authenticated cache entries)
+- `bun run auth:rich:sync -- --only-link <link-id>` (single-link capture)
+- `bun run auth:rich:sync -- --only-link <link-id> --force` (force refresh even when cache is valid)
+- `bun run auth:rich:clear -- --only-link <link-id>` (clear cache entry + unreferenced asset before recapture)
+- `bun run auth:extractor:new -- --id <id> --domains <csv> --summary \"<summary>\"` (new extractor scaffold)
 
 ## 11) `site.quality` (`site-quality`)
 

@@ -52,16 +52,16 @@ Execute in this exact order.
 3. If user selects day-2 maintenance, stop bootstrap and hand off to `docs/openclaw-update-crud.md`.
 4. Ensure user fork exists.
 5. Clone user fork and enter repository root.
-6. Install dependencies (`npm install` or `npm ci`).
+6. Install dependencies (`bun install` or `bun install --frozen-lockfile`).
 7. Resolve user identity using the precedence rules in this document.
 8. Personalize data files:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
 9. Validate and build:
-   - `npm run validate:data`
-   - `npm run build`
-   - `npm run quality:check`
+   - `bun run validate:data`
+   - `bun run build`
+   - `bun run quality:check`
 10. Commit and push directly to `main`.
 11. Verify GitHub Pages source is set to **GitHub Actions**.
 12. Poll CI and Deploy Pages workflow status for the pushed SHA.

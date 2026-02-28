@@ -21,14 +21,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: 1.3.9
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Required checks summary
         run: |
@@ -37,10 +36,10 @@ jobs:
             echo "- Event: \`${{ github.event_name }}\`"
             echo "- Ref: \`${{ github.ref }}\`"
             echo "- Commands:"
-            echo "  - \`npm run validate:data\`"
-            echo "  - \`npm run typecheck\`"
-            echo "  - \`npm run build\`"
-            echo "  - \`npm run quality:check\`"
+            echo "  - \`bun run validate:data\`"
+            echo "  - \`bun run typecheck\`"
+            echo "  - \`bun run build\`"
+            echo "  - \`bun run quality:check\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run required checks
@@ -62,10 +61,10 @@ jobs:
           }
 
           failures=()
-          run_check "validate_data" npm run validate:data || failures+=("validate:data")
-          run_check "typecheck" npm run typecheck || failures+=("typecheck")
-          run_check "build" npm run build || failures+=("build")
-          run_check "quality_check" npm run quality:check || failures+=("quality:check")
+          run_check "validate_data" bun run validate:data || failures+=("validate:data")
+          run_check "typecheck" bun run typecheck || failures+=("typecheck")
+          run_check "build" bun run build || failures+=("build")
+          run_check "quality_check" bun run quality:check || failures+=("quality:check")
 
           if ((${#failures[@]} > 0)); then
             echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
@@ -82,10 +81,10 @@ jobs:
             echo "- Failed commands: \`${{ steps.run_required.outputs.failures }}\`"
             echo "- Review log sections below and use local parity commands to reproduce."
             echo "- Suggested commands:"
-            echo "  - \`npm run validate:data\`"
-            echo "  - \`npm run typecheck\`"
-            echo "  - \`npm run build\`"
-            echo "  - \`npm run quality:check\`"
+            echo "  - \`bun run validate:data\`"
+            echo "  - \`bun run typecheck\`"
+            echo "  - \`bun run build\`"
+            echo "  - \`bun run quality:check\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Replay required raw logs
@@ -159,23 +158,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: 1.3.9
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Strict checks summary
         run: |
           {
             echo "## Strict Signal Lane (Phase 5 Non-Blocking)"
             echo "- Commands:"
-            echo "  - \`npm run validate:data:strict\`"
-            echo "  - \`npm run build:strict\`"
-            echo "  - \`npm run quality:strict\`"
+            echo "  - \`bun run validate:data:strict\`"
+            echo "  - \`bun run build:strict\`"
+            echo "  - \`bun run quality:strict\`"
             echo "- Policy: strict failures are warning signals in this phase."
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -198,9 +196,9 @@ jobs:
           }
 
           failures=()
-          run_check "validate_data_strict" npm run validate:data:strict || failures+=("validate:data:strict")
-          run_check "build_strict" npm run build:strict || failures+=("build:strict")
-          run_check "quality_strict" npm run quality:strict || failures+=("quality:strict")
+          run_check "validate_data_strict" bun run validate:data:strict || failures+=("validate:data:strict")
+          run_check "build_strict" bun run build:strict || failures+=("build:strict")
+          run_check "quality_strict" bun run quality:strict || failures+=("quality:strict")
 
           if ((${#failures[@]} > 0)); then
             echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"

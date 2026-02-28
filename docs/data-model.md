@@ -40,13 +40,13 @@ Schema: `schema/profile.schema.json`
 ### Avatar materialization behavior
 
 - `profile.avatar` remains the source-of-truth URL in `data/profile.json`.
-- During `npm run dev` and `npm run build`, avatar sync fetches and stores a local copy at `public/generated/profile-avatar.<ext>`.
+- During `bun run dev` and `bun run build`, avatar sync fetches and stores a local copy at `public/generated/profile-avatar.<ext>`.
 - Avatar sync writes `data/generated/profile-avatar.json` with fetch/cache metadata.
 - Runtime rendering uses the local resolved path from the generated manifest, not the raw remote URL.
 - On fetch failure:
   - cached local avatar is reused when available, or
   - fallback file `public/profile-avatar-fallback.svg` is used.
-- Force refresh is available via `npm run avatar:sync -- --force` or `OPENLINKS_AVATAR_FORCE=1`.
+- Force refresh is available via `bun run avatar:sync -- --force` or `OPENLINKS_AVATAR_FORCE=1`.
 
 ### Common optional fields
 
@@ -283,12 +283,12 @@ Payment rails can include explicit app links via `payment.rails[].appLinks` for 
 ### Rich image materialization behavior
 
 - Remote rich-image URLs are source data, but runtime does not render raw remote URLs.
-- During `npm run dev` and `npm run build`, `images:sync` fetches remote rich-link and SEO image candidates and writes:
+- During `bun run dev` and `bun run build`, `images:sync` fetches remote rich-link and SEO image candidates and writes:
   - baked files in `public/generated/images/<content-hash>.<ext>`
   - manifest `data/generated/content-images.json`
 - Runtime rich-card `metadata.image` values resolve to baked local paths when available.
-- If a link would render as a rich card without a materialized preview image, `npm run validate:data` (and therefore `npm run build`/`npm run dev`) now fails with remediation guidance.
-- Force refresh is available via `npm run images:sync -- --force` or `OPENLINKS_IMAGES_FORCE=1`.
+- If a link would render as a rich card without a materialized preview image, `bun run validate:data` (and therefore `bun run build`/`bun run dev`) now fails with remediation guidance.
+- Force refresh is available via `bun run images:sync -- --force` or `OPENLINKS_IMAGES_FORCE=1`.
 
 #### Manual metadata (`links[].metadata`)
 
@@ -353,19 +353,19 @@ When an enrichment-enabled rich link URL matches a `status=blocked` registry ent
 
 When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 
-`npm run dev` and `npm run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations.  
+`bun run dev` and `bun run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations.  
 Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 
 First-run authenticated setup command:
 
-- `npm run setup:rich-auth` (captures only missing/invalid authenticated cache entries)
-- Optional one-link capture: `npm run auth:rich:sync -- --only-link <link-id>`
-- Force one-link refresh even when cache is valid: `npm run auth:rich:sync -- --only-link <link-id> --force`
-- Clear cache entries/assets before recapture: `npm run auth:rich:clear -- --only-link <link-id>` (or `--all`)
+- `bun run setup:rich-auth` (captures only missing/invalid authenticated cache entries)
+- Optional one-link capture: `bun run auth:rich:sync -- --only-link <link-id>`
+- Force one-link refresh even when cache is valid: `bun run auth:rich:sync -- --only-link <link-id> --force`
+- Clear cache entries/assets before recapture: `bun run auth:rich:clear -- --only-link <link-id>` (or `--all`)
 
 Extractor scaffolding command:
 
-- `npm run auth:extractor:new -- --id <extractor-id> --domains <csv> --summary \"<summary>\"`
+- `bun run auth:extractor:new -- --id <extractor-id> --domains <csv> --summary \"<summary>\"`
 
 Local auth wait tuning for one-off LinkedIn flows:
 
@@ -374,10 +374,10 @@ Local auth wait tuning for one-off LinkedIn flows:
 
 LinkedIn debug commands:
 
-- `npm run linkedin:debug:bootstrap`
-- `npm run linkedin:debug:login`
-- `npm run linkedin:debug:validate`
-- `npm run linkedin:debug:validate:cookie-bridge`
+- `bun run linkedin:debug:bootstrap`
+- `bun run linkedin:debug:login`
+- `bun run linkedin:debug:validate`
+- `bun run linkedin:debug:validate:cookie-bridge`
 
 ## `site.json`
 
@@ -607,7 +607,7 @@ These values are consumed by:
 ### Standard mode
 
 ```bash
-npm run validate:data
+bun run validate:data
 ```
 
 Behavior:
@@ -618,7 +618,7 @@ Behavior:
 ### Strict mode
 
 ```bash
-npm run validate:data:strict
+bun run validate:data:strict
 ```
 
 Behavior:
@@ -629,7 +629,7 @@ Behavior:
 ### JSON mode
 
 ```bash
-npm run validate:data:json
+bun run validate:data:json
 ```
 
 Behavior:
@@ -722,9 +722,9 @@ You can use these ready presets directly:
 ## Recommended Edit Loop
 
 1. Update JSON in `data/`.
-2. Run `npm run validate:data`.
-3. Run `npm run build`.
-4. Preview with `npm run preview`.
+2. Run `bun run validate:data`.
+3. Run `bun run build`.
+4. Preview with `bun run preview`.
 5. Commit and push.
 
 ## Related Docs

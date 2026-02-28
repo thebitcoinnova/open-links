@@ -19,7 +19,7 @@ The adapter concept exists to keep deployment concerns separate from content/ren
 Any future adapter should preserve these invariants:
 
 1. Source content remains in `data/*.json`.
-2. Validation/build contract remains script-based (`npm run validate:data`, `npm run build`).
+2. Validation/build contract remains script-based (`bun run validate:data`, `bun run build`).
 3. Build output is static files in `dist/`.
 4. Base-path handling remains explicit and testable.
 5. CI/deploy diagnostics remain remediation-first.
@@ -66,8 +66,8 @@ Adapter logic should be additive and isolated to deployment layers.
 
 When implementing a real adapter in a later phase, verification should include:
 
-- `npm run validate:data` passes,
-- `npm run build` passes,
+- `bun run validate:data` passes,
+- `bun run build` passes,
 - adapter publishes `dist/` successfully,
 - generated URL serves expected content,
 - broken-path and invalid-config failures include actionable remediation,
