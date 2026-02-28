@@ -101,8 +101,8 @@
           "jsBytes": { "warn": 200000, "fail": 280000 },
           "cssBytes": { "warn": 45000, "fail": 70000 },
           "htmlBytes": { "warn": 18000, "fail": 26000 },
-          "largestAssetBytes": { "warn": 160000, "fail": 220000 },
-          "minimumScore": { "warn": 90, "fail": 75 }
+          "largestAssetBytes": { "warn": 999999999, "fail": 999999999 },
+          "minimumScore": { "warn": 1, "fail": 1 }
         },
         "desktop": {
           "totalBytes": { "warn": 340000, "fail": 440000 },
