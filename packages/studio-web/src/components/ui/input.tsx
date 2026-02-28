@@ -1,5 +1,5 @@
-import type { JSX } from "solid-js";
 import { cn } from "@/lib/utils";
+import type { JSX } from "solid-js";
 
 export function Input(props: JSX.InputHTMLAttributes<HTMLInputElement>) {
   return (
