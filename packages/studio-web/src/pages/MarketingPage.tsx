@@ -63,10 +63,10 @@ export default function MarketingPage() {
       <section class="mt-10 grid gap-4 md:grid-cols-3">
         <For each={features}>
           {(feature) => (
-            <Card class="border-white/20 bg-white/90 text-ink">
+            <Card>
               <feature.icon class="mb-4 text-pulse" size={24} />
               <h3 class="font-display text-lg font-bold">{feature.title}</h3>
-              <p class="mt-2 text-sm text-slate-700">{feature.body}</p>
+              <p class="mt-2 text-sm text-slate-300">{feature.body}</p>
             </Card>
           )}
         </For>

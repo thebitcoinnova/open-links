@@ -161,24 +161,24 @@ export default function OnboardingPage() {
   return (
     <PageShell>
       <section class="grid gap-4 md:grid-cols-2">
-        <Card class="space-y-4 bg-white text-ink">
+        <Card class="space-y-4">
           <h1 class="font-display text-3xl font-bold">Onboarding Wizard</h1>
-          <p class="text-sm text-slate-600">
+          <p class="text-sm text-slate-300">
             Follow each step in order. The flow is strict fork-first and blocks editing until app
             permissions are complete.
           </p>
           <Show when={message()}>
-            <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+            <p class="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200">
               {message()}
             </p>
           </Show>
         </Card>
 
-        <Card class="space-y-3 bg-white/95 text-ink">
+        <Card class="space-y-3">
           <h2 class="font-display text-xl font-semibold">Status</h2>
           <Show
             when={status()}
-            fallback={<p class="text-sm text-slate-500">Sign in with GitHub to load status.</p>}
+            fallback={<p class="text-sm text-slate-400">Sign in with GitHub to load status.</p>}
           >
             {(value) => (
               <ul class="space-y-2 text-sm">
@@ -193,31 +193,31 @@ export default function OnboardingPage() {
       </section>
 
       <section class="mt-6 grid gap-4 md:grid-cols-2">
-        <Card class="space-y-3 bg-white text-ink">
+        <Card class="space-y-3">
           <h3 class="font-display text-lg font-semibold">Step 1: GitHub account</h3>
-          <p class="text-sm text-slate-600">
+          <p class="text-sm text-slate-300">
             If you don’t have an account yet, create one and return here.
           </p>
           <Show when={captchaRequired}>
             <div class="space-y-2">
-              <p class="text-xs text-slate-600">Complete the security check before connecting.</p>
+              <p class="text-xs text-slate-300">Complete the security check before connecting.</p>
               <Show
                 when={turnstileSiteKey}
                 fallback={
-                  <p class="text-xs text-rose-700">
+                  <p class="text-xs text-rose-300">
                     Security check is unavailable because site key is missing.
                   </p>
                 }
               >
                 <div
-                  class="min-h-[68px] rounded-md border border-slate-200 bg-slate-50 p-2"
+                  class="min-h-[68px] rounded-md border border-slate-700 bg-slate-900/60 p-2"
                   ref={(element) => {
                     turnstileContainer = element;
                   }}
                 />
               </Show>
               <Show when={captchaError()}>
-                <p class="text-xs text-rose-700">{captchaError()}</p>
+                <p class="text-xs text-rose-300">{captchaError()}</p>
               </Show>
             </div>
           </Show>
@@ -231,9 +231,9 @@ export default function OnboardingPage() {
           </div>
         </Card>
 
-        <Card class="space-y-3 bg-white text-ink">
+        <Card class="space-y-3">
           <h3 class="font-display text-lg font-semibold">Step 2: Install GitHub App</h3>
-          <p class="text-sm text-slate-600">
+          <p class="text-sm text-slate-300">
             Install your GitHub App to enable fork, commit, and sync operations.
           </p>
           <a href={githubInstallUrl} target="_blank" rel="noreferrer">
@@ -241,9 +241,9 @@ export default function OnboardingPage() {
           </a>
         </Card>
 
-        <Card class="space-y-3 bg-white text-ink">
+        <Card class="space-y-3">
           <h3 class="font-display text-lg font-semibold">Step 3: Provision your fork</h3>
-          <p class="text-sm text-slate-600">
+          <p class="text-sm text-slate-300">
             Create your OpenLinks repository under your GitHub account.
           </p>
           <Button onClick={provision} disabled={provisioning() || !me()}>
@@ -251,12 +251,12 @@ export default function OnboardingPage() {
           </Button>
         </Card>
 
-        <Card class="space-y-3 bg-white text-ink">
+        <Card class="space-y-3">
           <h3 class="font-display text-lg font-semibold">Step 4: Open editor</h3>
-          <p class="text-sm text-slate-600">Launch the CRUD editor and start publishing updates.</p>
+          <p class="text-sm text-slate-300">Launch the CRUD editor and start publishing updates.</p>
           <Show
             when={latestRepoId()}
-            fallback={<p class="text-xs text-slate-500">Provision a fork first.</p>}
+            fallback={<p class="text-xs text-slate-400">Provision a fork first.</p>}
           >
             {(repoId) => (
               <A href={`/editor/${repoId()}`}>

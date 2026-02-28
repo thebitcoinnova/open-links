@@ -1,11 +1,11 @@
-import { createMemo, createResource, createSignal, For, Show } from "solid-js";
-import { useParams } from "@solidjs/router";
-import type { RepoContentPayload, ValidationResult } from "@openlinks/studio-shared";
+import PageShell from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
-import PageShell from "@/components/layout/PageShell";
 import { api } from "@/lib/api";
+import type { RepoContentPayload, ValidationResult } from "@openlinks/studio-shared";
+import { useParams } from "@solidjs/router";
+import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 
 type EditorTab = "profile" | "links" | "site" | "advanced";
 
@@ -174,28 +174,28 @@ export default function EditorPage() {
   return (
     <PageShell>
       <section class="grid gap-4 lg:grid-cols-[220px,1fr,320px]">
-        <Card class="space-y-2 bg-white text-ink">
-          <p class="text-xs uppercase tracking-widest text-slate-500">Sections</p>
+        <Card class="space-y-2">
+          <p class="text-xs uppercase tracking-widest text-slate-400">Sections</p>
           <For each={["profile", "links", "site", "advanced"] as EditorTab[]}>
             {(tab) => (
               <button
                 type="button"
-                class={`rounded-lg px-3 py-2 text-left text-sm ${activeTab() === tab ? "bg-ink text-white" : "hover:bg-slate-100"}`}
+                class={`rounded-lg px-3 py-2 text-left text-sm ${activeTab() === tab ? "bg-slate-100 text-ink" : "hover:bg-white/10"}`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab}
               </button>
             )}
           </For>
-          <div class="pt-2 text-xs text-slate-500">
+          <div class="pt-2 text-xs text-slate-400">
             Dirty state: {dirty() ? "unsaved changes" : "clean"}
           </div>
         </Card>
 
-        <Card class="space-y-4 bg-white text-ink">
+        <Card class="space-y-4">
           <Show
             when={initialized()}
-            fallback={<p class="text-sm text-slate-500">Loading repository content...</p>}
+            fallback={<p class="text-sm text-slate-400">Loading repository content...</p>}
           >
             {(loaded) => (
               <>
@@ -234,7 +234,7 @@ export default function EditorPage() {
                   <div class="space-y-3">
                     <For each={linksArray()}>
                       {(link, index) => (
-                        <div class="rounded-xl border border-slate-200 p-3">
+                        <div class="rounded-xl border border-slate-700 bg-slate-900/40 p-3">
                           <div class="grid gap-2 md:grid-cols-2">
                             <Input
                               value={String(link.id ?? "")}
@@ -304,7 +304,7 @@ export default function EditorPage() {
 
                 <Show when={activeTab() === "advanced"}>
                   <h2 class="font-display text-2xl font-bold">Advanced JSON</h2>
-                  <p class="text-sm text-slate-600">
+                  <p class="text-sm text-slate-300">
                     Use only if you need fields not exposed in guided forms.
                   </p>
                   <Textarea
@@ -346,7 +346,7 @@ export default function EditorPage() {
           </Show>
         </Card>
 
-        <Card class="space-y-4 bg-white text-ink">
+        <Card class="space-y-4">
           <h2 class="font-display text-xl font-bold">Publish Controls</h2>
           <div class="flex flex-wrap gap-2">
             <Button onClick={validate}>Validate</Button>
@@ -362,19 +362,19 @@ export default function EditorPage() {
           </div>
 
           <Show when={saveMessage()}>
-            <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+            <p class="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200">
               {saveMessage()}
             </p>
           </Show>
 
-          <div class="rounded-xl border border-slate-200 p-3 text-sm">
+          <div class="rounded-xl border border-slate-700 bg-slate-900/40 p-3 text-sm">
             <p class="font-semibold">Deployment</p>
             <Show
               when={deployStatus()}
-              fallback={<p class="text-slate-500">No deployment data yet.</p>}
+              fallback={<p class="text-slate-400">No deployment data yet.</p>}
             >
               {(status) => (
-                <ul class="mt-2 space-y-1 text-xs text-slate-700">
+                <ul class="mt-2 space-y-1 text-xs text-slate-300">
                   <li>CI: {status().ci}</li>
                   <li>Deploy: {status().deploy}</li>
                   <li>Pages URL: {status().pagesUrl ?? "not detected"}</li>
@@ -383,20 +383,22 @@ export default function EditorPage() {
             </Show>
           </div>
 
-          <div class="rounded-xl border border-slate-200 p-3 text-sm">
+          <div class="rounded-xl border border-slate-700 bg-slate-900/40 p-3 text-sm">
             <p class="font-semibold">Validation</p>
             <Show
               when={validation()}
-              fallback={<p class="text-slate-500">Run validation to see issues.</p>}
+              fallback={<p class="text-slate-400">Run validation to see issues.</p>}
             >
               {(result) => (
                 <>
-                  <p class={`mt-1 text-xs ${result().valid ? "text-green-700" : "text-rose-700"}`}>
+                  <p
+                    class={`mt-1 text-xs ${result().valid ? "text-emerald-300" : "text-rose-300"}`}
+                  >
                     {result().valid ? "Valid" : `${result().errors.length} error(s)`}
                   </p>
                   <For each={result().errors.slice(0, 8)}>
                     {(item) => (
-                      <p class="mt-1 text-xs text-rose-700">
+                      <p class="mt-1 text-xs text-rose-300">
                         [{item.source}] {item.path}: {item.message}
                       </p>
                     )}
@@ -406,13 +408,13 @@ export default function EditorPage() {
             </Show>
           </div>
 
-          <div class="rounded-xl border border-slate-200 p-3 text-sm">
+          <div class="rounded-xl border border-slate-700 bg-slate-900/40 p-3 text-sm">
             <p class="font-semibold">Recent operations</p>
-            <Show when={ops()} fallback={<p class="text-slate-500">No operations loaded.</p>}>
+            <Show when={ops()} fallback={<p class="text-slate-400">No operations loaded.</p>}>
               {(value) => (
                 <For each={value().operations.slice(0, 8)}>
                   {(op) => (
-                    <p class="mt-1 text-xs text-slate-700">
+                    <p class="mt-1 text-xs text-slate-300">
                       {op.operation} · {op.status}
                     </p>
                   )}
