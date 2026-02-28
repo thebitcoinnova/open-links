@@ -55,6 +55,30 @@ cd open-links
 bun install
 ```
 
+## Optional: Enable Pre-Commit Hooks
+
+OpenLinks ships Husky-based pre-commit hooks for fast local checks.
+
+For existing clones, run:
+
+```bash
+bun run prepare
+```
+
+Hook behavior:
+
+- Always runs staged Biome auto-fix/check and re-stages updates.
+- Runs `bun run validate:data` only when staged paths touch `data/`, `schema/`, or `scripts/`.
+- Runs `bun run typecheck` only when staged paths touch TS/config inputs.
+- Runs `bun run quality:embedded-code` only when staged paths touch `scripts/`.
+- Runs `bun run studio:check` only when staged paths touch `packages/` or `docs/studio-self-serve.md`.
+- Does **not** run `build`, `ci:required`, `enrich:rich*`, or `images:sync`.
+
+Temporary bypass options:
+
+- `git commit --no-verify`
+- `HUSKY=0 git commit ...`
+
 If your configuration uses authenticated rich extractors (`links[].enrichment.authenticatedExtractor`), complete first-run cache setup before `dev`/`build`:
 
 ```bash
