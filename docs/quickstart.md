@@ -79,6 +79,11 @@ Temporary bypass options:
 - `git commit --no-verify`
 - `HUSKY=0 git commit ...`
 
+Manual Biome commands:
+
+- `bun run biome:check` (repo-wide read-only checks)
+- `bun run biome:fix` (repo-wide autofix pass)
+
 If your configuration uses authenticated rich extractors (`links[].enrichment.authenticatedExtractor`), complete first-run cache setup before `dev`/`build`:
 
 ```bash

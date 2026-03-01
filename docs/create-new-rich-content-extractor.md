@@ -136,10 +136,22 @@ When state is `unknown`:
   - extractor version
   - selector profile
   - placeholder signals
-  - captured URL.
+  - captured URL
 - Keep diagnostics metadata-only; do not persist raw HTML/body dumps to tracked files.
 
-## Step 5: Configure Links and Capture Cache
+## Step 5: Handle Resolver Considerations (Required When Applicable)
+
+If the target extractor domain family exposes profile/account handles, update handle extraction coverage:
+
+1. Update URL extractor/reserved-route logic in `src/lib/identity/handle-resolver.ts`.
+2. Add or adjust tests in `src/lib/identity/handle-resolver.test.ts` for:
+   - valid profile URL resolution for the supported domain
+   - reserved/non-profile URL handling (`supported=true`, unresolved handle when applicable)
+   - unsupported-domain behavior (`supported=false`)
+   - manual `metadata.handle` precedence over URL-derived value
+3. Ensure handle updates remain URL-only and do not alter enrichment blocking behavior.
+
+## Step 6: Configure Links and Capture Cache
 
 1. Set `links[].enrichment.authenticatedExtractor`.
 2. Optionally set `authenticatedCacheKey`.
@@ -162,7 +174,7 @@ Generic auth-flow assistance for any extractor:
 
 - `bun run auth:flow:assist -- --extractor <extractor-id> --url <target-url>`
 
-## Step 6: Validate and Build
+## Step 7: Validate and Build
 
 Run:
 
@@ -180,7 +192,7 @@ Guardrail for embedded snippet enforcement:
 bun run quality:embedded-code
 ```
 
-## Step 7: Documentation Updates (Required)
+## Step 8: Documentation Updates (Required)
 
 Update all relevant docs:
 
@@ -197,7 +209,7 @@ Include:
 - auth transition checkpoints (for example MFA reached, trust-device prompt reached)
 - action decisions (proposed/executed/declined)
 
-## Step 8: Share Back (Recommended)
+## Step 9: Share Back (Recommended)
 
 If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.
 

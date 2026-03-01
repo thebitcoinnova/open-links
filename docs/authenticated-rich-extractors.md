@@ -300,4 +300,12 @@ Then complete implementation using:
 - `docs/create-new-rich-content-extractor.md`
 - `skills/create-new-rich-content-extractor/SKILL.md`
 
+## Handle Resolver Considerations
+
+When adding a new extractor for a domain family that also has profile/account handles, update handle coverage in parallel with extractor work:
+
+- extend `src/lib/identity/handle-resolver.ts` with URL-based handle extraction and reserved/non-profile path handling for that domain family
+- extend `src/lib/identity/handle-resolver.test.ts` with profile, reserved-path, unsupported-domain, and `metadata.handle` override-precedence cases
+- keep extraction URL-only (no HTML/meta scraping) unless a future policy change explicitly broadens scope
+
 If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.

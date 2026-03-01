@@ -40,7 +40,16 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
    - Implement `ensureSession` with transition monitoring + ask-first action confirmation.
    - Implement `extract` with metadata quality checks and local asset download.
 
-4. Implement mandatory auth-state loop behavior.
+4. Update handle resolver coverage when applicable.
+   - If the extractor domain family exposes user/profile handles, update `src/lib/identity/handle-resolver.ts`.
+   - Add/adjust reserved path handling so non-profile URLs remain supported-but-unresolved where appropriate.
+   - Extend `src/lib/identity/handle-resolver.test.ts` for:
+     - resolvable profile URL behavior,
+     - reserved/non-profile supported-domain behavior,
+     - unsupported-domain behavior,
+     - manual `metadata.handle` override precedence.
+
+5. Implement mandatory auth-state loop behavior.
    - Required state taxonomy:
      - `login`
      - `mfa_challenge`
@@ -58,23 +67,23 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
      - pause and prompt user to continue waiting or abort,
      - fail with actionable diagnostics when non-interactive.
 
-5. Configure links.
+6. Configure links.
    - Set `links[].enrichment.authenticatedExtractor`.
    - Optionally set `authenticatedCacheKey`.
 
-6. (Optional but recommended) run generic auth-flow helper.
+7. (Optional but recommended) run generic auth-flow helper.
 
 ```bash
 npm run auth:flow:assist -- --extractor <extractor-id> --url <target-url>
 ```
 
-7. Capture cache.
+8. Capture cache.
 
 ```bash
 npm run setup:rich-auth
 ```
 
-8. Validate.
+9. Validate.
 
 ```bash
 npm run validate:data
@@ -91,12 +100,12 @@ npm run linkedin:debug:login
 npm run linkedin:debug:validate
 ```
 
-9. Update docs.
+10. Update docs.
    - `docs/authenticated-rich-extractors.md`
    - `docs/create-new-rich-content-extractor.md`
    - site-specific debug/runbook docs
 
-10. Share back (recommended).
+11. Share back (recommended).
    - If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.
 
 ## Required Prompt Language (Auth Actions)
@@ -130,6 +139,7 @@ For each meaningful auth-run update in `docs/rich-metadata-fetch-blockers.md`, r
 - Transition/action diagnostics captured in gitignored auth-flow or sync artifacts.
 - Browser eval payloads are sourced from `scripts/embedded-code/browser/*` files (no large inline literals).
 - Scaffold code template source is a typed file at `scripts/authenticated-extractors/plugins/*.template.ts` with explicit replacement tokens.
+- For handle-capable domains, handle resolver and tests are updated and `metadata.handle` override precedence remains intact.
 
 ## Stop Conditions
 

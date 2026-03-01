@@ -2,9 +2,9 @@
 set -eu
 
 echo "pre-commit: running staged biome auto-fix"
-if ! bunx @biomejs/biome check --staged --write --files-ignore-unknown=true --no-errors-on-unmatched; then
+if ! bun run biome:staged:fix; then
   echo "pre-commit: biome staged auto-fix/check failed."
-  echo "Action: run 'bunx @biomejs/biome check --staged --write' and restage files."
+  echo "Action: run 'bun run biome:staged:fix' and restage files."
   exit 1
 fi
 
