@@ -23,6 +23,8 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
   const descriptionId = () => `rich-link-description-${safeId(props.link.id)}`;
   const handleId = () => `rich-link-handle-${safeId(props.link.id)}`;
   const sourceId = () => `rich-link-source-${safeId(props.link.id)}`;
+  const hasMetaCopy = () =>
+    Boolean(props.viewModel.handleDisplay || props.viewModel.showSourceLabel);
   const ariaDescribedBy = () => {
     const ids = [descriptionId()];
     if (props.viewModel.handleDisplay) {
@@ -72,11 +74,6 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
         <span class="rich-card-description" id={descriptionId()}>
           {props.viewModel.description}
         </span>
-        <Show when={props.viewModel.handleDisplay}>
-          <span class="rich-card-handle" id={handleId()}>
-            {props.viewModel.handleDisplay}
-          </span>
-        </Show>
 
         <span class="rich-card-meta">
           <LinkSiteIcon
@@ -86,9 +83,18 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
             options={props.brandIconOptions}
             themeFingerprint={props.themeFingerprint}
           />
-          <Show when={props.viewModel.showSourceLabel}>
-            <span class="rich-card-source" id={sourceId()}>
-              {props.viewModel.sourceLabel}
+          <Show when={hasMetaCopy()}>
+            <span class="rich-card-meta-copy">
+              <Show when={props.viewModel.handleDisplay}>
+                <span class="rich-card-handle" id={handleId()}>
+                  {props.viewModel.handleDisplay}
+                </span>
+              </Show>
+              <Show when={props.viewModel.showSourceLabel}>
+                <span class="rich-card-source" id={sourceId()}>
+                  {props.viewModel.sourceLabel}
+                </span>
+              </Show>
             </span>
           </Show>
         </span>

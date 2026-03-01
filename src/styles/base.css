@@ -391,23 +391,39 @@ a:focus-visible {
   line-height: var(--line-height-card-description);
 }
 
-.rich-card-handle {
-  color: color-mix(in srgb, var(--accent-strong) 78%, var(--text-primary) 22%);
-  font-size: var(--page-type-caption);
-  font-weight: 600;
-  line-height: var(--line-height-card-description);
-}
-
 .rich-card-meta {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-2);
+}
+
+.rich-card-meta .card-icon {
+  flex-shrink: 0;
+}
+
+.rich-card-meta-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.08rem;
+}
+
+.rich-card-handle {
+  color: color-mix(in srgb, var(--text-primary) 90%, var(--accent-strong) 10%);
+  font-size: calc(var(--page-type-caption) + 0.02rem);
+  font-weight: 700;
+  line-height: var(--line-height-card-description);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rich-card-source {
   color: color-mix(in srgb, var(--text-muted) 86%, var(--accent) 14%);
   font-size: var(--page-type-caption);
   letter-spacing: var(--tracking-card-source);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .payment-link-card {
