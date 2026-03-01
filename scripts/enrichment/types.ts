@@ -18,6 +18,7 @@ export interface EnrichmentMetadata {
   title?: string;
   description?: string;
   image?: string;
+  handle?: string;
   sourceLabel?: string;
   sourceLabelVisible?: boolean;
   enrichmentStatus?: EnrichmentStatus;

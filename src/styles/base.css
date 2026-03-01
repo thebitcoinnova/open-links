@@ -24,8 +24,11 @@ body {
   margin: 0;
   font-family: var(--font-body);
   font-size: var(--type-body);
-  background:
-    radial-gradient(110% 90% at 100% 0%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 72%),
+  background: radial-gradient(
+      110% 90% at 100% 0%,
+      color-mix(in srgb, var(--accent) 4%, transparent) 0%,
+      transparent 72%
+    ),
     linear-gradient(180deg, color-mix(in srgb, var(--surface-bg) 97%, black 3%), var(--surface-bg));
   color: var(--text-primary);
   transition: background-color var(--motion-mid), color var(--motion-mid);
@@ -299,11 +302,8 @@ a:focus-visible {
   padding: calc(var(--space-3) * var(--density-scale));
   background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
   text-decoration: none;
-  transition:
-    border-color var(--motion-fast),
-    transform var(--motion-fast),
-    background-color var(--motion-fast),
-    box-shadow var(--motion-fast);
+  transition: border-color var(--motion-fast), transform var(--motion-fast), background-color
+    var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .rich-link-card {
@@ -317,11 +317,8 @@ a:focus-visible {
   padding: calc(var(--space-3) * var(--density-scale));
   background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
   text-decoration: none;
-  transition:
-    border-color var(--motion-fast),
-    transform var(--motion-fast),
-    background-color var(--motion-fast),
-    box-shadow var(--motion-fast);
+  transition: border-color var(--motion-fast), transform var(--motion-fast), background-color
+    var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .rich-link-card.image-thumbnail {
@@ -394,6 +391,13 @@ a:focus-visible {
   line-height: var(--line-height-card-description);
 }
 
+.rich-card-handle {
+  color: color-mix(in srgb, var(--accent-strong) 78%, var(--text-primary) 22%);
+  font-size: var(--page-type-caption);
+  font-weight: 600;
+  line-height: var(--line-height-card-description);
+}
+
 .rich-card-meta {
   display: inline-flex;
   align-items: center;
@@ -414,11 +418,8 @@ a:focus-visible {
   border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
   padding: calc(var(--space-3) * var(--density-scale));
   background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
-  transition:
-    border-color var(--motion-fast),
-    transform var(--motion-fast),
-    background-color var(--motion-fast),
-    box-shadow var(--motion-fast);
+  transition: border-color var(--motion-fast), transform var(--motion-fast), background-color
+    var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .payment-link-card:hover {
@@ -563,7 +564,9 @@ a:focus-visible {
   padding: 0.25rem 0.65rem;
   min-height: calc(var(--page-target-size) - 14px);
   font-size: var(--page-type-caption);
-  font: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
   text-decoration: none;
   cursor: pointer;
   transition: border-color var(--motion-fast), transform var(--motion-fast);
@@ -740,6 +743,11 @@ a:focus-visible {
   text-overflow: ellipsis;
 }
 
+.card-copy .card-handle {
+  color: color-mix(in srgb, var(--accent-strong) 78%, var(--text-primary) 22%);
+  font-weight: 600;
+}
+
 .theme-toggle {
   border: 1px solid var(--border-subtle);
   background: var(--surface-pill);
@@ -799,7 +807,6 @@ a:focus-visible {
   box-shadow: none;
 }
 
-
 .theme-toggle:disabled {
   cursor: not-allowed;
   opacity: 0.7;
@@ -845,9 +852,7 @@ a:focus-visible {
   text-decoration: none;
   padding: 0.35rem 0.85rem;
   font-size: var(--page-type-caption);
-  transition:
-    transform var(--motion-fast),
-    background-color var(--motion-fast);
+  transition: transform var(--motion-fast), background-color var(--motion-fast);
 }
 
 .site-footer-cta:hover {

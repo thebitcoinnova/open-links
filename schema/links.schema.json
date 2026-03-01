@@ -100,10 +100,7 @@
         "message": { "type": "string", "minLength": 1 },
         "memo": { "type": "string", "minLength": 1 },
         "chainId": {
-          "oneOf": [
-            { "type": "string", "minLength": 1 },
-            { "type": "number" }
-          ]
+          "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "number" }]
         },
         "references": {
           "type": "array",
@@ -171,6 +168,7 @@
             "title": { "type": "string" },
             "description": { "type": "string" },
             "image": { "type": "string", "format": "uri" },
+            "handle": { "type": "string" },
             "imageFit": {
               "type": "string",
               "enum": ["cover", "contain"]

@@ -4,14 +4,16 @@ import type {
   RichCardMobileImageLayout,
   RichImageTreatment,
   SiteData,
-  SourceLabelDefault
+  SourceLabelDefault,
 } from "../content/load-content";
+import { resolveLinkHandle } from "../identity/handle-resolver";
 
 export type ResolvedCardVariant = "simple" | "rich";
 
 export interface RichCardViewModel {
   title: string;
   description: string;
+  handleDisplay?: string;
   imageUrl?: string;
   imageTreatment: RichImageTreatment;
   imageFit: RichCardImageFit;
@@ -95,19 +97,29 @@ export const resolveRichCardVariant = (site: SiteData, link: OpenLink): Resolved
 
 export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCardViewModel => {
   const metadata = link.metadata ?? {};
+  const resolvedHandle = resolveLinkHandle({
+    metadataHandle: metadata.handle,
+    url: link.url,
+    icon: link.icon,
+  });
   const sourceDefault = resolveSourceDefault(site);
   const configuredImageTreatment = resolveImageTreatment(site);
   const imageUrl =
-    typeof metadata.image === "string" && metadata.image.trim().length > 0 ? metadata.image : undefined;
+    typeof metadata.image === "string" && metadata.image.trim().length > 0
+      ? metadata.image
+      : undefined;
   const enrichmentDisabled =
     link.enrichment?.enabled === false || metadata.enrichmentReason === "enrichment_disabled";
   const imageTreatment: RichImageTreatment =
-    configuredImageTreatment === "off" || (enrichmentDisabled && !imageUrl) ? "off" : configuredImageTreatment;
+    configuredImageTreatment === "off" || (enrichmentDisabled && !imageUrl)
+      ? "off"
+      : configuredImageTreatment;
   const imageFit = resolveImageFit(site, link);
 
   return {
     title: metadata.title ?? link.label,
     description: metadata.description ?? link.description ?? urlDomain(link.url),
+    handleDisplay: resolvedHandle.displayHandle,
     imageUrl: imageTreatment === "off" ? undefined : imageUrl,
     imageTreatment,
     imageFit,
@@ -116,6 +128,6 @@ export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCard
     showSourceLabel:
       metadata.sourceLabelVisible ??
       link.enrichment?.sourceLabelVisible ??
-      sourceDefault === "show"
+      sourceDefault === "show",
   };
 };

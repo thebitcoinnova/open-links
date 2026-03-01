@@ -159,6 +159,7 @@ Known-site logo rendering is contrast-aware by default: brand color is preferred
     "title": "Project title",
     "description": "One-line project summary",
     "image": "https://example.com/preview.png",
+    "handle": "project-owner",
     "sourceLabel": "example.com"
   },
   "enrichment": {
@@ -297,6 +298,7 @@ Supported keys include:
 - `title`
 - `description`
 - `image`
+- `handle` (canonical username/handle without leading `@`; runtime renders as `@handle`)
 - `imageFit`
 - `mobileImageLayout`
 - `sourceLabel`
@@ -305,6 +307,16 @@ Supported keys include:
 - `enrichmentReason`
 - `enrichedAt`
 - `custom`
+
+#### URL-first handle extraction (v1)
+
+- Runtime and enrichment use URL-only handle extraction (no HTML/meta-tag scraping).
+- Resolution precedence is:
+  1. manual `links[].metadata.handle`
+  2. URL-derived handle when supported
+- Supported extractor families in v1: GitHub, X/Twitter, LinkedIn, Facebook, Instagram, Medium, Substack patterns.
+- If a URL is from a supported family but no handle can be resolved and `metadata.handle` is missing, validation emits a warning-level handle coverage issue.
+- Handle coverage warnings are non-strict-blocking and do not fail `bun run validate:data:strict`.
 
 #### Enrichment policy (`links[].enrichment`)
 

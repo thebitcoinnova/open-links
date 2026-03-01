@@ -1,39 +1,39 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import addFormats from "ajv-formats";
+import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import {
   DEFAULT_AUTH_CACHE_PATH,
   loadAuthenticatedCacheRegistry,
   resolveAuthenticatedCacheKey,
-  validateAuthenticatedCacheEntry
+  validateAuthenticatedCacheEntry,
 } from "./authenticated-extractors/cache";
 import {
   DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
   loadAuthenticatedExtractorsPolicy,
   resolveAuthenticatedExtractorById,
-  resolveAuthenticatedExtractorDomainMatch
+  resolveAuthenticatedExtractorDomainMatch,
 } from "./authenticated-extractors/policy";
 import {
   DEFAULT_BLOCKERS_REGISTRY_PATH,
+  type RichEnrichmentBlockersRegistry,
   loadRichEnrichmentBlockersRegistry,
   resolveKnownBlockerMatch,
-  type RichEnrichmentBlockersRegistry
 } from "./enrichment/blockers-registry";
 import { readEnrichmentReport } from "./enrichment/report";
 import type {
   EnrichmentFailureReason,
   EnrichmentRunEntry,
   EnrichmentRunReport,
-  EnrichmentRunSummary
+  EnrichmentRunSummary,
 } from "./enrichment/types";
-import { runPolicyRules, type ValidationIssue } from "./validation/rules";
 import {
+  type ValidationResult,
   formatHumanOutput,
   formatJsonOutput,
-  type ValidationResult
 } from "./validation/format-output";
+import { type ValidationIssue, runPolicyRules } from "./validation/rules";
 
 type OutputFormat = "human" | "json";
 
@@ -86,7 +86,7 @@ const parseArgs = (): ArgMap => {
     profilePath: getFlagValue("--profile") ?? "data/profile.json",
     linksPath: getFlagValue("--links") ?? "data/links.json",
     sitePath: getFlagValue("--site") ?? "data/site.json",
-    enrichmentReportPath: getFlagValue("--enrichment-report")
+    enrichmentReportPath: getFlagValue("--enrichment-report"),
   };
 };
 
@@ -98,7 +98,7 @@ const toStringOrUndefined = (value: unknown): string | undefined =>
 
 const resolveEnrichmentReportPath = (
   site: Record<string, unknown>,
-  overridePath?: string
+  overridePath?: string,
 ): string => {
   if (overridePath) {
     return overridePath;
@@ -107,7 +107,8 @@ const resolveEnrichmentReportPath = (
   const ui = isRecord(site.ui) ? site.ui : undefined;
   const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
   const enrichment = richCards && isRecord(richCards.enrichment) ? richCards.enrichment : undefined;
-  const reportPath = enrichment && typeof enrichment.reportPath === "string" ? enrichment.reportPath : undefined;
+  const reportPath =
+    enrichment && typeof enrichment.reportPath === "string" ? enrichment.reportPath : undefined;
 
   return reportPath ?? "data/generated/rich-enrichment-report.json";
 };
@@ -147,7 +148,7 @@ const schemaIssue = (source: string, error: ErrorObject): ValidationIssue => {
     source,
     path: fieldPath,
     message,
-    remediation: `Update ${fieldPath} in ${source} to satisfy schema rule: ${message}.`
+    remediation: `Update ${fieldPath} in ${source} to satisfy schema rule: ${message}.`,
   };
 };
 
@@ -196,7 +197,7 @@ const resolveEnabledByDefault = (site: Record<string, unknown>): boolean => {
 };
 
 const resolveAuthenticatedCacheConfig = (
-  site: Record<string, unknown>
+  site: Record<string, unknown>,
 ): { cachePath: string; warnAgeDays: number } => {
   const ui = isRecord(site.ui) ? site.ui : undefined;
   const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
@@ -216,7 +217,7 @@ const resolveAuthenticatedCacheConfig = (
 
   return {
     cachePath: configuredPath.length > 0 ? configuredPath : DEFAULT_AUTH_CACHE_PATH,
-    warnAgeDays
+    warnAgeDays,
   };
 };
 
@@ -228,7 +229,7 @@ const resolveRichRenderMode = (site: Record<string, unknown>): "auto" | "simple"
 
 const hasRichRenderCandidates = (
   linksData: Record<string, unknown>,
-  siteData: Record<string, unknown>
+  siteData: Record<string, unknown>,
 ): boolean => {
   if (resolveRichRenderMode(siteData) === "simple") {
     return false;
@@ -236,7 +237,7 @@ const hasRichRenderCandidates = (
 
   const links = Array.isArray(linksData.links) ? linksData.links : [];
   return links.some(
-    (rawLink) => isRecord(rawLink) && rawLink.type === "rich" && rawLink.enabled !== false
+    (rawLink) => isRecord(rawLink) && rawLink.type === "rich" && rawLink.enabled !== false,
   );
 };
 
@@ -255,7 +256,7 @@ const toCanonicalHttpUrl = (value: string): string | null => {
 };
 
 const resolveGeneratedMetadataByLink = (
-  payload: GeneratedRichMetadataPayload
+  payload: GeneratedRichMetadataPayload,
 ): Record<string, Record<string, unknown>> => {
   if (!isRecord(payload) || !isRecord(payload.links)) {
     return {};
@@ -273,7 +274,7 @@ const resolveGeneratedMetadataByLink = (
 };
 
 const resolveGeneratedContentImagesByUrl = (
-  payload: GeneratedContentImagesPayload
+  payload: GeneratedContentImagesPayload,
 ): Record<string, { resolvedPath?: string }> => {
   if (!isRecord(payload) || !isRecord(payload.byUrl)) {
     return {};
@@ -284,7 +285,7 @@ const resolveGeneratedContentImagesByUrl = (
   for (const [url, value] of Object.entries(payload.byUrl)) {
     if (isRecord(value)) {
       byUrl[url] = {
-        resolvedPath: typeof value.resolvedPath === "string" ? value.resolvedPath : undefined
+        resolvedPath: typeof value.resolvedPath === "string" ? value.resolvedPath : undefined,
       };
     }
   }
@@ -295,12 +296,12 @@ const resolveGeneratedContentImagesByUrl = (
 const resolvePreviewImageAvailability = (
   imageCandidate: string | undefined,
   generatedContentImagesByUrl: Record<string, { resolvedPath?: string }>,
-  contentImagesPath: string
+  contentImagesPath: string,
 ): { hasImage: boolean; detail: string } => {
   if (!imageCandidate) {
     return {
       hasImage: false,
-      detail: "No metadata.image value was found."
+      detail: "No metadata.image value was found.",
     };
   }
 
@@ -308,7 +309,7 @@ const resolvePreviewImageAvailability = (
   if (trimmed.length === 0) {
     return {
       hasImage: false,
-      detail: "metadata.image is an empty string."
+      detail: "metadata.image is an empty string.",
     };
   }
 
@@ -320,7 +321,7 @@ const resolvePreviewImageAvailability = (
   if (!canonical) {
     return {
       hasImage: false,
-      detail: `metadata.image uses an unsupported URL scheme (${trimmed}).`
+      detail: `metadata.image uses an unsupported URL scheme (${trimmed}).`,
     };
   }
 
@@ -331,9 +332,7 @@ const resolvePreviewImageAvailability = (
 
   return {
     hasImage: false,
-    detail:
-      `metadata.image points to a remote URL that was not materialized in ${contentImagesPath}. ` +
-      "Runtime strips that image before rendering."
+    detail: `metadata.image points to a remote URL that was not materialized in ${contentImagesPath}. Runtime strips that image before rendering.`,
   };
 };
 
@@ -344,7 +343,7 @@ const richCardPreviewImageIssues = (
   generatedMetadataByLink: Record<string, Record<string, unknown>>,
   generatedContentImagesByUrl: Record<string, { resolvedPath?: string }>,
   metadataPath: string,
-  contentImagesPath: string
+  contentImagesPath: string,
 ): ValidationIssue[] => {
   if (resolveRichRenderMode(siteData) === "simple") {
     return [];
@@ -364,13 +363,13 @@ const richCardPreviewImageIssues = (
     const generatedMetadata = generatedMetadataByLink[linkId] ?? {};
     const mergedMetadata: Record<string, unknown> = {
       ...metadata,
-      ...generatedMetadata
+      ...generatedMetadata,
     };
     const previewImage = toStringOrUndefined(mergedMetadata.image);
     const imageAvailability = resolvePreviewImageAvailability(
       previewImage,
       generatedContentImagesByUrl,
-      contentImagesPath
+      contentImagesPath,
     );
 
     if (imageAvailability.hasImage) {
@@ -384,10 +383,7 @@ const richCardPreviewImageIssues = (
     const linkPath = `$.links[${index}]`;
     const imagePath = `${linkPath}.metadata.image`;
 
-    const remediationBase =
-      `Add a preview image at ${imagePath} (for example a local ` +
-      "'generated/images/<hash>.jpg' asset or a remote URL that resolves into " +
-      `${contentImagesPath}).`;
+    const remediationBase = `Add a preview image at ${imagePath} (for example a local 'generated/images/<hash>.jpg' asset or a remote URL that resolves into ${contentImagesPath}).`;
     const enrichmentRemediation = enrichmentEnabled
       ? `If this rich link should use enrichment, rerun npm run enrich:rich:strict && npm run images:sync and verify ${metadataPath} has metadata.image for '${linkId}'.`
       : "This link has enrichment disabled; either add manual metadata.image, switch the link type to 'simple', or re-enable enrichment and rerun npm run enrich:rich:strict && npm run images:sync.";
@@ -401,7 +397,7 @@ const richCardPreviewImageIssues = (
         `but no renderable preview image is available. ${imageAvailability.detail}`,
       remediation:
         `${remediationBase} ${enrichmentRemediation} If this link should never use a rich card, ` +
-        `${linkPath}.type can be set to 'simple' (or set site.ui.richCards.renderMode='simple' globally).`
+        `${linkPath}.type can be set to 'simple' (or set site.ui.richCards.renderMode='simple' globally).`,
     });
   });
 
@@ -418,7 +414,7 @@ interface AuthenticatedExtractorTarget {
 
 const collectAuthenticatedExtractorTargets = (
   linksData: Record<string, unknown>,
-  siteData: Record<string, unknown>
+  siteData: Record<string, unknown>,
 ): AuthenticatedExtractorTarget[] => {
   const links = Array.isArray(linksData.links) ? linksData.links : [];
   const enabledByDefault = resolveEnabledByDefault(siteData);
@@ -449,7 +445,7 @@ const collectAuthenticatedExtractorTargets = (
 
     const cacheKey = resolveAuthenticatedCacheKey(
       toStringOrUndefined(enrichment?.authenticatedCacheKey),
-      linkId
+      linkId,
     );
 
     targets.push({
@@ -457,7 +453,7 @@ const collectAuthenticatedExtractorTargets = (
       linkId,
       url,
       extractorId,
-      cacheKey
+      cacheKey,
     });
   });
 
@@ -468,7 +464,7 @@ const authenticatedExtractorConfigIssues = (
   linksSource: string,
   linksData: Record<string, unknown>,
   siteData: Record<string, unknown>,
-  bypassActive: boolean
+  bypassActive: boolean,
 ): { issues: ValidationIssue[]; suppressedAuthenticatedCacheLinkIds: Set<string> } => {
   const issues: ValidationIssue[] = [];
   const suppressedAuthenticatedCacheLinkIds = new Set<string>();
@@ -483,7 +479,7 @@ const authenticatedExtractorConfigIssues = (
   let policy: ReturnType<typeof loadAuthenticatedExtractorsPolicy>;
   try {
     policy = loadAuthenticatedExtractorsPolicy({
-      policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH
+      policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -493,16 +489,18 @@ const authenticatedExtractorConfigIssues = (
       path: "$",
       message: `Failed to load authenticated extractors policy. ${message}`,
       remediation:
-        "Restore data/policy/rich-authenticated-extractors.json, ensure it validates against schema/rich-authenticated-extractors.schema.json, then run npm run setup:rich-auth."
+        "Restore data/policy/rich-authenticated-extractors.json, ensure it validates against schema/rich-authenticated-extractors.schema.json, then run npm run setup:rich-auth.",
     });
-    targets.forEach((target) => suppressedAuthenticatedCacheLinkIds.add(target.linkId));
+    for (const target of targets) {
+      suppressedAuthenticatedCacheLinkIds.add(target.linkId);
+    }
     return { issues, suppressedAuthenticatedCacheLinkIds };
   }
 
   let cacheRegistry: ReturnType<typeof loadAuthenticatedCacheRegistry>;
   try {
     cacheRegistry = loadAuthenticatedCacheRegistry({
-      cachePath
+      cachePath,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -512,9 +510,11 @@ const authenticatedExtractorConfigIssues = (
       path: "$",
       message: `Failed to load authenticated rich cache. ${message}`,
       remediation:
-        "Restore/fix data/cache/rich-authenticated-cache.json, ensure it validates against schema/rich-authenticated-cache.schema.json, then run npm run setup:rich-auth."
+        "Restore/fix data/cache/rich-authenticated-cache.json, ensure it validates against schema/rich-authenticated-cache.schema.json, then run npm run setup:rich-auth.",
     });
-    targets.forEach((target) => suppressedAuthenticatedCacheLinkIds.add(target.linkId));
+    for (const target of targets) {
+      suppressedAuthenticatedCacheLinkIds.add(target.linkId);
+    }
     return { issues, suppressedAuthenticatedCacheLinkIds };
   }
 
@@ -531,7 +531,7 @@ const authenticatedExtractorConfigIssues = (
         path: extractorPath,
         message: `Unknown authenticated extractor '${target.extractorId}' for link '${target.linkId}'.`,
         remediation:
-          "Use a valid extractor id from data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link, then run npm run setup:rich-auth."
+          "Use a valid extractor id from data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link, then run npm run setup:rich-auth.",
       });
       continue;
     }
@@ -544,7 +544,7 @@ const authenticatedExtractorConfigIssues = (
         path: extractorPath,
         message: `Authenticated extractor '${target.extractorId}' is disabled for link '${target.linkId}'.`,
         remediation:
-          "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link, then run npm run setup:rich-auth."
+          "Enable the extractor in data/policy/rich-authenticated-extractors.json or remove links[].enrichment.authenticatedExtractor for this link, then run npm run setup:rich-auth.",
       });
       continue;
     }
@@ -558,8 +558,8 @@ const authenticatedExtractorConfigIssues = (
         path: extractorPath,
         message: `Link '${target.linkId}' URL host is not allowed by extractor '${target.extractorId}'.`,
         remediation: `Allowed domains: ${extractor.domains.join(
-          ", "
-        )}. Fix links[].enrichment.authenticatedExtractor or the link URL, then run npm run setup:rich-auth.`
+          ", ",
+        )}. Fix links[].enrichment.authenticatedExtractor or the link URL, then run npm run setup:rich-auth.`,
       });
       continue;
     }
@@ -570,7 +570,7 @@ const authenticatedExtractorConfigIssues = (
       expectedExtractorId: target.extractorId,
       expectedUrl: target.url,
       warnAgeDays,
-      registry: cacheRegistry
+      registry: cacheRegistry,
     });
 
     if (validation.issues.length > 0) {
@@ -579,16 +579,11 @@ const authenticatedExtractorConfigIssues = (
 
     for (const issue of validation.issues) {
       issues.push({
-        level:
-          issue.level === "error"
-            ? bypassActive
-              ? "warning"
-              : "error"
-            : "warning",
+        level: issue.level === "error" ? (bypassActive ? "warning" : "error") : "warning",
         source: cachePath,
         path: issue.level === "error" ? cacheKeyPath : `$.entries.${target.cacheKey}`,
         message: `Authenticated cache check for link '${target.linkId}' failed: ${issue.message}`,
-        remediation: issue.remediation
+        remediation: issue.remediation,
       });
     }
   }
@@ -601,7 +596,7 @@ const knownBlockerConfigIssues = (
   linksData: Record<string, unknown>,
   siteData: Record<string, unknown>,
   registry: RichEnrichmentBlockersRegistry,
-  bypassActive: boolean
+  bypassActive: boolean,
 ): { issues: ValidationIssue[]; suppressedKnownBlockerLinkIds: Set<string> } => {
   const issues: ValidationIssue[] = [];
   const suppressedKnownBlockerLinkIds = new Set<string>();
@@ -641,7 +636,8 @@ const knownBlockerConfigIssues = (
     }
 
     const allowKnownBlocker = enrichment?.allowKnownBlocker === true;
-    const docsHint = match.blocker.docs.length > 0 ? ` Docs: ${match.blocker.docs.join(", ")}.` : "";
+    const docsHint =
+      match.blocker.docs.length > 0 ? ` Docs: ${match.blocker.docs.join(", ")}.` : "";
     const supportHint = match.blocker.plannedSupportNote
       ? ` ${match.blocker.plannedSupportNote}`
       : "";
@@ -655,7 +651,7 @@ const knownBlockerConfigIssues = (
         path,
         message: `Known blocker override enabled for rich link '${linkId}' (${url}). Matched blocker '${match.blocker.id}' on '${match.matchedDomain}'.`,
         remediation:
-          "This link is allowed to attempt direct-fetch enrichment despite known blocker policy. Keep this override temporary and monitor enrichment outcomes."
+          "This link is allowed to attempt direct-fetch enrichment despite known blocker policy. Keep this override temporary and monitor enrichment outcomes.",
       });
       return;
     }
@@ -669,8 +665,8 @@ const knownBlockerConfigIssues = (
       remediation: [
         ...match.blocker.remediation,
         "Set links[].enrichment.enabled=false for this link or set links[].enrichment.allowKnownBlocker=true to explicitly override.",
-        `Emergency local bypass: ${ENRICHMENT_BYPASS_ENV}=1 npm run build.${docsHint}`
-      ].join(" ")
+        `Emergency local bypass: ${ENRICHMENT_BYPASS_ENV}=1 npm run build.${docsHint}`,
+      ].join(" "),
     });
   });
 
@@ -683,7 +679,7 @@ const enrichmentIssues = (
   strict: boolean,
   bypassActive: boolean,
   suppressedKnownBlockerLinkIds: Set<string>,
-  suppressedAuthenticatedCacheLinkIds: Set<string>
+  suppressedAuthenticatedCacheLinkIds: Set<string>,
 ): ValidationIssue[] => {
   if (!report) {
     return [
@@ -693,8 +689,8 @@ const enrichmentIssues = (
         path: "$",
         message: "Rich enrichment report not found.",
         remediation:
-          "Run `npm run enrich:rich:strict` before validation/build so policy-based rich-link enrichment outcomes are available."
-      }
+          "Run `npm run enrich:rich:strict` before validation/build so policy-based rich-link enrichment outcomes are available.",
+      },
     ];
   }
 
@@ -725,16 +721,17 @@ const enrichmentIssues = (
       return;
     }
 
-    const level: ValidationIssue["level"] = strict && blocking && !bypassActive ? "error" : "warning";
+    const level: ValidationIssue["level"] =
+      strict && blocking && !bypassActive ? "error" : "warning";
     const diagnosticClass = blocking
       ? "blocking"
       : entry.staleCache
         ? "stale-cache"
-      : entry.manualFallbackUsed
-        ? "manual-fallback"
-        : entry.status === "failed"
-          ? "fetch-warning"
-          : "partial-warning";
+        : entry.manualFallbackUsed
+          ? "manual-fallback"
+          : entry.status === "failed"
+            ? "fetch-warning"
+            : "partial-warning";
 
     const missingFields =
       entry.reason === "metadata_missing" && entry.missingFields && entry.missingFields.length > 0
@@ -748,7 +745,7 @@ const enrichmentIssues = (
       message:
         `Rich enrichment ${diagnosticClass} for link '${entry.linkId}' (${entry.reason}). ${entry.message}` +
         `${missingFields} Policy: failureMode=${failureMode}, failOn=${failOn.join(", ")}.`,
-      remediation: entry.remediation
+      remediation: entry.remediation,
     });
   });
 
@@ -773,10 +770,14 @@ const run = () => {
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
 
-  const schemaChecks: Array<{ source: string; schema: Record<string, unknown>; data: Record<string, unknown> }> = [
+  const schemaChecks: Array<{
+    source: string;
+    schema: Record<string, unknown>;
+    data: Record<string, unknown>;
+  }> = [
     { source: args.profilePath, schema: profileSchema, data: profileData },
     { source: args.linksPath, schema: linksSchema, data: linksData },
-    { source: args.sitePath, schema: siteSchema, data: siteData }
+    { source: args.sitePath, schema: siteSchema, data: siteData },
   ];
 
   const issues: ValidationIssue[] = [];
@@ -801,9 +802,9 @@ const run = () => {
       sources: {
         profile: args.profilePath,
         links: args.linksPath,
-        site: args.sitePath
-      }
-    })
+        site: args.sitePath,
+      },
+    }),
   );
 
   try {
@@ -811,12 +812,12 @@ const run = () => {
       args.linksPath,
       linksData,
       siteData,
-      bypassActive
+      bypassActive,
     );
     issues.push(...authenticatedConfigResult.issues);
-    authenticatedConfigResult.suppressedAuthenticatedCacheLinkIds.forEach((linkId) =>
-      suppressedAuthenticatedCacheLinkIds.add(linkId)
-    );
+    for (const linkId of authenticatedConfigResult.suppressedAuthenticatedCacheLinkIds) {
+      suppressedAuthenticatedCacheLinkIds.add(linkId);
+    }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     issues.push({
@@ -825,25 +826,25 @@ const run = () => {
       path: "$.links",
       message: `Failed to evaluate authenticated extractor policy checks. ${message}`,
       remediation:
-        "Fix authenticated extractor link configuration and policy/cache files, run npm run setup:rich-auth, then rerun validation."
+        "Fix authenticated extractor link configuration and policy/cache files, run npm run setup:rich-auth, then rerun validation.",
     });
   }
 
   try {
     const blockersRegistry = loadRichEnrichmentBlockersRegistry({
-      registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH
+      registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH,
     });
     const blockerConfigResult = knownBlockerConfigIssues(
       args.linksPath,
       linksData,
       siteData,
       blockersRegistry,
-      bypassActive
+      bypassActive,
     );
     issues.push(...blockerConfigResult.issues);
-    blockerConfigResult.suppressedKnownBlockerLinkIds.forEach((linkId) =>
-      suppressedKnownBlockerLinkIds.add(linkId)
-    );
+    for (const linkId of blockerConfigResult.suppressedKnownBlockerLinkIds) {
+      suppressedKnownBlockerLinkIds.add(linkId);
+    }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     issues.push({
@@ -852,7 +853,7 @@ const run = () => {
       path: "$",
       message: `Failed to load rich-enrichment blockers registry. ${message}`,
       remediation:
-        "Restore data/policy/rich-enrichment-blockers.json and ensure it validates against schema/rich-enrichment-blockers.schema.json."
+        "Restore data/policy/rich-enrichment-blockers.json and ensure it validates against schema/rich-enrichment-blockers.schema.json.",
     });
   }
 
@@ -860,7 +861,7 @@ const run = () => {
     const metadataPath = resolveEnrichmentMetadataPath(siteData);
     const metadataRead = tryReadJsonFile<GeneratedRichMetadataPayload>(metadataPath);
     const contentImagesRead = tryReadJsonFile<GeneratedContentImagesPayload>(
-      DEFAULT_CONTENT_IMAGES_MANIFEST_PATH
+      DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
     );
 
     if (!metadataRead.value) {
@@ -870,9 +871,7 @@ const run = () => {
         path: "$",
         message:
           "Generated rich metadata is required to validate rich-card preview images, but it could not be loaded.",
-        remediation:
-          `Run npm run enrich:rich:strict to regenerate ${metadataPath}. ` +
-          `Then rerun npm run validate:data. ${metadataRead.errorMessage ?? ""}`.trim()
+        remediation: `Run npm run enrich:rich:strict to regenerate ${metadataPath}. ${`Then rerun npm run validate:data. ${metadataRead.errorMessage ?? ""}`.trim()}`,
       });
     }
 
@@ -883,9 +882,7 @@ const run = () => {
         path: "$",
         message:
           "Generated content-image manifest is required to validate rich-card preview images, but it could not be loaded.",
-        remediation:
-          `Run npm run images:sync to regenerate ${DEFAULT_CONTENT_IMAGES_MANIFEST_PATH}. ` +
-          `Then rerun npm run validate:data. ${contentImagesRead.errorMessage ?? ""}`.trim()
+        remediation: `Run npm run images:sync to regenerate ${DEFAULT_CONTENT_IMAGES_MANIFEST_PATH}. ${`Then rerun npm run validate:data. ${contentImagesRead.errorMessage ?? ""}`.trim()}`,
       });
     }
 
@@ -898,8 +895,8 @@ const run = () => {
           resolveGeneratedMetadataByLink(metadataRead.value),
           resolveGeneratedContentImagesByUrl(contentImagesRead.value),
           metadataPath,
-          DEFAULT_CONTENT_IMAGES_MANIFEST_PATH
-        )
+          DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+        ),
       );
     }
   }
@@ -911,12 +908,13 @@ const run = () => {
       args.strict,
       bypassActive,
       suppressedKnownBlockerLinkIds,
-      suppressedAuthenticatedCacheLinkIds
-    )
+      suppressedAuthenticatedCacheLinkIds,
+    ),
   );
 
   const errors = sortIssues(issues.filter((issue) => issue.level === "error"));
   const warnings = sortIssues(issues.filter((issue) => issue.level === "warning"));
+  const strictBlockingWarnings = warnings.filter((issue) => issue.strictBlocking !== false);
   const hasAuthenticatedSetupIssue = [...errors, ...warnings].some((issue) => {
     const normalizedMessage = issue.message.toLowerCase();
     const normalizedSource = issue.source.toLowerCase();
@@ -932,13 +930,14 @@ const run = () => {
   const result: ValidationResult = {
     strict: args.strict,
     format: args.format,
-    success: errors.length === 0 && (!args.strict || warnings.length === 0),
+    success: errors.length === 0 && (!args.strict || strictBlockingWarnings.length === 0),
     errors,
     warnings,
+    strictBlockingWarnings: strictBlockingWarnings.length,
     files: {
       profile: args.profilePath,
       links: args.linksPath,
-      site: args.sitePath
+      site: args.sitePath,
     },
     enrichment: {
       reportPath: enrichmentReportPath,
@@ -948,13 +947,13 @@ const run = () => {
       failureMode: enrichmentReport?.failureMode,
       failOn: enrichmentReport?.failOn,
       bypassActive,
-      abortedEarly: enrichmentReport?.abortedEarly
-    }
+      abortedEarly: enrichmentReport?.abortedEarly,
+    },
   };
 
   if (args.format === "human" && hasAuthenticatedSetupIssue && !bypassActive) {
     console.log(
-      "Hint: authenticated rich cache setup is required. Run `npm run setup:rich-auth`, commit updated cache/assets, then rerun validation/build."
+      "Hint: authenticated rich cache setup is required. Run `npm run setup:rich-auth`, commit updated cache/assets, then rerun validation/build.",
     );
     console.log("");
   }

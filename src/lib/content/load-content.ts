@@ -3,9 +3,9 @@ import profileData from "../../../data/profile.json";
 import siteData from "../../../data/site.json";
 import { resolvePrimaryPaymentHref } from "../payments/rails";
 import {
-  isPaymentCapableLink,
   type LinkPaymentConfig,
-  type SitePaymentsConfig
+  type SitePaymentsConfig,
+  isPaymentCapableLink,
 } from "../payments/types";
 
 export type {
@@ -19,7 +19,7 @@ export type {
   PaymentRail,
   PaymentRailType,
   SitePaymentQrDefaults,
-  SitePaymentsConfig
+  SitePaymentsConfig,
 } from "../payments/types";
 
 export type LinkType = "simple" | "rich" | "payment";
@@ -103,6 +103,7 @@ export interface RichLinkMetadata {
   image?: string;
   imageFit?: RichCardImageFit;
   mobileImageLayout?: RichCardMobileImageLayout;
+  handle?: string;
   sourceLabel?: string;
   sourceLabelVisible?: boolean;
   enrichmentStatus?: "fetched" | "partial" | "failed" | "skipped";
@@ -309,17 +310,17 @@ interface GeneratedContentImagesPayload {
 
 const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetadataPayload }>(
   "../../../data/generated/rich-metadata.json",
-  { eager: true }
+  { eager: true },
 );
 
 const generatedProfileAvatarModules = import.meta.glob<{ default: GeneratedProfileAvatarPayload }>(
   "../../../data/generated/profile-avatar.json",
-  { eager: true }
+  { eager: true },
 );
 
 const generatedContentImageModules = import.meta.glob<{ default: GeneratedContentImagesPayload }>(
   "../../../data/generated/content-images.json",
-  { eager: true }
+  { eager: true },
 );
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -344,7 +345,7 @@ const trimToUndefined = (value: string | undefined): string | undefined => {
 const PAYMENT_SUPPORT_GROUP: LinkGroup = {
   id: "support",
   label: "Support",
-  order: 999
+  order: 999,
 };
 
 const applyPaymentDefaults = (links: OpenLink[]): OpenLink[] =>
@@ -370,12 +371,14 @@ const applyPaymentDefaults = (links: OpenLink[]): OpenLink[] =>
 
     return {
       ...link,
-      ...updates
+      ...updates,
     };
   });
 
 const ensureSupportGroup = (groups: LinkGroup[], links: OpenLink[]): LinkGroup[] => {
-  const hasSupportLinks = links.some((link) => trimToUndefined(link.group) === PAYMENT_SUPPORT_GROUP.id);
+  const hasSupportLinks = links.some(
+    (link) => trimToUndefined(link.group) === PAYMENT_SUPPORT_GROUP.id,
+  );
   const hasSupportGroup = groups.some((group) => group.id === PAYMENT_SUPPORT_GROUP.id);
 
   if (!hasSupportLinks || hasSupportGroup) {
@@ -441,7 +444,7 @@ const toCanonicalHttpUrl = (value: string): string | null => {
 
 const resolveImageFromGeneratedMap = (
   candidate: string,
-  generatedByUrl: Record<string, GeneratedContentImageEntry>
+  generatedByUrl: Record<string, GeneratedContentImageEntry>,
 ): string | undefined => {
   const canonical = toCanonicalHttpUrl(candidate);
   if (!canonical) {
@@ -456,7 +459,9 @@ const resolveImageFromGeneratedMap = (
   return toLocalAssetUrl(entry.resolvedPath);
 };
 
-export const resolveGeneratedContentImageUrl = (candidate: string | undefined): string | undefined => {
+export const resolveGeneratedContentImageUrl = (
+  candidate: string | undefined,
+): string | undefined => {
   if (typeof candidate !== "string" || candidate.trim().length === 0) {
     return undefined;
   }
@@ -476,7 +481,11 @@ const resolveProfileAvatarPath = (): string => {
   const module = Object.values(generatedProfileAvatarModules)[0];
   const payload = module?.default;
 
-  if (!payload || typeof payload.resolvedPath !== "string" || payload.resolvedPath.trim().length === 0) {
+  if (
+    !payload ||
+    typeof payload.resolvedPath !== "string" ||
+    payload.resolvedPath.trim().length === 0
+  ) {
     return toLocalAssetUrl(fallbackPath);
   }
 
@@ -485,7 +494,7 @@ const resolveProfileAvatarPath = (): string => {
 
 const localizeRichMetadataImages = (
   links: OpenLink[],
-  generatedByUrl: Record<string, GeneratedContentImageEntry>
+  generatedByUrl: Record<string, GeneratedContentImageEntry>,
 ): OpenLink[] =>
   links.map((link) => {
     if (!link.metadata) {
@@ -510,7 +519,7 @@ const localizeRichMetadataImages = (
       const { image: _image, ...metadataWithoutImage } = link.metadata;
       return {
         ...link,
-        metadata: metadataWithoutImage
+        metadata: metadataWithoutImage,
       };
     }
 
@@ -518,14 +527,14 @@ const localizeRichMetadataImages = (
       ...link,
       metadata: {
         ...link.metadata,
-        image: resolvedImage
-      }
+        image: resolvedImage,
+      },
     };
   });
 
 const mergeGeneratedMetadata = (
   links: OpenLink[],
-  generatedByLink: Record<string, RichLinkMetadata>
+  generatedByLink: Record<string, RichLinkMetadata>,
 ): OpenLink[] =>
   links.map((link) => {
     const generated = generatedByLink[link.id];
@@ -537,8 +546,8 @@ const mergeGeneratedMetadata = (
       ...link,
       metadata: {
         ...(link.metadata ?? {}),
-        ...generated
-      }
+        ...generated,
+      },
     };
   });
 
@@ -564,7 +573,7 @@ export const loadContent = () => {
   const profileSource = profileData as ProfileData;
   const profile: ProfileData = {
     ...profileSource,
-    avatar: resolveProfileAvatarPath()
+    avatar: resolveProfileAvatarPath(),
   };
   const site = siteData as SiteData;
   const linksPayload = linksData as LinksData;
@@ -578,7 +587,8 @@ export const loadContent = () => {
   const links = rankByExplicitOrder(enabledLinks, linksPayload.order);
 
   const groups = ensureSupportGroup([...(linksPayload.groups ?? [])], links).sort(
-    (left, right) => (left.order ?? Number.MAX_SAFE_INTEGER) - (right.order ?? Number.MAX_SAFE_INTEGER)
+    (left, right) =>
+      (left.order ?? Number.MAX_SAFE_INTEGER) - (right.order ?? Number.MAX_SAFE_INTEGER),
   );
 
   return {
@@ -586,6 +596,6 @@ export const loadContent = () => {
     site,
     links,
     groups,
-    linksPayload
+    linksPayload,
   };
 };

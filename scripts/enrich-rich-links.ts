@@ -1,23 +1,24 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { normalizeHandle, resolveHandleFromUrl } from "../src/lib/identity/handle-resolver";
 import {
   DEFAULT_AUTH_CACHE_PATH,
   loadAuthenticatedCacheRegistry,
   resolveAuthenticatedCacheKey,
-  validateAuthenticatedCacheEntry
+  validateAuthenticatedCacheEntry,
 } from "./authenticated-extractors/cache";
 import {
   DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
   loadAuthenticatedExtractorsPolicy,
   resolveAuthenticatedExtractorById,
-  resolveAuthenticatedExtractorDomainMatch
+  resolveAuthenticatedExtractorDomainMatch,
 } from "./authenticated-extractors/policy";
 import {
   DEFAULT_BLOCKERS_REGISTRY_PATH,
-  resolveKnownBlockerMatch,
+  type KnownBlockerMatch,
   loadRichEnrichmentBlockersRegistry,
-  type KnownBlockerMatch
+  resolveKnownBlockerMatch,
 } from "./enrichment/blockers-registry";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
@@ -28,7 +29,7 @@ import type {
   EnrichmentMetadata,
   EnrichmentReason,
   EnrichmentRunEntry,
-  GeneratedRichMetadata
+  GeneratedRichMetadata,
 } from "./enrichment/types";
 
 interface CliArgs {
@@ -46,6 +47,7 @@ interface LinkInput {
   label: string;
   url?: string;
   type: "simple" | "rich" | "payment";
+  icon?: string;
   metadata?: EnrichmentMetadata;
   enrichment?: {
     enabled?: boolean;
@@ -115,19 +117,19 @@ const parseNumber = (value: string | undefined): number | undefined => {
 const parseArgs = (): CliArgs => {
   const args = process.argv.slice(2);
 
-  const valueOf = (name: string): string | undefined => {
+  const argValue = (name: string): string | undefined => {
     const index = args.indexOf(name);
     return index >= 0 ? args[index + 1] : undefined;
   };
 
   return {
     strict: args.includes("--strict"),
-    linksPath: valueOf("--links") ?? "data/links.json",
-    sitePath: valueOf("--site") ?? "data/site.json",
-    outputPath: valueOf("--out"),
-    reportPath: valueOf("--report"),
-    timeoutMs: parseNumber(valueOf("--timeout")),
-    retries: parseNumber(valueOf("--retries"))
+    linksPath: argValue("--links") ?? "data/links.json",
+    sitePath: argValue("--site") ?? "data/site.json",
+    outputPath: argValue("--out"),
+    reportPath: argValue("--report"),
+    timeoutMs: parseNumber(argValue("--timeout")),
+    retries: parseNumber(argValue("--retries")),
   };
 };
 
@@ -165,17 +167,17 @@ const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
     timeoutMs: Math.max(500, args.timeoutMs ?? defaults?.timeoutMs ?? 4000),
     retries: Math.max(0, args.retries ?? defaults?.retries ?? 1),
     outputPath: args.outputPath ?? defaults?.metadataPath ?? "data/generated/rich-metadata.json",
-    reportPath: args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json",
-    authenticatedCachePath:
-      defaults?.authenticatedCachePath ?? DEFAULT_AUTH_CACHE_PATH,
+    reportPath:
+      args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json",
+    authenticatedCachePath: defaults?.authenticatedCachePath ?? DEFAULT_AUTH_CACHE_PATH,
     authenticatedCacheWarnAgeDays: Math.max(
       1,
-      defaults?.authenticatedCacheWarnAgeDays ?? DEFAULT_AUTH_CACHE_WARN_AGE_DAYS
+      defaults?.authenticatedCacheWarnAgeDays ?? DEFAULT_AUTH_CACHE_WARN_AGE_DAYS,
     ),
     failureMode: resolveFailureMode(defaults?.failureMode),
     failOn: resolveFailOn(defaults?.failOn),
     allowManualMetadataFallback: defaults?.allowManualMetadataFallback ?? true,
-    bypassActive: process.env[ENRICHMENT_BYPASS_ENV] === "1"
+    bypassActive: process.env[ENRICHMENT_BYPASS_ENV] === "1",
   };
 };
 
@@ -190,6 +192,7 @@ const pickDefined = (metadata: EnrichmentMetadata): EnrichmentMetadata => {
   if (metadata.title) result.title = metadata.title;
   if (metadata.description) result.description = metadata.description;
   if (metadata.image) result.image = metadata.image;
+  if (metadata.handle) result.handle = metadata.handle;
   if (metadata.sourceLabel) result.sourceLabel = metadata.sourceLabel;
   if (typeof metadata.sourceLabelVisible === "boolean") {
     result.sourceLabelVisible = metadata.sourceLabelVisible;
@@ -203,7 +206,7 @@ const pickDefined = (metadata: EnrichmentMetadata): EnrichmentMetadata => {
 
 const mergeMetadata = (
   original: EnrichmentMetadata | undefined,
-  enriched: EnrichmentMetadata
+  enriched: EnrichmentMetadata,
 ): EnrichmentMetadata => pickDefined({ ...(original ?? {}), ...enriched });
 
 const hasManualMetadataFallback = (metadata: EnrichmentMetadata | undefined): boolean => {
@@ -218,7 +221,7 @@ const hasManualMetadataFallback = (metadata: EnrichmentMetadata | undefined): bo
 const makeEntryMessage = (
   status: EnrichmentRunEntry["status"],
   reason: EnrichmentReason,
-  manualFallbackUsed = false
+  manualFallbackUsed = false,
 ): string => {
   if (status === "skipped") {
     return "Enrichment skipped by configuration.";
@@ -258,7 +261,7 @@ const makeEntryMessage = (
 const remediationFor = (
   status: EnrichmentRunEntry["status"],
   reason: EnrichmentReason,
-  manualFallbackUsed = false
+  manualFallbackUsed = false,
 ): string => {
   if (status === "skipped") {
     return "Set enrichment.enabled=true on this rich link or adjust site.ui.richCards.enrichment.enabledByDefault.";
@@ -311,7 +314,7 @@ const knownBlockerRemediationFor = (match: KnownBlockerMatch): string => {
 
   parts.push(...match.blocker.remediation);
   parts.push(
-    "Disable enrichment for this link, or set links[].enrichment.allowKnownBlocker=true to override and attempt enrichment anyway."
+    "Disable enrichment for this link, or set links[].enrichment.allowKnownBlocker=true to override and attempt enrichment anyway.",
   );
   if (match.blocker.plannedSupportNote) {
     parts.push(match.blocker.plannedSupportNote);
@@ -327,13 +330,15 @@ const printBlockingDiagnostics = (
   entries: EnrichmentRunEntry[],
   config: ResolvedConfig,
   reportPath: string,
-  abortedEarly: boolean
+  abortedEarly: boolean,
 ) => {
   console.error("");
   console.error("OpenLinks rich enrichment failed due to blocking metadata issues.");
   console.error(`Policy: failureMode=${config.failureMode}, failOn=${config.failOn.join(", ")}`);
   if (abortedEarly) {
-    console.error("Processing stopped early after the first blocking failure (failureMode=immediate).");
+    console.error(
+      "Processing stopped early after the first blocking failure (failureMode=immediate).",
+    );
   }
   console.error(`Report path: ${reportPath}`);
   console.error("");
@@ -356,7 +361,11 @@ const printBlockingDiagnostics = (
     if (entry.cacheCapturedAt) {
       console.error(`   cacheCapturedAt: ${entry.cacheCapturedAt}`);
     }
-    if (entry.reason === "metadata_missing" && entry.missingFields && entry.missingFields.length > 0) {
+    if (
+      entry.reason === "metadata_missing" &&
+      entry.missingFields &&
+      entry.missingFields.length > 0
+    ) {
       console.error(`   missingFields: ${entry.missingFields.join(", ")}`);
     }
     if (entry.staleCache) {
@@ -371,7 +380,7 @@ const printBlockingDiagnostics = (
   console.error("  - First-time authenticated cache setup: npm run setup:rich-auth");
   console.error("  - Re-run diagnostics: npm run enrich:rich:strict");
   console.error(
-    `  - Temporary bypass (local/emergency only): ${ENRICHMENT_BYPASS_ENV}=1 npm run build`
+    `  - Temporary bypass (local/emergency only): ${ENRICHMENT_BYPASS_ENV}=1 npm run build`,
   );
 };
 
@@ -381,23 +390,23 @@ const run = async () => {
   const sitePayload = readJson<SitePayload>(args.sitePath);
   const config = resolveConfig(sitePayload, args);
   const hasAuthenticatedExtractorConfig = (linksPayload.links ?? []).some(
-    (link) => link.type === "rich" && typeof link.enrichment?.authenticatedExtractor === "string"
+    (link) => link.type === "rich" && typeof link.enrichment?.authenticatedExtractor === "string",
   );
 
   const authenticatedExtractorsPolicy = hasAuthenticatedExtractorConfig
     ? loadAuthenticatedExtractorsPolicy({
-        policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH
+        policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
       })
     : null;
 
   const authenticatedCacheRegistry = hasAuthenticatedExtractorConfig
     ? loadAuthenticatedCacheRegistry({
-        cachePath: config.authenticatedCachePath
+        cachePath: config.authenticatedCachePath,
       })
     : null;
 
   const blockersRegistry = loadRichEnrichmentBlockersRegistry({
-    registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH
+    registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH,
   });
   const generatedAt = new Date().toISOString();
   const enforceStrictBlocking = args.strict && !config.bypassActive;
@@ -405,30 +414,36 @@ const run = async () => {
 
   if (config.bypassActive) {
     console.warn(
-      `Warning: ${ENRICHMENT_BYPASS_ENV}=1 is active. Blocking enrichment failures (including known blocked domains) will be reported but will not fail this run.`
+      `Warning: ${ENRICHMENT_BYPASS_ENV}=1 is active. Blocking enrichment failures (including known blocked domains) will be reported but will not fail this run.`,
     );
   }
 
   const richLinks = (linksPayload.links ?? []).filter(
     (link): link is LinkInput & { type: "rich"; url: string } =>
-      link.type === "rich" && typeof link.url === "string" && link.url.length > 0
+      link.type === "rich" && typeof link.url === "string" && link.url.length > 0,
   );
   const entries: EnrichmentRunEntry[] = [];
   const generatedLinks: GeneratedRichMetadata["links"] = {};
   let abortedEarly = false;
 
   for (const link of richLinks) {
+    const urlDerivedHandle = resolveHandleFromUrl({
+      url: link.url,
+      icon: link.icon,
+    }).handle;
+    const handleForMetadata = normalizeHandle(link.metadata?.handle) ?? urlDerivedHandle;
     const linkEnabled = link.enrichment?.enabled ?? config.enabledByDefault;
     const authenticatedExtractorId = link.enrichment?.authenticatedExtractor?.trim();
 
     if (!linkEnabled) {
       const reason: EnrichmentReason = "enrichment_disabled";
       const metadata = mergeMetadata(link.metadata, {
+        handle: handleForMetadata,
         sourceLabel: link.enrichment?.sourceLabel,
         sourceLabelVisible: link.enrichment?.sourceLabelVisible,
         enrichmentStatus: "skipped",
         enrichmentReason: reason,
-        enrichedAt: generatedAt
+        enrichedAt: generatedAt,
       });
 
       entries.push({
@@ -441,7 +456,7 @@ const run = async () => {
         message: makeEntryMessage("skipped", reason),
         remediation: remediationFor("skipped", reason),
         metadata,
-        blocking: false
+        blocking: false,
       });
 
       generatedLinks[link.id] = { metadata };
@@ -451,27 +466,28 @@ const run = async () => {
     if (authenticatedExtractorId) {
       if (!authenticatedExtractorsPolicy || !authenticatedCacheRegistry) {
         throw new Error(
-          "Authenticated extractor is configured but policy/cache registry was not initialized."
+          "Authenticated extractor is configured but policy/cache registry was not initialized.",
         );
       }
 
       const extractor = resolveAuthenticatedExtractorById(
         authenticatedExtractorId,
-        authenticatedExtractorsPolicy
+        authenticatedExtractorsPolicy,
       );
       const cacheKey = resolveAuthenticatedCacheKey(
         link.enrichment?.authenticatedCacheKey,
-        link.id
+        link.id,
       );
 
       if (!extractor) {
         const reason: EnrichmentReason = "authenticated_cache_missing";
         const metadata = mergeMetadata(link.metadata, {
+          handle: handleForMetadata,
           sourceLabel: link.enrichment?.sourceLabel,
           sourceLabelVisible: link.enrichment?.sourceLabelVisible,
           enrichmentStatus: "failed",
           enrichmentReason: reason,
-          enrichedAt: generatedAt
+          enrichedAt: generatedAt,
         });
 
         entries.push({
@@ -487,7 +503,7 @@ const run = async () => {
           metadata,
           blocking: true,
           extractorId: authenticatedExtractorId,
-          cacheKey
+          cacheKey,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -496,11 +512,12 @@ const run = async () => {
       if (extractor.status === "disabled") {
         const reason: EnrichmentReason = "authenticated_cache_missing";
         const metadata = mergeMetadata(link.metadata, {
+          handle: handleForMetadata,
           sourceLabel: link.enrichment?.sourceLabel,
           sourceLabelVisible: link.enrichment?.sourceLabelVisible,
           enrichmentStatus: "failed",
           enrichmentReason: reason,
-          enrichedAt: generatedAt
+          enrichedAt: generatedAt,
         });
 
         entries.push({
@@ -516,7 +533,7 @@ const run = async () => {
           metadata,
           blocking: true,
           extractorId: authenticatedExtractorId,
-          cacheKey
+          cacheKey,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -526,11 +543,12 @@ const run = async () => {
       if (!domainMatch) {
         const reason: EnrichmentReason = "authenticated_cache_missing";
         const metadata = mergeMetadata(link.metadata, {
+          handle: handleForMetadata,
           sourceLabel: link.enrichment?.sourceLabel,
           sourceLabelVisible: link.enrichment?.sourceLabelVisible,
           enrichmentStatus: "failed",
           enrichmentReason: reason,
-          enrichedAt: generatedAt
+          enrichedAt: generatedAt,
         });
 
         entries.push({
@@ -542,12 +560,12 @@ const run = async () => {
           durationMs: 0,
           message: `Link URL host does not match authenticated extractor '${authenticatedExtractorId}' policy domains.`,
           remediation: `Allowed domains: ${extractor.domains.join(
-            ", "
+            ", ",
           )}. Fix links[].enrichment.authenticatedExtractor or link URL, then run npm run setup:rich-auth.`,
           metadata,
           blocking: true,
           extractorId: authenticatedExtractorId,
-          cacheKey
+          cacheKey,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -559,7 +577,7 @@ const run = async () => {
         expectedExtractorId: authenticatedExtractorId,
         expectedUrl: link.url,
         warnAgeDays: config.authenticatedCacheWarnAgeDays,
-        registry: authenticatedCacheRegistry
+        registry: authenticatedCacheRegistry,
       });
 
       const cacheErrors = cacheValidation.issues.filter((issue) => issue.level === "error");
@@ -569,11 +587,12 @@ const run = async () => {
       if (cacheErrors.length > 0 || !cacheValidation.metadata || !cacheValidation.valid) {
         const reason: EnrichmentReason = "authenticated_cache_missing";
         const metadata = mergeMetadata(link.metadata, {
+          handle: handleForMetadata,
           sourceLabel: link.enrichment?.sourceLabel,
           sourceLabelVisible: link.enrichment?.sourceLabelVisible,
           enrichmentStatus: "failed",
           enrichmentReason: reason,
-          enrichedAt: generatedAt
+          enrichedAt: generatedAt,
         });
 
         entries.push({
@@ -589,7 +608,7 @@ const run = async () => {
           blocking: true,
           extractorId: authenticatedExtractorId,
           cacheKey,
-          cacheCapturedAt: cacheValidation.entry?.entry.capturedAt
+          cacheCapturedAt: cacheValidation.entry?.entry.capturedAt,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -604,6 +623,7 @@ const run = async () => {
       const reason: EnrichmentReason = "authenticated_cache";
       const metadata = mergeMetadata(link.metadata, {
         ...cacheValidation.metadata,
+        handle: handleForMetadata,
         sourceLabel:
           link.enrichment?.sourceLabel ??
           cacheValidation.metadata.sourceLabel ??
@@ -611,7 +631,7 @@ const run = async () => {
         sourceLabelVisible: link.enrichment?.sourceLabelVisible,
         enrichmentStatus: "fetched",
         enrichmentReason: reason,
-        enrichedAt: generatedAt
+        enrichedAt: generatedAt,
       });
 
       entries.push({
@@ -632,7 +652,7 @@ const run = async () => {
         extractorId: authenticatedExtractorId,
         cacheKey,
         cacheCapturedAt: cacheValidation.entry?.entry.capturedAt,
-        staleCache: staleCache || undefined
+        staleCache: staleCache || undefined,
       });
       generatedLinks[link.id] = { metadata };
       continue;
@@ -643,11 +663,12 @@ const run = async () => {
     if (knownBlockerMatch && !allowKnownBlocker) {
       const reason: EnrichmentReason = "known_blocker";
       const metadata = mergeMetadata(link.metadata, {
+        handle: handleForMetadata,
         sourceLabel: link.enrichment?.sourceLabel,
         sourceLabelVisible: link.enrichment?.sourceLabelVisible,
         enrichmentStatus: "failed",
         enrichmentReason: reason,
-        enrichedAt: generatedAt
+        enrichedAt: generatedAt,
       });
 
       entries.push({
@@ -660,7 +681,7 @@ const run = async () => {
         message: knownBlockerMessageFor(knownBlockerMatch),
         remediation: knownBlockerRemediationFor(knownBlockerMatch),
         metadata,
-        blocking: true
+        blocking: true,
       });
       generatedLinks[link.id] = { metadata };
       continue;
@@ -671,24 +692,25 @@ const run = async () => {
         [
           `Warning: link '${link.id}' matches known blocker '${knownBlockerMatch.blocker.id}'`,
           "because enrichment.allowKnownBlocker=true is set, enrichment fetch will proceed anyway.",
-          `Host: ${knownBlockerMatch.host} (matched: ${knownBlockerMatch.matchedDomain})`
-        ].join(" ")
+          `Host: ${knownBlockerMatch.host} (matched: ${knownBlockerMatch.matchedDomain})`,
+        ].join(" "),
       );
     }
 
     const fetched = await fetchMetadata(link.url, {
       timeoutMs: config.timeoutMs,
-      retries: config.retries
+      retries: config.retries,
     });
 
     if (!fetched.ok || !fetched.html) {
       const reason: EnrichmentReason = "fetch_failed";
       const metadata = mergeMetadata(link.metadata, {
+        handle: handleForMetadata,
         sourceLabel: link.enrichment?.sourceLabel,
         sourceLabelVisible: link.enrichment?.sourceLabelVisible,
         enrichmentStatus: "failed",
         enrichmentReason: reason,
-        enrichedAt: generatedAt
+        enrichedAt: generatedAt,
       });
       const blocking = isBlockingReason(reason, config.failOn);
 
@@ -703,7 +725,7 @@ const run = async () => {
         message: fetched.error ?? makeEntryMessage("failed", reason),
         remediation: remediationFor("failed", reason),
         metadata,
-        blocking
+        blocking,
       });
 
       generatedLinks[link.id] = { metadata };
@@ -725,7 +747,8 @@ const run = async () => {
           ? "metadata_partial"
           : "metadata_missing";
 
-    const status: EnrichmentRunEntry["status"] = parsed.completeness === "full" ? "fetched" : "partial";
+    const status: EnrichmentRunEntry["status"] =
+      parsed.completeness === "full" ? "fetched" : "partial";
     const manualFallbackUsed =
       reason === "metadata_missing" &&
       config.allowManualMetadataFallback &&
@@ -734,11 +757,12 @@ const run = async () => {
 
     const metadata = mergeMetadata(link.metadata, {
       ...parsed.metadata,
+      handle: handleForMetadata,
       sourceLabel: link.enrichment?.sourceLabel ?? parsed.metadata.sourceLabel,
       sourceLabelVisible: link.enrichment?.sourceLabelVisible,
       enrichmentStatus: status,
       enrichmentReason: reason,
-      enrichedAt: generatedAt
+      enrichedAt: generatedAt,
     });
 
     entries.push({
@@ -754,7 +778,7 @@ const run = async () => {
       metadata,
       blocking,
       manualFallbackUsed: manualFallbackUsed || undefined,
-      missingFields: reason === "metadata_missing" ? parsed.missing : undefined
+      missingFields: reason === "metadata_missing" ? parsed.missing : undefined,
     });
 
     generatedLinks[link.id] = { metadata };
@@ -767,11 +791,15 @@ const run = async () => {
 
   const generated: GeneratedRichMetadata = {
     generatedAt,
-    links: generatedLinks
+    links: generatedLinks,
   };
 
   ensureDirectory(config.outputPath);
-  fs.writeFileSync(absolutePath(config.outputPath), `${JSON.stringify(generated, null, 2)}\n`, "utf8");
+  fs.writeFileSync(
+    absolutePath(config.outputPath),
+    `${JSON.stringify(generated, null, 2)}\n`,
+    "utf8",
+  );
 
   const report = writeEnrichmentReport({
     reportPath: config.reportPath,
@@ -781,25 +809,25 @@ const run = async () => {
     failureMode: config.failureMode,
     failOn: config.failOn,
     bypassActive: config.bypassActive,
-    abortedEarly
+    abortedEarly,
   });
 
   const blockingEntries = report.entries.filter((entry) => entry.blocking === true);
   const hasAuthenticatedCacheBlockingEntries = blockingEntries.some(
-    (entry) => entry.reason === "authenticated_cache_missing"
+    (entry) => entry.reason === "authenticated_cache_missing",
   );
 
   console.log("OpenLinks rich enrichment run");
   console.log(`Links processed: ${report.summary.total}`);
   console.log(
-    `Results: fetched=${report.summary.fetched}, partial=${report.summary.partial}, failed=${report.summary.failed}, skipped=${report.summary.skipped}`
+    `Results: fetched=${report.summary.fetched}, partial=${report.summary.partial}, failed=${report.summary.failed}, skipped=${report.summary.skipped}`,
   );
   console.log(
-    `Policy: failureMode=${config.failureMode}, failOn=${config.failOn.join(", ")}, allowManualMetadataFallback=${config.allowManualMetadataFallback}`
+    `Policy: failureMode=${config.failureMode}, failOn=${config.failOn.join(", ")}, allowManualMetadataFallback=${config.allowManualMetadataFallback}`,
   );
   console.log(`Known blockers registry: ${DEFAULT_BLOCKERS_REGISTRY_PATH}`);
   console.log(
-    `Known blocker policy: ${enforceKnownBlockers ? "enforced" : "bypassed"} (override per link: enrichment.allowKnownBlocker=true)`
+    `Known blocker policy: ${enforceKnownBlockers ? "enforced" : "bypassed"} (override per link: enrichment.allowKnownBlocker=true)`,
   );
   if (hasAuthenticatedExtractorConfig) {
     console.log(`Authenticated extractor policy: ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}`);
@@ -817,32 +845,32 @@ const run = async () => {
     console.log(
       `- ${entry.linkId}: ${entry.status} (${entry.reason})${entry.blocking ? " [blocking]" : ""}${
         entry.manualFallbackUsed ? " [manual-fallback]" : ""
-      }${entry.staleCache ? " [stale-cache]" : ""}${entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""}`
+      }${entry.staleCache ? " [stale-cache]" : ""}${entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""}`,
     );
   }
 
   const alwaysBlockingEntries = blockingEntries.filter((entry) =>
-    isAlwaysBlockingReason(entry.reason)
+    isAlwaysBlockingReason(entry.reason),
   );
   const strictPolicyEntries = blockingEntries.filter(
-    (entry) => !isAlwaysBlockingReason(entry.reason)
+    (entry) => !isAlwaysBlockingReason(entry.reason),
   );
   const entriesToFailOn = [
     ...(!config.bypassActive ? alwaysBlockingEntries : []),
-    ...(enforceStrictBlocking ? strictPolicyEntries : [])
+    ...(enforceStrictBlocking ? strictPolicyEntries : []),
   ];
   const shouldFail = entriesToFailOn.length > 0;
 
   if (config.bypassActive && blockingEntries.length > 0) {
     console.warn(
-      `Warning: ${blockingEntries.length} blocking enrichment issue(s) were detected but bypassed due to ${ENRICHMENT_BYPASS_ENV}=1.`
+      `Warning: ${blockingEntries.length} blocking enrichment issue(s) were detected but bypassed due to ${ENRICHMENT_BYPASS_ENV}=1.`,
     );
   }
 
   if (!config.bypassActive && hasAuthenticatedCacheBlockingEntries) {
     console.error("");
     console.error(
-      "Authenticated rich cache setup is required for one or more configured extractors. Run `npm run setup:rich-auth`, commit cache/assets, then rerun build."
+      "Authenticated rich cache setup is required for one or more configured extractors. Run `npm run setup:rich-auth`, commit cache/assets, then rerun build.",
     );
   }
 

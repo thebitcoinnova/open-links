@@ -18,10 +18,21 @@ const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_
 
 export const RichLinkCard = (props: RichLinkCardProps) => {
   const target = () => props.target ?? "_blank";
-  const rel = () => (target() === "_blank" ? props.rel ?? "noopener noreferrer" : undefined);
+  const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const titleId = () => `rich-link-title-${safeId(props.link.id)}`;
   const descriptionId = () => `rich-link-description-${safeId(props.link.id)}`;
+  const handleId = () => `rich-link-handle-${safeId(props.link.id)}`;
   const sourceId = () => `rich-link-source-${safeId(props.link.id)}`;
+  const ariaDescribedBy = () => {
+    const ids = [descriptionId()];
+    if (props.viewModel.handleDisplay) {
+      ids.push(handleId());
+    }
+    if (props.viewModel.showSourceLabel) {
+      ids.push(sourceId());
+    }
+    return ids.join(" ");
+  };
   const ariaLabel = () =>
     target() === "_blank"
       ? `Open ${props.viewModel.title} in a new tab`
@@ -36,7 +47,7 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
       rel={rel()}
       aria-label={ariaLabel()}
       aria-labelledby={titleId()}
-      aria-describedby={props.viewModel.showSourceLabel ? `${descriptionId()} ${sourceId()}` : descriptionId()}
+      aria-describedby={ariaDescribedBy()}
       data-interaction={props.interaction ?? "minimal"}
       data-link-type={props.link.type}
       data-image-fit={props.viewModel.imageFit}
@@ -61,6 +72,11 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
         <span class="rich-card-description" id={descriptionId()}>
           {props.viewModel.description}
         </span>
+        <Show when={props.viewModel.handleDisplay}>
+          <span class="rich-card-handle" id={handleId()}>
+            {props.viewModel.handleDisplay}
+          </span>
+        </Show>
 
         <span class="rich-card-meta">
           <LinkSiteIcon

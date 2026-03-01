@@ -6,6 +6,7 @@ export interface ValidationResult {
   success: boolean;
   errors: ValidationIssue[];
   warnings: ValidationIssue[];
+  strictBlockingWarnings: number;
   files: {
     profile: string;
     links: string;
@@ -36,15 +37,15 @@ export const formatHumanOutput = (result: ValidationResult): string => {
 
   lines.push(`OpenLinks data validation (${result.strict ? "strict" : "standard"} mode)`);
   lines.push(
-    `Files: profile=${result.files.profile}, links=${result.files.links}, site=${result.files.site}`
+    `Files: profile=${result.files.profile}, links=${result.files.links}, site=${result.files.site}`,
   );
   lines.push(
-    `Enrichment report: ${result.enrichment.found ? "found" : "missing"} (${result.enrichment.reportPath})`
+    `Enrichment report: ${result.enrichment.found ? "found" : "missing"} (${result.enrichment.reportPath})`,
   );
   if (result.enrichment.summary) {
     const summary = result.enrichment.summary;
     lines.push(
-      `Enrichment summary: total=${summary.total}, fetched=${summary.fetched}, partial=${summary.partial}, failed=${summary.failed}, skipped=${summary.skipped}`
+      `Enrichment summary: total=${summary.total}, fetched=${summary.fetched}, partial=${summary.partial}, failed=${summary.failed}, skipped=${summary.skipped}`,
     );
   }
   if (result.enrichment.failureMode || result.enrichment.failOn) {
@@ -58,7 +59,9 @@ export const formatHumanOutput = (result: ValidationResult): string => {
   if (result.enrichment.abortedEarly) {
     lines.push("Enrichment run aborted early due to immediate failure mode.");
   }
-  lines.push(`Errors: ${totalErrors} | Warnings: ${totalWarnings}`);
+  lines.push(
+    `Errors: ${totalErrors} | Warnings: ${totalWarnings} | Strict-blocking warnings: ${result.strictBlockingWarnings}`,
+  );
 
   if (totalErrors > 0) {
     lines.push("", "Errors:");
@@ -71,7 +74,8 @@ export const formatHumanOutput = (result: ValidationResult): string => {
   if (totalWarnings > 0) {
     lines.push("", "Warnings:");
     for (const issue of result.warnings) {
-      lines.push(`- [${issue.source}] ${issue.path}: ${issue.message}`);
+      const strictNote = issue.strictBlocking === false ? " [non-strict-blocking]" : "";
+      lines.push(`- [${issue.source}] ${issue.path}${strictNote}: ${issue.message}`);
       lines.push(`  Fix: ${issue.remediation}`);
     }
   }

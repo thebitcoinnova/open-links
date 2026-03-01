@@ -1,11 +1,10 @@
 import { KNOWN_SITE_ALIASES, normalizeKnownSiteAlias } from "../../src/lib/icons/known-sites-data";
-import {
-  isPaymentRailType,
-  type PaymentRailType
-} from "../../src/lib/payments/types";
+import { normalizeHandle, resolveHandleFromUrl } from "../../src/lib/identity/handle-resolver";
+import { type PaymentRailType, isPaymentRailType } from "../../src/lib/payments/types";
 
 export interface ValidationIssue {
   level: "error" | "warning";
+  strictBlocking?: boolean;
   source: string;
   path: string;
   message: string;
@@ -29,7 +28,7 @@ const PAYMENT_ALLOWED_SCHEMES = new Set([
   "bitcoin:",
   "lightning:",
   "ethereum:",
-  "solana:"
+  "solana:",
 ]);
 
 const PROFILE_KEYS = new Set([
@@ -42,7 +41,7 @@ const PROFILE_KEYS = new Set([
   "status",
   "profileLinks",
   "contact",
-  "custom"
+  "custom",
 ]);
 
 const LINKS_ROOT_KEYS = new Set(["links", "groups", "order", "custom"]);
@@ -59,7 +58,7 @@ const LINK_KEYS = new Set([
   "metadata",
   "enrichment",
   "payment",
-  "custom"
+  "custom",
 ]);
 
 const SITE_KEYS = new Set(["title", "description", "baseUrl", "theme", "ui", "quality", "custom"]);
@@ -70,14 +69,14 @@ const WEB_PAYMENT_RAILS = new Set<PaymentRailType>([
   "paypal",
   "cashapp",
   "stripe",
-  "coinbase"
+  "coinbase",
 ]);
 
 const CRYPTO_PAYMENT_RAILS = new Set<PaymentRailType>([
   "bitcoin",
   "lightning",
   "ethereum",
-  "solana"
+  "solana",
 ]);
 
 const BITCOIN_ADDRESS_PATTERN = /^(bc1[ac-hj-np-z02-9]{25,87}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/;
@@ -93,10 +92,23 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const toStringOrUndefined = (value: unknown): string | undefined =>
   typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 
+const handleResolutionReasonSummary = (reason: string): string => {
+  switch (reason) {
+    case "missing_handle_segment":
+      return "Missing expected username segment in the URL path.";
+    case "not_profile_url":
+      return "URL does not match a supported profile URL shape.";
+    case "invalid_handle":
+      return "URL path segment failed handle-format checks.";
+    default:
+      return "Supported handle extractor could not resolve a handle from this URL.";
+  }
+};
+
 const unknownTopLevelWarnings = (
   source: string,
   payload: Record<string, unknown>,
-  allowed: Set<string>
+  allowed: Set<string>,
 ): ValidationIssue[] => {
   const warnings: ValidationIssue[] = [];
 
@@ -107,7 +119,7 @@ const unknownTopLevelWarnings = (
         source,
         path: `$.${key}`,
         message: `Unknown top-level key '${key}' is allowed but not part of the core contract.`,
-        remediation: `Move '${key}' into a dedicated custom block if it is extension data, or document why it belongs at top level.`
+        remediation: `Move '${key}' into a dedicated custom block if it is extension data, or document why it belongs at top level.`,
       });
     }
   }
@@ -119,7 +131,7 @@ const checkCustomConflicts = (
   source: string,
   customValue: unknown,
   reservedKeys: Set<string>,
-  pathPrefix: string
+  pathPrefix: string,
 ): ValidationIssue[] => {
   const errors: ValidationIssue[] = [];
 
@@ -134,7 +146,7 @@ const checkCustomConflicts = (
         source,
         path: `${pathPrefix}.${key}`,
         message: `Custom key '${key}' conflicts with reserved core key '${key}'.`,
-        remediation: `Rename '${pathPrefix}.${key}' to a non-reserved extension key (for example '${key}Extra').`
+        remediation: `Rename '${pathPrefix}.${key}' to a non-reserved extension key (for example '${key}Extra').`,
       });
     }
   }
@@ -149,7 +161,7 @@ const checkScheme = (
   options?: {
     allowedSchemes?: Set<string>;
     remediation?: string;
-  }
+  },
 ): ValidationIssue[] => {
   if (typeof value !== "string" || value.length === 0) {
     return [];
@@ -165,8 +177,8 @@ const checkScheme = (
           source,
           path,
           message: `URL scheme '${parsed.protocol}' is not allowed.`,
-          remediation: options.remediation ?? "Use an allowed URL scheme for this field."
-        }
+          remediation: options.remediation ?? "Use an allowed URL scheme for this field.",
+        },
       ];
     }
   } catch {
@@ -176,8 +188,9 @@ const checkScheme = (
         source,
         path,
         message: "URL value is not parseable.",
-        remediation: options?.remediation ?? "Provide a valid absolute URL or supported scheme-based URL."
-      }
+        remediation:
+          options?.remediation ?? "Provide a valid absolute URL or supported scheme-based URL.",
+      },
     ];
   }
 
@@ -203,15 +216,18 @@ const checkKnownIconAlias = (source: string, path: string, value: unknown): Vali
       level: "warning",
       source,
       path,
-      message:
-        `Unknown icon alias '${value}'. Runtime rendering will fall back to URL-domain matching or generic icon fallback.`,
+      message: `Unknown icon alias '${value}'. Runtime rendering will fall back to URL-domain matching or generic icon fallback.`,
       remediation:
-        "Use a known alias from src/lib/icons/known-sites-data.ts, or remove links[].icon to rely on domain mapping."
-    }
+        "Use a known alias from src/lib/icons/known-sites-data.ts, or remove links[].icon to rely on domain mapping.",
+    },
   ];
 };
 
-const checkIconOverrideAliases = (source: string, path: string, value: unknown): ValidationIssue[] => {
+const checkIconOverrideAliases = (
+  source: string,
+  path: string,
+  value: unknown,
+): ValidationIssue[] => {
   if (!isRecord(value)) {
     return [];
   }
@@ -227,7 +243,7 @@ const checkIconOverrideAliases = (source: string, path: string, value: unknown):
         path: `${path}.${sourceAliasRaw}`,
         message: `Unknown icon override source alias '${sourceAliasRaw}'. Runtime remapping will ignore this entry.`,
         remediation:
-          "Use a known source alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides."
+          "Use a known source alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides.",
       });
     }
 
@@ -243,7 +259,7 @@ const checkIconOverrideAliases = (source: string, path: string, value: unknown):
         path: `${path}.${sourceAliasRaw}`,
         message: `Unknown icon override target alias '${targetAliasRaw}'. Runtime remapping will ignore this entry.`,
         remediation:
-          "Use a known target alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides."
+          "Use a known target alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides.",
       });
     }
   }
@@ -267,7 +283,7 @@ const checkQrColor = (
   source: string,
   path: string,
   value: unknown,
-  label: string
+  label: string,
 ): ValidationIssue[] => {
   const color = toStringOrUndefined(value);
   if (!color) {
@@ -284,8 +300,8 @@ const checkQrColor = (
       source,
       path,
       message: `${label} '${color}' does not look like a valid CSS color value.`,
-      remediation: "Use hex/rgb/hsl/named color values for QR foreground/background styling."
-    }
+      remediation: "Use hex/rgb/hsl/named color values for QR foreground/background styling.",
+    },
   ];
 };
 
@@ -309,12 +325,17 @@ const checkLogoUrlShape = (source: string, path: string, value: unknown): Valida
       source,
       path,
       message: `Custom QR logo URL '${url}' should be an absolute http(s) URL or a root-relative asset path.`,
-      remediation: "Use '/payment-logos/...' for local assets or a full https URL for remote assets."
-    }
+      remediation:
+        "Use '/payment-logos/...' for local assets or a full https URL for remote assets.",
+    },
   ];
 };
 
-const checkBitcoinFormat = (source: string, path: string, rail: Record<string, unknown>): ValidationIssue[] => {
+const checkBitcoinFormat = (
+  source: string,
+  path: string,
+  rail: Record<string, unknown>,
+): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const uri = toStringOrUndefined(rail.uri);
   const address = toStringOrUndefined(rail.address);
@@ -325,7 +346,7 @@ const checkBitcoinFormat = (source: string, path: string, rail: Record<string, u
       source,
       path,
       message: `Bitcoin URI '${uri}' does not start with 'bitcoin:'.`,
-      remediation: "Use BIP-21/BIP-321 style bitcoin: URIs for better wallet compatibility."
+      remediation: "Use BIP-21/BIP-321 style bitcoin: URIs for better wallet compatibility.",
     });
   }
 
@@ -335,25 +356,30 @@ const checkBitcoinFormat = (source: string, path: string, rail: Record<string, u
       source,
       path: `${path}.address`,
       message: `Bitcoin address '${address}' does not match common on-chain address formats.`,
-      remediation: "Use a valid bech32 (bc1...) or legacy/base58 BTC address."
+      remediation: "Use a valid bech32 (bc1...) or legacy/base58 BTC address.",
     });
   }
 
   return issues;
 };
 
-const checkLightningFormat = (source: string, path: string, rail: Record<string, unknown>): ValidationIssue[] => {
+const checkLightningFormat = (
+  source: string,
+  path: string,
+  rail: Record<string, unknown>,
+): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const uri = toStringOrUndefined(rail.uri);
   const address = toStringOrUndefined(rail.address);
 
-  if (uri && uri.includes(":") && !uri.toLowerCase().startsWith("lightning:")) {
+  if (uri?.includes(":") && !uri.toLowerCase().startsWith("lightning:")) {
     issues.push({
       level: "warning",
       source,
       path,
       message: `Lightning URI '${uri}' does not start with 'lightning:'.`,
-      remediation: "Use lightning: URIs, or provide invoice/LNURL/Lightning Address in the rail address field."
+      remediation:
+        "Use lightning: URIs, or provide invoice/LNURL/Lightning Address in the rail address field.",
     });
   }
 
@@ -362,7 +388,10 @@ const checkLightningFormat = (source: string, path: string, rail: Record<string,
     return issues;
   }
 
-  if (LIGHTNING_INVOICE_OR_LNURL_PATTERN.test(candidate) || LIGHTNING_ADDRESS_PATTERN.test(candidate)) {
+  if (
+    LIGHTNING_INVOICE_OR_LNURL_PATTERN.test(candidate) ||
+    LIGHTNING_ADDRESS_PATTERN.test(candidate)
+  ) {
     return issues;
   }
 
@@ -371,13 +400,18 @@ const checkLightningFormat = (source: string, path: string, rail: Record<string,
     source,
     path: `${path}.address`,
     message: `Lightning value '${candidate}' does not match common invoice/LNURL/lightning-address patterns.`,
-    remediation: "Use an invoice (lnbc...), LNURL (lnurl...), offer (lno...), or user@domain lightning address."
+    remediation:
+      "Use an invoice (lnbc...), LNURL (lnurl...), offer (lno...), or user@domain lightning address.",
   });
 
   return issues;
 };
 
-const checkEthereumFormat = (source: string, path: string, rail: Record<string, unknown>): ValidationIssue[] => {
+const checkEthereumFormat = (
+  source: string,
+  path: string,
+  rail: Record<string, unknown>,
+): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const uri = toStringOrUndefined(rail.uri);
   const address = toStringOrUndefined(rail.address);
@@ -388,7 +422,7 @@ const checkEthereumFormat = (source: string, path: string, rail: Record<string, 
       source,
       path,
       message: `Ethereum URI '${uri}' does not start with 'ethereum:'.`,
-      remediation: "Prefer EIP-681 style ethereum: URIs for best wallet compatibility."
+      remediation: "Prefer EIP-681 style ethereum: URIs for best wallet compatibility.",
     });
   }
 
@@ -398,14 +432,18 @@ const checkEthereumFormat = (source: string, path: string, rail: Record<string, 
       source,
       path: `${path}.address`,
       message: `Ethereum target '${address}' is not a standard hex address or ENS name.`,
-      remediation: "Use a 0x-prefixed 40-byte hex address or ENS name (for example name.eth)."
+      remediation: "Use a 0x-prefixed 40-byte hex address or ENS name (for example name.eth).",
     });
   }
 
   return issues;
 };
 
-const checkSolanaFormat = (source: string, path: string, rail: Record<string, unknown>): ValidationIssue[] => {
+const checkSolanaFormat = (
+  source: string,
+  path: string,
+  rail: Record<string, unknown>,
+): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const uri = toStringOrUndefined(rail.uri);
   const address = toStringOrUndefined(rail.address);
@@ -416,7 +454,7 @@ const checkSolanaFormat = (source: string, path: string, rail: Record<string, un
       source,
       path,
       message: `Solana URI '${uri}' does not start with 'solana:'.`,
-      remediation: "Prefer Solana Pay style solana: URIs for wallet interop."
+      remediation: "Prefer Solana Pay style solana: URIs for wallet interop.",
     });
   }
 
@@ -426,7 +464,7 @@ const checkSolanaFormat = (source: string, path: string, rail: Record<string, un
       source,
       path: `${path}.address`,
       message: `Solana address '${address}' is not a valid base58 public key shape.`,
-      remediation: "Use a valid base58 Solana public key (typically 32-44 chars)."
+      remediation: "Use a valid base58 Solana public key (typically 32-44 chars).",
     });
   }
 
@@ -437,7 +475,7 @@ const checkRailFormatWarnings = (
   source: string,
   path: string,
   railType: PaymentRailType,
-  rail: Record<string, unknown>
+  rail: Record<string, unknown>,
 ): ValidationIssue[] => {
   switch (railType) {
     case "bitcoin":
@@ -467,12 +505,26 @@ const checkPaymentQrConfig = (source: string, path: string, value: unknown): Val
       source,
       path,
       message: "QR logoMode is 'custom' but logoUrl is missing.",
-      remediation: "Provide qr.logoUrl when qr.logoMode is set to custom."
+      remediation: "Provide qr.logoUrl when qr.logoMode is set to custom.",
     });
   }
 
-  issues.push(...checkQrColor(source, `${path}.foregroundColor`, value.foregroundColor, "QR foreground color"));
-  issues.push(...checkQrColor(source, `${path}.backgroundColor`, value.backgroundColor, "QR background color"));
+  issues.push(
+    ...checkQrColor(
+      source,
+      `${path}.foregroundColor`,
+      value.foregroundColor,
+      "QR foreground color",
+    ),
+  );
+  issues.push(
+    ...checkQrColor(
+      source,
+      `${path}.backgroundColor`,
+      value.backgroundColor,
+      "QR background color",
+    ),
+  );
   issues.push(...checkLogoUrlShape(source, `${path}.logoUrl`, value.logoUrl));
 
   if (typeof value.logoSize === "number" && (value.logoSize < 0.15 || value.logoSize > 0.35)) {
@@ -481,7 +533,7 @@ const checkPaymentQrConfig = (source: string, path: string, value: unknown): Val
       source,
       path: `${path}.logoSize`,
       message: `QR logoSize ${value.logoSize} is outside the recommended 0.15-0.35 range for scan reliability.`,
-      remediation: "Use qr.logoSize between 0.15 and 0.35 to reduce scanning failures."
+      remediation: "Use qr.logoSize between 0.15 and 0.35 to reduce scanning failures.",
     });
   }
 
@@ -498,8 +550,8 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
         source,
         path,
         message: "Payment rail must be an object.",
-        remediation: "Provide each payment rail as an object with id and rail fields."
-      }
+        remediation: "Provide each payment rail as an object with id and rail fields.",
+      },
     ];
   }
 
@@ -510,7 +562,8 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
       source,
       path: `${path}.rail`,
       message: `Unknown payment rail '${String(railTypeRaw)}'.`,
-      remediation: "Use a supported rail type (for example bitcoin, lightning, paypal, patreon, etc.)."
+      remediation:
+        "Use a supported rail type (for example bitcoin, lightning, paypal, patreon, etc.).",
     });
 
     return issues;
@@ -522,7 +575,7 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
       source,
       path: `${path}.id`,
       message: "Payment rail id is required.",
-      remediation: "Provide a stable payment rail id (for example 'btc' or 'paypal')."
+      remediation: "Provide a stable payment rail id (for example 'btc' or 'paypal').",
     });
   }
 
@@ -539,7 +592,7 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
       source,
       path,
       message: `Rail '${railTypeRaw}' requires url or uri.`,
-      remediation: `Provide payment.rails[].url or payment.rails[].uri for ${railTypeRaw}.`
+      remediation: `Provide payment.rails[].url or payment.rails[].uri for ${railTypeRaw}.`,
     });
   }
 
@@ -549,7 +602,7 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
       source,
       path,
       message: `Rail '${railTypeRaw}' requires uri or address.`,
-      remediation: `Provide payment.rails[].uri or payment.rails[].address for ${railTypeRaw}.`
+      remediation: `Provide payment.rails[].uri or payment.rails[].address for ${railTypeRaw}.`,
     });
   }
 
@@ -559,22 +612,23 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
       source,
       path,
       message: "Rail 'custom-crypto' requires uri, url, or scheme + address.",
-      remediation: "Provide uri, url, or both scheme and address for custom-crypto rails."
+      remediation: "Provide uri, url, or both scheme and address for custom-crypto rails.",
     });
   }
 
   issues.push(
     ...checkScheme(source, `${path}.url`, value.url, {
       allowedSchemes: PAYMENT_ALLOWED_SCHEMES,
-      remediation: "Use http/https or supported payment schemes in payment rail URL fields."
-    })
+      remediation: "Use http/https or supported payment schemes in payment rail URL fields.",
+    }),
   );
 
-  if (uri && uri.includes(":")) {
+  if (uri?.includes(":")) {
     issues.push(
       ...checkScheme(source, `${path}.uri`, uri, {
-        remediation: "Use a valid URI for payment rails (for example bitcoin:, lightning:, ethereum:, solana:, or https://)."
-      })
+        remediation:
+          "Use a valid URI for payment rails (for example bitcoin:, lightning:, ethereum:, solana:, or https://).",
+      }),
     );
   }
 
@@ -586,8 +640,8 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
 
       issues.push(
         ...checkScheme(source, `${path}.appLinks[${appIndex}].url`, entry.url, {
-          remediation: "Provide a parseable app deep-link URL."
-        })
+          remediation: "Provide a parseable app deep-link URL.",
+        }),
       );
     });
   }
@@ -605,7 +659,14 @@ const checkPaymentConfig = (source: string, path: string, value: unknown): Valid
 
   const issues: ValidationIssue[] = [];
 
-  issues.push(...checkCustomConflicts(source, value.custom, new Set(["rails", "qrDisplay", "primaryRailId"]), `${path}.custom`));
+  issues.push(
+    ...checkCustomConflicts(
+      source,
+      value.custom,
+      new Set(["rails", "qrDisplay", "primaryRailId"]),
+      `${path}.custom`,
+    ),
+  );
 
   const rails = Array.isArray(value.rails) ? value.rails : [];
 
@@ -615,14 +676,16 @@ const checkPaymentConfig = (source: string, path: string, value: unknown): Valid
 
   const primaryRailId = toStringOrUndefined(value.primaryRailId);
   if (primaryRailId && rails.length > 0) {
-    const exists = rails.some((rail) => isRecord(rail) && toStringOrUndefined(rail.id) === primaryRailId);
+    const exists = rails.some(
+      (rail) => isRecord(rail) && toStringOrUndefined(rail.id) === primaryRailId,
+    );
     if (!exists) {
       issues.push({
         level: "warning",
         source,
         path: `${path}.primaryRailId`,
         message: `primaryRailId '${primaryRailId}' does not match any rail id.`,
-        remediation: "Set primaryRailId to an existing payment.rails[].id value."
+        remediation: "Set primaryRailId to an existing payment.rails[].id value.",
       });
     }
   }
@@ -630,7 +693,10 @@ const checkPaymentConfig = (source: string, path: string, value: unknown): Valid
   return issues;
 };
 
-const checkSitePaymentsConfig = (source: string, site: Record<string, unknown>): ValidationIssue[] => {
+const checkSitePaymentsConfig = (
+  source: string,
+  site: Record<string, unknown>,
+): ValidationIssue[] => {
   const ui = isRecord(site.ui) ? site.ui : undefined;
   const payments = ui && isRecord(ui.payments) ? ui.payments : undefined;
   const qr = payments && isRecord(payments.qr) ? payments.qr : undefined;
@@ -642,32 +708,50 @@ const checkSitePaymentsConfig = (source: string, site: Record<string, unknown>):
   const issues: ValidationIssue[] = [];
 
   issues.push(
-    ...checkQrColor(source, "$.ui.payments.qr.foregroundColorDefault", qr.foregroundColorDefault, "Default QR foreground color")
+    ...checkQrColor(
+      source,
+      "$.ui.payments.qr.foregroundColorDefault",
+      qr.foregroundColorDefault,
+      "Default QR foreground color",
+    ),
   );
   issues.push(
-    ...checkQrColor(source, "$.ui.payments.qr.backgroundColorDefault", qr.backgroundColorDefault, "Default QR background color")
+    ...checkQrColor(
+      source,
+      "$.ui.payments.qr.backgroundColorDefault",
+      qr.backgroundColorDefault,
+      "Default QR background color",
+    ),
   );
 
-  if (typeof qr.logoSizeDefault === "number" && (qr.logoSizeDefault < 0.15 || qr.logoSizeDefault > 0.35)) {
+  if (
+    typeof qr.logoSizeDefault === "number" &&
+    (qr.logoSizeDefault < 0.15 || qr.logoSizeDefault > 0.35)
+  ) {
     issues.push({
       level: "warning",
       source,
       path: "$.ui.payments.qr.logoSizeDefault",
       message: `logoSizeDefault ${qr.logoSizeDefault} is outside the recommended 0.15-0.35 range for scan reliability.`,
-      remediation: "Use a default logo size between 0.15 and 0.35 to reduce scanning failures."
+      remediation: "Use a default logo size between 0.15 and 0.35 to reduce scanning failures.",
     });
   }
 
   return issues;
 };
 
-export const runPolicyRules = ({ profile, links, site, sources: overrideSources }: PolicyInput): ValidationIssue[] => {
+export const runPolicyRules = ({
+  profile,
+  links,
+  site,
+  sources: overrideSources,
+}: PolicyInput): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const sources = {
     profile: "data/profile.json",
     links: "data/links.json",
     site: "data/site.json",
-    ...overrideSources
+    ...overrideSources,
   };
 
   issues.push(...unknownTopLevelWarnings(sources.profile, profile, PROFILE_KEYS));
@@ -679,19 +763,24 @@ export const runPolicyRules = ({ profile, links, site, sources: overrideSources 
   issues.push(...checkCustomConflicts(sources.site, site.custom, SITE_KEYS, "$.custom"));
 
   const siteUi = isRecord(site.ui) ? site.ui : undefined;
-  const maybeScale = siteUi && typeof siteUi.profileAvatarScale === "number" ? siteUi.profileAvatarScale : undefined;
+  const maybeScale =
+    siteUi && typeof siteUi.profileAvatarScale === "number" ? siteUi.profileAvatarScale : undefined;
   if (maybeScale !== undefined && (maybeScale <= 0 || maybeScale > 4)) {
     issues.push({
       level: "warning",
       source: sources.site,
       path: "$.ui.profileAvatarScale",
       message: `profileAvatarScale ${maybeScale} is outside the recommended 0–4 range.`,
-      remediation: "Use a value between 0 and 4 (default 1.5) for avatar size multiplier."
+      remediation: "Use a value between 0 and 4 (default 1.5) for avatar size multiplier.",
     });
   }
   const brandIcons = siteUi && isRecord(siteUi.brandIcons) ? siteUi.brandIcons : undefined;
   issues.push(
-    ...checkIconOverrideAliases(sources.site, "$.ui.brandIcons.iconOverrides", brandIcons?.iconOverrides)
+    ...checkIconOverrideAliases(
+      sources.site,
+      "$.ui.brandIcons.iconOverrides",
+      brandIcons?.iconOverrides,
+    ),
   );
   issues.push(...checkSitePaymentsConfig(sources.site, site));
 
@@ -701,8 +790,8 @@ export const runPolicyRules = ({ profile, links, site, sources: overrideSources 
       issues.push(
         ...checkScheme(sources.profile, `$.profileLinks[${index}].url`, link.url, {
           allowedSchemes: BASE_ALLOWED_SCHEMES,
-          remediation: "Use one of: http, https, mailto, tel."
-        })
+          remediation: "Use one of: http, https, mailto, tel.",
+        }),
       );
     }
   });
@@ -713,30 +802,58 @@ export const runPolicyRules = ({ profile, links, site, sources: overrideSources 
       return;
     }
 
+    const linkUrl = toStringOrUndefined(link.url);
+    const linkIcon = toStringOrUndefined(link.icon);
+    const linkEnabled = link.enabled !== false;
+    const metadata = isRecord(link.metadata) ? link.metadata : undefined;
+    const manualHandle = normalizeHandle(metadata?.handle);
+    const handleResolution = resolveHandleFromUrl({
+      url: linkUrl,
+      icon: linkIcon,
+    });
+
+    if (
+      linkEnabled &&
+      linkUrl &&
+      !manualHandle &&
+      handleResolution.supported &&
+      !handleResolution.handle
+    ) {
+      const extractorLabel = handleResolution.extractorId ?? "supported";
+      issues.push({
+        level: "warning",
+        strictBlocking: false,
+        source: sources.links,
+        path: `$.links[${index}].metadata.handle`,
+        message:
+          `Handle extraction warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': ` +
+          `supported extractor '${extractorLabel}' could not resolve a handle. ` +
+          `${handleResolutionReasonSummary(handleResolution.reason)}`,
+        remediation:
+          "Use a canonical profile URL for this domain or set links[].metadata.handle manually. " +
+          "Handle coverage warnings are informational and do not fail strict validation.",
+      });
+    }
+
     const linkType = toStringOrUndefined(link.type);
     const paymentConfig = isRecord(link.payment) ? link.payment : undefined;
     const isPaymentContext = linkType === "payment" || Boolean(paymentConfig);
 
-    if (linkType === "simple" || linkType === "rich" || toStringOrUndefined(link.url)) {
+    if (linkType === "simple" || linkType === "rich" || linkUrl) {
       issues.push(
-        ...checkScheme(sources.links, `$.links[${index}].url`, link.url, {
+        ...checkScheme(sources.links, `$.links[${index}].url`, linkUrl, {
           allowedSchemes: isPaymentContext ? PAYMENT_ALLOWED_SCHEMES : BASE_ALLOWED_SCHEMES,
           remediation: isPaymentContext
             ? "Use http/https/mailto/tel or a supported payment scheme for payment-enabled links."
-            : "Use one of: http, https, mailto, tel."
-        })
+            : "Use one of: http, https, mailto, tel.",
+        }),
       );
     }
 
     issues.push(...checkKnownIconAlias(sources.links, `$.links[${index}].icon`, link.icon));
     issues.push(...checkPaymentConfig(sources.links, `$.links[${index}].payment`, link.payment));
     issues.push(
-      ...checkCustomConflicts(
-        sources.links,
-        link.custom,
-        LINK_KEYS,
-        `$.links[${index}].custom`
-      )
+      ...checkCustomConflicts(sources.links, link.custom, LINK_KEYS, `$.links[${index}].custom`),
     );
   });
 
