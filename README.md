@@ -12,6 +12,9 @@
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
 
 This project is developer-first: fork or template the repo, edit JSON, push, and publish.
+<!-- OPENLINKS_SCREENSHOT_START -->
+![OpenLinks preview](docs/assets/openlinks-preview.png)
+<!-- OPENLINKS_SCREENSHOT_END -->
 
 ## Why OpenLinks
 
