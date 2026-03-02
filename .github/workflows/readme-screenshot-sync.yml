@@ -82,8 +82,17 @@ jobs:
           set -euo pipefail
           mkdir -p docs/assets
           npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
+            --timeout=120000 \
+            --wait-for-selector=".profile-header" \
+            --wait-for-timeout=1200 \
             http://127.0.0.1:4173 \
             docs/assets/openlinks-preview.png
+
+          bytes="$(wc -c < docs/assets/openlinks-preview.png)"
+          if [ "$bytes" -lt 20000 ]; then
+            echo "::error::Captured screenshot is unexpectedly small (${bytes} bytes)."
+            exit 1
+          fi
 
       - name: Update README screenshot block
         run: bun scripts/ci/upsert-readme-screenshot.ts
@@ -196,8 +205,17 @@ jobs:
           set -euo pipefail
           mkdir -p docs/assets
           npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
+            --timeout=120000 \
+            --wait-for-selector=".profile-header" \
+            --wait-for-timeout=1200 \
             http://127.0.0.1:4173 \
             docs/assets/openlinks-preview.png
+
+          bytes="$(wc -c < docs/assets/openlinks-preview.png)"
+          if [ "$bytes" -lt 20000 ]; then
+            echo "::error::Captured screenshot is unexpectedly small (${bytes} bytes)."
+            exit 1
+          fi
 
       - name: Update README screenshot block
         run: bun scripts/ci/upsert-readme-screenshot.ts
