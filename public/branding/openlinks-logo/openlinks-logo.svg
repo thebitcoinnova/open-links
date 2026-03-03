@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title desc">
-  <title id="title">OpenLinks logo mark (strict / mono / round)</title>
-  <desc id="desc">Circle and L use strict tangent geometry.</desc>
+  <title id="title">OpenLinks logo mark V2 (inset--centerline-2x--centered)</title>
+  <desc id="desc">Family=inset; ratio=centerline-2x; placement=centered; touch=top+endpoint tangent; corner inside.</desc>
   <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
-  <path d="M12 12 V88 H50" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M37.478 24.956 V75.044 H62.522" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

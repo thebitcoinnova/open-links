@@ -1,12 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1496" height="830" viewBox="0 0 1496 830" role="img" aria-labelledby="title desc">
-  <title id="title">OpenLinks V2 logo variants</title>
-  <desc id="desc">V2 inscribed-circle L exploration with ratio/touch constraints and alias annotations.</desc>
+  <title id="title">OpenLinks V2 logo variants (archive)</title>
+  <desc id="desc">Archived V2 non-winning comparison set with ratio/touch metadata and alias annotations.</desc>
   <rect width="1496" height="830" fill="#f1f4f9" />
   <g>
     <rect x="28" y="28" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
     <text x="46" y="59" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">two-touch / centerline-2x / centered</text>
     <text x="46" y="78" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
-    <text x="46" y="92" font-size="11" fill="#b25d18" font-family="'Manrope', 'Segoe UI', sans-serif">alias of three-touch--centerline-2x--centered</text>
     <rect x="40" y="100" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
     <rect x="52" y="110" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
     <g transform="translate(85 120) scale(0.84)">
@@ -231,6 +230,7 @@
     <rect x="28" y="544" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
     <text x="46" y="575" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">three-touch / centerline-2x / centered</text>
     <text x="46" y="594" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+corner+endpoint tangent</text>
+    <text x="46" y="608" font-size="11" fill="#b25d18" font-family="'Manrope', 'Segoe UI', sans-serif">alias of two-touch--centerline-2x--centered</text>
     <rect x="40" y="616" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
     <rect x="52" y="626" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
     <g transform="translate(85 636) scale(0.84)">

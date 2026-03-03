@@ -101,15 +101,23 @@ const TOP_LEVEL_CANONICAL_PATH = path.join(LOGO_ROOT_DIR, "openlinks-logo.svg");
 
 const V2_VERSION = "v2";
 const V2_DIR = path.join(LOGO_ROOT_DIR, V2_VERSION);
-const V2_COMPARISON_SHEET_PATH = path.join(
+const V2_ARCHIVE_DIR = path.join(V2_DIR, "archive");
+const V2_LEGACY_COMPARISON_SHEET_PATH = path.join(
   DOCS_LOGO_ROOT_DIR,
   V2_VERSION,
   "openlinks-logo-variants.svg",
 );
+const V2_ARCHIVE_COMPARISON_SHEET_PATH = path.join(
+  DOCS_LOGO_ROOT_DIR,
+  V2_VERSION,
+  "archive",
+  "openlinks-logo-variants.svg",
+);
 const V2_MANIFEST_PATH = path.join(V2_DIR, "manifest.json");
+const V2_ARCHIVE_MANIFEST_PATH = path.join(V2_ARCHIVE_DIR, "manifest.json");
 const V2_VERSION_CANONICAL_PATH = path.join(V2_DIR, "openlinks-logo.svg");
 const TOP_LEVEL_V2_ALIAS_PATH = path.join(LOGO_ROOT_DIR, "openlinks-logo-v2.svg");
-const V2_CANONICAL_ID = "three-touch--centerline-2x--centered";
+const V2_CANONICAL_ID = "inset--centerline-2x--centered";
 
 const COLOR = "#111111";
 const CANVAS_SIZE = 100;
@@ -444,7 +452,6 @@ const generateV1 = (): void => {
   }
 
   fs.copyFileSync(canonicalSource, path.join(V1_DIR, "openlinks-logo.svg"));
-  fs.copyFileSync(canonicalSource, TOP_LEVEL_CANONICAL_PATH);
 
   if (fs.existsSync(LEGACY_COMPARISON_SHEET_PATH)) {
     fs.rmSync(LEGACY_COMPARISON_SHEET_PATH);
@@ -452,7 +459,9 @@ const generateV1 = (): void => {
 
   console.log(`Generated ${variants.length} V1 variants at ${toRelative(V1_DIR)}.`);
   console.log(`V1 comparison sheet: ${toRelative(V1_COMPARISON_SHEET_PATH)}`);
-  console.log(`V1 canonical: ${toRelative(TOP_LEVEL_CANONICAL_PATH)} -> ${V1_CANONICAL_VARIANT}`);
+  console.log(
+    `V1 canonical: ${toRelative(path.join(V1_DIR, "openlinks-logo.svg"))} -> ${V1_CANONICAL_VARIANT}`,
+  );
 };
 
 const v2IdFromSpec = (spec: {
@@ -632,13 +641,86 @@ const buildV2Variants = (): V2VariantSpec[] => {
   return variants;
 };
 
-const writeV2Manifest = (input: {
+const serializeV2Variants = (variants: V2VariantSpec[]) =>
+  variants.map((variant) => ({
+    id: variant.id,
+    family: variant.family,
+    ratioMode: variant.ratioMode,
+    placement: variant.placement,
+    touchModel: variant.touchModel,
+    radiusTarget: Number(variant.radiusTarget.toFixed(4)),
+    solver: variant.solver,
+    solverNotes: variant.solverNotes,
+    filename: variant.filename,
+    aliasOf: variant.aliasOf,
+    geometry: {
+      xL: Number(variant.geometry.xL.toFixed(6)),
+      yTop: Number(variant.geometry.yTop.toFixed(6)),
+      yBottom: Number(variant.geometry.yBottom.toFixed(6)),
+      xFootEnd: Number(variant.geometry.xFootEnd.toFixed(6)),
+    },
+    metrics: {
+      width: Number(variant.metrics.width.toFixed(6)),
+      height: Number(variant.metrics.height.toFixed(6)),
+      centerlineRatio: Number(variant.metrics.centerlineRatio.toFixed(6)),
+      outerRatio: Number(variant.metrics.outerRatio.toFixed(6)),
+      topDistance: Number(variant.metrics.topDistance.toFixed(6)),
+      cornerDistance: Number(variant.metrics.cornerDistance.toFixed(6)),
+      endpointDistance: Number(variant.metrics.endpointDistance.toFixed(6)),
+    },
+  }));
+
+const writeActiveV2Manifest = (input: {
+  generatedAt: string;
   labels: V2VariantSpec[];
   unique: V2VariantSpec[];
+  canonical: V2VariantSpec;
 }): void => {
+  const archivedUniqueCount = input.unique.filter(
+    (variant) => variant.id !== input.canonical.id,
+  ).length;
   const manifest = {
-    version: V2_VERSION,
-    generatedAt: new Date().toISOString(),
+    version: `${V2_VERSION}-active`,
+    generatedAt: input.generatedAt,
+    canonical: {
+      id: input.canonical.id,
+      file: input.canonical.filename,
+      family: input.canonical.family,
+      ratioMode: input.canonical.ratioMode,
+      placement: input.canonical.placement,
+      touchModel: input.canonical.touchModel,
+      sourcePath: toRelative(path.join(V2_DIR, input.canonical.filename ?? "")),
+    },
+    aliases: {
+      versionAlias: toRelative(V2_VERSION_CANONICAL_PATH),
+      globalPrimary: toRelative(TOP_LEVEL_CANONICAL_PATH),
+      globalV2Alias: toRelative(TOP_LEVEL_V2_ALIAS_PATH),
+    },
+    archive: {
+      directory: toRelative(V2_ARCHIVE_DIR),
+      manifestPath: toRelative(V2_ARCHIVE_MANIFEST_PATH),
+      comparisonSheetPath: toRelative(V2_ARCHIVE_COMPARISON_SHEET_PATH),
+    },
+    stats: {
+      labelCount: input.labels.length,
+      uniqueFileCount: input.unique.length,
+      archivedUniqueFileCount: archivedUniqueCount,
+      aliasCount: input.labels.filter((variant) => variant.aliasOf).length,
+    },
+  };
+
+  fs.writeFileSync(V2_MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+};
+
+const writeArchiveV2Manifest = (input: {
+  generatedAt: string;
+  labels: V2VariantSpec[];
+  unique: V2VariantSpec[];
+  canonical: V2VariantSpec;
+}): void => {
+  const archiveManifest = {
+    version: `${V2_VERSION}-archive`,
+    generatedAt: input.generatedAt,
     constants: {
       circle: CIRCLE,
       style: {
@@ -652,48 +734,28 @@ const writeV2Manifest = (input: {
       relaxedTopClearance: V2_RELAXED_TOP_CLEARANCE,
     },
     canonical: {
-      id: V2_CANONICAL_ID,
-      versionAlias: "openlinks-logo.svg",
-      globalAlias: "../openlinks-logo-v2.svg",
+      id: input.canonical.id,
+      filename: input.canonical.filename,
     },
     stats: {
       labelCount: input.labels.length,
       uniqueFileCount: input.unique.length,
+      archivedUniqueFileCount: input.unique.filter((variant) => variant.id !== input.canonical.id)
+        .length,
       aliasCount: input.labels.filter((variant) => variant.aliasOf).length,
     },
-    variants: input.labels.map((variant) => ({
-      id: variant.id,
-      family: variant.family,
-      ratioMode: variant.ratioMode,
-      placement: variant.placement,
-      touchModel: variant.touchModel,
-      radiusTarget: Number(variant.radiusTarget.toFixed(4)),
-      solver: variant.solver,
-      solverNotes: variant.solverNotes,
-      filename: variant.filename,
-      aliasOf: variant.aliasOf,
-      geometry: {
-        xL: Number(variant.geometry.xL.toFixed(6)),
-        yTop: Number(variant.geometry.yTop.toFixed(6)),
-        yBottom: Number(variant.geometry.yBottom.toFixed(6)),
-        xFootEnd: Number(variant.geometry.xFootEnd.toFixed(6)),
-      },
-      metrics: {
-        width: Number(variant.metrics.width.toFixed(6)),
-        height: Number(variant.metrics.height.toFixed(6)),
-        centerlineRatio: Number(variant.metrics.centerlineRatio.toFixed(6)),
-        outerRatio: Number(variant.metrics.outerRatio.toFixed(6)),
-        topDistance: Number(variant.metrics.topDistance.toFixed(6)),
-        cornerDistance: Number(variant.metrics.cornerDistance.toFixed(6)),
-        endpointDistance: Number(variant.metrics.endpointDistance.toFixed(6)),
-      },
-    })),
+    variants: serializeV2Variants(input.labels),
   };
 
-  fs.writeFileSync(V2_MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  fs.writeFileSync(
+    V2_ARCHIVE_MANIFEST_PATH,
+    `${JSON.stringify(archiveManifest, null, 2)}\n`,
+    "utf8",
+  );
 };
 
 const generateV2 = (): void => {
+  const generatedAt = new Date().toISOString();
   const labels = buildV2Variants();
   const deduped = dedupeV2Variants(labels);
   const canonical = deduped.labels.find((variant) => variant.id === V2_CANONICAL_ID);
@@ -703,7 +765,12 @@ const generateV2 = (): void => {
 
   fs.rmSync(V2_DIR, { recursive: true, force: true });
   fs.mkdirSync(V2_DIR, { recursive: true });
-  fs.mkdirSync(path.dirname(V2_COMPARISON_SHEET_PATH), { recursive: true });
+  fs.mkdirSync(V2_ARCHIVE_DIR, { recursive: true });
+  fs.mkdirSync(path.dirname(V2_ARCHIVE_COMPARISON_SHEET_PATH), { recursive: true });
+
+  if (fs.existsSync(V2_LEGACY_COMPARISON_SHEET_PATH)) {
+    fs.rmSync(V2_LEGACY_COMPARISON_SHEET_PATH);
+  }
 
   for (const variant of deduped.unique) {
     if (!variant.filename) {
@@ -717,14 +784,33 @@ const generateV2 = (): void => {
       style: V2_MONO_STYLE,
     });
 
-    fs.writeFileSync(path.join(V2_DIR, variant.filename), svg, "utf8");
+    const targetDir = variant.id === canonical.id ? V2_DIR : V2_ARCHIVE_DIR;
+    fs.writeFileSync(path.join(targetDir, variant.filename), svg, "utf8");
   }
 
   const canonicalSource = path.join(V2_DIR, canonical.filename);
+  if (!fs.existsSync(canonicalSource)) {
+    throw new Error(
+      `V2 canonical source not found after generation: ${toRelative(canonicalSource)}`,
+    );
+  }
+
   fs.copyFileSync(canonicalSource, V2_VERSION_CANONICAL_PATH);
+  fs.copyFileSync(canonicalSource, TOP_LEVEL_CANONICAL_PATH);
   fs.copyFileSync(canonicalSource, TOP_LEVEL_V2_ALIAS_PATH);
 
-  writeV2Manifest(deduped);
+  writeActiveV2Manifest({
+    generatedAt,
+    labels: deduped.labels,
+    unique: deduped.unique,
+    canonical,
+  });
+  writeArchiveV2Manifest({
+    generatedAt,
+    labels: deduped.labels,
+    unique: deduped.unique,
+    canonical,
+  });
 
   const cards: ComparisonCard[] = deduped.labels.map((variant) => ({
     id: variant.id,
@@ -740,24 +826,24 @@ const generateV2 = (): void => {
   }));
 
   const comparisonSheet = buildComparisonSheet({
-    title: "OpenLinks V2 logo variants",
-    desc: "V2 inscribed-circle L exploration with ratio/touch constraints and alias annotations.",
+    title: "OpenLinks V2 logo variants (archive)",
+    desc: "Archived V2 non-winning comparison set with ratio/touch metadata and alias annotations.",
     cards,
   });
-  fs.writeFileSync(V2_COMPARISON_SHEET_PATH, comparisonSheet, "utf8");
+  fs.writeFileSync(V2_ARCHIVE_COMPARISON_SHEET_PATH, comparisonSheet, "utf8");
 
   console.log(
-    `Generated ${deduped.labels.length} V2 labels (${deduped.unique.length} unique files).`,
+    `Generated ${deduped.labels.length} V2 labels (${deduped.unique.length} unique files; canonical=${canonical.id}).`,
   );
-  console.log(`V2 variants directory: ${toRelative(V2_DIR)}`);
-  console.log(`V2 comparison sheet: ${toRelative(V2_COMPARISON_SHEET_PATH)}`);
-  console.log(`V2 manifest: ${toRelative(V2_MANIFEST_PATH)}`);
+  console.log(`V2 active directory: ${toRelative(V2_DIR)}`);
+  console.log(`V2 archive directory: ${toRelative(V2_ARCHIVE_DIR)}`);
+  console.log(`V2 active manifest: ${toRelative(V2_MANIFEST_PATH)}`);
+  console.log(`V2 archive manifest: ${toRelative(V2_ARCHIVE_MANIFEST_PATH)}`);
+  console.log(`V2 archive comparison sheet: ${toRelative(V2_ARCHIVE_COMPARISON_SHEET_PATH)}`);
   console.log(
-    `V2 canonical alias: ${toRelative(V2_VERSION_CANONICAL_PATH)} -> ${canonical.filename}`,
+    `Global primary logo: ${toRelative(TOP_LEVEL_CANONICAL_PATH)} -> ${canonical.filename}`,
   );
-  console.log(
-    `Top-level V2 alias: ${toRelative(TOP_LEVEL_V2_ALIAS_PATH)} -> ${canonical.filename}`,
-  );
+  console.log(`Global V2 alias: ${toRelative(TOP_LEVEL_V2_ALIAS_PATH)} -> ${canonical.filename}`);
 };
 
 const run = (): void => {

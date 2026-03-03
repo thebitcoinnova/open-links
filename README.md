@@ -16,6 +16,13 @@ This project is developer-first: fork the repo, edit JSON, push, and publish.
 ![OpenLinks preview](docs/assets/openlinks-preview.png)
 <!-- OPENLINKS_SCREENSHOT_END -->
 
+## Logo Assets
+
+- Governance doc: [docs/logo-governance.md](docs/logo-governance.md)
+- Global primary logo: `public/branding/openlinks-logo/openlinks-logo.svg`
+- Explicit V2 alias: `public/branding/openlinks-logo/openlinks-logo-v2.svg`
+- Archived non-winning V2 marks: `public/branding/openlinks-logo/v2/archive/`
+
 ## Why OpenLinks
 
 - Static SolidJS site with minimal runtime complexity.
