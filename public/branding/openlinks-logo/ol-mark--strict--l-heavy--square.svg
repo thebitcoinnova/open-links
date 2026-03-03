@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title desc">
+  <title id="title">OpenLinks logo mark (strict / l-heavy / square)</title>
+  <desc id="desc">Circle and L use strict tangent geometry.</desc>
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="5" />
+  <path d="M12 12 V88 H50" fill="none" stroke="#111111" stroke-width="8" stroke-linecap="butt" stroke-linejoin="miter" />
+</svg>
