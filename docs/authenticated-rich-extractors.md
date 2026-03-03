@@ -37,6 +37,7 @@ Current extractor ids in this repository:
 - `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session)
 - `medium-auth-browser` (Medium profile extraction via RSS feed capture path)
 - `x-auth-browser` (X profile extraction via oEmbed + avatar capture path)
+- `youtube-auth-browser` (YouTube public-page metadata capture + local image cache path)
 - `facebook-auth-browser` (Facebook profile extraction via authenticated browser session + profile image capture)
 
 ### Site-level
@@ -80,10 +81,12 @@ Useful filters:
 bun run auth:rich:sync -- --only-link linkedin
 bun run auth:rich:sync -- --only-link medium
 bun run auth:rich:sync -- --only-link x
+bun run auth:rich:sync -- --only-link youtube
 bun run auth:rich:sync -- --only-link facebook
 bun run auth:rich:sync -- --only-extractor linkedin-auth-browser
 bun run auth:rich:sync -- --only-extractor medium-auth-browser
 bun run auth:rich:sync -- --only-extractor x-auth-browser
+bun run auth:rich:sync -- --only-extractor youtube-auth-browser
 bun run auth:rich:sync -- --only-extractor facebook-auth-browser
 bun run auth:rich:sync -- --only-missing
 bun run auth:rich:sync -- --force
@@ -237,6 +240,18 @@ The X extractor (`x-auth-browser`) uses an oEmbed + avatar path:
 - writes cache diagnostics including `handle`, `oembedUrl`, and placeholder checks
 
 No interactive login is currently required for the X extractor path.
+
+## YouTube Extractor Behavior
+
+The YouTube extractor (`youtube-auth-browser`) uses public page metadata capture:
+
+- supports `youtube.com` and `youtu.be` URLs (short links normalize to canonical watch URLs)
+- fetches page metadata (`title`, `description`, `image`) with strict required-field validation
+- rejects consent/challenge/unavailable placeholder responses before cache write
+- downloads preview image to `public/cache/rich-authenticated/`
+- writes cache diagnostics including normalized capture URL and placeholder-signal checks
+
+No interactive login is currently required for the YouTube extractor path.
 
 ## Facebook Extractor Behavior
 

@@ -36,6 +36,11 @@ test("resolves supported URL handles", () => {
       extractorId: "substack",
       handle: "peterryszkiewicz",
     },
+    {
+      url: "https://www.youtube.com/@OpenAI",
+      extractorId: "youtube",
+      handle: "openai",
+    },
   ] as const;
 
   for (const item of cases) {
@@ -60,6 +65,12 @@ test("marks reserved or non-profile paths as supported but unresolved", () => {
       reason: "not_profile_url",
     },
     { url: "https://substack.com/profile", extractorId: "substack", reason: "not_profile_url" },
+    {
+      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      extractorId: "youtube",
+      reason: "not_profile_url",
+    },
+    { url: "https://youtu.be/dQw4w9WgXcQ", extractorId: "youtube", reason: "not_profile_url" },
   ] as const;
 
   for (const item of cases) {

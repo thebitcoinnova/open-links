@@ -7,7 +7,8 @@ export type HandleExtractorId =
   | "facebook"
   | "instagram"
   | "medium"
-  | "substack";
+  | "substack"
+  | "youtube";
 
 export type HandleResolutionReason =
   | "resolved"
@@ -48,6 +49,7 @@ const FACEBOOK_HOSTS = new Set(["facebook.com", "m.facebook.com", "fb.com"]);
 const INSTAGRAM_HOSTS = new Set(["instagram.com"]);
 const MEDIUM_HOSTS = new Set(["medium.com"]);
 const SUBSTACK_HOSTS = new Set(["substack.com"]);
+const YOUTUBE_HOSTS = new Set(["youtube.com", "m.youtube.com", "youtu.be"]);
 
 const GITHUB_RESERVED = new Set([
   "about",
@@ -187,6 +189,24 @@ const SUBSTACK_SUBDOMAIN_RESERVED = new Set([
   "substack",
   "support",
   "www",
+]);
+
+const YOUTUBE_RESERVED = new Set([
+  "about",
+  "account",
+  "feed",
+  "gaming",
+  "hashtag",
+  "jobs",
+  "kids",
+  "live",
+  "music",
+  "news",
+  "playlist",
+  "premium",
+  "results",
+  "shorts",
+  "watch",
 ]);
 
 const LINKEDIN_PREFIXES = new Set(["in", "company", "school"]);
@@ -417,6 +437,53 @@ const resolveSubstack = (host: string, segments: string[]): HandleResolution => 
   return supportedWithoutHandle("substack", "not_profile_url");
 };
 
+const resolveYoutube = (host: string, segments: string[]): HandleResolution => {
+  if (host === "youtu.be") {
+    return supportedWithoutHandle("youtube", "not_profile_url");
+  }
+
+  const first = toLowerTrimmed(segments[0] ?? "");
+  if (!first) {
+    return supportedWithoutHandle("youtube", "missing_handle_segment");
+  }
+
+  if (first.startsWith("@")) {
+    const candidate = normalizeHandle(first);
+    if (!candidate || !/^[a-z0-9._-]{3,30}$/.test(candidate)) {
+      return supportedWithoutHandle("youtube", "invalid_handle");
+    }
+    return resolved("youtube", candidate);
+  }
+
+  if (first === "channel" || first === "c" || first === "user") {
+    const raw = segments[1];
+    if (!raw) {
+      return supportedWithoutHandle("youtube", "missing_handle_segment");
+    }
+
+    const candidate = normalizeHandle(raw);
+    if (!candidate || !/^[a-z0-9._-]{3,100}$/.test(candidate)) {
+      return supportedWithoutHandle("youtube", "invalid_handle");
+    }
+    return resolved("youtube", candidate);
+  }
+
+  if (YOUTUBE_RESERVED.has(first)) {
+    return supportedWithoutHandle("youtube", "not_profile_url");
+  }
+
+  if (segments.length > 1) {
+    return supportedWithoutHandle("youtube", "not_profile_url");
+  }
+
+  const candidate = normalizeHandle(first);
+  if (!candidate || !/^[a-z0-9._-]{3,30}$/.test(candidate)) {
+    return supportedWithoutHandle("youtube", "invalid_handle");
+  }
+
+  return resolved("youtube", candidate);
+};
+
 const isSubstackIconHint = (icon: string | undefined): boolean => {
   if (typeof icon !== "string") {
     return false;
@@ -467,6 +534,10 @@ export const resolveHandleFromUrl = (input: ResolveHandleFromUrlInput): HandleRe
 
   if (SUBSTACK_HOSTS.has(host) || isSubdomainOf(host, "substack.com")) {
     return resolveSubstack(host, segments);
+  }
+
+  if (YOUTUBE_HOSTS.has(host) || isSubdomainOf(host, "youtube.com")) {
+    return resolveYoutube(host, segments);
   }
 
   if (isSubstackIconHint(input.icon)) {
