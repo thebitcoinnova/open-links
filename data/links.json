@@ -79,12 +79,16 @@
       "id": "instagram",
       "label": "Instagram",
       "url": "https://www.instagram.com/peterryszkiewicz/",
-      "type": "simple",
+      "type": "rich",
       "icon": "instagram",
       "description": "Photos and stories",
       "group": "social",
       "order": 6,
       "enabled": true,
+      "enrichment": {
+        "enabled": true,
+        "authenticatedExtractor": "instagram-auth-browser"
+      },
       "custom": {}
     },
     {

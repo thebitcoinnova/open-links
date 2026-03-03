@@ -1,4 +1,5 @@
 import { facebookAuthBrowserExtractor } from "./plugins/facebook-auth-browser";
+import { instagramAuthBrowserExtractor } from "./plugins/instagram-auth-browser";
 import { linkedinAuthBrowserExtractor } from "./plugins/linkedin-auth-browser";
 // AUTH_EXTRACTOR_IMPORTS_START
 import { mediumAuthBrowserExtractor } from "./plugins/medium-auth-browser";
@@ -14,6 +15,7 @@ const EXTRACTORS: Record<string, AuthenticatedExtractorPlugin> = {
   [xAuthBrowserExtractor.id]: xAuthBrowserExtractor,
   [facebookAuthBrowserExtractor.id]: facebookAuthBrowserExtractor,
   [youtubeAuthBrowserExtractor.id]: youtubeAuthBrowserExtractor,
+  [instagramAuthBrowserExtractor.id]: instagramAuthBrowserExtractor,
   // AUTH_EXTRACTOR_MAP_END
 };
 

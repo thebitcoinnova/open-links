@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-extractors.schema.json",
   "version": 1,
-  "updatedAt": "2026-03-03T03:45:43.983Z",
+  "updatedAt": "2026-03-03T03:57:00.423Z",
   "extractors": [
     {
       "id": "linkedin-auth-browser",
@@ -68,6 +68,20 @@
       "matchSubdomains": true,
       "summary": "Uses YouTube page metadata capture with local image asset caching for stable rich-card enrichment.",
       "loginInstructions": "No interactive login is currently required; extractor fetches public YouTube page metadata and caches local image assets.",
+      "docs": [
+        "docs/authenticated-rich-extractors.md",
+        "docs/create-new-rich-content-extractor.md",
+        "docs/rich-metadata-fetch-blockers.md"
+      ]
+    },
+    {
+      "id": "instagram-auth-browser",
+      "status": "experimental",
+      "method": "manual_browser_session",
+      "domains": ["instagram.com"],
+      "matchSubdomains": true,
+      "summary": "Uses Instagram public-page metadata capture with local image asset caching for stable rich-card enrichment.",
+      "loginInstructions": "No interactive login is currently required; extractor fetches public Instagram page metadata and caches local image assets.",
       "docs": [
         "docs/authenticated-rich-extractors.md",
         "docs/create-new-rich-content-extractor.md",
