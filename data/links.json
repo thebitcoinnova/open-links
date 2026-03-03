@@ -88,6 +88,22 @@
       "custom": {}
     },
     {
+      "id": "youtube",
+      "label": "YouTube",
+      "url": "https://www.youtube.com/@peterryszkiewicz4354",
+      "type": "rich",
+      "icon": "youtube",
+      "description": "Videos and channel updates",
+      "group": "social",
+      "order": 7,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true,
+        "authenticatedExtractor": "youtube-auth-browser"
+      },
+      "custom": {}
+    },
+    {
       "id": "medium",
       "label": "Medium",
       "url": "https://medium.com/@peterryszkiewicz",
@@ -95,7 +111,7 @@
       "icon": "medium",
       "description": "Articles and blog posts",
       "group": "content",
-      "order": 7,
+      "order": 8,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -111,7 +127,7 @@
       "icon": "substack",
       "description": "Newsletter and long-form writing",
       "group": "content",
-      "order": 8,
+      "order": 9,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -143,6 +159,7 @@
     "openlinks-home",
     "facebook",
     "instagram",
+    "youtube",
     "medium",
     "substack"
   ],

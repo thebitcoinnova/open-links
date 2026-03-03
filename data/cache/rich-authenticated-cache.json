@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-cache.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-28T17:49:38.237Z",
+  "updatedAt": "2026-03-03T03:53:02.763Z",
   "entries": {
     "linkedin": {
       "extractorId": "linkedin-auth-browser",
@@ -127,6 +127,34 @@
           "session=openlinks-facebook-auth",
           "sessionName=openlinks-facebook-auth"
         ]
+      }
+    },
+    "youtube": {
+      "extractorId": "youtube-auth-browser",
+      "linkId": "youtube",
+      "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
+      "capturedAt": "2026-03-03T03:53:02.763Z",
+      "metadata": {
+        "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
+        "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
+        "image": "cache/rich-authenticated/6b9108d57c85504129a4db624a858e965986b899a07b540b484797162d6159f6.jpg",
+        "sourceLabel": "youtube.com"
+      },
+      "assets": {
+        "image": {
+          "path": "cache/rich-authenticated/6b9108d57c85504129a4db624a858e965986b899a07b540b484797162d6159f6.jpg",
+          "sourceUrl": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
+          "contentType": "image/jpeg",
+          "bytes": 159152,
+          "sha256": "6b9108d57c85504129a4db624a858e965986b899a07b540b484797162d6159f6"
+        }
+      },
+      "diagnostics": {
+        "extractorVersion": "2026-03-03.2",
+        "selectorProfile": "youtube-public-metadata-v1",
+        "placeholderSignals": [],
+        "capturedFromUrl": "https://www.youtube.com/@peterryszkiewicz4354",
+        "notes": ["cacheKey=youtube"]
       }
     }
   }
