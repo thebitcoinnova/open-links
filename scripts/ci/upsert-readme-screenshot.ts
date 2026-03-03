@@ -25,7 +25,7 @@ const parseArgs = (): Args => {
     readmePath: getFlag("--readme") ?? "README.md",
     anchorLine:
       getFlag("--anchor") ??
-      "This project is developer-first: fork or template the repo, edit JSON, push, and publish.",
+      "This project is developer-first: fork the repo, edit JSON, push, and publish.",
     imagePath: getFlag("--image-path") ?? "docs/assets/openlinks-preview.png",
     imageAlt: getFlag("--image-alt") ?? "OpenLinks preview",
     startMarker: getFlag("--start-marker") ?? "<!-- OPENLINKS_SCREENSHOT_START -->",

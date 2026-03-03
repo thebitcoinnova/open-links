@@ -11,7 +11,7 @@
 
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
 
-This project is developer-first: fork or template the repo, edit JSON, push, and publish.
+This project is developer-first: fork the repo, edit JSON, push, and publish.
 <!-- OPENLINKS_SCREENSHOT_START -->
 ![OpenLinks preview](docs/assets/openlinks-preview.png)
 <!-- OPENLINKS_SCREENSHOT_END -->
@@ -69,10 +69,9 @@ Use this path for day-2 maintenance when the user likely already has a fork and/
 
 ### 3) Create your own repository (Manual Path)
 
-Use one of:
+Use this approach:
 
 1. Fork this repository.
-2. Use this repository as a template.
 
 ### 4) Clone and install
 

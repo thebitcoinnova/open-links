@@ -1,6 +1,6 @@
 # Quickstart
 
-This guide is the fastest path from fork/template to first successful local run and GitHub Pages deployment.
+This guide is the fastest path from fork to first successful local run and GitHub Pages deployment.
 
 ## Preferred: OpenClaw One-Message Paths
 
@@ -42,10 +42,9 @@ Use the manual steps below only when you are not using OpenClaw.
 
 ## Manual Bootstrap Your Repository
 
-Use one approach:
+Use this approach:
 
 1. **Fork** this repository if you want to pull upstream updates.
-2. **Use this template** for a fresh standalone repository.
 
 After repo creation:
 
