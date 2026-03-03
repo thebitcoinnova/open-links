@@ -48,6 +48,9 @@ jobs:
           PAGES_BASE_MODE: root
         run: bun run build
 
+      - name: Install Playwright Chromium
+        run: npx --yes playwright@1.52.0 install --with-deps chromium
+
       - name: Start preview server
         id: preview
         shell: bash
@@ -73,20 +76,69 @@ jobs:
           echo "::endgroup::"
           exit 1
 
-      - name: Install Playwright Chromium
-        run: npx --yes playwright@1.52.0 install --with-deps chromium
-
       - name: Capture README screenshot
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p docs/assets
-          npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
-            --timeout=120000 \
-            --wait-for-selector=".profile-header" \
-            --wait-for-timeout=1200 \
-            http://127.0.0.1:4173 \
-            docs/assets/openlinks-preview.png
+
+          capture_with_wait() {
+            local url="$1"
+            npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
+              --timeout=120000 \
+              --wait-for-selector=".profile-header" \
+              --wait-for-timeout=1200 \
+              "$url" \
+              docs/assets/openlinks-preview.png
+          }
+
+          script_src="$(sed -n 's|.*<script type=\"module\" crossorigin src=\"\([^\"]*\)\".*|\1|p' dist/index.html | head -n 1)"
+          if [ -z "$script_src" ]; then
+            echo "::error::Unable to resolve script src from dist/index.html."
+            sed -n '1,120p' dist/index.html
+            exit 1
+          fi
+
+          capture_path="/"
+          if [[ "$script_src" == */assets/* ]]; then
+            maybe_prefix="${script_src%%/assets/*}"
+            if [ -n "$maybe_prefix" ] && [ "$maybe_prefix" != "$script_src" ]; then
+              capture_path="${maybe_prefix}/"
+            fi
+          fi
+
+          capture_url="http://127.0.0.1:4173${capture_path}"
+          asset_url="http://127.0.0.1:4173${script_src}"
+          echo "Resolved capture_url=${capture_url}"
+          echo "Resolved asset_url=${asset_url}"
+
+          if ! curl --silent --show-error --fail "$asset_url" > /dev/null; then
+            echo "::error::Main asset is unreachable at ${asset_url}."
+            echo "::group::dist/index.html"
+            sed -n '1,160p' dist/index.html
+            echo "::endgroup::"
+            echo "::group::Preview log"
+            cat /tmp/openlinks-preview.log
+            echo "::endgroup::"
+            exit 1
+          fi
+
+          if ! capture_with_wait "$capture_url"; then
+            echo "::warning::Primary screenshot capture failed. Trying fallback URLs."
+            if ! capture_with_wait "http://127.0.0.1:4173/" && ! capture_with_wait "http://127.0.0.1:4173/open-links/"; then
+              echo "::error::All screenshot capture attempts failed."
+              echo "::group::Preview log"
+              cat /tmp/openlinks-preview.log
+              echo "::endgroup::"
+              echo "::group::Root HTML (first 120 lines)"
+              curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
+              echo "::endgroup::"
+              echo "::group::/open-links/ HTML (first 120 lines)"
+              curl --silent "http://127.0.0.1:4173/open-links/" | sed -n '1,120p'
+              echo "::endgroup::"
+              exit 1
+            fi
+          fi
 
           bytes="$(wc -c < docs/assets/openlinks-preview.png)"
           if [ "$bytes" -lt 20000 ]; then
@@ -171,6 +223,9 @@ jobs:
           PAGES_BASE_MODE: root
         run: bun run build
 
+      - name: Install Playwright Chromium
+        run: npx --yes playwright@1.52.0 install --with-deps chromium
+
       - name: Start preview server
         id: preview
         shell: bash
@@ -196,20 +251,69 @@ jobs:
           echo "::endgroup::"
           exit 1
 
-      - name: Install Playwright Chromium
-        run: npx --yes playwright@1.52.0 install --with-deps chromium
-
       - name: Capture README screenshot
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p docs/assets
-          npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
-            --timeout=120000 \
-            --wait-for-selector=".profile-header" \
-            --wait-for-timeout=1200 \
-            http://127.0.0.1:4173 \
-            docs/assets/openlinks-preview.png
+
+          capture_with_wait() {
+            local url="$1"
+            npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
+              --timeout=120000 \
+              --wait-for-selector=".profile-header" \
+              --wait-for-timeout=1200 \
+              "$url" \
+              docs/assets/openlinks-preview.png
+          }
+
+          script_src="$(sed -n 's|.*<script type=\"module\" crossorigin src=\"\([^\"]*\)\".*|\1|p' dist/index.html | head -n 1)"
+          if [ -z "$script_src" ]; then
+            echo "::error::Unable to resolve script src from dist/index.html."
+            sed -n '1,120p' dist/index.html
+            exit 1
+          fi
+
+          capture_path="/"
+          if [[ "$script_src" == */assets/* ]]; then
+            maybe_prefix="${script_src%%/assets/*}"
+            if [ -n "$maybe_prefix" ] && [ "$maybe_prefix" != "$script_src" ]; then
+              capture_path="${maybe_prefix}/"
+            fi
+          fi
+
+          capture_url="http://127.0.0.1:4173${capture_path}"
+          asset_url="http://127.0.0.1:4173${script_src}"
+          echo "Resolved capture_url=${capture_url}"
+          echo "Resolved asset_url=${asset_url}"
+
+          if ! curl --silent --show-error --fail "$asset_url" > /dev/null; then
+            echo "::error::Main asset is unreachable at ${asset_url}."
+            echo "::group::dist/index.html"
+            sed -n '1,160p' dist/index.html
+            echo "::endgroup::"
+            echo "::group::Preview log"
+            cat /tmp/openlinks-preview.log
+            echo "::endgroup::"
+            exit 1
+          fi
+
+          if ! capture_with_wait "$capture_url"; then
+            echo "::warning::Primary screenshot capture failed. Trying fallback URLs."
+            if ! capture_with_wait "http://127.0.0.1:4173/" && ! capture_with_wait "http://127.0.0.1:4173/open-links/"; then
+              echo "::error::All screenshot capture attempts failed."
+              echo "::group::Preview log"
+              cat /tmp/openlinks-preview.log
+              echo "::endgroup::"
+              echo "::group::Root HTML (first 120 lines)"
+              curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
+              echo "::endgroup::"
+              echo "::group::/open-links/ HTML (first 120 lines)"
+              curl --silent "http://127.0.0.1:4173/open-links/" | sed -n '1,120p'
+              echo "::endgroup::"
+              exit 1
+            fi
+          fi
 
           bytes="$(wc -c < docs/assets/openlinks-preview.png)"
           if [ "$bytes" -lt 20000 ]; then
