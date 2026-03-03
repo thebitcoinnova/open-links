@@ -12,14 +12,14 @@ import {
   resolveLinkedinUrl,
   resolveSessionConfig,
   runAgentBrowserJson,
-  summarizeLinkedinAuthTransitions,
   summarizeLinkedinAuthResult,
+  summarizeLinkedinAuthTransitions,
   toAbsoluteFromRoot,
   toBooleanFlag,
   valueForFlag,
   waitForLinkedinAuthenticatedSession,
   writeJsonFile,
-  writeTextFile
+  writeTextFile,
 } from "./linkedin-debug-common";
 
 interface CookieBridgeDiagnostic {
@@ -70,7 +70,10 @@ const parseMaxHtmlBytes = (args: string[]): number => {
   return parsed;
 };
 
-const truncateHtmlIfNeeded = (html: string, maxBytes: number): { html: string; truncated: boolean } => {
+const truncateHtmlIfNeeded = (
+  html: string,
+  maxBytes: number,
+): { html: string; truncated: boolean } => {
   const bytes = Buffer.byteLength(html, "utf8");
   if (bytes <= maxBytes) {
     return { html, truncated: false };
@@ -81,7 +84,7 @@ const truncateHtmlIfNeeded = (html: string, maxBytes: number): { html: string; t
   const truncatedBuffer = Buffer.from(html, "utf8").subarray(0, maxContentBytes);
   return {
     html: `${truncatedBuffer.toString("utf8")}${marker}`,
-    truncated: true
+    truncated: true,
   };
 };
 
@@ -115,14 +118,14 @@ const toCookieHeader = (value: unknown): string | undefined => {
 
 const runCookieBridgeDiagnostic = async (
   url: string,
-  sessionData: unknown
+  sessionData: unknown,
 ): Promise<CookieBridgeDiagnostic> => {
   try {
     const cookieHeader = toCookieHeader(sessionData);
     if (!cookieHeader) {
       return {
         enabled: true,
-        error: "No exportable cookies found for cookie-bridge diagnostic."
+        error: "No exportable cookies found for cookie-bridge diagnostic.",
       };
     }
 
@@ -132,10 +135,11 @@ const runCookieBridgeDiagnostic = async (
       headers: {
         "user-agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "accept-language": "en-US,en;q=0.9",
-        cookie: cookieHeader
-      }
+        cookie: cookieHeader,
+      },
     });
 
     const html = await response.text();
@@ -148,12 +152,12 @@ const runCookieBridgeDiagnostic = async (
       ok: response.ok,
       finalUrl: response.url,
       placeholderSignals,
-      responseSample: sample
+      responseSample: sample,
     };
   } catch (error) {
     return {
       enabled: true,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 };
@@ -180,7 +184,7 @@ const run = async () => {
     timeoutMs: precheckTimeoutMs,
     pollMs: authSettings.pollMs,
     logPrefix: "[linkedin:debug:validate-auth]",
-    emitStateLogs: headed
+    emitStateLogs: headed,
   });
 
   const stamp = fileTimestamp();
@@ -188,7 +192,7 @@ const run = async () => {
     "output",
     "playwright",
     "linkedin-debug",
-    `summary-${stamp}.json`
+    `summary-${stamp}.json`,
   );
 
   if (!authResult.verified) {
@@ -204,9 +208,9 @@ const run = async () => {
         summary: summarizeLinkedinAuthResult(authResult),
         transitionsSummary: summarizeLinkedinAuthTransitions(authResult),
         transitions: authResult.transitions,
-        finalSnapshot: authResult.finalSnapshot
+        finalSnapshot: authResult.finalSnapshot,
       },
-      cookieBridgeDiagnostic: { enabled: false }
+      cookieBridgeDiagnostic: { enabled: false },
     };
 
     writeJsonFile(summaryArtifactPath, summary);
@@ -224,20 +228,20 @@ const run = async () => {
   runAgentBrowserJson(["wait", "2000"], config, { allowFailure: true });
 
   const currentUrlResult = runAgentBrowserJson<unknown>(["get", "url"], config, {
-    allowFailure: true
+    allowFailure: true,
   });
   const htmlResult = runAgentBrowserJson<unknown>(
     ["eval", LINKEDIN_READ_OUTER_HTML_SNIPPET],
     config,
-    { allowFailure: false }
+    { allowFailure: false },
   );
 
   const html = readEvalString(htmlResult.response?.data);
   if (!html) {
     throw new Error(
       `Unable to read HTML from authenticated browser session. Raw payload: ${JSON.stringify(
-        htmlResult.response?.data ?? null
-      )}`
+        htmlResult.response?.data ?? null,
+      )}`,
     );
   }
   const currentUrl = readUrlValue(currentUrlResult.response?.data);
@@ -246,14 +250,14 @@ const run = async () => {
   const placeholderSignals = classifyPlaceholderSignals({
     html,
     title: parsed.metadata.title,
-    description: parsed.metadata.description
+    description: parsed.metadata.description,
   });
   const metadataMissing = parsed.completeness === "none";
   const placeholderDetected = placeholderSignals.length > 0;
   const pass = !metadataMissing && !placeholderDetected;
 
   const cookiesPayload = runAgentBrowserJson(["cookies", "get"], config, {
-    allowFailure: true
+    allowFailure: true,
   }).response?.data;
   const cookieNames = extractCookieNames(cookiesPayload);
 
@@ -262,13 +266,13 @@ const run = async () => {
     "output",
     "playwright",
     "linkedin-debug",
-    `page-${stamp}.html`
+    `page-${stamp}.html`,
   );
   const metadataArtifactPath = toAbsoluteFromRoot(
     "output",
     "playwright",
     "linkedin-debug",
-    `metadata-${stamp}.json`
+    `metadata-${stamp}.json`,
   );
 
   writeTextFile(htmlArtifactPath, htmlWrite.html);
@@ -276,7 +280,7 @@ const run = async () => {
     timestamp: nowIso(),
     targetUrl,
     currentUrl,
-    parsed
+    parsed,
   });
 
   const cookieBridgeDiagnostic = cookieBridgeCheck
@@ -314,9 +318,9 @@ const run = async () => {
       summary: summarizeLinkedinAuthResult(authResult),
       transitionsSummary: summarizeLinkedinAuthTransitions(authResult),
       transitions: authResult.transitions,
-      finalSnapshot: authResult.finalSnapshot
+      finalSnapshot: authResult.finalSnapshot,
     },
-    cookieBridgeDiagnostic
+    cookieBridgeDiagnostic,
   };
 
   writeJsonFile(summaryArtifactPath, summary);
@@ -327,7 +331,9 @@ const run = async () => {
   console.log(`Current URL: ${currentUrl ?? "unknown"}`);
   console.log(`Completeness: ${parsed.completeness}`);
   console.log(`Auth transitions: ${summarizeLinkedinAuthTransitions(authResult) || "none"}`);
-  console.log(`Placeholder signals: ${placeholderSignals.length > 0 ? placeholderSignals.join(", ") : "none"}`);
+  console.log(
+    `Placeholder signals: ${placeholderSignals.length > 0 ? placeholderSignals.join(", ") : "none"}`,
+  );
   if (cookieBridgeCheck) {
     if ("error" in cookieBridgeDiagnostic && cookieBridgeDiagnostic.error) {
       console.log(`Cookie-bridge diagnostic: error (${cookieBridgeDiagnostic.error})`);
@@ -335,7 +341,7 @@ const run = async () => {
       console.log(
         `Cookie-bridge diagnostic: status=${cookieBridgeDiagnostic.statusCode ?? "unknown"} placeholderSignals=${
           cookieBridgeDiagnostic.placeholderSignals?.join(", ") || "none"
-        }`
+        }`,
       );
     }
   }
@@ -345,7 +351,7 @@ const run = async () => {
     console.log("Next step: use parsed metadata as candidate manual metadata for data/links.json.");
   } else {
     console.log(
-      "Next step: re-run linkedin:debug:login (multi-factor authentication is optional) or keep enrichment disabled/manual for LinkedIn."
+      "Next step: re-run linkedin:debug:login (multi-factor authentication is optional) or keep enrichment disabled/manual for LinkedIn.",
     );
   }
 

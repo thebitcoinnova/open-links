@@ -7,7 +7,7 @@ import type {
   EnrichmentMissingField,
   EnrichmentRunEntry,
   EnrichmentRunReport,
-  EnrichmentRunSummary
+  EnrichmentRunSummary,
 } from "./types";
 
 export interface WriteEnrichmentReportInput {
@@ -72,7 +72,7 @@ export const summarizeEntries = (entries: EnrichmentRunEntry[]): EnrichmentRunSu
     fetched: 0,
     partial: 0,
     failed: 0,
-    skipped: 0
+    skipped: 0,
   };
 
   for (const entry of entries) {
@@ -89,7 +89,7 @@ export const createEnrichmentReport = ({
   failureMode,
   failOn,
   bypassActive,
-  abortedEarly
+  abortedEarly,
 }: Omit<WriteEnrichmentReportInput, "reportPath">): EnrichmentRunReport => ({
   generatedAt,
   strict,
@@ -98,7 +98,7 @@ export const createEnrichmentReport = ({
   failureMode,
   failOn,
   bypassActive,
-  abortedEarly
+  abortedEarly,
 });
 
 export const writeEnrichmentReport = (input: WriteEnrichmentReportInput): EnrichmentRunReport => {
@@ -138,14 +138,17 @@ const toEntry = (value: unknown): EnrichmentRunEntry | null => {
     message: typeof value.message === "string" ? value.message : "",
     remediation: typeof value.remediation === "string" ? value.remediation : "",
     statusCode: typeof value.statusCode === "number" ? value.statusCode : undefined,
-    metadata: isRecord(value.metadata) ? (value.metadata as EnrichmentRunEntry["metadata"]) : undefined,
+    metadata: isRecord(value.metadata)
+      ? (value.metadata as EnrichmentRunEntry["metadata"])
+      : undefined,
     blocking: typeof value.blocking === "boolean" ? value.blocking : undefined,
     missingFields: toMissingFields(value.missingFields),
-    manualFallbackUsed: typeof value.manualFallbackUsed === "boolean" ? value.manualFallbackUsed : undefined,
+    manualFallbackUsed:
+      typeof value.manualFallbackUsed === "boolean" ? value.manualFallbackUsed : undefined,
     extractorId: typeof value.extractorId === "string" ? value.extractorId : undefined,
     cacheKey: typeof value.cacheKey === "string" ? value.cacheKey : undefined,
     cacheCapturedAt: typeof value.cacheCapturedAt === "string" ? value.cacheCapturedAt : undefined,
-    staleCache: typeof value.staleCache === "boolean" ? value.staleCache : undefined
+    staleCache: typeof value.staleCache === "boolean" ? value.staleCache : undefined,
   };
 };
 
@@ -163,17 +166,20 @@ export const readEnrichmentReport = (reportPath: string): EnrichmentRunReport | 
     }
 
     const entriesInput = Array.isArray(parsed.entries) ? parsed.entries : [];
-    const entries = entriesInput.map(toEntry).filter((entry): entry is EnrichmentRunEntry => entry !== null);
+    const entries = entriesInput
+      .map(toEntry)
+      .filter((entry): entry is EnrichmentRunEntry => entry !== null);
 
     return {
-      generatedAt: typeof parsed.generatedAt === "string" ? parsed.generatedAt : new Date(0).toISOString(),
+      generatedAt:
+        typeof parsed.generatedAt === "string" ? parsed.generatedAt : new Date(0).toISOString(),
       strict: parsed.strict === true,
       summary: summarizeEntries(entries),
       entries,
       failureMode: isFailureMode(parsed.failureMode) ? parsed.failureMode : undefined,
       failOn: toFailOn(parsed.failOn),
       bypassActive: typeof parsed.bypassActive === "boolean" ? parsed.bypassActive : undefined,
-      abortedEarly: typeof parsed.abortedEarly === "boolean" ? parsed.abortedEarly : undefined
+      abortedEarly: typeof parsed.abortedEarly === "boolean" ? parsed.abortedEarly : undefined,
     };
   } catch {
     return null;

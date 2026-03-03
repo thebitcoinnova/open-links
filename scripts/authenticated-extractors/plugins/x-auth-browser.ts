@@ -6,7 +6,7 @@ import type {
   AuthenticatedExtractorExtractContext,
   AuthenticatedExtractorExtractResult,
   AuthenticatedExtractorPlugin,
-  AuthenticatedExtractorSessionContext
+  AuthenticatedExtractorSessionContext,
 } from "../types";
 
 const EXTRACTOR_ID = "x-auth-browser";
@@ -78,7 +78,7 @@ const decodeHtmlEntities = (value: string): string =>
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", "\"")
+    .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
     .trim();
 
@@ -99,11 +99,16 @@ const detectPlaceholderSignals = (input: {
   providerName?: string;
   html?: string;
 }): string[] => {
-  const combined = [input.title ?? "", input.providerName ?? "", input.html ?? ""].join("\n").toLowerCase();
+  const combined = [input.title ?? "", input.providerName ?? "", input.html ?? ""]
+    .join("\n")
+    .toLowerCase();
   const checks: Array<{ label: string; pattern: RegExp }> = [
     { label: "oembed_unavailable", pattern: /not found|no status found|invalid url/i },
     { label: "sign_in_prompt", pattern: /sign in|log in/i },
-    { label: "challenge_page", pattern: /just a moment|checking if the site connection is secure/i }
+    {
+      label: "challenge_page",
+      pattern: /just a moment|checking if the site connection is secure/i,
+    },
   ];
 
   const findings: string[] = [];
@@ -128,7 +133,7 @@ const resolveProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
   const allowed = ["x.com", "twitter.com", "mobile.twitter.com"];
   if (!allowed.includes(hostname) && !hostname.endsWith(".twitter.com")) {
     throw new Error(
-      `X extractor only supports x.com/twitter.com hosts. Got '${parsed.hostname}' for '${sourceUrl}'.`
+      `X extractor only supports x.com/twitter.com hosts. Got '${parsed.hostname}' for '${sourceUrl}'.`,
     );
   }
 
@@ -149,11 +154,13 @@ const resolveProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
   return {
     handle,
     canonicalUrl: `https://x.com/${handle}`,
-    oEmbedTargetUrl: `https://twitter.com/${handle}`
+    oEmbedTargetUrl: `https://twitter.com/${handle}`,
   };
 };
 
-const fetchOEmbedPayload = async (targetUrl: string): Promise<{ payload: OEmbedPayload; oEmbedUrl: string }> => {
+const fetchOEmbedPayload = async (
+  targetUrl: string,
+): Promise<{ payload: OEmbedPayload; oEmbedUrl: string }> => {
   const oEmbedUrl = new URL("https://publish.twitter.com/oembed");
   oEmbedUrl.searchParams.set("url", targetUrl);
   oEmbedUrl.searchParams.set("omit_script", "true");
@@ -166,8 +173,8 @@ const fetchOEmbedPayload = async (targetUrl: string): Promise<{ payload: OEmbedP
     headers: {
       "user-agent": USER_AGENT,
       accept: "application/json",
-      "accept-language": "en-US,en;q=0.9"
-    }
+      "accept-language": "en-US,en;q=0.9",
+    },
   });
 
   if (!response.ok) {
@@ -177,7 +184,7 @@ const fetchOEmbedPayload = async (targetUrl: string): Promise<{ payload: OEmbedP
   const payload = (await response.json()) as OEmbedPayload;
   return {
     payload,
-    oEmbedUrl: oEmbedUrl.toString()
+    oEmbedUrl: oEmbedUrl.toString(),
   };
 };
 
@@ -191,7 +198,7 @@ const extractDisplayHandleFromHtml = (html: string | undefined, fallbackHandle: 
 };
 
 const buildMetadataPayload = async (
-  sourceUrl: string
+  sourceUrl: string,
 ): Promise<{
   handle: string;
   title: string;
@@ -206,7 +213,7 @@ const buildMetadataPayload = async (
   const providerName = safeTrim(payload.provider_name) ?? "";
   if (!/twitter/i.test(providerName)) {
     throw new Error(
-      `X extractor expected oEmbed provider 'Twitter' but received '${providerName || "missing"}'.`
+      `X extractor expected oEmbed provider 'Twitter' but received '${providerName || "missing"}'.`,
     );
   }
 
@@ -214,12 +221,12 @@ const buildMetadataPayload = async (
   const placeholderSignals = detectPlaceholderSignals({
     title: payload.title,
     providerName,
-    html: payload.html
+    html: payload.html,
   });
 
   if (placeholderSignals.includes("oembed_unavailable")) {
     throw new Error(
-      `X extractor received unavailable oEmbed payload for handle '${displayHandle}'. Signals: ${placeholderSignals.join(", ")}.`
+      `X extractor received unavailable oEmbed payload for handle '${displayHandle}'. Signals: ${placeholderSignals.join(", ")}.`,
     );
   }
 
@@ -232,13 +239,13 @@ const buildMetadataPayload = async (
     description,
     currentUrl: safeTrim(payload.url) ?? target.canonicalUrl,
     oEmbedUrl,
-    placeholderSignals
+    placeholderSignals,
   };
 };
 
 const downloadImageAsset = async (
   context: AuthenticatedExtractorExtractContext,
-  sourceUrls: string[]
+  sourceUrls: string[],
 ): Promise<{
   path: string;
   sourceUrl: string;
@@ -255,8 +262,8 @@ const downloadImageAsset = async (
       headers: {
         "user-agent": USER_AGENT,
         accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        "accept-language": "en-US,en;q=0.9"
-      }
+        "accept-language": "en-US,en;q=0.9",
+      },
     });
 
     if (!response.ok) {
@@ -280,7 +287,10 @@ const downloadImageAsset = async (
     fs.mkdirSync(context.publicAssetDirAbsolute, { recursive: true });
     fs.writeFileSync(path.join(context.publicAssetDirAbsolute, fileName), bytes);
 
-    const relativePath = path.posix.join(context.publicAssetDirRelative.replaceAll("\\", "/"), fileName);
+    const relativePath = path.posix.join(
+      context.publicAssetDirRelative.replaceAll("\\", "/"),
+      fileName,
+    );
     const contentType =
       response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream";
 
@@ -289,7 +299,7 @@ const downloadImageAsset = async (
       sourceUrl,
       contentType,
       bytes: bytes.byteLength,
-      sha256
+      sha256,
     };
   }
 
@@ -297,30 +307,30 @@ const downloadImageAsset = async (
 };
 
 const ensureSession = async (
-  context: AuthenticatedExtractorSessionContext
+  context: AuthenticatedExtractorSessionContext,
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
   try {
     const payload = await buildMetadataPayload(context.targetUrl);
     return {
       verified: true,
-      details: `verified handle=${payload.handle}; source=oembed`
+      details: `verified handle=${payload.handle}; source=oembed`,
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     return {
       verified: false,
-      details: message
+      details: message,
     };
   }
 };
 
 const extract = async (
-  context: AuthenticatedExtractorExtractContext
+  context: AuthenticatedExtractorExtractContext,
 ): Promise<AuthenticatedExtractorExtractResult> => {
   const payload = await buildMetadataPayload(context.sourceUrl);
   const imageAsset = await downloadImageAsset(context, [
     `https://unavatar.io/x/${encodeURIComponent(payload.handle)}`,
-    "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png"
+    "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
   ]);
 
   return {
@@ -329,7 +339,7 @@ const extract = async (
       title: payload.title,
       description: payload.description,
       image: imageAsset.path,
-      sourceLabel: resolveSourceLabel(context.sourceUrl)
+      sourceLabel: resolveSourceLabel(context.sourceUrl),
     },
     assets: {
       image: {
@@ -337,8 +347,8 @@ const extract = async (
         sourceUrl: imageAsset.sourceUrl,
         contentType: imageAsset.contentType,
         bytes: imageAsset.bytes,
-        sha256: imageAsset.sha256
-      }
+        sha256: imageAsset.sha256,
+      },
     },
     diagnostics: {
       extractorVersion: EXTRACTOR_VERSION,
@@ -348,14 +358,14 @@ const extract = async (
       notes: [
         `cacheKey=${context.cacheKey}`,
         `handle=${payload.handle}`,
-        `oembedUrl=${payload.oEmbedUrl}`
-      ]
-    }
+        `oembedUrl=${payload.oEmbedUrl}`,
+      ],
+    },
   };
 };
 
 export const xAuthBrowserExtractor: AuthenticatedExtractorPlugin = {
   id: EXTRACTOR_ID,
   ensureSession,
-  extract
+  extract,
 };

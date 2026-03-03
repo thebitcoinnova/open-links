@@ -18,7 +18,6 @@ export const TopUtilityBar = (props: TopUtilityBarProps) => {
       </h2>
       <div
         class="utility-actions"
-        role="group"
         aria-label={props.controlsLabel ?? "Display controls"}
         aria-labelledby={titleId}
       >

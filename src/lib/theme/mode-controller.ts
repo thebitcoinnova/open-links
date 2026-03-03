@@ -1,9 +1,4 @@
-import type {
-  ModePolicy,
-  SiteData,
-  DensityMode,
-  BrandIconSizeMode
-} from "../content/load-content";
+import type { BrandIconSizeMode, DensityMode, ModePolicy, SiteData } from "../content/load-content";
 
 export type UiMode = "dark" | "light";
 
@@ -31,7 +26,8 @@ const readStoredMode = (): UiMode | null => {
   return normalizeStoredMode(window.localStorage.getItem(STORAGE_KEY));
 };
 
-export const resolveModePolicy = (site: SiteData): ModePolicy => normalizeModePolicy(site.ui?.modePolicy);
+export const resolveModePolicy = (site: SiteData): ModePolicy =>
+  normalizeModePolicy(site.ui?.modePolicy);
 
 export const resolveInitialMode = (policy: ModePolicy): UiMode => {
   if (policy === "static-dark") return "dark";
@@ -74,7 +70,7 @@ export const applyThemeState = ({
   mode,
   policy,
   density,
-  brandIconSizeMode
+  brandIconSizeMode,
 }: ApplyThemeOptions): void => {
   if (typeof document === "undefined") {
     return;

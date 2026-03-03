@@ -43,7 +43,7 @@ const parseCssVariables = (cssBlock?: string): Record<string, string> => {
 const resolveThemeModeVars = (
   rootDir: string,
   themeId: string,
-  mode: "dark" | "light"
+  mode: "dark" | "light",
 ): {
   surfacePill: string;
   accent: string;
@@ -60,28 +60,28 @@ const resolveThemeModeVars = (
     const themeCss = fs.readFileSync(themePath, "utf8");
     const themeBlock = extractCssBlock(
       themeCss,
-      `:root[data-theme=\"${themeId}\"][data-mode=\"${mode}\"]`
+      `:root[data-theme=\"${themeId}\"][data-mode=\"${mode}\"]`,
     );
     themeVars = parseCssVariables(themeBlock);
   }
 
   const resolved = {
     ...tokenVars,
-    ...themeVars
+    ...themeVars,
   };
 
   return {
     surfacePill: resolved["--surface-pill"] ?? "#1A2232",
     accent: resolved["--accent"] ?? "#50E3C2",
     textPrimary: resolved["--text-primary"] ?? "#F5F7FB",
-    borderSubtle: resolved["--border-subtle"] ?? "#64748B"
+    borderSubtle: resolved["--border-subtle"] ?? "#64748B",
   };
 };
 
 const iconContrastIssues = (
   rootDir: string,
   strict: boolean,
-  site: QualitySiteInput
+  site: QualitySiteInput,
 ): QualityIssue[] => {
   const issues: QualityIssue[] = [];
   const activeTheme = site.theme?.active ?? "sleek";
@@ -100,7 +100,7 @@ const iconContrastIssues = (
         themeSurfacePillColor: vars.surfacePill,
         themeAccentColor: vars.accent,
         themeTextColor: vars.textPrimary,
-        themeBorderColor: vars.borderSubtle
+        themeBorderColor: vars.borderSubtle,
       });
 
       if (palette.resolvedContrastRatio >= options.minContrastRatio) {
@@ -115,10 +115,9 @@ const iconContrastIssues = (
         metric: "icon-contrast-ratio",
         actual: palette.resolvedContrastRatio,
         expected: `>= ${options.minContrastRatio}`,
-        message:
-          `Resolved icon contrast for '${knownSite.id}' is below configured minimum in ${mode} mode.`,
+        message: `Resolved icon contrast for '${knownSite.id}' is below configured minimum in ${mode} mode.`,
         remediation:
-          "Adjust ui.brandIcons policy (contrastMode/minContrastRatio/colorMode) or icon palette tuning to satisfy configured minimum contrast."
+          "Adjust ui.brandIcons policy (contrastMode/minContrastRatio/colorMode) or icon palette tuning to satisfy configured minimum contrast.",
       });
     }
   }
@@ -130,7 +129,7 @@ export const runA11yChecks = ({
   rootDir,
   strict,
   focusContrastStrict,
-  site
+  site,
 }: RunA11yChecksInput): QualityDomainResult => {
   const issues: QualityIssue[] = [];
 
@@ -150,7 +149,7 @@ export const runA11yChecks = ({
       code: "A11Y_MAIN_LANDMARK_MISSING",
       scope: "src/routes/index.tsx",
       message: "Main landmark is missing from root page layout.",
-      remediation: "Render the primary content container as a <main> landmark."
+      remediation: "Render the primary content container as a <main> landmark.",
     });
   }
 
@@ -161,7 +160,7 @@ export const runA11yChecks = ({
       code: "A11Y_SIMPLE_CARD_LABEL_MISSING",
       scope: "src/components/cards/SimpleLinkCard.tsx",
       message: "Simple link card anchor is missing explicit accessible labeling.",
-      remediation: "Add aria-label/labelled-by semantics describing destination and action."
+      remediation: "Add aria-label/labelled-by semantics describing destination and action.",
     });
   }
 
@@ -172,7 +171,7 @@ export const runA11yChecks = ({
       code: "A11Y_SIMPLE_CARD_DESCRIPTION_MISSING",
       scope: "src/components/cards/SimpleLinkCard.tsx",
       message: "Simple link cards are missing aria-describedby semantics.",
-      remediation: "Add aria-describedby for destination/context detail text on simple cards."
+      remediation: "Add aria-describedby for destination/context detail text on simple cards.",
     });
   }
 
@@ -183,7 +182,7 @@ export const runA11yChecks = ({
       code: "A11Y_RICH_CARD_LABEL_MISSING",
       scope: "src/components/cards/RichLinkCard.tsx",
       message: "Rich link card anchor is missing explicit accessible labeling.",
-      remediation: "Add aria-label/labelled-by semantics describing rich card destination."
+      remediation: "Add aria-label/labelled-by semantics describing rich card destination.",
     });
   }
 
@@ -194,18 +193,19 @@ export const runA11yChecks = ({
       code: "A11Y_RICH_CARD_DESCRIPTION_MISSING",
       scope: "src/components/cards/RichLinkCard.tsx",
       message: "Rich link cards are missing aria-describedby semantics.",
-      remediation: "Add aria-describedby pointing to rich-card description/source content."
+      remediation: "Add aria-describedby pointing to rich-card description/source content.",
     });
   }
 
-  if (!utilityBar.includes('role="group"') || !utilityBar.includes("aria-label")) {
+  if (!utilityBar.includes("aria-label") && !utilityBar.includes("aria-labelledby")) {
     issues.push({
       domain: "accessibility",
       level: "error",
       code: "A11Y_UTILITY_GROUP_SEMANTICS_MISSING",
       scope: "src/components/layout/TopUtilityBar.tsx",
-      message: "Top utility controls lack role/group labeling semantics.",
-      remediation: "Expose utility controls inside a labeled group so screen readers announce control context."
+      message: "Top utility controls lack explicit labeling semantics.",
+      remediation:
+        "Expose utility controls inside a labeled container so screen readers announce control context.",
     });
   }
 
@@ -216,7 +216,8 @@ export const runA11yChecks = ({
       code: "A11Y_UTILITY_MENU_DISCLOSURE_MISSING",
       scope: "src/components/layout/UtilityControlsMenu.tsx",
       message: "Utility controls menu is missing disclosure linkage semantics.",
-      remediation: "Expose utility controls with aria-expanded state and aria-controls panel linkage."
+      remediation:
+        "Expose utility controls with aria-expanded state and aria-controls panel linkage.",
     });
   }
 
@@ -231,7 +232,8 @@ export const runA11yChecks = ({
       code: "A11Y_UTILITY_MENU_CLOSE_BEHAVIOR_WEAK",
       scope: "src/components/layout/UtilityControlsMenu.tsx",
       message: "Utility controls menu is missing one or more expected close interactions.",
-      remediation: "Support close-on-Escape, outside pointer interactions, and focus leaving the menu surface."
+      remediation:
+        "Support close-on-Escape, outside pointer interactions, and focus leaving the menu surface.",
     });
   }
 
@@ -242,7 +244,8 @@ export const runA11yChecks = ({
       code: "A11Y_TOGGLE_SEMANTICS_MISSING",
       scope: "src/components/theme/ThemeToggle.tsx",
       message: "Theme toggle requires aria-label and aria-pressed semantics.",
-      remediation: "Keep theme toggle state and action messaging explicit for assistive technologies."
+      remediation:
+        "Keep theme toggle state and action messaging explicit for assistive technologies.",
     });
   }
 
@@ -250,10 +253,10 @@ export const runA11yChecks = ({
     ".simple-link-card:focus-visible",
     ".rich-link-card:focus-visible",
     ".theme-toggle:focus-visible",
-    ".utility-menu-button:focus-visible"
+    ".utility-menu-button:focus-visible",
   ];
 
-  focusSelectors.forEach((selector) => {
+  for (const selector of focusSelectors) {
     if (!styles.includes(selector)) {
       issues.push({
         domain: "accessibility",
@@ -261,10 +264,11 @@ export const runA11yChecks = ({
         code: "A11Y_FOCUS_STYLE_MISSING",
         scope: selector,
         message: `Missing focus-visible styling for selector '${selector}'.`,
-        remediation: "Add clear focus-visible styling (border/outline/shadow) so keyboard users can track focus."
+        remediation:
+          "Add clear focus-visible styling (border/outline/shadow) so keyboard users can track focus.",
       });
     }
-  });
+  }
 
   if (!styles.includes(":focus-visible")) {
     issues.push({
@@ -273,7 +277,8 @@ export const runA11yChecks = ({
       code: "A11Y_GLOBAL_FOCUS_MISSING",
       scope: "src/styles/base.css",
       message: "Global :focus-visible style is missing.",
-      remediation: "Define a global :focus-visible baseline to improve keyboard focus discoverability."
+      remediation:
+        "Define a global :focus-visible baseline to improve keyboard focus discoverability.",
     });
   }
 
@@ -284,7 +289,7 @@ export const runA11yChecks = ({
       code: "A11Y_FOCUS_TOKEN_MISSING",
       scope: "src/styles/tokens.css",
       message: "Focus-shadow token is missing from token palette.",
-      remediation: "Define --shadow-focus token so focus states remain consistent across themes."
+      remediation: "Define --shadow-focus token so focus states remain consistent across themes.",
     });
   }
 
@@ -301,6 +306,6 @@ export const runA11yChecks = ({
       : hasWarning
         ? "Accessibility checks passed with warnings."
         : "Accessibility checks passed.",
-    issues
+    issues,
   };
 };

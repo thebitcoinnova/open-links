@@ -20,7 +20,8 @@ const INLINE_EVAL_LITERAL_PATTERN =
 const LARGE_INLINE_TEMPLATE_PATTERN = /const\s+template\s*=\s*`([\s\S]*?)`;/g;
 const LARGE_TEMPLATE_MIN_LINES = 20;
 
-const toRelative = (absolutePath: string): string => path.relative(ROOT, absolutePath).replaceAll("\\", "/");
+const toRelative = (absolutePath: string): string =>
+  path.relative(ROOT, absolutePath).replaceAll("\\", "/");
 
 const toLineColumn = (content: string, index: number): { line: number; column: number } => {
   const upToIndex = content.slice(0, index);
@@ -37,7 +38,11 @@ const listScriptTypeScriptFiles = (directory: string): string[] => {
   for (const entry of entries) {
     const absolutePath = path.join(directory, entry.name);
     if (entry.isDirectory()) {
-      if (absolutePath === EMBEDDED_CODE_DIR || entry.name === "node_modules" || entry.name === ".git") {
+      if (
+        absolutePath === EMBEDDED_CODE_DIR ||
+        entry.name === "node_modules" ||
+        entry.name === ".git"
+      ) {
         continue;
       }
       results.push(...listScriptTypeScriptFiles(absolutePath));
@@ -90,7 +95,7 @@ const checkInlineEvalLiterals = (absolutePath: string, content: string): Finding
       file: toRelative(absolutePath),
       line,
       column,
-      message: `Inline literal used as runAgentBrowserJson eval payload (${literal.startsWith("`") ? "template literal" : "string literal"}). Move payload into scripts/embedded-code/ and load via embedded-code-loader.`
+      message: `Inline literal used as runAgentBrowserJson eval payload (${literal.startsWith("`") ? "template literal" : "string literal"}). Move payload into scripts/embedded-code/ and load via embedded-code-loader.`,
     });
   }
 
@@ -120,7 +125,7 @@ const checkLargeInlineTemplates = (absolutePath: string, content: string): Findi
       line,
       column,
       message:
-        "Large inline scaffold template detected. Move template into scripts/authenticated-extractors/plugins/*.template.ts and render via shared token replacement."
+        "Large inline scaffold template detected. Move template into scripts/authenticated-extractors/plugins/*.template.ts and render via shared token replacement.",
     });
   }
 
@@ -144,19 +149,23 @@ const run = (): void => {
       line: 1,
       column: 1,
       message:
-        "Legacy scaffold template extension '.template.ts.txt' is not allowed. Rename/migrate to '.template.ts'."
+        "Legacy scaffold template extension '.template.ts.txt' is not allowed. Rename/migrate to '.template.ts'.",
     });
   }
 
   if (findings.length === 0) {
-    console.log("Embedded code guardrail: PASS (no prohibited inline eval/template patterns found).");
+    console.log(
+      "Embedded code guardrail: PASS (no prohibited inline eval/template patterns found).",
+    );
     return;
   }
 
-  console.error(`Embedded code guardrail: FAIL (${findings.length} finding${findings.length === 1 ? "" : "s"}).`);
+  console.error(
+    `Embedded code guardrail: FAIL (${findings.length} finding${findings.length === 1 ? "" : "s"}).`,
+  );
   for (const finding of findings) {
     console.error(
-      `- [${finding.rule}] ${finding.file}:${finding.line}:${finding.column} ${finding.message}`
+      `- [${finding.rule}] ${finding.file}:${finding.line}:${finding.column} ${finding.message}`,
     );
   }
 

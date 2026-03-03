@@ -4,7 +4,7 @@ import type {
   LinkGroup,
   OpenLink,
   ProfileRichness,
-  SiteData
+  SiteData,
 } from "../content/load-content";
 
 export interface ResolvedLinkSection {
@@ -65,7 +65,7 @@ export const resolveComposition = (site: SiteData): CompositionConfig => {
     grouping: getGrouping(site),
     profileRichness: getProfileRichness(site),
     profileEmphasis: emphasisForMode(mode),
-    blocks: blocksForMode(mode)
+    blocks: blocksForMode(mode),
   };
 };
 
@@ -87,7 +87,7 @@ const groupedSections = (links: OpenLink[], groups: LinkGroup[]): ResolvedLinkSe
     .map((group) => ({
       id: group.id,
       label: group.label,
-      links: byGroup.get(group.id) ?? []
+      links: byGroup.get(group.id) ?? [],
     }))
     .filter((section) => section.links.length > 0);
 
@@ -102,7 +102,7 @@ const groupedSections = (links: OpenLink[], groups: LinkGroup[]): ResolvedLinkSe
 export const resolveLinkSections = (
   links: OpenLink[],
   groups: LinkGroup[],
-  grouping: GroupingStyle
+  grouping: GroupingStyle,
 ): ResolvedLinkSection[] => {
   if (grouping === "none") {
     return [{ id: "all", links }];

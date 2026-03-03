@@ -1,7 +1,7 @@
+import { type SpawnSyncReturns, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { loadEmbeddedCode } from "../shared/embedded-code-loader";
 
 export const DEFAULT_LINKEDIN_DEBUG_SESSION = "openlinks-linkedin-debug";
@@ -14,7 +14,7 @@ export const DEFAULT_AUTH_SESSION_POLL_MS = 2_000;
 
 const AUTH_COOKIE_CANDIDATES = ["li_at", "liap"];
 const LINKEDIN_INSPECT_AUTH_SNAPSHOT_SNIPPET = loadEmbeddedCode(
-  "browser/linkedin/inspect-auth-snapshot.js"
+  "browser/linkedin/inspect-auth-snapshot.js",
 );
 
 export interface SessionConfig {
@@ -35,7 +35,12 @@ export interface AgentBrowserJsonResult<T = unknown> {
   } | null;
 }
 
-export type LinkedinAuthState = "authenticated" | "login" | "mfa_challenge" | "authwall" | "unknown";
+export type LinkedinAuthState =
+  | "authenticated"
+  | "login"
+  | "mfa_challenge"
+  | "authwall"
+  | "unknown";
 
 export interface AuthWaitSettings {
   timeoutMs: number;
@@ -124,7 +129,8 @@ export const nowIso = (): string => new Date().toISOString();
 
 export const fileTimestamp = (): string => nowIso().replaceAll(":", "-");
 
-export const toAbsoluteFromRoot = (...segments: string[]): string => path.join(process.cwd(), ...segments);
+export const toAbsoluteFromRoot = (...segments: string[]): string =>
+  path.join(process.cwd(), ...segments);
 
 export const ensureLinkedinDebugOutputDirectory = (): string => {
   const outputDir = toAbsoluteFromRoot(LINKEDIN_DEBUG_OUTPUT_DIRECTORY);
@@ -156,7 +162,7 @@ export const resolveSessionConfig = (): SessionConfig => {
 
   if (!/^[a-fA-F0-9]{64}$/.test(encryptionKey)) {
     throw new Error(
-      "AGENT_BROWSER_ENCRYPTION_KEY is required and must be a 64-character hex value for LinkedIn authenticated debug tooling."
+      "AGENT_BROWSER_ENCRYPTION_KEY is required and must be a 64-character hex value for LinkedIn authenticated debug tooling.",
     );
   }
 
@@ -171,14 +177,14 @@ export const runRawCommand = (
     env?: NodeJS.ProcessEnv;
     allowFailure?: boolean;
     maxBufferBytes?: number;
-  }
+  },
 ): SpawnSyncReturns<string> => {
   const maxBuffer = options?.maxBufferBytes ?? 20 * 1024 * 1024;
   const result = spawnSync(command, args, {
     cwd: options?.cwd ?? process.cwd(),
     env: options?.env ?? process.env,
     encoding: "utf8",
-    maxBuffer
+    maxBuffer,
   });
 
   const status = result.status;
@@ -187,7 +193,9 @@ export const runRawCommand = (
     const stderr = (result.stderr ?? "").trim();
     const stdout = (result.stdout ?? "").trim();
     const details = [stderr, stdout].filter((value) => value.length > 0).join("\n");
-    throw new Error(`Command failed (${command} ${args.join(" ")}): ${details || `exit=${status}`}`);
+    throw new Error(
+      `Command failed (${command} ${args.join(" ")}): ${details || `exit=${status}`}`,
+    );
   }
 
   return result;
@@ -217,7 +225,7 @@ export const runAgentBrowserJson = <T = unknown>(
     allowFailure?: boolean;
     extraArgs?: string[];
     cwd?: string;
-  }
+  },
 ): AgentBrowserJsonResult<T> => {
   const command = [
     "--yes",
@@ -228,12 +236,12 @@ export const runAgentBrowserJson = <T = unknown>(
     "--session-name",
     config.sessionName,
     ...(options?.extraArgs ?? []),
-    ...args
+    ...args,
   ];
 
   const result = runRawCommand("npx", command, {
     allowFailure: true,
-    cwd: options?.cwd
+    cwd: options?.cwd,
   });
   const parsed = parseJsonMaybe(result.stdout) as AgentBrowserJsonResult<T>["response"];
   const response = parsed;
@@ -243,11 +251,17 @@ export const runAgentBrowserJson = <T = unknown>(
 
   if (shouldFail && !options?.allowFailure) {
     const payloadError =
-      typeof response?.error === "string" && response.error.trim().length > 0 ? response.error.trim() : undefined;
+      typeof response?.error === "string" && response.error.trim().length > 0
+        ? response.error.trim()
+        : undefined;
     const stderr = (result.stderr ?? "").trim();
     const stdout = (result.stdout ?? "").trim();
-    const details = [payloadError, stderr, stdout].filter((value) => value && value.length > 0).join("\n");
-    throw new Error(`agent-browser command failed (${args.join(" ")}): ${details || `exit=${result.status}`}`);
+    const details = [payloadError, stderr, stdout]
+      .filter((value) => value && value.length > 0)
+      .join("\n");
+    throw new Error(
+      `agent-browser command failed (${args.join(" ")}): ${details || `exit=${result.status}`}`,
+    );
   }
 
   return {
@@ -255,7 +269,7 @@ export const runAgentBrowserJson = <T = unknown>(
     status: result.status,
     stdout: result.stdout ?? "",
     stderr: result.stderr ?? "",
-    response
+    response,
   };
 };
 
@@ -332,7 +346,7 @@ export const classifyPlaceholderSignals = (input: {
     { label: "linkedin_join_prompt", pattern: /join linkedin/i },
     { label: "linkedin_authwall", pattern: /authwall/i },
     { label: "cloudflare_challenge", pattern: /just a moment\.\.\./i },
-    { label: "js_cookie_challenge", pattern: /enable javascript and cookies to continue/i }
+    { label: "js_cookie_challenge", pattern: /enable javascript and cookies to continue/i },
   ];
 
   for (const check of checks) {
@@ -369,42 +383,40 @@ export const resolveAuthWaitSettings = (input?: {
 
   const timeoutMs = Math.max(
     5_000,
-    input?.timeoutMs ?? envTimeout ?? DEFAULT_AUTH_SESSION_TIMEOUT_MS
+    input?.timeoutMs ?? envTimeout ?? DEFAULT_AUTH_SESSION_TIMEOUT_MS,
   );
   const pollMs = Math.max(250, input?.pollMs ?? envPoll ?? DEFAULT_AUTH_SESSION_POLL_MS);
 
   return {
     timeoutMs,
-    pollMs: Math.min(pollMs, timeoutMs)
+    pollMs: Math.min(pollMs, timeoutMs),
   };
 };
 
 export const resolveAuthWaitOverridesFromArgs = (
-  args: string[]
+  args: string[],
 ): { timeoutMs?: number; pollMs?: number } => {
   const timeoutMs = parseInteger(valueForFlag(args, "--auth-timeout-ms"));
   const pollMs = parseInteger(valueForFlag(args, "--poll-ms"));
 
   return {
     timeoutMs: timeoutMs && timeoutMs > 0 ? timeoutMs : undefined,
-    pollMs: pollMs && pollMs > 0 ? pollMs : undefined
+    pollMs: pollMs && pollMs > 0 ? pollMs : undefined,
   };
 };
 
 const inspectLinkedinAuthSnapshot = (config: SessionConfig): LinkedinAuthSnapshot => {
   const currentUrl = resolveCurrentUrl(
-    runAgentBrowserJson(["get", "url"], config, { allowFailure: true }).response?.data
+    runAgentBrowserJson(["get", "url"], config, { allowFailure: true }).response?.data,
   );
   const cookieNames = extractCookieNames(
-    runAgentBrowserJson(["cookies", "get"], config, { allowFailure: true }).response?.data
+    runAgentBrowserJson(["cookies", "get"], config, { allowFailure: true }).response?.data,
   );
 
   const evalData = readEvalRecord(
-    runAgentBrowserJson<unknown>(
-      ["eval", LINKEDIN_INSPECT_AUTH_SNAPSHOT_SNIPPET],
-      config,
-      { allowFailure: true }
-    ).response?.data
+    runAgentBrowserJson<unknown>(["eval", LINKEDIN_INSPECT_AUTH_SNAPSHOT_SNIPPET], config, {
+      allowFailure: true,
+    }).response?.data,
   );
 
   const title = lower(toText(evalData?.title));
@@ -417,7 +429,9 @@ const inspectLinkedinAuthSnapshot = (config: SessionConfig): LinkedinAuthSnapsho
   const host = resolveHost(currentUrl);
   const pathText = lower(currentUrl);
 
-  const hasAuthCookie = AUTH_COOKIE_CANDIDATES.some((cookieName) => cookieNames.includes(cookieName));
+  const hasAuthCookie = AUTH_COOKIE_CANDIDATES.some((cookieName) =>
+    cookieNames.includes(cookieName),
+  );
   const authwallSignals =
     /linkedin\.com\/(authwall|signup)/i.test(pathText) ||
     body.includes("join linkedin") ||
@@ -471,7 +485,7 @@ const inspectLinkedinAuthSnapshot = (config: SessionConfig): LinkedinAuthSnapsho
     state,
     currentUrl,
     cookieNames,
-    signals
+    signals,
   };
 };
 
@@ -483,7 +497,7 @@ export const summarizeLinkedinAuthResult = (result: WaitForLinkedinAuthResult): 
     `state=${final?.state ?? "unknown"}`,
     `url=${final?.currentUrl ?? "unknown"}`,
     `cookies=${final?.cookieNames.length ?? 0}`,
-    `transitions=${result.transitions.length}`
+    `transitions=${result.transitions.length}`,
   ].join("; ");
 };
 
@@ -494,18 +508,18 @@ export const summarizeLinkedinAuthTransitions = (result: WaitForLinkedinAuthResu
 
 export const waitForLinkedinAuthenticatedSession = async (
   config: SessionConfig,
-  input: WaitForLinkedinAuthInput
+  input: WaitForLinkedinAuthInput,
 ): Promise<WaitForLinkedinAuthResult> => {
   const settings = resolveAuthWaitSettings({
     timeoutMs: input.timeoutMs,
-    pollMs: input.pollMs
+    pollMs: input.pollMs,
   });
   const logPrefix = input.logPrefix ?? "[linkedin-auth]";
   const emitStateLogs = input.emitStateLogs ?? true;
 
   const openResult = runAgentBrowserJson(["open", input.targetUrl], config, {
     extraArgs: input.headed ? ["--headed"] : [],
-    allowFailure: true
+    allowFailure: true,
   });
 
   if (emitStateLogs && openResult.response?.success === false) {
@@ -514,7 +528,7 @@ export const waitForLinkedinAuthenticatedSession = async (
 
   if (emitStateLogs) {
     console.log(
-      `${logPrefix} waiting for authenticated session. Multi-factor authentication or challenge steps are optional; flow continues automatically once authenticated is detected.`
+      `${logPrefix} waiting for authenticated session. Multi-factor authentication or challenge steps are optional; flow continues automatically once authenticated is detected.`,
     );
   }
 
@@ -533,7 +547,7 @@ export const waitForLinkedinAuthenticatedSession = async (
       transitions.push(snapshot);
       if (emitStateLogs) {
         console.log(
-          `${logPrefix} state=${snapshot.state} url=${snapshot.currentUrl ?? "unknown"} signals=${snapshot.signals.join(",")}`
+          `${logPrefix} state=${snapshot.state} url=${snapshot.currentUrl ?? "unknown"} signals=${snapshot.signals.join(",")}`,
         );
       }
     }
@@ -544,12 +558,12 @@ export const waitForLinkedinAuthenticatedSession = async (
         timedOut: false,
         settings,
         transitions,
-        finalSnapshot: snapshot
+        finalSnapshot: snapshot,
       };
     }
 
     runAgentBrowserJson(["wait", String(settings.pollMs)], config, {
-      allowFailure: true
+      allowFailure: true,
     });
   }
 
@@ -563,7 +577,7 @@ export const waitForLinkedinAuthenticatedSession = async (
     console.warn(
       `${logPrefix} timed out after ${settings.timeoutMs}ms (last state=${finalSnapshot.state}, url=${
         finalSnapshot.currentUrl ?? "unknown"
-      }).`
+      }).`,
     );
   }
 
@@ -572,6 +586,6 @@ export const waitForLinkedinAuthenticatedSession = async (
     timedOut: true,
     settings,
     transitions,
-    finalSnapshot
+    finalSnapshot,
   };
 };

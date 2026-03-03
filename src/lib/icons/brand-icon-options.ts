@@ -1,12 +1,9 @@
 import type {
   BrandIconColorMode,
   BrandIconContrastMode,
-  BrandIconSizeMode
+  BrandIconSizeMode,
 } from "../content/load-content";
-import {
-  normalizeKnownSiteIconOverrides,
-  type KnownSiteIconOverrides
-} from "./known-sites-data";
+import { type KnownSiteIconOverrides, normalizeKnownSiteIconOverrides } from "./known-sites-data";
 
 export interface ResolvedBrandIconOptions {
   colorMode: BrandIconColorMode;
@@ -28,7 +25,8 @@ interface BrandIconOptionsSiteLike {
   };
 }
 
-const normalizeColorMode = (value: unknown): BrandIconColorMode => (value === "theme" ? "theme" : "brand");
+const normalizeColorMode = (value: unknown): BrandIconColorMode =>
+  value === "theme" ? "theme" : "brand";
 
 const normalizeContrastMode = (value: unknown): BrandIconContrastMode => {
   if (value === "always-theme" || value === "always-brand") {
@@ -37,7 +35,8 @@ const normalizeContrastMode = (value: unknown): BrandIconContrastMode => {
   return "auto";
 };
 
-const normalizeSizeMode = (value: unknown): BrandIconSizeMode => (value === "normal" ? "normal" : "large");
+const normalizeSizeMode = (value: unknown): BrandIconSizeMode =>
+  value === "normal" ? "normal" : "large";
 
 const normalizeMinContrastRatio = (value: unknown): number => {
   if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -48,7 +47,9 @@ const normalizeMinContrastRatio = (value: unknown): number => {
   return Number(clamped.toFixed(2));
 };
 
-export const resolveBrandIconOptions = (site: BrandIconOptionsSiteLike): ResolvedBrandIconOptions => {
+export const resolveBrandIconOptions = (
+  site: BrandIconOptionsSiteLike,
+): ResolvedBrandIconOptions => {
   const config = site.ui?.brandIcons;
 
   return {
@@ -56,6 +57,6 @@ export const resolveBrandIconOptions = (site: BrandIconOptionsSiteLike): Resolve
     contrastMode: normalizeContrastMode(config?.contrastMode),
     minContrastRatio: normalizeMinContrastRatio(config?.minContrastRatio),
     sizeMode: normalizeSizeMode(config?.sizeMode),
-    iconOverrides: normalizeKnownSiteIconOverrides(config?.iconOverrides)
+    iconOverrides: normalizeKnownSiteIconOverrides(config?.iconOverrides),
   };
 };

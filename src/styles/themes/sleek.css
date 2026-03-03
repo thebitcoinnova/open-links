@@ -46,15 +46,19 @@
 }
 
 :root[data-theme^="sleek"][data-mode="dark"] body {
-  background:
-    radial-gradient(120% 105% at 100% 0%, color-mix(in srgb, var(--accent) 24%, transparent) 0%, transparent 62%),
-    linear-gradient(180deg, #060911 0%, var(--surface-bg) 46%, #090f1a 100%);
+  background: radial-gradient(
+      120% 105% at 100% 0%,
+      color-mix(in srgb, var(--accent) 24%, transparent) 0%,
+      transparent 62%
+    ), linear-gradient(180deg, #060911 0%, var(--surface-bg) 46%, #090f1a 100%);
 }
 
 :root[data-theme^="sleek"][data-mode="light"] body {
-  background:
-    radial-gradient(120% 110% at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 62%),
-    linear-gradient(180deg, #fbfdff 0%, var(--surface-bg) 52%, #f2f5fa 100%);
+  background: radial-gradient(
+      120% 110% at 100% 0%,
+      color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+      transparent 62%
+    ), linear-gradient(180deg, #fbfdff 0%, var(--surface-bg) 52%, #f2f5fa 100%);
 }
 
 :root[data-theme^="sleek"] .utility-pill,
@@ -73,9 +77,8 @@
 :root[data-theme^="sleek"] .utility-menu-panel {
   border-color: color-mix(in srgb, var(--border-subtle) 88%, transparent 12%);
   background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-pill) 4%);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset,
-    0 18px 32px color-mix(in srgb, var(--surface-bg) 54%, black 46%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset, 0 18px 32px
+    color-mix(in srgb, var(--surface-bg) 54%, black 46%);
 }
 
 :root[data-theme^="sleek"] .profile-header {
@@ -89,9 +92,8 @@
 :root[data-theme^="sleek"] .rich-link-card {
   border-color: color-mix(in srgb, var(--border-subtle) 45%, transparent 55%);
   background: color-mix(in srgb, var(--surface-card) 82%, var(--surface-panel) 18%);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset,
-    0 10px 24px color-mix(in srgb, var(--surface-bg) 62%, black 38%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset, 0 10px 24px
+    color-mix(in srgb, var(--surface-bg) 62%, black 38%);
 }
 
 :root[data-theme^="sleek"] .simple-link-card:hover,
@@ -99,9 +101,8 @@
 :root[data-theme^="sleek"] .theme-toggle:hover {
   transform: none;
   border-color: color-mix(in srgb, var(--border-strong) 60%, transparent 40%);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent),
-    0 14px 30px color-mix(in srgb, var(--surface-bg) 56%, black 44%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent), 0 14px 30px
+    color-mix(in srgb, var(--surface-bg) 56%, black 44%);
 }
 
 :root[data-theme^="sleek"] .utility-menu-button:hover {
@@ -127,9 +128,7 @@
 :root[data-theme^="sleek"] .rich-link-card:focus-visible,
 :root[data-theme^="sleek"] .theme-toggle:focus-visible {
   border-color: var(--accent-strong);
-  box-shadow:
-    var(--shadow-focus),
-    0 12px 26px color-mix(in srgb, var(--surface-bg) 58%, black 42%);
+  box-shadow: var(--shadow-focus), 0 12px 26px color-mix(in srgb, var(--surface-bg) 58%, black 42%);
 }
 
 :root[data-theme^="sleek"] .utility-menu-button:focus-visible {

@@ -53,7 +53,7 @@ const CONTENT_TYPE_EXTENSION_MAP = new Map<string, string>([
   ["image/png", "png"],
   ["image/svg+xml", "svg"],
   ["image/tiff", "tiff"],
-  ["image/webp", "webp"]
+  ["image/webp", "webp"],
 ]);
 
 const KNOWN_IMAGE_EXTENSIONS = new Set([
@@ -67,7 +67,7 @@ const KNOWN_IMAGE_EXTENSIONS = new Set([
   "svg",
   "tif",
   "tiff",
-  "webp"
+  "webp",
 ]);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -82,12 +82,16 @@ const isTruthy = (value: string | undefined): boolean => {
 };
 
 const normalizeRelativePath = (input: string): string =>
-  input.replaceAll("\\", "/").replace(/^\.?\//, "").replace(/^\/+/, "").trim();
+  input
+    .replaceAll("\\", "/")
+    .replace(/^\.?\//, "")
+    .replace(/^\/+/, "")
+    .trim();
 
 const parseArgs = (): AvatarSyncOptions => {
   const args = process.argv.slice(2);
 
-  const valueOf = (name: string, fallback: string): string => {
+  const getFlagValue = (name: string, fallback: string): string => {
     const index = args.indexOf(name);
     if (index < 0) {
       return fallback;
@@ -102,11 +106,11 @@ const parseArgs = (): AvatarSyncOptions => {
   };
 
   return {
-    profilePath: valueOf("--profile", DEFAULT_PROFILE_PATH),
-    manifestPath: valueOf("--manifest", DEFAULT_MANIFEST_PATH),
-    outputDir: valueOf("--output-dir", DEFAULT_OUTPUT_DIR),
-    fallbackPath: normalizeRelativePath(valueOf("--fallback", DEFAULT_FALLBACK_PATH)),
-    force: args.includes("--force") || isTruthy(process.env[FORCE_ENV])
+    profilePath: getFlagValue("--profile", DEFAULT_PROFILE_PATH),
+    manifestPath: getFlagValue("--manifest", DEFAULT_MANIFEST_PATH),
+    outputDir: getFlagValue("--output-dir", DEFAULT_OUTPUT_DIR),
+    fallbackPath: normalizeRelativePath(getFlagValue("--fallback", DEFAULT_FALLBACK_PATH)),
+    force: args.includes("--force") || isTruthy(process.env[FORCE_ENV]),
   };
 };
 
@@ -154,16 +158,12 @@ const readManifest = (manifestPath: string): ProfileAvatarManifest | null => {
     const manifest: ProfileAvatarManifest = {
       sourceUrl,
       resolvedPath,
-      status: ([
-        "fetched",
-        "not_modified",
-        "cache_fresh",
-        "cache_on_error",
-        "fallback_on_error"
-      ] as const).includes(status as AvatarSyncStatus)
+      status: (
+        ["fetched", "not_modified", "cache_fresh", "cache_on_error", "fallback_on_error"] as const
+      ).includes(status as AvatarSyncStatus)
         ? (status as AvatarSyncStatus)
         : "fallback_on_error",
-      updatedAt
+      updatedAt,
     };
 
     if (typeof payload.etag === "string" && payload.etag.trim().length > 0) {
@@ -217,7 +217,10 @@ const parseMaxAgeSeconds = (cacheControl: string | undefined): number | undefine
 
 const toIso = (value: number): string => new Date(value).toISOString();
 
-const computeExpiresAt = (cacheControl: string | undefined, dateHeader: string | undefined): string | undefined => {
+const computeExpiresAt = (
+  cacheControl: string | undefined,
+  dateHeader: string | undefined,
+): string | undefined => {
   const maxAgeSeconds = parseMaxAgeSeconds(cacheControl);
   if (maxAgeSeconds === undefined) {
     return undefined;
@@ -282,7 +285,7 @@ const extensionFromResolvedPath = (resolvedPath: string | undefined): string | u
 const resolveExtension = (
   contentType: string | null,
   sourceUrl: string,
-  previousResolvedPath: string | undefined
+  previousResolvedPath: string | undefined,
 ): string =>
   extensionFromContentType(contentType) ??
   extensionFromUrl(sourceUrl) ??
@@ -291,7 +294,9 @@ const resolveExtension = (
 
 const resolvedPathFromOutputDir = (outputDir: string, fileName: string): string => {
   const normalized = normalizeRelativePath(outputDir).replace(/\/+$/, "");
-  const relativeToPublic = normalized.startsWith("public/") ? normalized.slice("public/".length) : normalized;
+  const relativeToPublic = normalized.startsWith("public/")
+    ? normalized.slice("public/".length)
+    : normalized;
   return [relativeToPublic, fileName].filter(Boolean).join("/");
 };
 
@@ -332,13 +337,13 @@ const buildManifest = (
     cacheControl?: string;
     expiresAt?: string;
     warning?: string;
-  }
+  },
 ): ProfileAvatarManifest => {
   const manifest: ProfileAvatarManifest = {
     sourceUrl: base.sourceUrl,
     resolvedPath: normalizePublicPath(base.resolvedPath),
     status: base.status,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   if (detail.etag) {
@@ -373,7 +378,9 @@ const run = async () => {
 
   const sourceMatchesCache = !!sourceUrl && manifest?.sourceUrl === sourceUrl;
   const cachedAssetExists =
-    sourceMatchesCache && !!manifest && fs.existsSync(resolveManifestAssetAbsolutePath(manifest.resolvedPath));
+    sourceMatchesCache &&
+    !!manifest &&
+    fs.existsSync(resolveManifestAssetAbsolutePath(manifest.resolvedPath));
 
   const fallbackResolvedPath = normalizePublicPath(options.fallbackPath || DEFAULT_FALLBACK_PATH);
   const fallbackAbsolutePath = resolveManifestAssetAbsolutePath(fallbackResolvedPath);
@@ -392,14 +399,14 @@ const run = async () => {
         {
           sourceUrl: sourceUrlRaw,
           resolvedPath: fallbackResolvedPath,
-          status: "fallback_on_error"
+          status: "fallback_on_error",
         },
         {
           warning: fallbackExists
             ? warning
-            : `${warning} Fallback file is missing at '${fallbackAbsolutePath}'.`
-        }
-      )
+            : `${warning} Fallback file is missing at '${fallbackAbsolutePath}'.`,
+        },
+      ),
     );
     return;
   }
@@ -411,25 +418,25 @@ const run = async () => {
         {
           sourceUrl,
           resolvedPath: manifest.resolvedPath,
-          status: "cache_fresh"
+          status: "cache_fresh",
         },
         {
           etag: manifest.etag,
           lastModified: manifest.lastModified,
           cacheControl: manifest.cacheControl,
-          expiresAt: manifest.expiresAt
-        }
-      )
+          expiresAt: manifest.expiresAt,
+        },
+      ),
     );
     console.log(
-      `OpenLinks avatar sync: cache is fresh; using '${normalizePublicPath(manifest.resolvedPath)}' without network fetch.`
+      `OpenLinks avatar sync: cache is fresh; using '${normalizePublicPath(manifest.resolvedPath)}' without network fetch.`,
     );
     return;
   }
 
   const requestHeaders: Record<string, string> = {
     "user-agent": "open-links-avatar-sync/0.1",
-    accept: "image/*,*/*;q=0.8"
+    accept: "image/*,*/*;q=0.8",
   };
 
   if (!shouldForce && sourceMatchesCache && manifest) {
@@ -451,16 +458,16 @@ const run = async () => {
           {
             sourceUrl,
             resolvedPath: manifest.resolvedPath,
-            status: "cache_on_error"
+            status: "cache_on_error",
           },
           {
             etag: manifest.etag,
             lastModified: manifest.lastModified,
             cacheControl: manifest.cacheControl,
             expiresAt: manifest.expiresAt,
-            warning
-          }
-        )
+            warning,
+          },
+        ),
       );
       return;
     }
@@ -473,14 +480,14 @@ const run = async () => {
         {
           sourceUrl,
           resolvedPath: fallbackResolvedPath,
-          status: "fallback_on_error"
+          status: "fallback_on_error",
         },
         {
           warning: fallbackExists
             ? warning
-            : `${warning} Fallback file is missing at '${fallbackAbsolutePath}'.`
-        }
-      )
+            : `${warning} Fallback file is missing at '${fallbackAbsolutePath}'.`,
+        },
+      ),
     );
   };
 
@@ -492,7 +499,7 @@ const run = async () => {
       method: "GET",
       redirect: "follow",
       signal: controller.signal,
-      headers: requestHeaders
+      headers: requestHeaders,
     });
 
     if (response.status === 304) {
@@ -514,19 +521,19 @@ const run = async () => {
           {
             sourceUrl,
             resolvedPath: manifest.resolvedPath,
-            status: "not_modified"
+            status: "not_modified",
           },
           {
             etag: etag ?? undefined,
             lastModified: lastModified ?? undefined,
             cacheControl: cacheControl ?? undefined,
-            expiresAt
-          }
-        )
+            expiresAt,
+          },
+        ),
       );
 
       console.log(
-        `OpenLinks avatar sync: remote avatar not modified; using cached '${normalizePublicPath(manifest.resolvedPath)}'.`
+        `OpenLinks avatar sync: remote avatar not modified; using cached '${normalizePublicPath(manifest.resolvedPath)}'.`,
       );
       return;
     }
@@ -542,7 +549,11 @@ const run = async () => {
       return;
     }
 
-    const extension = resolveExtension(response.headers.get("content-type"), sourceUrl, manifest?.resolvedPath);
+    const extension = resolveExtension(
+      response.headers.get("content-type"),
+      sourceUrl,
+      manifest?.resolvedPath,
+    );
     const fileName = `${GENERATED_BASENAME}.${extension}`;
     const absoluteOutputDir = absolutePath(options.outputDir);
     const absoluteOutputFile = path.join(absoluteOutputDir, fileName);
@@ -563,15 +574,15 @@ const run = async () => {
         {
           sourceUrl,
           resolvedPath,
-          status: "fetched"
+          status: "fetched",
         },
         {
           etag,
           lastModified,
           cacheControl,
-          expiresAt
-        }
-      )
+          expiresAt,
+        },
+      ),
     );
 
     console.log(`OpenLinks avatar sync: fetched avatar -> '${normalizePublicPath(resolvedPath)}'.`);

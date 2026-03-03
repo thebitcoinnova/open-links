@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import type { AnySchema } from "ajv";
 import addFormats from "ajv-formats";
+import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 
 export type RichEnrichmentBlockerStatus = "blocked" | "monitoring" | "resolved";
 export type RichEnrichmentBlockerScope = "direct_fetch";
@@ -78,12 +78,14 @@ const readJsonFileOrThrow = (relativePath: string): unknown => {
   }
 };
 
-const normalizeRegistry = (raw: RichEnrichmentBlockersRegistry): RichEnrichmentBlockersRegistry => ({
+const normalizeRegistry = (
+  raw: RichEnrichmentBlockersRegistry,
+): RichEnrichmentBlockersRegistry => ({
   ...raw,
   blockers: raw.blockers.map((blocker) => ({
     ...blocker,
-    domains: blocker.domains.map((domain) => domain.trim().toLowerCase())
-  }))
+    domains: blocker.domains.map((domain) => domain.trim().toLowerCase()),
+  })),
 });
 
 export const loadRichEnrichmentBlockersRegistry = (options?: {
@@ -105,8 +107,8 @@ export const loadRichEnrichmentBlockersRegistry = (options?: {
       [
         `Invalid blockers registry at ${registryPath}.`,
         "Schema validation errors:",
-        formatSchemaErrors(validate.errors)
-      ].join("\n")
+        formatSchemaErrors(validate.errors),
+      ].join("\n"),
     );
   }
 
@@ -127,7 +129,7 @@ const matchesDomain = (host: string, domain: string, matchSubdomains: boolean): 
 export const resolveKnownBlockerMatch = (
   url: string,
   registry: RichEnrichmentBlockersRegistry,
-  scope: RichEnrichmentBlockerScope = "direct_fetch"
+  scope: RichEnrichmentBlockerScope = "direct_fetch",
 ): KnownBlockerMatch | null => {
   const host = toHost(url);
   if (!host) {
@@ -150,7 +152,7 @@ export const resolveKnownBlockerMatch = (
         bestMatch = {
           blocker,
           host,
-          matchedDomain: domain
+          matchedDomain: domain,
         };
       }
     }

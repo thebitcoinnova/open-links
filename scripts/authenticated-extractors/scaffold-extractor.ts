@@ -2,10 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { renderTemplateTokens } from "../shared/embedded-code-loader";
-import {
-  DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
-  loadAuthenticatedExtractorsPolicy
-} from "./policy";
+import { DEFAULT_AUTH_EXTRACTORS_POLICY_PATH, loadAuthenticatedExtractorsPolicy } from "./policy";
 
 interface CliArgs {
   id: string;
@@ -21,13 +18,14 @@ const PLUGIN_TEMPLATE_PATH =
 const DEFAULT_DOCS = [
   "docs/authenticated-rich-extractors.md",
   "docs/create-new-rich-content-extractor.md",
-  "docs/rich-metadata-fetch-blockers.md"
+  "docs/rich-metadata-fetch-blockers.md",
 ];
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
 
-const readText = (relativePath: string): string => fs.readFileSync(absolutePath(relativePath), "utf8");
+const readText = (relativePath: string): string =>
+  fs.readFileSync(absolutePath(relativePath), "utf8");
 
 const writeText = (relativePath: string, value: string): void => {
   const absolute = absolutePath(relativePath);
@@ -41,7 +39,7 @@ const readJson = <T>(relativePath: string): T =>
 const writeJson = (relativePath: string, payload: unknown): void =>
   writeText(relativePath, `${JSON.stringify(payload, null, 2)}\n`);
 
-const valueOf = (args: string[], flag: string): string | undefined => {
+const getFlagValue = (args: string[], flag: string): string | undefined => {
   const index = args.indexOf(flag);
   if (index < 0) {
     return undefined;
@@ -58,9 +56,9 @@ const valueOf = (args: string[], flag: string): string | undefined => {
 
 const parseArgs = (): CliArgs => {
   const args = process.argv.slice(2);
-  const id = valueOf(args, "--id");
-  const domainsRaw = valueOf(args, "--domains");
-  const summary = valueOf(args, "--summary");
+  const id = getFlagValue(args, "--id");
+  const domainsRaw = getFlagValue(args, "--domains");
+  const summary = getFlagValue(args, "--summary");
 
   if (!id) {
     throw new Error("Missing required flag --id <extractor-id>.");
@@ -82,13 +80,13 @@ const parseArgs = (): CliArgs => {
   }
 
   if (!summary) {
-    throw new Error("Missing required flag --summary \"<summary>\".");
+    throw new Error('Missing required flag --summary "<summary>".');
   }
 
   return {
     id,
     domains,
-    summary
+    summary,
   };
 };
 
@@ -102,7 +100,7 @@ const toCamelCase = (value: string): string => {
     .map((part, index) =>
       index === 0
         ? part.toLowerCase()
-        : `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`
+        : `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`,
     )
     .join("");
 };
@@ -111,7 +109,7 @@ const appendLineBetweenMarkers = (
   content: string,
   markerStart: string,
   markerEnd: string,
-  line: string
+  line: string,
 ): string => {
   const startIndex = content.indexOf(markerStart);
   const endIndex = content.indexOf(markerEnd);
@@ -142,9 +140,9 @@ const scaffoldPlugin = (args: CliArgs): { pluginPath: string; exportName: string
       __EXTRACTOR_ID__: args.id,
       __EXTRACTOR_VERSION__: `${new Date().toISOString().slice(0, 10)}.1`,
       __DEFAULT_SESSION__: `openlinks-${args.id}`,
-      __EXPORT_NAME__: exportName
+      __EXPORT_NAME__: exportName,
     },
-    `scaffold template '${PLUGIN_TEMPLATE_PATH}'`
+    `scaffold template '${PLUGIN_TEMPLATE_PATH}'`,
   );
 
   writeText(pluginPath, template);
@@ -160,13 +158,13 @@ const updateRegistry = (args: CliArgs, exportName: string): void => {
     registry,
     "// AUTH_EXTRACTOR_IMPORTS_START",
     "// AUTH_EXTRACTOR_IMPORTS_END",
-    importLine
+    importLine,
   );
   registry = appendLineBetweenMarkers(
     registry,
     "// AUTH_EXTRACTOR_MAP_START",
     "// AUTH_EXTRACTOR_MAP_END",
-    mapLine
+    mapLine,
   );
 
   writeText(REGISTRY_PATH, registry);
@@ -174,12 +172,12 @@ const updateRegistry = (args: CliArgs, exportName: string): void => {
 
 const updatePolicy = (args: CliArgs): void => {
   const policy = loadAuthenticatedExtractorsPolicy({
-    policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH
+    policyPath: DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
   });
 
   if (policy.extractors.some((extractor) => extractor.id === args.id)) {
     throw new Error(
-      `Policy already contains extractor id '${args.id}' in ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}.`
+      `Policy already contains extractor id '${args.id}' in ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}.`,
     );
   }
 
@@ -192,7 +190,7 @@ const updatePolicy = (args: CliArgs): void => {
     summary: args.summary,
     loginInstructions:
       "Complete site login and any MFA/challenge in the headed browser session; sync continues automatically after auth detection.",
-    docs: DEFAULT_DOCS
+    docs: DEFAULT_DOCS,
   });
 
   policy.updatedAt = new Date().toISOString();
@@ -203,11 +201,11 @@ const run = () => {
   const args = parseArgs();
 
   const existingPolicy = readJson<{ extractors?: Array<{ id?: string }> }>(
-    DEFAULT_AUTH_EXTRACTORS_POLICY_PATH
+    DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
   );
   if ((existingPolicy.extractors ?? []).some((extractor) => extractor.id === args.id)) {
     throw new Error(
-      `Extractor '${args.id}' already exists in ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}. Choose a different id.`
+      `Extractor '${args.id}' already exists in ${DEFAULT_AUTH_EXTRACTORS_POLICY_PATH}. Choose a different id.`,
     );
   }
 

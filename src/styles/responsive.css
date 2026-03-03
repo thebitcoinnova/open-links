@@ -150,7 +150,9 @@
     display: block;
   }
 
-  body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-description {
+  body
+    .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"]
+    .rich-card-description {
     display: block;
     margin-top: var(--space-1);
   }

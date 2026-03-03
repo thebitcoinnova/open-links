@@ -1,13 +1,12 @@
+import { type SpawnSyncReturns, spawnSync } from "node:child_process";
 import process from "node:process";
-import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 
 export const OPENLINKS_AUTH_SESSION_TIMEOUT_ENV = "OPENLINKS_AUTH_SESSION_TIMEOUT_MS";
 export const OPENLINKS_AUTH_SESSION_POLL_ENV = "OPENLINKS_AUTH_SESSION_POLL_MS";
 export const DEFAULT_AUTH_SESSION_TIMEOUT_MS = 600_000;
 export const DEFAULT_AUTH_SESSION_POLL_MS = 2_000;
 export const DEFAULT_AUTH_SESSION_NAME = "openlinks-auth-session";
-const DUMMY_ENCRYPTION_KEY =
-  "0000000000000000000000000000000000000000000000000000000000000000";
+const DUMMY_ENCRYPTION_KEY = "0000000000000000000000000000000000000000000000000000000000000000";
 
 export interface BrowserSessionConfig {
   session: string;
@@ -75,14 +74,14 @@ export const valueForFlag = (args: string[], flag: string): string | undefined =
 };
 
 export const resolveAuthWaitOverridesFromArgs = (
-  args: string[]
+  args: string[],
 ): { timeoutMs?: number; pollMs?: number } => {
   const timeoutMs = parseInteger(valueForFlag(args, "--auth-timeout-ms"));
   const pollMs = parseInteger(valueForFlag(args, "--poll-ms"));
 
   return {
     timeoutMs: timeoutMs && timeoutMs > 0 ? timeoutMs : undefined,
-    pollMs: pollMs && pollMs > 0 ? pollMs : undefined
+    pollMs: pollMs && pollMs > 0 ? pollMs : undefined,
   };
 };
 
@@ -95,13 +94,13 @@ export const resolveAuthWaitSettings = (input?: {
 
   const timeoutMs = Math.max(
     5_000,
-    input?.timeoutMs ?? envTimeout ?? DEFAULT_AUTH_SESSION_TIMEOUT_MS
+    input?.timeoutMs ?? envTimeout ?? DEFAULT_AUTH_SESSION_TIMEOUT_MS,
   );
   const pollMs = Math.max(250, input?.pollMs ?? envPoll ?? DEFAULT_AUTH_SESSION_POLL_MS);
 
   return {
     timeoutMs,
-    pollMs: Math.min(pollMs, timeoutMs)
+    pollMs: Math.min(pollMs, timeoutMs),
   };
 };
 
@@ -117,14 +116,14 @@ export const resolveBrowserSessionConfig = (input?: {
 
   if (input?.requireEncryptionKey && !hasValidKey) {
     throw new Error(
-      "AGENT_BROWSER_ENCRYPTION_KEY is required and must be a 64-character hex value for this workflow."
+      "AGENT_BROWSER_ENCRYPTION_KEY is required and must be a 64-character hex value for this workflow.",
     );
   }
 
   return {
     session,
     sessionName,
-    encryptionKey: hasValidKey ? providedKey : DUMMY_ENCRYPTION_KEY
+    encryptionKey: hasValidKey ? providedKey : DUMMY_ENCRYPTION_KEY,
   };
 };
 
@@ -136,14 +135,14 @@ export const runRawCommand = (
     env?: NodeJS.ProcessEnv;
     allowFailure?: boolean;
     maxBufferBytes?: number;
-  }
+  },
 ): SpawnSyncReturns<string> => {
   const maxBuffer = options?.maxBufferBytes ?? 20 * 1024 * 1024;
   const result = spawnSync(command, args, {
     cwd: options?.cwd ?? process.cwd(),
     env: options?.env ?? process.env,
     encoding: "utf8",
-    maxBuffer
+    maxBuffer,
   });
 
   const failed = result.status !== 0;
@@ -151,7 +150,9 @@ export const runRawCommand = (
     const stderr = (result.stderr ?? "").trim();
     const stdout = (result.stdout ?? "").trim();
     const details = [stderr, stdout].filter((value) => value.length > 0).join("\n");
-    throw new Error(`Command failed (${command} ${args.join(" ")}): ${details || `exit=${result.status}`}`);
+    throw new Error(
+      `Command failed (${command} ${args.join(" ")}): ${details || `exit=${result.status}`}`,
+    );
   }
 
   return result;
@@ -164,7 +165,7 @@ export const runAgentBrowserJson = <T = unknown>(
     allowFailure?: boolean;
     extraArgs?: string[];
     cwd?: string;
-  }
+  },
 ): AgentBrowserJsonResult<T> => {
   const command = [
     "--yes",
@@ -175,12 +176,12 @@ export const runAgentBrowserJson = <T = unknown>(
     "--session-name",
     config.sessionName,
     ...(options?.extraArgs ?? []),
-    ...args
+    ...args,
   ];
 
   const result = runRawCommand("npx", command, {
     allowFailure: true,
-    cwd: options?.cwd
+    cwd: options?.cwd,
   });
 
   const parsed = parseJsonMaybe(result.stdout) as AgentBrowserJsonResult<T>["response"];
@@ -191,11 +192,17 @@ export const runAgentBrowserJson = <T = unknown>(
 
   if (shouldFail && !options?.allowFailure) {
     const payloadError =
-      typeof response?.error === "string" && response.error.trim().length > 0 ? response.error.trim() : undefined;
+      typeof response?.error === "string" && response.error.trim().length > 0
+        ? response.error.trim()
+        : undefined;
     const stderr = (result.stderr ?? "").trim();
     const stdout = (result.stdout ?? "").trim();
-    const details = [payloadError, stderr, stdout].filter((value) => value && value.length > 0).join("\n");
-    throw new Error(`agent-browser command failed (${args.join(" ")}): ${details || `exit=${result.status}`}`);
+    const details = [payloadError, stderr, stdout]
+      .filter((value) => value && value.length > 0)
+      .join("\n");
+    throw new Error(
+      `agent-browser command failed (${args.join(" ")}): ${details || `exit=${result.status}`}`,
+    );
   }
 
   return {
@@ -203,6 +210,6 @@ export const runAgentBrowserJson = <T = unknown>(
     status: result.status,
     stdout: result.stdout ?? "",
     stderr: result.stderr ?? "",
-    response
+    response,
   };
 };

@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020Module, { type ErrorObject } from "ajv/dist/2020.js";
-import addFormatsModule from "ajv-formats";
 import type { RepoContentPayload, ValidationResult } from "@openlinks/studio-shared";
+import addFormatsModule from "ajv-formats";
+import Ajv2020Module, { type ErrorObject } from "ajv/dist/2020.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

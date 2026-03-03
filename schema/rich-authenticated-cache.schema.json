@@ -110,7 +110,12 @@
           },
           "diagnostics": {
             "type": "object",
-            "required": ["extractorVersion", "selectorProfile", "placeholderSignals", "capturedFromUrl"],
+            "required": [
+              "extractorVersion",
+              "selectorProfile",
+              "placeholderSignals",
+              "capturedFromUrl"
+            ],
             "properties": {
               "extractorVersion": {
                 "type": "string",

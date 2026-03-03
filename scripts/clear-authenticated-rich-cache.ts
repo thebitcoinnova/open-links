@@ -3,7 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import {
   DEFAULT_AUTH_CACHE_PATH,
-  loadAuthenticatedCacheRegistry
+  loadAuthenticatedCacheRegistry,
 } from "./authenticated-extractors/cache";
 import type { AuthenticatedCacheEntry } from "./authenticated-extractors/types";
 
@@ -35,7 +35,7 @@ const absolutePath = (value: string): string =>
 const parseArgs = (): CliArgs => {
   const args = process.argv.slice(2);
 
-  const valueOf = (name: string): string | undefined => {
+  const getFlagValue = (name: string): string | undefined => {
     const index = args.indexOf(name);
     if (index < 0) {
       return undefined;
@@ -51,12 +51,12 @@ const parseArgs = (): CliArgs => {
   };
 
   return {
-    cachePath: valueOf("--cache") ?? DEFAULT_AUTH_CACHE_PATH,
-    onlyLink: valueOf("--only-link"),
-    onlyExtractor: valueOf("--only-extractor"),
-    cacheKey: valueOf("--cache-key"),
+    cachePath: getFlagValue("--cache") ?? DEFAULT_AUTH_CACHE_PATH,
+    onlyLink: getFlagValue("--only-link"),
+    onlyExtractor: getFlagValue("--only-extractor"),
+    cacheKey: getFlagValue("--cache-key"),
     all: args.includes("--all"),
-    dryRun: args.includes("--dry-run")
+    dryRun: args.includes("--dry-run"),
   };
 };
 
@@ -74,7 +74,9 @@ const writeJson = (relativePath: string, payload: unknown) => {
 };
 
 const writeOutputArtifact = (payload: unknown): string => {
-  const absolute = absolutePath(path.join(OUTPUT_DIR_RELATIVE, `clear-summary-${fileTimestamp()}.json`));
+  const absolute = absolutePath(
+    path.join(OUTPUT_DIR_RELATIVE, `clear-summary-${fileTimestamp()}.json`),
+  );
   fs.mkdirSync(path.dirname(absolute), { recursive: true });
   fs.writeFileSync(absolute, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   return absolute;
@@ -94,7 +96,7 @@ const makeUsage = (): string =>
     "  --only-extractor <id>  Clear entries with this extractorId.",
     "  --cache-key <key>      Clear this exact cache key.",
     "  --all                  Clear all authenticated cache entries.",
-    "  --dry-run              Report changes without mutating files."
+    "  --dry-run              Report changes without mutating files.",
   ].join("\n");
 
 const isWithinPath = (targetPath: string, rootPath: string): boolean => {
@@ -110,23 +112,23 @@ const run = () => {
     throw new Error(
       [
         "No selector provided. Provide at least one selector (--only-link, --only-extractor, --cache-key) or use --all.",
-        makeUsage()
-      ].join("\n\n")
+        makeUsage(),
+      ].join("\n\n"),
     );
   }
 
   if (args.all && (args.onlyLink || args.onlyExtractor || args.cacheKey)) {
     console.warn(
-      "auth:rich:clear warning: --all was provided with selectors; selectors are ignored and all entries will be targeted."
+      "auth:rich:clear warning: --all was provided with selectors; selectors are ignored and all entries will be targeted.",
     );
   }
 
   const registry = loadAuthenticatedCacheRegistry({
-    cachePath: args.cachePath
+    cachePath: args.cachePath,
   });
   const records: CacheEntryRecord[] = Object.entries(registry.entries).map(([cacheKey, entry]) => ({
     cacheKey,
-    entry
+    entry,
   }));
 
   const matched = records.filter((record) => {
@@ -147,20 +149,24 @@ const run = () => {
 
   const matchedKeys = new Set(matched.map((record) => record.cacheKey));
   const remainingEntries = Object.fromEntries(
-    records.filter((record) => !matchedKeys.has(record.cacheKey)).map((record) => [record.cacheKey, record.entry])
+    records
+      .filter((record) => !matchedKeys.has(record.cacheKey))
+      .map((record) => [record.cacheKey, record.entry]),
   );
 
   const removedAssetPaths = new Set(
     matched
       .map((record) => record.entry.assets.image.path)
       .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-      .map((value) => normalizePublicPath(value))
+      .map((value) => normalizePublicPath(value)),
   );
   const stillReferencedAssetPaths = new Set(
-    Object.values(remainingEntries).map((entry) => normalizePublicPath(entry.assets.image.path))
+    Object.values(remainingEntries).map((entry) => normalizePublicPath(entry.assets.image.path)),
   );
 
-  const deletableAssetPaths = [...removedAssetPaths].filter((assetPath) => !stillReferencedAssetPaths.has(assetPath));
+  const deletableAssetPaths = [...removedAssetPaths].filter(
+    (assetPath) => !stillReferencedAssetPaths.has(assetPath),
+  );
 
   const removedAssets: string[] = [];
   const missingAssets: string[] = [];
@@ -188,7 +194,7 @@ const run = () => {
     writeJson(args.cachePath, {
       ...registry,
       updatedAt: nowIso(),
-      entries: remainingEntries
+      entries: remainingEntries,
     });
   }
 
@@ -201,13 +207,13 @@ const run = () => {
       all: args.all,
       onlyLink: args.onlyLink,
       onlyExtractor: args.onlyExtractor,
-      cacheKey: args.cacheKey
+      cacheKey: args.cacheKey,
     },
     totalEntriesBefore: records.length,
     matchedEntries: matched.map((record) => ({
       cacheKey: record.cacheKey,
       linkId: record.entry.linkId,
-      extractorId: record.entry.extractorId
+      extractorId: record.entry.extractorId,
     })),
     totalEntriesAfter: Object.keys(remainingEntries).length,
     removedAssets,
@@ -218,7 +224,7 @@ const run = () => {
         ? "No entries matched provided selectors."
         : args.dryRun
           ? "Dry run only. No files were changed."
-          : "Cache entries and unreferenced assets were removed."
+          : "Cache entries and unreferenced assets were removed.",
   };
   const artifactPath = writeOutputArtifact(artifact);
 
@@ -233,7 +239,9 @@ const run = () => {
     console.log(`Assets already missing: ${missingAssets.length}`);
   }
   if (skippedUnsafeAssets.length > 0) {
-    console.log(`Assets skipped (outside public/${AUTH_ASSET_ROOT_RELATIVE}/): ${skippedUnsafeAssets.length}`);
+    console.log(
+      `Assets skipped (outside public/${AUTH_ASSET_ROOT_RELATIVE}/): ${skippedUnsafeAssets.length}`,
+    );
   }
   console.log(`Artifact: ${path.relative(ROOT, artifactPath)}`);
 
@@ -248,7 +256,7 @@ const run = () => {
   }
 
   console.log(
-    "Next step: recapture cache with `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`) and commit updated manifest/assets."
+    "Next step: recapture cache with `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`) and commit updated manifest/assets.",
   );
 };
 

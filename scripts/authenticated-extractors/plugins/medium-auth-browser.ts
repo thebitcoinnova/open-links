@@ -6,7 +6,7 @@ import type {
   AuthenticatedExtractorExtractContext,
   AuthenticatedExtractorExtractResult,
   AuthenticatedExtractorPlugin,
-  AuthenticatedExtractorSessionContext
+  AuthenticatedExtractorSessionContext,
 } from "../types";
 
 const EXTRACTOR_ID = "medium-auth-browser";
@@ -65,7 +65,7 @@ const detectPlaceholderSignals = (input: {
     input.currentUrl ?? "",
     input.title ?? "",
     input.description ?? "",
-    input.rawBody ?? ""
+    input.rawBody ?? "",
   ]
     .join("\n")
     .toLowerCase();
@@ -77,7 +77,7 @@ const detectPlaceholderSignals = (input: {
     { label: "cloudflare_attention", pattern: /attention required.*cloudflare/i },
     { label: "security_check", pattern: /checking if the site connection is secure/i },
     { label: "access_denied", pattern: /access denied/i },
-    { label: "medium_signin_page", pattern: /medium\.com\/m\/signin|sign in to medium/i }
+    { label: "medium_signin_page", pattern: /medium\.com\/m\/signin|sign in to medium/i },
   ];
 
   for (const check of checks) {
@@ -94,7 +94,7 @@ const decodeEntities = (value: string): string =>
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", "\"")
+    .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
     .trim();
 
@@ -120,7 +120,7 @@ const resolveMediumFeedUrl = (sourceUrl: string): string => {
   const host = parsed.hostname.toLowerCase();
   if (!(host === "medium.com" || host.endsWith(".medium.com"))) {
     throw new Error(
-      `Medium extractor only supports medium.com hosts. Got '${parsed.hostname}' for '${sourceUrl}'.`
+      `Medium extractor only supports medium.com hosts. Got '${parsed.hostname}' for '${sourceUrl}'.`,
     );
   }
 
@@ -145,8 +145,8 @@ const fetchFeedXml = async (feedUrl: string): Promise<string> => {
       "user-agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
       accept: "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5",
-      "accept-language": "en-US,en;q=0.9"
-    }
+      "accept-language": "en-US,en;q=0.9",
+    },
   });
 
   if (!response.ok) {
@@ -157,7 +157,7 @@ const fetchFeedXml = async (feedUrl: string): Promise<string> => {
 };
 
 const extractFromFeed = async (
-  sourceUrl: string
+  sourceUrl: string,
 ): Promise<{
   title: string;
   description: string;
@@ -173,36 +173,34 @@ const extractFromFeed = async (
 
   const title = firstMatch(channel, [
     /<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/i,
-    /<title>([\s\S]*?)<\/title>/i
+    /<title>([\s\S]*?)<\/title>/i,
   ]);
   const description = firstMatch(channel, [
     /<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i,
-    /<description>([\s\S]*?)<\/description>/i
+    /<description>([\s\S]*?)<\/description>/i,
   ]);
   const imageUrl = firstMatch(channel, [/<image>[\s\S]*?<url>([\s\S]*?)<\/url>[\s\S]*?<\/image>/i]);
-  const currentUrl =
-    firstMatch(channel, [/<link>([\s\S]*?)<\/link>/i]) ??
-    sourceUrl;
+  const currentUrl = firstMatch(channel, [/<link>([\s\S]*?)<\/link>/i]) ?? sourceUrl;
 
   const placeholderSignals = detectPlaceholderSignals({
     currentUrl,
     title,
     description,
-    rawBody: xml
+    rawBody: xml,
   });
 
   if (!title || !description || !imageUrl) {
     throw new Error(
       [
         "Medium extractor could not capture required metadata from feed XML.",
-        `title=${title ? "present" : "missing"}, description=${description ? "present" : "missing"}, image=${imageUrl ? "present" : "missing"}.`
-      ].join(" ")
+        `title=${title ? "present" : "missing"}, description=${description ? "present" : "missing"}, image=${imageUrl ? "present" : "missing"}.`,
+      ].join(" "),
     );
   }
 
   if (placeholderSignals.length > 0) {
     throw new Error(
-      `Medium extractor captured placeholder/challenge content: ${placeholderSignals.join(", ")}.`
+      `Medium extractor captured placeholder/challenge content: ${placeholderSignals.join(", ")}.`,
     );
   }
 
@@ -212,29 +210,31 @@ const extractFromFeed = async (
     imageUrl,
     currentUrl,
     placeholderSignals,
-    feedUrl
+    feedUrl,
   };
 };
 
 const downloadImageAsset = async (
   sourceUrl: string,
-  context: AuthenticatedExtractorExtractContext
+  context: AuthenticatedExtractorExtractContext,
 ): Promise<{ path: string; bytes: number; contentType: string; sha256: string }> => {
   const headers: Record<string, string> = {
     "user-agent":
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-    "accept-language": "en-US,en;q=0.9"
+    "accept-language": "en-US,en;q=0.9",
   };
 
   const response = await fetch(sourceUrl, {
     method: "GET",
     redirect: "follow",
-    headers
+    headers,
   });
 
   if (!response.ok) {
-    throw new Error(`Medium extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`);
+    throw new Error(
+      `Medium extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`,
+    );
   }
 
   const bytes = Buffer.from(await response.arrayBuffer());
@@ -244,43 +244,49 @@ const downloadImageAsset = async (
 
   const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
   const extension =
-    extensionFromContentType(response.headers.get("content-type")) ?? extensionFromUrl(sourceUrl) ?? "jpg";
+    extensionFromContentType(response.headers.get("content-type")) ??
+    extensionFromUrl(sourceUrl) ??
+    "jpg";
   const fileName = `${sha256}.${extension}`;
 
   fs.mkdirSync(context.publicAssetDirAbsolute, { recursive: true });
   fs.writeFileSync(path.join(context.publicAssetDirAbsolute, fileName), bytes);
 
-  const relativePath = path.posix.join(context.publicAssetDirRelative.replaceAll("\\", "/"), fileName);
-  const contentType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream";
+  const relativePath = path.posix.join(
+    context.publicAssetDirRelative.replaceAll("\\", "/"),
+    fileName,
+  );
+  const contentType =
+    response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream";
 
   return {
     path: relativePath,
     bytes: bytes.byteLength,
     contentType,
-    sha256
+    sha256,
   };
 };
 
 const ensureSession = async (
-  context: AuthenticatedExtractorSessionContext
+  context: AuthenticatedExtractorSessionContext,
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
   try {
     const payload = await extractFromFeed(context.targetUrl);
     return {
       verified: true,
-      details: `verified feed=${payload.feedUrl}; title=${payload.title.slice(0, 80)}`
+      details: `verified feed=${payload.feedUrl}; title=${payload.title.slice(0, 80)}`,
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     return {
       verified: false,
-      details: message
+      details: message,
     };
   }
 };
 
 const extract = async (
-  context: AuthenticatedExtractorExtractContext
+  context: AuthenticatedExtractorExtractContext,
 ): Promise<AuthenticatedExtractorExtractResult> => {
   const payload = await extractFromFeed(context.sourceUrl);
   const imageAsset = await downloadImageAsset(payload.imageUrl, context);
@@ -291,7 +297,7 @@ const extract = async (
       title: payload.title,
       description: payload.description,
       image: imageAsset.path,
-      sourceLabel: resolveSourceLabel(context.sourceUrl)
+      sourceLabel: resolveSourceLabel(context.sourceUrl),
     },
     assets: {
       image: {
@@ -299,21 +305,21 @@ const extract = async (
         sourceUrl: payload.imageUrl,
         contentType: imageAsset.contentType,
         bytes: imageAsset.bytes,
-        sha256: imageAsset.sha256
-      }
+        sha256: imageAsset.sha256,
+      },
     },
     diagnostics: {
       extractorVersion: EXTRACTOR_VERSION,
       selectorProfile: SELECTOR_PROFILE,
       placeholderSignals: payload.placeholderSignals,
       capturedFromUrl: payload.currentUrl,
-      notes: [`cacheKey=${context.cacheKey}`, `feedUrl=${payload.feedUrl}`]
-    }
+      notes: [`cacheKey=${context.cacheKey}`, `feedUrl=${payload.feedUrl}`],
+    },
   };
 };
 
 export const mediumAuthBrowserExtractor: AuthenticatedExtractorPlugin = {
   id: EXTRACTOR_ID,
   ensureSession,
-  extract
+  extract,
 };

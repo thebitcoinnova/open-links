@@ -22,15 +22,7 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "status",
-          "method",
-          "domains",
-          "matchSubdomains",
-          "summary",
-          "docs"
-        ],
+        "required": ["id", "status", "method", "domains", "matchSubdomains", "summary", "docs"],
         "properties": {
           "id": {
             "type": "string",

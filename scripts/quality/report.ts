@@ -20,29 +20,33 @@ export const formatQualityHumanOutput = (result: QualityRunResult): string => {
   lines.push(`Errors: ${result.errors.length} | Warnings: ${result.warnings.length}`);
 
   lines.push("", "Domain status:");
-  result.domainResults.forEach((domain) => {
+  for (const domain of result.domainResults) {
     lines.push(`- ${domain.domain}: ${domain.status} — ${domain.summary}`);
-  });
+  }
 
   if (result.errors.length > 0) {
     lines.push("", "Errors:");
-    result.errors.forEach((issue) => lines.push(formatIssue("-", issue)));
+    for (const issue of result.errors) {
+      lines.push(formatIssue("-", issue));
+    }
   }
 
   if (result.warnings.length > 0) {
     lines.push("", "Warnings:");
-    result.warnings.forEach((issue) => lines.push(formatIssue("-", issue)));
+    for (const issue of result.warnings) {
+      lines.push(formatIssue("-", issue));
+    }
   }
 
   if (result.checklist.length > 0) {
     lines.push("", "Manual smoke checklist:");
-    result.checklist.forEach((check) => {
+    for (const check of result.checklist) {
       lines.push(`- [${check.status}] ${check.label}`);
       lines.push(`  Details: ${check.details}`);
       if (check.remediation) {
         lines.push(`  Fix: ${check.remediation}`);
       }
-    });
+    }
   }
 
   lines.push("", "Remediation checklist:");
@@ -50,25 +54,32 @@ export const formatQualityHumanOutput = (result: QualityRunResult): string => {
   if (domains.length === 0) {
     lines.push("- none");
   } else {
-    domains.forEach((domain) => {
+    for (const domain of domains) {
       lines.push(`- ${domain}`);
-      result.remediationChecklist[domain].forEach((entry) => lines.push(`  - ${entry}`));
-    });
+      for (const entry of result.remediationChecklist[domain]) {
+        lines.push(`  - ${entry}`);
+      }
+    }
   }
 
   return lines.join("\n");
 };
 
-export const formatQualityJsonOutput = (result: QualityRunResult): string => JSON.stringify(result, null, 2);
+export const formatQualityJsonOutput = (result: QualityRunResult): string =>
+  JSON.stringify(result, null, 2);
 
 export const writeQualityReport = (reportPath: string, result: QualityRunResult) => {
-  const absolutePath = path.isAbsolute(reportPath) ? reportPath : path.join(process.cwd(), reportPath);
+  const absolutePath = path.isAbsolute(reportPath)
+    ? reportPath
+    : path.join(process.cwd(), reportPath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, formatQualityJsonOutput(result));
 };
 
 export const writeQualitySummary = (summaryPath: string, result: QualityRunResult) => {
-  const absolutePath = path.isAbsolute(summaryPath) ? summaryPath : path.join(process.cwd(), summaryPath);
+  const absolutePath = path.isAbsolute(summaryPath)
+    ? summaryPath
+    : path.join(process.cwd(), summaryPath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, formatQualityHumanOutput(result));
 };

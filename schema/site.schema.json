@@ -50,10 +50,7 @@
       "additionalProperties": true
     },
     "typographyTokenValue": {
-      "oneOf": [
-        { "type": "string", "minLength": 1 },
-        { "type": "number" }
-      ]
+      "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "number" }]
     },
     "typographyOverrides": {
       "type": "object",

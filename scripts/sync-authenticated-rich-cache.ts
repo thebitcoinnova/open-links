@@ -5,17 +5,17 @@ import {
   DEFAULT_AUTH_CACHE_PATH,
   loadAuthenticatedCacheRegistry,
   resolveAuthenticatedCacheKey,
-  validateAuthenticatedCacheEntry
+  validateAuthenticatedCacheEntry,
 } from "./authenticated-extractors/cache";
 import {
   DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
   loadAuthenticatedExtractorsPolicy,
   resolveAuthenticatedExtractorById,
-  resolveAuthenticatedExtractorDomainMatch
+  resolveAuthenticatedExtractorDomainMatch,
 } from "./authenticated-extractors/policy";
 import {
   getAuthenticatedExtractorPlugin,
-  validateRegisteredExtractorsAgainstPolicy
+  validateRegisteredExtractorsAgainstPolicy,
 } from "./authenticated-extractors/registry";
 import type { AuthFlowSessionReport } from "./authenticated-extractors/types";
 
@@ -101,7 +101,7 @@ const writeOutputArtifact = (payload: unknown): string => {
 const parseArgs = (): CliArgs => {
   const args = process.argv.slice(2);
 
-  const valueOf = (name: string): string | undefined => {
+  const getFlagValue = (name: string): string | undefined => {
     const index = args.indexOf(name);
     if (index < 0) {
       return undefined;
@@ -117,14 +117,14 @@ const parseArgs = (): CliArgs => {
   };
 
   return {
-    linksPath: valueOf("--links") ?? DEFAULT_LINKS_PATH,
-    cachePath: valueOf("--cache") ?? DEFAULT_AUTH_CACHE_PATH,
-    policyPath: valueOf("--policy") ?? DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
-    onlyLink: valueOf("--only-link"),
-    onlyExtractor: valueOf("--only-extractor"),
+    linksPath: getFlagValue("--links") ?? DEFAULT_LINKS_PATH,
+    cachePath: getFlagValue("--cache") ?? DEFAULT_AUTH_CACHE_PATH,
+    policyPath: getFlagValue("--policy") ?? DEFAULT_AUTH_EXTRACTORS_POLICY_PATH,
+    onlyLink: getFlagValue("--only-link"),
+    onlyExtractor: getFlagValue("--only-extractor"),
     includeDisabled: args.includes("--include-disabled"),
     force: args.includes("--force"),
-    onlyMissing: args.includes("--only-missing")
+    onlyMissing: args.includes("--only-missing"),
   };
 };
 
@@ -133,10 +133,10 @@ const run = async () => {
   const args = parseArgs();
   const linksPayload = readJson<LinksPayload>(args.linksPath);
   const policy = loadAuthenticatedExtractorsPolicy({
-    policyPath: args.policyPath
+    policyPath: args.policyPath,
   });
   const cache = loadAuthenticatedCacheRegistry({
-    cachePath: args.cachePath
+    cachePath: args.cachePath,
   });
 
   const registryChecks = validateRegisteredExtractorsAgainstPolicy(policy);
@@ -145,8 +145,8 @@ const run = async () => {
       [
         "Authenticated extractor registry mismatch detected.",
         `Missing policy/handler alignment for: ${registryChecks.missingHandlers.join(", ")}`,
-        "Ensure each policy extractor id has a registered code handler and vice versa."
-      ].join(" ")
+        "Ensure each policy extractor id has a registered code handler and vice versa.",
+      ].join(" "),
     );
   }
 
@@ -182,7 +182,7 @@ const run = async () => {
     .map((link) => ({
       link,
       extractorId: link.enrichment?.authenticatedExtractor?.trim() ?? "",
-      cacheKey: resolveAuthenticatedCacheKey(link.enrichment?.authenticatedCacheKey, link.id)
+      cacheKey: resolveAuthenticatedCacheKey(link.enrichment?.authenticatedCacheKey, link.id),
     }));
 
   const warnings: string[] = [];
@@ -193,16 +193,20 @@ const run = async () => {
   const forcedRefreshCacheKeys: string[] = [];
   let cacheMutated = false;
   const onlyMissingSkipMode = args.onlyMissing && !args.force;
-  const runMode = args.onlyMissing ? (args.force ? "only-missing-force-refresh" : "only-missing") : "full";
+  const runMode = args.onlyMissing
+    ? args.force
+      ? "only-missing-force-refresh"
+      : "only-missing"
+    : "full";
 
   if (args.onlyMissing) {
     if (args.force) {
       console.log(
-        "Authenticated rich cache sync mode: --only-missing with --force (valid cache entries for selected links will be refreshed)."
+        "Authenticated rich cache sync mode: --only-missing with --force (valid cache entries for selected links will be refreshed).",
       );
     } else {
       console.log(
-        "Authenticated rich cache sync mode: --only-missing (idempotent; valid cache entries are skipped)."
+        "Authenticated rich cache sync mode: --only-missing (idempotent; valid cache entries are skipped).",
       );
     }
   } else {
@@ -220,7 +224,7 @@ const run = async () => {
       errors,
       sessionChecks,
       captures,
-      note: "No rich links matched authenticated extractor sync filters."
+      note: "No rich links matched authenticated extractor sync filters.",
     });
 
     console.log("No rich links matched authenticated extractor sync filters.");
@@ -239,7 +243,7 @@ const run = async () => {
         expectedExtractorId: candidate.extractorId,
         expectedUrl: candidate.link.url ?? "",
         warnAgeDays: DEFAULT_WARN_AGE_DAYS,
-        registry: cache
+        registry: cache,
       });
 
       const hasErrors = validation.issues.some((issue) => issue.level === "error");
@@ -252,7 +256,7 @@ const run = async () => {
           extractorId: candidate.extractorId,
           cacheKey: candidate.cacheKey,
           status: "skipped_valid_cache",
-          details: "Existing authenticated cache entry is valid; skipping due to --only-missing."
+          details: "Existing authenticated cache entry is valid; skipping due to --only-missing.",
         });
         continue;
       }
@@ -274,7 +278,9 @@ const run = async () => {
     byExtractor.set(candidate.extractorId, list);
   }
 
-  const publicAssetDirAbsolute = absolutePath(path.join("public", DEFAULT_PUBLIC_ASSET_DIR_RELATIVE));
+  const publicAssetDirAbsolute = absolutePath(
+    path.join("public", DEFAULT_PUBLIC_ASSET_DIR_RELATIVE),
+  );
   fs.mkdirSync(publicAssetDirAbsolute, { recursive: true });
 
   let capturedCount = 0;
@@ -284,14 +290,14 @@ const run = async () => {
     const policyExtractor = resolveAuthenticatedExtractorById(extractorId, policy);
     if (!policyExtractor) {
       errors.push(
-        `Link(s) configured extractor '${extractorId}' but no policy entry exists in ${args.policyPath}.`
+        `Link(s) configured extractor '${extractorId}' but no policy entry exists in ${args.policyPath}.`,
       );
       continue;
     }
 
     if (policyExtractor.status === "disabled") {
       errors.push(
-        `Extractor '${extractorId}' is disabled in policy. Enable it or remove links[].enrichment.authenticatedExtractor.`
+        `Extractor '${extractorId}' is disabled in policy. Enable it or remove links[].enrichment.authenticatedExtractor.`,
       );
       continue;
     }
@@ -304,12 +310,15 @@ const run = async () => {
 
     const errorCountBeforeDomainChecks = errors.length;
     for (const candidate of extractorCandidates) {
-      const match = resolveAuthenticatedExtractorDomainMatch(candidate.link.url ?? "", policyExtractor);
+      const match = resolveAuthenticatedExtractorDomainMatch(
+        candidate.link.url ?? "",
+        policyExtractor,
+      );
       if (!match) {
         errors.push(
           `Link '${candidate.link.id}' URL '${candidate.link.url}' does not match extractor '${extractorId}' policy domains (${policyExtractor.domains.join(
-            ", "
-          )}).`
+            ", ",
+          )}).`,
         );
       }
     }
@@ -321,19 +330,19 @@ const run = async () => {
     try {
       const sessionResult = await plugin.ensureSession({
         extractorId,
-        targetUrl: extractorCandidates[0]?.link.url ?? ""
+        targetUrl: extractorCandidates[0]?.link.url ?? "",
       });
 
       sessionChecks.push({
         extractorId,
         verified: sessionResult.verified,
         details: sessionResult.details,
-        report: sessionResult.report
+        report: sessionResult.report,
       });
 
       if (!sessionResult.verified) {
         errors.push(
-          `Extractor '${extractorId}' session verification failed. ${sessionResult.details ?? "No details."}`
+          `Extractor '${extractorId}' session verification failed. ${sessionResult.details ?? "No details."}`,
         );
         continue;
       }
@@ -343,12 +352,14 @@ const run = async () => {
       sessionChecks.push({
         extractorId,
         verified: false,
-        details: message
+        details: message,
       });
       continue;
     }
 
-    console.log(`Extractor '${extractorId}' session verified. Processing ${extractorCandidates.length} link(s)...`);
+    console.log(
+      `Extractor '${extractorId}' session verified. Processing ${extractorCandidates.length} link(s)...`,
+    );
 
     for (const candidate of extractorCandidates) {
       try {
@@ -359,7 +370,7 @@ const run = async () => {
           sourceUrl: candidate.link.url ?? "",
           force: args.force,
           publicAssetDirAbsolute,
-          publicAssetDirRelative: DEFAULT_PUBLIC_ASSET_DIR_RELATIVE
+          publicAssetDirRelative: DEFAULT_PUBLIC_ASSET_DIR_RELATIVE,
         });
 
         cache.entries[candidate.cacheKey] = {
@@ -369,7 +380,7 @@ const run = async () => {
           capturedAt: result.capturedAt,
           metadata: result.metadata,
           assets: result.assets,
-          diagnostics: result.diagnostics
+          diagnostics: result.diagnostics,
         };
 
         cacheMutated = true;
@@ -380,18 +391,20 @@ const run = async () => {
           extractorId,
           cacheKey: candidate.cacheKey,
           status: "captured",
-          details: `Captured metadata and assets (${result.metadata.image}).`
+          details: `Captured metadata and assets (${result.metadata.image}).`,
         });
         console.log(`- Captured '${candidate.link.id}' -> cacheKey='${candidate.cacheKey}'`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        errors.push(`Extractor '${extractorId}' failed for link '${candidate.link.id}': ${message}`);
+        errors.push(
+          `Extractor '${extractorId}' failed for link '${candidate.link.id}': ${message}`,
+        );
         captures.push({
           linkId: candidate.link.id,
           extractorId,
           cacheKey: candidate.cacheKey,
           status: "error",
-          details: message
+          details: message,
         });
       }
     }
@@ -411,12 +424,12 @@ const run = async () => {
       linkId: candidate.link.id,
       url: candidate.link.url,
       extractorId: candidate.extractorId,
-      cacheKey: candidate.cacheKey
+      cacheKey: candidate.cacheKey,
     })),
     processedLinks: selectedCandidates.map((candidate) => ({
       linkId: candidate.link.id,
       extractorId: candidate.extractorId,
-      cacheKey: candidate.cacheKey
+      cacheKey: candidate.cacheKey,
     })),
     skippedValidCacheKeys,
     forcedRefreshCacheKeys,
@@ -426,7 +439,7 @@ const run = async () => {
     sessionChecks,
     captures,
     warnings,
-    errors
+    errors,
   };
 
   const artifactPath = writeOutputArtifact(artifactPayload);
@@ -464,17 +477,19 @@ const run = async () => {
     }
 
     console.error(
-      "Remediation: resolve errors, run `npm run setup:rich-auth` (or `npm run auth:rich:sync`), then commit data/cache/rich-authenticated-cache.json and public/cache/rich-authenticated/* assets."
+      "Remediation: resolve errors, run `npm run setup:rich-auth` (or `npm run auth:rich:sync`), then commit data/cache/rich-authenticated-cache.json and public/cache/rich-authenticated/* assets.",
     );
     process.exit(1);
   }
 
   if (args.onlyMissing && selectedCandidates.length === 0) {
-    console.log("No missing/invalid authenticated cache entries detected. Setup is already complete and idempotent.");
+    console.log(
+      "No missing/invalid authenticated cache entries detected. Setup is already complete and idempotent.",
+    );
   }
 
   console.log(
-    "Next step: commit updated cache manifest/assets (if changed), then run npm run enrich:rich and npm run build."
+    "Next step: commit updated cache manifest/assets (if changed), then run npm run enrich:rich and npm run build.",
   );
 };
 

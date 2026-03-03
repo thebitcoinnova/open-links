@@ -1,1 +1,1 @@
-document.documentElement.outerHTML
+document.documentElement.outerHTML;

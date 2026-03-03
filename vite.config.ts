@@ -23,7 +23,6 @@ const resolveBasePath = (): string => {
       return "/";
     case "auto":
       return process.env.GITHUB_ACTIONS ? projectBasePath : "/";
-    case "project":
     default:
       return projectBasePath;
   }
@@ -35,10 +34,10 @@ const buildTimestamp = process.env.OPENLINKS_BUILD_TIMESTAMP ?? new Date().toISO
 export default defineConfig({
   plugins: [solidPlugin()],
   build: {
-    target: "esnext"
+    target: "esnext",
   },
   define: {
-    __OPENLINKS_BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp)
+    __OPENLINKS_BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp),
   },
-  base
+  base,
 });

@@ -37,13 +37,20 @@ export const StyledPaymentQr = (props: StyledPaymentQrProps) => {
       foregroundColor: props.foregroundColor,
       backgroundColor: props.backgroundColor,
       logoUrl: props.logoUrl,
-      logoSize: props.logoSize
+      logoSize: props.logoSize,
     });
 
     return cleanup;
   });
 
-  return <div ref={container} class={props.class} role="img" aria-label={props.ariaLabel ?? "Payment QR code"} />;
+  return (
+    <div
+      ref={container}
+      class={props.class}
+      role="img"
+      aria-label={props.ariaLabel ?? "Payment QR code"}
+    />
+  );
 };
 
 export default StyledPaymentQr;

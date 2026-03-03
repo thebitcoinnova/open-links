@@ -19,6 +19,21 @@ This is orchestration guidance for agents. It does not replace runtime policy so
 4. Do not silently use `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 5. Use bypass only when the user explicitly asks for an emergency temporary override.
 
+## Pre-Commit Requirements (Mandatory)
+
+Before creating any commit in this repository:
+
+1. Fix all lint and typecheck issues (no outstanding diagnostics).
+2. Run all lint/typecheck commands:
+   - `bun run biome:check`
+   - `bun run studio:lint`
+   - `bun run typecheck`
+   - `bun run studio:typecheck`
+3. Run all tests:
+   - `bun run --filter @openlinks/studio-api test`
+   - `bun run studio:test:integration`
+4. Do not commit while any command above is failing.
+
 ## Failure Trigger Matrix
 
 | Trigger reason | Expected default behavior | First diagnostic commands | Agent first action |

@@ -12,7 +12,8 @@ export interface StyledQrCodeOptions {
   margin?: number;
 }
 
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 
 const styleToDotType = (style: PaymentQrStyle): DotType => {
   switch (style) {
@@ -20,7 +21,6 @@ const styleToDotType = (style: PaymentQrStyle): DotType => {
       return "dots";
     case "rounded":
       return "rounded";
-    case "square":
     default:
       return "square";
   }
@@ -38,29 +38,29 @@ const toQrOptions = (options: StyledQrCodeOptions): Options => {
     data: options.payload,
     image: options.logoUrl,
     qrOptions: {
-      errorCorrectionLevel: "H"
+      errorCorrectionLevel: "H",
     },
     imageOptions: {
       hideBackgroundDots: true,
       imageSize: resolvedLogoSize,
       margin: 2,
-      crossOrigin: "anonymous"
+      crossOrigin: "anonymous",
     },
     dotsOptions: {
       type: styleToDotType(resolvedStyle),
-      color: options.foregroundColor ?? "#111827"
+      color: options.foregroundColor ?? "#111827",
     },
     cornersSquareOptions: {
       type: resolvedStyle === "dots" ? "extra-rounded" : "square",
-      color: options.foregroundColor ?? "#111827"
+      color: options.foregroundColor ?? "#111827",
     },
     cornersDotOptions: {
       type: resolvedStyle === "dots" ? "dot" : "square",
-      color: options.foregroundColor ?? "#111827"
+      color: options.foregroundColor ?? "#111827",
     },
     backgroundOptions: {
-      color: options.backgroundColor ?? "#FFFFFF"
-    }
+      color: options.backgroundColor ?? "#FFFFFF",
+    },
   };
 };
 
@@ -69,7 +69,7 @@ export const createStyledQrCode = (options: StyledQrCodeOptions): QRCodeStyling 
 
 export const mountStyledQrCode = (
   container: HTMLElement,
-  options: StyledQrCodeOptions
+  options: StyledQrCodeOptions,
 ): (() => void) => {
   const qrCode = createStyledQrCode(options);
   container.textContent = "";

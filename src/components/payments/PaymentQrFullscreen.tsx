@@ -1,4 +1,4 @@
-import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import type { PaymentQrStyle } from "../../lib/payments/types";
 import StyledPaymentQr from "./StyledPaymentQr";
 
@@ -18,7 +18,7 @@ const focusableSelector =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export const PaymentQrFullscreen = (props: PaymentQrFullscreenProps) => {
-  let dialogRef: HTMLDivElement | undefined;
+  let dialogRef: HTMLDialogElement | undefined;
   let closeButtonRef: HTMLButtonElement | undefined;
   const [qrSize, setQrSize] = createSignal(420);
 
@@ -57,8 +57,11 @@ export const PaymentQrFullscreen = (props: PaymentQrFullscreenProps) => {
         return;
       }
 
-      const focusable = Array.from(dialogRef.querySelectorAll<HTMLElement>(focusableSelector)).filter(
-        (element) => !element.hasAttribute("disabled") && element.getAttribute("aria-hidden") !== "true"
+      const focusable = Array.from(
+        dialogRef.querySelectorAll<HTMLElement>(focusableSelector),
+      ).filter(
+        (element) =>
+          !element.hasAttribute("disabled") && element.getAttribute("aria-hidden") !== "true",
       );
 
       if (focusable.length === 0) {
@@ -93,7 +96,7 @@ export const PaymentQrFullscreen = (props: PaymentQrFullscreenProps) => {
     };
   });
 
-  const handleBackdropClick = (event: MouseEvent) => {
+  const handleBackdropPointerDown = (event: PointerEvent) => {
     if (event.target === event.currentTarget) {
       props.onClose();
     }
@@ -101,17 +104,22 @@ export const PaymentQrFullscreen = (props: PaymentQrFullscreenProps) => {
 
   return (
     <Show when={props.open}>
-      <div class="payment-qr-fullscreen-backdrop" role="presentation" onClick={handleBackdropClick}>
-        <div
+      <div class="payment-qr-fullscreen-backdrop" onPointerDown={handleBackdropPointerDown}>
+        <dialog
           class="payment-qr-fullscreen-dialog"
-          role="dialog"
           aria-modal="true"
           aria-label={`${props.railLabel} QR code`}
           ref={dialogRef}
+          open
         >
           <div class="payment-qr-fullscreen-header">
             <strong>{props.railLabel}</strong>
-            <button type="button" class="payment-qr-close-button" onClick={props.onClose} ref={closeButtonRef}>
+            <button
+              type="button"
+              class="payment-qr-close-button"
+              onClick={props.onClose}
+              ref={closeButtonRef}
+            >
               Close
             </button>
           </div>
@@ -127,7 +135,7 @@ export const PaymentQrFullscreen = (props: PaymentQrFullscreenProps) => {
             class="payment-qr-fullscreen-canvas"
             ariaLabel={`${props.railLabel} payment QR code`}
           />
-        </div>
+        </dialog>
       </div>
     </Show>
   );

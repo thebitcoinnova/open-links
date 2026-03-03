@@ -1,8 +1,4 @@
-import type {
-  LinkPaymentConfig,
-  PaymentRail,
-  PaymentRailType
-} from "./types";
+import type { LinkPaymentConfig, PaymentRail, PaymentRailType } from "./types";
 
 export interface ResolvedPaymentRailAction {
   rail: PaymentRail;
@@ -18,7 +14,8 @@ export interface ResolvedPaymentRailAction {
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
 
-const trimString = (value: unknown): string | undefined => (isNonEmptyString(value) ? value.trim() : undefined);
+const trimString = (value: unknown): string | undefined =>
+  isNonEmptyString(value) ? value.trim() : undefined;
 const trimNumberish = (value: unknown): string | undefined => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return String(value);
@@ -84,7 +81,7 @@ const railTypeLabelMap: Record<PaymentRailType, string> = {
   lightning: "Lightning",
   ethereum: "Ethereum",
   solana: "Solana",
-  "custom-crypto": "Crypto"
+  "custom-crypto": "Crypto",
 };
 
 const railIconAliasMap: Record<PaymentRailType, string> = {
@@ -98,12 +95,13 @@ const railIconAliasMap: Record<PaymentRailType, string> = {
   lightning: "lightning",
   ethereum: "ethereum",
   solana: "solana",
-  "custom-crypto": "wallet"
+  "custom-crypto": "wallet",
 };
 
 export const paymentRailLabel = (railType: PaymentRailType): string => railTypeLabelMap[railType];
 
-export const paymentRailIconAlias = (railType: PaymentRailType): string => railIconAliasMap[railType];
+export const paymentRailIconAlias = (railType: PaymentRailType): string =>
+  railIconAliasMap[railType];
 
 const resolveWebRailHref = (rail: PaymentRail): string | undefined =>
   trimString(rail.url) ?? trimString(rail.uri);
@@ -261,11 +259,7 @@ export const resolvePaymentRailAction = (rail: PaymentRail): ResolvedPaymentRail
   const qrPayload = qrPayloadFromConfig ?? href;
 
   const explicitCopy =
-    trimString(rail.address) ??
-    trimString(rail.uri) ??
-    trimString(rail.url) ??
-    qrPayload ??
-    href;
+    trimString(rail.address) ?? trimString(rail.uri) ?? trimString(rail.url) ?? qrPayload ?? href;
 
   return {
     rail,
@@ -275,11 +269,13 @@ export const resolvePaymentRailAction = (rail: PaymentRail): ResolvedPaymentRail
     qrPayload,
     copyValue: explicitCopy,
     displayValue,
-    openInNewTab: Boolean(href && (isHttpLike(href) || !hasExplicitScheme(href)))
+    openInNewTab: Boolean(href && (isHttpLike(href) || !hasExplicitScheme(href))),
   };
 };
 
-export const resolveEnabledPaymentRails = (payment: LinkPaymentConfig | undefined): PaymentRail[] => {
+export const resolveEnabledPaymentRails = (
+  payment: LinkPaymentConfig | undefined,
+): PaymentRail[] => {
   if (!Array.isArray(payment?.rails)) {
     return [];
   }
@@ -301,7 +297,9 @@ export const resolveEnabledPaymentRails = (payment: LinkPaymentConfig | undefine
   });
 };
 
-export const resolvePrimaryPaymentRail = (payment: LinkPaymentConfig | undefined): PaymentRail | undefined => {
+export const resolvePrimaryPaymentRail = (
+  payment: LinkPaymentConfig | undefined,
+): PaymentRail | undefined => {
   const enabledRails = resolveEnabledPaymentRails(payment);
   if (enabledRails.length === 0) {
     return undefined;
@@ -318,7 +316,9 @@ export const resolvePrimaryPaymentRail = (payment: LinkPaymentConfig | undefined
   return enabledRails[0];
 };
 
-export const resolvePrimaryPaymentHref = (payment: LinkPaymentConfig | undefined): string | undefined => {
+export const resolvePrimaryPaymentHref = (
+  payment: LinkPaymentConfig | undefined,
+): string | undefined => {
   const primaryRail = resolvePrimaryPaymentRail(payment);
   if (!primaryRail) {
     return undefined;

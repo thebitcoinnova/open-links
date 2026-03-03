@@ -5,7 +5,7 @@ import type {
   PerformanceProfileBudget,
   QualityDomainResult,
   QualityIssue,
-  QualitySiteInput
+  QualitySiteInput,
 } from "./types";
 
 interface RunPerformanceChecksInput {
@@ -20,29 +20,32 @@ const DEFAULT_BUDGETS: Record<string, Record<string, BudgetThreshold>> = {
     jsBytes: { warn: 200000, fail: 280000 },
     cssBytes: { warn: 45000, fail: 70000 },
     htmlBytes: { warn: 18000, fail: 26000 },
-    largestAssetBytes: { warn: 160000, fail: 220000 }
+    largestAssetBytes: { warn: 160000, fail: 220000 },
   },
   desktop: {
     totalBytes: { warn: 340000, fail: 440000 },
     jsBytes: { warn: 240000, fail: 320000 },
     cssBytes: { warn: 55000, fail: 80000 },
     htmlBytes: { warn: 22000, fail: 32000 },
-    largestAssetBytes: { warn: 210000, fail: 290000 }
-  }
+    largestAssetBytes: { warn: 210000, fail: 290000 },
+  },
 };
 
 const DEFAULT_MINIMUM_SCORE: BudgetThreshold = {
   warn: 90,
-  fail: 75
+  fail: 75,
 };
 
 const BAKED_IMAGE_WARN_BYTES = 5_000_000;
 
-const normalizeThreshold = (value: BudgetThreshold | number | undefined, fallback: BudgetThreshold) => {
+const normalizeThreshold = (
+  value: BudgetThreshold | number | undefined,
+  fallback: BudgetThreshold,
+) => {
   if (typeof value === "number") {
     return {
       warn: value,
-      fail: Math.round(value * 1.3)
+      fail: Math.round(value * 1.3),
     };
   }
 
@@ -74,7 +77,7 @@ const collectBundleMetrics = (rootDir: string) => {
   let largestAssetBytes = 0;
   let bakedImageBytes = 0;
 
-  assetFiles.forEach((assetPath) => {
+  for (const assetPath of assetFiles) {
     const stats = fs.statSync(assetPath);
     const bytes = stats.size;
     totalAssetBytes += bytes;
@@ -87,16 +90,18 @@ const collectBundleMetrics = (rootDir: string) => {
     if (assetPath.endsWith(".css")) {
       cssBytes += bytes;
     }
-  });
+  }
 
   if (fs.existsSync(generatedImagesDir)) {
-    const generatedFiles = fs.readdirSync(generatedImagesDir).map((name) => path.join(generatedImagesDir, name));
-    generatedFiles.forEach((generatedFilePath) => {
+    const generatedFiles = fs
+      .readdirSync(generatedImagesDir)
+      .map((name) => path.join(generatedImagesDir, name));
+    for (const generatedFilePath of generatedFiles) {
       if (!fs.statSync(generatedFilePath).isFile()) {
-        return;
+        continue;
       }
       bakedImageBytes += fs.statSync(generatedFilePath).size;
-    });
+    }
   }
 
   return {
@@ -105,7 +110,7 @@ const collectBundleMetrics = (rootDir: string) => {
     jsBytes,
     cssBytes,
     largestAssetBytes,
-    bakedImageBytes
+    bakedImageBytes,
   };
 };
 
@@ -138,7 +143,7 @@ const evaluateProfile = (
     cssBytes: number;
     largestAssetBytes: number;
     bakedImageBytes: number;
-  }
+  },
 ) => {
   const issueStartIndex = issues.length;
   const defaults = DEFAULT_BUDGETS[profileName];
@@ -147,10 +152,13 @@ const evaluateProfile = (
     htmlBytes: normalizeThreshold(profileBudget?.htmlBytes, defaults.htmlBytes),
     jsBytes: normalizeThreshold(profileBudget?.jsBytes, defaults.jsBytes),
     cssBytes: normalizeThreshold(profileBudget?.cssBytes, defaults.cssBytes),
-    largestAssetBytes: normalizeThreshold(profileBudget?.largestAssetBytes, defaults.largestAssetBytes)
+    largestAssetBytes: normalizeThreshold(
+      profileBudget?.largestAssetBytes,
+      defaults.largestAssetBytes,
+    ),
   };
 
-  (Object.keys(thresholds) as Array<keyof typeof thresholds>).forEach((metric) => {
+  for (const metric of Object.keys(thresholds) as Array<keyof typeof thresholds>) {
     const actual = metrics[metric];
     const threshold = thresholds[metric];
 
@@ -164,7 +172,7 @@ const evaluateProfile = (
         actual,
         expected: threshold.fail,
         message: `${profileName} ${metricLabel(metric)} exceeded fail budget (${actual} > ${threshold.fail}).`,
-        remediation: `Reduce ${metricLabel(metric)} for '${profileName}' profile or adjust quality.performance.profiles.${profileName}.${metric}.`
+        remediation: `Reduce ${metricLabel(metric)} for '${profileName}' profile or adjust quality.performance.profiles.${profileName}.${metric}.`,
       });
       return;
     }
@@ -179,16 +187,21 @@ const evaluateProfile = (
         actual,
         expected: threshold.warn,
         message: `${profileName} ${metricLabel(metric)} exceeded warn budget (${actual} > ${threshold.warn}).`,
-        remediation: `Optimize ${metricLabel(metric)} or raise warning threshold in quality.performance.profiles.${profileName}.${metric}.`
+        remediation: `Optimize ${metricLabel(metric)} or raise warning threshold in quality.performance.profiles.${profileName}.${metric}.`,
       });
     }
-  });
+  }
 
-  const profileIssues = issues.slice(issueStartIndex).filter((issue) => issue.scope === profileName);
+  const profileIssues = issues
+    .slice(issueStartIndex)
+    .filter((issue) => issue.scope === profileName);
   const errorCount = profileIssues.filter((issue) => issue.level === "error").length;
   const warningCount = profileIssues.filter((issue) => issue.level === "warning").length;
   const score = Math.max(0, 100 - errorCount * 18 - warningCount * 7);
-  const minimumScoreThreshold = normalizeThreshold(profileBudget?.minimumScore, DEFAULT_MINIMUM_SCORE);
+  const minimumScoreThreshold = normalizeThreshold(
+    profileBudget?.minimumScore,
+    DEFAULT_MINIMUM_SCORE,
+  );
 
   if (score < minimumScoreThreshold.fail) {
     issues.push({
@@ -200,7 +213,7 @@ const evaluateProfile = (
       actual: score,
       expected: minimumScoreThreshold.fail,
       message: `${profileName} aggregate performance score (${score}) is below fail threshold (${minimumScoreThreshold.fail}).`,
-      remediation: `Reduce performance-budget violations or lower quality.performance.profiles.${profileName}.minimumScore thresholds.`
+      remediation: `Reduce performance-budget violations or lower quality.performance.profiles.${profileName}.minimumScore thresholds.`,
     });
     return;
   }
@@ -215,7 +228,7 @@ const evaluateProfile = (
       actual: score,
       expected: minimumScoreThreshold.warn,
       message: `${profileName} aggregate performance score (${score}) is below warning threshold (${minimumScoreThreshold.warn}).`,
-      remediation: `Improve performance metrics or tune quality.performance.profiles.${profileName}.minimumScore thresholds.`
+      remediation: `Improve performance metrics or tune quality.performance.profiles.${profileName}.minimumScore thresholds.`,
     });
   }
 };
@@ -223,7 +236,7 @@ const evaluateProfile = (
 export const runPerformanceChecks = ({
   rootDir,
   strict,
-  site
+  site,
 }: RunPerformanceChecksInput): QualityDomainResult => {
   const issues: QualityIssue[] = [];
   const metrics = collectBundleMetrics(rootDir);
@@ -234,14 +247,15 @@ export const runPerformanceChecks = ({
       level: "error",
       code: "PERF_DIST_MISSING",
       message: "dist/index.html is missing. Performance checks require a production build output.",
-      remediation: "Run `npm run build` before `npm run quality:check` or ensure CI required lane builds before quality checks."
+      remediation:
+        "Run `npm run build` before `npm run quality:check` or ensure CI required lane builds before quality checks.",
     });
 
     return {
       domain: "performance",
       status: "fail",
       summary: "Performance checks failed because build artifacts are missing.",
-      issues
+      issues,
     };
   }
 
@@ -262,7 +276,7 @@ export const runPerformanceChecks = ({
       expected: BAKED_IMAGE_WARN_BYTES,
       message: `Baked image bytes in dist/generated/images exceeded warning threshold (${metrics.bakedImageBytes} > ${BAKED_IMAGE_WARN_BYTES}).`,
       remediation:
-        "Optimize remote image sources or reduce baked image count/size. This warning is non-blocking and does not escalate in strict mode."
+        "Optimize remote image sources or reduce baked image count/size. This warning is non-blocking and does not escalate in strict mode.",
     });
   }
 
@@ -279,6 +293,6 @@ export const runPerformanceChecks = ({
       : hasWarning
         ? `Performance checks passed with warnings for routes: ${routeSummary}.`
         : `Performance checks passed for routes: ${routeSummary}.`,
-    issues
+    issues,
   };
 };

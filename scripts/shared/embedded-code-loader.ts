@@ -42,7 +42,7 @@ export const loadEmbeddedCode = (relativePath: string): string => {
 
   if (!fs.existsSync(absolutePath)) {
     throw new Error(
-      `Embedded code file not found: scripts/embedded-code/${key}. Check path '${relativePath}'.`
+      `Embedded code file not found: scripts/embedded-code/${key}. Check path '${relativePath}'.`,
     );
   }
 
@@ -53,15 +53,19 @@ export const loadEmbeddedCode = (relativePath: string): string => {
 
 export const renderEmbeddedCode = (
   relativePath: string,
-  replacements: Record<string, string>
+  replacements: Record<string, string>,
 ): string => {
-  return renderTemplateTokens(loadEmbeddedCode(relativePath), replacements, `embedded code '${relativePath}'`);
+  return renderTemplateTokens(
+    loadEmbeddedCode(relativePath),
+    replacements,
+    `embedded code '${relativePath}'`,
+  );
 };
 
 export const renderTemplateTokens = (
   template: string,
   replacements: Record<string, string>,
-  sourceLabel = "template"
+  sourceLabel = "template",
 ): string => {
   let rendered = template;
 

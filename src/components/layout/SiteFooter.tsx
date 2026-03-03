@@ -8,14 +8,17 @@ export interface SiteFooterProps {
 
 const localFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
-  timeStyle: "short"
+  timeStyle: "short",
 });
 
 export const SiteFooter = (props: SiteFooterProps) => {
   const ctaUrl = () => props.preferences.ctaUrl.trim();
 
   const buildDate = createMemo(() => {
-    if (typeof props.buildTimestampIso !== "string" || props.buildTimestampIso.trim().length === 0) {
+    if (
+      typeof props.buildTimestampIso !== "string" ||
+      props.buildTimestampIso.trim().length === 0
+    ) {
       return null;
     }
 
@@ -43,8 +46,7 @@ export const SiteFooter = (props: SiteFooterProps) => {
 
       <Show when={props.preferences.showLastUpdated && buildDate()}>
         <p class="site-footer-meta">
-          Last updated{" "}
-          <time datetime={buildDate()!.toISOString()}>{formattedBuildDate()}</time>
+          Last updated <time datetime={buildDate()?.toISOString()}>{formattedBuildDate()}</time>
         </p>
       </Show>
     </footer>

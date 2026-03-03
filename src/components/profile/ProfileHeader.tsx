@@ -100,7 +100,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         await navigator.share({
           title: props.profile.name,
           text: props.profile.headline,
-          url: shareUrl
+          url: shareUrl,
         });
         setTimedShareStatus("Share opened");
         return;
@@ -136,7 +136,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
           <p class="profile-bio">{props.profile.bio}</p>
         </Show>
 
-        <div class="profile-actions" role="group" aria-label="Profile sharing actions">
+        <div class="profile-actions" aria-label="Profile sharing actions">
           <button type="button" class="profile-share-button" onClick={() => handleShareProfile()}>
             Share profile
           </button>
@@ -148,24 +148,24 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
             Copy link
           </button>
           <Show when={shareStatus()}>
-            <p class="profile-share-status" role="status" aria-live="polite">
+            <output class="profile-share-status" aria-live="polite">
               {shareStatus()}
-            </p>
+            </output>
           </Show>
         </div>
 
         <Show when={richness() === "rich"}>
-          <div class="profile-meta" role="list">
+          <ul class="profile-meta">
             <Show when={props.profile.location}>
-              <p role="listitem">Location: {props.profile.location}</p>
+              <li>Location: {props.profile.location}</li>
             </Show>
             <Show when={props.profile.pronouns}>
-              <p role="listitem">Pronouns: {props.profile.pronouns}</p>
+              <li>Pronouns: {props.profile.pronouns}</li>
             </Show>
             <Show when={props.profile.status}>
-              <p role="listitem">Status: {props.profile.status}</p>
+              <li>Status: {props.profile.status}</li>
             </Show>
-          </div>
+          </ul>
         </Show>
 
         <Show when={richness() === "rich" && contacts().length > 0}>

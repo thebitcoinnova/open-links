@@ -11,7 +11,7 @@ const railLogoPaths: Record<PaymentRailType, string> = {
   lightning: "/payment-logos/lightning.svg",
   ethereum: "/payment-logos/ethereum.svg",
   solana: "/payment-logos/solana.svg",
-  "custom-crypto": "/payment-logos/generic-crypto.svg"
+  "custom-crypto": "/payment-logos/generic-crypto.svg",
 };
 
 const toAssetUrl = (assetPath: string): string => {

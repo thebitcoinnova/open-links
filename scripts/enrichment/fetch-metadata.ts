@@ -38,8 +38,8 @@ const fetchOnce = async (url: string, timeoutMs: number): Promise<FetchOnceResul
       signal: controller.signal,
       headers: {
         "user-agent": "open-links-enricher/0.1",
-        accept: "text/html,application/xhtml+xml"
-      }
+        accept: "text/html,application/xhtml+xml",
+      },
     });
 
     const html = await response.text();
@@ -48,20 +48,20 @@ const fetchOnce = async (url: string, timeoutMs: number): Promise<FetchOnceResul
       return {
         ok: false,
         statusCode: response.status,
-        error: `Received HTTP ${response.status}`
+        error: `Received HTTP ${response.status}`,
       };
     }
 
     return {
       ok: true,
       statusCode: response.status,
-      html
+      html,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown fetch error";
     return {
       ok: false,
-      error: message
+      error: message,
     };
   } finally {
     clearTimeout(timeout);
@@ -70,7 +70,7 @@ const fetchOnce = async (url: string, timeoutMs: number): Promise<FetchOnceResul
 
 export const fetchMetadata = async (
   url: string,
-  options: FetchMetadataOptions
+  options: FetchMetadataOptions,
 ): Promise<FetchMetadataResult> => {
   const timeoutMs = Math.max(500, Math.floor(options.timeoutMs));
   const retries = Math.max(0, Math.floor(options.retries));
@@ -90,7 +90,7 @@ export const fetchMetadata = async (
         html: result.html,
         attempts: attempt,
         durationMs: performance.now() - startedAt,
-        statusCode: result.statusCode
+        statusCode: result.statusCode,
       };
     }
 
@@ -111,6 +111,6 @@ export const fetchMetadata = async (
     attempts: attemptsAllowed,
     durationMs: performance.now() - startedAt,
     statusCode: lastStatusCode,
-    error: lastError
+    error: lastError,
   };
 };

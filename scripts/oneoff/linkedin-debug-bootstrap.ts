@@ -1,18 +1,18 @@
 import process from "node:process";
 import {
+  type SessionConfig,
   isBrowserBinaryMissingError,
   nowIso,
   redactSecret,
   resolveSessionConfig,
   runAgentBrowserJson,
   runRawCommand,
-  type SessionConfig
 } from "./linkedin-debug-common";
 
 const installAgentBrowserBinaries = () => {
   console.log("Installing browser binaries via agent-browser...");
   runRawCommand("npx", ["--yes", "agent-browser", "install"], {
-    allowFailure: false
+    allowFailure: false,
   });
 };
 
@@ -22,15 +22,15 @@ const probeAgentBrowser = (config: SessionConfig) => {
   const probeConfig: SessionConfig = {
     session: probeSession,
     sessionName: probeSessionName,
-    encryptionKey: config.encryptionKey
+    encryptionKey: config.encryptionKey,
   };
 
   const openResult = runAgentBrowserJson(["open", "https://example.com"], probeConfig, {
-    allowFailure: true
+    allowFailure: true,
   });
 
   const closeResult = runAgentBrowserJson(["close"], probeConfig, {
-    allowFailure: true
+    allowFailure: true,
   });
 
   return { openResult, closeResult };
@@ -39,17 +39,17 @@ const probeAgentBrowser = (config: SessionConfig) => {
 const run = () => {
   const startedAt = nowIso();
   const npxCheck = runRawCommand("npx", ["--version"], {
-    allowFailure: true
+    allowFailure: true,
   });
   if (npxCheck.status !== 0) {
     throw new Error(
-      "npx is required for LinkedIn authenticated debug tooling. Install Node.js/npm and retry."
+      "npx is required for LinkedIn authenticated debug tooling. Install Node.js/npm and retry.",
     );
   }
 
   const config = resolveSessionConfig();
   const versionResult = runRawCommand("npx", ["--yes", "agent-browser", "--version"], {
-    allowFailure: true
+    allowFailure: true,
   });
   if (versionResult.status !== 0) {
     const details = [versionResult.stderr, versionResult.stdout]
@@ -72,7 +72,7 @@ const run = () => {
   ) {
     if (!isBrowserBinaryMissingError(probeFailureContext)) {
       throw new Error(
-        `agent-browser probe failed for a non-install reason:\n${probeFailureContext.trim()}`
+        `agent-browser probe failed for a non-install reason:\n${probeFailureContext.trim()}`,
       );
     }
 

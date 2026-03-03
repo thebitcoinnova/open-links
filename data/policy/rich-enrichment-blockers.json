@@ -37,19 +37,13 @@
         "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='medium-auth-browser' and run npm run setup:rich-auth."
       ],
       "plannedSupportNote": "Authenticated extractor workaround is available via medium-auth-browser (RSS feed capture).",
-      "docs": [
-        "docs/rich-metadata-fetch-blockers.md",
-        "docs/authenticated-rich-extractors.md"
-      ]
+      "docs": ["docs/rich-metadata-fetch-blockers.md", "docs/authenticated-rich-extractors.md"]
     },
     {
       "id": "x-direct-fetch",
       "status": "blocked",
       "scope": "direct_fetch",
-      "domains": [
-        "x.com",
-        "twitter.com"
-      ],
+      "domains": ["x.com", "twitter.com"],
       "matchSubdomains": true,
       "reasonCategory": "unknown",
       "lastVerifiedAt": "2026-02-26T09:55:47Z",
@@ -60,18 +54,13 @@
         "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='x-auth-browser' and run npm run setup:rich-auth."
       ],
       "plannedSupportNote": "Authenticated extractor workaround is available via x-auth-browser (oEmbed + avatar capture).",
-      "docs": [
-        "docs/rich-metadata-fetch-blockers.md",
-        "docs/authenticated-rich-extractors.md"
-      ]
+      "docs": ["docs/rich-metadata-fetch-blockers.md", "docs/authenticated-rich-extractors.md"]
     },
     {
       "id": "facebook-direct-fetch",
       "status": "blocked",
       "scope": "direct_fetch",
-      "domains": [
-        "facebook.com"
-      ],
+      "domains": ["facebook.com"],
       "matchSubdomains": true,
       "reasonCategory": "authwall",
       "lastVerifiedAt": "2026-02-26T10:06:49Z",
@@ -82,10 +71,7 @@
         "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='facebook-auth-browser' and run npm run setup:rich-auth."
       ],
       "plannedSupportNote": "Authenticated extractor workaround is available via facebook-auth-browser (profile URL normalization + local cached image asset).",
-      "docs": [
-        "docs/rich-metadata-fetch-blockers.md",
-        "docs/authenticated-rich-extractors.md"
-      ]
+      "docs": ["docs/rich-metadata-fetch-blockers.md", "docs/authenticated-rich-extractors.md"]
     }
   ]
 }

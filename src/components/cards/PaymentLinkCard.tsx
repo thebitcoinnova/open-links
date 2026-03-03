@@ -1,19 +1,19 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { resolvePaymentRailLogoUrl } from "../../lib/payments/rail-logos";
 import {
+  type ResolvedPaymentRailAction,
   resolveEnabledPaymentRails,
   resolvePaymentRailAction,
   resolvePrimaryPaymentHref,
-  type ResolvedPaymentRailAction
 } from "../../lib/payments/rails";
 import type {
   PaymentQrDisplayMode,
   PaymentQrFullscreenMode,
   PaymentQrLogoMode,
   PaymentQrStyle,
-  PaymentRail
+  PaymentRail,
 } from "../../lib/payments/types";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 import PaymentQrFullscreen from "../payments/PaymentQrFullscreen";
@@ -73,8 +73,8 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const railActions = createMemo(() =>
     rails().map((rail) => ({
       rail,
-      action: resolvePaymentRailAction(rail)
-    }))
+      action: resolvePaymentRailAction(rail),
+    })),
   );
 
   const primaryRail = createMemo(() => {
@@ -98,7 +98,9 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const descriptionId = () => `payment-link-description-${safeId(props.link.id)}`;
 
   const description = () =>
-    props.link.description ?? props.link.url ?? "Support this profile across multiple payment rails";
+    props.link.description ??
+    props.link.url ??
+    "Support this profile across multiple payment rails";
 
   const effectiveQrDisplay = (): PaymentQrDisplayMode =>
     props.link.payment?.qrDisplay ?? siteQrDefaults()?.displayDefault ?? "always";
@@ -114,10 +116,13 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
 
   const primaryTarget = createMemo(() => props.target ?? linkTargetForHref(primaryHref()));
   const primaryRel = createMemo(() =>
-    primaryTarget() === "_blank" ? props.rel ?? "noopener noreferrer" : undefined
+    primaryTarget() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined,
   );
 
-  const shouldShowQr = (railEntry: { rail: PaymentRail; action: ResolvedPaymentRailAction }): boolean => {
+  const shouldShowQr = (railEntry: {
+    rail: PaymentRail;
+    action: ResolvedPaymentRailAction;
+  }): boolean => {
     if (effectiveQrDisplay() === "hidden") {
       return false;
     }
@@ -178,13 +183,16 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     resolvePaymentRailLogoUrl({
       railType: rail.rail,
       logoMode: qrLogoModeForRail(rail),
-      customLogoUrl: rail.qr?.logoUrl
+      customLogoUrl: rail.qr?.logoUrl,
     });
 
   const qrFullscreenModeForRail = (rail: PaymentRail): PaymentQrFullscreenMode =>
     rail.qr?.fullscreen ?? siteQrDefaults()?.fullscreenDefault ?? "enabled";
 
-  const canUseFullscreenForRail = (railEntry: { rail: PaymentRail; action: ResolvedPaymentRailAction }): boolean => {
+  const canUseFullscreenForRail = (railEntry: {
+    rail: PaymentRail;
+    action: ResolvedPaymentRailAction;
+  }): boolean => {
     if (!shouldShowQr(railEntry) || !railEntry.action.qrPayload) {
       return false;
     }
@@ -192,8 +200,9 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     return qrFullscreenModeForRail(railEntry.rail) === "enabled";
   };
 
-  const openRailInNewTab = (railEntry: { rail: PaymentRail; action: ResolvedPaymentRailAction }): string | undefined =>
-    railEntry.action.openInNewTab ? "noopener noreferrer" : undefined;
+  const openRailInNewTab = (railEntry: { rail: PaymentRail; action: ResolvedPaymentRailAction }):
+    | string
+    | undefined => (railEntry.action.openInNewTab ? "noopener noreferrer" : undefined);
 
   const copyRailValue = async (railId: string, value: string | undefined) => {
     if (!value || typeof navigator === "undefined" || !navigator.clipboard) {
@@ -369,10 +378,9 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                 </Show>
 
                 <Show when={showQrForRail() && qrVisible() && railEntry.action.qrPayload}>
-                  <div
+                  <section
                     class="payment-rail-qr-panel"
                     id={`payment-rail-qr-${safeId(`${props.link.id}-${railId}`)}`}
-                    role="region"
                     aria-labelledby={railLabelId}
                   >
                     <StyledPaymentQr
@@ -396,7 +404,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                         {fullscreenCtaLabel()}
                       </button>
                     </Show>
-                  </div>
+                  </section>
                 </Show>
               </li>
             );

@@ -2,24 +2,24 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { stdin, stdout } from "node:process";
-import { loadEmbeddedCode } from "../../shared/embedded-code-loader";
 import {
+  type SessionConfig,
   classifyPlaceholderSignals,
   extractCookieNames,
   resolveAuthWaitSettings,
   resolveSessionConfig,
   runAgentBrowserJson,
-  summarizeLinkedinAuthTransitions,
   summarizeLinkedinAuthResult,
+  summarizeLinkedinAuthTransitions,
   waitForLinkedinAuthenticatedSession,
-  type SessionConfig
 } from "../../oneoff/linkedin-debug-common";
+import { loadEmbeddedCode } from "../../shared/embedded-code-loader";
 import type {
   AuthenticatedExtractorEnsureSessionResult,
   AuthenticatedExtractorExtractContext,
   AuthenticatedExtractorExtractResult,
   AuthenticatedExtractorPlugin,
-  AuthenticatedExtractorSessionContext
+  AuthenticatedExtractorSessionContext,
 } from "../types";
 
 const EXTRACTOR_ID = "linkedin-auth-browser";
@@ -27,7 +27,7 @@ const EXTRACTOR_VERSION = "2026-02-25.2";
 const SELECTOR_PROFILE = "linkedin-profile-v1";
 const SHORT_VERIFY_TIMEOUT_MS = 8_000;
 const LINKEDIN_EXTRACT_PROFILE_PAYLOAD_SNIPPET = loadEmbeddedCode(
-  "browser/linkedin/extract-profile-payload.js"
+  "browser/linkedin/extract-profile-payload.js",
 );
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -52,12 +52,13 @@ const resolveCurrentUrl = (value: unknown): string | undefined => {
 };
 
 const isAuthwallUrl = (value: string | undefined): boolean =>
-  typeof value === "string" && /linkedin\.com\/(authwall|signup|checkpoint|uas\/login)/i.test(value);
+  typeof value === "string" &&
+  /linkedin\.com\/(authwall|signup|checkpoint|uas\/login)/i.test(value);
 
 const requireInteractiveTerminal = () => {
   if (!stdin.isTTY || !stdout.isTTY) {
     throw new Error(
-      "Interactive terminal is required for LinkedIn login. Run this command in a local TTY and retry."
+      "Interactive terminal is required for LinkedIn login. Run this command in a local TTY and retry.",
     );
   }
 };
@@ -138,7 +139,7 @@ const resolveAgentConfig = (): SessionConfig => resolveSessionConfig();
 
 const extractLinkedinProfilePayload = async (
   config: SessionConfig,
-  sourceUrl: string
+  sourceUrl: string,
 ): Promise<{
   title: string;
   description: string;
@@ -147,23 +148,25 @@ const extractLinkedinProfilePayload = async (
   placeholderSignals: string[];
 }> => {
   const openResult = runAgentBrowserJson(["open", sourceUrl], config, {
-    allowFailure: true
+    allowFailure: true,
   });
   if (openResult.response?.success === false) {
-    console.warn(`LinkedIn extractor open warning: ${openResult.response.error ?? "unknown error"}`);
+    console.warn(
+      `LinkedIn extractor open warning: ${openResult.response.error ?? "unknown error"}`,
+    );
   }
 
   runAgentBrowserJson(["wait", "2000"], config, { allowFailure: true });
   runAgentBrowserJson(["wait", "2000"], config, { allowFailure: true });
 
   const currentUrl = resolveCurrentUrl(
-    runAgentBrowserJson(["get", "url"], config, { allowFailure: true }).response?.data
+    runAgentBrowserJson(["get", "url"], config, { allowFailure: true }).response?.data,
   );
 
   const evalResult = runAgentBrowserJson<unknown>(
     ["eval", LINKEDIN_EXTRACT_PROFILE_PAYLOAD_SNIPPET],
     config,
-    { allowFailure: false }
+    { allowFailure: false },
   );
 
   const payload = (() => {
@@ -185,7 +188,7 @@ const extractLinkedinProfilePayload = async (
   const placeholderSignals = classifyPlaceholderSignals({
     title,
     description,
-    html: `${pageUrl ?? ""} ${title ?? ""} ${description ?? ""}`
+    html: `${pageUrl ?? ""} ${title ?? ""} ${description ?? ""}`,
   });
 
   if (!title || !description || !imageUrl) {
@@ -194,14 +197,14 @@ const extractLinkedinProfilePayload = async (
         "LinkedIn extractor could not capture required metadata fields from authenticated DOM.",
         `title=${title ? "present" : "missing"}, description=${description ? "present" : "missing"}, image=${
           imageUrl ? "present" : "missing"
-        }`
-      ].join(" ")
+        }`,
+      ].join(" "),
     );
   }
 
   if (placeholderSignals.length > 0) {
     throw new Error(
-      `LinkedIn extractor captured placeholder/authwall signals: ${placeholderSignals.join(", ")}. Re-login and retry.`
+      `LinkedIn extractor captured placeholder/authwall signals: ${placeholderSignals.join(", ")}. Re-login and retry.`,
     );
   }
 
@@ -214,17 +217,17 @@ const extractLinkedinProfilePayload = async (
     description,
     imageUrl,
     currentUrl: pageUrl,
-    placeholderSignals
+    placeholderSignals,
   };
 };
 
 const downloadImageAsset = async (
   config: SessionConfig,
   sourceUrl: string,
-  context: AuthenticatedExtractorExtractContext
+  context: AuthenticatedExtractorExtractContext,
 ): Promise<{ path: string; bytes: number; contentType: string; sha256: string }> => {
   const cookiesPayload = runAgentBrowserJson(["cookies", "get"], config, {
-    allowFailure: true
+    allowFailure: true,
   }).response?.data;
   const cookieHeader = toCookieHeader(cookiesPayload);
 
@@ -232,7 +235,7 @@ const downloadImageAsset = async (
     "user-agent":
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-    "accept-language": "en-US,en;q=0.9"
+    "accept-language": "en-US,en;q=0.9",
   };
 
   if (cookieHeader) {
@@ -242,11 +245,13 @@ const downloadImageAsset = async (
   const response = await fetch(sourceUrl, {
     method: "GET",
     redirect: "follow",
-    headers
+    headers,
   });
 
   if (!response.ok) {
-    throw new Error(`LinkedIn extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`);
+    throw new Error(
+      `LinkedIn extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`,
+    );
   }
 
   const bytes = Buffer.from(await response.arrayBuffer());
@@ -256,25 +261,31 @@ const downloadImageAsset = async (
 
   const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
   const extension =
-    extensionFromContentType(response.headers.get("content-type")) ?? extensionFromUrl(sourceUrl) ?? "jpg";
+    extensionFromContentType(response.headers.get("content-type")) ??
+    extensionFromUrl(sourceUrl) ??
+    "jpg";
   const fileName = `${sha256}.${extension}`;
 
   const absolutePath = path.join(context.publicAssetDirAbsolute, fileName);
   fs.mkdirSync(context.publicAssetDirAbsolute, { recursive: true });
   fs.writeFileSync(absolutePath, bytes);
 
-  const relativePath = path.posix.join(context.publicAssetDirRelative.replaceAll("\\", "/"), fileName);
+  const relativePath = path.posix.join(
+    context.publicAssetDirRelative.replaceAll("\\", "/"),
+    fileName,
+  );
   return {
     path: relativePath,
     bytes: bytes.byteLength,
-    contentType: response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream",
-    sha256
+    contentType:
+      response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream",
+    sha256,
   };
 };
 
 const verifySession = async (
   config: SessionConfig,
-  targetUrl: string
+  targetUrl: string,
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
   const settings = resolveAuthWaitSettings();
   const authResult = await waitForLinkedinAuthenticatedSession(config, {
@@ -282,19 +293,19 @@ const verifySession = async (
     timeoutMs: Math.min(settings.timeoutMs, SHORT_VERIFY_TIMEOUT_MS),
     pollMs: Math.min(settings.pollMs, 1_000),
     logPrefix: `[${EXTRACTOR_ID}]`,
-    emitStateLogs: false
+    emitStateLogs: false,
   });
 
   runAgentBrowserJson(["close"], config, { allowFailure: true });
 
   return {
     verified: authResult.verified,
-    details: summarizeLinkedinAuthResult(authResult)
+    details: summarizeLinkedinAuthResult(authResult),
   };
 };
 
 const ensureSession = async (
-  context: AuthenticatedExtractorSessionContext
+  context: AuthenticatedExtractorSessionContext,
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
   const config = resolveAgentConfig();
   const initialCheck = await verifySession(config, context.targetUrl);
@@ -308,10 +319,10 @@ const ensureSession = async (
   console.log("");
   console.log(`[${context.extractorId}] LinkedIn login required.`);
   console.log(
-    `[${context.extractorId}] A headed browser will open. Complete login credentials, and if your account has multi-factor authentication or a challenge step complete it there; extraction continues automatically once authenticated.`
+    `[${context.extractorId}] A headed browser will open. Complete login credentials, and if your account has multi-factor authentication or a challenge step complete it there; extraction continues automatically once authenticated.`,
   );
   console.log(
-    `[${context.extractorId}] Waiting up to ${settings.timeoutMs}ms (poll ${settings.pollMs}ms).`
+    `[${context.extractorId}] Waiting up to ${settings.timeoutMs}ms (poll ${settings.pollMs}ms).`,
   );
 
   const authResult = await waitForLinkedinAuthenticatedSession(config, {
@@ -320,7 +331,7 @@ const ensureSession = async (
     timeoutMs: settings.timeoutMs,
     pollMs: settings.pollMs,
     logPrefix: `[${context.extractorId}]`,
-    emitStateLogs: true
+    emitStateLogs: true,
   });
 
   runAgentBrowserJson(["close"], config, { allowFailure: true });
@@ -328,19 +339,19 @@ const ensureSession = async (
   if (!authResult.verified) {
     throw new Error(
       `LinkedIn login verification failed. ${summarizeLinkedinAuthResult(authResult)}. transitions=${summarizeLinkedinAuthTransitions(
-        authResult
-      )}`
+        authResult,
+      )}`,
     );
   }
 
   return {
     verified: true,
-    details: `${summarizeLinkedinAuthResult(authResult)}; transitions=${summarizeLinkedinAuthTransitions(authResult)}`
+    details: `${summarizeLinkedinAuthResult(authResult)}; transitions=${summarizeLinkedinAuthTransitions(authResult)}`,
   };
 };
 
 const extract = async (
-  context: AuthenticatedExtractorExtractContext
+  context: AuthenticatedExtractorExtractContext,
 ): Promise<AuthenticatedExtractorExtractResult> => {
   const config = resolveAgentConfig();
 
@@ -360,7 +371,7 @@ const extract = async (
       title: payload.title,
       description: payload.description,
       image: imageAsset.path,
-      sourceLabel: resolveSourceLabel(context.sourceUrl)
+      sourceLabel: resolveSourceLabel(context.sourceUrl),
     },
     assets: {
       image: {
@@ -368,8 +379,8 @@ const extract = async (
         sourceUrl: payload.imageUrl,
         contentType: imageAsset.contentType,
         bytes: imageAsset.bytes,
-        sha256: imageAsset.sha256
-      }
+        sha256: imageAsset.sha256,
+      },
     },
     diagnostics: {
       extractorVersion: EXTRACTOR_VERSION,
@@ -379,14 +390,14 @@ const extract = async (
       notes: [
         `session=${config.session}`,
         `sessionName=${config.sessionName}`,
-        `cacheKey=${context.cacheKey}`
-      ]
-    }
+        `cacheKey=${context.cacheKey}`,
+      ],
+    },
   };
 };
 
 export const linkedinAuthBrowserExtractor: AuthenticatedExtractorPlugin = {
   id: EXTRACTOR_ID,
   ensureSession,
-  extract
+  extract,
 };

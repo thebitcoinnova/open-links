@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { config } from "../config.js";
 import { CryptoBox } from "../lib/crypto.js";
-import { db, type UserRecord } from "./database.js";
+import { type UserRecord, db } from "./database.js";
 
 interface OAuthTokenResponse {
   access_token?: string;

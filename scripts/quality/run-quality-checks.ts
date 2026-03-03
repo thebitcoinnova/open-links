@@ -7,7 +7,7 @@ import {
   formatQualityHumanOutput,
   formatQualityJsonOutput,
   writeQualityReport,
-  writeQualitySummary
+  writeQualitySummary,
 } from "./report";
 import { runSeoChecks } from "./seo";
 import type {
@@ -17,7 +17,7 @@ import type {
   QualityPolicy,
   QualityProfileInput,
   QualityRunResult,
-  QualitySiteInput
+  QualitySiteInput,
 } from "./types";
 
 type OutputFormat = "human" | "json";
@@ -55,31 +55,34 @@ const parseArgs = (): ArgMap => {
     reportPath: getFlagValue("--report"),
     summaryPath: getFlagValue("--summary"),
     sitePath: getFlagValue("--site") ?? "data/site.json",
-    profilePath: getFlagValue("--profile") ?? "data/profile.json"
+    profilePath: getFlagValue("--profile") ?? "data/profile.json",
   };
 };
 
 const collectRemediationChecklist = (issues: QualityIssue[]): Record<string, string[]> => {
   const remediation = new Map<string, Set<string>>();
 
-  issues.forEach((issue) => {
+  for (const issue of issues) {
     if (!remediation.has(issue.domain)) {
       remediation.set(issue.domain, new Set());
     }
-    remediation.get(issue.domain)!.add(issue.remediation);
-  });
+    const maybeDomainEntries = remediation.get(issue.domain);
+    if (maybeDomainEntries) {
+      maybeDomainEntries.add(issue.remediation);
+    }
+  }
 
   const output: Record<string, string[]> = {};
-  remediation.forEach((entries, domain) => {
+  for (const [domain, entries] of remediation) {
     output[domain] = Array.from(entries);
-  });
+  }
 
   return output;
 };
 
 const resolveBlockingDomains = (policy?: QualityPolicy): QualityDomain[] => {
   const configured = policy?.blockingDomains?.filter((domain) =>
-    ["seo", "accessibility", "performance", "manual-smoke"].includes(domain)
+    ["seo", "accessibility", "performance", "manual-smoke"].includes(domain),
   ) as QualityDomain[] | undefined;
 
   if (configured && configured.length > 0) {
@@ -94,13 +97,15 @@ const buildResult = (
   reportPath: string,
   blockingDomains: QualityDomain[],
   domainResults: QualityDomainResult[],
-  checklist: QualityRunResult["checklist"]
+  checklist: QualityRunResult["checklist"],
 ): QualityRunResult => {
   const allIssues = domainResults.flatMap((domain) => domain.issues);
   const errors = allIssues.filter((issue) => issue.level === "error");
   const warnings = allIssues.filter((issue) => issue.level === "warning");
 
-  const blockingErrorCount = errors.filter((issue) => blockingDomains.includes(issue.domain)).length;
+  const blockingErrorCount = errors.filter((issue) =>
+    blockingDomains.includes(issue.domain),
+  ).length;
 
   return {
     strict,
@@ -112,7 +117,7 @@ const buildResult = (
     errors,
     warnings,
     checklist,
-    remediationChecklist: collectRemediationChecklist(allIssues)
+    remediationChecklist: collectRemediationChecklist(allIssues),
   };
 };
 
@@ -123,35 +128,43 @@ const run = () => {
   const profile = readJson<QualityProfileInput>(args.profilePath);
 
   const qualityPolicy = site.quality;
-  const reportPath = args.reportPath ?? qualityPolicy?.reportPath ?? "data/generated/quality-report.json";
-  const summaryPath = args.summaryPath ?? qualityPolicy?.summaryPath ?? "data/generated/quality-report.md";
+  const reportPath =
+    args.reportPath ?? qualityPolicy?.reportPath ?? "data/generated/quality-report.json";
+  const summaryPath =
+    args.summaryPath ?? qualityPolicy?.summaryPath ?? "data/generated/quality-report.md";
 
   const seoResult = runSeoChecks(site, profile);
   const a11yResult = runA11yChecks({
     rootDir: ROOT,
     strict: args.strict,
     focusContrastStrict: qualityPolicy?.accessibility?.focusContrastStrict ?? true,
-    site
+    site,
   });
   const manualSmokeResult = runManualSmokeChecks({
     rootDir: ROOT,
-    checklistLabels: qualityPolicy?.accessibility?.manualSmokeChecks ?? []
+    checklistLabels: qualityPolicy?.accessibility?.manualSmokeChecks ?? [],
   });
   const perfResult = runPerformanceChecks({
     rootDir: ROOT,
     strict: args.strict,
-    site
+    site,
   });
 
   const domainResults: QualityDomainResult[] = [
     seoResult.domainResult,
     a11yResult,
     perfResult,
-    manualSmokeResult.domainResult
+    manualSmokeResult.domainResult,
   ];
 
   const blockingDomains = resolveBlockingDomains(qualityPolicy);
-  const result = buildResult(args.strict, reportPath, blockingDomains, domainResults, manualSmokeResult.checks);
+  const result = buildResult(
+    args.strict,
+    reportPath,
+    blockingDomains,
+    domainResults,
+    manualSmokeResult.checks,
+  );
 
   writeQualityReport(reportPath, result);
   writeQualitySummary(summaryPath, result);

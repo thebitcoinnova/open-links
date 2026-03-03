@@ -1,5 +1,5 @@
+import { type JSX, Show, createSignal, createUniqueId, onCleanup, onMount } from "solid-js";
 import { IconMenu } from "../../lib/icons/custom-icons";
-import { Show, createSignal, createUniqueId, onCleanup, onMount, type JSX } from "solid-js";
 
 export interface UtilityControlsMenuProps {
   label?: string;
@@ -74,7 +74,12 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
   });
 
   return (
-    <div class="utility-menu" ref={containerRef} onFocusOut={handleFocusOut} onKeyDown={handleKeyDown}>
+    <div
+      class="utility-menu"
+      ref={containerRef}
+      onFocusOut={handleFocusOut}
+      onKeyDown={handleKeyDown}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -87,7 +92,11 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
         <IconMenu aria-hidden="true" />
       </button>
       <Show when={isOpen()}>
-        <div id={panelId} class="utility-menu-panel" role="group" aria-label={props.panelLabel ?? "Theme and mode controls"}>
+        <div
+          id={panelId}
+          class="utility-menu-panel"
+          aria-label={props.panelLabel ?? "Theme and mode controls"}
+        >
           {props.children}
         </div>
       </Show>

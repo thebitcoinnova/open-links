@@ -92,7 +92,7 @@ const CONTENT_TYPE_EXTENSION_MAP = new Map<string, string>([
   ["image/png", "png"],
   ["image/svg+xml", "svg"],
   ["image/tiff", "tiff"],
-  ["image/webp", "webp"]
+  ["image/webp", "webp"],
 ]);
 
 const KNOWN_IMAGE_EXTENSIONS = new Set([
@@ -106,7 +106,7 @@ const KNOWN_IMAGE_EXTENSIONS = new Set([
   "svg",
   "tif",
   "tiff",
-  "webp"
+  "webp",
 ]);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -121,7 +121,11 @@ const isTruthy = (value: string | undefined): boolean => {
 };
 
 const normalizeRelativePath = (input: string): string =>
-  input.replaceAll("\\", "/").replace(/^\.?\//, "").replace(/^\/+/, "").trim();
+  input
+    .replaceAll("\\", "/")
+    .replace(/^\.?\//, "")
+    .replace(/^\/+/, "")
+    .trim();
 
 const absolutePath = (relativePath: string): string =>
   path.isAbsolute(relativePath) ? relativePath : path.join(ROOT, relativePath);
@@ -159,7 +163,7 @@ const parseNumber = (value: string | undefined): number | undefined => {
 const parseArgs = (): CliArgs => {
   const args = process.argv.slice(2);
 
-  const valueOf = (name: string, fallback: string): string => {
+  const getFlagValue = (name: string, fallback: string): string => {
     const index = args.indexOf(name);
     if (index < 0) {
       return fallback;
@@ -175,12 +179,16 @@ const parseArgs = (): CliArgs => {
 
   return {
     force: args.includes("--force") || isTruthy(process.env[FORCE_ENV]),
-    linksPath: valueOf("--links", DEFAULT_LINKS_PATH),
-    sitePath: valueOf("--site", DEFAULT_SITE_PATH),
-    richMetadataPath: valueOf("--rich-metadata", DEFAULT_RICH_METADATA_PATH),
-    manifestPath: valueOf("--manifest", DEFAULT_MANIFEST_PATH),
-    outputDir: valueOf("--output-dir", DEFAULT_OUTPUT_DIR),
-    maxBytesWarn: Math.max(1024, parseNumber(valueOf("--max-bytes-warn", String(MAX_IMAGE_BYTES_WARN))) ?? MAX_IMAGE_BYTES_WARN)
+    linksPath: getFlagValue("--links", DEFAULT_LINKS_PATH),
+    sitePath: getFlagValue("--site", DEFAULT_SITE_PATH),
+    richMetadataPath: getFlagValue("--rich-metadata", DEFAULT_RICH_METADATA_PATH),
+    manifestPath: getFlagValue("--manifest", DEFAULT_MANIFEST_PATH),
+    outputDir: getFlagValue("--output-dir", DEFAULT_OUTPUT_DIR),
+    maxBytesWarn: Math.max(
+      1024,
+      parseNumber(getFlagValue("--max-bytes-warn", String(MAX_IMAGE_BYTES_WARN))) ??
+        MAX_IMAGE_BYTES_WARN,
+    ),
   };
 };
 
@@ -229,7 +237,10 @@ const parseMaxAgeSeconds = (cacheControl: string | undefined): number | undefine
 
 const toIso = (value: number): string => new Date(value).toISOString();
 
-const computeExpiresAt = (cacheControl: string | undefined, dateHeader: string | undefined): string | undefined => {
+const computeExpiresAt = (
+  cacheControl: string | undefined,
+  dateHeader: string | undefined,
+): string | undefined => {
   const maxAgeSeconds = parseMaxAgeSeconds(cacheControl);
   if (maxAgeSeconds === undefined) {
     return undefined;
@@ -294,18 +305,21 @@ const extensionFromResolvedPath = (resolvedPath: string | undefined): string | u
 const resolveExtension = (
   contentType: string | null,
   sourceUrl: string,
-  previousResolvedPath: string | undefined
+  previousResolvedPath: string | undefined,
 ): string =>
   extensionFromContentType(contentType) ??
   extensionFromUrl(sourceUrl) ??
   extensionFromResolvedPath(previousResolvedPath) ??
   "jpg";
 
-const toContentHash = (buffer: Buffer): string => crypto.createHash("sha256").update(buffer).digest("hex");
+const toContentHash = (buffer: Buffer): string =>
+  crypto.createHash("sha256").update(buffer).digest("hex");
 
 const resolvedPathFromOutputDir = (outputDir: string, fileName: string): string => {
   const normalized = normalizeRelativePath(outputDir).replace(/\/+$/, "");
-  const relativeToPublic = normalized.startsWith("public/") ? normalized.slice("public/".length) : normalized;
+  const relativeToPublic = normalized.startsWith("public/")
+    ? normalized.slice("public/".length)
+    : normalized;
   return [relativeToPublic, fileName].filter(Boolean).join("/");
 };
 
@@ -332,22 +346,22 @@ const readPreviousManifest = (manifestPath: string): GeneratedContentImagesManif
       continue;
     }
 
-    if (typeof rawEntry.sourceUrl !== "string" || typeof rawEntry.status !== "string" || typeof rawEntry.updatedAt !== "string") {
+    if (
+      typeof rawEntry.sourceUrl !== "string" ||
+      typeof rawEntry.status !== "string" ||
+      typeof rawEntry.updatedAt !== "string"
+    ) {
       continue;
     }
 
     const entry: GeneratedContentImageEntry = {
       sourceUrl: rawEntry.sourceUrl,
-      status: ([
-        "fetched",
-        "not_modified",
-        "cache_fresh",
-        "cache_on_error",
-        "fallback_on_error"
-      ] as const).includes(rawEntry.status as ContentImageSyncStatus)
+      status: (
+        ["fetched", "not_modified", "cache_fresh", "cache_on_error", "fallback_on_error"] as const
+      ).includes(rawEntry.status as ContentImageSyncStatus)
         ? (rawEntry.status as ContentImageSyncStatus)
         : "fallback_on_error",
-      updatedAt: rawEntry.updatedAt
+      updatedAt: rawEntry.updatedAt,
     };
 
     if (typeof rawEntry.resolvedPath === "string" && rawEntry.resolvedPath.trim().length > 0) {
@@ -368,7 +382,11 @@ const readPreviousManifest = (manifestPath: string): GeneratedContentImagesManif
     if (typeof rawEntry.contentType === "string" && rawEntry.contentType.trim().length > 0) {
       entry.contentType = rawEntry.contentType;
     }
-    if (typeof rawEntry.bytes === "number" && Number.isFinite(rawEntry.bytes) && rawEntry.bytes >= 0) {
+    if (
+      typeof rawEntry.bytes === "number" &&
+      Number.isFinite(rawEntry.bytes) &&
+      rawEntry.bytes >= 0
+    ) {
       entry.bytes = rawEntry.bytes;
     }
     if (typeof rawEntry.warning === "string" && rawEntry.warning.trim().length > 0) {
@@ -383,7 +401,7 @@ const readPreviousManifest = (manifestPath: string): GeneratedContentImagesManif
       typeof parsed.generatedAt === "string" && parsed.generatedAt.trim().length > 0
         ? parsed.generatedAt
         : new Date(0).toISOString(),
-    byUrl
+    byUrl,
   };
 };
 
@@ -401,12 +419,12 @@ const buildEntry = (
     contentType?: string;
     bytes?: number;
     warning?: string;
-  }
+  },
 ): GeneratedContentImageEntry => {
   const entry: GeneratedContentImageEntry = {
     sourceUrl: base.sourceUrl,
     status: base.status,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   if (base.resolvedPath) {
@@ -444,7 +462,7 @@ const logWarning = (message: string) => {
 const collectCandidates = (
   linksPayload: LinksPayload,
   generatedRichMetadata: RichMetadataPayload | null,
-  sitePayload: SitePayload
+  sitePayload: SitePayload,
 ): string[] => {
   const candidates = new Set<string>();
   const links = Array.isArray(linksPayload.links) ? linksPayload.links : [];
@@ -475,7 +493,7 @@ const collectCandidates = (
     seo?.defaults?.ogImage,
     seo?.defaults?.twitterImage,
     seo?.overrides?.profile?.ogImage,
-    seo?.overrides?.profile?.twitterImage
+    seo?.overrides?.profile?.twitterImage,
   ];
 
   for (const value of seoValues) {
@@ -507,7 +525,9 @@ const garbageCollectOutput = (outputDir: string, keepPaths: Set<string>) => {
 
   for (const fileName of fs.readdirSync(absoluteOutputDir)) {
     const absoluteFilePath = path.join(absoluteOutputDir, fileName);
-    const relativeResolvedPath = normalizePublicPath(resolvedPathFromOutputDir(outputDir, fileName));
+    const relativeResolvedPath = normalizePublicPath(
+      resolvedPathFromOutputDir(outputDir, fileName),
+    );
     if (keepPaths.has(relativeResolvedPath)) {
       continue;
     }
@@ -540,7 +560,9 @@ const run = async () => {
     const previousEntry = previousManifest?.byUrl[candidateKey];
     const cachedPath = previousEntry?.resolvedPath;
     const cachedAssetExists =
-      typeof cachedPath === "string" && cachedPath.length > 0 && fs.existsSync(resolveManifestAssetAbsolutePath(cachedPath));
+      typeof cachedPath === "string" &&
+      cachedPath.length > 0 &&
+      fs.existsSync(resolveManifestAssetAbsolutePath(cachedPath));
 
     if (!httpUrl) {
       const warning = `Unsupported non-http image URL '${candidate}'. Runtime will use local fallback behavior.`;
@@ -548,11 +570,11 @@ const run = async () => {
       nextByUrl[candidateKey] = buildEntry(
         {
           sourceUrl: candidate,
-          status: "fallback_on_error"
+          status: "fallback_on_error",
         },
         {
-          warning
-        }
+          warning,
+        },
       );
       continue;
     }
@@ -562,7 +584,7 @@ const run = async () => {
         {
           sourceUrl: httpUrl,
           resolvedPath: previousEntry.resolvedPath,
-          status: "cache_fresh"
+          status: "cache_fresh",
         },
         {
           etag: previousEntry.etag,
@@ -570,8 +592,8 @@ const run = async () => {
           cacheControl: previousEntry.cacheControl,
           expiresAt: previousEntry.expiresAt,
           contentType: previousEntry.contentType,
-          bytes: previousEntry.bytes
-        }
+          bytes: previousEntry.bytes,
+        },
       );
       console.log(`OpenLinks content image sync: cache is fresh for '${httpUrl}'.`);
       continue;
@@ -579,7 +601,7 @@ const run = async () => {
 
     const headers: Record<string, string> = {
       "user-agent": "open-links-content-image-sync/0.1",
-      accept: "image/*,*/*;q=0.8"
+      accept: "image/*,*/*;q=0.8",
     };
 
     if (!args.force && previousEntry) {
@@ -594,14 +616,14 @@ const run = async () => {
     const fallbackFromError = (reason: string) => {
       if (previousEntry && cachedAssetExists && previousEntry.resolvedPath) {
         const warning = `Image fetch failed (${reason}) for '${httpUrl}'. Reusing cached '${normalizePublicPath(
-          previousEntry.resolvedPath
+          previousEntry.resolvedPath,
         )}'.`;
         logWarning(warning);
         nextByUrl[candidateKey] = buildEntry(
           {
             sourceUrl: httpUrl,
             resolvedPath: previousEntry.resolvedPath,
-            status: "cache_on_error"
+            status: "cache_on_error",
           },
           {
             etag: previousEntry.etag,
@@ -610,8 +632,8 @@ const run = async () => {
             expiresAt: previousEntry.expiresAt,
             contentType: previousEntry.contentType,
             bytes: previousEntry.bytes,
-            warning
-          }
+            warning,
+          },
         );
         return;
       }
@@ -621,11 +643,11 @@ const run = async () => {
       nextByUrl[candidateKey] = buildEntry(
         {
           sourceUrl: httpUrl,
-          status: "fallback_on_error"
+          status: "fallback_on_error",
         },
         {
-          warning
-        }
+          warning,
+        },
       );
     };
 
@@ -637,7 +659,7 @@ const run = async () => {
         method: "GET",
         redirect: "follow",
         headers,
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       if (response.status === 304) {
@@ -648,7 +670,8 @@ const run = async () => {
 
         const cacheControl = response.headers.get("cache-control") ?? previousEntry.cacheControl;
         const expiresAt =
-          computeExpiresAt(cacheControl ?? undefined, response.headers.get("date") ?? undefined) ?? previousEntry.expiresAt;
+          computeExpiresAt(cacheControl ?? undefined, response.headers.get("date") ?? undefined) ??
+          previousEntry.expiresAt;
         const etag = response.headers.get("etag") ?? previousEntry.etag;
         const lastModified = response.headers.get("last-modified") ?? previousEntry.lastModified;
 
@@ -656,7 +679,7 @@ const run = async () => {
           {
             sourceUrl: httpUrl,
             resolvedPath: previousEntry.resolvedPath,
-            status: "not_modified"
+            status: "not_modified",
           },
           {
             etag: etag ?? undefined,
@@ -664,8 +687,8 @@ const run = async () => {
             cacheControl: cacheControl ?? undefined,
             expiresAt,
             contentType: previousEntry.contentType,
-            bytes: previousEntry.bytes
-          }
+            bytes: previousEntry.bytes,
+          },
         );
         console.log(`OpenLinks content image sync: not modified '${httpUrl}'.`);
         continue;
@@ -683,7 +706,11 @@ const run = async () => {
       }
 
       const hash = toContentHash(buffer);
-      const extension = resolveExtension(response.headers.get("content-type"), httpUrl, previousEntry?.resolvedPath);
+      const extension = resolveExtension(
+        response.headers.get("content-type"),
+        httpUrl,
+        previousEntry?.resolvedPath,
+      );
       const fileName = `${hash}.${extension}`;
       const absoluteOutputFile = path.join(absolutePath(args.outputDir), fileName);
       const resolvedPath = resolvedPathFromOutputDir(args.outputDir, fileName);
@@ -702,7 +729,9 @@ const run = async () => {
       }
 
       if (buffer.byteLength > args.maxBytesWarn) {
-        warnings.push(`Fetched '${httpUrl}' exceeds warn threshold (${buffer.byteLength} bytes > ${args.maxBytesWarn}).`);
+        warnings.push(
+          `Fetched '${httpUrl}' exceeds warn threshold (${buffer.byteLength} bytes > ${args.maxBytesWarn}).`,
+        );
       }
 
       for (const warning of warnings) {
@@ -713,7 +742,7 @@ const run = async () => {
         {
           sourceUrl: httpUrl,
           resolvedPath,
-          status: "fetched"
+          status: "fetched",
         },
         {
           etag,
@@ -722,11 +751,13 @@ const run = async () => {
           expiresAt,
           contentType,
           bytes: buffer.byteLength,
-          warning: warnings.length > 0 ? warnings.join(" ") : undefined
-        }
+          warning: warnings.length > 0 ? warnings.join(" ") : undefined,
+        },
       );
 
-      console.log(`OpenLinks content image sync: fetched '${httpUrl}' -> '${normalizePublicPath(resolvedPath)}'.`);
+      console.log(
+        `OpenLinks content image sync: fetched '${httpUrl}' -> '${normalizePublicPath(resolvedPath)}'.`,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       fallbackFromError(message);
@@ -737,7 +768,7 @@ const run = async () => {
 
   const manifest: GeneratedContentImagesManifest = {
     generatedAt: new Date().toISOString(),
-    byUrl: nextByUrl
+    byUrl: nextByUrl,
   };
 
   const keepPaths = listReferencedResolvedPaths(manifest);
@@ -749,17 +780,22 @@ const run = async () => {
     totalCandidates: candidates.length,
     trackedUrls: Object.keys(manifest.byUrl).length,
     fetched: Object.values(manifest.byUrl).filter((entry) => entry.status === "fetched").length,
-    notModified: Object.values(manifest.byUrl).filter((entry) => entry.status === "not_modified").length,
-    cacheFresh: Object.values(manifest.byUrl).filter((entry) => entry.status === "cache_fresh").length,
-    cacheOnError: Object.values(manifest.byUrl).filter((entry) => entry.status === "cache_on_error").length,
-    fallbackOnError: Object.values(manifest.byUrl).filter((entry) => entry.status === "fallback_on_error").length
+    notModified: Object.values(manifest.byUrl).filter((entry) => entry.status === "not_modified")
+      .length,
+    cacheFresh: Object.values(manifest.byUrl).filter((entry) => entry.status === "cache_fresh")
+      .length,
+    cacheOnError: Object.values(manifest.byUrl).filter((entry) => entry.status === "cache_on_error")
+      .length,
+    fallbackOnError: Object.values(manifest.byUrl).filter(
+      (entry) => entry.status === "fallback_on_error",
+    ).length,
   };
 
   console.log("OpenLinks content image sync summary");
   console.log(`Candidates: ${summary.totalCandidates}`);
   console.log(`Tracked URL entries: ${summary.trackedUrls}`);
   console.log(
-    `Statuses: fetched=${summary.fetched}, not_modified=${summary.notModified}, cache_fresh=${summary.cacheFresh}, cache_on_error=${summary.cacheOnError}, fallback_on_error=${summary.fallbackOnError}`
+    `Statuses: fetched=${summary.fetched}, not_modified=${summary.notModified}, cache_fresh=${summary.cacheFresh}, cache_on_error=${summary.cacheOnError}, fallback_on_error=${summary.fallbackOnError}`,
   );
   console.log(`Manifest: ${args.manifestPath}`);
   console.log(`Output directory: ${args.outputDir}`);

@@ -15,7 +15,7 @@ const ALL_THEMES: ThemeDefinition[] = [
   { id: "neutral", label: "Neutral", intensity: "mild" },
   { id: "editorial", label: "Editorial", intensity: "strong" },
   { id: "futuristic", label: "Futuristic", intensity: "strong" },
-  { id: "humanist", label: "Humanist", intensity: "strong" }
+  { id: "humanist", label: "Humanist", intensity: "strong" },
 ];
 
 const REGISTRY = new Map(ALL_THEMES.map((theme) => [theme.id, theme]));
@@ -40,14 +40,21 @@ export interface ThemeSelection {
 export const resolveThemeSelection = (site: SiteData): ThemeSelection => {
   const available = normalizeAvailableThemes(site);
   const requestedActive = site.theme?.active;
-  const active = requestedActive && available.includes(requestedActive) ? requestedActive : available[0];
-  const activeDefinition = REGISTRY.get(active) ?? REGISTRY.get("sleek")!;
+  const active =
+    requestedActive && available.includes(requestedActive) ? requestedActive : available[0];
+  const fallbackDefinition = REGISTRY.get("sleek") ?? ALL_THEMES[0];
+  if (!fallbackDefinition) {
+    throw new Error("Theme registry must contain at least one definition.");
+  }
+
+  const activeDefinition = REGISTRY.get(active) ?? fallbackDefinition;
 
   return {
     active,
     available,
-    activeDefinition
+    activeDefinition,
   };
 };
 
-export const getThemeDefinition = (themeId: string): ThemeDefinition | undefined => REGISTRY.get(themeId);
+export const getThemeDefinition = (themeId: string): ThemeDefinition | undefined =>
+  REGISTRY.get(themeId);

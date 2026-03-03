@@ -1,18 +1,19 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import type { AnySchema } from "ajv";
 import addFormats from "ajv-formats";
+import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import type {
   AuthenticatedExtractorPolicyEntry,
-  AuthenticatedExtractorsPolicyRegistry
+  AuthenticatedExtractorsPolicyRegistry,
 } from "./types";
 
 const ROOT = process.cwd();
 
 export const DEFAULT_AUTH_EXTRACTORS_POLICY_PATH = "data/policy/rich-authenticated-extractors.json";
-export const DEFAULT_AUTH_EXTRACTORS_SCHEMA_PATH = "schema/rich-authenticated-extractors.schema.json";
+export const DEFAULT_AUTH_EXTRACTORS_SCHEMA_PATH =
+  "schema/rich-authenticated-extractors.schema.json";
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -50,13 +51,13 @@ const readJsonFileOrThrow = (relativePath: string): unknown => {
 };
 
 const normalizeRegistry = (
-  raw: AuthenticatedExtractorsPolicyRegistry
+  raw: AuthenticatedExtractorsPolicyRegistry,
 ): AuthenticatedExtractorsPolicyRegistry => ({
   ...raw,
   extractors: raw.extractors.map((extractor) => ({
     ...extractor,
-    domains: extractor.domains.map((domain) => domain.trim().toLowerCase())
-  }))
+    domains: extractor.domains.map((domain) => domain.trim().toLowerCase()),
+  })),
 });
 
 export const loadAuthenticatedExtractorsPolicy = (options?: {
@@ -78,8 +79,8 @@ export const loadAuthenticatedExtractorsPolicy = (options?: {
       [
         `Invalid authenticated extractors policy at ${policyPath}.`,
         "Schema validation errors:",
-        formatSchemaErrors(validate.errors)
-      ].join("\n")
+        formatSchemaErrors(validate.errors),
+      ].join("\n"),
     );
   }
 
@@ -99,7 +100,7 @@ const matchesDomain = (host: string, domain: string, matchSubdomains: boolean): 
 
 export const resolveAuthenticatedExtractorById = (
   extractorId: string,
-  registry: AuthenticatedExtractorsPolicyRegistry
+  registry: AuthenticatedExtractorsPolicyRegistry,
 ): AuthenticatedExtractorPolicyEntry | null => {
   const normalized = extractorId.trim();
   if (!normalized) {
@@ -117,7 +118,7 @@ export interface AuthenticatedExtractorDomainMatch {
 
 export const resolveAuthenticatedExtractorDomainMatch = (
   url: string,
-  extractor: AuthenticatedExtractorPolicyEntry
+  extractor: AuthenticatedExtractorPolicyEntry,
 ): AuthenticatedExtractorDomainMatch | null => {
   const host = toHost(url);
   if (!host) {
@@ -142,6 +143,6 @@ export const resolveAuthenticatedExtractorDomainMatch = (
   return {
     extractor,
     host,
-    matchedDomain
+    matchedDomain,
   };
 };

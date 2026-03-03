@@ -1,7 +1,4 @@
-import type {
-  BrandIconColorMode,
-  BrandIconContrastMode
-} from "../content/load-content";
+import type { BrandIconColorMode, BrandIconContrastMode } from "../content/load-content";
 
 interface RgbColor {
   r: number;
@@ -33,7 +30,8 @@ const clampChannel = (value: number): number => Math.max(0, Math.min(255, Math.r
 
 const toHex = (value: number): string => clampChannel(value).toString(16).padStart(2, "0");
 
-const rgbToHex = (color: RgbColor): string => `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`.toUpperCase();
+const rgbToHex = (color: RgbColor): string =>
+  `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`.toUpperCase();
 
 const parseHexColor = (value: string): RgbColor | undefined => {
   const normalized = value.trim();
@@ -50,7 +48,7 @@ const parseHexColor = (value: string): RgbColor | undefined => {
     return {
       r: Number.parseInt(raw[0] + raw[0], 16),
       g: Number.parseInt(raw[1] + raw[1], 16),
-      b: Number.parseInt(raw[2] + raw[2], 16)
+      b: Number.parseInt(raw[2] + raw[2], 16),
     };
   }
 
@@ -65,7 +63,7 @@ const parseHexColor = (value: string): RgbColor | undefined => {
   return {
     r: Number.parseInt(raw.slice(0, 2), 16),
     g: Number.parseInt(raw.slice(2, 4), 16),
-    b: Number.parseInt(raw.slice(4, 6), 16)
+    b: Number.parseInt(raw.slice(4, 6), 16),
   };
 };
 
@@ -97,22 +95,24 @@ const parseRgbColor = (value: string): RgbColor | undefined => {
   return {
     r: channels[0],
     g: channels[1],
-    b: channels[2]
+    b: channels[2],
   };
 };
 
-const parseCssColor = (value: string): RgbColor | undefined => parseHexColor(value) ?? parseRgbColor(value);
+const parseCssColor = (value: string): RgbColor | undefined =>
+  parseHexColor(value) ?? parseRgbColor(value);
 
 const mix = (base: RgbColor, tint: RgbColor, tintWeight: number): RgbColor => {
   const weight = Math.max(0, Math.min(1, tintWeight));
   return {
     r: base.r * (1 - weight) + tint.r * weight,
     g: base.g * (1 - weight) + tint.g * weight,
-    b: base.b * (1 - weight) + tint.b * weight
+    b: base.b * (1 - weight) + tint.b * weight,
   };
 };
 
-const blendToward = (color: RgbColor, target: RgbColor, amount: number): RgbColor => mix(color, target, amount);
+const blendToward = (color: RgbColor, target: RgbColor, amount: number): RgbColor =>
+  mix(color, target, amount);
 
 const luminanceChannel = (value: number): number => {
   const normalized = value / 255;
@@ -134,7 +134,9 @@ export const contrastRatio = (left: RgbColor, right: RgbColor): number => {
 
 const isSleekTheme = (themeId?: string): boolean => (themeId ?? "").startsWith("sleek");
 
-const resolveMixWeights = (themeId?: string): {
+const resolveMixWeights = (
+  themeId?: string,
+): {
   themeChipTintWeight: number;
   brandChipTintWeight: number;
   brandBorderTintWeight: number;
@@ -143,20 +145,20 @@ const resolveMixWeights = (themeId?: string): {
     return {
       themeChipTintWeight: 0.14,
       brandChipTintWeight: 0.16,
-      brandBorderTintWeight: 0.2
+      brandBorderTintWeight: 0.2,
     };
   }
 
   return {
     themeChipTintWeight: 0.26,
     brandChipTintWeight: 0.2,
-    brandBorderTintWeight: 0.24
+    brandBorderTintWeight: 0.24,
   };
 };
 
 const resolveBestGlyphCandidate = (
   candidates: RgbColor[],
-  background: RgbColor
+  background: RgbColor,
 ): { color: RgbColor; ratio: number } => {
   let best = candidates[0];
   let bestRatio = contrastRatio(best, background);
@@ -176,7 +178,7 @@ const resolveBestGlyphCandidate = (
 const improveBackgroundContrast = (
   glyph: RgbColor,
   background: RgbColor,
-  minimumRatio: number
+  minimumRatio: number,
 ): { background: RgbColor; ratio: number; changed: boolean } => {
   let bestBackground = background;
   let bestRatio = contrastRatio(glyph, background);
@@ -211,7 +213,7 @@ const improveBackgroundContrast = (
   return {
     background: bestBackground,
     ratio: bestRatio,
-    changed
+    changed,
   };
 };
 
@@ -231,7 +233,8 @@ export const resolveIconPalette = (input: ResolveIconPaletteInput): ResolvedIcon
   const parsedBrand = input.brandColor ? parseCssColor(input.brandColor) : undefined;
 
   if (!parsedSurface || !parsedAccent || !parsedText || !parsedBorder) {
-    const fallbackGlyph = input.colorMode === "theme" ? { r: 245, g: 247, b: 251 } : { r: 255, g: 255, b: 255 };
+    const fallbackGlyph =
+      input.colorMode === "theme" ? { r: 245, g: 247, b: 251 } : { r: 255, g: 255, b: 255 };
     const fallbackBackground = { r: 42, g: 51, b: 71 };
     const fallbackBorder = { r: 73, g: 90, b: 125 };
 
@@ -240,16 +243,14 @@ export const resolveIconPalette = (input: ResolveIconPaletteInput): ResolvedIcon
       chipBackgroundColor: rgbToHex(fallbackBackground),
       chipBorderColor: rgbToHex(fallbackBorder),
       resolvedContrastRatio: Number(contrastRatio(fallbackGlyph, fallbackBackground).toFixed(2)),
-      usedFallback: true
+      usedFallback: true,
     };
   }
 
   const minimumRatio = normalizeMinimumRatio(input.minContrastRatio);
-  const {
-    themeChipTintWeight,
-    brandChipTintWeight,
-    brandBorderTintWeight
-  } = resolveMixWeights(input.themeId);
+  const { themeChipTintWeight, brandChipTintWeight, brandBorderTintWeight } = resolveMixWeights(
+    input.themeId,
+  );
 
   const useBrandChip = input.colorMode === "brand" && parsedBrand;
   const chipBackground = useBrandChip
@@ -264,9 +265,9 @@ export const resolveIconPalette = (input: ResolveIconPaletteInput): ResolvedIcon
     input.contrastMode === "always-theme"
       ? themeGlyph
       : input.contrastMode === "always-brand"
-        ? parsedBrand ?? themeGlyph
+        ? (parsedBrand ?? themeGlyph)
         : input.colorMode === "brand"
-          ? parsedBrand ?? themeGlyph
+          ? (parsedBrand ?? themeGlyph)
           : themeGlyph;
 
   let glyph = initialGlyph;
@@ -277,7 +278,7 @@ export const resolveIconPalette = (input: ResolveIconPaletteInput): ResolvedIcon
     const fallbackCandidates: RgbColor[] = [
       themeGlyph,
       { r: 255, g: 255, b: 255 },
-      { r: 0, g: 0, b: 0 }
+      { r: 0, g: 0, b: 0 },
     ];
 
     const best = resolveBestGlyphCandidate(fallbackCandidates, chipBackground);
@@ -302,6 +303,6 @@ export const resolveIconPalette = (input: ResolveIconPaletteInput): ResolvedIcon
     chipBackgroundColor: rgbToHex(finalBackground),
     chipBorderColor: rgbToHex(finalBorder),
     resolvedContrastRatio: Number(finalRatio.toFixed(2)),
-    usedFallback
+    usedFallback,
   };
 };

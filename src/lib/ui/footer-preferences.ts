@@ -28,7 +28,6 @@ export const resolveFooterPreferences = (site: SiteData): ResolvedFooterPreferen
     description: toOptionalTrimmed(footer?.description) ?? DEFAULT_DESCRIPTION,
     ctaLabel: toOptionalTrimmed(footer?.ctaLabel) ?? DEFAULT_CTA_LABEL,
     ctaUrl: toOptionalTrimmed(footer?.ctaUrl) ?? DEFAULT_CTA_URL,
-    showLastUpdated: typeof footer?.showLastUpdated === "boolean" ? footer.showLastUpdated : true
+    showLastUpdated: typeof footer?.showLastUpdated === "boolean" ? footer.showLastUpdated : true,
   };
 };
-

@@ -57,7 +57,7 @@ export const LinkSiteIcon = (props: LinkSiteIconProps) => {
       themeSurfacePillColor: readRootColorVar("--surface-pill", "#1A2232"),
       themeAccentColor: readRootColorVar("--accent", "#50E3C2"),
       themeTextColor: readRootColorVar("--text-primary", "#F5F7FB"),
-      themeBorderColor: readRootColorVar("--border-subtle", "#6B7280")
+      themeBorderColor: readRootColorVar("--border-subtle", "#6B7280"),
     });
   });
 
@@ -70,7 +70,7 @@ export const LinkSiteIcon = (props: LinkSiteIconProps) => {
     return {
       "--card-icon-fg": resolved.glyphColor,
       "--card-icon-bg": resolved.chipBackgroundColor,
-      "--card-icon-border": resolved.chipBorderColor
+      "--card-icon-border": resolved.chipBorderColor,
     };
   });
 

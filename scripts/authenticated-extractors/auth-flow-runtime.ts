@@ -1,10 +1,10 @@
-import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
+import readline from "node:readline/promises";
 import type {
   AuthFlowActionCandidate,
   AuthFlowSessionReport,
   AuthFlowSnapshot,
-  AuthFlowTransition
+  AuthFlowTransition,
 } from "./types";
 
 export interface AuthFlowActionExecutionResult {
@@ -62,7 +62,7 @@ const toTransition = (snapshot: AuthFlowSnapshot): AuthFlowTransition => {
     path: pathValue,
     title: snapshot.title,
     signals: snapshot.signals,
-    actionLabels: snapshot.actionCandidates.map((candidate) => candidate.label)
+    actionLabels: snapshot.actionCandidates.map((candidate) => candidate.label),
   };
 };
 
@@ -77,7 +77,7 @@ const signatureForSnapshot = (snapshot: AuthFlowSnapshot): string => {
     snapshot.currentUrl ?? "",
     snapshot.title ?? "",
     signalSignature,
-    actionSignature
+    actionSignature,
   ].join("::");
 };
 
@@ -93,13 +93,13 @@ const askYesNo = async (question: string): Promise<boolean> => {
 
 const askContinueOrAbort = async (
   logPrefix: string,
-  snapshot: AuthFlowSnapshot
+  snapshot: AuthFlowSnapshot,
 ): Promise<"continue" | "abort"> => {
   const rl = readline.createInterface({ input: stdin, output: stdout });
   try {
     const answer = (
       await rl.question(
-        `${logPrefix} Unknown state detected (${snapshot.state}). Continue waiting? [y=continue / n=abort]: `
+        `${logPrefix} Unknown state detected (${snapshot.state}). Continue waiting? [y=continue / n=abort]: `,
       )
     )
       .trim()
@@ -115,7 +115,7 @@ const askContinueOrAbort = async (
 
 const requireInteractiveTerminal = (reason: string): never => {
   throw new Error(
-    `Interactive confirmation required (${reason}) but no TTY is available. Re-run in a local interactive terminal.`
+    `Interactive confirmation required (${reason}) but no TTY is available. Re-run in a local interactive terminal.`,
   );
 };
 
@@ -141,7 +141,7 @@ const finalizeResult = (input: {
     actionsProposed: [...new Set(input.actionsProposed)],
     actionsExecuted: [...new Set(input.actionsExecuted)],
     actionsDeclined: [...new Set(input.actionsDeclined)],
-    heartbeats: input.heartbeats
+    heartbeats: input.heartbeats,
   };
 
   return {
@@ -149,14 +149,15 @@ const finalizeResult = (input: {
     timedOut: input.timedOut,
     failureReason: input.failureReason,
     finalSnapshot: input.finalSnapshot,
-    report
+    report,
   };
 };
 
 const isInteractive = (): boolean => stdin.isTTY && stdout.isTTY;
 
 const shouldPauseForUnknownState = (snapshot: AuthFlowSnapshot): boolean =>
-  snapshot.state === "unknown" || (snapshot.state === "post_auth_consent" && snapshot.actionCandidates.length === 0);
+  snapshot.state === "unknown" ||
+  (snapshot.state === "post_auth_consent" && snapshot.actionCandidates.length === 0);
 
 export const summarizeAuthFlowResult = (result: WaitForAuthenticatedSessionResult): string => {
   const finalSnapshot = result.finalSnapshot;
@@ -168,12 +169,12 @@ export const summarizeAuthFlowResult = (result: WaitForAuthenticatedSessionResul
     `signals=${finalSnapshot.signals.join(",") || "none"}`,
     `transitions=${result.report.transitions.length}`,
     `actionsExecuted=${result.report.actionsExecuted.length}`,
-    `failureReason=${result.failureReason ?? "none"}`
+    `failureReason=${result.failureReason ?? "none"}`,
   ].join("; ");
 };
 
 export const waitForAuthenticatedSession = async (
-  input: WaitForAuthenticatedSessionInput
+  input: WaitForAuthenticatedSessionInput,
 ): Promise<WaitForAuthenticatedSessionResult> => {
   const startedAt = nowIso();
   const logPrefix = input.logPrefix ?? "[auth-flow]";
@@ -219,7 +220,7 @@ export const waitForAuthenticatedSession = async (
         actionsProposed,
         actionsExecuted,
         actionsDeclined,
-        heartbeats
+        heartbeats,
       });
     }
 
@@ -234,7 +235,7 @@ export const waitForAuthenticatedSession = async (
         actionsExecuted,
         actionsDeclined,
         heartbeats,
-        failureReason: "blocked_state"
+        failureReason: "blocked_state",
       });
     }
 
@@ -262,14 +263,14 @@ export const waitForAuthenticatedSession = async (
             actionsExecuted,
             actionsDeclined,
             heartbeats,
-            failureReason: "interactive_required_action_confirmation"
+            failureReason: "interactive_required_action_confirmation",
           });
         }
 
         const shouldExecute = await askYesNo(
           `${logPrefix} Action candidate '${candidate.label}' (risk=${candidate.risk}, confidence=${candidate.confidence.toFixed(
-            2
-          )}). Execute now? [y/N]: `
+            2,
+          )}). Execute now? [y/N]: `,
         );
 
         if (!shouldExecute) {
@@ -282,18 +283,18 @@ export const waitForAuthenticatedSession = async (
           requireInteractiveTerminal("action execution callback missing");
         }
         const ensuredExecuteAction = executeAction as (
-          action: AuthFlowActionCandidate
+          action: AuthFlowActionCandidate,
         ) => Promise<AuthFlowActionExecutionResult>;
 
         const execution = await ensuredExecuteAction(candidate);
         if (execution.success) {
           actionsExecuted.push(candidate.actionId);
           console.log(
-            `${logPrefix} Executed action '${candidate.actionId}' (${execution.details ?? "no extra details"}).`
+            `${logPrefix} Executed action '${candidate.actionId}' (${execution.details ?? "no extra details"}).`,
           );
         } else {
           console.warn(
-            `${logPrefix} Action '${candidate.actionId}' did not execute (${execution.details ?? "unknown reason"}).`
+            `${logPrefix} Action '${candidate.actionId}' did not execute (${execution.details ?? "unknown reason"}).`,
           );
         }
       }
@@ -311,7 +312,7 @@ export const waitForAuthenticatedSession = async (
           actionsExecuted,
           actionsDeclined,
           heartbeats,
-          failureReason: "interactive_required_unknown_state"
+          failureReason: "interactive_required_unknown_state",
         });
       }
 
@@ -330,7 +331,7 @@ export const waitForAuthenticatedSession = async (
             actionsExecuted,
             actionsDeclined,
             heartbeats,
-            failureReason: "unknown_state_aborted_by_operator"
+            failureReason: "unknown_state_aborted_by_operator",
           });
         }
       }
@@ -355,6 +356,6 @@ export const waitForAuthenticatedSession = async (
     actionsExecuted,
     actionsDeclined,
     heartbeats,
-    failureReason: "timeout"
+    failureReason: "timeout",
   });
 };

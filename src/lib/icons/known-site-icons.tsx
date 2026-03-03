@@ -50,11 +50,11 @@ import {
   siWhatsapp,
   siX,
   siYarn,
-  siYoutube
+  siYoutube,
 } from "simple-icons";
 import type { Component } from "solid-js";
+import { IconLinkedin, IconSkype, IconTwitter, IconWallet, createSimpleIcon } from "./custom-icons";
 import type { KnownSiteId } from "./known-sites-data";
-import { createSimpleIcon, IconLinkedin, IconSkype, IconTwitter, IconWallet } from "./custom-icons";
 
 export type KnownSiteIconComponent = Component<Record<string, unknown>>;
 
@@ -114,7 +114,8 @@ const knownSiteIcons: Record<KnownSiteId, KnownSiteIconComponent> = {
   wallet: IconWallet,
   substack: createSimpleIcon(siSubstack),
   google: createSimpleIcon(siGoogle),
-  openai: createSimpleIcon(siOpenai)
+  openai: createSimpleIcon(siOpenai),
 };
 
-export const resolveKnownSiteIcon = (siteId: KnownSiteId): KnownSiteIconComponent => knownSiteIcons[siteId];
+export const resolveKnownSiteIcon = (siteId: KnownSiteId): KnownSiteIconComponent =>
+  knownSiteIcons[siteId];

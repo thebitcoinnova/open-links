@@ -1,4 +1,13 @@
-import { createEffect, createMemo, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from "solid-js";
 import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
@@ -7,29 +16,29 @@ import SiteFooter from "../components/layout/SiteFooter";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
+import ThemeToggle from "../components/theme/ThemeToggle";
 import { loadContent, resolveGeneratedContentImageUrl } from "../lib/content/load-content";
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
 import { isPaymentCapableLink } from "../lib/payments/types";
-import ThemeToggle from "../components/theme/ThemeToggle";
 import {
-  applyTypographyState,
+  type UiMode,
   applyThemeState,
+  applyTypographyState,
   canToggleMode,
   persistModePreference,
   resolveInitialMode,
   resolveModePolicy,
-  type UiMode
 } from "../lib/theme/mode-controller";
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
-import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
 import {
   buildRichCardViewModel,
   resolveRichCardVariant,
-  resolveRichRenderMode
+  resolveRichRenderMode,
 } from "../lib/ui/rich-card-policy";
+import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
 
 const content = loadContent();
 const composition = resolveComposition(content.site);
@@ -43,10 +52,14 @@ const themeDefinition = getThemeDefinition(themeSelection.active);
 const typography = resolveTypographyPreferences({
   site: content.site,
   activeTheme: themeSelection.active,
-  typographyScale: layout.typographyScale
+  typographyScale: layout.typographyScale,
 });
 
-const sections = resolveLinkSections(content.links, content.groups, composition.grouping) as LinkSectionData[];
+const sections = resolveLinkSections(
+  content.links,
+  content.groups,
+  composition.grouping,
+) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
 
 const firstString = (...values: Array<string | undefined>): string | undefined => {
@@ -80,7 +93,7 @@ const ensureMetaTag = (attr: "name" | "property", key: string, contentValue: str
 };
 
 const ensureCanonical = (href: string) => {
-  let link = document.head.querySelector<HTMLLinkElement>("link[rel=\"canonical\"]");
+  let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
 
   if (!link) {
     link = document.createElement("link");
@@ -96,21 +109,27 @@ const applySeoMetadata = () => {
   const defaults = seo?.defaults ?? {};
   const overrides = seo?.overrides?.profile ?? {};
 
-  const baseOrigin = firstString(seo?.canonicalBaseUrl, window.location.origin) ?? window.location.origin;
+  const baseOrigin =
+    firstString(seo?.canonicalBaseUrl, window.location.origin) ?? window.location.origin;
 
   const title =
     firstString(
       overrides.title,
       defaults.title,
       content.profile.name ? `${content.profile.name} | ${content.site.title}` : undefined,
-      content.site.title
+      content.site.title,
     ) ?? "OpenLinks";
 
   const description =
-    firstString(overrides.description, defaults.description, content.profile.bio, content.site.description) ??
-    "OpenLinks profile";
+    firstString(
+      overrides.description,
+      defaults.description,
+      content.profile.bio,
+      content.site.description,
+    ) ?? "OpenLinks profile";
 
-  const canonicalInput = firstString(overrides.canonical, defaults.canonical, content.site.baseUrl, "/") ?? "/";
+  const canonicalInput =
+    firstString(overrides.canonical, defaults.canonical, content.site.baseUrl, "/") ?? "/";
   const canonical = toAbsoluteUrl(canonicalInput, baseOrigin);
 
   const imagePath =
@@ -120,7 +139,7 @@ const applySeoMetadata = () => {
       defaults.twitterImage,
       defaults.ogImage,
       seo?.socialImageFallback,
-      "/openlinks-social-fallback.svg"
+      "/openlinks-social-fallback.svg",
     ) ?? "/openlinks-social-fallback.svg";
   const resolvedImagePath =
     resolveGeneratedContentImageUrl(imagePath) ??
@@ -128,14 +147,22 @@ const applySeoMetadata = () => {
     "/openlinks-social-fallback.svg";
 
   const ogTitle = firstString(overrides.ogTitle, defaults.ogTitle, title) ?? title;
-  const ogDescription = firstString(overrides.ogDescription, defaults.ogDescription, description) ?? description;
-  const ogUrl = toAbsoluteUrl(firstString(overrides.ogUrl, defaults.ogUrl, canonical) ?? canonical, baseOrigin);
+  const ogDescription =
+    firstString(overrides.ogDescription, defaults.ogDescription, description) ?? description;
+  const ogUrl = toAbsoluteUrl(
+    firstString(overrides.ogUrl, defaults.ogUrl, canonical) ?? canonical,
+    baseOrigin,
+  );
   const ogImage = toAbsoluteUrl(resolvedImagePath, baseOrigin);
 
-  const twitterCard = firstString(overrides.twitterCard, defaults.twitterCard, "summary_large_image") ?? "summary_large_image";
-  const twitterTitle = firstString(overrides.twitterTitle, defaults.twitterTitle, ogTitle) ?? ogTitle;
+  const twitterCard =
+    firstString(overrides.twitterCard, defaults.twitterCard, "summary_large_image") ??
+    "summary_large_image";
+  const twitterTitle =
+    firstString(overrides.twitterTitle, defaults.twitterTitle, ogTitle) ?? ogTitle;
   const twitterDescription =
-    firstString(overrides.twitterDescription, defaults.twitterDescription, ogDescription) ?? ogDescription;
+    firstString(overrides.twitterDescription, defaults.twitterDescription, ogDescription) ??
+    ogDescription;
   const twitterImage = toAbsoluteUrl(resolvedImagePath, baseOrigin);
 
   document.title = title;
@@ -144,7 +171,11 @@ const applySeoMetadata = () => {
   ensureMetaTag("name", "description", description);
   ensureMetaTag("property", "og:title", ogTitle);
   ensureMetaTag("property", "og:description", ogDescription);
-  ensureMetaTag("property", "og:type", firstString(overrides.ogType, defaults.ogType, "website") ?? "website");
+  ensureMetaTag(
+    "property",
+    "og:type",
+    firstString(overrides.ogType, defaults.ogType, "website") ?? "website",
+  );
   ensureMetaTag("property", "og:url", ogUrl);
   ensureMetaTag("property", "og:image", ogImage);
 
@@ -221,7 +252,7 @@ export default function RouteIndex() {
       mode: mode(),
       policy: modePolicy,
       density: layout.density,
-      brandIconSizeMode: brandIconOptions.sizeMode
+      brandIconSizeMode: brandIconOptions.sizeMode,
     });
     applyTypographyState(typography);
   });
@@ -240,7 +271,9 @@ export default function RouteIndex() {
     <main
       aria-label="OpenLinks profile and links"
       class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
-      style={{ "--profile-avatar-scale": String(layout.profileAvatarScale) } as Record<string, string>}
+      style={
+        { "--profile-avatar-scale": String(layout.profileAvatarScale) } as Record<string, string>
+      }
     >
       <TopUtilityBar title={content.site.title} controlsLabel="Theme and mode controls">
         <UtilityControlsMenu panelLabel="Theme and mode controls">
@@ -255,7 +288,8 @@ export default function RouteIndex() {
             <ThemeToggle mode={mode()} onToggle={handleModeToggle} />
           </Show>
           <span class="utility-pill" aria-live="polite">
-            {themeDefinition?.label ?? themeSelection.active} · {themeDefinition?.intensity ?? "mild"}
+            {themeDefinition?.label ?? themeSelection.active} ·{" "}
+            {themeDefinition?.intensity ?? "mild"}
           </span>
           <span class="utility-pill" aria-live="polite">
             Cards: {richRenderMode === "simple" ? "simple only" : "rich + simple"}
@@ -286,7 +320,10 @@ export default function RouteIndex() {
         )}
       </For>
 
-      <SiteFooter preferences={footerPreferences} buildTimestampIso={__OPENLINKS_BUILD_TIMESTAMP__} />
+      <SiteFooter
+        preferences={footerPreferences}
+        buildTimestampIso={__OPENLINKS_BUILD_TIMESTAMP__}
+      />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 (() => {
   const normalize = (value) => (value || "").replace(/\s+/g, " ").trim();
-  const isPlaceholder = (value) => /sign up\s*\|\s*linkedin|join linkedin|authwall/i.test(value || "");
+  const isPlaceholder = (value) =>
+    /sign up\s*\|\s*linkedin|join linkedin|authwall/i.test(value || "");
 
   const collectText = (nodes, minLength = 1, maxLength = 260) => {
     const seen = new Set();
@@ -20,7 +21,7 @@
   const fullName =
     headingTexts.find(
       (value) =>
-        !/about|activity|experience|education|skills|analytics|people you may know/i.test(value)
+        !/about|activity|experience|education|skills|analytics|people you may know/i.test(value),
     ) ||
     headingTexts[0] ||
     null;
@@ -28,15 +29,19 @@
   const headlineCandidates = collectText(
     document.querySelectorAll("main p, main span, main div"),
     8,
-    180
+    180,
   )
-    .filter((value) => /engineer|developer|founder|owner|manager|designer|architect|student|lead/i.test(value))
-    .filter((value) => !/connections|followers|contact info|profile language|public profile/i.test(value));
+    .filter((value) =>
+      /engineer|developer|founder|owner|manager|designer|architect|student|lead/i.test(value),
+    )
+    .filter(
+      (value) => !/connections|followers|contact info|profile language|public profile/i.test(value),
+    );
   const headline = headlineCandidates[0] || null;
 
   let about = null;
   const aboutHeading = Array.from(document.querySelectorAll("main h2, main h3, main span")).find(
-    (node) => normalize(node.textContent || "").toLowerCase() === "about"
+    (node) => normalize(node.textContent || "").toLowerCase() === "about",
   );
   if (aboutHeading) {
     const section = aboutHeading.closest("section") || aboutHeading.parentElement;
@@ -89,6 +94,6 @@
     about,
     description,
     imageUrl,
-    currentUrl: window.location.href
+    currentUrl: window.location.href,
   };
-})()
+})();

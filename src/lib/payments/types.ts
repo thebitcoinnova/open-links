@@ -9,7 +9,7 @@ export const PAYMENT_RAIL_TYPES = [
   "lightning",
   "ethereum",
   "solana",
-  "custom-crypto"
+  "custom-crypto",
 ] as const;
 
 export type PaymentRailType = (typeof PAYMENT_RAIL_TYPES)[number];
@@ -98,7 +98,7 @@ export const hasPaymentRails = (payment: LinkPaymentConfig | undefined): boolean
   Array.isArray(payment?.rails) && payment.rails.some((rail) => rail.enabled !== false);
 
 export const isPaymentCapableLink = (
-  link: { type?: string; payment?: LinkPaymentConfig } | undefined
+  link: { type?: string; payment?: LinkPaymentConfig } | undefined,
 ): boolean => {
   if (!link) {
     return false;

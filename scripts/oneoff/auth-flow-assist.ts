@@ -6,12 +6,12 @@ import {
   OPENLINKS_AUTH_SESSION_TIMEOUT_ENV,
   resolveAuthWaitOverridesFromArgs,
   resolveAuthWaitSettings,
-  valueForFlag
+  valueForFlag,
 } from "../authenticated-extractors/browser-session";
 import {
   loadAuthenticatedExtractorsPolicy,
   resolveAuthenticatedExtractorById,
-  resolveAuthenticatedExtractorDomainMatch
+  resolveAuthenticatedExtractorDomainMatch,
 } from "../authenticated-extractors/policy";
 import { getAuthenticatedExtractorPlugin } from "../authenticated-extractors/registry";
 
@@ -51,7 +51,7 @@ const parseArgs = (): CliArgs => {
 
   return {
     extractorId,
-    targetUrl
+    targetUrl,
   };
 };
 
@@ -82,8 +82,8 @@ const run = async () => {
   if (!resolveAuthenticatedExtractorDomainMatch(args.targetUrl, policyExtractor)) {
     throw new Error(
       `URL '${args.targetUrl}' does not match extractor '${args.extractorId}' domains (${policyExtractor.domains.join(
-        ", "
-      )}).`
+        ", ",
+      )}).`,
     );
   }
 
@@ -93,12 +93,12 @@ const run = async () => {
   console.log(`Auth timeout (ms): ${waitSettings.timeoutMs}`);
   console.log(`Auth poll interval (ms): ${waitSettings.pollMs}`);
   console.log(
-    "This command delegates to extractor ensureSession and records transition/action reports when available."
+    "This command delegates to extractor ensureSession and records transition/action reports when available.",
   );
 
   const ensureResult = await plugin.ensureSession({
     extractorId: args.extractorId,
-    targetUrl: args.targetUrl
+    targetUrl: args.targetUrl,
   });
 
   const artifactPayload = {
@@ -110,7 +110,7 @@ const run = async () => {
     verified: ensureResult.verified,
     details: ensureResult.details,
     hasStructuredReport: Boolean(ensureResult.report),
-    report: ensureResult.report ?? null
+    report: ensureResult.report ?? null,
   };
   const artifactPath = writeOutputArtifact(artifactPayload);
 
@@ -120,7 +120,7 @@ const run = async () => {
   console.log(`Artifact: ${path.relative(ROOT, artifactPath)}`);
   if (!ensureResult.report) {
     console.log(
-      "No structured session report was returned by this extractor. Consider migrating it to auth-flow runtime helpers."
+      "No structured session report was returned by this extractor. Consider migrating it to auth-flow runtime helpers.",
     );
   }
 

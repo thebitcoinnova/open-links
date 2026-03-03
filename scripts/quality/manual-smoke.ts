@@ -12,8 +12,11 @@ const readText = (rootDir: string, relativePath: string): string =>
 
 export const runManualSmokeChecks = ({
   rootDir,
-  checklistLabels
-}: RunManualSmokeInput): { domainResult: QualityDomainResult; checks: ManualSmokeCheckResult[] } => {
+  checklistLabels,
+}: RunManualSmokeInput): {
+  domainResult: QualityDomainResult;
+  checks: ManualSmokeCheckResult[];
+} => {
   const routeIndex = readText(rootDir, "src/routes/index.tsx");
   const simpleCard = readText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
   const richCard = readText(rootDir, "src/components/cards/RichLinkCard.tsx");
@@ -30,18 +33,16 @@ export const runManualSmokeChecks = ({
       details: routeIndex.includes("<main")
         ? "Main landmark detected."
         : "Main landmark not found in route layout.",
-      remediation: "Render primary page content inside a <main> element."
+      remediation: "Render primary page content inside a <main> element.",
     },
     {
       id: "toggle-label",
-      label:
-        checklistLabels[1] ??
-        "Theme toggle announces state/action for screen readers.",
+      label: checklistLabels[1] ?? "Theme toggle announces state/action for screen readers.",
       status: themeToggle.includes("aria-label") ? "pass" : "warn",
       details: themeToggle.includes("aria-label")
         ? "Theme toggle contains aria-label semantics."
         : "Theme toggle lacks explicit aria-label semantics.",
-      remediation: "Set an aria-label that reflects dark/light toggle action."
+      remediation: "Set an aria-label that reflects dark/light toggle action.",
     },
     {
       id: "simple-card-action",
@@ -53,7 +54,8 @@ export const runManualSmokeChecks = ({
         simpleCard.includes("<a") && simpleCard.includes("aria-label")
           ? "Simple card anchor and aria-label detected."
           : "Simple card anchor/label semantics are incomplete.",
-      remediation: "Ensure simple cards are anchors with explicit action-oriented accessible naming."
+      remediation:
+        "Ensure simple cards are anchors with explicit action-oriented accessible naming.",
     },
     {
       id: "rich-card-action",
@@ -65,7 +67,7 @@ export const runManualSmokeChecks = ({
         richCard.includes("<a") && richCard.includes("aria-label")
           ? "Rich card anchor and aria-label detected."
           : "Rich card anchor/label semantics are incomplete.",
-      remediation: "Ensure rich cards are anchors with explicit destination labeling."
+      remediation: "Ensure rich cards are anchors with explicit destination labeling.",
     },
     {
       id: "utility-controls-menu",
@@ -84,8 +86,9 @@ export const runManualSmokeChecks = ({
         utilityMenu.includes("aria-controls")
           ? "Utility controls menu integration and disclosure semantics detected."
           : "Utility controls menu integration/disclosure semantics appear incomplete.",
-      remediation: "Render utility controls inside UtilityControlsMenu with aria-expanded and aria-controls linkage."
-    }
+      remediation:
+        "Render utility controls inside UtilityControlsMenu with aria-expanded and aria-controls linkage.",
+    },
   ];
 
   const issues: QualityIssue[] = checks
@@ -96,7 +99,7 @@ export const runManualSmokeChecks = ({
       code: "MANUAL_SMOKE_INCOMPLETE",
       scope: check.id,
       message: check.details,
-      remediation: check.remediation ?? "Review accessibility smoke checklist."
+      remediation: check.remediation ?? "Review accessibility smoke checklist.",
     }));
 
   const status = issues.length > 0 ? "warn" : "pass";
@@ -109,8 +112,8 @@ export const runManualSmokeChecks = ({
         status === "pass"
           ? "Manual smoke checklist signals are satisfied."
           : "Manual smoke checklist has follow-up items.",
-      issues
+      issues,
     },
-    checks
+    checks,
   };
 };

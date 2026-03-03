@@ -1,5 +1,5 @@
 import type { SyncResult } from "@openlinks/studio-shared";
-import { db, type RepoRecord } from "./database.js";
+import { type RepoRecord, db } from "./database.js";
 import { githubAuthService } from "./github-auth.js";
 import { githubRepoService } from "./github-repo.js";
 

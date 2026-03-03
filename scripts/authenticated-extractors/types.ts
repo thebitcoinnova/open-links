@@ -150,9 +150,11 @@ export interface AuthenticatedExtractorEnsureSessionResult {
 export interface AuthenticatedExtractorPlugin {
   id: string;
   ensureSession: (
-    context: AuthenticatedExtractorSessionContext
+    context: AuthenticatedExtractorSessionContext,
   ) => Promise<AuthenticatedExtractorEnsureSessionResult>;
-  extract: (context: AuthenticatedExtractorExtractContext) => Promise<AuthenticatedExtractorExtractResult>;
+  extract: (
+    context: AuthenticatedExtractorExtractContext,
+  ) => Promise<AuthenticatedExtractorExtractResult>;
 }
 
 export interface AuthenticatedCacheValidationIssue {

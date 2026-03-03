@@ -2,7 +2,7 @@ import type {
   SiteData,
   TypographyOverrides,
   TypographyScaleMode,
-  TypographyTransformMode
+  TypographyTransformMode,
 } from "../content/load-content";
 
 const TYPOGRAPHY_TO_CSS_VAR = {
@@ -28,7 +28,7 @@ const TYPOGRAPHY_TO_CSS_VAR = {
   trackingIcon: "--tracking-icon",
   transformUtilityTitle: "--transform-utility-title",
   transformSectionHeading: "--transform-section-heading",
-  transformContactLabel: "--transform-contact-label"
+  transformContactLabel: "--transform-contact-label",
 } as const;
 
 type TypographyOverrideKey = keyof typeof TYPOGRAPHY_TO_CSS_VAR;
@@ -38,14 +38,14 @@ const MANAGED_VARS = Object.values(TYPOGRAPHY_TO_CSS_VAR);
 const TRANSFORM_KEYS = new Set<TypographyOverrideKey>([
   "transformUtilityTitle",
   "transformSectionHeading",
-  "transformContactLabel"
+  "transformContactLabel",
 ]);
 
 const VALID_TRANSFORMS = new Set<TypographyTransformMode>([
   "none",
   "uppercase",
   "lowercase",
-  "capitalize"
+  "capitalize",
 ]);
 
 const SCALE_PRESETS: Record<TypographyScaleMode, Partial<TypographyOverrides>> = {
@@ -53,13 +53,13 @@ const SCALE_PRESETS: Record<TypographyScaleMode, Partial<TypographyOverrides>> =
   compact: {
     sizeTitle: "clamp(1.5rem, 3.2vw, 2.05rem)",
     sizeHeadline: "clamp(0.95rem, 2vw, 1.08rem)",
-    sizeCaption: "0.82rem"
+    sizeCaption: "0.82rem",
   },
   expressive: {
     sizeTitle: "clamp(1.9rem, 4.5vw, 2.75rem)",
     sizeHeadline: "clamp(1.15rem, 2.4vw, 1.3rem)",
-    sizeCaption: "0.93rem"
-  }
+    sizeCaption: "0.93rem",
+  },
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -92,7 +92,7 @@ const normalizeTransformValue = (value: unknown): TypographyTransformMode | unde
 };
 
 const normalizeTypographyOverrides = (
-  overrides: unknown
+  overrides: unknown,
 ): Partial<Record<TypographyOverrideKey, string>> => {
   if (!isRecord(overrides)) {
     return {};
@@ -128,7 +128,7 @@ interface ResolveTypographyPreferencesInput {
 export const resolveTypographyPreferences = ({
   site,
   activeTheme,
-  typographyScale
+  typographyScale,
 }: ResolveTypographyPreferencesInput): ResolvedTypographyPreferences => {
   const presetOverrides = normalizeTypographyOverrides(SCALE_PRESETS[typographyScale]);
   const globalOverrides = normalizeTypographyOverrides(site.ui?.typography?.global);
@@ -136,7 +136,7 @@ export const resolveTypographyPreferences = ({
   const merged = {
     ...presetOverrides,
     ...globalOverrides,
-    ...themeOverrides
+    ...themeOverrides,
   };
 
   const cssVars: Record<string, string> = {};
@@ -152,6 +152,6 @@ export const resolveTypographyPreferences = ({
 
   return {
     managedVars: [...MANAGED_VARS],
-    cssVars
+    cssVars,
   };
 };

@@ -3,7 +3,7 @@ import type {
   DesktopColumnsMode,
   SiteData,
   TargetSizeMode,
-  TypographyScaleMode
+  TypographyScaleMode,
 } from "../content/load-content";
 
 export interface LayoutPreferences {
@@ -56,5 +56,5 @@ export const resolveLayoutPreferences = (site: SiteData): LayoutPreferences => (
   desktopColumns: desktopColumns(site),
   typographyScale: typographyScale(site),
   targetSize: targetSize(site),
-  profileAvatarScale: profileAvatarScale(site)
+  profileAvatarScale: profileAvatarScale(site),
 });
