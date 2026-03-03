@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { generateOpenLinksBrandAssets } from "./generate-openlinks-brand-assets";
 import {
   type CircleSpec,
   type LGeometry,
@@ -670,6 +671,12 @@ const serializeV2Variants = (variants: V2VariantSpec[]) =>
     },
   }));
 
+const serializeGeneratedJson = (value: unknown): string =>
+  `${JSON.stringify(value, null, 2).replace(
+    /"solverNotes": \[\n\s+"([^"\n]+)"\n\s+\]/g,
+    '"solverNotes": ["$1"]',
+  )}\n`;
+
 const writeActiveV2Manifest = (input: {
   generatedAt: string;
   labels: V2VariantSpec[];
@@ -709,7 +716,7 @@ const writeActiveV2Manifest = (input: {
     },
   };
 
-  fs.writeFileSync(V2_MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  fs.writeFileSync(V2_MANIFEST_PATH, serializeGeneratedJson(manifest), "utf8");
 };
 
 const writeArchiveV2Manifest = (input: {
@@ -747,11 +754,7 @@ const writeArchiveV2Manifest = (input: {
     variants: serializeV2Variants(input.labels),
   };
 
-  fs.writeFileSync(
-    V2_ARCHIVE_MANIFEST_PATH,
-    `${JSON.stringify(archiveManifest, null, 2)}\n`,
-    "utf8",
-  );
+  fs.writeFileSync(V2_ARCHIVE_MANIFEST_PATH, serializeGeneratedJson(archiveManifest), "utf8");
 };
 
 const generateV2 = (): void => {
@@ -846,9 +849,14 @@ const generateV2 = (): void => {
   console.log(`Global V2 alias: ${toRelative(TOP_LEVEL_V2_ALIAS_PATH)} -> ${canonical.filename}`);
 };
 
-const run = (): void => {
+const run = async (): Promise<void> => {
   generateV1();
   generateV2();
+  await generateOpenLinksBrandAssets({ quiet: false });
 };
 
-run();
+run().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`Failed to generate OpenLinks logo variants: ${message}`);
+  process.exitCode = 1;
+});

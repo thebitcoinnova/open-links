@@ -17,6 +17,7 @@
     "build": "vite build",
     "build:strict": "bun run avatar:sync && bun run enrich:rich:strict && bun run images:sync && bun run validate:data:strict && vite build",
     "prebuild": "bun run avatar:sync && bun run enrich:rich:strict && bun run images:sync && bun run validate:data",
+    "branding:assets": "bun scripts/generate-openlinks-brand-assets.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "biome:check": "bunx @biomejs/biome check . --files-ignore-unknown=true",
@@ -71,10 +72,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^25.3.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "husky": "^9.1.7",
+    "png-to-ico": "^3.0.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-solid": "^2.11.10"

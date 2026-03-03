@@ -103,6 +103,18 @@ a:focus-visible {
   font-size: var(--page-type-caption);
 }
 
+.utility-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.utility-logo {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+}
+
 .utility-actions {
   display: flex;
   align-items: center;

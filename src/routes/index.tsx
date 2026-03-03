@@ -275,7 +275,12 @@ export default function RouteIndex() {
         { "--profile-avatar-scale": String(layout.profileAvatarScale) } as Record<string, string>
       }
     >
-      <TopUtilityBar title={content.site.title} controlsLabel="Theme and mode controls">
+      <TopUtilityBar
+        title={content.site.title}
+        controlsLabel="Theme and mode controls"
+        logoPath="branding/openlinks-logo/openlinks-logo.svg"
+        logoAlt="OpenLinks logo"
+      >
         <UtilityControlsMenu panelLabel="Theme and mode controls">
           <Show
             when={canToggle()}

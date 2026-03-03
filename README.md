@@ -22,6 +22,9 @@ This project is developer-first: fork the repo, edit JSON, push, and publish.
 - Global primary logo: `public/branding/openlinks-logo/openlinks-logo.svg`
 - Explicit V2 alias: `public/branding/openlinks-logo/openlinks-logo-v2.svg`
 - Archived non-winning V2 marks: `public/branding/openlinks-logo/v2/archive/`
+- Runtime browser icon set (main app): `public/`
+- Runtime browser icon set (Studio): `packages/studio-web/public/`
+- Regenerate runtime brand assets: `bun run branding:assets`
 
 ## Why OpenLinks
 

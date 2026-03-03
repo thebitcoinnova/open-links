@@ -38,3 +38,47 @@ bun scripts/generate-openlinks-logo-variants.ts
 ```
 
 The generator is the source of truth for canonical ids, aliases, and archive placement.
+
+## Runtime Brand Assets
+
+Runtime browser/app icons are generated from the active canonical alias:
+
+- `public/branding/openlinks-logo/openlinks-logo.svg`
+
+Generate runtime brand assets directly with:
+
+```bash
+bun run branding:assets
+```
+
+The logo-variant generator also triggers this command path after canonical/logo updates.
+
+### Main app output root (`public/`)
+
+- `favicon.svg`
+- `favicon-16x16.png`
+- `favicon-32x32.png`
+- `favicon.ico`
+- `apple-touch-icon.png`
+- `android-chrome-192x192.png`
+- `android-chrome-512x512.png`
+- `site.webmanifest`
+- `branding/openlinks-logo/openlinks-logo.svg`
+
+### Studio output root (`packages/studio-web/public/`)
+
+- `favicon.svg`
+- `favicon-16x16.png`
+- `favicon-32x32.png`
+- `favicon.ico`
+- `apple-touch-icon.png`
+- `android-chrome-192x192.png`
+- `android-chrome-512x512.png`
+- `site.webmanifest`
+- `branding/openlinks-logo/openlinks-logo.svg`
+
+## Favicon Badge Policy
+
+- Tiny browser icons (`favicon.svg`, PNG favicon sizes, ICO) use a high-contrast circular badge treatment for legibility at 16-32 px.
+- The mark geometry remains the selected V2 winner; only presentation contrast is adjusted for favicon readability.
+- Header/social surfaces use the same logo family without forcing tiny-icon badge styling.

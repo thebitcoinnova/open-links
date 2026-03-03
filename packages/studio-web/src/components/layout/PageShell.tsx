@@ -6,12 +6,22 @@ interface PageShellProps {
   children: JSX.Element;
 }
 
+const toAssetUrl = (assetPath: string): string => {
+  const base = import.meta.env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = assetPath.replace(/^\/+/, "");
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+const STUDIO_LOGO_PATH = toAssetUrl("branding/openlinks-logo/openlinks-logo.svg");
+
 export default function PageShell(props: PageShellProps) {
   return (
     <div class="min-h-screen bg-gradient-to-br from-ink via-slate-900 to-slate-800 text-slate-100">
       <header class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6 md:px-8">
-        <A href="/" class="font-display text-lg tracking-tight text-white">
-          OpenLinks Studio
+        <A href="/" class="flex items-center gap-2 font-display text-lg tracking-tight text-white">
+          <img src={STUDIO_LOGO_PATH} alt="" aria-hidden="true" class="h-6 w-6 shrink-0" />
+          <span>OpenLinks Studio</span>
         </A>
         <nav class="flex items-center gap-2 text-sm">
           <A href="/onboarding" class="rounded-lg px-3 py-2 text-slate-200 hover:bg-white/10">
