@@ -19,6 +19,10 @@ jobs:
     name: Sync README Screenshot (Direct Push)
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    env:
+      PAGES_BASE_MODE: root
+      BASE_PATH: ""
+      REPO_NAME_OVERRIDE: ""
     outputs:
       push_result: ${{ steps.publish.outputs.push_result }}
 
@@ -42,10 +46,26 @@ jobs:
         run: |
           echo "value=$(git show -s --format=%cI "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
 
+      - name: Validate screenshot base environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${PAGES_BASE_MODE:-}" != "root" ]; then
+            echo "::error::PAGES_BASE_MODE must be 'root' for README screenshot workflow."
+            exit 1
+          fi
+          if [ -n "${BASE_PATH:-}" ]; then
+            echo "::error::BASE_PATH must be empty for README screenshot workflow."
+            exit 1
+          fi
+          if [ -n "${REPO_NAME_OVERRIDE:-}" ]; then
+            echo "::error::REPO_NAME_OVERRIDE must be empty for README screenshot workflow."
+            exit 1
+          fi
+
       - name: Build site
         env:
           OPENLINKS_BUILD_TIMESTAMP: ${{ steps.build_timestamp.outputs.value }}
-          PAGES_BASE_MODE: root
         run: bun run build
 
       - name: Install Playwright Chromium
@@ -82,16 +102,6 @@ jobs:
           set -euo pipefail
           mkdir -p docs/assets
 
-          capture_with_wait() {
-            local url="$1"
-            npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
-              --timeout=120000 \
-              --wait-for-selector=".profile-header" \
-              --wait-for-timeout=1200 \
-              "$url" \
-              docs/assets/openlinks-preview.png
-          }
-
           script_src="$(sed -n 's|.*<script type=\"module\" crossorigin src=\"\([^\"]*\)\".*|\1|p' dist/index.html | head -n 1)"
           if [ -z "$script_src" ]; then
             echo "::error::Unable to resolve script src from dist/index.html."
@@ -112,33 +122,39 @@ jobs:
           echo "Resolved capture_url=${capture_url}"
           echo "Resolved asset_url=${asset_url}"
 
-          if ! curl --silent --show-error --fail "$asset_url" > /dev/null; then
-            echo "::error::Main asset is unreachable at ${asset_url}."
+          ready=false
+          for _ in {1..60}; do
+            if curl --silent --show-error --fail "$capture_url" > /dev/null && \
+               curl --silent --show-error --fail "$asset_url" > /dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" != "true" ]; then
+            echo "::error::Preview did not become ready with matching HTML and asset URLs."
             echo "::group::dist/index.html"
             sed -n '1,160p' dist/index.html
             echo "::endgroup::"
             echo "::group::Preview log"
             cat /tmp/openlinks-preview.log
             echo "::endgroup::"
+            echo "::group::Root HTML (first 120 lines)"
+            curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
+            echo "::endgroup::"
+            echo "::group::Capture URL HTML (first 120 lines)"
+            curl --silent "$capture_url" | sed -n '1,120p'
+            echo "::endgroup::"
             exit 1
           fi
 
-          if ! capture_with_wait "$capture_url"; then
-            echo "::warning::Primary screenshot capture failed. Trying fallback URLs."
-            if ! capture_with_wait "http://127.0.0.1:4173/" && ! capture_with_wait "http://127.0.0.1:4173/open-links/"; then
-              echo "::error::All screenshot capture attempts failed."
-              echo "::group::Preview log"
-              cat /tmp/openlinks-preview.log
-              echo "::endgroup::"
-              echo "::group::Root HTML (first 120 lines)"
-              curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
-              echo "::endgroup::"
-              echo "::group::/open-links/ HTML (first 120 lines)"
-              curl --silent "http://127.0.0.1:4173/open-links/" | sed -n '1,120p'
-              echo "::endgroup::"
-              exit 1
-            fi
-          fi
+          npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
+            --timeout=120000 \
+            --wait-for-selector=".profile-header" \
+            --wait-for-timeout=1200 \
+            "$capture_url" \
+            docs/assets/openlinks-preview.png
 
           bytes="$(wc -c < docs/assets/openlinks-preview.png)"
           if [ "$bytes" -lt 20000 ]; then
@@ -196,6 +212,10 @@ jobs:
     needs:
       - sync-main
     if: needs.sync-main.outputs.push_result == 'blocked'
+    env:
+      PAGES_BASE_MODE: root
+      BASE_PATH: ""
+      REPO_NAME_OVERRIDE: ""
 
     steps:
       - name: Checkout repository
@@ -217,10 +237,26 @@ jobs:
         run: |
           echo "value=$(git show -s --format=%cI "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
 
+      - name: Validate screenshot base environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${PAGES_BASE_MODE:-}" != "root" ]; then
+            echo "::error::PAGES_BASE_MODE must be 'root' for README screenshot workflow."
+            exit 1
+          fi
+          if [ -n "${BASE_PATH:-}" ]; then
+            echo "::error::BASE_PATH must be empty for README screenshot workflow."
+            exit 1
+          fi
+          if [ -n "${REPO_NAME_OVERRIDE:-}" ]; then
+            echo "::error::REPO_NAME_OVERRIDE must be empty for README screenshot workflow."
+            exit 1
+          fi
+
       - name: Build site
         env:
           OPENLINKS_BUILD_TIMESTAMP: ${{ steps.build_timestamp.outputs.value }}
-          PAGES_BASE_MODE: root
         run: bun run build
 
       - name: Install Playwright Chromium
@@ -257,16 +293,6 @@ jobs:
           set -euo pipefail
           mkdir -p docs/assets
 
-          capture_with_wait() {
-            local url="$1"
-            npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
-              --timeout=120000 \
-              --wait-for-selector=".profile-header" \
-              --wait-for-timeout=1200 \
-              "$url" \
-              docs/assets/openlinks-preview.png
-          }
-
           script_src="$(sed -n 's|.*<script type=\"module\" crossorigin src=\"\([^\"]*\)\".*|\1|p' dist/index.html | head -n 1)"
           if [ -z "$script_src" ]; then
             echo "::error::Unable to resolve script src from dist/index.html."
@@ -287,33 +313,39 @@ jobs:
           echo "Resolved capture_url=${capture_url}"
           echo "Resolved asset_url=${asset_url}"
 
-          if ! curl --silent --show-error --fail "$asset_url" > /dev/null; then
-            echo "::error::Main asset is unreachable at ${asset_url}."
+          ready=false
+          for _ in {1..60}; do
+            if curl --silent --show-error --fail "$capture_url" > /dev/null && \
+               curl --silent --show-error --fail "$asset_url" > /dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" != "true" ]; then
+            echo "::error::Preview did not become ready with matching HTML and asset URLs."
             echo "::group::dist/index.html"
             sed -n '1,160p' dist/index.html
             echo "::endgroup::"
             echo "::group::Preview log"
             cat /tmp/openlinks-preview.log
             echo "::endgroup::"
+            echo "::group::Root HTML (first 120 lines)"
+            curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
+            echo "::endgroup::"
+            echo "::group::Capture URL HTML (first 120 lines)"
+            curl --silent "$capture_url" | sed -n '1,120p'
+            echo "::endgroup::"
             exit 1
           fi
 
-          if ! capture_with_wait "$capture_url"; then
-            echo "::warning::Primary screenshot capture failed. Trying fallback URLs."
-            if ! capture_with_wait "http://127.0.0.1:4173/" && ! capture_with_wait "http://127.0.0.1:4173/open-links/"; then
-              echo "::error::All screenshot capture attempts failed."
-              echo "::group::Preview log"
-              cat /tmp/openlinks-preview.log
-              echo "::endgroup::"
-              echo "::group::Root HTML (first 120 lines)"
-              curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
-              echo "::endgroup::"
-              echo "::group::/open-links/ HTML (first 120 lines)"
-              curl --silent "http://127.0.0.1:4173/open-links/" | sed -n '1,120p'
-              echo "::endgroup::"
-              exit 1
-            fi
-          fi
+          npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
+            --timeout=120000 \
+            --wait-for-selector=".profile-header" \
+            --wait-for-timeout=1200 \
+            "$capture_url" \
+            docs/assets/openlinks-preview.png
 
           bytes="$(wc -c < docs/assets/openlinks-preview.png)"
           if [ "$bytes" -lt 20000 ]; then
