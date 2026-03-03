@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title desc">
+  <title id="title">OpenLinks logo mark V2 (inset--outer-2x--bottom-left)</title>
+  <desc id="desc">Family=inset; ratio=outer-2x; placement=bottom-left; touch=top+endpoint tangent; corner inside.</desc>
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+  <path d="M38.7007 24.3811 V75.6115 H61.3159" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

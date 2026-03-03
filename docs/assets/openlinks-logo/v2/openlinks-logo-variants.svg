@@ -1,0 +1,343 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1496" height="830" viewBox="0 0 1496 830" role="img" aria-labelledby="title desc">
+  <title id="title">OpenLinks V2 logo variants</title>
+  <desc id="desc">V2 inscribed-circle L exploration with ratio/touch constraints and alias annotations.</desc>
+  <rect width="1496" height="830" fill="#f1f4f9" />
+  <g>
+    <rect x="28" y="28" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="46" y="59" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">two-touch / centerline-2x / centered</text>
+    <text x="46" y="78" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <text x="46" y="92" font-size="11" fill="#b25d18" font-family="'Manrope', 'Segoe UI', sans-serif">alias of three-touch--centerline-2x--centered</text>
+    <rect x="40" y="100" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="52" y="110" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(85 120) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="122" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(270 109) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="158" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(258 145) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="194" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(234 181) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="46" y="248" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.0000:1</text>
+    <text x="46" y="262" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 1.8267:1 (closed-form)</text>
+  </g>
+  <g>
+    <rect x="388" y="28" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="406" y="59" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">two-touch / centerline-2x / bottom-left</text>
+    <text x="406" y="78" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <rect x="400" y="100" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="412" y="110" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(445 120) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.7217 21.3621 V78.6054 H64.3433" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="122" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(630 109) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.7217 21.3621 V78.6054 H64.3433" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="158" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(618 145) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.7217 21.3621 V78.6054 H64.3433" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="194" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(594 181) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.7217 21.3621 V78.6054 H64.3433" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="406" y="248" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.0000:1</text>
+    <text x="406" y="262" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 1.8267:1 (numeric)</text>
+  </g>
+  <g>
+    <rect x="748" y="28" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="766" y="59" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">two-touch / outer-2x / centered</text>
+    <text x="766" y="78" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <rect x="760" y="100" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="772" y="110" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(805 120) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="122" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(990 109) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="158" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(978 145) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="194" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(954 181) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="766" y="248" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.2290:1</text>
+    <text x="766" y="262" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 2.0000:1 (closed-form)</text>
+  </g>
+  <g>
+    <rect x="1108" y="28" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="1126" y="59" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">two-touch / outer-2x / bottom-left</text>
+    <text x="1126" y="78" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <rect x="1120" y="100" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="1132" y="110" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(1165 120) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9334 20.7893 V79.1823 H63.1299" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="122" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(1350 109) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9334 20.7893 V79.1823 H63.1299" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="158" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(1338 145) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9334 20.7893 V79.1823 H63.1299" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="194" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(1314 181) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9334 20.7893 V79.1823 H63.1299" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1126" y="248" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.2290:1</text>
+    <text x="1126" y="262" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 2.0000:1 (numeric)</text>
+  </g>
+  <g>
+    <rect x="28" y="286" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="46" y="317" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">inset / centerline-2x / centered</text>
+    <text x="46" y="336" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <rect x="40" y="358" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="52" y="368" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(85 378) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.478 24.956 V75.044 H62.522" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="380" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(270 367) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.478 24.956 V75.044 H62.522" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="416" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(258 403) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.478 24.956 V75.044 H62.522" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="452" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(234 439) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.478 24.956 V75.044 H62.522" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="46" y="506" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.0000:1</text>
+    <text x="46" y="520" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 1.8067:1 (closed-form)</text>
+  </g>
+  <g>
+    <rect x="388" y="286" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="406" y="317" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">inset / centerline-2x / bottom-left</text>
+    <text x="406" y="336" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <rect x="400" y="358" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="412" y="368" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(445 378) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.5065 24.9418 V75.0297 H62.5504" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="380" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(630 367) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.5065 24.9418 V75.0297 H62.5504" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="416" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(618 403) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.5065 24.9418 V75.0297 H62.5504" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="452" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(594 439) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.5065 24.9418 V75.0297 H62.5504" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="406" y="506" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.0000:1</text>
+    <text x="406" y="520" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 1.8067:1 (numeric)</text>
+  </g>
+  <g>
+    <rect x="748" y="286" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="766" y="317" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">inset / outer-2x / centered</text>
+    <text x="766" y="336" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <rect x="760" y="358" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="772" y="368" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(805 378) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.6924 24.3848 V75.6152 H61.3076" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="380" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(990 367) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.6924 24.3848 V75.6152 H61.3076" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="416" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(978 403) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.6924 24.3848 V75.6152 H61.3076" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="452" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(954 439) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.6924 24.3848 V75.6152 H61.3076" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="766" y="506" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.2653:1</text>
+    <text x="766" y="520" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 2.0000:1 (closed-form)</text>
+  </g>
+  <g>
+    <rect x="1108" y="286" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="1126" y="317" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">inset / outer-2x / bottom-left</text>
+    <text x="1126" y="336" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+endpoint tangent; corner inside</text>
+    <rect x="1120" y="358" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="1132" y="368" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(1165 378) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.7007 24.3811 V75.6115 H61.3159" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="380" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(1350 367) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.7007 24.3811 V75.6115 H61.3159" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="416" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(1338 403) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.7007 24.3811 V75.6115 H61.3159" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="452" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(1314 439) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M38.7007 24.3811 V75.6115 H61.3159" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1126" y="506" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.2653:1</text>
+    <text x="1126" y="520" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 2.0000:1 (numeric)</text>
+  </g>
+  <g>
+    <rect x="28" y="544" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="46" y="575" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">three-touch / centerline-2x / centered</text>
+    <text x="46" y="594" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+corner+endpoint tangent</text>
+    <rect x="40" y="616" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="52" y="626" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(85 636) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="638" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(270 625) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="674" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(258 661) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="334" y="710" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(234 697) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.6892 21.3783 V78.6217 H64.3108" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="46" y="764" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.0000:1</text>
+    <text x="46" y="778" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 1.8267:1 (closed-form)</text>
+  </g>
+  <g>
+    <rect x="388" y="544" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="406" y="575" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">three-touch / centerline-2x / bottom-left</text>
+    <text x="406" y="594" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: corner+endpoint tangent; top relaxed</text>
+    <rect x="400" y="616" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="412" y="626" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(445 636) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.9694 22.6375 V78.7601 H64.0306" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="638" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(630 625) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.9694 22.6375 V78.7601 H64.0306" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="674" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(618 661) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.9694 22.6375 V78.7601 H64.0306" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="694" y="710" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(594 697) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M35.9694 22.6375 V78.7601 H64.0306" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="406" y="764" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.0000:1</text>
+    <text x="406" y="778" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 1.8238:1 (numeric)</text>
+  </g>
+  <g>
+    <rect x="748" y="544" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="766" y="575" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">three-touch / outer-2x / centered</text>
+    <text x="766" y="594" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: top+corner+endpoint tangent</text>
+    <text x="766" y="608" font-size="11" fill="#b25d18" font-family="'Manrope', 'Segoe UI', sans-serif">alias of two-touch--outer-2x--centered</text>
+    <rect x="760" y="616" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="772" y="626" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(805 636) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="638" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(990 625) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="674" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(978 661) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1054" y="710" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(954 697) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M36.9017 20.8035 V79.1965 H63.0983" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="766" y="764" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.2290:1</text>
+    <text x="766" y="778" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 2.0000:1 (closed-form)</text>
+  </g>
+  <g>
+    <rect x="1108" y="544" width="360" height="258" rx="16" fill="#ffffff" stroke="#dce2ec" />
+    <text x="1126" y="575" font-size="14" font-weight="700" fill="#161d2b" font-family="'Space Grotesk', 'Avenir Next', sans-serif">three-touch / outer-2x / bottom-left</text>
+    <text x="1126" y="594" font-size="12" fill="#304159" font-family="'Manrope', 'Segoe UI', sans-serif">touch: corner+endpoint tangent; top relaxed</text>
+    <rect x="1120" y="616" width="336" height="128" rx="10" fill="#f7f9fc" stroke="#e5eaf2" />
+    <rect x="1132" y="626" width="166" height="108" rx="8" fill="#ffffff" stroke="#e5eaf2" />
+    <g transform="translate(1165 636) scale(0.84)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.1821 22.0489 V79.3207 H62.8179" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="638" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">24px</text>
+    <g transform="translate(1350 625) scale(0.24)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.1821 22.0489 V79.3207 H62.8179" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="674" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">48px</text>
+    <g transform="translate(1338 661) scale(0.48)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.1821 22.0489 V79.3207 H62.8179" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1414" y="710" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">96px</text>
+    <g transform="translate(1314 697) scale(0.96)">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#111111" stroke-width="6" />
+      <path d="M37.1821 22.0489 V79.3207 H62.8179" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text x="1126" y="764" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">centerline H:W = 2.2340:1</text>
+    <text x="1126" y="778" font-size="11" fill="#4f5968" font-family="'Manrope', 'Segoe UI', sans-serif">outer H:W = 2.0000:1 (numeric)</text>
+  </g>
+</svg>
