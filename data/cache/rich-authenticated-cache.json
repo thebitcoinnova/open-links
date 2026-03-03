@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-cache.schema.json",
   "version": 1,
-  "updatedAt": "2026-03-03T03:58:19.153Z",
+  "updatedAt": "2026-03-03T04:06:16.993Z",
   "entries": {
     "linkedin": {
       "extractorId": "linkedin-auth-browser",
@@ -161,10 +161,10 @@
       "extractorId": "instagram-auth-browser",
       "linkId": "instagram",
       "sourceUrl": "https://www.instagram.com/peterryszkiewicz/",
-      "capturedAt": "2026-03-03T03:58:19.153Z",
+      "capturedAt": "2026-03-03T04:06:16.993Z",
       "metadata": {
-        "title": "Peter No Taxation Without Representation Ryszkiewicz (&#064;peterryszkiewicz) &#x2022; Instagram photos and videos",
-        "description": "86 Followers, 168 Following, 36 Posts - See Instagram photos and videos from Peter No Taxation Without Representation Ryszkiewicz (&#064;peterryszkiewicz)",
+        "title": "Peter No Taxation Without Representation Ryszkiewicz (@peterryszkiewicz) • Instagram photos and videos",
+        "description": "86 Followers, 168 Following, 36 Posts - See Instagram photos and videos from Peter No Taxation Without Representation Ryszkiewicz (@peterryszkiewicz)",
         "image": "cache/rich-authenticated/35a71a4916c222981fa4d860b4a76cf5b5784a8db873f582ff1e60ba7d4ee0e6.jpg",
         "sourceLabel": "instagram.com"
       },

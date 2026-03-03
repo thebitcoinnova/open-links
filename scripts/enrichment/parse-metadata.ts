@@ -1,16 +1,51 @@
 import type { EnrichmentMetadata } from "./types";
 
-const htmlEntityMap: Record<string, string> = {
-  "&amp;": "&",
-  "&lt;": "<",
-  "&gt;": ">",
-  "&quot;": '"',
-  "&#39;": "'",
-  "&nbsp;": " "
+const namedHtmlEntityMap: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+};
+
+const decodeNumericEntity = (entityBody: string): string | undefined => {
+  const normalized = entityBody.toLowerCase();
+  const codePoint = normalized.startsWith("#x")
+    ? Number.parseInt(entityBody.slice(2), 16)
+    : entityBody.startsWith("#")
+      ? Number.parseInt(entityBody.slice(1), 10)
+      : Number.NaN;
+
+  if (!Number.isInteger(codePoint)) {
+    return undefined;
+  }
+
+  if (codePoint < 0 || codePoint > 0x10ffff) {
+    return undefined;
+  }
+
+  // Preserve malformed scalar values instead of emitting lone surrogate code units.
+  if (codePoint >= 0xd800 && codePoint <= 0xdfff) {
+    return undefined;
+  }
+
+  try {
+    return String.fromCodePoint(codePoint);
+  } catch {
+    return undefined;
+  }
 };
 
 const decodeEntities = (value: string): string =>
-  value.replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (entity) => htmlEntityMap[entity] ?? entity);
+  value.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]+);/g, (entity, entityBody) => {
+    if (entityBody.startsWith("#")) {
+      const decoded = decodeNumericEntity(entityBody);
+      return decoded ?? entity;
+    }
+
+    return namedHtmlEntityMap[entityBody] ?? entity;
+  });
 
 const toSourceLabel = (url: string): string => {
   try {
@@ -84,18 +119,18 @@ export const parseMetadata = (html: string, url: string): ParsedMetadata => {
   const description = extractMetaContent(html, [
     "og:description",
     "twitter:description",
-    "description"
+    "description",
   ]);
   const image = toAbsoluteUrl(
     extractMetaContent(html, ["og:image", "twitter:image", "twitter:image:src"]),
-    url
+    url,
   );
 
   const metadata: EnrichmentMetadata = {
     title,
     description,
     image,
-    sourceLabel: toSourceLabel(url)
+    sourceLabel: toSourceLabel(url),
   };
 
   const missing: Array<"title" | "description" | "image"> = [];
@@ -116,6 +151,6 @@ export const parseMetadata = (html: string, url: string): ParsedMetadata => {
   return {
     metadata,
     completeness,
-    missing
+    missing,
   };
 };
