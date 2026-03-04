@@ -539,7 +539,7 @@ Example:
 {
   "ui": {
     "footer": {
-      "description": "OpenLinks is a personal, free, open source, version-controlled links site. Fork it, customize JSON, and publish fast.",
+      "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.",
       "ctaLabel": "Create Your OpenLinks",
       "ctaUrl": "https://github.com/pRizz/open-links",
       "showLastUpdated": true

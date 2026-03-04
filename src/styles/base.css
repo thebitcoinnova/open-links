@@ -56,6 +56,7 @@ a:focus-visible {
 
 :root {
   --card-icon-size-scale: 1.12;
+  --brand-logo-filter: none;
 }
 
 :root[data-brand-icon-size="normal"] {
@@ -64,6 +65,10 @@ a:focus-visible {
 
 :root[data-brand-icon-size="large"] {
   --card-icon-size-scale: 1.12;
+}
+
+:root[data-mode="dark"] {
+  --brand-logo-filter: brightness(0) saturate(100%) invert(1);
 }
 
 .page {
@@ -110,9 +115,10 @@ a:focus-visible {
 }
 
 .utility-logo {
-  width: 1.2rem;
-  height: 1.2rem;
+  width: clamp(1.35rem, 4vw, 1.6rem);
+  height: clamp(1.35rem, 4vw, 1.6rem);
   flex-shrink: 0;
+  filter: var(--brand-logo-filter);
 }
 
 .utility-actions {
@@ -863,10 +869,23 @@ a:focus-visible {
   border-top: 1px solid color-mix(in srgb, var(--border-subtle) 80%, transparent 20%);
 }
 
+.site-footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.site-footer-logo {
+  width: 1.6rem;
+  height: 1.6rem;
+  filter: var(--brand-logo-filter);
+}
+
 .site-footer-description {
   margin: 0;
   color: color-mix(in srgb, var(--text-muted) 88%, var(--text-primary) 12%);
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 .site-footer-cta {

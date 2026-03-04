@@ -20,7 +20,7 @@ export default function PageShell(props: PageShellProps) {
     <div class="min-h-screen bg-gradient-to-br from-ink via-slate-900 to-slate-800 text-slate-100">
       <header class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6 md:px-8">
         <A href="/" class="flex items-center gap-2 font-display text-lg tracking-tight text-white">
-          <img src={STUDIO_LOGO_PATH} alt="" aria-hidden="true" class="h-6 w-6 shrink-0" />
+          <img src={STUDIO_LOGO_PATH} alt="" aria-hidden="true" class="openlinks-studio-logo" />
           <span>OpenLinks Studio</span>
         </A>
         <nav class="flex items-center gap-2 text-sm">
@@ -35,6 +35,12 @@ export default function PageShell(props: PageShellProps) {
       <main class={`mx-auto w-full max-w-6xl px-4 pb-20 md:px-8 ${props.class ?? ""}`}>
         {props.children}
       </main>
+      <footer class="mx-auto w-full max-w-6xl px-4 pb-10 md:px-8">
+        <div class="flex flex-col items-center gap-2 text-center">
+          <img src={STUDIO_LOGO_PATH} alt="OpenLinks Studio logo" class="openlinks-studio-logo" />
+          <p class="text-xs uppercase tracking-[0.14em] text-slate-400">OpenLinks Studio</p>
+        </div>
+      </footer>
     </div>
   );
 }

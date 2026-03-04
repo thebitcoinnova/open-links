@@ -8,7 +8,7 @@ export interface ResolvedFooterPreferences {
 }
 
 const DEFAULT_DESCRIPTION =
-  "OpenLinks is a personal, free, open source, version-controlled links site. Fork it, customize JSON, and publish fast.";
+  "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.";
 const DEFAULT_CTA_LABEL = "Create Your OpenLinks";
 const DEFAULT_CTA_URL = "https://github.com/pRizz/open-links";
 

@@ -4,6 +4,8 @@ import type { ResolvedFooterPreferences } from "../../lib/ui/footer-preferences"
 export interface SiteFooterProps {
   preferences: ResolvedFooterPreferences;
   buildTimestampIso?: string;
+  logoPath?: string;
+  logoAlt?: string;
 }
 
 const localFormatter = new Intl.DateTimeFormat(undefined, {
@@ -11,8 +13,22 @@ const localFormatter = new Intl.DateTimeFormat(undefined, {
   timeStyle: "short",
 });
 
+const toAssetUrl = (assetPath: string): string => {
+  const base = import.meta.env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = assetPath.replace(/^\/+/, "");
+  return `${normalizedBase}${normalizedPath}`;
+};
+
 export const SiteFooter = (props: SiteFooterProps) => {
   const ctaUrl = () => props.preferences.ctaUrl.trim();
+  const logoSrc = () => {
+    const maybePath = props.logoPath?.trim();
+    if (!maybePath) {
+      return undefined;
+    }
+    return toAssetUrl(maybePath);
+  };
 
   const buildDate = createMemo(() => {
     if (
@@ -36,6 +52,19 @@ export const SiteFooter = (props: SiteFooterProps) => {
 
   return (
     <footer class="site-footer" aria-label="Site footer">
+      <Show when={logoSrc()}>
+        {(src) => (
+          <div class="site-footer-brand">
+            <img
+              class="site-footer-logo"
+              src={src()}
+              alt={props.logoAlt ?? ""}
+              aria-hidden={props.logoAlt ? undefined : "true"}
+            />
+          </div>
+        )}
+      </Show>
+
       <p class="site-footer-description">{props.preferences.description}</p>
 
       <Show when={ctaUrl().length > 0}>
