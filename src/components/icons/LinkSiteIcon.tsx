@@ -1,7 +1,7 @@
-import { createMemo } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
-import { resolveIconPalette } from "../../lib/icons/icon-contrast";
+import { type ResolvedIconPalette, resolveIconPalette } from "../../lib/icons/icon-contrast";
 import { resolveKnownSiteIcon } from "../../lib/icons/known-site-icons";
 import { resolveKnownSite, resolveKnownSiteById } from "../../lib/icons/known-sites-data";
 
@@ -22,7 +22,34 @@ const readRootColorVar = (name: string, fallback: string): string => {
   return value.length > 0 ? value : fallback;
 };
 
+const resolvePaletteForSite = (
+  siteBrandColor: string | undefined,
+  options: ResolvedBrandIconOptions,
+): ResolvedIconPalette | undefined => {
+  if (!siteBrandColor) {
+    return undefined;
+  }
+
+  const themeId =
+    typeof document === "undefined" ? undefined : document.documentElement.dataset.theme;
+
+  return resolveIconPalette({
+    themeId,
+    colorMode: options.colorMode,
+    contrastMode: options.contrastMode,
+    minContrastRatio: options.minContrastRatio,
+    brandColor: siteBrandColor,
+    themeSurfacePillColor: readRootColorVar("--surface-pill", "#1A2232"),
+    themeAccentColor: readRootColorVar("--accent", "#50E3C2"),
+    themeTextColor: readRootColorVar("--text-primary", "#F5F7FB"),
+    themeBorderColor: readRootColorVar("--border-subtle", "#6B7280"),
+  });
+};
+
 export const LinkSiteIcon = (props: LinkSiteIconProps) => {
+  const [palette, setPalette] = createSignal<ResolvedIconPalette | undefined>();
+  let paletteSyncVersion = 0;
+
   const site = createMemo(() => {
     const baseSite = resolveKnownSite(props.icon, props.url);
     if (!baseSite) {
@@ -36,29 +63,25 @@ export const LinkSiteIcon = (props: LinkSiteIconProps) => {
 
     return resolveKnownSiteById(overrideSiteId) ?? baseSite;
   });
-  const palette = createMemo(() => {
-    // Dependency marker so icon palette recomputes on mode/theme changes.
+
+  createEffect(() => {
+    const resolvedSite = site();
+    const options = props.options;
     props.themeFingerprint;
 
-    const resolvedSite = site();
-    if (!resolvedSite) {
-      return undefined;
-    }
+    const currentVersion = ++paletteSyncVersion;
 
-    const themeId =
-      typeof document === "undefined" ? undefined : document.documentElement.dataset.theme;
+    queueMicrotask(() => {
+      if (currentVersion !== paletteSyncVersion) {
+        return;
+      }
 
-    return resolveIconPalette({
-      themeId,
-      colorMode: props.options.colorMode,
-      contrastMode: props.options.contrastMode,
-      minContrastRatio: props.options.minContrastRatio,
-      brandColor: resolvedSite.brandColor,
-      themeSurfacePillColor: readRootColorVar("--surface-pill", "#1A2232"),
-      themeAccentColor: readRootColorVar("--accent", "#50E3C2"),
-      themeTextColor: readRootColorVar("--text-primary", "#F5F7FB"),
-      themeBorderColor: readRootColorVar("--border-subtle", "#6B7280"),
+      setPalette(resolvePaletteForSite(resolvedSite?.brandColor, options));
     });
+  });
+
+  onCleanup(() => {
+    paletteSyncVersion += 1;
   });
 
   const siteColorStyle = createMemo<JSX.CSSProperties | undefined>(() => {
