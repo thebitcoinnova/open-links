@@ -124,25 +124,32 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
       </Show>
 
       <div class="profile-copy">
-        <h1>{props.profile.name}</h1>
-        <Show when={props.profile.headline}>
-          <p class="profile-headline">{props.profile.headline}</p>
-        </Show>
-        <Show when={props.profile.bio && richness() !== "minimal"}>
-          <p class="profile-bio">{props.profile.bio}</p>
-        </Show>
-
         <div class="profile-actions" aria-label="Profile sharing actions">
-          <button type="button" class="profile-share-button" onClick={() => handleShareProfile()}>
-            <IconShare class="profile-share-button-icon" aria-hidden="true" />
-            Share profile
-          </button>
+          <div class="profile-title-row">
+            <h1>{props.profile.name}</h1>
+            <button
+              type="button"
+              class="profile-share-button"
+              aria-label="Share profile"
+              title="Share profile"
+              onClick={() => handleShareProfile()}
+            >
+              <IconShare class="profile-share-button-icon" aria-hidden="true" />
+            </button>
+          </div>
           <Show when={shareStatus()}>
             <output class="profile-share-status" aria-live="polite">
               {shareStatus()}
             </output>
           </Show>
         </div>
+
+        <Show when={props.profile.headline}>
+          <p class="profile-headline">{props.profile.headline}</p>
+        </Show>
+        <Show when={props.profile.bio && richness() !== "minimal"}>
+          <p class="profile-bio">{props.profile.bio}</p>
+        </Show>
 
         <Show when={richness() === "rich"}>
           <ul class="profile-meta">

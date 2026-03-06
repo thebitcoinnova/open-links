@@ -27,13 +27,19 @@
     gap: var(--space-1);
   }
 
+  body .profile-title-row {
+    gap: var(--space-1);
+  }
+
   body .profile-share-button {
-    flex: 1 1 100%;
-    justify-content: center;
+    width: calc(var(--page-target-size) + 0.15rem);
+    height: calc(var(--page-target-size) + 0.15rem);
+    min-width: calc(var(--page-target-size) + 0.15rem);
+    min-height: calc(var(--page-target-size) + 0.15rem);
   }
 
   body .profile-share-status {
-    margin-top: var(--space-1);
+    margin-top: 0;
   }
 
   body .utility-actions {
