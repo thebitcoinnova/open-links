@@ -97,7 +97,7 @@
   }
 
   body .rich-card-media {
-    min-height: 7rem;
+    min-height: 7.5rem;
   }
 
   body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] {
@@ -112,7 +112,7 @@
 
   body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-media {
     float: inline-start;
-    width: clamp(4.75rem, 25vw, 6.5rem);
+    width: clamp(5.1rem, 27vw, 6.9rem);
     min-height: 0;
     margin-inline-end: var(--space-3);
     margin-block-end: var(--space-2);

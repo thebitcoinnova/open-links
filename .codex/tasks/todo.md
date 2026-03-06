@@ -1,12 +1,12 @@
 # Todo
 
-- [x] Add `primal.net` to the known-site registry and icon map.
-- [x] Extend handle resolution coverage for `primal.net` profile URLs and tests.
-- [x] Add the Primal profile link to `data/links.json` with the provided sample URL.
-- [x] Verify with `bun test src/lib/identity/handle-resolver.test.ts`, `bun run validate:data`, `bun run typecheck`, `bun run biome:check`, and `bun run build`.
+- [x] Bump the global profile avatar scale in `data/site.json` from `1.5` to `1.6`.
+- [x] Add explicit rich-card variant markup so CSS can target `simple` and `rich` card surfaces consistently.
+- [x] Rebalance card sizing globally in CSS: slightly larger rich media, smaller rich-card icons, and larger simple-card leading logos without changing the simple-card row layout.
+- [x] Verify with `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and `bun run build`.
 
 ## Completion Review
 
-- Result: `primal.net` now behaves like a first-class rich social link with direct-fetch enrichment, domain/icon recognition, and URL-handle support.
-- Verification: all requested checks passed after regenerating rich metadata and synced content images.
-- Residual risk: Primal profile URLs appear slug-based, so handle display now relies on URL-derived behavior unless a verified Primal-specific public handle source is added later.
+- Result: The profile avatar, rich-card media, rich-card icons, and simple-card leading logos were rebalanced globally using the existing site config plus variant-specific card CSS.
+- Verification: `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and `bun run build` all passed. Playwright verification against the built preview confirmed clean desktop/mobile rendering with no simple-card overflow or clipping.
+- Residual risk: Rich-card media still stretches to the full card row height on desktop, so the larger simple-card logo chip is intentionally bigger than before but remains shorter than the full rich-media block when descriptions run long.

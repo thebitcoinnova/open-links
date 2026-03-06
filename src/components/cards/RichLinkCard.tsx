@@ -52,6 +52,7 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
       aria-describedby={ariaDescribedBy()}
       data-interaction={props.interaction ?? "minimal"}
       data-link-type={props.link.type}
+      data-card-variant="rich"
       data-image-fit={props.viewModel.imageFit}
       data-mobile-image-layout={props.viewModel.mobileImageLayout}
       data-has-image={props.viewModel.imageUrl ? "true" : "false"}
