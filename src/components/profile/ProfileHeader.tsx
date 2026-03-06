@@ -1,5 +1,6 @@
 import { For, Show, createSignal, onCleanup } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
+import { IconShare } from "../../lib/icons/custom-icons";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
@@ -87,11 +88,6 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     resetTimer = setTimeout(() => setShareStatus(""), STATUS_RESET_DELAY_MS);
   };
 
-  const handleCopyLink = async () => {
-    const copied = await copyToClipboard(resolveShareUrl());
-    setTimedShareStatus(copied ? "Copied" : "Copy failed");
-  };
-
   const handleShareProfile = async () => {
     const shareUrl = resolveShareUrl();
 
@@ -112,7 +108,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     }
 
     const copied = await copyToClipboard(shareUrl);
-    setTimedShareStatus(copied ? "Copied" : "Copy failed");
+    setTimedShareStatus(copied ? "Link copied" : "Share failed");
   };
 
   onCleanup(() => {
@@ -138,14 +134,8 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
 
         <div class="profile-actions" aria-label="Profile sharing actions">
           <button type="button" class="profile-share-button" onClick={() => handleShareProfile()}>
+            <IconShare class="profile-share-button-icon" aria-hidden="true" />
             Share profile
-          </button>
-          <button
-            type="button"
-            class="profile-share-button secondary"
-            onClick={() => handleCopyLink()}
-          >
-            Copy link
           </button>
           <Show when={shareStatus()}>
             <output class="profile-share-status" aria-live="polite">

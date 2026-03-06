@@ -218,34 +218,46 @@ a:focus-visible {
 }
 
 .profile-share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
   border: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--surface-pill) 82%, var(--accent) 18%);
+  background: color-mix(in srgb, var(--accent) 28%, var(--surface-pill) 72%);
   color: var(--text-primary);
   border-radius: 999px;
-  min-height: calc(var(--page-target-size) - 10px);
-  padding: 0.35rem 0.8rem;
+  min-height: calc(var(--page-target-size) + 0.15rem);
+  padding: 0.55rem 1.15rem;
   font: inherit;
-  font-size: var(--page-type-caption);
+  font-size: calc(var(--page-type-caption) + 0.02rem);
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 14%, transparent);
   cursor: pointer;
-  transition: border-color var(--motion-fast), transform var(--motion-fast);
-}
-
-.profile-share-button.secondary {
-  background: color-mix(in srgb, var(--surface-pill) 88%, var(--surface-card) 12%);
+  transition: border-color var(--motion-fast), transform var(--motion-fast), box-shadow
+    var(--motion-fast), background-color var(--motion-fast);
 }
 
 .profile-share-button:hover {
   border-color: var(--border-strong);
   transform: translateY(-1px);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .profile-share-button:active {
   transform: translateY(0);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .profile-share-button:focus-visible {
   box-shadow: var(--shadow-focus);
   border-color: var(--accent-strong);
+}
+
+.profile-share-button-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
 }
 
 .profile-share-status {

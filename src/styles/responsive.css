@@ -28,7 +28,8 @@
   }
 
   body .profile-share-button {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
+    justify-content: center;
   }
 
   body .profile-share-status {
