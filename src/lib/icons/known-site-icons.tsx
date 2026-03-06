@@ -53,7 +53,14 @@ import {
   siYoutube,
 } from "simple-icons";
 import type { Component } from "solid-js";
-import { IconLinkedin, IconSkype, IconTwitter, IconWallet, createSimpleIcon } from "./custom-icons";
+import {
+  IconLinkedin,
+  IconPrimal,
+  IconSkype,
+  IconTwitter,
+  IconWallet,
+  createSimpleIcon,
+} from "./custom-icons";
 import type { KnownSiteId } from "./known-sites-data";
 
 export type KnownSiteIconComponent = Component<Record<string, unknown>>;
@@ -72,6 +79,7 @@ const knownSiteIcons: Record<KnownSiteId, KnownSiteIconComponent> = {
   threads: createSimpleIcon(siThreads),
   bluesky: createSimpleIcon(siBluesky),
   mastodon: createSimpleIcon(siMastodon),
+  primal: IconPrimal,
   twitch: createSimpleIcon(siTwitch),
   snapchat: createSimpleIcon(siSnapchat),
   pinterest: createSimpleIcon(siPinterest),

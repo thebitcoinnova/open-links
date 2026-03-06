@@ -6,6 +6,7 @@ export type HandleExtractorId =
   | "linkedin"
   | "facebook"
   | "instagram"
+  | "primal"
   | "medium"
   | "substack"
   | "youtube";
@@ -47,6 +48,7 @@ const X_HOSTS = new Set(["x.com", "twitter.com", "mobile.twitter.com"]);
 const LINKEDIN_HOSTS = new Set(["linkedin.com", "lnkd.in"]);
 const FACEBOOK_HOSTS = new Set(["facebook.com", "m.facebook.com", "fb.com"]);
 const INSTAGRAM_HOSTS = new Set(["instagram.com"]);
+const PRIMAL_HOSTS = new Set(["primal.net"]);
 const MEDIUM_HOSTS = new Set(["medium.com"]);
 const SUBSTACK_HOSTS = new Set(["substack.com"]);
 const YOUTUBE_HOSTS = new Set(["youtube.com", "m.youtube.com", "youtu.be"]);
@@ -156,6 +158,22 @@ const INSTAGRAM_RESERVED = new Set([
   "stories",
   "tv",
   "web",
+]);
+
+const PRIMAL_RESERVED = new Set([
+  "about",
+  "bookmarks",
+  "downloads",
+  "explore",
+  "home",
+  "login",
+  "messages",
+  "notifications",
+  "premium",
+  "search",
+  "settings",
+  "signup",
+  "wallet",
 ]);
 
 const MEDIUM_RESERVED = new Set([
@@ -379,6 +397,24 @@ const resolveInstagram = (segments: string[]): HandleResolution => {
   return resolved("instagram", candidate);
 };
 
+const resolvePrimal = (segments: string[]): HandleResolution => {
+  const candidate = toLowerTrimmed((segments[0] ?? "").replace(/^@+/, ""));
+  if (!candidate) {
+    return supportedWithoutHandle("primal", "missing_handle_segment");
+  }
+
+  if (segments.length > 1 || PRIMAL_RESERVED.has(candidate)) {
+    return supportedWithoutHandle("primal", "not_profile_url");
+  }
+
+  const normalizedCandidate = normalizeHandle(candidate);
+  if (!normalizedCandidate || !/^[a-z0-9._-]{1,100}$/.test(normalizedCandidate)) {
+    return supportedWithoutHandle("primal", "invalid_handle");
+  }
+
+  return resolved("primal", normalizedCandidate);
+};
+
 const resolveMedium = (segments: string[]): HandleResolution => {
   const first = segments[0];
   if (!first) {
@@ -526,6 +562,10 @@ export const resolveHandleFromUrl = (input: ResolveHandleFromUrlInput): HandleRe
 
   if (INSTAGRAM_HOSTS.has(host)) {
     return resolveInstagram(segments);
+  }
+
+  if (PRIMAL_HOSTS.has(host)) {
+    return resolvePrimal(segments);
   }
 
   if (MEDIUM_HOSTS.has(host)) {

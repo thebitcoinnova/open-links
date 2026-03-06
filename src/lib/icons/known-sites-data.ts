@@ -104,6 +104,13 @@ export const KNOWN_SITES = [
     brandColor: "#6364FF",
   },
   {
+    id: "primal",
+    label: "Primal",
+    aliases: ["primal", "primalnet"],
+    domains: ["primal.net"],
+    brandColor: "#3861E4",
+  },
+  {
     id: "twitch",
     label: "Twitch",
     aliases: ["twitch"],

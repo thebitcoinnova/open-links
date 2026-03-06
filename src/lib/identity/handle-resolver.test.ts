@@ -27,6 +27,11 @@ test("resolves supported URL handles", () => {
       handle: "peterryszkiewicz",
     },
     {
+      url: "https://primal.net/peterryszkiewicz",
+      extractorId: "primal",
+      handle: "peterryszkiewicz",
+    },
+    {
       url: "https://medium.com/@peterryszkiewicz",
       extractorId: "medium",
       handle: "peterryszkiewicz",
@@ -59,6 +64,7 @@ test("marks reserved or non-profile paths as supported but unresolved", () => {
     { url: "https://linkedin.com/feed/", extractorId: "linkedin", reason: "not_profile_url" },
     { url: "https://facebook.com/groups", extractorId: "facebook", reason: "not_profile_url" },
     { url: "https://instagram.com/explore", extractorId: "instagram", reason: "not_profile_url" },
+    { url: "https://primal.net/home", extractorId: "primal", reason: "not_profile_url" },
     {
       url: "https://medium.com/topics/technology",
       extractorId: "medium",

@@ -1,6 +1,21 @@
 {
   "links": [
     {
+      "id": "primal",
+      "label": "Primal",
+      "url": "https://primal.net/peterryszkiewicz",
+      "type": "rich",
+      "icon": "primal",
+      "description": "Nostr profile and notes",
+      "group": "social",
+      "order": 1,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
+    },
+    {
       "id": "github",
       "label": "GitHub",
       "url": "https://github.com/pRizz",
@@ -8,7 +23,7 @@
       "icon": "github",
       "description": "Code, experiments, and open-source projects",
       "group": "social",
-      "order": 1,
+      "order": 2,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -23,7 +38,7 @@
       "icon": "x",
       "description": "Short updates and project notes",
       "group": "social",
-      "order": 2,
+      "order": 3,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -39,7 +54,7 @@
       "icon": "linkedin",
       "description": "Professional profile and recent work",
       "group": "work",
-      "order": 3,
+      "order": 4,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -55,7 +70,7 @@
       "icon": "github",
       "description": "Project homepage preview card with fallback defaults",
       "group": "work",
-      "order": 4,
+      "order": 5,
       "enabled": true,
       "custom": {}
     },
@@ -67,7 +82,7 @@
       "icon": "facebook",
       "description": "Personal Facebook profile",
       "group": "social",
-      "order": 5,
+      "order": 6,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -83,7 +98,7 @@
       "icon": "instagram",
       "description": "Photos and stories",
       "group": "social",
-      "order": 6,
+      "order": 7,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -99,7 +114,7 @@
       "icon": "youtube",
       "description": "Videos and channel updates",
       "group": "social",
-      "order": 7,
+      "order": 8,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -115,7 +130,7 @@
       "icon": "medium",
       "description": "Articles and blog posts",
       "group": "content",
-      "order": 8,
+      "order": 9,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -131,7 +146,7 @@
       "icon": "substack",
       "description": "Newsletter and long-form writing",
       "group": "content",
-      "order": 9,
+      "order": 10,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -157,6 +172,7 @@
     }
   ],
   "order": [
+    "primal",
     "github",
     "x",
     "linkedin",
