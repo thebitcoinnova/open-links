@@ -1,3 +1,10 @@
+import {
+  type ResolvedSeoMetadata,
+  isPlaceholderExampleUrl,
+  resolveBaseAwareAssetPath,
+  resolveBasePathFromUrl,
+  resolveSeoMetadata,
+} from "../../src/lib/seo/resolve-seo-metadata";
 import type {
   QualityDomainResult,
   QualityIssue,
@@ -5,160 +12,6 @@ import type {
   QualitySeoMetadata,
   QualitySiteInput,
 } from "./types";
-
-interface SeoResolutionTrace {
-  titleSource: string;
-  descriptionSource: string;
-  canonicalSource: string;
-  imageSource: string;
-}
-
-export interface ResolvedSeoMetadata {
-  metadata: QualitySeoMetadata;
-  trace: SeoResolutionTrace;
-}
-
-const firstString = (...values: Array<string | undefined>): string | undefined => {
-  for (const value of values) {
-    if (typeof value === "string" && value.trim().length > 0) {
-      return value.trim();
-    }
-  }
-  return undefined;
-};
-
-const toAbsoluteUrl = (value: string, fallbackBase?: string): string => {
-  try {
-    return new URL(value).toString();
-  } catch {
-    const base =
-      fallbackBase && /^https?:\/\//.test(fallbackBase) ? fallbackBase : "https://example.com";
-    return new URL(value.startsWith("/") ? value : `/${value}`, base).toString();
-  }
-};
-
-const resolveCanonical = (
-  site: QualitySiteInput,
-  explicitCanonical?: string,
-): { value: string; source: string } => {
-  const base = site.quality?.seo?.canonicalBaseUrl;
-
-  if (explicitCanonical) {
-    return {
-      value: toAbsoluteUrl(explicitCanonical, base),
-      source: "seo.override.canonical",
-    };
-  }
-
-  if (site.baseUrl) {
-    return {
-      value: toAbsoluteUrl(site.baseUrl, base),
-      source: "site.baseUrl",
-    };
-  }
-
-  return {
-    value: toAbsoluteUrl("/", base),
-    source: "fallback.root",
-  };
-};
-
-export const resolveSeoMetadata = (
-  site: QualitySiteInput,
-  profile: QualityProfileInput,
-): ResolvedSeoMetadata => {
-  const seo = site.quality?.seo;
-  const defaults = seo?.defaults ?? {};
-  const profileOverrides = seo?.overrides?.profile ?? {};
-
-  const title =
-    firstString(
-      profileOverrides.title,
-      defaults.title,
-      profile.name ? `${profile.name} | ${site.title}` : undefined,
-      site.title,
-    ) ?? "OpenLinks";
-
-  const description =
-    firstString(
-      profileOverrides.description,
-      defaults.description,
-      profile.bio,
-      site.description,
-    ) ?? "OpenLinks profile";
-
-  const canonicalResolution = resolveCanonical(
-    site,
-    firstString(profileOverrides.canonical, defaults.canonical),
-  );
-
-  const fallbackImage = firstString(seo?.socialImageFallback) ?? "/openlinks-social-fallback.svg";
-  const image =
-    firstString(
-      profileOverrides.twitterImage,
-      profileOverrides.ogImage,
-      defaults.twitterImage,
-      defaults.ogImage,
-    ) ?? fallbackImage;
-
-  const ogTitle = firstString(profileOverrides.ogTitle, defaults.ogTitle, title) ?? title;
-  const ogDescription =
-    firstString(profileOverrides.ogDescription, defaults.ogDescription, description) ?? description;
-  const twitterTitle =
-    firstString(profileOverrides.twitterTitle, defaults.twitterTitle, ogTitle) ?? ogTitle;
-  const twitterDescription =
-    firstString(profileOverrides.twitterDescription, defaults.twitterDescription, ogDescription) ??
-    ogDescription;
-
-  const ogUrl =
-    firstString(profileOverrides.ogUrl, defaults.ogUrl, canonicalResolution.value) ??
-    canonicalResolution.value;
-
-  const metadata: QualitySeoMetadata = {
-    title,
-    description,
-    canonical: canonicalResolution.value,
-    ogTitle,
-    ogDescription,
-    ogType: firstString(profileOverrides.ogType, defaults.ogType, "website") ?? "website",
-    ogImage: toAbsoluteUrl(image, seo?.canonicalBaseUrl),
-    ogUrl: toAbsoluteUrl(ogUrl, seo?.canonicalBaseUrl),
-    twitterCard:
-      firstString(profileOverrides.twitterCard, defaults.twitterCard, "summary_large_image") ??
-      "summary_large_image",
-    twitterTitle,
-    twitterDescription,
-    twitterImage: toAbsoluteUrl(image, seo?.canonicalBaseUrl),
-  };
-
-  const trace: SeoResolutionTrace = {
-    titleSource: firstString(profileOverrides.title)
-      ? "seo.overrides.profile.title"
-      : firstString(defaults.title)
-        ? "seo.defaults.title"
-        : profile.name
-          ? "profile.name + site.title fallback"
-          : "site.title fallback",
-    descriptionSource: firstString(profileOverrides.description)
-      ? "seo.overrides.profile.description"
-      : firstString(defaults.description)
-        ? "seo.defaults.description"
-        : profile.bio
-          ? "profile.bio fallback"
-          : "site.description fallback",
-    canonicalSource: canonicalResolution.source,
-    imageSource: firstString(profileOverrides.twitterImage, profileOverrides.ogImage)
-      ? "seo.overrides.profile.image"
-      : firstString(defaults.twitterImage, defaults.ogImage)
-        ? "seo.defaults.image"
-        : "seo.socialImageFallback",
-  };
-
-  return {
-    metadata,
-    trace,
-  };
-};
 
 const missingRequiredFields = (metadata: QualitySeoMetadata): Array<keyof QualitySeoMetadata> =>
   (Object.keys(metadata) as Array<keyof QualitySeoMetadata>).filter((key) => {
@@ -170,7 +23,13 @@ export const runSeoChecks = (
   site: QualitySiteInput,
   profile: QualityProfileInput,
 ): { domainResult: QualityDomainResult; resolved: ResolvedSeoMetadata } => {
-  const resolved = resolveSeoMetadata(site, profile);
+  const resolved = resolveSeoMetadata(site, profile, {
+    resolveImagePath: (candidate) =>
+      resolveBaseAwareAssetPath(
+        candidate,
+        resolveBasePathFromUrl(site.quality?.seo?.canonicalBaseUrl),
+      ),
+  });
   const issues: QualityIssue[] = [];
 
   const missingFields = missingRequiredFields(resolved.metadata);
@@ -182,6 +41,25 @@ export const runSeoChecks = (
       scope: field,
       message: `Resolved SEO metadata field '${field}' is empty.`,
       remediation: `Define '${field}' in quality.seo.defaults or quality.seo.overrides.profile.`,
+    });
+  }
+
+  for (const [field, value] of [
+    ["canonical", resolved.metadata.canonical],
+    ["ogUrl", resolved.metadata.ogUrl],
+  ] as const) {
+    if (!isPlaceholderExampleUrl(value)) {
+      continue;
+    }
+
+    issues.push({
+      domain: "seo",
+      level: "error",
+      code: "SEO_PLACEHOLDER_URL",
+      scope: field,
+      message: `Resolved SEO URL field '${field}' points at placeholder host '${new URL(value).hostname}'.`,
+      remediation:
+        "Set quality.seo.canonicalBaseUrl and any explicit SEO URL overrides to your deployed HTTPS URL.",
     });
   }
 

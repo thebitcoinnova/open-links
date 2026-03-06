@@ -21,6 +21,11 @@ import { loadContent, resolveGeneratedContentImageUrl } from "../lib/content/loa
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
 import { isPaymentCapableLink } from "../lib/payments/types";
 import {
+  resolveBaseAwareAssetPath,
+  resolveBasePathFromUrl,
+  resolveSeoMetadata,
+} from "../lib/seo/resolve-seo-metadata";
+import {
   type UiMode,
   applyThemeState,
   applyTypographyState,
@@ -62,23 +67,6 @@ const sections = resolveLinkSections(
 ) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
 
-const firstString = (...values: Array<string | undefined>): string | undefined => {
-  for (const value of values) {
-    if (typeof value === "string" && value.trim().length > 0) {
-      return value.trim();
-    }
-  }
-  return undefined;
-};
-
-const toAbsoluteUrl = (value: string, fallbackBase: string): string => {
-  try {
-    return new URL(value).toString();
-  } catch {
-    return new URL(value.startsWith("/") ? value : `/${value}`, fallbackBase).toString();
-  }
-};
-
 const ensureMetaTag = (attr: "name" | "property", key: string, contentValue: string) => {
   const selector = `meta[${attr}=\"${key}\"]`;
   let meta = document.head.querySelector<HTMLMetaElement>(selector);
@@ -105,84 +93,35 @@ const ensureCanonical = (href: string) => {
 };
 
 const applySeoMetadata = () => {
-  const seo = content.site.quality?.seo;
-  const defaults = seo?.defaults ?? {};
-  const overrides = seo?.overrides?.profile ?? {};
+  const { metadata } = resolveSeoMetadata(content.site, content.profile, {
+    fallbackOrigin: window.location.origin,
+    resolveImagePath: (candidate) => {
+      const resolved = resolveGeneratedContentImageUrl(candidate);
+      if (!resolved) {
+        return undefined;
+      }
 
-  const baseOrigin =
-    firstString(seo?.canonicalBaseUrl, window.location.origin) ?? window.location.origin;
+      return resolveBaseAwareAssetPath(
+        resolved,
+        resolveBasePathFromUrl(content.site.quality?.seo?.canonicalBaseUrl),
+      );
+    },
+  });
 
-  const title =
-    firstString(
-      overrides.title,
-      defaults.title,
-      content.profile.name ? `${content.profile.name} | ${content.site.title}` : undefined,
-      content.site.title,
-    ) ?? "OpenLinks";
+  document.title = metadata.title;
+  ensureCanonical(metadata.canonical);
 
-  const description =
-    firstString(
-      overrides.description,
-      defaults.description,
-      content.profile.bio,
-      content.site.description,
-    ) ?? "OpenLinks profile";
+  ensureMetaTag("name", "description", metadata.description);
+  ensureMetaTag("property", "og:title", metadata.ogTitle);
+  ensureMetaTag("property", "og:description", metadata.ogDescription);
+  ensureMetaTag("property", "og:type", metadata.ogType);
+  ensureMetaTag("property", "og:url", metadata.ogUrl);
+  ensureMetaTag("property", "og:image", metadata.ogImage);
 
-  const canonicalInput =
-    firstString(overrides.canonical, defaults.canonical, content.site.baseUrl, "/") ?? "/";
-  const canonical = toAbsoluteUrl(canonicalInput, baseOrigin);
-
-  const imagePath =
-    firstString(
-      overrides.twitterImage,
-      overrides.ogImage,
-      defaults.twitterImage,
-      defaults.ogImage,
-      seo?.socialImageFallback,
-      "/openlinks-social-fallback.svg",
-    ) ?? "/openlinks-social-fallback.svg";
-  const resolvedImagePath =
-    resolveGeneratedContentImageUrl(imagePath) ??
-    resolveGeneratedContentImageUrl("/openlinks-social-fallback.svg") ??
-    "/openlinks-social-fallback.svg";
-
-  const ogTitle = firstString(overrides.ogTitle, defaults.ogTitle, title) ?? title;
-  const ogDescription =
-    firstString(overrides.ogDescription, defaults.ogDescription, description) ?? description;
-  const ogUrl = toAbsoluteUrl(
-    firstString(overrides.ogUrl, defaults.ogUrl, canonical) ?? canonical,
-    baseOrigin,
-  );
-  const ogImage = toAbsoluteUrl(resolvedImagePath, baseOrigin);
-
-  const twitterCard =
-    firstString(overrides.twitterCard, defaults.twitterCard, "summary_large_image") ??
-    "summary_large_image";
-  const twitterTitle =
-    firstString(overrides.twitterTitle, defaults.twitterTitle, ogTitle) ?? ogTitle;
-  const twitterDescription =
-    firstString(overrides.twitterDescription, defaults.twitterDescription, ogDescription) ??
-    ogDescription;
-  const twitterImage = toAbsoluteUrl(resolvedImagePath, baseOrigin);
-
-  document.title = title;
-  ensureCanonical(canonical);
-
-  ensureMetaTag("name", "description", description);
-  ensureMetaTag("property", "og:title", ogTitle);
-  ensureMetaTag("property", "og:description", ogDescription);
-  ensureMetaTag(
-    "property",
-    "og:type",
-    firstString(overrides.ogType, defaults.ogType, "website") ?? "website",
-  );
-  ensureMetaTag("property", "og:url", ogUrl);
-  ensureMetaTag("property", "og:image", ogImage);
-
-  ensureMetaTag("name", "twitter:card", twitterCard);
-  ensureMetaTag("name", "twitter:title", twitterTitle);
-  ensureMetaTag("name", "twitter:description", twitterDescription);
-  ensureMetaTag("name", "twitter:image", twitterImage);
+  ensureMetaTag("name", "twitter:card", metadata.twitterCard);
+  ensureMetaTag("name", "twitter:title", metadata.twitterTitle);
+  ensureMetaTag("name", "twitter:description", metadata.twitterDescription);
+  ensureMetaTag("name", "twitter:image", metadata.twitterImage);
 };
 
 const targetForLink = (url?: string): "_blank" | "_self" => {
