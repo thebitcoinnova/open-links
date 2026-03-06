@@ -3,12 +3,26 @@
   const isPlaceholder = (value) =>
     /sign up\s*\|\s*linkedin|join linkedin|authwall/i.test(value || "");
 
-  const collectText = (nodes, minLength = 1, maxLength = 260) => {
+  const hasNestedCandidate = (node, minLength, maxLength) =>
+    Array.from(node.querySelectorAll("p, span, div")).some((candidate) => {
+      if (candidate === node) {
+        return false;
+      }
+
+      const value = normalize(candidate.textContent || "");
+      return value.length >= minLength && value.length <= maxLength;
+    });
+
+  const collectText = (nodes, minLength = 1, maxLength = 260, options = {}) => {
+    const leafOnly = options.leafOnly === true;
     const seen = new Set();
     const values = [];
     for (const node of nodes) {
       const value = normalize(node.textContent || "");
       if (!value || value.length < minLength || value.length > maxLength || seen.has(value)) {
+        continue;
+      }
+      if (leafOnly && hasNestedCandidate(node, minLength, maxLength)) {
         continue;
       }
       seen.add(value);
@@ -46,8 +60,11 @@
   if (aboutHeading) {
     const section = aboutHeading.closest("section") || aboutHeading.parentElement;
     if (section) {
-      const aboutCandidates = collectText(section.querySelectorAll("p, span, div"), 24, 500)
+      const aboutCandidates = collectText(section.querySelectorAll("p, span, div"), 24, 500, {
+        leafOnly: true,
+      })
         .filter((value) => value.toLowerCase() !== "about")
+        .filter((value) => !/^about(?=[A-Z])/.test(value))
         .filter((value) => !/show all|see more|contact info|connections/i.test(value));
       about = aboutCandidates[0] || null;
     }

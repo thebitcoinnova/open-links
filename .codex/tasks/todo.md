@@ -23,6 +23,11 @@
 - [x] Add a reusable `IconShare` and render it inside the `Share profile` CTA.
 - [x] Restyle the profile share button as the primary pill in `src/styles/base.css` and keep mobile behavior aligned in `src/styles/responsive.css`.
 - [x] Verify the change with targeted checks, diff review, and note any environment blockers.
+- [x] Restore local dependencies and rerun the LinkedIn-rich baseline diagnostics.
+- [x] Fix the LinkedIn authenticated extractor so About text does not capture the section label.
+- [x] Add a focused regression test for LinkedIn description sanitizing and headline fallback behavior.
+- [x] Apply the immediate LinkedIn cache workaround and attempt a refresh from the fixed extractor.
+- [x] Verify with `bun run enrich:rich:strict`, `bun run validate:data`, `bun test`, and `bun run build`.
 
 ## Previous Completion Review
 
@@ -35,3 +40,9 @@
 - Result: The profile header now exposes a single prominent `Share profile` CTA with a leading share icon, while keeping the native-share-first and clipboard-fallback behavior in one button.
 - Verification: `bun run biome:check`, `bun run studio:lint`, `bun run typecheck`, `bun run studio:typecheck`, `bun run --filter @openlinks/studio-api test`, `bun run studio:test:integration`, and `bun run build` passed, and Playwright confirmed the page renders one share button with an icon and shows `Link copied` after forcing the clipboard fallback path.
 - Residual risk: The share-sheet success path still depends on browser support for `navigator.share`, so native-share behavior remains browser-specific even though the fallback path is verified.
+
+### LinkedIn extractor fix
+
+- Result: LinkedIn authenticated extraction now filters out the glued `About` section label at both the DOM-candidate layer and the final Node-side description normalization layer, and the committed LinkedIn cache entry now serves the corrected description immediately.
+- Verification: `bun install`, `bun run typecheck`, `bun run quality:embedded-code`, `bun test`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, and `bun run build` all passed. `bun run auth:rich:sync -- --only-link linkedin --force` was attempted and failed only because `AGENT_BROWSER_ENCRYPTION_KEY` is not set to a valid 64-character hex value in this environment.
+- Residual risk: A live LinkedIn recapture from the fixed extractor is still pending until local authenticated-browser prerequisites are available, so the committed cache contains the manual hotfix text rather than a newly re-captured LinkedIn session artifact.

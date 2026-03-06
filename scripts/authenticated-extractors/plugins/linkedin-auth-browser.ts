@@ -21,9 +21,10 @@ import type {
   AuthenticatedExtractorPlugin,
   AuthenticatedExtractorSessionContext,
 } from "../types";
+import { resolveLinkedinDescription } from "./linkedin-profile-text";
 
 const EXTRACTOR_ID = "linkedin-auth-browser";
-const EXTRACTOR_VERSION = "2026-02-25.2";
+const EXTRACTOR_VERSION = "2026-03-06.1";
 const SELECTOR_PROFILE = "linkedin-profile-v1";
 const SHORT_VERIFY_TIMEOUT_MS = 8_000;
 const LINKEDIN_EXTRACT_PROFILE_PAYLOAD_SNIPPET = loadEmbeddedCode(
@@ -181,7 +182,14 @@ const extractLinkedinProfilePayload = async (
   })();
 
   const title = payload ? toText(payload.title) : undefined;
-  const description = payload ? toText(payload.description) : undefined;
+  const about = payload ? toText(payload.about) : undefined;
+  const headline = payload ? toText(payload.headline) : undefined;
+  const fallbackDescription = payload ? toText(payload.description) : undefined;
+  const description = resolveLinkedinDescription({
+    about,
+    headline,
+    fallbackDescription,
+  });
   const imageUrl = payload ? toText(payload.imageUrl) : undefined;
   const pageUrl = payload ? toText(payload.currentUrl) : undefined;
 
