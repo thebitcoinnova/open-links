@@ -7,6 +7,10 @@ import {
   type SitePaymentsConfig,
   isPaymentCapableLink,
 } from "../payments/types";
+import {
+  type SocialProfileMetadataFields,
+  mergeMetadataWithManualSocialProfileOverrides,
+} from "./social-profile-fields";
 
 export type {
   LinkPaymentConfig,
@@ -97,7 +101,7 @@ export interface SiteQualityConfig {
   };
 }
 
-export interface RichLinkMetadata {
+export interface RichLinkMetadata extends SocialProfileMetadataFields {
   title?: string;
   description?: string;
   image?: string;
@@ -459,21 +463,27 @@ const resolveImageFromGeneratedMap = (
   return toLocalAssetUrl(entry.resolvedPath);
 };
 
-export const resolveGeneratedContentImageUrl = (
+const resolveGeneratedAssetUrl = (
   candidate: string | undefined,
+  generatedByUrl: Record<string, GeneratedContentImageEntry>,
 ): string | undefined => {
   if (typeof candidate !== "string" || candidate.trim().length === 0) {
     return undefined;
   }
 
   const trimmed = candidate.trim();
-  const generatedByUrl = resolveGeneratedContentImages();
-
   if (!hasUrlScheme(trimmed)) {
     return toLocalAssetUrl(trimmed);
   }
 
   return resolveImageFromGeneratedMap(trimmed, generatedByUrl);
+};
+
+export const resolveGeneratedContentImageUrl = (
+  candidate: string | undefined,
+): string | undefined => {
+  const generatedByUrl = resolveGeneratedContentImages();
+  return resolveGeneratedAssetUrl(candidate, generatedByUrl);
 };
 
 const resolveProfileAvatarPath = (): string => {
@@ -501,34 +511,35 @@ const localizeRichMetadataImages = (
       return link;
     }
 
-    const imageCandidate = link.metadata.image;
-    if (typeof imageCandidate !== "string" || imageCandidate.trim().length === 0) {
+    const metadataRecord = { ...link.metadata } as Record<string, unknown>;
+    let mutated = false;
+
+    for (const field of ["image", "profileImage"] as const) {
+      const candidate = metadataRecord[field];
+      if (typeof candidate !== "string" || candidate.trim().length === 0) {
+        continue;
+      }
+
+      const resolvedAsset = resolveGeneratedAssetUrl(candidate, generatedByUrl);
+      if (!resolvedAsset) {
+        delete metadataRecord[field];
+        mutated = true;
+        continue;
+      }
+
+      if (resolvedAsset !== candidate) {
+        metadataRecord[field] = resolvedAsset;
+        mutated = true;
+      }
+    }
+
+    if (!mutated) {
       return link;
-    }
-
-    const trimmed = imageCandidate.trim();
-    let resolvedImage: string | undefined;
-
-    if (!hasUrlScheme(trimmed)) {
-      resolvedImage = toLocalAssetUrl(trimmed);
-    } else {
-      resolvedImage = resolveImageFromGeneratedMap(trimmed, generatedByUrl);
-    }
-
-    if (!resolvedImage) {
-      const { image: _image, ...metadataWithoutImage } = link.metadata;
-      return {
-        ...link,
-        metadata: metadataWithoutImage,
-      };
     }
 
     return {
       ...link,
-      metadata: {
-        ...link.metadata,
-        image: resolvedImage,
-      },
+      metadata: metadataRecord as RichLinkMetadata,
     };
   });
 
@@ -542,12 +553,11 @@ const mergeGeneratedMetadata = (
       return link;
     }
 
+    const metadata = mergeMetadataWithManualSocialProfileOverrides(link.metadata, generated);
+
     return {
       ...link,
-      metadata: {
-        ...(link.metadata ?? {}),
-        ...generated,
-      },
+      metadata,
     };
   });
 

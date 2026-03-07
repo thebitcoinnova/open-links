@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-authenticated-cache.schema.json",
   "version": 1,
-  "updatedAt": "2026-03-03T04:06:16.993Z",
+  "updatedAt": "2026-03-07T14:48:08.868Z",
   "entries": {
     "linkedin": {
       "extractorId": "linkedin-auth-browser",
@@ -133,11 +133,14 @@
       "extractorId": "youtube-auth-browser",
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
-      "capturedAt": "2026-03-03T03:53:02.763Z",
+      "capturedAt": "2026-03-07T14:48:08.868Z",
       "metadata": {
         "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
         "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
         "image": "cache/rich-authenticated/6b9108d57c85504129a4db624a858e965986b899a07b540b484797162d6159f6.jpg",
+        "profileImage": "cache/rich-authenticated/6b9108d57c85504129a4db624a858e965986b899a07b540b484797162d6159f6.jpg",
+        "subscribersCount": 11,
+        "subscribersCountRaw": "11 subscribers",
         "sourceLabel": "youtube.com"
       },
       "assets": {
@@ -161,17 +164,22 @@
       "extractorId": "instagram-auth-browser",
       "linkId": "instagram",
       "sourceUrl": "https://www.instagram.com/peterryszkiewicz/",
-      "capturedAt": "2026-03-03T04:06:16.993Z",
+      "capturedAt": "2026-03-07T14:48:05.463Z",
       "metadata": {
-        "title": "Peter No Taxation Without Representation Ryszkiewicz (@peterryszkiewicz) • Instagram photos and videos",
-        "description": "86 Followers, 168 Following, 36 Posts - See Instagram photos and videos from Peter No Taxation Without Representation Ryszkiewicz (@peterryszkiewicz)",
+        "title": "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz) • Instagram photos and videos",
+        "description": "86 Followers, 169 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
         "image": "cache/rich-authenticated/35a71a4916c222981fa4d860b4a76cf5b5784a8db873f582ff1e60ba7d4ee0e6.jpg",
+        "profileImage": "cache/rich-authenticated/35a71a4916c222981fa4d860b4a76cf5b5784a8db873f582ff1e60ba7d4ee0e6.jpg",
+        "followersCount": 86,
+        "followersCountRaw": "86 Followers",
+        "followingCount": 169,
+        "followingCountRaw": "169 Following",
         "sourceLabel": "instagram.com"
       },
       "assets": {
         "image": {
           "path": "cache/rich-authenticated/35a71a4916c222981fa4d860b4a76cf5b5784a8db873f582ff1e60ba7d4ee0e6.jpg",
-          "sourceUrl": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=0K7XiUyxy3oQ7kNvwFR7OA3&_nc_oc=AdnHcY7TBdl4gWeJqu82MfMhF9TVtHArJcGafr6Ty8CHdVwCZJK65KbDEvnPAjGFN5M&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_Afyjnr7YacmtwKyNbYAlfly12HNXhpuasDLzZwr_MSFjxQ&oe=69AC1EAE",
+          "sourceUrl": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=zoHehpCt-jkQ7kNvwGcvmZE&_nc_oc=Adk0m1VErAU_PvknfYVxNCn8DUPyJWum2PN1oZvs_Tte7CnGEQicC0H20fJ6H0GeLNg&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_AfyBYlZPKdqrSl_r4ZuPqtqBBPonyc51a85BJWiH3bi2Jw&oe=69B20D6E",
           "contentType": "image/jpeg",
           "bytes": 3825,
           "sha256": "35a71a4916c222981fa4d860b4a76cf5b5784a8db873f582ff1e60ba7d4ee0e6"

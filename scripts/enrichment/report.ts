@@ -8,6 +8,8 @@ import type {
   EnrichmentRunEntry,
   EnrichmentRunReport,
   EnrichmentRunSummary,
+  ExpectedSocialProfileField,
+  SupportedSocialProfilePlatform,
 } from "./types";
 
 export interface WriteEnrichmentReportInput {
@@ -32,6 +34,13 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const FAILURE_REASONS: EnrichmentFailureReason[] = ["fetch_failed", "metadata_missing"];
 const FAILURE_MODES: EnrichmentFailureMode[] = ["immediate", "aggregate"];
 const MISSING_FIELDS: EnrichmentMissingField[] = ["title", "description", "image"];
+const PROFILE_FIELDS: ExpectedSocialProfileField[] = [
+  "profileImage",
+  "followersCount",
+  "followingCount",
+  "subscribersCount",
+];
+const PROFILE_PLATFORMS: SupportedSocialProfilePlatform[] = ["instagram", "youtube"];
 
 const isFailureReason = (value: unknown): value is EnrichmentFailureReason =>
   typeof value === "string" && FAILURE_REASONS.includes(value as EnrichmentFailureReason);
@@ -41,6 +50,12 @@ const isFailureMode = (value: unknown): value is EnrichmentFailureMode =>
 
 const isMissingField = (value: unknown): value is EnrichmentMissingField =>
   typeof value === "string" && MISSING_FIELDS.includes(value as EnrichmentMissingField);
+
+const isProfileField = (value: unknown): value is ExpectedSocialProfileField =>
+  typeof value === "string" && PROFILE_FIELDS.includes(value as ExpectedSocialProfileField);
+
+const isProfilePlatform = (value: unknown): value is SupportedSocialProfilePlatform =>
+  typeof value === "string" && PROFILE_PLATFORMS.includes(value as SupportedSocialProfilePlatform);
 
 const toFailOn = (value: unknown): EnrichmentFailureReason[] | undefined => {
   if (!Array.isArray(value)) {
@@ -63,6 +78,15 @@ const toMissingFields = (value: unknown): EnrichmentMissingField[] | undefined =
   }
 
   const fields = value.filter(isMissingField);
+  return fields.length > 0 ? fields : undefined;
+};
+
+const toMissingProfileFields = (value: unknown): ExpectedSocialProfileField[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const fields = value.filter(isProfileField);
   return fields.length > 0 ? fields : undefined;
 };
 
@@ -149,6 +173,10 @@ const toEntry = (value: unknown): EnrichmentRunEntry | null => {
     cacheKey: typeof value.cacheKey === "string" ? value.cacheKey : undefined,
     cacheCapturedAt: typeof value.cacheCapturedAt === "string" ? value.cacheCapturedAt : undefined,
     staleCache: typeof value.staleCache === "boolean" ? value.staleCache : undefined,
+    supportedProfilePlatform: isProfilePlatform(value.supportedProfilePlatform)
+      ? value.supportedProfilePlatform
+      : undefined,
+    missingProfileFields: toMissingProfileFields(value.missingProfileFields),
   };
 };
 

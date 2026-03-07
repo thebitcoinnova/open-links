@@ -2,6 +2,16 @@
 
 ## Current
 
+- [x] Implement the Phase 07 schema, type, merge, and validation contract for social profile avatars plus platform-native audience counts.
+- [x] Extend Instagram and YouTube authenticated extraction, cache persistence, and enrichment reporting for profile metadata.
+- [x] Wire profile avatars and audience metrics through image sync, runtime loading, and rich-card view models without redesigning the cards yet.
+- [x] Verify Phase 07 with focused social-profile tests, enrichment/build checks, and the repo-wide lint/type/test suite.
+
+- [x] Research the Phase 7 metadata pipeline seams for social profile avatars, audience stats, merge precedence, and image materialization.
+- [x] Create `.planning/phases/07-social-profile-metadata-pipeline/07-RESEARCH.md` from the current codebase and locked context decisions.
+- [x] Create the three Phase 7 execution plans for contract/validation, Instagram+YouTube extraction, and runtime metadata plumbing.
+- [x] Verify the Phase 7 plan set against the roadmap goal and requirements before handing off to execution.
+
 - [x] Review the archived v1.0 planning artifacts and current metadata/card seams to scope the next milestone around social profile metadata and card refresh.
 - [x] Define v1.1 requirements and milestone goals in `.planning/PROJECT.md` and `.planning/REQUIREMENTS.md`.
 - [x] Create the v1.1 roadmap in `.planning/ROADMAP.md` and reset `.planning/STATE.md` so Phase 7 is ready for discussion/planning.
@@ -16,6 +26,14 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: Phase 07 now persists platform-native social profile metadata end-to-end for Instagram and YouTube, including separate profile avatars, follower/following/subscriber counts, raw-text companions, manual override precedence, warning-only missing-field handling, runtime localization, and rich-card-facing `socialProfile` view-model plumbing.
+- Verification: `bun test src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts scripts/authenticated-extractors/plugins/instagram-auth-browser.test.ts scripts/authenticated-extractors/plugins/youtube-auth-browser.test.ts`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run build`, `bun run biome:check`, `bun run studio:lint`, `bun run typecheck`, `bun run studio:typecheck`, `bun run --filter @openlinks/studio-api test`, and `bun run studio:test:integration` all passed. `validate:data` still reports the existing non-blocking Substack handle warning.
+- Residual risk: Audience parsing still depends on platform-specific text surfaces and only Instagram/YouTube are covered in this first pass, so broader social-platform support and the actual card redesign remain Phase 8+ work.
+
+- Result: Phase 7 now has a research brief plus three executable plans that sequence the work as contract/precedence first, extractor persistence second, and runtime asset/view-model plumbing third.
+- Verification: Reviewed `.planning/phases/07-social-profile-metadata-pipeline/07-RESEARCH.md`, `.planning/phases/07-social-profile-metadata-pipeline/07-01-PLAN.md`, `.planning/phases/07-social-profile-metadata-pipeline/07-02-PLAN.md`, `.planning/phases/07-social-profile-metadata-pipeline/07-03-PLAN.md`, and checked that all three plan files exist with waves `1`, `2`, and `3`.
+- Residual risk: Exact field naming for parsed versus raw audience values is still intentionally discretionary inside execution, so Plan 07-01 should settle that quickly before downstream files start diverging.
 
 - Result: The planning artifacts now define milestone v1.1 around social profile metadata persistence and a profile-style card refresh, with requirements mapped cleanly to phases 7-9.
 - Verification: Reviewed `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/STATE.md`, and `git diff -- .planning/PROJECT.md .planning/REQUIREMENTS.md .planning/ROADMAP.md .planning/STATE.md` for scope and traceability consistency.

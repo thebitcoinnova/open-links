@@ -4,6 +4,10 @@ import process from "node:process";
 import type { AnySchema } from "ajv";
 import addFormats from "ajv-formats";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
+import {
+  resolveMissingSupportedSocialProfileFields,
+  resolveSupportedSocialProfile,
+} from "../../src/lib/content/social-profile-fields";
 import type { EnrichmentMetadata } from "../enrichment/types";
 import type {
   AuthenticatedCacheEntry,
@@ -68,6 +72,10 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
         title: entry.metadata.title.trim(),
         description: entry.metadata.description.trim(),
         image: entry.metadata.image.trim(),
+        profileImage: entry.metadata.profileImage?.trim(),
+        followersCountRaw: entry.metadata.followersCountRaw?.trim(),
+        followingCountRaw: entry.metadata.followingCountRaw?.trim(),
+        subscribersCountRaw: entry.metadata.subscribersCountRaw?.trim(),
         sourceLabel: entry.metadata.sourceLabel?.trim(),
       },
       assets: {
@@ -139,6 +147,8 @@ const normalizePublicPath = (value: string): string => {
 const resolvePublicAssetAbsolutePath = (value: string): string =>
   path.join(ROOT, "public", normalizePublicPath(value));
 
+const hasUrlScheme = (value: string): boolean => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value);
+
 const toAgeDays = (capturedAt: string): number | undefined => {
   const capturedMs = Date.parse(capturedAt);
   if (!Number.isFinite(capturedMs)) {
@@ -157,6 +167,13 @@ const toEnrichmentMetadata = (entry: AuthenticatedCacheEntry): EnrichmentMetadat
   title: entry.metadata.title,
   description: entry.metadata.description,
   image: entry.metadata.image,
+  profileImage: entry.metadata.profileImage,
+  followersCount: entry.metadata.followersCount,
+  followersCountRaw: entry.metadata.followersCountRaw,
+  followingCount: entry.metadata.followingCount,
+  followingCountRaw: entry.metadata.followingCountRaw,
+  subscribersCount: entry.metadata.subscribersCount,
+  subscribersCountRaw: entry.metadata.subscribersCountRaw,
   sourceLabel: entry.metadata.sourceLabel,
 });
 
@@ -233,6 +250,17 @@ export const validateAuthenticatedCacheEntry = (
     });
   }
 
+  if (metadata.profileImage && !hasUrlScheme(metadata.profileImage)) {
+    const profileImageAbsolutePath = resolvePublicAssetAbsolutePath(metadata.profileImage);
+    if (!fs.existsSync(profileImageAbsolutePath)) {
+      issues.push({
+        level: "error",
+        message: `Cache entry '${input.cacheKey}' profile image asset is missing at '${path.relative(ROOT, profileImageAbsolutePath)}'.`,
+        remediation: `Run npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${input.expectedLinkId}) and commit generated assets under public/cache/rich-authenticated/.`,
+      });
+    }
+  }
+
   const cachedSourceHost = (() => {
     try {
       return new URL(rawEntry.sourceUrl).hostname;
@@ -270,6 +298,24 @@ export const validateAuthenticatedCacheEntry = (
     });
   }
 
+  const enrichmentMetadata = toEnrichmentMetadata(rawEntry);
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: input.expectedUrl,
+  });
+  if (supportedProfile) {
+    const missingProfileFields = resolveMissingSupportedSocialProfileFields(
+      enrichmentMetadata,
+      supportedProfile,
+    );
+    if (missingProfileFields.length > 0) {
+      issues.push({
+        level: "warning",
+        message: `Cache entry '${input.cacheKey}' is missing expected ${supportedProfile.platform} profile fields: ${missingProfileFields.join(", ")}.`,
+        remediation: `Refresh cache with npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${input.expectedLinkId}), or set manual overrides under data/links.json.`,
+      });
+    }
+  }
+
   const entry: ResolvedAuthenticatedCacheEntry = {
     cacheKey: input.cacheKey,
     entry: rawEntry,
@@ -281,6 +327,6 @@ export const validateAuthenticatedCacheEntry = (
     valid: issues.every((issue) => issue.level !== "error"),
     entry,
     issues,
-    metadata: toEnrichmentMetadata(rawEntry),
+    metadata: enrichmentMetadata,
   };
 };

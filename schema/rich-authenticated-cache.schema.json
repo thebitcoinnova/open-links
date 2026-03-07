@@ -67,6 +67,34 @@
                 "type": "string",
                 "minLength": 1
               },
+              "profileImage": {
+                "type": "string",
+                "minLength": 1
+              },
+              "followersCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "followersCountRaw": {
+                "type": "string",
+                "minLength": 1
+              },
+              "followingCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "followingCountRaw": {
+                "type": "string",
+                "minLength": 1
+              },
+              "subscribersCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "subscribersCountRaw": {
+                "type": "string",
+                "minLength": 1
+              },
               "sourceLabel": {
                 "type": "string",
                 "minLength": 1

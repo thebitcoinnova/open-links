@@ -30,14 +30,14 @@ interface GeneratedContentImagesManifest {
 }
 
 interface RichMetadataPayload {
-  links?: Record<string, { metadata?: { image?: unknown } }>;
+  links?: Record<string, { metadata?: { image?: unknown; profileImage?: unknown } }>;
 }
 
 interface LinksPayload {
   links?: Array<{
     id?: unknown;
     type?: unknown;
-    metadata?: { image?: unknown };
+    metadata?: { image?: unknown; profileImage?: unknown };
   }>;
 }
 
@@ -469,21 +469,28 @@ const collectCandidates = (
   const generatedLinks = isRecord(generatedRichMetadata?.links) ? generatedRichMetadata.links : {};
 
   for (const link of links) {
-    if (!isRecord(link) || link.type !== "rich") {
+    if (!isRecord(link)) {
       continue;
     }
 
     const linkId = typeof link.id === "string" ? link.id : undefined;
-    const generatedImageValue =
+    const generatedMetadata =
       linkId && isRecord(generatedLinks[linkId]) && isRecord(generatedLinks[linkId].metadata)
-        ? generatedLinks[linkId].metadata.image
+        ? generatedLinks[linkId].metadata
         : undefined;
+    const manualMetadata = isRecord(link.metadata) ? link.metadata : undefined;
 
-    const manualImageValue = isRecord(link.metadata) ? link.metadata.image : undefined;
-    const imageValue = generatedImageValue ?? manualImageValue;
+    const candidateValues = [
+      generatedMetadata?.image,
+      generatedMetadata?.profileImage,
+      manualMetadata?.image,
+      manualMetadata?.profileImage,
+    ];
 
-    if (typeof imageValue === "string" && imageValue.trim().length > 0) {
-      candidates.add(imageValue.trim());
+    for (const candidateValue of candidateValues) {
+      if (typeof candidateValue === "string" && candidateValue.trim().length > 0) {
+        candidates.add(candidateValue.trim());
+      }
     }
   }
 

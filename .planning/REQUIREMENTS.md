@@ -7,9 +7,9 @@
 
 ### Data Model & Enrichment
 
-- [ ] **DATA-07**: Maintainer can store profile-centric link metadata, including handle, profile image, and audience counts, in `links[].metadata` or generated rich metadata.
-- [ ] **DATA-08**: Build-time enrichment and authenticated extractors save available follower/following/subscriber-style counts and profile avatar data for supported social profile links.
-- [ ] **DATA-09**: Validation and metadata merging preserve deterministic manual overrides when some profile fields are missing, partial, or unsupported.
+- [x] **DATA-07**: Maintainer can store profile-centric link metadata, including handle, profile image, and audience counts, in `links[].metadata` or generated rich metadata.
+- [x] **DATA-08**: Build-time enrichment and authenticated extractors save available follower/following/subscriber-style counts and profile avatar data for supported social profile links.
+- [x] **DATA-09**: Validation and metadata merging preserve deterministic manual overrides when some profile fields are missing, partial, or unsupported.
 
 ### UI & Experience
 
@@ -49,9 +49,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-07 | Phase 7 | Pending |
-| DATA-08 | Phase 7 | Pending |
-| DATA-09 | Phase 7 | Pending |
+| DATA-07 | Phase 7 | Complete |
+| DATA-08 | Phase 7 | Complete |
+| DATA-09 | Phase 7 | Complete |
 | UI-07 | Phase 8 | Pending |
 | UI-08 | Phase 8 | Pending |
 | UI-09 | Phase 8 | Pending |
@@ -66,4 +66,4 @@
 
 ---
 *Requirements defined: 2026-03-07*
-*Last updated: 2026-03-07 after initial v1.1 definition*
+*Last updated: 2026-03-07 after Phase 7 completion*

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { resolveSupportedSocialProfile } from "../../../src/lib/content/social-profile-fields";
 import { fetchMetadata } from "../../enrichment/fetch-metadata";
 import { parseMetadata } from "../../enrichment/parse-metadata";
 import type {
@@ -10,12 +11,15 @@ import type {
   AuthenticatedExtractorPlugin,
   AuthenticatedExtractorSessionContext,
 } from "../types";
+import { parseAudienceCount } from "./social-profile-counts";
 
 const EXTRACTOR_ID = "instagram-auth-browser";
 const EXTRACTOR_VERSION = "2026-03-03.2";
 const SELECTOR_PROFILE = "instagram-public-metadata-v1";
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+const INSTAGRAM_DESCRIPTION_PATTERN =
+  /^\s*(?<followersValue>[^,]+?)\s+(?<followersLabel>Followers?),\s*(?<followingValue>[^,]+?)\s+(?<followingLabel>Following)\b/i;
 
 const safeTrim = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
@@ -61,22 +65,17 @@ const extensionFromUrl = (sourceUrl: string): string | undefined => {
 };
 
 const normalizeTargetUrl = (sourceUrl: string): string => {
-  let parsed: URL;
-  try {
-    parsed = new URL(sourceUrl);
-  } catch {
-    throw new Error(`Invalid Instagram URL '${sourceUrl}' for extractor '${EXTRACTOR_ID}'.`);
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: sourceUrl,
+    icon: "instagram",
+  });
+  if (!supportedProfile || supportedProfile.platform !== "instagram") {
+    throw new Error(
+      `Instagram extractor only supports clear instagram.com profile/account URLs. Got '${sourceUrl}'.`,
+    );
   }
 
-  const host = parsed.hostname
-    .replace(/^www\./, "")
-    .replace(/^m\./, "")
-    .toLowerCase();
-  if (!(host === "instagram.com" || host.endsWith(".instagram.com"))) {
-    throw new Error(`Instagram extractor only supports instagram.com URLs. Got host '${host}'.`);
-  }
-
-  return `https://www.instagram.com${parsed.pathname}`;
+  return `https://www.instagram.com/${supportedProfile.handle}/`;
 };
 
 const detectPlaceholderSignals = (input: {
@@ -119,9 +118,48 @@ interface ExtractedMetadataPayload {
   title: string;
   description: string;
   imageUrl: string;
+  profileImageUrl?: string;
+  followersCount?: number;
+  followersCountRaw?: string;
+  followingCount?: number;
+  followingCountRaw?: string;
   sourceLabel: string;
   placeholderSignals: string[];
 }
+
+export interface InstagramProfileMetadata {
+  followersCount?: number;
+  followersCountRaw?: string;
+  followingCount?: number;
+  followingCountRaw?: string;
+}
+
+export const parseInstagramProfileMetadata = (
+  description: string | undefined,
+): InstagramProfileMetadata => {
+  const trimmed = safeTrim(description);
+  if (!trimmed) {
+    return {};
+  }
+
+  const match = INSTAGRAM_DESCRIPTION_PATTERN.exec(trimmed);
+  const followersValue = safeTrim(match?.groups?.followersValue);
+  const followersLabel = safeTrim(match?.groups?.followersLabel);
+  const followingValue = safeTrim(match?.groups?.followingValue);
+  const followingLabel = safeTrim(match?.groups?.followingLabel);
+
+  const followersCountRaw =
+    followersValue && followersLabel ? `${followersValue} ${followersLabel}` : undefined;
+  const followingCountRaw =
+    followingValue && followingLabel ? `${followingValue} ${followingLabel}` : undefined;
+
+  return {
+    followersCount: parseAudienceCount(followersCountRaw),
+    followersCountRaw,
+    followingCount: parseAudienceCount(followingCountRaw),
+    followingCountRaw,
+  };
+};
 
 const extractPublicMetadata = async (sourceUrl: string): Promise<ExtractedMetadataPayload> => {
   const currentUrl = normalizeTargetUrl(sourceUrl);
@@ -140,6 +178,7 @@ const extractPublicMetadata = async (sourceUrl: string): Promise<ExtractedMetada
   const title = safeTrim(parsed.metadata.title);
   const description = safeTrim(parsed.metadata.description);
   const imageUrl = safeTrim(parsed.metadata.image);
+  const profileMetadata = parseInstagramProfileMetadata(description);
   const placeholderSignals = detectPlaceholderSignals({
     html: fetched.html,
     currentUrl,
@@ -183,6 +222,11 @@ const extractPublicMetadata = async (sourceUrl: string): Promise<ExtractedMetada
     title,
     description,
     imageUrl,
+    profileImageUrl: imageUrl,
+    followersCount: profileMetadata.followersCount,
+    followersCountRaw: profileMetadata.followersCountRaw,
+    followingCount: profileMetadata.followingCount,
+    followingCountRaw: profileMetadata.followingCountRaw,
     sourceLabel: "instagram.com",
     placeholderSignals,
   };
@@ -276,6 +320,11 @@ const extract = async (
       title: metadata.title,
       description: metadata.description,
       image: imageAsset.path,
+      profileImage: metadata.profileImageUrl ? imageAsset.path : undefined,
+      followersCount: metadata.followersCount,
+      followersCountRaw: metadata.followersCountRaw,
+      followingCount: metadata.followingCount,
+      followingCountRaw: metadata.followingCountRaw,
       sourceLabel: metadata.sourceLabel,
     },
     assets: {

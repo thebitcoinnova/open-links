@@ -1,3 +1,15 @@
+import type {
+  ExpectedSocialProfileField,
+  SocialProfileMetadataFields,
+  SupportedSocialProfilePlatform,
+} from "../../src/lib/content/social-profile-fields";
+
+export type {
+  ExpectedSocialProfileField,
+  SocialProfileMetadataFields,
+  SupportedSocialProfilePlatform,
+} from "../../src/lib/content/social-profile-fields";
+
 export type EnrichmentStatus = "fetched" | "partial" | "failed" | "skipped";
 
 export type EnrichmentReason =
@@ -14,7 +26,7 @@ export type EnrichmentFailureReason = "fetch_failed" | "metadata_missing";
 export type EnrichmentFailureMode = "immediate" | "aggregate";
 export type EnrichmentMissingField = "title" | "description" | "image";
 
-export interface EnrichmentMetadata {
+export interface EnrichmentMetadata extends SocialProfileMetadataFields {
   title?: string;
   description?: string;
   image?: string;
@@ -49,6 +61,8 @@ export interface EnrichmentRunEntry {
   cacheKey?: string;
   cacheCapturedAt?: string;
   staleCache?: boolean;
+  supportedProfilePlatform?: SupportedSocialProfilePlatform;
+  missingProfileFields?: ExpectedSocialProfileField[];
 }
 
 export interface EnrichmentRunSummary {

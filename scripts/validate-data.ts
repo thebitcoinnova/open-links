@@ -4,6 +4,11 @@ import process from "node:process";
 import addFormats from "ajv-formats";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import {
+  mergeMetadataWithManualSocialProfileOverrides,
+  resolveMissingSupportedSocialProfileFields,
+  resolveSupportedSocialProfile,
+} from "../src/lib/content/social-profile-fields";
+import {
   DEFAULT_AUTH_CACHE_PATH,
   loadAuthenticatedCacheRegistry,
   resolveAuthenticatedCacheKey,
@@ -404,6 +409,74 @@ const richCardPreviewImageIssues = (
   return issues;
 };
 
+const supportedSocialProfileMetadataIssues = (
+  linksSource: string,
+  linksData: Record<string, unknown>,
+  siteData: Record<string, unknown>,
+  generatedMetadataByLink: Record<string, Record<string, unknown>>,
+): ValidationIssue[] => {
+  const links = Array.isArray(linksData.links) ? linksData.links : [];
+  const enabledByDefault = resolveEnabledByDefault(siteData);
+  const issues: ValidationIssue[] = [];
+
+  links.forEach((rawLink, index) => {
+    if (!isRecord(rawLink) || rawLink.type !== "rich" || rawLink.enabled === false) {
+      return;
+    }
+
+    const enrichment = isRecord(rawLink.enrichment) ? rawLink.enrichment : undefined;
+    const enrichmentEnabled =
+      typeof enrichment?.enabled === "boolean" ? enrichment.enabled : enabledByDefault;
+    if (!enrichmentEnabled) {
+      return;
+    }
+
+    const url = toStringOrUndefined(rawLink.url);
+    if (!url) {
+      return;
+    }
+
+    const supportedProfile = resolveSupportedSocialProfile({
+      url,
+      icon: toStringOrUndefined(rawLink.icon),
+    });
+    if (!supportedProfile) {
+      return;
+    }
+
+    const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
+    const manualMetadata = isRecord(rawLink.metadata) ? rawLink.metadata : {};
+    const generatedMetadata = generatedMetadataByLink[linkId] ?? {};
+    const mergedMetadata =
+      mergeMetadataWithManualSocialProfileOverrides(manualMetadata, generatedMetadata) ?? {};
+    const missingProfileFields = resolveMissingSupportedSocialProfileFields(
+      mergedMetadata,
+      supportedProfile,
+    );
+
+    if (missingProfileFields.length === 0) {
+      return;
+    }
+
+    const refreshCommand = toStringOrUndefined(enrichment?.authenticatedExtractor)
+      ? `Run npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${linkId})`
+      : "Run npm run enrich:rich:strict";
+
+    issues.push({
+      level: "warning",
+      source: linksSource,
+      path: `$.links[${index}].metadata`,
+      message:
+        `Supported ${supportedProfile.platform} profile link '${linkId}' is missing expected social profile metadata: ` +
+        `${missingProfileFields.join(", ")}.`,
+      remediation: `${refreshCommand}, or add manual values under $.links[${index}].metadata for the missing fields.`,
+      strictBlocking: false,
+    });
+  });
+
+  return issues;
+};
+
 interface AuthenticatedExtractorTarget {
   index: number;
   linkId: string;
@@ -737,6 +810,10 @@ const enrichmentIssues = (
       entry.reason === "metadata_missing" && entry.missingFields && entry.missingFields.length > 0
         ? ` Missing fields: ${entry.missingFields.join(", ")}.`
         : "";
+    const missingProfileFields =
+      entry.missingProfileFields && entry.missingProfileFields.length > 0
+        ? ` Expected social profile fields missing: ${entry.missingProfileFields.join(", ")}.`
+        : "";
 
     issues.push({
       level,
@@ -744,7 +821,7 @@ const enrichmentIssues = (
       path: `$.entries[${index}]`,
       message:
         `Rich enrichment ${diagnosticClass} for link '${entry.linkId}' (${entry.reason}). ${entry.message}` +
-        `${missingFields} Policy: failureMode=${failureMode}, failOn=${failOn.join(", ")}.`,
+        `${missingFields}${missingProfileFields} Policy: failureMode=${failureMode}, failOn=${failOn.join(", ")}.`,
       remediation: entry.remediation,
     });
   });
@@ -887,15 +964,26 @@ const run = () => {
     }
 
     if (metadataRead.value && contentImagesRead.value) {
+      const generatedMetadataByLink = resolveGeneratedMetadataByLink(metadataRead.value);
+
       issues.push(
         ...richCardPreviewImageIssues(
           args.linksPath,
           linksData,
           siteData,
-          resolveGeneratedMetadataByLink(metadataRead.value),
+          generatedMetadataByLink,
           resolveGeneratedContentImagesByUrl(contentImagesRead.value),
           metadataPath,
           DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+        ),
+      );
+
+      issues.push(
+        ...supportedSocialProfileMetadataIssues(
+          args.linksPath,
+          linksData,
+          siteData,
+          generatedMetadataByLink,
         ),
       );
     }

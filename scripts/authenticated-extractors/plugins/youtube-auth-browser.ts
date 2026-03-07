@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { resolveSupportedSocialProfile } from "../../../src/lib/content/social-profile-fields";
 import { fetchMetadata } from "../../enrichment/fetch-metadata";
 import { parseMetadata } from "../../enrichment/parse-metadata";
 import type {
@@ -10,12 +11,15 @@ import type {
   AuthenticatedExtractorPlugin,
   AuthenticatedExtractorSessionContext,
 } from "../types";
+import { parseAudienceCount } from "./social-profile-counts";
 
 const EXTRACTOR_ID = "youtube-auth-browser";
 const EXTRACTOR_VERSION = "2026-03-03.2";
 const SELECTOR_PROFILE = "youtube-public-metadata-v1";
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+const YOUTUBE_THUMBNAIL_URL_PATTERN =
+  /itemprop="thumbnailUrl" href="([^"]+)"|"channelMetadataRenderer":\{.*?"avatar":\{"thumbnails":\[\{"url":"([^"]+)"/s;
 
 const safeTrim = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
@@ -87,28 +91,41 @@ const normalizeTargetUrl = (sourceUrl: string): string => {
     .replace(/^www\./, "")
     .replace(/^m\./, "")
     .toLowerCase();
-  if (host === "youtu.be") {
-    const videoId = parsed.pathname
-      .split("/")
-      .map((segment) => segment.trim())
-      .filter((segment) => segment.length > 0)[0];
-
-    if (!videoId) {
-      throw new Error(`YouTube short URL '${sourceUrl}' is missing a video id segment.`);
-    }
-
-    const canonical = new URL("https://www.youtube.com/watch");
-    canonical.searchParams.set("v", videoId);
-    return canonical.toString();
+  if (!(host === "youtube.com" || host.endsWith(".youtube.com"))) {
+    throw new Error(
+      `YouTube extractor only supports youtube.com profile/channel URLs. Got host '${parsed.hostname}'.`,
+    );
   }
 
-  if (host === "youtube.com" || host.endsWith(".youtube.com")) {
-    return parsed.toString();
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: sourceUrl,
+    icon: "youtube",
+  });
+  if (!supportedProfile || supportedProfile.platform !== "youtube") {
+    throw new Error(
+      `YouTube extractor only supports clear youtube.com profile/channel URLs. Got '${sourceUrl}'.`,
+    );
   }
 
-  throw new Error(
-    `YouTube extractor only supports youtube.com/youtu.be URLs. Got host '${parsed.hostname}'.`,
-  );
+  const segments = parsed.pathname
+    .split("/")
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0);
+  const first = segments[0];
+
+  if (!first) {
+    throw new Error(`YouTube URL '${sourceUrl}' is missing a profile path segment.`);
+  }
+
+  if (first.startsWith("@")) {
+    return `https://www.youtube.com/${first}`;
+  }
+
+  if ((first === "channel" || first === "c" || first === "user") && segments[1]) {
+    return `https://www.youtube.com/${first}/${segments[1]}`;
+  }
+
+  return `https://www.youtube.com/${first}`;
 };
 
 const detectPlaceholderSignals = (input: {
@@ -155,9 +172,47 @@ interface ExtractedMetadataPayload {
   title: string;
   description: string;
   imageUrl: string;
+  profileImageUrl?: string;
+  subscribersCount?: number;
+  subscribersCountRaw?: string;
   sourceLabel: string;
   placeholderSignals: string[];
 }
+
+export interface YoutubeProfileMetadata {
+  subscribersCount?: number;
+  subscribersCountRaw?: string;
+}
+
+export const extractYoutubeSubscriberCountRaw = (html: string): string | undefined => {
+  const metadataRowsMarker = '"metadataRows":[';
+  const startIndex = html.indexOf(metadataRowsMarker);
+  if (startIndex < 0) {
+    return undefined;
+  }
+
+  const segment = html.slice(startIndex, startIndex + 2_500);
+  const contentMatch = /"content":"([^"]+ subscribers?)"/i.exec(segment);
+  if (contentMatch?.[1]) {
+    return safeTrim(contentMatch[1]);
+  }
+
+  const accessibilityMatch = /"accessibilityLabel":"([^"]+ subscribers?)"/i.exec(segment);
+  return safeTrim(accessibilityMatch?.[1]);
+};
+
+export const extractYoutubeProfileImageUrl = (html: string): string | undefined => {
+  const match = YOUTUBE_THUMBNAIL_URL_PATTERN.exec(html);
+  return safeTrim(match?.[1] ?? match?.[2]);
+};
+
+export const parseYoutubeProfileMetadata = (html: string): YoutubeProfileMetadata => {
+  const subscribersCountRaw = extractYoutubeSubscriberCountRaw(html);
+  return {
+    subscribersCount: parseAudienceCount(subscribersCountRaw),
+    subscribersCountRaw,
+  };
+};
 
 const extractPublicMetadata = async (sourceUrl: string): Promise<ExtractedMetadataPayload> => {
   const currentUrl = normalizeTargetUrl(sourceUrl);
@@ -175,7 +230,9 @@ const extractPublicMetadata = async (sourceUrl: string): Promise<ExtractedMetada
   const parsed = parseMetadata(fetched.html, currentUrl);
   const title = safeTrim(parsed.metadata.title);
   const description = safeTrim(parsed.metadata.description);
-  const imageUrl = safeTrim(parsed.metadata.image);
+  const profileImageUrl = extractYoutubeProfileImageUrl(fetched.html);
+  const imageUrl = safeTrim(parsed.metadata.image) ?? profileImageUrl;
+  const profileMetadata = parseYoutubeProfileMetadata(fetched.html);
   const placeholderSignals = detectPlaceholderSignals({
     html: fetched.html,
     currentUrl,
@@ -219,6 +276,9 @@ const extractPublicMetadata = async (sourceUrl: string): Promise<ExtractedMetada
     title,
     description,
     imageUrl,
+    profileImageUrl,
+    subscribersCount: profileMetadata.subscribersCount,
+    subscribersCountRaw: profileMetadata.subscribersCountRaw,
     sourceLabel: resolveSourceLabel(currentUrl),
     placeholderSignals,
   };
@@ -304,7 +364,10 @@ const extract = async (
   context: AuthenticatedExtractorExtractContext,
 ): Promise<AuthenticatedExtractorExtractResult> => {
   const metadata = await extractPublicMetadata(context.sourceUrl);
-  const imageAsset = await downloadImageAsset(context, metadata.imageUrl);
+  const imageAsset = await downloadImageAsset(
+    context,
+    metadata.profileImageUrl ?? metadata.imageUrl,
+  );
 
   return {
     capturedAt: new Date().toISOString(),
@@ -312,6 +375,9 @@ const extract = async (
       title: metadata.title,
       description: metadata.description,
       image: imageAsset.path,
+      profileImage: metadata.profileImageUrl ? imageAsset.path : undefined,
+      subscribersCount: metadata.subscribersCount,
+      subscribersCountRaw: metadata.subscribersCountRaw,
       sourceLabel: metadata.sourceLabel,
     },
     assets: {

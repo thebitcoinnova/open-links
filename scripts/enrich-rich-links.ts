@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import {
+  SOCIAL_PROFILE_METADATA_FIELDS,
+  mergeMetadataWithManualSocialProfileOverrides,
+  resolveMissingSupportedSocialProfileFields,
+  resolveSupportedSocialProfile,
+} from "../src/lib/content/social-profile-fields";
 import { normalizeHandle, resolveHandleFromUrl } from "../src/lib/identity/handle-resolver";
 import {
   DEFAULT_AUTH_CACHE_PATH,
@@ -29,6 +35,7 @@ import type {
   EnrichmentMetadata,
   EnrichmentReason,
   EnrichmentRunEntry,
+  ExpectedSocialProfileField,
   GeneratedRichMetadata,
 } from "./enrichment/types";
 
@@ -188,6 +195,7 @@ const ensureDirectory = (relativePath: string) => {
 
 const pickDefined = (metadata: EnrichmentMetadata): EnrichmentMetadata => {
   const result: EnrichmentMetadata = {};
+  const resultRecord = result as Record<string, unknown>;
 
   if (metadata.title) result.title = metadata.title;
   if (metadata.description) result.description = metadata.description;
@@ -200,6 +208,16 @@ const pickDefined = (metadata: EnrichmentMetadata): EnrichmentMetadata => {
   if (metadata.enrichmentStatus) result.enrichmentStatus = metadata.enrichmentStatus;
   if (metadata.enrichmentReason) result.enrichmentReason = metadata.enrichmentReason;
   if (metadata.enrichedAt) result.enrichedAt = metadata.enrichedAt;
+  for (const field of SOCIAL_PROFILE_METADATA_FIELDS) {
+    const value = metadata[field];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      resultRecord[field] = value;
+      continue;
+    }
+    if (typeof value === "string" && value.trim().length > 0) {
+      resultRecord[field] = value;
+    }
+  }
 
   return result;
 };
@@ -207,7 +225,48 @@ const pickDefined = (metadata: EnrichmentMetadata): EnrichmentMetadata => {
 const mergeMetadata = (
   original: EnrichmentMetadata | undefined,
   enriched: EnrichmentMetadata,
-): EnrichmentMetadata => pickDefined({ ...(original ?? {}), ...enriched });
+): EnrichmentMetadata =>
+  pickDefined(mergeMetadataWithManualSocialProfileOverrides(original, enriched) ?? {});
+
+const resolveProfileWarningContext = (
+  supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
+  metadata: EnrichmentMetadata,
+): {
+  supportedProfilePlatform?: EnrichmentRunEntry["supportedProfilePlatform"];
+  missingProfileFields?: ExpectedSocialProfileField[];
+} => {
+  if (!supportedProfile) {
+    return {};
+  }
+
+  const missingProfileFields = resolveMissingSupportedSocialProfileFields(
+    metadata,
+    supportedProfile,
+  );
+  return {
+    supportedProfilePlatform: supportedProfile.platform,
+    missingProfileFields: missingProfileFields.length > 0 ? missingProfileFields : undefined,
+  };
+};
+
+const warnForMissingProfileFields = (
+  linkId: string,
+  url: string,
+  supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
+  missingProfileFields: ExpectedSocialProfileField[] | undefined,
+) => {
+  if (!supportedProfile || !missingProfileFields || missingProfileFields.length === 0) {
+    return;
+  }
+
+  console.warn(
+    [
+      `Warning [${linkId}]: supported ${supportedProfile.platform} profile metadata is incomplete.`,
+      `Missing fields: ${missingProfileFields.join(", ")}.`,
+      `URL: ${url}`,
+    ].join(" "),
+  );
+};
 
 const hasManualMetadataFallback = (metadata: EnrichmentMetadata | undefined): boolean => {
   if (!metadata) {
@@ -427,6 +486,10 @@ const run = async () => {
   let abortedEarly = false;
 
   for (const link of richLinks) {
+    const supportedProfile = resolveSupportedSocialProfile({
+      url: link.url,
+      icon: link.icon,
+    });
     const urlDerivedHandle = resolveHandleFromUrl({
       url: link.url,
       icon: link.icon,
@@ -445,6 +508,13 @@ const run = async () => {
         enrichmentReason: reason,
         enrichedAt: generatedAt,
       });
+      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        supportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
 
       entries.push({
         linkId: link.id,
@@ -457,6 +527,7 @@ const run = async () => {
         remediation: remediationFor("skipped", reason),
         metadata,
         blocking: false,
+        ...profileWarningContext,
       });
 
       generatedLinks[link.id] = { metadata };
@@ -489,6 +560,13 @@ const run = async () => {
           enrichmentReason: reason,
           enrichedAt: generatedAt,
         });
+        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        warnForMissingProfileFields(
+          link.id,
+          link.url,
+          supportedProfile,
+          profileWarningContext.missingProfileFields,
+        );
 
         entries.push({
           linkId: link.id,
@@ -504,6 +582,7 @@ const run = async () => {
           blocking: true,
           extractorId: authenticatedExtractorId,
           cacheKey,
+          ...profileWarningContext,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -519,6 +598,13 @@ const run = async () => {
           enrichmentReason: reason,
           enrichedAt: generatedAt,
         });
+        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        warnForMissingProfileFields(
+          link.id,
+          link.url,
+          supportedProfile,
+          profileWarningContext.missingProfileFields,
+        );
 
         entries.push({
           linkId: link.id,
@@ -534,6 +620,7 @@ const run = async () => {
           blocking: true,
           extractorId: authenticatedExtractorId,
           cacheKey,
+          ...profileWarningContext,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -550,6 +637,13 @@ const run = async () => {
           enrichmentReason: reason,
           enrichedAt: generatedAt,
         });
+        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        warnForMissingProfileFields(
+          link.id,
+          link.url,
+          supportedProfile,
+          profileWarningContext.missingProfileFields,
+        );
 
         entries.push({
           linkId: link.id,
@@ -566,6 +660,7 @@ const run = async () => {
           blocking: true,
           extractorId: authenticatedExtractorId,
           cacheKey,
+          ...profileWarningContext,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -594,6 +689,13 @@ const run = async () => {
           enrichmentReason: reason,
           enrichedAt: generatedAt,
         });
+        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        warnForMissingProfileFields(
+          link.id,
+          link.url,
+          supportedProfile,
+          profileWarningContext.missingProfileFields,
+        );
 
         entries.push({
           linkId: link.id,
@@ -609,6 +711,7 @@ const run = async () => {
           extractorId: authenticatedExtractorId,
           cacheKey,
           cacheCapturedAt: cacheValidation.entry?.entry.capturedAt,
+          ...profileWarningContext,
         });
         generatedLinks[link.id] = { metadata };
         continue;
@@ -633,6 +736,13 @@ const run = async () => {
         enrichmentReason: reason,
         enrichedAt: generatedAt,
       });
+      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        supportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
 
       entries.push({
         linkId: link.id,
@@ -653,6 +763,7 @@ const run = async () => {
         cacheKey,
         cacheCapturedAt: cacheValidation.entry?.entry.capturedAt,
         staleCache: staleCache || undefined,
+        ...profileWarningContext,
       });
       generatedLinks[link.id] = { metadata };
       continue;
@@ -670,6 +781,13 @@ const run = async () => {
         enrichmentReason: reason,
         enrichedAt: generatedAt,
       });
+      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        supportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
 
       entries.push({
         linkId: link.id,
@@ -682,6 +800,7 @@ const run = async () => {
         remediation: knownBlockerRemediationFor(knownBlockerMatch),
         metadata,
         blocking: true,
+        ...profileWarningContext,
       });
       generatedLinks[link.id] = { metadata };
       continue;
@@ -712,6 +831,13 @@ const run = async () => {
         enrichmentReason: reason,
         enrichedAt: generatedAt,
       });
+      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        supportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
       const blocking = isBlockingReason(reason, config.failOn);
 
       entries.push({
@@ -726,6 +852,7 @@ const run = async () => {
         remediation: remediationFor("failed", reason),
         metadata,
         blocking,
+        ...profileWarningContext,
       });
 
       generatedLinks[link.id] = { metadata };
@@ -764,6 +891,13 @@ const run = async () => {
       enrichmentReason: reason,
       enrichedAt: generatedAt,
     });
+    const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+    warnForMissingProfileFields(
+      link.id,
+      link.url,
+      supportedProfile,
+      profileWarningContext.missingProfileFields,
+    );
 
     entries.push({
       linkId: link.id,
@@ -779,6 +913,7 @@ const run = async () => {
       blocking,
       manualFallbackUsed: manualFallbackUsed || undefined,
       missingFields: reason === "metadata_missing" ? parsed.missing : undefined,
+      ...profileWarningContext,
     });
 
     generatedLinks[link.id] = { metadata };

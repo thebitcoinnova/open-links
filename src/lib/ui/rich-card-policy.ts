@@ -6,7 +6,10 @@ import type {
   SiteData,
   SourceLabelDefault,
 } from "../content/load-content";
-import { resolveLinkHandle } from "../identity/handle-resolver";
+import {
+  type ResolvedSocialProfileMetadata,
+  resolveSocialProfileMetadata,
+} from "./social-profile-metadata";
 
 export type ResolvedCardVariant = "simple" | "rich";
 
@@ -15,6 +18,7 @@ export interface RichCardViewModel {
   description: string;
   handleDisplay?: string;
   imageUrl?: string;
+  socialProfile: ResolvedSocialProfileMetadata;
   imageTreatment: RichImageTreatment;
   imageFit: RichCardImageFit;
   mobileImageLayout: RichCardMobileImageLayout;
@@ -97,17 +101,10 @@ export const resolveRichCardVariant = (site: SiteData, link: OpenLink): Resolved
 
 export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCardViewModel => {
   const metadata = link.metadata ?? {};
-  const resolvedHandle = resolveLinkHandle({
-    metadataHandle: metadata.handle,
-    url: link.url,
-    icon: link.icon,
-  });
+  const socialProfile = resolveSocialProfileMetadata(link);
   const sourceDefault = resolveSourceDefault(site);
   const configuredImageTreatment = resolveImageTreatment(site);
-  const imageUrl =
-    typeof metadata.image === "string" && metadata.image.trim().length > 0
-      ? metadata.image
-      : undefined;
+  const imageUrl = socialProfile.previewImageUrl;
   const enrichmentDisabled =
     link.enrichment?.enabled === false || metadata.enrichmentReason === "enrichment_disabled";
   const imageTreatment: RichImageTreatment =
@@ -119,8 +116,9 @@ export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCard
   return {
     title: metadata.title ?? link.label,
     description: metadata.description ?? link.description ?? urlDomain(link.url),
-    handleDisplay: resolvedHandle.displayHandle,
+    handleDisplay: socialProfile.handleDisplay,
     imageUrl: imageTreatment === "off" ? undefined : imageUrl,
+    socialProfile,
     imageTreatment,
     imageFit,
     mobileImageLayout: resolveMobileImageLayout(site, link),

@@ -4,17 +4,18 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Ready for phase planning (defined 2026-03-07)  
+**Status:** Phase 7 complete; Phase 8 ready for discussion (updated 2026-03-07)
 **Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.  
 **Phases:** 7-9  
-**Requirements mapped:** 9/9
+**Requirements mapped:** 9/9 (3 complete)
 
 ### Phase 7: Social Profile Metadata Pipeline
 
 **Directory:** `07-social-profile-metadata-pipeline`  
+**Status:** Complete 2026-03-07
 **Goal:** Extend schemas, generated metadata, validation, and extractor outputs so supported links can persist profile avatar and audience stats.  
 **Depends on:** Phase 6  
-**Planned plans:** 3  
+**Plans:** 3/3 complete
 **Requirements:** DATA-07, DATA-08, DATA-09
 
 **Success criteria:**
@@ -22,10 +23,10 @@
 2. Direct and authenticated extractor paths can persist supported profile stats and avatars into saved metadata.
 3. Merge and validation behavior stay deterministic when profile fields are partial, missing, or unsupported.
 
-**Planned plan areas:**
-- 07-01: Extend schema/types/validation for profile-centric metadata fields.
-- 07-02: Update enrichment and authenticated extractor outputs, fixtures, and reports for profile stats capture.
-- 07-03: Wire runtime content-loading and card view models to the new metadata surface.
+**Completed plan areas:**
+- [x] 07-01: Extend schema/types/validation for profile-centric metadata fields.
+- [x] 07-02: Update enrichment and authenticated extractor outputs, fixtures, and reports for profile stats capture.
+- [x] 07-03: Wire runtime content-loading and card view models to the new metadata surface.
 
 ### Phase 8: Social Profile Card UI Refresh
 
@@ -65,7 +66,7 @@
 ## Milestones
 
 - ✅ **v1.0** — Shipped 2026-02-23. 6 phases, 16 plans. [Archive](./milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1** — Defined 2026-03-07. 3 phases planned (7-9).
+- 🚧 **v1.1** — Defined 2026-03-07. 3 phases planned (7-9), 1 complete.
 
 ## Historical References
 

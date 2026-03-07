@@ -1,3 +1,4 @@
+import type { SocialProfileMetadataFields } from "../../src/lib/content/social-profile-fields";
 import type { EnrichmentMetadata } from "../enrichment/types";
 
 export type AuthenticatedExtractorStatus = "active" | "experimental" | "disabled";
@@ -36,7 +37,7 @@ export interface AuthenticatedCacheImageAsset {
   sha256: string;
 }
 
-export interface AuthenticatedCacheMetadata {
+export interface AuthenticatedCacheMetadata extends SocialProfileMetadataFields {
   title: string;
   description: string;
   image: string;
