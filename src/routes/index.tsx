@@ -172,6 +172,7 @@ export default function RouteIndex() {
     return (
       <SimpleLinkCard
         link={link}
+        site={content.site}
         target={target}
         interaction="minimal"
         brandIconOptions={brandIconOptions}

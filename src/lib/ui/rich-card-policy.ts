@@ -17,13 +17,15 @@ export interface RichCardViewModel {
   title: string;
   description: string;
   handleDisplay?: string;
-  imageUrl?: string;
+  previewImageUrl?: string;
   socialProfile: ResolvedSocialProfileMetadata;
   imageTreatment: RichImageTreatment;
   imageFit: RichCardImageFit;
   mobileImageLayout: RichCardMobileImageLayout;
   sourceLabel?: string;
   showSourceLabel: boolean;
+  showProfileHeader: boolean;
+  showMetaHandle: boolean;
 }
 
 export const resolveRichRenderMode = (site: SiteData): "auto" | "simple" =>
@@ -87,6 +89,61 @@ const urlDomain = (url: string | undefined): string => {
   }
 };
 
+const resolveMetadataText = (value: unknown): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
+};
+
+export interface LinkSourcePresentation {
+  sourceLabel?: string;
+  showSourceLabel: boolean;
+}
+
+export const resolveLinkSourcePresentation = (
+  site: SiteData,
+  link: OpenLink,
+): LinkSourcePresentation => {
+  const metadata = link.metadata ?? {};
+  const sourceDefault = resolveSourceDefault(site);
+
+  return {
+    sourceLabel: metadata.sourceLabel ?? link.enrichment?.sourceLabel ?? urlDomain(link.url),
+    showSourceLabel:
+      metadata.sourceLabelVisible ??
+      link.enrichment?.sourceLabelVisible ??
+      sourceDefault === "show",
+  };
+};
+
+export const resolveLinkCardDescription = (
+  link: OpenLink,
+  socialProfile?: ResolvedSocialProfileMetadata,
+): string => {
+  const metadataDescription = resolveMetadataText(link.metadata?.description);
+  const fallbackDescription = link.description ?? urlDomain(link.url);
+
+  if (!metadataDescription) {
+    return fallbackDescription;
+  }
+
+  if (socialProfile?.usesProfileLayout && link.description) {
+    const normalizedDescription = metadataDescription.toLowerCase();
+    const repeatsMetricCopy = socialProfile.metrics.some((metric) =>
+      metric.rawText ? normalizedDescription.includes(metric.rawText.toLowerCase()) : false,
+    );
+
+    if (repeatsMetricCopy) {
+      return link.description;
+    }
+  }
+
+  return metadataDescription;
+};
+
 export const resolveRichCardVariant = (site: SiteData, link: OpenLink): ResolvedCardVariant => {
   if (link.type !== "rich") {
     return "simple";
@@ -102,30 +159,38 @@ export const resolveRichCardVariant = (site: SiteData, link: OpenLink): Resolved
 export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCardViewModel => {
   const metadata = link.metadata ?? {};
   const socialProfile = resolveSocialProfileMetadata(link);
-  const sourceDefault = resolveSourceDefault(site);
   const configuredImageTreatment = resolveImageTreatment(site);
-  const imageUrl = socialProfile.previewImageUrl;
+  const sourcePresentation = resolveLinkSourcePresentation(site, link);
   const enrichmentDisabled =
     link.enrichment?.enabled === false || metadata.enrichmentReason === "enrichment_disabled";
   const imageTreatment: RichImageTreatment =
-    configuredImageTreatment === "off" || (enrichmentDisabled && !imageUrl)
+    configuredImageTreatment === "off" ||
+    (enrichmentDisabled && !socialProfile.hasDistinctPreviewImage)
       ? "off"
       : configuredImageTreatment;
   const imageFit = resolveImageFit(site, link);
+  const previewImageUrl =
+    imageTreatment === "off"
+      ? undefined
+      : socialProfile.hasDistinctPreviewImage
+        ? socialProfile.previewImageUrl
+        : !socialProfile.profileImageUrl
+          ? socialProfile.previewImageUrl
+          : undefined;
+  const showProfileHeader = socialProfile.usesProfileLayout;
 
   return {
-    title: metadata.title ?? link.label,
-    description: metadata.description ?? link.description ?? urlDomain(link.url),
+    title: socialProfile.displayName ?? metadata.title ?? link.label,
+    description: resolveLinkCardDescription(link, socialProfile),
     handleDisplay: socialProfile.handleDisplay,
-    imageUrl: imageTreatment === "off" ? undefined : imageUrl,
+    previewImageUrl,
     socialProfile,
     imageTreatment,
     imageFit,
     mobileImageLayout: resolveMobileImageLayout(site, link),
-    sourceLabel: metadata.sourceLabel ?? link.enrichment?.sourceLabel ?? urlDomain(link.url),
-    showSourceLabel:
-      metadata.sourceLabelVisible ??
-      link.enrichment?.sourceLabelVisible ??
-      sourceDefault === "show",
+    sourceLabel: sourcePresentation.sourceLabel,
+    showSourceLabel: sourcePresentation.showSourceLabel,
+    showProfileHeader,
+    showMetaHandle: !showProfileHeader && Boolean(socialProfile.handleDisplay),
   };
 };

@@ -1,4 +1,6 @@
 import type { OpenLink } from "../content/load-content";
+import { resolveSupportedSocialProfile } from "../content/social-profile-fields";
+import type { HandleExtractorId } from "../identity/handle-resolver";
 import { resolveLinkHandle } from "../identity/handle-resolver";
 
 export type SocialAudienceMetricKind = "followers" | "following" | "subscribers";
@@ -8,15 +10,75 @@ export interface SocialAudienceMetric {
   label: string;
   count?: number;
   rawText?: string;
+  parsedCountCompactText?: string;
+  displayLabel: string;
+  displayText: string;
 }
 
 export interface ResolvedSocialProfileMetadata {
+  platform?: HandleExtractorId;
+  displayName?: string;
   handle?: string;
   handleDisplay?: string;
+  usesProfileLayout: boolean;
+  hasDistinctPreviewImage: boolean;
   profileImageUrl?: string;
   previewImageUrl?: string;
   metrics: SocialAudienceMetric[];
 }
+
+const audienceCountFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  compactDisplay: "short",
+  maximumFractionDigits: 1,
+});
+
+const collapseWhitespace = (value: string): string => value.replace(/\s+/gu, " ").trim();
+
+const resolveMetadataText = (value: unknown): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = collapseWhitespace(value);
+  return normalized.length > 0 ? normalized : undefined;
+};
+
+const resolveDisplayLabel = (rawText: string | undefined, fallbackLabel: string): string => {
+  if (!rawText) {
+    return fallbackLabel;
+  }
+
+  const tokens = rawText.split(/\s+/u).filter((token) => token.length > 0);
+  const labelStartIndex = tokens.findIndex((token) => !/\d/u.test(token));
+  if (labelStartIndex <= 0) {
+    return fallbackLabel;
+  }
+
+  return tokens.slice(labelStartIndex).join(" ").trim();
+};
+
+const resolveDisplayNameFromTitle = (
+  rawTitle: string | undefined,
+  platform: HandleExtractorId | undefined,
+): string | undefined => {
+  if (!rawTitle) {
+    return undefined;
+  }
+
+  if (platform === "instagram") {
+    return rawTitle
+      .replace(/\s*[•·]\s*Instagram photos and videos$/iu, "")
+      .replace(/\s*\(\s*@?[^)]+\)\s*$/u, "")
+      .trim();
+  }
+
+  if (platform === "youtube") {
+    return rawTitle.replace(/\s*-\s*YouTube$/iu, "").trim();
+  }
+
+  return rawTitle;
+};
 
 const pushMetric = (
   metrics: SocialAudienceMetric[],
@@ -26,18 +88,27 @@ const pushMetric = (
   rawText: unknown,
 ) => {
   const resolvedCount = typeof count === "number" && Number.isFinite(count) ? count : undefined;
-  const resolvedRawText =
-    typeof rawText === "string" && rawText.trim().length > 0 ? rawText : undefined;
+  const resolvedRawText = resolveMetadataText(rawText);
 
   if (resolvedCount === undefined && !resolvedRawText) {
     return;
   }
+
+  const parsedCountCompactText =
+    resolvedCount === undefined ? undefined : audienceCountFormatter.format(resolvedCount);
+  const displayLabel = resolveDisplayLabel(resolvedRawText, label);
 
   metrics.push({
     kind,
     label,
     count: resolvedCount,
     rawText: resolvedRawText,
+    parsedCountCompactText,
+    displayLabel,
+    displayText:
+      parsedCountCompactText !== undefined
+        ? `${parsedCountCompactText} ${displayLabel}`
+        : (resolvedRawText ?? displayLabel),
   });
 };
 
@@ -48,7 +119,15 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     url: link.url,
     icon: link.icon,
   });
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: link.url,
+    icon: link.icon,
+  });
+  const platform = resolvedHandle.resolution.extractorId;
   const metrics: SocialAudienceMetric[] = [];
+  const profileImageUrl = resolveMetadataText(metadata.profileImage);
+  const previewImageUrl = resolveMetadataText(metadata.image);
+  const displayName = resolveDisplayNameFromTitle(resolveMetadataText(metadata.title), platform);
 
   pushMetric(
     metrics,
@@ -73,16 +152,17 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
   );
 
   return {
+    platform,
+    displayName:
+      displayName ?? (supportedProfile ? resolvedHandle.displayHandle : undefined) ?? link.label,
     handle: resolvedHandle.handle,
     handleDisplay: resolvedHandle.displayHandle,
-    profileImageUrl:
-      typeof metadata.profileImage === "string" && metadata.profileImage.trim().length > 0
-        ? metadata.profileImage
-        : undefined,
-    previewImageUrl:
-      typeof metadata.image === "string" && metadata.image.trim().length > 0
-        ? metadata.image
-        : undefined,
+    usesProfileLayout: Boolean(supportedProfile || profileImageUrl || metrics.length > 0),
+    hasDistinctPreviewImage: Boolean(
+      previewImageUrl && (!profileImageUrl || previewImageUrl !== profileImageUrl),
+    ),
+    profileImageUrl,
+    previewImageUrl,
     metrics,
   };
 };

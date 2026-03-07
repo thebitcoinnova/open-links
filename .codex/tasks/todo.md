@@ -2,6 +2,16 @@
 
 ## Current
 
+- [x] Extend the shared profile presentation layer for Phase 08 with display-ready metric text, display-name cleanup, avatar/preview separation, and profile-aware description fallback logic.
+- [x] Rebuild rich cards around an avatar-first social profile header while keeping description, preview-media fallback rules, and source branding coherent.
+- [x] Refresh simple cards to support circular avatars, wrapped handle/metric lines, and inline source-brand context in the compact layout.
+- [x] Verify Phase 08 with targeted profile-card tests, desktop/mobile Playwright inspection, and the repo quality/lint/type/test suite.
+
+- [x] Research the Phase 08 card UI seams for rich/simple components, social-profile helpers, responsive styling, and fallback constraints.
+- [x] Create `.planning/phases/08-social-profile-card-ui-refresh/08-RESEARCH.md` from the current card/rendering code and the locked design decisions.
+- [x] Create the three Phase 08 execution plans for rich-card profile headers, simple-card profile compaction, and final responsive/accessibility polish.
+- [x] Verify the Phase 08 plan set against the roadmap goal, UI requirements, and the current runtime/validation constraints before handing off to execution.
+
 - [x] Implement the Phase 07 schema, type, merge, and validation contract for social profile avatars plus platform-native audience counts.
 - [x] Extend Instagram and YouTube authenticated extraction, cache persistence, and enrichment reporting for profile metadata.
 - [x] Wire profile avatars and audience metrics through image sync, runtime loading, and rich-card view models without redesigning the cards yet.
@@ -26,6 +36,14 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: Phase 08 now renders supported social links as profile-style cards, with circular avatar headers and compact follower/subscriber metrics in rich cards, while the simple-card path reuses the same shared profile/source presentation logic for render-mode fallback.
+- Verification: `bun test src/lib/ui/social-profile-metadata.test.ts src/components/cards/social-profile-card-rendering.test.tsx`, `bun run biome:check`, `bun run typecheck`, `bun run studio:lint`, `bun run studio:typecheck`, `bun run --filter @openlinks/studio-api test`, `bun run studio:test:integration`, `bun run build`, and `bun run quality:check` all passed. Playwright inspection against the built preview at desktop (`1440x1400`) and mobile (`390x844`) confirmed Instagram/YouTube avatar headers, compact metric wrapping, and stable adjacent non-profile cards.
+- Residual risk: The live site config still primarily exercises the new social treatment through rich cards, so broader platform-specific templates, grid/toggle layouts, and more extensive rendered simple-card examples remain future work for Phase 9+.
+
+- Result: Phase 08 now has a research brief plus three executable plans that sequence the work as rich-card header redesign first, simple-card profile compaction second, and final responsive/fallback/accessibility polish third.
+- Verification: Reviewed `.planning/phases/08-social-profile-card-ui-refresh/08-RESEARCH.md`, `.planning/phases/08-social-profile-card-ui-refresh/08-01-PLAN.md`, `.planning/phases/08-social-profile-card-ui-refresh/08-02-PLAN.md`, `.planning/phases/08-social-profile-card-ui-refresh/08-03-PLAN.md`, and checked that the plan files exist with waves `1`, `2`, and `3` plus dependency links `08-01 -> 08-02 -> 08-03`.
+- Residual risk: Simple cards currently use a square brand-logo leading slot, so Phase 08 execution will need to rehome source-brand context carefully once circular avatars take over that visual position.
 
 - Result: Phase 07 now persists platform-native social profile metadata end-to-end for Instagram and YouTube, including separate profile avatars, follower/following/subscriber counts, raw-text companions, manual override precedence, warning-only missing-field handling, runtime localization, and rich-card-facing `socialProfile` view-model plumbing.
 - Verification: `bun test src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts scripts/authenticated-extractors/plugins/instagram-auth-browser.test.ts scripts/authenticated-extractors/plugins/youtube-auth-browser.test.ts`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run build`, `bun run biome:check`, `bun run studio:lint`, `bun run typecheck`, `bun run studio:typecheck`, `bun run --filter @openlinks/studio-api test`, and `bun run studio:test:integration` all passed. `validate:data` still reports the existing non-blocking Substack handle warning.

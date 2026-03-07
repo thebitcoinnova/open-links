@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import type { RichCardViewModel } from "../../lib/ui/rich-card-policy";
@@ -21,16 +21,21 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
   const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const titleId = () => `rich-link-title-${safeId(props.link.id)}`;
   const descriptionId = () => `rich-link-description-${safeId(props.link.id)}`;
-  const handleId = () => `rich-link-handle-${safeId(props.link.id)}`;
+  const metaId = () => `rich-link-meta-${safeId(props.link.id)}`;
   const sourceId = () => `rich-link-source-${safeId(props.link.id)}`;
-  const hasMetaCopy = () =>
-    Boolean(props.viewModel.handleDisplay || props.viewModel.showSourceLabel);
+  const hasHeaderMeta = () =>
+    props.viewModel.showProfileHeader &&
+    Boolean(props.viewModel.handleDisplay || props.viewModel.socialProfile.metrics.length > 0);
+  const hasFallbackHandle = () =>
+    props.viewModel.showMetaHandle && Boolean(props.viewModel.handleDisplay);
+  const hasSourceCopy = () =>
+    Boolean(props.viewModel.showSourceLabel && props.viewModel.sourceLabel) || hasFallbackHandle();
   const ariaDescribedBy = () => {
     const ids = [descriptionId()];
-    if (props.viewModel.handleDisplay) {
-      ids.push(handleId());
+    if (hasHeaderMeta() || hasFallbackHandle()) {
+      ids.push(metaId());
     }
-    if (props.viewModel.showSourceLabel) {
+    if (props.viewModel.showSourceLabel && props.viewModel.sourceLabel) {
       ids.push(sourceId());
     }
     return ids.join(" ");
@@ -39,7 +44,8 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
     target() === "_blank"
       ? `Open ${props.viewModel.title} in a new tab`
       : `Open ${props.viewModel.title}`;
-  const showMediaSlot = () => props.viewModel.imageTreatment !== "off";
+  const showPreviewMedia = () =>
+    props.viewModel.imageTreatment !== "off" && Boolean(props.viewModel.previewImageUrl);
 
   return (
     <a
@@ -55,23 +61,55 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
       data-card-variant="rich"
       data-image-fit={props.viewModel.imageFit}
       data-mobile-image-layout={props.viewModel.mobileImageLayout}
-      data-has-image={props.viewModel.imageUrl ? "true" : "false"}
+      data-has-avatar={props.viewModel.socialProfile.profileImageUrl ? "true" : "false"}
+      data-has-preview-image={showPreviewMedia() ? "true" : "false"}
+      data-has-metrics={props.viewModel.socialProfile.metrics.length > 0 ? "true" : "false"}
+      data-has-profile-layout={props.viewModel.showProfileHeader ? "true" : "false"}
     >
-      <Show when={showMediaSlot()}>
+      <span class="rich-card-body">
         <Show
-          when={props.viewModel.imageUrl}
-          fallback={<span class="rich-card-media rich-card-media-fallback">No preview image</span>}
+          when={props.viewModel.showProfileHeader}
+          fallback={
+            <span class="rich-card-header rich-card-header-fallback">
+              <strong class="rich-card-title" id={titleId()}>
+                {props.viewModel.title}
+              </strong>
+            </span>
+          }
         >
-          <span class="rich-card-media" aria-hidden="true">
-            <img src={props.viewModel.imageUrl} alt="" loading="lazy" />
+          <span class="rich-card-header rich-card-header-profile">
+            <Show
+              when={props.viewModel.socialProfile.profileImageUrl}
+              fallback={<span class="rich-card-avatar rich-card-avatar-empty" aria-hidden="true" />}
+            >
+              <span class="rich-card-avatar" aria-hidden="true">
+                <img src={props.viewModel.socialProfile.profileImageUrl} alt="" loading="lazy" />
+              </span>
+            </Show>
+            <span class="rich-card-header-copy">
+              <strong class="rich-card-title" id={titleId()}>
+                {props.viewModel.title}
+              </strong>
+              <Show when={hasHeaderMeta()}>
+                <span class="rich-card-profile-meta" id={metaId()}>
+                  <Show when={props.viewModel.handleDisplay}>
+                    <span class="rich-card-handle">{props.viewModel.handleDisplay}</span>
+                  </Show>
+                  <For each={props.viewModel.socialProfile.metrics}>
+                    {(metric) => <span class="rich-card-metric">{metric.displayText}</span>}
+                  </For>
+                </span>
+              </Show>
+            </span>
           </span>
         </Show>
-      </Show>
 
-      <span class="rich-card-body">
-        <strong class="rich-card-title" id={titleId()}>
-          {props.viewModel.title}
-        </strong>
+        <Show when={showPreviewMedia()}>
+          <span class="rich-card-media" aria-hidden="true">
+            <img src={props.viewModel.previewImageUrl} alt="" loading="lazy" />
+          </span>
+        </Show>
+
         <span class="rich-card-description" id={descriptionId()}>
           {props.viewModel.description}
         </span>
@@ -84,14 +122,14 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
             options={props.brandIconOptions}
             themeFingerprint={props.themeFingerprint}
           />
-          <Show when={hasMetaCopy()}>
+          <Show when={hasSourceCopy()}>
             <span class="rich-card-meta-copy">
-              <Show when={props.viewModel.handleDisplay}>
-                <span class="rich-card-handle" id={handleId()}>
+              <Show when={hasFallbackHandle()}>
+                <span class="rich-card-handle" id={metaId()}>
                   {props.viewModel.handleDisplay}
                 </span>
               </Show>
-              <Show when={props.viewModel.showSourceLabel}>
+              <Show when={props.viewModel.showSourceLabel && props.viewModel.sourceLabel}>
                 <span class="rich-card-source" id={sourceId()}>
                   {props.viewModel.sourceLabel}
                 </span>

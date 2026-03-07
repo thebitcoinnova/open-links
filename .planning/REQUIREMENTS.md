@@ -13,9 +13,9 @@
 
 ### UI & Experience
 
-- [ ] **UI-07**: Rich cards with profile metadata render a profile-style header with circular profile image, handle, and audience stats while keeping description and source branding.
-- [ ] **UI-08**: Simple cards surface handle and available audience stats in a compact profile-oriented layout without losing fast link scanning.
-- [ ] **UI-09**: Links without profile metadata continue to render clear fallback simple/rich layouts on mobile and desktop without broken spacing or inaccessible labels.
+- [x] **UI-07**: Rich cards with profile metadata render a profile-style header with circular profile image, handle, and audience stats while keeping description and source branding.
+- [x] **UI-08**: Simple cards surface handle and available audience stats in a compact profile-oriented layout without losing fast link scanning.
+- [x] **UI-09**: Links without profile metadata continue to render clear fallback simple/rich layouts on mobile and desktop without broken spacing or inaccessible labels.
 
 ### Documentation & Extensibility
 
@@ -52,9 +52,9 @@
 | DATA-07 | Phase 7 | Complete |
 | DATA-08 | Phase 7 | Complete |
 | DATA-09 | Phase 7 | Complete |
-| UI-07 | Phase 8 | Pending |
-| UI-08 | Phase 8 | Pending |
-| UI-09 | Phase 8 | Pending |
+| UI-07 | Phase 8 | Complete |
+| UI-08 | Phase 8 | Complete |
+| UI-09 | Phase 8 | Complete |
 | DOC-05 | Phase 9 | Pending |
 | DOC-06 | Phase 9 | Pending |
 | QUAL-06 | Phase 9 | Pending |
@@ -66,4 +66,4 @@
 
 ---
 *Requirements defined: 2026-03-07*
-*Last updated: 2026-03-07 after Phase 7 completion*
+*Last updated: 2026-03-07 after Phase 8 completion*

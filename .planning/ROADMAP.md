@@ -4,10 +4,10 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Phase 7 complete; Phase 8 ready for discussion (updated 2026-03-07)
+**Status:** Phase 8 complete; Phase 9 ready for discussion (updated 2026-03-07)
 **Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.  
 **Phases:** 7-9  
-**Requirements mapped:** 9/9 (3 complete)
+**Requirements mapped:** 9/9 (6 complete)
 
 ### Phase 7: Social Profile Metadata Pipeline
 
@@ -31,9 +31,10 @@
 ### Phase 8: Social Profile Card UI Refresh
 
 **Directory:** `08-social-profile-card-ui-refresh`  
+**Status:** Complete 2026-03-07
 **Goal:** Rebuild simple and rich card presentation around profile identity cues while preserving existing content and source context.  
 **Depends on:** Phase 7  
-**Planned plans:** 3  
+**Plans:** 3/3 complete
 **Requirements:** UI-07, UI-08, UI-09
 
 **Success criteria:**
@@ -41,10 +42,10 @@
 2. Simple cards present compact social-profile metadata without losing scanability or interaction clarity.
 3. Links without profile metadata still render stable, accessible layouts on mobile and desktop.
 
-**Planned plan areas:**
-- 08-01: Redesign rich-card structure for profile-style header and metadata grouping.
-- 08-02: Refresh simple-card layout and responsive rules for compact audience stats.
-- 08-03: Finish styling/accessibility polish across breakpoints and fallback states.
+**Completed plan areas:**
+- [x] 08-01: Redesign rich-card structure for profile-style header and metadata grouping.
+- [x] 08-02: Refresh simple-card layout and responsive rules for compact audience stats.
+- [x] 08-03: Finish styling/accessibility polish across breakpoints and fallback states.
 
 ### Phase 9: Docs + Regression Hardening for Social Cards
 
@@ -66,7 +67,7 @@
 ## Milestones
 
 - ✅ **v1.0** — Shipped 2026-02-23. 6 phases, 16 plans. [Archive](./milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1** — Defined 2026-03-07. 3 phases planned (7-9), 1 complete.
+- 🚧 **v1.1** — Defined 2026-03-07. 3 phases planned (7-9), 2 complete.
 
 ## Historical References
 
