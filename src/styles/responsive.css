@@ -119,10 +119,14 @@
 
   body .rich-link-card[data-mobile-image-layout="inline"][data-has-image="true"] .rich-card-media {
     float: inline-start;
-    width: clamp(5.1rem, 27vw, 6.9rem);
+    width: var(--card-rich-media-inline-mobile);
     min-height: 0;
     margin-inline-end: var(--space-3);
     margin-block-end: var(--space-2);
+  }
+
+  body .simple-link-card[data-card-variant="simple"] .card-icon {
+    --simple-card-leading-visual-size: var(--card-rich-media-inline-mobile);
   }
 
   body
