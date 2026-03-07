@@ -2,6 +2,8 @@
 
 This guide documents the authenticated-extractor framework for rich cards when direct metadata fetch is blocked (authwall, anti-bot, challenge pages).
 
+Authenticated extraction is a fallback workflow after public-source triage, not the default first move. Before adding or changing authenticated extractor support, first run the decision process in [`docs/create-new-rich-content-extractor.md`](docs/create-new-rich-content-extractor.md) and prefer `public_direct` or `public_augmented` whenever stable public sources can satisfy the required fields.
+
 ## Purpose
 
 For links configured with `links[].enrichment.authenticatedExtractor`, OpenLinks does not perform direct HTTP metadata fetch during enrichment.

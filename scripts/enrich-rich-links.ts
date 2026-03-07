@@ -29,6 +29,17 @@ import {
 } from "./enrichment/blockers-registry";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
+import {
+  DEFAULT_PUBLIC_CACHE_PATH,
+  computePublicCacheExpiresAt,
+  hasCacheablePublicMetadata,
+  loadPublicCacheRegistry,
+  resolveCachedEntryStatus,
+  resolvePublicCacheEntry,
+  toEnrichmentMetadataFromPublicCache,
+  toPublicCacheMetadata,
+  writePublicCacheRegistry,
+} from "./enrichment/public-cache";
 import { writeEnrichmentReport } from "./enrichment/report";
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
 import type {
@@ -81,6 +92,7 @@ interface SitePayload {
         retries?: number;
         metadataPath?: string;
         reportPath?: string;
+        publicCachePath?: string;
         authenticatedCachePath?: string;
         authenticatedCacheWarnAgeDays?: number;
         failureMode?: EnrichmentFailureMode;
@@ -97,6 +109,7 @@ interface ResolvedConfig {
   retries: number;
   outputPath: string;
   reportPath: string;
+  publicCachePath: string;
   authenticatedCachePath: string;
   authenticatedCacheWarnAgeDays: number;
   failureMode: EnrichmentFailureMode;
@@ -178,6 +191,7 @@ const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
     outputPath: args.outputPath ?? defaults?.metadataPath ?? "data/generated/rich-metadata.json",
     reportPath:
       args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json",
+    publicCachePath: defaults?.publicCachePath ?? DEFAULT_PUBLIC_CACHE_PATH,
     authenticatedCachePath: defaults?.authenticatedCachePath ?? DEFAULT_AUTH_CACHE_PATH,
     authenticatedCacheWarnAgeDays: Math.max(
       1,
@@ -305,6 +319,10 @@ const makeEntryMessage = (
     return "Using committed authenticated cache metadata for this link.";
   }
 
+  if (reason === "public_cache") {
+    return "Using committed public cache metadata for this link.";
+  }
+
   if (reason === "authenticated_cache_missing") {
     return "Authenticated cache entry was missing or invalid for this link.";
   }
@@ -345,6 +363,10 @@ const remediationFor = (
     return "No action required. Keep cache fresh with `npm run setup:rich-auth` (or `npm run auth:rich:sync`) when metadata changes.";
   }
 
+  if (reason === "public_cache") {
+    return "No action required. The public cache refreshes automatically during `npm run enrich:rich` and `npm run enrich:rich:strict`.";
+  }
+
   if (reason === "authenticated_cache_missing") {
     return "Run `npm run setup:rich-auth` (or `npm run auth:rich:sync -- --only-link <link-id>`), commit `data/cache/rich-authenticated-cache.json` and `public/cache/rich-authenticated/*`, then rerun build.";
   }
@@ -373,6 +395,53 @@ const isBlockingReason = (reason: EnrichmentReason, failOn: EnrichmentFailureRea
 
 const isAlwaysBlockingReason = (reason: EnrichmentReason): boolean =>
   reason === "known_blocker" || reason === "authenticated_cache_missing";
+
+const publicCacheMessageFor = (
+  staleCache: boolean,
+  manualFallbackUsed: boolean,
+  reusedWithoutFetch: boolean,
+): string => {
+  if (staleCache) {
+    return "Public metadata fetch failed; using stale committed public cache metadata.";
+  }
+
+  if (manualFallbackUsed) {
+    return "Using committed public cache metadata; manual link.metadata fallback remains active for missing preview fields.";
+  }
+
+  if (reusedWithoutFetch) {
+    return "Using fresh committed public cache metadata without a network fetch.";
+  }
+
+  return "Using committed public cache metadata.";
+};
+
+const publicCacheRemediationFor = (linkId: string, staleCache: boolean): string =>
+  staleCache
+    ? `Transient fetch failure. Re-run \`npm run enrich:rich:strict\` later to refresh the public cache for '${linkId}'.`
+    : remediationFor("fetched", "public_cache");
+
+const mergeCachedPublicMetadata = (
+  link: LinkInput & { type: "rich"; url: string },
+  supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
+  handleForMetadata: string | undefined,
+  cachedMetadata: ReturnType<typeof toEnrichmentMetadataFromPublicCache>,
+  enrichedAt: string,
+  status: EnrichmentRunEntry["status"],
+): EnrichmentMetadata =>
+  mergeLinkMetadata(
+    link.metadata,
+    {
+      ...cachedMetadata,
+      handle: handleForMetadata,
+      sourceLabel: link.enrichment?.sourceLabel ?? cachedMetadata.sourceLabel,
+      sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+      enrichmentStatus: status,
+      enrichmentReason: "public_cache",
+      enrichedAt,
+    },
+    supportedProfile,
+  );
 
 const formatDurationMs = (durationMs: number): string => `${Math.max(0, Math.round(durationMs))}ms`;
 
@@ -478,6 +547,10 @@ const run = async () => {
   const blockersRegistry = loadRichEnrichmentBlockersRegistry({
     registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH,
   });
+  const publicCacheRegistry = loadPublicCacheRegistry({
+    cachePath: config.publicCachePath,
+  });
+  let publicCacheDirty = false;
   const generatedAt = new Date().toISOString();
   const enforceStrictBlocking = args.strict && !config.bypassActive;
   const enforceKnownBlockers = !config.bypassActive;
@@ -855,12 +928,182 @@ const run = async () => {
       );
     }
 
+    const publicCacheKey = link.id;
+    const cachedPublicEntry = resolvePublicCacheEntry(
+      publicCacheRegistry,
+      publicCacheKey,
+      link.url,
+    );
+
+    if (cachedPublicEntry?.fresh) {
+      const cachedMetadata = toEnrichmentMetadataFromPublicCache(cachedPublicEntry.entry.metadata);
+      const cachedStatus = resolveCachedEntryStatus(cachedPublicEntry.entry.metadata);
+      const manualFallbackUsed =
+        !!cachedStatus.missingFields &&
+        config.allowManualMetadataFallback &&
+        hasManualMetadataFallback(link.metadata);
+      const metadata = mergeCachedPublicMetadata(
+        link,
+        supportedProfile,
+        handleForMetadata,
+        cachedMetadata,
+        cachedPublicEntry.entry.updatedAt,
+        cachedStatus.status,
+      );
+      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        supportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
+
+      entries.push({
+        linkId: link.id,
+        url: link.url,
+        status: cachedStatus.status,
+        reason: "public_cache",
+        attempts: 0,
+        durationMs: 0,
+        message: publicCacheMessageFor(false, manualFallbackUsed, true),
+        remediation: publicCacheRemediationFor(link.id, false),
+        metadata,
+        blocking: false,
+        manualFallbackUsed: manualFallbackUsed || undefined,
+        missingFields: cachedStatus.missingFields,
+        cacheKey: publicCacheKey,
+        cacheCapturedAt: cachedPublicEntry.entry.capturedAt,
+        ...profileWarningContext,
+      });
+      generatedLinks[link.id] = { metadata };
+      continue;
+    }
+
+    const requestHeaders: Record<string, string> = {};
+    if (cachedPublicEntry?.entry.etag) {
+      requestHeaders["if-none-match"] = cachedPublicEntry.entry.etag;
+    }
+    if (cachedPublicEntry?.entry.lastModified) {
+      requestHeaders["if-modified-since"] = cachedPublicEntry.entry.lastModified;
+    }
+
     const fetched = await fetchMetadata(link.url, {
       timeoutMs: config.timeoutMs,
       retries: config.retries,
+      headers: requestHeaders,
     });
 
+    if (fetched.notModified && cachedPublicEntry) {
+      const cacheControl = fetched.cacheControl ?? cachedPublicEntry.entry.cacheControl;
+      const expiresAt =
+        computePublicCacheExpiresAt(cacheControl, fetched.responseDate) ??
+        cachedPublicEntry.entry.expiresAt;
+
+      publicCacheRegistry.entries[publicCacheKey] = {
+        ...cachedPublicEntry.entry,
+        updatedAt: generatedAt,
+        etag: fetched.etag ?? cachedPublicEntry.entry.etag,
+        lastModified: fetched.lastModified ?? cachedPublicEntry.entry.lastModified,
+        cacheControl,
+        expiresAt,
+      };
+      publicCacheRegistry.updatedAt = generatedAt;
+      publicCacheDirty = true;
+
+      const refreshedEntry = publicCacheRegistry.entries[publicCacheKey];
+      const cachedMetadata = toEnrichmentMetadataFromPublicCache(refreshedEntry.metadata);
+      const cachedStatus = resolveCachedEntryStatus(refreshedEntry.metadata);
+      const manualFallbackUsed =
+        !!cachedStatus.missingFields &&
+        config.allowManualMetadataFallback &&
+        hasManualMetadataFallback(link.metadata);
+      const metadata = mergeCachedPublicMetadata(
+        link,
+        supportedProfile,
+        handleForMetadata,
+        cachedMetadata,
+        refreshedEntry.updatedAt,
+        cachedStatus.status,
+      );
+      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        supportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
+
+      entries.push({
+        linkId: link.id,
+        url: link.url,
+        status: cachedStatus.status,
+        reason: "public_cache",
+        attempts: fetched.attempts,
+        durationMs: fetched.durationMs,
+        statusCode: fetched.statusCode,
+        message: publicCacheMessageFor(false, manualFallbackUsed, false),
+        remediation: publicCacheRemediationFor(link.id, false),
+        metadata,
+        blocking: false,
+        manualFallbackUsed: manualFallbackUsed || undefined,
+        missingFields: cachedStatus.missingFields,
+        cacheKey: publicCacheKey,
+        cacheCapturedAt: refreshedEntry.capturedAt,
+        ...profileWarningContext,
+      });
+      generatedLinks[link.id] = { metadata };
+      continue;
+    }
+
     if (!fetched.ok || !fetched.html) {
+      if (cachedPublicEntry && hasCacheablePublicMetadata(cachedPublicEntry.entry.metadata)) {
+        const cachedMetadata = toEnrichmentMetadataFromPublicCache(
+          cachedPublicEntry.entry.metadata,
+        );
+        const cachedStatus = resolveCachedEntryStatus(cachedPublicEntry.entry.metadata);
+        const manualFallbackUsed =
+          !!cachedStatus.missingFields &&
+          config.allowManualMetadataFallback &&
+          hasManualMetadataFallback(link.metadata);
+        const metadata = mergeCachedPublicMetadata(
+          link,
+          supportedProfile,
+          handleForMetadata,
+          cachedMetadata,
+          cachedPublicEntry.entry.capturedAt,
+          cachedStatus.status,
+        );
+        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        warnForMissingProfileFields(
+          link.id,
+          link.url,
+          supportedProfile,
+          profileWarningContext.missingProfileFields,
+        );
+
+        entries.push({
+          linkId: link.id,
+          url: link.url,
+          status: cachedStatus.status,
+          reason: "public_cache",
+          attempts: fetched.attempts,
+          durationMs: fetched.durationMs,
+          statusCode: fetched.statusCode,
+          message: publicCacheMessageFor(true, manualFallbackUsed, false),
+          remediation: publicCacheRemediationFor(link.id, true),
+          metadata,
+          blocking: false,
+          manualFallbackUsed: manualFallbackUsed || undefined,
+          missingFields: cachedStatus.missingFields,
+          cacheKey: publicCacheKey,
+          cacheCapturedAt: cachedPublicEntry.entry.capturedAt,
+          staleCache: true,
+          ...profileWarningContext,
+        });
+        generatedLinks[link.id] = { metadata };
+        continue;
+      }
+
       const reason: EnrichmentReason = "fetch_failed";
       const metadata = mergeLinkMetadata(
         link.metadata,
@@ -914,6 +1157,27 @@ const run = async () => {
       metadata: parsed.metadata,
       supportedProfile,
     });
+    const cacheMetadata = toPublicCacheMetadata(enrichedMetadata);
+
+    if (hasCacheablePublicMetadata(cacheMetadata)) {
+      publicCacheRegistry.entries[publicCacheKey] = {
+        linkId: link.id,
+        sourceUrl: link.url,
+        capturedAt: generatedAt,
+        updatedAt: generatedAt,
+        metadata: cacheMetadata,
+        etag: fetched.etag,
+        lastModified: fetched.lastModified,
+        cacheControl: fetched.cacheControl,
+        expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
+      };
+      publicCacheRegistry.updatedAt = generatedAt;
+      publicCacheDirty = true;
+    } else if (publicCacheRegistry.entries[publicCacheKey]) {
+      delete publicCacheRegistry.entries[publicCacheKey];
+      publicCacheRegistry.updatedAt = generatedAt;
+      publicCacheDirty = true;
+    }
 
     const reason: EnrichmentReason =
       parsed.completeness === "full"
@@ -981,6 +1245,10 @@ const run = async () => {
     links: generatedLinks,
   };
 
+  if (publicCacheDirty) {
+    writePublicCacheRegistry(config.publicCachePath, publicCacheRegistry);
+  }
+
   ensureDirectory(config.outputPath);
   fs.writeFileSync(
     absolutePath(config.outputPath),
@@ -1022,6 +1290,7 @@ const run = async () => {
     console.log(`Authenticated cache warn age days: ${config.authenticatedCacheWarnAgeDays}`);
   }
   console.log(`Bypass active: ${config.bypassActive ? "yes" : "no"} (${ENRICHMENT_BYPASS_ENV})`);
+  console.log(`Public cache: ${config.publicCachePath}`);
   console.log(`Generated metadata: ${config.outputPath}`);
   console.log(`Enrichment report: ${config.reportPath}`);
   if (abortedEarly) {

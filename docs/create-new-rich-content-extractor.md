@@ -1,36 +1,129 @@
 # Create New Rich Content Extractor
 
-This playbook defines the required process for adding authenticated rich extractors for blocked domains.
+This playbook defines the required public-first process for adding rich metadata support when OpenLinks does not yet capture the fields a link needs.
 
-Use this when direct metadata fetch is blocked and you want build-safe committed cache output.
+Use this when existing direct enrichment is missing data and you need to decide whether support belongs in:
+
+- `public_direct`
+- `public_augmented`
+- `authenticated_required`
 
 ## Outcome Contract
 
-A new extractor is complete only when all of these are true:
+A new support workflow is complete only when all of these are true:
 
-1. Policy entry exists in `data/policy/rich-authenticated-extractors.json`.
-2. Plugin exists and is registered in `scripts/authenticated-extractors/registry.ts`.
-3. Target links are configured with `links[].enrichment.authenticatedExtractor`.
-4. `bun run setup:rich-auth` captures valid cache entries and assets.
-5. `bun run build` passes without bypass.
-6. Blocker and findings docs are updated with UTC timestamps.
+1. A triage write-up exists with:
+   - fields needed,
+   - fields currently present,
+   - public sources checked,
+   - chosen branch,
+   - reason authenticated extraction is or is not required.
+2. Exactly one branch has been completed:
+   - `public_direct`
+   - `public_augmented`
+   - `authenticated_required`
+3. `bun run build` passes without bypass.
+4. Relevant docs were updated to reflect the chosen branch.
 
 ## Required Security Boundaries
 
 - Never commit cookies, credentials, or session state.
 - Never commit raw HTML snapshots to repository-tracked paths.
-- Commit only:
+- For `authenticated_required`, commit only:
   - `data/cache/rich-authenticated-cache.json`
   - `public/cache/rich-authenticated/*`
   - metadata-only diagnostics in cache entries.
 
-## Step 1: Confirm Domain Is a Direct-Fetch Blocker
+## Step 1: Public-Source Triage
+
+Start here for every case. Do not scaffold an authenticated extractor before completing this step.
+
+1. Define the exact fields you need from the current OpenLinks metadata model:
+   - `title`
+   - `description`
+   - `image`
+   - `profileImage`
+   - `handle`
+   - audience counts when applicable
+2. Determine what existing direct enrichment already returns.
+3. Inspect stable public sources that could fill the gap:
+   - page metadata,
+   - public profile HTML,
+   - oEmbed,
+   - RSS/feed data,
+   - public avatar/image endpoints.
+4. Record a triage write-up containing:
+   - fields needed,
+   - fields currently present,
+   - public sources checked,
+   - chosen branch,
+   - reason authenticated extraction is or is not required.
+
+## Step 2: Choose the Branch
+
+Classify the result into exactly one branch:
+
+- `public_direct`
+  - Existing direct enrichment already produces the required fields.
+  - Stop. Do not create blocker or extractor work.
+- `public_augmented`
+  - Stable public sources can satisfy the missing fields.
+  - Continue with the public implementation branch below.
+- `authenticated_required`
+  - Public sources are blocked or insufficient.
+  - Continue with the authenticated implementation branch below.
+
+## Step 3: `public_direct` Stop Rule
+
+If the chosen branch is `public_direct`:
+
+1. Do not update `data/policy/rich-enrichment-blockers.json`.
+2. Do not scaffold an authenticated extractor.
+3. Do not update authenticated cache manifests or committed auth assets.
+4. Validate only if link/config changes were required:
+
+```bash
+bun run validate:data
+bun run enrich:rich:strict
+bun run build
+```
+
+## Step 4: `public_augmented` Implementation Branch
+
+When the chosen branch is `public_augmented`:
+
+1. Extend existing public enrichment/parsing/normalization paths instead of authenticated cache infrastructure.
+2. Gather only the fields needed by the current metadata model.
+3. Prefer keeping generic parsers generic and adding targeted augmentation/normalization after parsing when platform-specific logic is required.
+4. Ensure the public path writes normalized fetch-derived metadata through the committed public cache:
+   - `data/cache/rich-public-cache.json`
+   - `schema/rich-public-cache.schema.json`
+   - no raw HTML snapshots
+5. Update handle coverage when applicable:
+   - `src/lib/identity/handle-resolver.ts`
+   - `src/lib/identity/handle-resolver.test.ts`
+6. Do not touch:
+   - `data/policy/rich-authenticated-extractors.json`
+   - `data/cache/rich-authenticated-cache.json`
+   - `public/cache/rich-authenticated/*`
+7. Validate:
+
+```bash
+bun run validate:data
+bun run enrich:rich:strict
+bun run build
+```
+
+## Step 5: `authenticated_required` Blocker Confirmation
+
+Only after public-source triage selects `authenticated_required`:
 
 1. Add/update domain status in `data/policy/rich-enrichment-blockers.json`.
 2. Record narrative findings and attempts in `docs/rich-metadata-fetch-blockers.md` with UTC timestamps.
-3. Define current remediation until extractor is live.
+3. Define current remediation until the authenticated path is live.
+4. Record why public sources were rejected.
 
-## Step 2: Scaffold the Extractor
+## Step 6: Scaffold the Extractor
 
 Run:
 
@@ -51,7 +144,7 @@ Required replacement tokens in that template:
 - `__DEFAULT_SESSION__`
 - `__EXPORT_NAME__`
 
-## Step 3: Implement Plugin Contract
+## Step 7: Implement Plugin Contract
 
 File: `scripts/authenticated-extractors/plugins/<extractor-id>.ts`
 
@@ -125,7 +218,7 @@ When state is `unknown`:
 - return metadata with local asset path
 - keep browser DOM extraction snippets in dedicated files under `scripts/embedded-code/browser/...`
 
-## Step 4: Selector and Quality Strategy
+## Step 8: Selector and Quality Strategy
 
 - Prefer stable selectors with fallback layers.
 - Treat these as hard failures:
@@ -139,9 +232,9 @@ When state is `unknown`:
   - captured URL
 - Keep diagnostics metadata-only; do not persist raw HTML/body dumps to tracked files.
 
-## Step 5: Handle Resolver Considerations (Required When Applicable)
+## Step 9: Handle Resolver Considerations (Required When Applicable)
 
-If the target extractor domain family exposes profile/account handles, update handle extraction coverage:
+If the chosen branch is `public_augmented` or `authenticated_required` and the domain family exposes profile/account handles, update handle extraction coverage:
 
 1. Update URL extractor/reserved-route logic in `src/lib/identity/handle-resolver.ts`.
 2. Add or adjust tests in `src/lib/identity/handle-resolver.test.ts` for:
@@ -151,7 +244,7 @@ If the target extractor domain family exposes profile/account handles, update ha
    - manual `metadata.handle` precedence over URL-derived value
 3. Ensure handle updates remain URL-only and do not alter enrichment blocking behavior.
 
-## Step 6: Configure Links and Capture Cache
+## Step 10: Configure Links and Capture Cache
 
 1. Set `links[].enrichment.authenticatedExtractor`.
 2. Optionally set `authenticatedCacheKey`.
@@ -174,7 +267,7 @@ Generic auth-flow assistance for any extractor:
 
 - `bun run auth:flow:assist -- --extractor <extractor-id> --url <target-url>`
 
-## Step 7: Validate and Build
+## Step 11: Validate and Build
 
 Run:
 
@@ -192,24 +285,26 @@ Guardrail for embedded snippet enforcement:
 bun run quality:embedded-code
 ```
 
-## Step 8: Documentation Updates (Required)
+## Step 12: Documentation Updates (Required)
 
 Update all relevant docs:
 
-- `docs/authenticated-rich-extractors.md`
-- `docs/rich-metadata-fetch-blockers.md`
-- site-specific debug/runbook docs (if present)
+- Always update:
+  - `docs/create-new-rich-content-extractor.md`
+- Update `docs/authenticated-rich-extractors.md` only when authenticated workflow guidance changes.
+- Update `docs/rich-metadata-fetch-blockers.md` only for `authenticated_required` or when blocker evidence changes.
+- Update site-specific debug/runbook docs when present.
 
 Include:
 
-- timestamped findings
+- triage outcome and chosen branch
+- public sources checked
 - known limitations
 - remediation and operator workflow
-- any extractor-specific caveats.
-- auth transition checkpoints (for example MFA reached, trust-device prompt reached)
-- action decisions (proposed/executed/declined)
+- any extractor-specific caveats
+- auth transition checkpoints and action decisions for `authenticated_required`
 
-## Step 9: Share Back (Recommended)
+## Step 13: Share Back (Recommended)
 
 If this extractor workflow helped you, kindly consider opening a pull request against https://github.com/pRizz/open-links so everyone can benefit. Feedback and refinements are appreciated.
 

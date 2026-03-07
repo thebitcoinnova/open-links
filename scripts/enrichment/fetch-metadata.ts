@@ -4,22 +4,33 @@ export interface FetchMetadataOptions {
   timeoutMs: number;
   retries: number;
   retryDelayMs?: number;
+  headers?: Record<string, string>;
 }
 
 export interface FetchMetadataResult {
   ok: boolean;
+  notModified?: boolean;
   html?: string;
   attempts: number;
   durationMs: number;
   statusCode?: number;
   error?: string;
+  etag?: string;
+  lastModified?: string;
+  cacheControl?: string;
+  responseDate?: string;
 }
 
 interface FetchOnceResult {
   ok: boolean;
+  notModified?: boolean;
   html?: string;
   statusCode?: number;
   error?: string;
+  etag?: string;
+  lastModified?: string;
+  cacheControl?: string;
+  responseDate?: string;
 }
 
 const delay = (ms: number): Promise<void> =>
@@ -27,7 +38,11 @@ const delay = (ms: number): Promise<void> =>
     setTimeout(resolve, ms);
   });
 
-const fetchOnce = async (url: string, timeoutMs: number): Promise<FetchOnceResult> => {
+const fetchOnce = async (
+  url: string,
+  timeoutMs: number,
+  headers: Record<string, string>,
+): Promise<FetchOnceResult> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -39,8 +54,25 @@ const fetchOnce = async (url: string, timeoutMs: number): Promise<FetchOnceResul
       headers: {
         "user-agent": "open-links-enricher/0.1",
         accept: "text/html,application/xhtml+xml",
+        ...headers,
       },
     });
+
+    const responseHeaders = {
+      etag: response.headers.get("etag") ?? undefined,
+      lastModified: response.headers.get("last-modified") ?? undefined,
+      cacheControl: response.headers.get("cache-control") ?? undefined,
+      responseDate: response.headers.get("date") ?? undefined,
+    };
+
+    if (response.status === 304) {
+      return {
+        ok: false,
+        notModified: true,
+        statusCode: response.status,
+        ...responseHeaders,
+      };
+    }
 
     const html = await response.text();
 
@@ -49,6 +81,7 @@ const fetchOnce = async (url: string, timeoutMs: number): Promise<FetchOnceResul
         ok: false,
         statusCode: response.status,
         error: `Received HTTP ${response.status}`,
+        ...responseHeaders,
       };
     }
 
@@ -56,6 +89,7 @@ const fetchOnce = async (url: string, timeoutMs: number): Promise<FetchOnceResul
       ok: true,
       statusCode: response.status,
       html,
+      ...responseHeaders,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown fetch error";
@@ -77,12 +111,16 @@ export const fetchMetadata = async (
   const retryDelayMs = Math.max(0, Math.floor(options.retryDelayMs ?? 250));
   const attemptsAllowed = retries + 1;
   const startedAt = performance.now();
+  const requestHeaders = options.headers ?? {};
 
   let lastError = "Metadata fetch failed";
   let lastStatusCode: number | undefined;
+  let lastHeaders:
+    | Pick<FetchMetadataResult, "etag" | "lastModified" | "cacheControl" | "responseDate">
+    | undefined;
 
   for (let attempt = 1; attempt <= attemptsAllowed; attempt += 1) {
-    const result = await fetchOnce(url, timeoutMs);
+    const result = await fetchOnce(url, timeoutMs, requestHeaders);
 
     if (result.ok && result.html) {
       return {
@@ -91,6 +129,28 @@ export const fetchMetadata = async (
         attempts: attempt,
         durationMs: performance.now() - startedAt,
         statusCode: result.statusCode,
+        etag: result.etag,
+        lastModified: result.lastModified,
+        cacheControl: result.cacheControl,
+        responseDate: result.responseDate,
+      };
+    }
+
+    lastHeaders = {
+      etag: result.etag,
+      lastModified: result.lastModified,
+      cacheControl: result.cacheControl,
+      responseDate: result.responseDate,
+    };
+
+    if (result.notModified) {
+      return {
+        ok: false,
+        notModified: true,
+        attempts: attempt,
+        durationMs: performance.now() - startedAt,
+        statusCode: result.statusCode,
+        ...lastHeaders,
       };
     }
 
@@ -112,5 +172,6 @@ export const fetchMetadata = async (
     durationMs: performance.now() - startedAt,
     statusCode: lastStatusCode,
     error: lastError,
+    ...lastHeaders,
   };
 };

@@ -336,6 +336,11 @@
                   "type": "string",
                   "minLength": 1
                 },
+                "publicCachePath": {
+                  "type": "string",
+                  "minLength": 1,
+                  "default": "data/cache/rich-public-cache.json"
+                },
                 "authenticatedCachePath": {
                   "type": "string",
                   "minLength": 1,

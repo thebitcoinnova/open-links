@@ -45,7 +45,8 @@
         "timeoutMs": 4000,
         "retries": 1,
         "metadataPath": "data/generated/rich-metadata.json",
-        "reportPath": "data/generated/rich-enrichment-report.json"
+        "reportPath": "data/generated/rich-enrichment-report.json",
+        "publicCachePath": "data/cache/rich-public-cache.json"
       }
     },
     "payments": {

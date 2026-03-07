@@ -353,6 +353,7 @@ Site-level default enrichment behavior is defined in `site.ui.richCards.enrichme
 - `retries`: retry count after the first attempt.
 - `metadataPath`: generated metadata output path.
 - `reportPath`: generated enrichment report path.
+- `publicCachePath`: committed public metadata cache manifest path (default `data/cache/rich-public-cache.json`).
 - `authenticatedCachePath`: authenticated cache manifest path (default `data/cache/rich-authenticated-cache.json`).
 - `authenticatedCacheWarnAgeDays`: stale-cache warning threshold in days (default `30`, warning-only).
 - `failureMode`: `immediate` (default) or `aggregate`.
@@ -366,6 +367,11 @@ Canonical known-blocker policy registry:
 - `data/policy/rich-enrichment-blockers.json`
 - Schema: `schema/rich-enrichment-blockers.schema.json`
 
+Canonical public enrichment cache registry:
+
+- `data/cache/rich-public-cache.json`
+- `schema/rich-public-cache.schema.json`
+
 Canonical authenticated extractor + cache registries:
 
 - `data/policy/rich-authenticated-extractors.json`
@@ -376,6 +382,10 @@ Canonical authenticated extractor + cache registries:
 - `output/playwright/auth-rich-sync/` (diagnostics, gitignored)
 
 When an enrichment-enabled rich link URL matches a `status=blocked` registry entry, enrichment fails early with reason `known_blocker` unless `links[].enrichment.allowKnownBlocker=true` is set for that link.
+
+When direct/public enrichment succeeds, OpenLinks writes normalized fetch-derived metadata into the committed public cache manifest. Later enrich runs reuse fresh cache entries or revalidate stale entries with conditional requests (`reason=public_cache`) instead of live-fetching every page on every run.
+
+If a direct/public fetch fails but a committed public cache entry already exists, enrichment reuses that stale cached metadata as a warning-level fallback. No raw public HTML snapshots are committed.
 
 When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 
@@ -448,6 +458,7 @@ Main presentation controls include:
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.imageFit`: `contain` (default preserve mode), `cover`
 - `richCards.mobile.imageLayout`: `inline` (default), `full-width`
+- `richCards.enrichment.publicCachePath`: path to committed public rich-cache manifest
 - `richCards.enrichment.authenticatedCachePath`: path to authenticated rich-cache manifest
 - `richCards.enrichment.authenticatedCacheWarnAgeDays`: stale warning threshold for authenticated cache entries
 - `richCards.enrichment.failureMode`: `immediate` (default), `aggregate`

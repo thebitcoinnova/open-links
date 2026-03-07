@@ -17,6 +17,7 @@ export type EnrichmentReason =
   | "metadata_partial"
   | "metadata_missing"
   | "fetch_failed"
+  | "public_cache"
   | "authenticated_cache"
   | "authenticated_cache_missing"
   | "known_blocker"

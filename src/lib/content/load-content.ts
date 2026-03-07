@@ -116,6 +116,7 @@ export interface RichLinkMetadata extends SocialProfileMetadataFields {
     | "metadata_partial"
     | "metadata_missing"
     | "fetch_failed"
+    | "public_cache"
     | "authenticated_cache"
     | "authenticated_cache_missing"
     | "known_blocker"
@@ -254,6 +255,7 @@ export interface SiteData {
         retries?: number;
         metadataPath?: string;
         reportPath?: string;
+        publicCachePath?: string;
         authenticatedCachePath?: string;
         authenticatedCacheWarnAgeDays?: number;
         failureMode?: "immediate" | "aggregate";
