@@ -23,16 +23,34 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
   const descriptionId = () => `rich-link-description-${safeId(props.link.id)}`;
   const metaId = () => `rich-link-meta-${safeId(props.link.id)}`;
   const sourceId = () => `rich-link-source-${safeId(props.link.id)}`;
+  const hasHandleDisplay = () => Boolean(props.viewModel.handleDisplay);
   const hasHeaderMeta = () =>
     props.viewModel.showProfileHeader &&
     Boolean(props.viewModel.handleDisplay || props.viewModel.socialProfile.metrics.length > 0);
   const hasFallbackHandle = () =>
     props.viewModel.showMetaHandle && Boolean(props.viewModel.handleDisplay);
+  const fallbackHeaderMeta = () => {
+    if (props.viewModel.showProfileHeader) {
+      return undefined;
+    }
+
+    if (hasFallbackHandle()) {
+      return props.viewModel.handleDisplay;
+    }
+
+    if (props.viewModel.showSourceLabel && props.viewModel.sourceLabel) {
+      return props.viewModel.sourceLabel;
+    }
+
+    return undefined;
+  };
+  const hasFallbackHeaderMeta = () => Boolean(fallbackHeaderMeta());
+  const showFooterHandle = () => props.viewModel.showProfileHeader && hasHandleDisplay();
   const hasSourceCopy = () =>
-    Boolean(props.viewModel.showSourceLabel && props.viewModel.sourceLabel) || hasFallbackHandle();
+    Boolean(props.viewModel.showSourceLabel && props.viewModel.sourceLabel) || showFooterHandle();
   const ariaDescribedBy = () => {
     const ids = [descriptionId()];
-    if (hasHeaderMeta() || hasFallbackHandle()) {
+    if (hasHeaderMeta() || hasFallbackHeaderMeta()) {
       ids.push(metaId());
     }
     if (props.viewModel.showSourceLabel && props.viewModel.sourceLabel) {
@@ -71,9 +89,25 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
           when={props.viewModel.showProfileHeader}
           fallback={
             <span class="rich-card-header rich-card-header-fallback">
-              <strong class="rich-card-title" id={titleId()}>
-                {props.viewModel.title}
-              </strong>
+              <span class="rich-card-header-copy">
+                <strong class="rich-card-title" id={titleId()}>
+                  {props.viewModel.title}
+                </strong>
+                <Show when={hasFallbackHeaderMeta()}>
+                  <span class="rich-card-profile-meta rich-card-fallback-meta" id={metaId()}>
+                    <Show
+                      when={hasFallbackHandle()}
+                      fallback={
+                        <span class="rich-card-source rich-card-source-inline">
+                          {fallbackHeaderMeta()}
+                        </span>
+                      }
+                    >
+                      <span class="rich-card-handle">{props.viewModel.handleDisplay}</span>
+                    </Show>
+                  </span>
+                </Show>
+              </span>
             </span>
           }
         >
@@ -124,7 +158,7 @@ export const RichLinkCard = (props: RichLinkCardProps) => {
           />
           <Show when={hasSourceCopy()}>
             <span class="rich-card-meta-copy">
-              <Show when={hasFallbackHandle()}>
+              <Show when={showFooterHandle()}>
                 <span class="rich-card-handle" id={metaId()}>
                   {props.viewModel.handleDisplay}
                 </span>

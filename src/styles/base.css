@@ -62,6 +62,10 @@ a:focus-visible {
   --card-rich-media-thumbnail-min: 5.3rem;
   --card-rich-media-thumbnail-max: 6.2rem;
   --card-rich-media-inline-mobile: clamp(5.1rem, 27vw, 6.9rem);
+  --rich-card-avatar-desktop-min: 4.6rem;
+  --rich-card-avatar-desktop-fluid: 11vw;
+  --rich-card-avatar-desktop-max: 5.6rem;
+  --rich-card-avatar-mobile: 4.5rem;
 }
 
 :root[data-brand-icon-size="normal"] {
@@ -423,10 +427,25 @@ a:focus-visible {
   gap: var(--space-3);
 }
 
+.rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"] .rich-card-body {
+  grid-template-columns: minmax(0, var(--card-rich-media-inline-mobile)) minmax(0, 1fr);
+  grid-template-areas:
+    "media header"
+    "media description"
+    "media meta";
+  column-gap: var(--space-3);
+  row-gap: var(--space-2);
+  align-items: start;
+}
+
 .rich-card-header {
   min-width: 0;
   display: grid;
   gap: var(--space-2);
+}
+
+.rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"] .rich-card-header {
+  grid-area: header;
 }
 
 .rich-card-header-profile {
@@ -435,9 +454,21 @@ a:focus-visible {
   gap: var(--space-3);
 }
 
+.rich-card-header-fallback {
+  align-content: start;
+}
+
 .rich-card-avatar {
-  width: clamp(4rem, 10vw, 4.9rem);
-  height: clamp(4rem, 10vw, 4.9rem);
+  width: clamp(
+    var(--rich-card-avatar-desktop-min),
+    var(--rich-card-avatar-desktop-fluid),
+    var(--rich-card-avatar-desktop-max)
+  );
+  height: clamp(
+    var(--rich-card-avatar-desktop-min),
+    var(--rich-card-avatar-desktop-fluid),
+    var(--rich-card-avatar-desktop-max)
+  );
   border-radius: 999px;
   overflow: hidden;
   flex-shrink: 0;
@@ -474,6 +505,10 @@ a:focus-visible {
   line-height: var(--line-height-card-description);
 }
 
+.rich-card-fallback-meta {
+  gap: 0.2rem 0.55rem;
+}
+
 .rich-card-title {
   font-family: var(--font-display);
   font-size: var(--type-card-title);
@@ -488,11 +523,20 @@ a:focus-visible {
   white-space: normal;
 }
 
+.rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+  .rich-card-description {
+  grid-area: description;
+}
+
 .rich-card-meta {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"] .rich-card-meta {
+  grid-area: meta;
 }
 
 .rich-card-meta .card-icon {
@@ -526,6 +570,19 @@ a:focus-visible {
   font-size: var(--page-type-caption);
   letter-spacing: var(--tracking-card-source);
   white-space: normal;
+}
+
+.rich-card-source-inline {
+  color: color-mix(in srgb, var(--text-primary) 72%, var(--text-muted) 28%);
+  letter-spacing: normal;
+}
+
+.rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"] .rich-card-media {
+  grid-area: media;
+  width: 100%;
+  min-height: var(--card-rich-media-inline-mobile);
+  aspect-ratio: 1 / 1;
+  align-self: start;
 }
 
 .payment-link-card {

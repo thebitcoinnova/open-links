@@ -109,12 +109,24 @@
   }
 
   body .rich-card-avatar {
-    width: 3.9rem;
-    height: 3.9rem;
+    width: var(--rich-card-avatar-mobile);
+    height: var(--rich-card-avatar-mobile);
+  }
+
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+    .rich-card-body {
+    column-gap: var(--space-2);
   }
 
   body .rich-card-media {
     min-height: 7.5rem;
+  }
+
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+    .rich-card-media {
+    min-height: var(--card-rich-media-inline-mobile);
   }
 
   body
@@ -149,6 +161,61 @@
 
   body .site-footer-cta {
     width: fit-content;
+  }
+}
+
+@media (min-width: 761px) {
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+    .rich-card-body {
+    --rich-card-desktop-preview-min: var(--card-rich-media-inline-min);
+    --rich-card-desktop-preview-max: var(--card-rich-media-inline-max);
+
+    grid-template-columns:
+      minmax(var(--rich-card-desktop-preview-min), var(--rich-card-desktop-preview-max))
+      minmax(0, 1fr);
+    grid-template-areas:
+      "media header"
+      "media description"
+      "media meta";
+    column-gap: var(--space-3);
+    row-gap: var(--space-2);
+    align-items: start;
+  }
+
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"].image-thumbnail
+    .rich-card-body {
+    --rich-card-desktop-preview-min: var(--card-rich-media-thumbnail-min);
+    --rich-card-desktop-preview-max: var(--card-rich-media-thumbnail-max);
+  }
+
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+    .rich-card-header {
+    grid-area: header;
+  }
+
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+    .rich-card-media {
+    grid-area: media;
+    width: 100%;
+    min-height: var(--rich-card-desktop-preview-max);
+    aspect-ratio: 1 / 1;
+    align-self: start;
+  }
+
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+    .rich-card-description {
+    grid-area: description;
+  }
+
+  body
+    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
+    .rich-card-meta {
+    grid-area: meta;
   }
 }
 
