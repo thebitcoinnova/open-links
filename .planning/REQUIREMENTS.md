@@ -1,0 +1,69 @@
+# Requirements: OpenLinks v1.1
+
+**Defined:** 2026-03-07
+**Core Value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
+
+## v1.1 Requirements
+
+### Data Model & Enrichment
+
+- [ ] **DATA-07**: Maintainer can store profile-centric link metadata, including handle, profile image, and audience counts, in `links[].metadata` or generated rich metadata.
+- [ ] **DATA-08**: Build-time enrichment and authenticated extractors save available follower/following/subscriber-style counts and profile avatar data for supported social profile links.
+- [ ] **DATA-09**: Validation and metadata merging preserve deterministic manual overrides when some profile fields are missing, partial, or unsupported.
+
+### UI & Experience
+
+- [ ] **UI-07**: Rich cards with profile metadata render a profile-style header with circular profile image, handle, and audience stats while keeping description and source branding.
+- [ ] **UI-08**: Simple cards surface handle and available audience stats in a compact profile-oriented layout without losing fast link scanning.
+- [ ] **UI-09**: Links without profile metadata continue to render clear fallback simple/rich layouts on mobile and desktop without broken spacing or inaccessible labels.
+
+### Documentation & Extensibility
+
+- [ ] **DOC-05**: Maintainer docs explain the new profile metadata fields, supported extractor coverage, and manual override/fallback paths.
+- [ ] **DOC-06**: Docs and examples show how the refreshed card presentation uses profile metadata and how maintainers can customize or opt out of the profile-style treatment.
+
+### Quality & Verification
+
+- [ ] **QUAL-06**: Maintainer can verify the refreshed cards and metadata fallbacks through targeted automated coverage and documented manual checks.
+
+## Future Requirements
+
+### Social Metadata Depth
+
+- **DATA-10**: Maintainer can store and render additional platform-specific metrics such as post counts, verified status, or likes when they are available and worth the complexity.
+- **UI-10**: Project can support platform-specific card templates (for example, channel-style vs profile-style vs post-style) without rewriting the base card system.
+
+### Editing Workflows
+
+- **DOC-07**: Studio/editor workflows expose social profile metadata fields directly instead of requiring manual JSON edits.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Live client-side platform API fetching | Conflicts with deterministic static builds and would add credentials/runtime fragility |
+| Full native embeds for each platform | Higher complexity than the profile-card polish targeted in v1.1 |
+| Broad expansion into unrelated milestone candidates (CLI CRUD, hosting adapters, in-site editor) | Dilutes the focused UI/data-model milestone and slows delivery |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| DATA-07 | Phase 7 | Pending |
+| DATA-08 | Phase 7 | Pending |
+| DATA-09 | Phase 7 | Pending |
+| UI-07 | Phase 8 | Pending |
+| UI-08 | Phase 8 | Pending |
+| UI-09 | Phase 8 | Pending |
+| DOC-05 | Phase 9 | Pending |
+| DOC-06 | Phase 9 | Pending |
+| QUAL-06 | Phase 9 | Pending |
+
+**Coverage:**
+- v1.1 requirements: 9 total
+- Mapped to phases: 9
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-03-07*
+*Last updated: 2026-03-07 after initial v1.1 definition*

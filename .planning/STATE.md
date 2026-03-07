@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-23)
+See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Planning next milestone
+**Current focus:** Phase 7 setup for social profile metadata and card refresh
 
 ## Current Position
 
-Phase: Milestone v1.0 archived
-Plan: 0 of 0 (milestone closure)
-Status: Ready to start next milestone definition
-Last activity: 2026-02-23 - Completed v1.0 archival, milestone audit pass, and release tag creation.
+Phase: 07-social-profile-metadata-pipeline
+Plan: 0 of 0 (phase not planned)
+Status: Ready to discuss Phase 7
+Last activity: 2026-03-07 - Initialized milestone v1.1 roadmap for social profile metadata and card refresh.
 
-Progress: [##########] 100%
+Progress: [----------] 0%
 
 ## Performance Metrics
 
@@ -44,18 +44,20 @@ Progress: [##########] 100%
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
+- Preserve the v1.0 static architecture and add social profile metadata as an optional extension to the existing link model.
+- Keep follower and following data build-time only; do not introduce live runtime platform API dependencies.
 
 ### Pending Todos
 
-None yet.
+- Phase 7 needs discussion/planning before implementation begins.
 
 ### Blockers/Concerns
 
-None yet.
+- Audience metrics vary by platform, so the data model must handle asymmetric or missing counts cleanly.
+- The card refresh must preserve current fallback behavior for non-profile links and partially enriched metadata.
 
 ## Session Continuity
 
-Last session: 2026-02-23 03:10
-Stopped at: v1.0 milestone completed and archived.
+Last session: 2026-03-07 14:00
+Stopped at: Milestone v1.1 initialized; Phase 7 is ready for discussion/planning.
 Resume file: .planning/ROADMAP.md
