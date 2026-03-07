@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   mergeMetadataWithManualSocialProfileOverrides,
+  normalizeSupportedSocialProfileMetadata,
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
 } from "./social-profile-fields";
@@ -37,20 +38,48 @@ test("manual social profile fields override generated values without changing ge
   });
 });
 
-test("supported social profile detection stays conservative for profile URLs only", () => {
+test("supported social profile detection supports the expanded platform set but stays conservative for non-profile URLs", () => {
   // Arrange
   const instagramProfileUrl = "https://www.instagram.com/peterryszkiewicz/";
+  const githubProfileUrl = "https://github.com/pRizz";
+  const primalProfileUrl = "https://primal.net/peterryszkiewicz";
+  const xProfileUrl = "https://x.com/pryszkie";
+  const facebookProfileUrl = "https://www.facebook.com/peter.ryszkiewicz";
   const youtubeVideoUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
   // Act
-  const supportedProfile = resolveSupportedSocialProfile({ url: instagramProfileUrl });
+  const instagramProfile = resolveSupportedSocialProfile({ url: instagramProfileUrl });
+  const githubProfile = resolveSupportedSocialProfile({ url: githubProfileUrl });
+  const primalProfile = resolveSupportedSocialProfile({ url: primalProfileUrl });
+  const xProfile = resolveSupportedSocialProfile({ url: xProfileUrl });
+  const facebookProfile = resolveSupportedSocialProfile({ url: facebookProfileUrl });
   const unsupportedProfile = resolveSupportedSocialProfile({ url: youtubeVideoUrl });
 
   // Assert
-  assert.deepEqual(supportedProfile, {
+  assert.deepEqual(instagramProfile, {
     platform: "instagram",
     handle: "peterryszkiewicz",
     expectedFields: ["profileImage", "followersCount", "followingCount"],
+  });
+  assert.deepEqual(githubProfile, {
+    platform: "github",
+    handle: "prizz",
+    expectedFields: ["profileImage", "followersCount", "followingCount"],
+  });
+  assert.deepEqual(primalProfile, {
+    platform: "primal",
+    handle: "peterryszkiewicz",
+    expectedFields: ["profileImage"],
+  });
+  assert.deepEqual(xProfile, {
+    platform: "x",
+    handle: "pryszkie",
+    expectedFields: ["profileImage"],
+  });
+  assert.deepEqual(facebookProfile, {
+    platform: "facebook",
+    handle: "peter.ryszkiewicz",
+    expectedFields: ["profileImage"],
   });
   assert.equal(unsupportedProfile, null);
 });
@@ -80,4 +109,56 @@ test("raw audience text satisfies supported-profile warning checks when numeric 
   // Assert
   assert.deepEqual(missingWithRawSubscriberText, []);
   assert.deepEqual(missingWithoutAvatar, ["profileImage"]);
+});
+
+test("supported profile normalization backfills profile image from preview image", () => {
+  // Arrange
+  const githubProfile = resolveSupportedSocialProfile({
+    url: "https://github.com/pRizz",
+  });
+  assert.ok(githubProfile);
+
+  // Act
+  const normalized = normalizeSupportedSocialProfileMetadata(
+    {
+      image: "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
+      followersCount: 90,
+      followersCountRaw: "90 followers",
+    },
+    githubProfile,
+  );
+  const missingFields = resolveMissingSupportedSocialProfileFields(normalized, githubProfile);
+
+  // Assert
+  assert.deepEqual(normalized, {
+    image: "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
+    profileImage: "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
+    followersCount: 90,
+    followersCountRaw: "90 followers",
+  });
+  assert.deepEqual(missingFields, ["followingCount"]);
+});
+
+test("avatar-only supported platforms accept normalized preview images without audience counts", () => {
+  // Arrange
+  const xProfile = resolveSupportedSocialProfile({
+    url: "https://x.com/pryszkie",
+  });
+  assert.ok(xProfile);
+
+  // Act
+  const normalized = normalizeSupportedSocialProfileMetadata(
+    {
+      image: "cache/rich-authenticated/example-avatar.jpg",
+    },
+    xProfile,
+  );
+  const missingFields = resolveMissingSupportedSocialProfileFields(normalized, xProfile);
+
+  // Assert
+  assert.deepEqual(normalized, {
+    image: "cache/rich-authenticated/example-avatar.jpg",
+    profileImage: "cache/rich-authenticated/example-avatar.jpg",
+  });
+  assert.deepEqual(missingFields, []);
 });

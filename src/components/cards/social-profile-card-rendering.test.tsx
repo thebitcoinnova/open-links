@@ -63,7 +63,26 @@ const githubRichLink = {
       "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
     sourceLabel: "github.com",
     handle: "prizz",
-    image: "/generated/images/github-preview.jpg",
+    image: "/generated/images/github-avatar.jpg",
+    followersCount: 90,
+    followersCountRaw: "90 followers",
+    followingCount: 87,
+    followingCountRaw: "87 following",
+  },
+} as const satisfies OpenLink;
+
+const articleRichLink = {
+  id: "article",
+  label: "Engineering Notes",
+  url: "https://notes.openlinks.dev/launch-notes",
+  type: "rich",
+  icon: "notion",
+  description: "Shipping notes and technical writeups",
+  metadata: {
+    title: "Engineering Notes",
+    description: "Shipping notes and technical writeups",
+    image: "/generated/images/article-preview.jpg",
+    sourceLabel: "notes.openlinks.dev",
   },
 } as const satisfies OpenLink;
 
@@ -117,22 +136,40 @@ test("shared presentation data stays ready for simple-card profile rendering", (
   assert.equal(description, "Photos and stories");
 });
 
-test("non-profile rich cards keep preview media and fallback metadata for desktop preview layouts", () => {
+test("github rich cards switch to profile layout with avatar identity and audience metrics", () => {
   // Arrange
   const viewModel = buildRichCardViewModel(site, githubRichLink);
 
   // Assert
-  assert.equal(viewModel.showProfileHeader, false);
-  assert.equal(viewModel.showMetaHandle, true);
+  assert.equal(viewModel.showProfileHeader, true);
+  assert.equal(viewModel.showMetaHandle, false);
   assert.equal(viewModel.handleDisplay, "@prizz");
-  assert.equal(viewModel.previewImageUrl, "/generated/images/github-preview.jpg");
-  assert.equal(viewModel.title, "pRizz - Overview");
+  assert.equal(viewModel.previewImageUrl, undefined);
+  assert.equal(viewModel.title, "pRizz");
   assert.equal(
     viewModel.description,
     "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
   );
   assert.equal(viewModel.sourceLabel, "github.com");
-  assert.equal(viewModel.socialProfile.profileImageUrl, undefined);
+  assert.equal(viewModel.socialProfile.profileImageUrl, "/generated/images/github-avatar.jpg");
+  assert.deepEqual(
+    viewModel.socialProfile.metrics.map((metric) => metric.displayText),
+    ["90 followers", "87 following"],
+  );
+});
+
+test("non-profile rich cards keep preview media and fallback metadata for preview layouts", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, articleRichLink);
+
+  // Assert
+  assert.equal(viewModel.showProfileHeader, false);
+  assert.equal(viewModel.showMetaHandle, false);
+  assert.equal(viewModel.handleDisplay, undefined);
+  assert.equal(viewModel.previewImageUrl, "/generated/images/article-preview.jpg");
+  assert.equal(viewModel.title, "Engineering Notes");
+  assert.equal(viewModel.description, "Shipping notes and technical writeups");
+  assert.equal(viewModel.sourceLabel, "notes.openlinks.dev");
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 

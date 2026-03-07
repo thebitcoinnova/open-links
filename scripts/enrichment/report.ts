@@ -40,7 +40,14 @@ const PROFILE_FIELDS: ExpectedSocialProfileField[] = [
   "followingCount",
   "subscribersCount",
 ];
-const PROFILE_PLATFORMS: SupportedSocialProfilePlatform[] = ["instagram", "youtube"];
+const PROFILE_PLATFORMS: SupportedSocialProfilePlatform[] = [
+  "facebook",
+  "github",
+  "instagram",
+  "primal",
+  "x",
+  "youtube",
+];
 
 const isFailureReason = (value: unknown): value is EnrichmentFailureReason =>
   typeof value === "string" && FAILURE_REASONS.includes(value as EnrichmentFailureReason);

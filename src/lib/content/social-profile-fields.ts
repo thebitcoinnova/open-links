@@ -1,6 +1,12 @@
 import { resolveHandleFromUrl } from "../identity/handle-resolver";
 
-export type SupportedSocialProfilePlatform = "instagram" | "youtube";
+export type SupportedSocialProfilePlatform =
+  | "facebook"
+  | "github"
+  | "instagram"
+  | "primal"
+  | "x"
+  | "youtube";
 export type SocialProfileMetricField = "followersCount" | "followingCount" | "subscribersCount";
 export type SocialProfileMetricRawField =
   | "followersCountRaw"
@@ -28,10 +34,16 @@ export interface SupportedSocialProfileTarget {
   expectedFields: readonly ExpectedSocialProfileField[];
 }
 
-type MetadataRecord = SocialProfileMetadataFields & Record<string, unknown>;
+export interface SocialProfileMetadataLike extends SocialProfileMetadataFields {
+  image?: string;
+}
 
 const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
+  facebook: ["profileImage"],
+  github: ["profileImage", "followersCount", "followingCount"],
   instagram: ["profileImage", "followersCount", "followingCount"],
+  primal: ["profileImage"],
+  x: ["profileImage"],
   youtube: ["profileImage", "subscribersCount"],
 } as const satisfies Record<SupportedSocialProfilePlatform, readonly ExpectedSocialProfileField[]>;
 
@@ -57,7 +69,10 @@ const hasDefinedProfileValue = (value: unknown): boolean => {
   return value !== undefined;
 };
 
-const hasMetricValue = (metadata: MetadataRecord, field: SocialProfileMetricField): boolean => {
+const hasMetricValue = (
+  metadata: SocialProfileMetadataLike,
+  field: SocialProfileMetricField,
+): boolean => {
   if (hasDefinedProfileValue(metadata[field])) {
     return true;
   }
@@ -96,6 +111,28 @@ export const mergeMetadataWithManualSocialProfileOverrides = <T extends object>(
   return merged;
 };
 
+export const normalizeSupportedSocialProfileMetadata = <T extends SocialProfileMetadataLike>(
+  metadata: T | undefined,
+  target: SupportedSocialProfileTarget | null | undefined,
+): T | undefined => {
+  if (!metadata || !target) {
+    return metadata;
+  }
+
+  if (hasDefinedProfileValue(metadata.profileImage)) {
+    return metadata;
+  }
+
+  if (!hasDefinedProfileValue(metadata.image)) {
+    return metadata;
+  }
+
+  return {
+    ...metadata,
+    profileImage: metadata.image,
+  } as T;
+};
+
 export const resolveSupportedSocialProfile = (input: {
   url?: string;
   icon?: string;
@@ -105,7 +142,14 @@ export const resolveSupportedSocialProfile = (input: {
     return null;
   }
 
-  if (resolution.extractorId !== "instagram" && resolution.extractorId !== "youtube") {
+  if (
+    resolution.extractorId !== "facebook" &&
+    resolution.extractorId !== "github" &&
+    resolution.extractorId !== "instagram" &&
+    resolution.extractorId !== "primal" &&
+    resolution.extractorId !== "x" &&
+    resolution.extractorId !== "youtube"
+  ) {
     return null;
   }
 
@@ -117,10 +161,10 @@ export const resolveSupportedSocialProfile = (input: {
 };
 
 export const resolveMissingSupportedSocialProfileFields = (
-  metadata: SocialProfileMetadataFields | undefined,
+  metadata: SocialProfileMetadataLike | undefined,
   target: SupportedSocialProfileTarget,
 ): ExpectedSocialProfileField[] => {
-  const resolvedMetadata = (metadata ?? {}) as MetadataRecord;
+  const resolvedMetadata = normalizeSupportedSocialProfileMetadata(metadata ?? {}, target) ?? {};
   const missing: ExpectedSocialProfileField[] = [];
 
   for (const field of target.expectedFields) {

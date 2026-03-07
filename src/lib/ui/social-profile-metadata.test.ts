@@ -95,11 +95,11 @@ test("formats parsed metrics compactly while preserving raw-label casing when av
 test("returns an empty metric list when no audience fields are present", () => {
   // Arrange
   const link = {
-    id: "github",
-    label: "GitHub",
-    url: "https://github.com/pRizz",
+    id: "project",
+    label: "Project",
+    url: "https://example.com/project",
     type: "rich",
-    icon: "github",
+    icon: "notion",
     metadata: {},
   } as const;
 
@@ -107,11 +107,72 @@ test("returns an empty metric list when no audience fields are present", () => {
   const resolved = resolveSocialProfileMetadata(link);
 
   // Assert
-  assert.equal(resolved.platform, "github");
-  assert.equal(resolved.displayName, "GitHub");
+  assert.equal(resolved.platform, undefined);
+  assert.equal(resolved.displayName, "Project");
   assert.equal(resolved.usesProfileLayout, false);
   assert.equal(resolved.hasDistinctPreviewImage, false);
   assert.deepEqual(resolved.metrics, []);
   assert.equal(resolved.profileImageUrl, undefined);
   assert.equal(resolved.previewImageUrl, undefined);
+});
+
+test("reuses preview images as profile avatars for newly supported avatar-first platforms", () => {
+  // Arrange
+  const link = {
+    id: "x",
+    label: "X",
+    url: "https://x.com/pryszkie",
+    type: "rich",
+    icon: "x",
+    metadata: {
+      title: "@pryszkie on X",
+      image: "/generated/images/x-avatar.jpg",
+      sourceLabel: "x.com",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "x");
+  assert.equal(resolved.displayName, "@pryszkie on X");
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/generated/images/x-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/generated/images/x-avatar.jpg");
+  assert.deepEqual(resolved.metrics, []);
+});
+
+test("keeps GitHub metrics in profile order while treating the avatar image as identity chrome", () => {
+  // Arrange
+  const link = {
+    id: "github",
+    label: "GitHub",
+    url: "https://github.com/pRizz",
+    type: "rich",
+    icon: "github",
+    metadata: {
+      title: "pRizz - Overview",
+      image: "/generated/images/github-avatar.jpg",
+      followersCount: 90,
+      followersCountRaw: "90 followers",
+      followingCount: 87,
+      followingCountRaw: "87 following",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "github");
+  assert.equal(resolved.displayName, "pRizz");
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/generated/images/github-avatar.jpg");
+  assert.deepEqual(
+    resolved.metrics.map((metric) => metric.displayText),
+    ["90 followers", "87 following"],
+  );
 });

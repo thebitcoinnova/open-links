@@ -240,6 +240,7 @@ The X extractor (`x-auth-browser`) uses an oEmbed + avatar path:
 - verifies profile availability via `https://publish.twitter.com/oembed`
 - generates stable title/description when oEmbed title is blank
 - captures image asset from `https://unavatar.io/x/<handle>` (fallback to X icon asset)
+- writes both `metadata.image` and `metadata.profileImage` so X links render on the profile-card path without a cache refresh
 - writes cache diagnostics including `handle`, `oembedUrl`, and placeholder checks
 
 No interactive login is currently required for the X extractor path.
@@ -280,6 +281,7 @@ The Facebook extractor (`facebook-auth-browser`) uses an authenticated browser-s
 - extracts title/description/profile-image candidates from authenticated DOM content
 - rejects login-wall, challenge placeholders, and generic non-profile image assets
 - downloads the detected profile image with current browser cookies and writes a local cached asset
+- writes both `metadata.image` and `metadata.profileImage` so Facebook links render on the profile-card path
 - writes cache diagnostics including state signals and captured URL/session context
 
 LinkedIn debug commands:

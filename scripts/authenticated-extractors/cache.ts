@@ -5,6 +5,7 @@ import type { AnySchema } from "ajv";
 import addFormats from "ajv-formats";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import {
+  normalizeSupportedSocialProfileMetadata,
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
 } from "../../src/lib/content/social-profile-fields";
@@ -298,10 +299,12 @@ export const validateAuthenticatedCacheEntry = (
     });
   }
 
-  const enrichmentMetadata = toEnrichmentMetadata(rawEntry);
   const supportedProfile = resolveSupportedSocialProfile({
     url: input.expectedUrl,
   });
+  const cacheMetadata = toEnrichmentMetadata(rawEntry);
+  const enrichmentMetadata =
+    normalizeSupportedSocialProfileMetadata(cacheMetadata, supportedProfile) ?? cacheMetadata;
   if (supportedProfile) {
     const missingProfileFields = resolveMissingSupportedSocialProfileFields(
       enrichmentMetadata,

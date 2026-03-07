@@ -1,5 +1,8 @@
 import type { OpenLink } from "../content/load-content";
-import { resolveSupportedSocialProfile } from "../content/social-profile-fields";
+import {
+  normalizeSupportedSocialProfileMetadata,
+  resolveSupportedSocialProfile,
+} from "../content/social-profile-fields";
 import type { HandleExtractorId } from "../identity/handle-resolver";
 import { resolveLinkHandle } from "../identity/handle-resolver";
 
@@ -77,6 +80,13 @@ const resolveDisplayNameFromTitle = (
     return rawTitle.replace(/\s*-\s*YouTube$/iu, "").trim();
   }
 
+  if (platform === "github") {
+    return rawTitle
+      .replace(/\s*-\s*Overview$/iu, "")
+      .replace(/\s*[·•]\s*GitHub$/iu, "")
+      .trim();
+  }
+
   return rawTitle;
 };
 
@@ -123,32 +133,40 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     url: link.url,
     icon: link.icon,
   });
+  const normalizedMetadata =
+    normalizeSupportedSocialProfileMetadata(
+      metadata as Record<string, unknown> & { image?: string; profileImage?: string },
+      supportedProfile,
+    ) ?? metadata;
   const platform = resolvedHandle.resolution.extractorId;
   const metrics: SocialAudienceMetric[] = [];
-  const profileImageUrl = resolveMetadataText(metadata.profileImage);
-  const previewImageUrl = resolveMetadataText(metadata.image);
-  const displayName = resolveDisplayNameFromTitle(resolveMetadataText(metadata.title), platform);
+  const profileImageUrl = resolveMetadataText(normalizedMetadata.profileImage);
+  const previewImageUrl = resolveMetadataText(normalizedMetadata.image);
+  const displayName = resolveDisplayNameFromTitle(
+    resolveMetadataText(normalizedMetadata.title),
+    platform,
+  );
 
   pushMetric(
     metrics,
     "followers",
     "Followers",
-    metadata.followersCount,
-    metadata.followersCountRaw,
+    normalizedMetadata.followersCount,
+    normalizedMetadata.followersCountRaw,
   );
   pushMetric(
     metrics,
     "following",
     "Following",
-    metadata.followingCount,
-    metadata.followingCountRaw,
+    normalizedMetadata.followingCount,
+    normalizedMetadata.followingCountRaw,
   );
   pushMetric(
     metrics,
     "subscribers",
     "Subscribers",
-    metadata.subscribersCount,
-    metadata.subscribersCountRaw,
+    normalizedMetadata.subscribersCount,
+    normalizedMetadata.subscribersCountRaw,
   );
 
   return {

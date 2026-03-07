@@ -298,7 +298,14 @@ Supported keys include:
 - `title`
 - `description`
 - `image`
+- `profileImage`
 - `handle` (canonical username/handle without leading `@`; runtime renders as `@handle`)
+- `followersCount`
+- `followersCountRaw`
+- `followingCount`
+- `followingCountRaw`
+- `subscribersCount`
+- `subscribersCountRaw`
 - `imageFit`
 - `mobileImageLayout`
 - `sourceLabel`
@@ -317,6 +324,13 @@ Supported keys include:
 - Supported extractor families in v1: GitHub, X/Twitter, LinkedIn, Facebook, Instagram, Medium, Substack patterns.
 - If a URL is from a supported family but no handle can be resolved and `metadata.handle` is missing, validation emits a warning-level handle coverage issue.
 - Handle coverage warnings are non-strict-blocking and do not fail `bun run validate:data:strict`.
+
+Current profile-card-capable rich-link families include:
+
+- GitHub: avatar + follower/following counts when public profile HTML exposes them
+- Instagram: avatar + follower/following counts
+- YouTube: avatar + subscriber counts
+- Primal, X, and Facebook: avatar-first profile cards without count guarantees in the current pass
 
 #### Enrichment policy (`links[].enrichment`)
 

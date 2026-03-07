@@ -4,6 +4,7 @@ import process from "node:process";
 import {
   SOCIAL_PROFILE_METADATA_FIELDS,
   mergeMetadataWithManualSocialProfileOverrides,
+  normalizeSupportedSocialProfileMetadata,
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
 } from "../src/lib/content/social-profile-fields";
@@ -29,6 +30,7 @@ import {
 import { fetchMetadata } from "./enrichment/fetch-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
 import { writeEnrichmentReport } from "./enrichment/report";
+import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
 import type {
   EnrichmentFailureMode,
   EnrichmentFailureReason,
@@ -227,6 +229,15 @@ const mergeMetadata = (
   enriched: EnrichmentMetadata,
 ): EnrichmentMetadata =>
   pickDefined(mergeMetadataWithManualSocialProfileOverrides(original, enriched) ?? {});
+
+const mergeLinkMetadata = (
+  original: EnrichmentMetadata | undefined,
+  enriched: EnrichmentMetadata,
+  supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
+): EnrichmentMetadata => {
+  const metadata = mergeMetadata(original, enriched);
+  return normalizeSupportedSocialProfileMetadata(metadata, supportedProfile) ?? metadata;
+};
 
 const resolveProfileWarningContext = (
   supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
@@ -500,14 +511,18 @@ const run = async () => {
 
     if (!linkEnabled) {
       const reason: EnrichmentReason = "enrichment_disabled";
-      const metadata = mergeMetadata(link.metadata, {
-        handle: handleForMetadata,
-        sourceLabel: link.enrichment?.sourceLabel,
-        sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-        enrichmentStatus: "skipped",
-        enrichmentReason: reason,
-        enrichedAt: generatedAt,
-      });
+      const metadata = mergeLinkMetadata(
+        link.metadata,
+        {
+          handle: handleForMetadata,
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "skipped",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt,
+        },
+        supportedProfile,
+      );
       const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
@@ -552,14 +567,18 @@ const run = async () => {
 
       if (!extractor) {
         const reason: EnrichmentReason = "authenticated_cache_missing";
-        const metadata = mergeMetadata(link.metadata, {
-          handle: handleForMetadata,
-          sourceLabel: link.enrichment?.sourceLabel,
-          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-          enrichmentStatus: "failed",
-          enrichmentReason: reason,
-          enrichedAt: generatedAt,
-        });
+        const metadata = mergeLinkMetadata(
+          link.metadata,
+          {
+            handle: handleForMetadata,
+            sourceLabel: link.enrichment?.sourceLabel,
+            sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+            enrichmentStatus: "failed",
+            enrichmentReason: reason,
+            enrichedAt: generatedAt,
+          },
+          supportedProfile,
+        );
         const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
         warnForMissingProfileFields(
           link.id,
@@ -590,14 +609,18 @@ const run = async () => {
 
       if (extractor.status === "disabled") {
         const reason: EnrichmentReason = "authenticated_cache_missing";
-        const metadata = mergeMetadata(link.metadata, {
-          handle: handleForMetadata,
-          sourceLabel: link.enrichment?.sourceLabel,
-          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-          enrichmentStatus: "failed",
-          enrichmentReason: reason,
-          enrichedAt: generatedAt,
-        });
+        const metadata = mergeLinkMetadata(
+          link.metadata,
+          {
+            handle: handleForMetadata,
+            sourceLabel: link.enrichment?.sourceLabel,
+            sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+            enrichmentStatus: "failed",
+            enrichmentReason: reason,
+            enrichedAt: generatedAt,
+          },
+          supportedProfile,
+        );
         const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
         warnForMissingProfileFields(
           link.id,
@@ -629,14 +652,18 @@ const run = async () => {
       const domainMatch = resolveAuthenticatedExtractorDomainMatch(link.url, extractor);
       if (!domainMatch) {
         const reason: EnrichmentReason = "authenticated_cache_missing";
-        const metadata = mergeMetadata(link.metadata, {
-          handle: handleForMetadata,
-          sourceLabel: link.enrichment?.sourceLabel,
-          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-          enrichmentStatus: "failed",
-          enrichmentReason: reason,
-          enrichedAt: generatedAt,
-        });
+        const metadata = mergeLinkMetadata(
+          link.metadata,
+          {
+            handle: handleForMetadata,
+            sourceLabel: link.enrichment?.sourceLabel,
+            sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+            enrichmentStatus: "failed",
+            enrichmentReason: reason,
+            enrichedAt: generatedAt,
+          },
+          supportedProfile,
+        );
         const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
         warnForMissingProfileFields(
           link.id,
@@ -681,14 +708,18 @@ const run = async () => {
 
       if (cacheErrors.length > 0 || !cacheValidation.metadata || !cacheValidation.valid) {
         const reason: EnrichmentReason = "authenticated_cache_missing";
-        const metadata = mergeMetadata(link.metadata, {
-          handle: handleForMetadata,
-          sourceLabel: link.enrichment?.sourceLabel,
-          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-          enrichmentStatus: "failed",
-          enrichmentReason: reason,
-          enrichedAt: generatedAt,
-        });
+        const metadata = mergeLinkMetadata(
+          link.metadata,
+          {
+            handle: handleForMetadata,
+            sourceLabel: link.enrichment?.sourceLabel,
+            sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+            enrichmentStatus: "failed",
+            enrichmentReason: reason,
+            enrichedAt: generatedAt,
+          },
+          supportedProfile,
+        );
         const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
         warnForMissingProfileFields(
           link.id,
@@ -724,18 +755,22 @@ const run = async () => {
       }
 
       const reason: EnrichmentReason = "authenticated_cache";
-      const metadata = mergeMetadata(link.metadata, {
-        ...cacheValidation.metadata,
-        handle: handleForMetadata,
-        sourceLabel:
-          link.enrichment?.sourceLabel ??
-          cacheValidation.metadata.sourceLabel ??
-          extractor.domains[0],
-        sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-        enrichmentStatus: "fetched",
-        enrichmentReason: reason,
-        enrichedAt: generatedAt,
-      });
+      const metadata = mergeLinkMetadata(
+        link.metadata,
+        {
+          ...cacheValidation.metadata,
+          handle: handleForMetadata,
+          sourceLabel:
+            link.enrichment?.sourceLabel ??
+            cacheValidation.metadata.sourceLabel ??
+            extractor.domains[0],
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "fetched",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt,
+        },
+        supportedProfile,
+      );
       const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
@@ -773,14 +808,18 @@ const run = async () => {
     const allowKnownBlocker = link.enrichment?.allowKnownBlocker === true;
     if (knownBlockerMatch && !allowKnownBlocker) {
       const reason: EnrichmentReason = "known_blocker";
-      const metadata = mergeMetadata(link.metadata, {
-        handle: handleForMetadata,
-        sourceLabel: link.enrichment?.sourceLabel,
-        sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-        enrichmentStatus: "failed",
-        enrichmentReason: reason,
-        enrichedAt: generatedAt,
-      });
+      const metadata = mergeLinkMetadata(
+        link.metadata,
+        {
+          handle: handleForMetadata,
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "failed",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt,
+        },
+        supportedProfile,
+      );
       const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
@@ -823,14 +862,18 @@ const run = async () => {
 
     if (!fetched.ok || !fetched.html) {
       const reason: EnrichmentReason = "fetch_failed";
-      const metadata = mergeMetadata(link.metadata, {
-        handle: handleForMetadata,
-        sourceLabel: link.enrichment?.sourceLabel,
-        sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-        enrichmentStatus: "failed",
-        enrichmentReason: reason,
-        enrichedAt: generatedAt,
-      });
+      const metadata = mergeLinkMetadata(
+        link.metadata,
+        {
+          handle: handleForMetadata,
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "failed",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt,
+        },
+        supportedProfile,
+      );
       const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
@@ -866,6 +909,11 @@ const run = async () => {
     }
 
     const parsed = parseMetadata(fetched.html, link.url);
+    const enrichedMetadata = augmentSupportedSocialProfileMetadata({
+      html: fetched.html,
+      metadata: parsed.metadata,
+      supportedProfile,
+    });
 
     const reason: EnrichmentReason =
       parsed.completeness === "full"
@@ -882,15 +930,19 @@ const run = async () => {
       hasManualMetadataFallback(link.metadata);
     const blocking = isBlockingReason(reason, config.failOn) && !manualFallbackUsed;
 
-    const metadata = mergeMetadata(link.metadata, {
-      ...parsed.metadata,
-      handle: handleForMetadata,
-      sourceLabel: link.enrichment?.sourceLabel ?? parsed.metadata.sourceLabel,
-      sourceLabelVisible: link.enrichment?.sourceLabelVisible,
-      enrichmentStatus: status,
-      enrichmentReason: reason,
-      enrichedAt: generatedAt,
-    });
+    const metadata = mergeLinkMetadata(
+      link.metadata,
+      {
+        ...enrichedMetadata,
+        handle: handleForMetadata,
+        sourceLabel: link.enrichment?.sourceLabel ?? enrichedMetadata.sourceLabel,
+        sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+        enrichmentStatus: status,
+        enrichmentReason: reason,
+        enrichedAt: generatedAt,
+      },
+      supportedProfile,
+    );
     const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
     warnForMissingProfileFields(
       link.id,
