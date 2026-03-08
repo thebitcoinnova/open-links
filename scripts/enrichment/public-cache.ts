@@ -45,6 +45,8 @@ export interface PublicCacheRegistry {
   entries: Record<string, PublicCacheEntry>;
 }
 
+export type PublicCacheMergeTargetId = string | null;
+
 export interface ResolvedPublicCacheEntry {
   cacheKey: string;
   entry: PublicCacheEntry;
@@ -92,6 +94,18 @@ const trimToUndefined = (value: string | undefined): string | undefined => {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const hasDefinedMetadataValue = (value: unknown): boolean => {
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+
+  return value !== undefined;
 };
 
 const normalizeMetadata = (metadata: PublicCacheMetadata): PublicCacheMetadata => {
@@ -293,6 +307,47 @@ export const hasCacheablePublicMetadata = (
   }
 
   return false;
+};
+
+export const mergePublicCacheMetadataForTarget = (input: {
+  targetId: PublicCacheMergeTargetId;
+  previous?: PublicCacheMetadata;
+  next: PublicCacheMetadata;
+}): PublicCacheMetadata => {
+  const next = normalizeMetadata(input.next);
+  if (!input.previous || input.targetId !== "medium-public-feed") {
+    return next;
+  }
+
+  const merged: PublicCacheMetadata = {
+    ...next,
+  };
+  const mergedRecord = merged as Record<string, number | string | undefined>;
+  const previousRecord = input.previous as Record<string, unknown>;
+  const fieldsToPreserve = [
+    "followersCount",
+    "followersCountRaw",
+    "followingCount",
+    "followingCountRaw",
+  ] as const;
+
+  for (const field of fieldsToPreserve) {
+    if (hasDefinedMetadataValue(mergedRecord[field])) {
+      continue;
+    }
+
+    const previousValue = previousRecord[field];
+    if (typeof previousValue === "number" && Number.isFinite(previousValue)) {
+      mergedRecord[field] = previousValue;
+      continue;
+    }
+
+    if (typeof previousValue === "string" && previousValue.trim().length > 0) {
+      mergedRecord[field] = previousValue.trim();
+    }
+  }
+
+  return normalizeMetadata(merged);
 };
 
 export const toPublicCacheMetadata = (metadata: EnrichmentMetadata): PublicCacheMetadata => {

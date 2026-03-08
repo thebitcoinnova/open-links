@@ -4,7 +4,7 @@ import { parseMetadata } from "./parse-metadata";
 import { parseAudienceCount } from "./social-profile-counts";
 import type { EnrichmentMetadata, EnrichmentMissingField } from "./types";
 
-const BROWSER_USER_AGENT =
+export const PUBLIC_BROWSER_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 const INSTAGRAM_DESCRIPTION_PATTERN =
   /^\s*(?<followersValue>[^,]+?)\s+(?<followersLabel>Followers?),\s*(?<followingValue>[^,]+?)\s+(?<followingLabel>Following)\b/i;
@@ -811,7 +811,7 @@ export const resolvePublicAugmentationTarget = (
       sourceUrl,
       headers: {
         "accept-language": "en-US,en;q=0.9",
-        "user-agent": BROWSER_USER_AGENT,
+        "user-agent": PUBLIC_BROWSER_USER_AGENT,
       },
       parse: (body) =>
         parseSubstackPublicProfile(
@@ -832,7 +832,7 @@ export const resolvePublicAugmentationTarget = (
       acceptHeader: "application/json",
       headers: {
         "accept-language": "en-US,en;q=0.9",
-        "user-agent": BROWSER_USER_AGENT,
+        "user-agent": PUBLIC_BROWSER_USER_AGENT,
       },
       parse: (body) => parseXOEmbed(input.url, body),
     };
@@ -845,7 +845,7 @@ export const resolvePublicAugmentationTarget = (
       acceptHeader: "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5",
       headers: {
         "accept-language": "en-US,en;q=0.9",
-        "user-agent": BROWSER_USER_AGENT,
+        "user-agent": PUBLIC_BROWSER_USER_AGENT,
       },
       parse: (body) => parseMediumFeed(input.url, body),
     };

@@ -157,6 +157,8 @@ test("medium profile metadata cleans the feed title into a display name and trea
       image: "/generated/images/medium-avatar.jpg",
       handle: "peterryszkiewicz",
       sourceLabel: "medium.com",
+      followersCount: 3300,
+      followersCountRaw: "3.3K followers",
     },
   } as const;
 
@@ -172,6 +174,17 @@ test("medium profile metadata cleans the feed title into a display name and trea
   assert.equal(resolved.hasDistinctPreviewImage, false);
   assert.equal(resolved.profileImageUrl, "/generated/images/medium-avatar.jpg");
   assert.equal(resolved.previewImageUrl, "/generated/images/medium-avatar.jpg");
+  assert.deepEqual(resolved.metrics, [
+    {
+      kind: "followers",
+      label: "Followers",
+      count: 3300,
+      rawText: "3.3K followers",
+      parsedCountCompactText: "3.3K",
+      displayLabel: "followers",
+      displayText: "3.3K followers",
+    },
+  ]);
 });
 
 test("substack custom-domain metadata uses the explicit handle and strips the site suffix from titles", () => {

@@ -15,6 +15,16 @@
 - [x] Update logo governance and brand-asset wording so the docs and runtime asset pipeline reflect v3 as the active mark.
 - [x] Verify the logo refresh with regeneration, `bun run typecheck`, `bun run build`, and a final diff review for unintended alias churn.
 
+- [x] Add a Medium-first `bun run public:rich:sync` command that bootstraps public cache entries from the feed and overlays browser-captured follower counts without touching authenticated-extractor infrastructure.
+- [x] Extend public-cache writes so Medium feed refreshes preserve previously captured social metrics when the feed path does not provide them.
+- [x] Add focused parser, cache-merge, UI, and sync-runner tests plus the Medium public-browser docs updates, then verify with the targeted and repo validation/build commands.
+
+### Completion Review
+
+- Result: Medium now stays on the `public_augmented` path, with a separate `bun run public:rich:sync` command that uses a public browser profile to capture follower counts into `data/cache/rich-public-cache.json` while feed-based enrichment preserves those counts on later refreshes.
+- Verification: `bun install`, `bun test scripts/enrichment/medium-public-browser.test.ts scripts/enrichment/public-cache.test.ts scripts/public-rich-sync.test.ts src/lib/ui/social-profile-metadata.test.ts src/components/cards/social-profile-card-rendering.test.tsx`, `bun run typecheck`, `bun run biome:check`, `bun run enrich:rich:strict`, and `bun run build` passed. `bun run public:rich:sync -- --only-link medium` succeeded once and wrote the Medium public cache/artifact, then a second immediate rerun failed cleanly on a Cloudflare placeholder without mutating the cache.
+- Residual risk: Medium’s public browser capture is environment-sensitive and not fully deterministic; the committed cache now contains `3.3K followers` from the successful browser artifact, but repeated sync attempts can still hit Cloudflare and require another retry later.
+
 - [x] Extend Substack public augmentation so custom-domain links fetch canonical `substack.com/@handle` profile data and persist subscriber counts without changing displayed source labels.
 - [x] Keep Medium on the public-only path with no follower-count support, and document the March 8, 2026 evidence for that decision in the extractor/blocker workflow docs.
 - [x] Verify the Substack subscriber-count change with focused enrichment/profile tests, then run repo enrichment/build checks and note any environment blockers.

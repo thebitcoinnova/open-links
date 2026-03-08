@@ -25,6 +25,7 @@
     "biome:staged:fix": "bunx @biomejs/biome check --staged --write --files-ignore-unknown=true --no-errors-on-unmatched",
     "enrich:rich": "bun scripts/enrich-rich-links.ts",
     "enrich:rich:strict": "bun scripts/enrich-rich-links.ts --strict",
+    "public:rich:sync": "bun scripts/public-rich-sync.ts",
     "linkedin:debug:bootstrap": "bun scripts/oneoff/linkedin-debug-bootstrap.ts",
     "linkedin:debug:login": "bun scripts/oneoff/linkedin-login-session.ts",
     "linkedin:debug:validate": "bun scripts/oneoff/linkedin-metadata-validate.ts",

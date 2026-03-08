@@ -9,6 +9,7 @@ import {
   hasCacheablePublicMetadata,
   isPublicCacheFresh,
   loadPublicCacheRegistry,
+  mergePublicCacheMetadataForTarget,
   resolveCachedEntryStatus,
   toEnrichmentMetadataFromPublicCache,
   toPublicCacheMetadata,
@@ -212,4 +213,34 @@ test("ignores source-label-only payloads when deciding whether metadata is cache
 
   // Assert
   assert.equal(cacheable, false);
+});
+
+test("preserves Medium social metrics when feed refresh metadata does not include them", () => {
+  // Arrange
+  const merged = mergePublicCacheMetadataForTarget({
+    targetId: "medium-public-feed",
+    previous: {
+      title: "Stories by Peter Ryszkiewicz on Medium",
+      description: "Stories by Peter Ryszkiewicz on Medium",
+      image: "https://cdn-images-1.medium.com/original-avatar.jpg",
+      profileImage: "https://cdn-images-1.medium.com/original-avatar.jpg",
+      handle: "peterryszkiewicz",
+      followersCount: 3300,
+      followersCountRaw: "3.3K followers",
+    },
+    next: {
+      title: "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
+      description: "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
+      image: "https://cdn-images-1.medium.com/refreshed-avatar.jpg",
+      profileImage: "https://cdn-images-1.medium.com/refreshed-avatar.jpg",
+      handle: "peterryszkiewicz",
+      sourceLabel: "medium.com",
+    },
+  });
+
+  // Assert
+  assert.equal(merged.followersCount, 3300);
+  assert.equal(merged.followersCountRaw, "3.3K followers");
+  assert.equal(merged.title, "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium");
+  assert.equal(merged.image, "https://cdn-images-1.medium.com/refreshed-avatar.jpg");
 });

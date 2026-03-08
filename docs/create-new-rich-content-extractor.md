@@ -101,17 +101,18 @@ When the chosen branch is `public_augmented`:
    - `schema/rich-public-cache.schema.json`
    - no raw HTML snapshots
    - current in-repo examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata)
-5. Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
-6. A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
-7. Count-only gaps do not justify authenticated extraction when the platform already has a stable public path for the rest of the metadata.
-8. Update handle coverage when applicable:
+5. A `public_augmented` implementation may use a separate operator-invoked public browser refresh when a public page exposes extra metadata that direct HTTP fetch cannot reliably reach. That browser step must write through the committed public cache and must not run during normal `build` / `dev` enrichment.
+6. Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
+7. A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
+8. Count-only gaps do not justify authenticated extraction when the platform already has a stable public path for the rest of the metadata.
+9. Update handle coverage when applicable:
    - `src/lib/identity/handle-resolver.ts`
    - `src/lib/identity/handle-resolver.test.ts`
-9. Do not touch:
+10. Do not touch:
    - `data/policy/rich-authenticated-extractors.json`
    - `data/cache/rich-authenticated-cache.json`
    - `public/cache/rich-authenticated/*`
-10. Validate:
+11. Validate:
  
 ```bash
 bun run validate:data

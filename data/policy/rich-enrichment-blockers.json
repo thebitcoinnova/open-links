@@ -29,14 +29,15 @@
       "domains": ["medium.com"],
       "matchSubdomains": true,
       "reasonCategory": "challenge",
-      "lastVerifiedAt": "2026-02-25T12:39:14Z",
+      "lastVerifiedAt": "2026-03-08T14:01:38Z",
       "summary": "Direct fetch returns challenge pages (HTTP 403 / anti-bot) and browser automation is redirected to Cloudflare verification instead of profile metadata.",
       "remediation": [
         "Disable enrichment for affected links.",
         "Use manual links[].metadata fields for rich cards.",
-        "Prefer built-in public augmentation via npm run enrich:rich:strict so metadata is captured through the committed public cache."
+        "Prefer built-in public augmentation via npm run enrich:rich:strict so metadata is captured through the committed public cache.",
+        "Use bun run public:rich:sync -- --only-link <link-id> for optional public browser follower capture."
       ],
-      "plannedSupportNote": "Built-in public augmentation is available via the Medium RSS/feed capture path.",
+      "plannedSupportNote": "Built-in public augmentation is available via the Medium RSS/feed capture path, with optional non-auth public browser follower capture.",
       "docs": ["docs/rich-metadata-fetch-blockers.md", "docs/authenticated-rich-extractors.md"]
     },
     {

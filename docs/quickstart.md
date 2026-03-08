@@ -95,6 +95,10 @@ Authenticated rich cache paths:
 - `public/cache/rich-authenticated/`
 - `output/playwright/auth-rich-sync/` (diagnostics, gitignored)
 
+Optional public rich-browser diagnostics:
+
+- `output/playwright/public-rich-sync/` (gitignored)
+
 ## Configure Your First Site
 
 Edit the three primary content files:
@@ -124,6 +128,12 @@ Recommended first pass:
 
 ```bash
 bun run validate:data
+```
+
+If you want Medium follower counts cached through the public browser path, run this before `dev` or after your Medium profile changes:
+
+```bash
+bun run public:rich:sync -- --only-link medium
 ```
 
 ### Start dev server

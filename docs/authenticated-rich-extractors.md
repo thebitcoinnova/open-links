@@ -41,7 +41,7 @@ Current extractor ids in this repository:
 
 Current public-augmentation examples that are no longer configured as authenticated extractors:
 
-- Medium (RSS/feed capture path)
+- Medium (RSS/feed capture path, plus optional public browser follower refresh)
 - X (oEmbed + avatar path)
 - Instagram (public page metadata capture)
 - YouTube (public page metadata capture)

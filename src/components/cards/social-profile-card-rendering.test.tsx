@@ -102,6 +102,8 @@ const mediumRichLink = {
     handle: "peterryszkiewicz",
     image: "/generated/images/medium-avatar.jpg",
     profileImage: "/generated/images/medium-avatar.jpg",
+    followersCount: 3300,
+    followersCountRaw: "3.3K followers",
   },
 } as const satisfies OpenLink;
 
@@ -266,9 +268,15 @@ test("medium rich cards treat the feed avatar as the profile lead and clean the 
   assert.equal(viewModel.leadImageUrl, "/generated/images/medium-avatar.jpg");
   assert.equal(viewModel.title, "Peter Ryszkiewicz");
   assert.equal(viewModel.description, "Stories by Peter Ryszkiewicz on Medium");
-  assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peterryszkiewicz" }]);
+  assert.deepEqual(viewModel.headerMetaItems, [
+    { kind: "handle", text: "@peterryszkiewicz" },
+    { kind: "metric", text: "3.3K followers" },
+  ]);
   assert.equal(viewModel.footerSourceLabel, "medium.com");
-  assert.deepEqual(viewModel.socialProfile.metrics, []);
+  assert.deepEqual(
+    viewModel.socialProfile.metrics.map((metric) => metric.displayText),
+    ["3.3K followers"],
+  );
 });
 
 test("substack custom-domain rich cards use the explicit handle and avatar-first profile layout", () => {

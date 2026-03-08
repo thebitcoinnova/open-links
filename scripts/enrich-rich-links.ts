@@ -35,6 +35,7 @@ import {
   computePublicCacheExpiresAt,
   hasCacheablePublicMetadata,
   loadPublicCacheRegistry,
+  mergePublicCacheMetadataForTarget,
   resolveCachedEntryStatus,
   resolvePublicCacheEntry,
   toEnrichmentMetadataFromPublicCache,
@@ -1415,7 +1416,11 @@ const run = async () => {
       metadata: parsed.metadata,
       supportedProfile,
     });
-    const cacheMetadata = toPublicCacheMetadata(enrichedMetadata);
+    const cacheMetadata = mergePublicCacheMetadataForTarget({
+      targetId: publicAugmentationTarget?.id ?? null,
+      previous: publicCacheRegistry.entries[publicCacheKey]?.metadata,
+      next: toPublicCacheMetadata(enrichedMetadata),
+    });
 
     if (hasCacheablePublicMetadata(cacheMetadata)) {
       publicCacheRegistry.entries[publicCacheKey] = {
@@ -1451,13 +1456,14 @@ const run = async () => {
       config.allowManualMetadataFallback &&
       hasManualMetadataFallback(link.metadata);
     const blocking = isBlockingReason(reason, config.failOn) && !manualFallbackUsed;
+    const enrichedMetadataFromCache = toEnrichmentMetadataFromPublicCache(cacheMetadata);
 
     const metadata = mergeLinkMetadata(
       link.metadata,
       {
-        ...enrichedMetadata,
-        handle: handleForMetadata ?? enrichedMetadata.handle,
-        sourceLabel: link.enrichment?.sourceLabel ?? enrichedMetadata.sourceLabel,
+        ...enrichedMetadataFromCache,
+        handle: handleForMetadata ?? enrichedMetadataFromCache.handle,
+        sourceLabel: link.enrichment?.sourceLabel ?? enrichedMetadataFromCache.sourceLabel,
         sourceLabelVisible: link.enrichment?.sourceLabelVisible,
         enrichmentStatus: status,
         enrichmentReason: reason,

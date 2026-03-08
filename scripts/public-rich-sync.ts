@@ -1,0 +1,544 @@
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import { resolveSupportedSocialProfile } from "../src/lib/content/social-profile-fields";
+import { fetchMetadata } from "./enrichment/fetch-metadata";
+import type { MediumPublicProfileBrowserSnapshot } from "./enrichment/medium-public-browser";
+import { parseMediumPublicProfileMetrics } from "./enrichment/medium-public-browser";
+import {
+  PUBLIC_BROWSER_USER_AGENT,
+  type PublicAugmentationTarget,
+  resolvePublicAugmentationTarget,
+} from "./enrichment/public-augmentation";
+import {
+  PUBLIC_RICH_SYNC_OUTPUT_DIRECTORY,
+  type PublicBrowserProfileConfig,
+  runPublicBrowserJson,
+  toAbsolutePublicRichOutputPath,
+} from "./enrichment/public-browser";
+import { computePublicCacheExpiresAt } from "./enrichment/public-cache";
+import {
+  DEFAULT_PUBLIC_CACHE_PATH,
+  type PublicCacheEntry,
+  type PublicCacheRegistry,
+  loadPublicCacheRegistry,
+  mergePublicCacheMetadataForTarget,
+  toPublicCacheMetadata,
+  writePublicCacheRegistry,
+} from "./enrichment/public-cache";
+import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
+import { loadEmbeddedCode } from "./shared/embedded-code-loader";
+
+const ROOT = process.cwd();
+const DEFAULT_BROWSER_WAIT_MS = 8_000;
+const DEFAULT_FETCH_TIMEOUT_MS = 4_000;
+const DEFAULT_FETCH_RETRIES = 1;
+const MEDIUM_BROWSER_ARGS = ["--disable-blink-features=AutomationControlled"] as const;
+const MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/medium/extract-public-profile-metrics.js",
+);
+
+interface CliArgs {
+  linksPath: string;
+  publicCachePath: string;
+  onlyLink?: string;
+  onlyMissing: boolean;
+  force: boolean;
+  headed: boolean;
+  browserWaitMs: number;
+}
+
+interface LinkInput {
+  id: string;
+  label: string;
+  url?: string;
+  type: "simple" | "rich" | "payment";
+  icon?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface LinksPayload {
+  links: LinkInput[];
+}
+
+interface RichLinkInput extends LinkInput {
+  url: string;
+  type: "rich";
+}
+
+interface MediumPublicTarget extends PublicAugmentationTarget {
+  id: "medium-public-feed";
+}
+
+interface BootstrapBaseEntryInput {
+  link: RichLinkInput;
+  target: MediumPublicTarget;
+  existingEntry?: PublicCacheEntry;
+  generatedAt: string;
+}
+
+export interface MediumBrowserCaptureResult {
+  ok: boolean;
+  artifactPath: string;
+  metrics: ReturnType<typeof parseMediumPublicProfileMetrics>;
+  snapshot?: MediumPublicProfileBrowserSnapshot;
+  error?: string;
+}
+
+interface CaptureMediumMetricsInput {
+  link: RichLinkInput;
+  headed: boolean;
+  browserWaitMs: number;
+  generatedAt: string;
+}
+
+export interface PublicRichSyncDependencies {
+  readLinks: (linksPath: string) => LinksPayload;
+  loadPublicCache: (publicCachePath: string) => PublicCacheRegistry;
+  writePublicCache: (publicCachePath: string, registry: PublicCacheRegistry) => void;
+  bootstrapBaseEntry: (input: BootstrapBaseEntryInput) => Promise<PublicCacheEntry>;
+  captureMediumMetrics: (input: CaptureMediumMetricsInput) => Promise<MediumBrowserCaptureResult>;
+  nowIso: () => string;
+  log: (message: string) => void;
+}
+
+export interface PublicRichSyncRunEntry {
+  linkId: string;
+  status: "synced" | "skipped" | "failed";
+  reason: string;
+  artifactPath?: string;
+}
+
+export interface PublicRichSyncResult {
+  dirty: boolean;
+  processed: number;
+  skipped: number;
+  failed: number;
+  entries: PublicRichSyncRunEntry[];
+  registry: PublicCacheRegistry;
+}
+
+const safeTrim = (value: unknown): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const parseInteger = (value: string | undefined): number | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const absolutePath = (value: string): string =>
+  path.isAbsolute(value) ? value : path.join(ROOT, value);
+
+const readJson = <T>(relativePath: string): T =>
+  JSON.parse(fs.readFileSync(absolutePath(relativePath), "utf8")) as T;
+
+const nowIso = (): string => new Date().toISOString();
+const fileTimestamp = (): string => nowIso().replaceAll(":", "-");
+
+const writeJsonArtifact = (absoluteArtifactPath: string, payload: unknown): string => {
+  fs.mkdirSync(path.dirname(absoluteArtifactPath), { recursive: true });
+  fs.writeFileSync(absoluteArtifactPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return absoluteArtifactPath;
+};
+
+const getFlagValue = (args: string[], flag: string): string | undefined => {
+  const index = args.indexOf(flag);
+  if (index < 0) {
+    return undefined;
+  }
+
+  const value = args[index + 1];
+  if (typeof value !== "string" || value.startsWith("--")) {
+    return undefined;
+  }
+
+  return value;
+};
+
+const parseArgs = (argv = process.argv.slice(2)): CliArgs => ({
+  linksPath: getFlagValue(argv, "--links") ?? "data/links.json",
+  publicCachePath: getFlagValue(argv, "--cache") ?? DEFAULT_PUBLIC_CACHE_PATH,
+  onlyLink: getFlagValue(argv, "--only-link")?.trim(),
+  onlyMissing: argv.includes("--only-missing"),
+  force: argv.includes("--force"),
+  headed: argv.includes("--headed"),
+  browserWaitMs: Math.max(
+    1_000,
+    parseInteger(getFlagValue(argv, "--wait-ms")) ?? DEFAULT_BROWSER_WAIT_MS,
+  ),
+});
+
+const isRichLink = (link: LinkInput): link is RichLinkInput =>
+  link.type === "rich" && typeof link.url === "string" && link.url.trim().length > 0;
+
+const isMediumPublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is MediumPublicTarget => target?.id === "medium-public-feed";
+
+const hasFollowersMetric = (entry: PublicCacheEntry | undefined): boolean =>
+  typeof entry?.metadata.followersCount === "number" ||
+  (typeof entry?.metadata.followersCountRaw === "string" &&
+    entry.metadata.followersCountRaw.trim().length > 0);
+
+const hasBaseProfileMetadata = (entry: PublicCacheEntry | undefined): boolean => {
+  if (!entry) {
+    return false;
+  }
+
+  return (
+    typeof entry.metadata.title === "string" &&
+    entry.metadata.title.trim().length > 0 &&
+    typeof entry.metadata.description === "string" &&
+    entry.metadata.description.trim().length > 0 &&
+    typeof entry.metadata.image === "string" &&
+    entry.metadata.image.trim().length > 0 &&
+    typeof entry.metadata.profileImage === "string" &&
+    entry.metadata.profileImage.trim().length > 0 &&
+    typeof entry.metadata.handle === "string" &&
+    entry.metadata.handle.trim().length > 0
+  );
+};
+
+const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
+  ...entry,
+  metadata: {
+    ...entry.metadata,
+  },
+});
+
+const extractEvalResult = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
+
+  if (
+    "result" in value &&
+    typeof value.result === "object" &&
+    value.result !== null &&
+    !Array.isArray(value.result)
+  ) {
+    return value.result as Record<string, unknown>;
+  }
+
+  return value as Record<string, unknown>;
+};
+
+const buildMediumProfileConfig = (linkId: string, headed: boolean): PublicBrowserProfileConfig => ({
+  profilePath: toAbsolutePublicRichOutputPath("profiles", linkId),
+  headed,
+  userAgent: PUBLIC_BROWSER_USER_AGENT,
+  browserArgs: [...MEDIUM_BROWSER_ARGS],
+});
+
+export const bootstrapMediumBaseEntry = async (
+  input: BootstrapBaseEntryInput,
+): Promise<PublicCacheEntry> => {
+  const fetched = await fetchMetadata(input.target.sourceUrl, {
+    timeoutMs: DEFAULT_FETCH_TIMEOUT_MS,
+    retries: DEFAULT_FETCH_RETRIES,
+    acceptHeader: input.target.acceptHeader,
+    headers: input.target.headers,
+  });
+
+  if (!fetched.ok || !fetched.html) {
+    throw new Error(
+      `Unable to fetch Medium public feed '${input.target.sourceUrl}'. ${
+        fetched.error ?? `HTTP ${fetched.statusCode ?? "unknown"}`
+      }`,
+    );
+  }
+
+  const parsed = input.target.parse(fetched.html);
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: input.link.url,
+    icon: input.link.icon,
+    metadataHandle: input.link.metadata?.handle,
+  });
+  const augmentedMetadata = augmentSupportedSocialProfileMetadata({
+    html: fetched.html,
+    metadata: parsed.metadata,
+    supportedProfile,
+  });
+  const mergedMetadata = mergePublicCacheMetadataForTarget({
+    targetId: input.target.id,
+    previous: input.existingEntry?.metadata,
+    next: toPublicCacheMetadata(augmentedMetadata),
+  });
+
+  return {
+    linkId: input.link.id,
+    sourceUrl: input.target.sourceUrl,
+    capturedAt: input.generatedAt,
+    updatedAt: input.generatedAt,
+    metadata: mergedMetadata,
+    etag: fetched.etag,
+    lastModified: fetched.lastModified,
+    cacheControl: fetched.cacheControl,
+    expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
+  };
+};
+
+export const captureMediumMetricsFromBrowser = async (
+  input: CaptureMediumMetricsInput,
+): Promise<MediumBrowserCaptureResult> => {
+  const config = buildMediumProfileConfig(input.link.id, input.headed);
+  fs.mkdirSync(config.profilePath, { recursive: true });
+
+  const artifactRelativePath = path.join(
+    PUBLIC_RICH_SYNC_OUTPUT_DIRECTORY,
+    `${input.link.id}-${fileTimestamp()}.json`,
+  );
+  const artifactAbsolutePath = absolutePath(artifactRelativePath);
+  let snapshot: MediumPublicProfileBrowserSnapshot | undefined;
+  let error: string | undefined;
+
+  try {
+    runPublicBrowserJson(["open", input.link.url], config, {
+      allowFailure: true,
+    });
+    runPublicBrowserJson(["wait", "--load", "networkidle"], config, {
+      allowFailure: true,
+    });
+    runPublicBrowserJson(["wait", String(input.browserWaitMs)], config, {
+      allowFailure: true,
+    });
+
+    const evalResult = runPublicBrowserJson<unknown>(
+      [
+        "eval",
+        "--base64",
+        Buffer.from(MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET, "utf8").toString("base64"),
+      ],
+      config,
+      {
+        allowFailure: false,
+      },
+    );
+    const payload = extractEvalResult(evalResult.response?.data);
+    snapshot = payload
+      ? {
+          currentUrl: safeTrim(payload.currentUrl),
+          title: safeTrim(payload.title),
+          bodyText: safeTrim(payload.bodyText),
+          metricTexts: Array.isArray(payload.metricTexts)
+            ? payload.metricTexts
+                .map((value) => safeTrim(value))
+                .filter((value): value is string => Boolean(value))
+            : undefined,
+        }
+      : undefined;
+  } catch (captureError: unknown) {
+    error = captureError instanceof Error ? captureError.message : String(captureError);
+  } finally {
+    runPublicBrowserJson(["close"], config, {
+      allowFailure: true,
+    });
+  }
+
+  const metrics = parseMediumPublicProfileMetrics(snapshot ?? {});
+  if (!error && metrics.placeholderSignals.length > 0) {
+    error = `Medium public browser capture saw placeholder content: ${metrics.placeholderSignals.join(", ")}.`;
+  }
+  if (!error && !metrics.followersCountRaw) {
+    error = "Medium public browser capture did not find a follower count.";
+  }
+
+  writeJsonArtifact(artifactAbsolutePath, {
+    timestamp: input.generatedAt,
+    linkId: input.link.id,
+    targetUrl: input.link.url,
+    headed: input.headed,
+    browserWaitMs: input.browserWaitMs,
+    profilePath: path.relative(ROOT, config.profilePath),
+    snapshot: snapshot ?? null,
+    metrics,
+    ok: !error,
+    error: error ?? null,
+  });
+
+  return {
+    ok: !error,
+    artifactPath: artifactRelativePath,
+    metrics,
+    snapshot,
+    error,
+  };
+};
+
+const defaultDependencies: PublicRichSyncDependencies = {
+  readLinks: (linksPath) => readJson<LinksPayload>(linksPath),
+  loadPublicCache: (publicCachePath) => loadPublicCacheRegistry({ cachePath: publicCachePath }),
+  writePublicCache: (publicCachePath, registry) =>
+    writePublicCacheRegistry(publicCachePath, registry),
+  bootstrapBaseEntry: bootstrapMediumBaseEntry,
+  captureMediumMetrics: captureMediumMetricsFromBrowser,
+  nowIso,
+  log: (message) => console.log(message),
+};
+
+export const runPublicRichSyncWithDependencies = async (
+  args: CliArgs,
+  dependencies: PublicRichSyncDependencies,
+): Promise<PublicRichSyncResult> => {
+  const linksPayload = dependencies.readLinks(args.linksPath);
+  const registry = dependencies.loadPublicCache(args.publicCachePath);
+  const entries: PublicRichSyncRunEntry[] = [];
+  let dirty = false;
+  let processed = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  const candidates = linksPayload.links
+    .filter(isRichLink)
+    .filter((link) => !args.onlyLink || link.id === args.onlyLink)
+    .map((link) => ({
+      link,
+      target: resolvePublicAugmentationTarget({
+        url: link.url,
+        icon: link.icon,
+        metadataHandle: link.metadata?.handle,
+      }),
+    }))
+    .filter((candidate): candidate is { link: RichLinkInput; target: MediumPublicTarget } =>
+      isMediumPublicTarget(candidate.target),
+    );
+
+  if (candidates.length === 0) {
+    dependencies.log("No Medium public-augmentation links matched the sync filters.");
+    return {
+      dirty: false,
+      processed,
+      skipped,
+      failed,
+      entries,
+      registry,
+    };
+  }
+
+  for (const candidate of candidates) {
+    const generatedAt = dependencies.nowIso();
+    const existingEntry = registry.entries[candidate.link.id];
+
+    if (args.onlyMissing && !args.force && hasFollowersMetric(existingEntry)) {
+      skipped += 1;
+      entries.push({
+        linkId: candidate.link.id,
+        status: "skipped",
+        reason: "followers_present",
+      });
+      dependencies.log(`[public:rich:sync] skip ${candidate.link.id}: followers already present.`);
+      continue;
+    }
+
+    let workingEntry = existingEntry ? cloneEntry(existingEntry) : undefined;
+    if (!hasBaseProfileMetadata(workingEntry)) {
+      workingEntry = await dependencies.bootstrapBaseEntry({
+        link: candidate.link,
+        target: candidate.target,
+        existingEntry: workingEntry,
+        generatedAt,
+      });
+      registry.entries[candidate.link.id] = workingEntry;
+      registry.updatedAt = generatedAt;
+      dirty = true;
+      dependencies.log(`[public:rich:sync] bootstrapped base metadata for ${candidate.link.id}.`);
+    }
+
+    processed += 1;
+    const capture = await dependencies.captureMediumMetrics({
+      link: candidate.link,
+      headed: args.headed,
+      browserWaitMs: args.browserWaitMs,
+      generatedAt,
+    });
+
+    if (!capture.ok || !capture.metrics.followersCountRaw) {
+      failed += 1;
+      entries.push({
+        linkId: candidate.link.id,
+        status: "failed",
+        reason: capture.error ?? "followers_missing",
+        artifactPath: capture.artifactPath,
+      });
+      dependencies.log(
+        `[public:rich:sync] fail ${candidate.link.id}: ${capture.error ?? "followers missing"} (${capture.artifactPath})`,
+      );
+      continue;
+    }
+
+    const nextEntry = workingEntry ? cloneEntry(workingEntry) : undefined;
+    if (!nextEntry) {
+      throw new Error(`Internal error: working entry missing for '${candidate.link.id}'.`);
+    }
+
+    nextEntry.updatedAt = generatedAt;
+    nextEntry.metadata.followersCount = capture.metrics.followersCount;
+    nextEntry.metadata.followersCountRaw = capture.metrics.followersCountRaw;
+    if (capture.metrics.followingCount !== undefined) {
+      nextEntry.metadata.followingCount = capture.metrics.followingCount;
+    }
+    if (capture.metrics.followingCountRaw) {
+      nextEntry.metadata.followingCountRaw = capture.metrics.followingCountRaw;
+    }
+
+    registry.entries[candidate.link.id] = nextEntry;
+    registry.updatedAt = generatedAt;
+    dirty = true;
+    entries.push({
+      linkId: candidate.link.id,
+      status: "synced",
+      reason: existingEntry ? "counts_refreshed" : "bootstrapped_and_refreshed",
+      artifactPath: capture.artifactPath,
+    });
+    dependencies.log(
+      `[public:rich:sync] synced ${candidate.link.id}: ${capture.metrics.followersCountRaw} (${capture.artifactPath})`,
+    );
+  }
+
+  if (dirty) {
+    dependencies.writePublicCache(args.publicCachePath, registry);
+  }
+
+  return {
+    dirty,
+    processed,
+    skipped,
+    failed,
+    entries,
+    registry,
+  };
+};
+
+const runCli = async () => {
+  const args = parseArgs();
+  const result = await runPublicRichSyncWithDependencies(args, defaultDependencies);
+
+  console.log("");
+  console.log("Public rich sync summary");
+  console.log(`Processed: ${result.processed}`);
+  console.log(`Skipped: ${result.skipped}`);
+  console.log(`Failed: ${result.failed}`);
+  console.log(`Cache updated: ${result.dirty ? "yes" : "no"}`);
+
+  if (result.failed > 0) {
+    process.exit(1);
+  }
+};
+
+if (import.meta.main) {
+  runCli().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Public rich sync failed: ${message}`);
+    process.exit(1);
+  });
+}
