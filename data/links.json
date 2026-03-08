@@ -7,7 +7,7 @@
       "type": "rich",
       "icon": "primal",
       "description": "Nostr profile and notes",
-      "group": "social",
+      "group": "favorites",
       "order": 1,
       "enabled": true,
       "enrichment": {
@@ -22,7 +22,7 @@
       "type": "rich",
       "icon": "github",
       "description": "Code, experiments, and open-source projects",
-      "group": "social",
+      "group": "favorites",
       "order": 2,
       "enabled": true,
       "enrichment": {
@@ -37,7 +37,7 @@
       "type": "rich",
       "icon": "x",
       "description": "Short updates and project notes",
-      "group": "social",
+      "group": "favorites",
       "order": 3,
       "enabled": true,
       "enrichment": {
@@ -141,7 +141,7 @@
       "type": "rich",
       "icon": "substack",
       "description": "Newsletter and long-form writing",
-      "group": "content",
+      "group": "favorites",
       "order": 10,
       "enabled": true,
       "enrichment": {
@@ -155,32 +155,37 @@
   ],
   "groups": [
     {
+      "id": "favorites",
+      "label": "Favorites",
+      "order": 1
+    },
+    {
       "id": "social",
       "label": "Social",
-      "order": 1
+      "order": 2
     },
     {
       "id": "work",
       "label": "Work",
-      "order": 2
+      "order": 3
     },
     {
       "id": "content",
       "label": "Content",
-      "order": 3
+      "order": 4
     }
   ],
   "order": [
     "primal",
     "github",
+    "substack",
     "x",
     "linkedin",
     "openlinks-home",
     "facebook",
     "instagram",
     "youtube",
-    "medium",
-    "substack"
+    "medium"
   ],
   "custom": {}
 }
