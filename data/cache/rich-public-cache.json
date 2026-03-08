@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-08T09:32:37.328Z",
+  "updatedAt": "2026-03-08T12:47:10.236Z",
   "entries": {
     "primal": {
       "linkId": "primal",
       "sourceUrl": "https://primal.net/peterryszkiewicz",
-      "capturedAt": "2026-03-08T09:32:37.328Z",
-      "updatedAt": "2026-03-08T09:32:37.328Z",
+      "capturedAt": "2026-03-08T12:47:10.236Z",
+      "updatedAt": "2026-03-08T12:47:10.236Z",
       "metadata": {
         "title": "Peter No Taxation Without Representation Ryszkiewicz",
         "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
@@ -15,13 +15,13 @@
         "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg"
       },
       "cacheControl": "must-revalidate, proxy-revalidate, max-age=1",
-      "expiresAt": "2026-03-08T09:32:38.000Z"
+      "expiresAt": "2026-03-08T12:47:11.000Z"
     },
     "github": {
       "linkId": "github",
       "sourceUrl": "https://github.com/pRizz",
-      "capturedAt": "2026-03-08T09:32:27.408Z",
-      "updatedAt": "2026-03-08T09:32:37.328Z",
+      "capturedAt": "2026-03-08T12:47:10.236Z",
+      "updatedAt": "2026-03-08T12:47:10.236Z",
       "metadata": {
         "title": "pRizz - Overview",
         "description": "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
@@ -33,20 +33,22 @@
         "followingCount": 87,
         "followingCountRaw": "87 following"
       },
-      "etag": "W/\"f0635c84c7cbc9857e00a8c0dae3f2b4\"",
+      "etag": "W/\"6219b734dbe1b6045ac8c85858642a25\"",
       "cacheControl": "max-age=0, private, must-revalidate",
-      "expiresAt": "2026-03-08T09:32:28.000Z"
+      "expiresAt": "2026-03-08T12:47:10.000Z"
     },
     "substack": {
       "linkId": "substack",
       "sourceUrl": "https://peter.ryszkiewicz.us/",
-      "capturedAt": "2026-03-08T09:32:37.328Z",
-      "updatedAt": "2026-03-08T09:32:37.328Z",
+      "capturedAt": "2026-03-08T12:47:10.236Z",
+      "updatedAt": "2026-03-08T12:47:10.236Z",
       "metadata": {
-        "title": "Peter Ryszkiewicz | Substack",
-        "description": "Software Engineer. Click to read Peter Ryszkiewicz on Substack. Launched a month ago.",
-        "image": "https://substackcdn.com/image/fetch/$s_!NmXI!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fpeterryszkiewicz.substack.com%2Ftwitter%2Fsubscribe-card.jpg%3Fv%3D298060393%26version%3D9",
-        "sourceLabel": "peter.ryszkiewicz.us"
+        "title": "Peter Ryszkiewicz",
+        "description": "Software Engineer",
+        "image": "https://substack-post-media.s3.amazonaws.com/public/images/45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
+        "handle": "peterryszkiewicz",
+        "sourceLabel": "peter.ryszkiewicz.us",
+        "profileImage": "https://substack-post-media.s3.amazonaws.com/public/images/45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg"
       },
       "cacheControl": "no-cache"
     },
@@ -69,14 +71,14 @@
     "instagram": {
       "linkId": "instagram",
       "sourceUrl": "https://www.instagram.com/peterryszkiewicz/",
-      "capturedAt": "2026-03-08T09:32:37.328Z",
-      "updatedAt": "2026-03-08T09:32:37.328Z",
+      "capturedAt": "2026-03-08T12:47:10.236Z",
+      "updatedAt": "2026-03-08T12:47:10.236Z",
       "metadata": {
         "title": "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz) • Instagram photos and videos",
         "description": "86 Followers, 172 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
-        "image": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=zoHehpCt-jkQ7kNvwGcvmZE&_nc_oc=Adk0m1VErAU_PvknfYVxNCn8DUPyJWum2PN1oZvs_Tte7CnGEQicC0H20fJ6H0GeLNg&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_AfyLLGHNMKLAvA6GmGAwRUjBRUCXb1haZm7V6U4pC8rl0A&oe=69B326AE",
+        "image": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=BzqirAgJHvsQ7kNvwE38DNC&_nc_oc=Adl_g3fQXJNIXBWcy4mCnWAyvwxTCfNl7abSoaDwZgnDhyQ3lZnQCQHGGH6etW1nJSI&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_AfwFxSmgeTvQcuUtGDo-O82Gq-NJRUUv1HntDf-IghcG_Q&oe=69B326AE",
         "sourceLabel": "instagram.com",
-        "profileImage": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=zoHehpCt-jkQ7kNvwGcvmZE&_nc_oc=Adk0m1VErAU_PvknfYVxNCn8DUPyJWum2PN1oZvs_Tte7CnGEQicC0H20fJ6H0GeLNg&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_AfyLLGHNMKLAvA6GmGAwRUjBRUCXb1haZm7V6U4pC8rl0A&oe=69B326AE",
+        "profileImage": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=BzqirAgJHvsQ7kNvwE38DNC&_nc_oc=Adl_g3fQXJNIXBWcy4mCnWAyvwxTCfNl7abSoaDwZgnDhyQ3lZnQCQHGGH6etW1nJSI&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_AfwFxSmgeTvQcuUtGDo-O82Gq-NJRUUv1HntDf-IghcG_Q&oe=69B326AE",
         "followersCount": 86,
         "followersCountRaw": "86 Followers",
         "followingCount": 172,
@@ -87,8 +89,8 @@
     "youtube": {
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
-      "capturedAt": "2026-03-08T09:32:37.328Z",
-      "updatedAt": "2026-03-08T09:32:37.328Z",
+      "capturedAt": "2026-03-08T12:47:10.236Z",
+      "updatedAt": "2026-03-08T12:47:10.236Z",
       "metadata": {
         "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
         "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
@@ -99,21 +101,23 @@
         "subscribersCountRaw": "11 subscribers"
       },
       "cacheControl": "no-cache, no-store, max-age=0, must-revalidate",
-      "expiresAt": "2026-03-08T09:32:38.000Z"
+      "expiresAt": "2026-03-08T12:47:11.000Z"
     },
     "medium": {
       "linkId": "medium",
       "sourceUrl": "https://medium.com/feed/@peterryszkiewicz",
-      "capturedAt": "2026-03-08T09:22:55.794Z",
-      "updatedAt": "2026-03-08T09:22:55.794Z",
+      "capturedAt": "2026-03-08T12:45:41.570Z",
+      "updatedAt": "2026-03-08T12:45:41.570Z",
       "metadata": {
         "title": "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
         "description": "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
         "image": "https://cdn-images-1.medium.com/fit/c/150/150/0*_SAmj5J9y1Pv5Ri0.",
-        "sourceLabel": "medium.com"
+        "handle": "peterryszkiewicz",
+        "sourceLabel": "medium.com",
+        "profileImage": "https://cdn-images-1.medium.com/fit/c/150/150/0*_SAmj5J9y1Pv5Ri0."
       },
       "cacheControl": "private, must-revalidate, max-age=900",
-      "expiresAt": "2026-03-08T09:37:57.000Z"
+      "expiresAt": "2026-03-08T13:00:43.000Z"
     }
   }
 }

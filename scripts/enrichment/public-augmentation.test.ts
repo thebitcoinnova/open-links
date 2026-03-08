@@ -82,8 +82,106 @@ test("parses Medium feed metadata into a complete preview payload", () => {
 
   // Assert
   assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.handle, "peterryszkiewicz");
   assert.equal(parsed?.metadata.sourceLabel, "medium.com");
   assert.equal(parsed?.metadata.image, "https://cdn-images-1.medium.com/fit/c/150/150/example.jpg");
+  assert.equal(
+    parsed?.metadata.profileImage,
+    "https://cdn-images-1.medium.com/fit/c/150/150/example.jpg",
+  );
+});
+
+test("resolves a Substack public augmentation target for a custom-domain profile homepage", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+  });
+
+  // Assert
+  assert.ok(target);
+  assert.equal(target.id, "substack-public-profile");
+  assert.equal(target.sourceUrl, "https://peter.ryszkiewicz.us/");
+});
+
+test("parses Substack profile metadata from JSON-LD and ignores the subscribe-card preview image", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Peter Ryszkiewicz | Substack" />
+        <meta property="og:description" content="Fallback subscribe-card description" />
+        <meta property="og:image" content="https://substackcdn.com/image/fetch/subscribe-card.jpg" />
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": "Peter Ryszkiewicz",
+            "url": "https://substack.com/@peterryszkiewicz",
+            "jobTitle": "Software Engineer",
+            "image": "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg"
+          }
+        </script>
+        <script>
+          window._preloads = JSON.parse("{\\"pub\\":{\\"name\\":\\"Wrong Name\\",\\"subdomain\\":\\"wrong-handle\\",\\"hero_text\\":\\"Wrong hero\\",\\"logo_url\\":\\"https://substackcdn.com/logo.png\\"}}")
+        </script>
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "Peter Ryszkiewicz");
+  assert.equal(parsed?.metadata.description, "Software Engineer");
+  assert.equal(parsed?.metadata.handle, "peterryszkiewicz");
+  assert.equal(
+    parsed?.metadata.image,
+    "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+  );
+  assert.equal(
+    parsed?.metadata.profileImage,
+    "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+  );
+});
+
+test("falls back to Substack preloads data when JSON-LD person metadata is absent", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Peter Ryszkiewicz | Substack" />
+        <meta property="og:description" content="Fallback subscribe-card description" />
+        <meta property="og:image" content="https://substackcdn.com/image/fetch/subscribe-card.jpg" />
+        <script>
+          window._preloads = JSON.parse("{\\"pub\\":{\\"name\\":\\"Peter Ryszkiewicz\\",\\"subdomain\\":\\"peterryszkiewicz\\",\\"hero_text\\":\\"Software Engineer\\",\\"logo_url\\":\\"https://substack-post-media.s3.amazonaws.com/public/images/logo.png\\"},\\"posts\\":[{\\"publishedBylines\\":[{\\"name\\":\\"Peter Ryszkiewicz\\",\\"handle\\":\\"peterryszkiewicz\\",\\"bio\\":\\"Software Engineer\\",\\"photo_url\\":\\"https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg\\"}]}]}")
+        </script>
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "Peter Ryszkiewicz");
+  assert.equal(parsed?.metadata.description, "Software Engineer");
+  assert.equal(parsed?.metadata.handle, "peterryszkiewicz");
+  assert.equal(
+    parsed?.metadata.profileImage,
+    "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+  );
 });
 
 test("parses Instagram follower and following counts from the profile description", () => {

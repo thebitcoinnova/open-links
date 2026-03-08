@@ -299,10 +299,11 @@ export const validateAuthenticatedCacheEntry = (
     });
   }
 
+  const cacheMetadata = toEnrichmentMetadata(rawEntry);
   const supportedProfile = resolveSupportedSocialProfile({
     url: input.expectedUrl,
+    metadataHandle: cacheMetadata.handle,
   });
-  const cacheMetadata = toEnrichmentMetadata(rawEntry);
   const enrichmentMetadata =
     normalizeSupportedSocialProfileMetadata(cacheMetadata, supportedProfile) ?? cacheMetadata;
   if (supportedProfile) {

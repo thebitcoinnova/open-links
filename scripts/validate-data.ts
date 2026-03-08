@@ -440,19 +440,25 @@ const supportedSocialProfileMetadataIssues = (
     const supportedProfile = resolveSupportedSocialProfile({
       url,
       icon: toStringOrUndefined(rawLink.icon),
+      metadataHandle: isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
     });
-    if (!supportedProfile) {
-      return;
-    }
-
     const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
     const manualMetadata = isRecord(rawLink.metadata) ? rawLink.metadata : {};
     const generatedMetadata = generatedMetadataByLink[linkId] ?? {};
     const mergedMetadata =
       mergeMetadataWithManualSocialProfileOverrides(manualMetadata, generatedMetadata) ?? {};
+    const resolvedSupportedProfile =
+      resolveSupportedSocialProfile({
+        url,
+        icon: toStringOrUndefined(rawLink.icon),
+        metadataHandle: mergedMetadata.handle,
+      }) ?? supportedProfile;
+    if (!resolvedSupportedProfile) {
+      return;
+    }
     const missingProfileFields = resolveMissingSupportedSocialProfileFields(
       mergedMetadata,
-      supportedProfile,
+      resolvedSupportedProfile,
     );
 
     if (missingProfileFields.length === 0) {
@@ -468,7 +474,7 @@ const supportedSocialProfileMetadataIssues = (
       source: linksSource,
       path: `$.links[${index}].metadata`,
       message:
-        `Supported ${supportedProfile.platform} profile link '${linkId}' is missing expected social profile metadata: ` +
+        `Supported ${resolvedSupportedProfile.platform} profile link '${linkId}' is missing expected social profile metadata: ` +
         `${missingProfileFields.join(", ")}.`,
       remediation: `${refreshCommand}, or add manual values under $.links[${index}].metadata for the missing fields.`,
       strictBlocking: false,

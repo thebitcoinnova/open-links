@@ -92,6 +92,19 @@ const resolveDisplayNameFromTitle = (
     return cleaned.length > 0 ? cleaned : rawTitle;
   }
 
+  if (platform === "medium") {
+    const cleaned = rawTitle
+      .replace(/^Stories by\s+/iu, "")
+      .replace(/\s+on Medium$/iu, "")
+      .trim();
+    return cleaned.length > 0 ? cleaned : rawTitle;
+  }
+
+  if (platform === "substack") {
+    const cleaned = rawTitle.replace(/\s*[|·•-]\s*Substack$/iu, "").trim();
+    return cleaned.length > 0 ? cleaned : rawTitle;
+  }
+
   return rawTitle;
 };
 
@@ -137,6 +150,7 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
   const supportedProfile = resolveSupportedSocialProfile({
     url: link.url,
     icon: link.icon,
+    metadataHandle: metadata.handle,
   });
   const normalizedMetadata =
     normalizeSupportedSocialProfileMetadata(

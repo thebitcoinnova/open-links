@@ -144,6 +144,67 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
   assert.deepEqual(resolved.metrics, []);
 });
 
+test("medium profile metadata cleans the feed title into a display name and treats the avatar as identity chrome", () => {
+  // Arrange
+  const link = {
+    id: "medium",
+    label: "Medium",
+    url: "https://medium.com/@peterryszkiewicz",
+    type: "rich",
+    icon: "medium",
+    metadata: {
+      title: "Stories by Peter Ryszkiewicz on Medium",
+      image: "/generated/images/medium-avatar.jpg",
+      handle: "peterryszkiewicz",
+      sourceLabel: "medium.com",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "medium");
+  assert.equal(resolved.displayName, "Peter Ryszkiewicz");
+  assert.equal(resolved.handle, "peterryszkiewicz");
+  assert.equal(resolved.handleDisplay, "@peterryszkiewicz");
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/generated/images/medium-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/generated/images/medium-avatar.jpg");
+});
+
+test("substack custom-domain metadata uses the explicit handle and strips the site suffix from titles", () => {
+  // Arrange
+  const link = {
+    id: "substack",
+    label: "Substack",
+    url: "https://peter.ryszkiewicz.us/",
+    type: "rich",
+    icon: "substack",
+    metadata: {
+      title: "Peter Ryszkiewicz | Substack",
+      image: "/generated/images/substack-avatar.jpg",
+      profileImage: "/generated/images/substack-avatar.jpg",
+      handle: "peterryszkiewicz",
+      sourceLabel: "peter.ryszkiewicz.us",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "substack");
+  assert.equal(resolved.displayName, "Peter Ryszkiewicz");
+  assert.equal(resolved.handle, "peterryszkiewicz");
+  assert.equal(resolved.handleDisplay, "@peterryszkiewicz");
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/generated/images/substack-avatar.jpg");
+});
+
 test("linkedin profile metadata reuses authenticated preview media and trims the site suffix from titles", () => {
   // Arrange
   const link = {

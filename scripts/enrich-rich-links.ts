@@ -254,6 +254,17 @@ const mergeLinkMetadata = (
   return normalizeSupportedSocialProfileMetadata(metadata, supportedProfile) ?? metadata;
 };
 
+const resolveSupportedProfileForMetadata = (
+  link: LinkInput & { type: "rich"; url: string },
+  metadata: EnrichmentMetadata,
+  fallbackSupportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
+): ReturnType<typeof resolveSupportedSocialProfile> =>
+  resolveSupportedSocialProfile({
+    url: link.url,
+    icon: link.icon,
+    metadataHandle: metadata.handle,
+  }) ?? fallbackSupportedProfile;
+
 const resolveProfileWarningContext = (
   supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
   metadata: EnrichmentMetadata,
@@ -434,7 +445,7 @@ const mergeCachedPublicMetadata = (
     link.metadata,
     {
       ...cachedMetadata,
-      handle: handleForMetadata,
+      handle: handleForMetadata ?? cachedMetadata.handle,
       sourceLabel: link.enrichment?.sourceLabel ?? cachedMetadata.sourceLabel,
       sourceLabelVisible: link.enrichment?.sourceLabelVisible,
       enrichmentStatus: status,
@@ -586,6 +597,7 @@ const run = async () => {
     const supportedProfile = resolveSupportedSocialProfile({
       url: link.url,
       icon: link.icon,
+      metadataHandle: link.metadata?.handle,
     });
     const urlDerivedHandle = resolveHandleFromUrl({
       url: link.url,
@@ -609,11 +621,16 @@ const run = async () => {
         },
         supportedProfile,
       );
-      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
         link.url,
-        supportedProfile,
+        warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
 
@@ -665,11 +682,19 @@ const run = async () => {
           },
           supportedProfile,
         );
-        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        const warningSupportedProfile = resolveSupportedProfileForMetadata(
+          link,
+          metadata,
+          supportedProfile,
+        );
+        const profileWarningContext = resolveProfileWarningContext(
+          warningSupportedProfile,
+          metadata,
+        );
         warnForMissingProfileFields(
           link.id,
           link.url,
-          supportedProfile,
+          warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
 
@@ -707,11 +732,19 @@ const run = async () => {
           },
           supportedProfile,
         );
-        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        const warningSupportedProfile = resolveSupportedProfileForMetadata(
+          link,
+          metadata,
+          supportedProfile,
+        );
+        const profileWarningContext = resolveProfileWarningContext(
+          warningSupportedProfile,
+          metadata,
+        );
         warnForMissingProfileFields(
           link.id,
           link.url,
-          supportedProfile,
+          warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
 
@@ -750,11 +783,19 @@ const run = async () => {
           },
           supportedProfile,
         );
-        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        const warningSupportedProfile = resolveSupportedProfileForMetadata(
+          link,
+          metadata,
+          supportedProfile,
+        );
+        const profileWarningContext = resolveProfileWarningContext(
+          warningSupportedProfile,
+          metadata,
+        );
         warnForMissingProfileFields(
           link.id,
           link.url,
-          supportedProfile,
+          warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
 
@@ -806,11 +847,19 @@ const run = async () => {
           },
           supportedProfile,
         );
-        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        const warningSupportedProfile = resolveSupportedProfileForMetadata(
+          link,
+          metadata,
+          supportedProfile,
+        );
+        const profileWarningContext = resolveProfileWarningContext(
+          warningSupportedProfile,
+          metadata,
+        );
         warnForMissingProfileFields(
           link.id,
           link.url,
-          supportedProfile,
+          warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
 
@@ -845,7 +894,7 @@ const run = async () => {
         link.metadata,
         {
           ...cacheValidation.metadata,
-          handle: handleForMetadata,
+          handle: handleForMetadata ?? cacheValidation.metadata.handle,
           sourceLabel:
             link.enrichment?.sourceLabel ??
             cacheValidation.metadata.sourceLabel ??
@@ -857,11 +906,16 @@ const run = async () => {
         },
         supportedProfile,
       );
-      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
         link.url,
-        supportedProfile,
+        warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
 
@@ -910,11 +964,16 @@ const run = async () => {
         },
         supportedProfile,
       );
-      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
         link.url,
-        supportedProfile,
+        warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
 
@@ -968,11 +1027,16 @@ const run = async () => {
         cachedPublicEntry.entry.updatedAt,
         cachedStatus.status,
       );
-      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
         link.url,
-        supportedProfile,
+        warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
 
@@ -1046,11 +1110,16 @@ const run = async () => {
         refreshedEntry.updatedAt,
         cachedStatus.status,
       );
-      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
         link.url,
-        supportedProfile,
+        warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
 
@@ -1097,11 +1166,19 @@ const run = async () => {
           cachedPublicEntry.entry.capturedAt,
           cachedStatus.status,
         );
-        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        const warningSupportedProfile = resolveSupportedProfileForMetadata(
+          link,
+          metadata,
+          supportedProfile,
+        );
+        const profileWarningContext = resolveProfileWarningContext(
+          warningSupportedProfile,
+          metadata,
+        );
         warnForMissingProfileFields(
           link.id,
           link.url,
-          supportedProfile,
+          warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
 
@@ -1144,11 +1221,16 @@ const run = async () => {
         },
         supportedProfile,
       );
-      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
         link.url,
-        supportedProfile,
+        warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
       const blocking = reason === "known_blocker" ? true : isBlockingReason(reason, config.failOn);
@@ -1227,11 +1309,19 @@ const run = async () => {
           cachedPublicEntry.entry.capturedAt,
           cachedStatus.status,
         );
-        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        const warningSupportedProfile = resolveSupportedProfileForMetadata(
+          link,
+          metadata,
+          supportedProfile,
+        );
+        const profileWarningContext = resolveProfileWarningContext(
+          warningSupportedProfile,
+          metadata,
+        );
         warnForMissingProfileFields(
           link.id,
           link.url,
-          supportedProfile,
+          warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
 
@@ -1274,11 +1364,16 @@ const run = async () => {
         },
         supportedProfile,
       );
-      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
       warnForMissingProfileFields(
         link.id,
         link.url,
-        supportedProfile,
+        warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
       const blocking = reason === "known_blocker" ? true : isBlockingReason(reason, config.failOn);
@@ -1360,7 +1455,7 @@ const run = async () => {
       link.metadata,
       {
         ...enrichedMetadata,
-        handle: handleForMetadata,
+        handle: handleForMetadata ?? enrichedMetadata.handle,
         sourceLabel: link.enrichment?.sourceLabel ?? enrichedMetadata.sourceLabel,
         sourceLabelVisible: link.enrichment?.sourceLabelVisible,
         enrichmentStatus: status,
@@ -1369,11 +1464,16 @@ const run = async () => {
       },
       supportedProfile,
     );
-    const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+    const warningSupportedProfile = resolveSupportedProfileForMetadata(
+      link,
+      metadata,
+      supportedProfile,
+    );
+    const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
     warnForMissingProfileFields(
       link.id,
       link.url,
-      supportedProfile,
+      warningSupportedProfile,
       profileWarningContext.missingProfileFields,
     );
 

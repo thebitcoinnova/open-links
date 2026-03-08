@@ -43,7 +43,10 @@ test("supported social profile detection supports the expanded platform set but 
   const instagramProfileUrl = "https://www.instagram.com/peterryszkiewicz/";
   const githubProfileUrl = "https://github.com/pRizz";
   const linkedinProfileUrl = "https://www.linkedin.com/in/peter-ryszkiewicz/";
+  const mediumProfileUrl = "https://medium.com/@peterryszkiewicz";
   const primalProfileUrl = "https://primal.net/peterryszkiewicz";
+  const substackProfileUrl = "https://peterryszkiewicz.substack.com/";
+  const substackCustomDomainUrl = "https://peter.ryszkiewicz.us/";
   const xProfileUrl = "https://x.com/pryszkie";
   const facebookProfileUrl = "https://www.facebook.com/peter.ryszkiewicz";
   const linkedinFeedUrl = "https://www.linkedin.com/feed/";
@@ -53,7 +56,14 @@ test("supported social profile detection supports the expanded platform set but 
   const instagramProfile = resolveSupportedSocialProfile({ url: instagramProfileUrl });
   const githubProfile = resolveSupportedSocialProfile({ url: githubProfileUrl });
   const linkedinProfile = resolveSupportedSocialProfile({ url: linkedinProfileUrl });
+  const mediumProfile = resolveSupportedSocialProfile({ url: mediumProfileUrl });
   const primalProfile = resolveSupportedSocialProfile({ url: primalProfileUrl });
+  const substackProfile = resolveSupportedSocialProfile({ url: substackProfileUrl });
+  const substackCustomDomainProfile = resolveSupportedSocialProfile({
+    url: substackCustomDomainUrl,
+    icon: "substack",
+    metadataHandle: "@peterryszkiewicz",
+  });
   const xProfile = resolveSupportedSocialProfile({ url: xProfileUrl });
   const facebookProfile = resolveSupportedSocialProfile({ url: facebookProfileUrl });
   const unsupportedLinkedinPage = resolveSupportedSocialProfile({ url: linkedinFeedUrl });
@@ -75,8 +85,23 @@ test("supported social profile detection supports the expanded platform set but 
     handle: "peter-ryszkiewicz",
     expectedFields: ["profileImage"],
   });
+  assert.deepEqual(mediumProfile, {
+    platform: "medium",
+    handle: "peterryszkiewicz",
+    expectedFields: ["profileImage"],
+  });
   assert.deepEqual(primalProfile, {
     platform: "primal",
+    handle: "peterryszkiewicz",
+    expectedFields: ["profileImage"],
+  });
+  assert.deepEqual(substackProfile, {
+    platform: "substack",
+    handle: "peterryszkiewicz",
+    expectedFields: ["profileImage"],
+  });
+  assert.deepEqual(substackCustomDomainProfile, {
+    platform: "substack",
     handle: "peterryszkiewicz",
     expectedFields: ["profileImage"],
   });
@@ -171,6 +196,55 @@ test("avatar-only supported platforms accept normalized preview images without a
     profileImage: "cache/rich-authenticated/example-avatar.jpg",
   });
   assert.deepEqual(missingFields, []);
+});
+
+test("medium profile normalization backfills the feed image as the profile avatar", () => {
+  // Arrange
+  const mediumProfile = resolveSupportedSocialProfile({
+    url: "https://medium.com/@peterryszkiewicz",
+  });
+  assert.ok(mediumProfile);
+
+  // Act
+  const normalized = normalizeSupportedSocialProfileMetadata(
+    {
+      image: "https://cdn-images-1.medium.com/fit/c/150/150/example.jpg",
+    },
+    mediumProfile,
+  );
+  const missingFields = resolveMissingSupportedSocialProfileFields(normalized, mediumProfile);
+
+  // Assert
+  assert.deepEqual(normalized, {
+    image: "https://cdn-images-1.medium.com/fit/c/150/150/example.jpg",
+    profileImage: "https://cdn-images-1.medium.com/fit/c/150/150/example.jpg",
+  });
+  assert.deepEqual(missingFields, []);
+});
+
+test("substack profile normalization does not treat preview images as profile avatars", () => {
+  // Arrange
+  const substackProfile = resolveSupportedSocialProfile({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+    metadataHandle: "@peterryszkiewicz",
+  });
+  assert.ok(substackProfile);
+
+  // Act
+  const normalized = normalizeSupportedSocialProfileMetadata(
+    {
+      image: "https://substackcdn.com/image/fetch/subscribe-card.jpg",
+    },
+    substackProfile,
+  );
+  const missingFields = resolveMissingSupportedSocialProfileFields(normalized, substackProfile);
+
+  // Assert
+  assert.deepEqual(normalized, {
+    image: "https://substackcdn.com/image/fetch/subscribe-card.jpg",
+  });
+  assert.deepEqual(missingFields, ["profileImage"]);
 });
 
 test("linkedin profile normalization backfills profile image from authenticated preview media", () => {

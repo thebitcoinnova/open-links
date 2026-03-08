@@ -2,6 +2,10 @@
 
 ## Current
 
+- [x] Promote Medium and Substack into the supported social-profile platform set, including Substack custom-domain handling via explicit/generated handles.
+- [x] Update public enrichment/cache plumbing so Medium persists handle/avatar data and Substack extracts avatar-first profile metadata instead of subscribe-card previews.
+- [x] Extend focused profile-card and enrichment tests for Medium/Substack, then verify with targeted tests plus typecheck/enrichment/validation/build checks.
+
 - [x] Increase the default site-logo/icon sizing again so lead logos and source/footer logos render larger without per-card overrides.
 - [x] Verify the logo-size follow-up with `bun run biome:check` and `bun run build`, then review any generated-file churn before closing.
 
@@ -65,6 +69,10 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: Medium and Substack now participate in the avatar-first supported social-profile path. Medium feed augmentation persists `handle` plus `profileImage`, Substack custom-domain enrichment extracts canonical handle and avatar/headshot metadata from safe public HTML, and the shared card/view-model layer now renders both platforms as profile cards with cleaned titles and handle rows.
+- Verification: `bun install`, `bun test src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts src/components/cards/social-profile-card-rendering.test.tsx scripts/enrichment/public-augmentation.test.ts scripts/enrichment/public-cache.test.ts`, `bun run typecheck`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run biome:check`, and `bun run build` all passed.
+- Residual risk: `data/cache/rich-public-cache.json` picked up normal refresh churn for a few other public-cache entries when `enrich:rich:strict` reran; the functional changes are limited to Medium/Substack support plus the explicit Substack handle in `data/links.json`, but cache timestamps and some fetched URLs/ETags also moved as part of verification.
 
 - Result: Default site logos/icons are now larger again. The global card-icon scale and base size were increased, the configured `normal` and `large` icon-size modes both step up, and the shared lead/footer logo tokens were increased so both main card logos and source/footer logos render larger without per-card overrides.
 - Verification: `bun run biome:check` and `bun run build` passed. The build path also passed `avatar:sync`, `enrich:rich:strict`, `images:sync`, and `validate:data`; `validate:data` still reports the existing non-blocking Substack handle warning.

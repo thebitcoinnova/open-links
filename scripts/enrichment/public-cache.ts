@@ -17,6 +17,7 @@ export interface PublicCacheMetadata {
   description?: string;
   image?: string;
   profileImage?: string;
+  handle?: string;
   followersCount?: number;
   followersCountRaw?: string;
   followingCount?: number;
@@ -102,6 +103,7 @@ const normalizeMetadata = (metadata: PublicCacheMetadata): PublicCacheMetadata =
     normalized.description = trimToUndefined(metadata.description);
   }
   if (trimToUndefined(metadata.image)) normalized.image = trimToUndefined(metadata.image);
+  if (trimToUndefined(metadata.handle)) normalized.handle = trimToUndefined(metadata.handle);
   if (trimToUndefined(metadata.sourceLabel)) {
     normalized.sourceLabel = trimToUndefined(metadata.sourceLabel);
   }
@@ -305,6 +307,9 @@ export const toPublicCacheMetadata = (metadata: EnrichmentMetadata): PublicCache
   }
   if (typeof metadata.image === "string" && metadata.image.trim().length > 0) {
     cacheMetadata.image = metadata.image.trim();
+  }
+  if (typeof metadata.handle === "string" && metadata.handle.trim().length > 0) {
+    cacheMetadata.handle = metadata.handle.trim();
   }
   if (typeof metadata.sourceLabel === "string" && metadata.sourceLabel.trim().length > 0) {
     cacheMetadata.sourceLabel = metadata.sourceLabel.trim();

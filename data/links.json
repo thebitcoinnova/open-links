@@ -147,6 +147,9 @@
       "enrichment": {
         "enabled": true
       },
+      "metadata": {
+        "handle": "peterryszkiewicz"
+      },
       "custom": {}
     }
   ],

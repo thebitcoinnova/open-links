@@ -1,11 +1,13 @@
-import { resolveHandleFromUrl } from "../identity/handle-resolver";
+import { normalizeHandle, resolveHandleFromUrl } from "../identity/handle-resolver";
 
 export type SupportedSocialProfilePlatform =
   | "facebook"
   | "github"
   | "instagram"
   | "linkedin"
+  | "medium"
   | "primal"
+  | "substack"
   | "x"
   | "youtube";
 export type SocialProfileMetricField = "followersCount" | "followingCount" | "subscribersCount";
@@ -44,10 +46,28 @@ const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
   github: ["profileImage", "followersCount", "followingCount"],
   instagram: ["profileImage", "followersCount", "followingCount"],
   linkedin: ["profileImage"],
+  medium: ["profileImage"],
   primal: ["profileImage"],
+  substack: ["profileImage"],
   x: ["profileImage"],
   youtube: ["profileImage", "subscribersCount"],
 } as const satisfies Record<SupportedSocialProfilePlatform, readonly ExpectedSocialProfileField[]>;
+
+const PROFILE_IMAGE_BACKFILL_PLATFORMS = new Set<SupportedSocialProfilePlatform>([
+  "facebook",
+  "github",
+  "instagram",
+  "linkedin",
+  "medium",
+  "primal",
+  "x",
+  "youtube",
+]);
+
+const isSupportedSocialProfilePlatform = (
+  value: unknown,
+): value is SupportedSocialProfilePlatform =>
+  typeof value === "string" && value in EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM;
 
 export const SOCIAL_PROFILE_METADATA_FIELDS = [
   "profileImage",
@@ -125,6 +145,10 @@ export const normalizeSupportedSocialProfileMetadata = <T extends SocialProfileM
     return metadata;
   }
 
+  if (!PROFILE_IMAGE_BACKFILL_PLATFORMS.has(target.platform)) {
+    return metadata;
+  }
+
   if (!hasDefinedProfileValue(metadata.image)) {
     return metadata;
   }
@@ -138,20 +162,27 @@ export const normalizeSupportedSocialProfileMetadata = <T extends SocialProfileM
 export const resolveSupportedSocialProfile = (input: {
   url?: string;
   icon?: string;
+  metadataHandle?: unknown;
 }): SupportedSocialProfileTarget | null => {
   const resolution = resolveHandleFromUrl(input);
-  if (resolution.reason !== "resolved" || !resolution.handle) {
-    return null;
+  const metadataHandle = normalizeHandle(input.metadataHandle);
+
+  if (
+    metadataHandle &&
+    resolution.supported &&
+    isSupportedSocialProfilePlatform(resolution.extractorId)
+  ) {
+    return {
+      platform: resolution.extractorId,
+      handle: metadataHandle,
+      expectedFields: EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM[resolution.extractorId],
+    };
   }
 
   if (
-    resolution.extractorId !== "facebook" &&
-    resolution.extractorId !== "github" &&
-    resolution.extractorId !== "instagram" &&
-    resolution.extractorId !== "linkedin" &&
-    resolution.extractorId !== "primal" &&
-    resolution.extractorId !== "x" &&
-    resolution.extractorId !== "youtube"
+    resolution.reason !== "resolved" ||
+    !resolution.handle ||
+    !isSupportedSocialProfilePlatform(resolution.extractorId)
   ) {
     return null;
   }

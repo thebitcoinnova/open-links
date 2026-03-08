@@ -88,6 +88,40 @@ const linkedinRichLink = {
   },
 } as const satisfies OpenLink;
 
+const mediumRichLink = {
+  id: "medium",
+  label: "Medium",
+  url: "https://medium.com/@peterryszkiewicz",
+  type: "rich",
+  icon: "medium",
+  description: "Articles and blog posts",
+  metadata: {
+    title: "Stories by Peter Ryszkiewicz on Medium",
+    description: "Stories by Peter Ryszkiewicz on Medium",
+    sourceLabel: "medium.com",
+    handle: "peterryszkiewicz",
+    image: "/generated/images/medium-avatar.jpg",
+    profileImage: "/generated/images/medium-avatar.jpg",
+  },
+} as const satisfies OpenLink;
+
+const substackRichLink = {
+  id: "substack",
+  label: "Substack",
+  url: "https://peter.ryszkiewicz.us/",
+  type: "rich",
+  icon: "substack",
+  description: "Newsletter and long-form writing",
+  metadata: {
+    title: "Peter Ryszkiewicz | Substack",
+    description: "Software Engineer",
+    sourceLabel: "peter.ryszkiewicz.us",
+    handle: "peterryszkiewicz",
+    image: "/generated/images/substack-avatar.jpg",
+    profileImage: "/generated/images/substack-avatar.jpg",
+  },
+} as const satisfies OpenLink;
+
 const articleRichLink = {
   id: "article",
   label: "Engineering Notes",
@@ -220,6 +254,34 @@ test("linkedin rich cards use avatar leads from authenticated metadata without d
   );
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peter-ryszkiewicz" }]);
   assert.equal(viewModel.footerSourceLabel, "linkedin.com");
+  assert.deepEqual(viewModel.socialProfile.metrics, []);
+});
+
+test("medium rich cards treat the feed avatar as the profile lead and clean the author title", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, mediumRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/medium-avatar.jpg");
+  assert.equal(viewModel.title, "Peter Ryszkiewicz");
+  assert.equal(viewModel.description, "Stories by Peter Ryszkiewicz on Medium");
+  assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peterryszkiewicz" }]);
+  assert.equal(viewModel.footerSourceLabel, "medium.com");
+  assert.deepEqual(viewModel.socialProfile.metrics, []);
+});
+
+test("substack custom-domain rich cards use the explicit handle and avatar-first profile layout", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, substackRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.title, "Peter Ryszkiewicz");
+  assert.equal(viewModel.description, "Software Engineer");
+  assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peterryszkiewicz" }]);
+  assert.equal(viewModel.footerSourceLabel, "peter.ryszkiewicz.us");
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 
