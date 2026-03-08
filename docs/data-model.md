@@ -310,6 +310,7 @@ Supported keys include:
 - `imageFit`
 - `mobileImageLayout`
 - `sourceLabel`
+  - when this is a host-like custom domain for a known platform, footer rendering clarifies it as `Platform · domain` (for example `Substack · peter.ryszkiewicz.us`)
 - `sourceLabelVisible`
 - `enrichmentStatus`
 - `enrichmentReason`

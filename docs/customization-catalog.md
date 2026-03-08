@@ -79,6 +79,9 @@ Coverage:
 - `enrichedAt`
 - `custom`
 
+Notes:
+`sourceLabel` still defines the displayed source/domain string, but known-platform custom domains are clarified automatically in card footers as `Platform · domain`.
+
 ## 5) `links[].enrichment` (`links-enrichment`)
 
 Coverage:

@@ -2,6 +2,10 @@
 
 ## Current
 
+- [x] Clarify footer source labels for known-platform custom domains using a shared formatter instead of raw host-only copy.
+- [x] Add focused footer-label tests for canonical domains, custom domains, hidden labels, and simple-card reuse.
+- [x] Verify the footer-label change with targeted tests plus typecheck, biome, and build checks.
+
 - [x] Promote Medium and Substack into the supported social-profile platform set, including Substack custom-domain handling via explicit/generated handles.
 - [x] Update public enrichment/cache plumbing so Medium persists handle/avatar data and Substack extracts avatar-first profile metadata instead of subscribe-card previews.
 - [x] Extend focused profile-card and enrichment tests for Medium/Substack, then verify with targeted tests plus typecheck/enrichment/validation/build checks.
@@ -69,6 +73,10 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: Known-platform links on custom domains now clarify the footer/source row as `Platform · domain` while leaving canonical platform hosts and non-host manual labels unchanged. This is implemented only in the footer formatter, so header/source fallback text and other card copy remain as they were.
+- Verification: `bun test src/lib/ui/rich-card-footer-labels.test.ts src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/rich-card-description-sourcing.test.ts`, `bun run typecheck`, `bun run biome:check`, and `bun run build` all passed.
+- Residual risk: The already-dirty `data/cache/rich-public-cache.json` continued to pick up normal verification churn when `bun run build` reran enrichment; this task did not intentionally change cache logic or data content.
 
 - Result: Medium and Substack now participate in the avatar-first supported social-profile path. Medium feed augmentation persists `handle` plus `profileImage`, Substack custom-domain enrichment extracts canonical handle and avatar/headshot metadata from safe public HTML, and the shared card/view-model layer now renders both platforms as profile cards with cleaned titles and handle rows.
 - Verification: `bun install`, `bun test src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts src/components/cards/social-profile-card-rendering.test.tsx scripts/enrichment/public-augmentation.test.ts scripts/enrichment/public-cache.test.ts`, `bun run typecheck`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run biome:check`, and `bun run build` all passed.

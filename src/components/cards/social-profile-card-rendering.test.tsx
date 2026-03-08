@@ -281,7 +281,7 @@ test("substack custom-domain rich cards use the explicit handle and avatar-first
   assert.equal(viewModel.title, "Peter Ryszkiewicz");
   assert.equal(viewModel.description, "Software Engineer");
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peterryszkiewicz" }]);
-  assert.equal(viewModel.footerSourceLabel, "peter.ryszkiewicz.us");
+  assert.equal(viewModel.footerSourceLabel, "Substack · peter.ryszkiewicz.us");
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 
@@ -295,7 +295,7 @@ test("non-profile rich cards keep preview leads with compact header and footer s
   assert.equal(viewModel.title, "Engineering Notes");
   assert.equal(viewModel.description, "Shipping notes and technical writeups");
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "notes.openlinks.dev" }]);
-  assert.equal(viewModel.footerSourceLabel, "notes.openlinks.dev");
+  assert.equal(viewModel.footerSourceLabel, "Notion · notes.openlinks.dev");
   assert.equal(viewModel.showFooterIcon, true);
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
@@ -310,7 +310,7 @@ test("non-profile rich cards without preview media fall back to icon-led shared 
   assert.equal(viewModel.title, "Engineering Notes");
   assert.equal(viewModel.description, "Shipping notes and technical writeups");
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "notes.openlinks.dev" }]);
-  assert.equal(viewModel.footerSourceLabel, "notes.openlinks.dev");
+  assert.equal(viewModel.footerSourceLabel, "Notion · notes.openlinks.dev");
   assert.equal(viewModel.showFooterIcon, false);
 });
 

@@ -6,6 +6,7 @@ import type {
   SiteData,
   SourceLabelDefault,
 } from "../content/load-content";
+import { resolveKnownSite } from "../icons/known-sites-data";
 import {
   type ResolvedSocialProfileMetadata,
   resolveSocialProfileMetadata,
@@ -95,6 +96,42 @@ const resolveMetadataText = (value: unknown): string | undefined => {
 const isDescriptionSource = (value: unknown): value is RichCardDescriptionSource =>
   value === "fetched" || value === "manual";
 
+const normalizeHostLikeLabel = (value: string | undefined): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || /\s/u.test(trimmed) || !trimmed.includes(".")) {
+    return undefined;
+  }
+
+  try {
+    const normalizedInput = trimmed.toLowerCase().replace(/^www\./u, "");
+    const resolvedHost = new URL(`https://${trimmed}`).hostname
+      .toLowerCase()
+      .replace(/^www\./u, "");
+    return resolvedHost === normalizedInput ? resolvedHost : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const isCanonicalKnownSiteDomain = (
+  normalizedHostLabel: string,
+  domains: readonly string[],
+): boolean =>
+  domains.some((domain) => {
+    const normalizedDomain = domain
+      .trim()
+      .toLowerCase()
+      .replace(/^www\./u, "");
+    return (
+      normalizedHostLabel === normalizedDomain ||
+      normalizedHostLabel.endsWith(`.${normalizedDomain}`)
+    );
+  });
+
 export interface LinkSourcePresentation {
   sourceLabel?: string;
   showSourceLabel: boolean;
@@ -114,6 +151,27 @@ export const resolveLinkSourcePresentation = (
       link.enrichment?.sourceLabelVisible ??
       sourceDefault === "show",
   };
+};
+
+export const resolveFooterSourceLabel = (
+  link: Pick<OpenLink, "icon" | "url">,
+  sourceLabel: string | undefined,
+): string | undefined => {
+  if (!sourceLabel) {
+    return undefined;
+  }
+
+  const normalizedHostLabel = normalizeHostLikeLabel(sourceLabel);
+  if (!normalizedHostLabel) {
+    return sourceLabel;
+  }
+
+  const knownSite = resolveKnownSite(link.icon, link.url);
+  if (!knownSite || isCanonicalKnownSiteDomain(normalizedHostLabel, knownSite.domains)) {
+    return sourceLabel;
+  }
+
+  return `${knownSite.label} · ${sourceLabel}`;
 };
 
 const resolveDescriptionSource = (site: SiteData, link: OpenLink): RichCardDescriptionSource => {
@@ -240,7 +298,7 @@ export const buildNonPaymentCardViewModel = (
   const headerMetaItems = buildHeaderMetaItems(variant, socialProfile, sourcePresentation);
   const footerSourceLabel =
     sourcePresentation.showSourceLabel && sourcePresentation.sourceLabel
-      ? sourcePresentation.sourceLabel
+      ? resolveFooterSourceLabel(link, sourcePresentation.sourceLabel)
       : undefined;
   const title =
     variant === "simple" && !socialProfile.usesProfileLayout
