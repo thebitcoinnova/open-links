@@ -26,6 +26,7 @@ import {
   loadRichEnrichmentBlockersRegistry,
   resolveKnownBlockerMatch,
 } from "./enrichment/blockers-registry";
+import { hasPublicAugmentationTarget } from "./enrichment/public-augmentation";
 import { readEnrichmentReport } from "./enrichment/report";
 import type {
   EnrichmentFailureReason,
@@ -705,6 +706,10 @@ const knownBlockerConfigIssues = (
 
     const match = resolveKnownBlockerMatch(url, registry, "direct_fetch");
     if (!match) {
+      return;
+    }
+
+    if (hasPublicAugmentationTarget({ url, icon: toStringOrUndefined(rawLink.icon) })) {
       return;
     }
 

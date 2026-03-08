@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/rich-enrichment-blockers.schema.json",
   "version": 1,
-  "updatedAt": "2026-02-26T10:06:49Z",
+  "updatedAt": "2026-03-07T23:12:09Z",
   "blockers": [
     {
       "id": "linkedin-direct-fetch",
@@ -16,7 +16,7 @@
         "Disable enrichment for affected links.",
         "Use manual links[].metadata fields for rich cards."
       ],
-      "plannedSupportNote": "Authenticated session-based workaround is planned (coming soon).",
+      "plannedSupportNote": "Authenticated extractor support is available via linkedin-auth-browser.",
       "docs": [
         "docs/rich-metadata-fetch-blockers.md",
         "docs/linkedin-authenticated-metadata-debug-runbook.md"
@@ -34,9 +34,9 @@
       "remediation": [
         "Disable enrichment for affected links.",
         "Use manual links[].metadata fields for rich cards.",
-        "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='medium-auth-browser' and run npm run setup:rich-auth."
+        "Prefer built-in public augmentation via npm run enrich:rich:strict so metadata is captured through the committed public cache."
       ],
-      "plannedSupportNote": "Authenticated extractor workaround is available via medium-auth-browser (RSS feed capture).",
+      "plannedSupportNote": "Built-in public augmentation is available via the Medium RSS/feed capture path.",
       "docs": ["docs/rich-metadata-fetch-blockers.md", "docs/authenticated-rich-extractors.md"]
     },
     {
@@ -51,9 +51,9 @@
       "remediation": [
         "Disable enrichment for affected links.",
         "Use manual links[].metadata fields for rich cards.",
-        "Prefer authenticated extractor cache via links[].enrichment.authenticatedExtractor='x-auth-browser' and run npm run setup:rich-auth."
+        "Prefer built-in public augmentation via npm run enrich:rich:strict so metadata is captured through the committed public cache."
       ],
-      "plannedSupportNote": "Authenticated extractor workaround is available via x-auth-browser (oEmbed + avatar capture).",
+      "plannedSupportNote": "Built-in public augmentation is available via the X oEmbed + avatar capture path.",
       "docs": ["docs/rich-metadata-fetch-blockers.md", "docs/authenticated-rich-extractors.md"]
     },
     {

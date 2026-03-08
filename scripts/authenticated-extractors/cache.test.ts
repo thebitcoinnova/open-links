@@ -10,7 +10,7 @@ const ROOT = process.cwd();
 
 test("cache validation backfills profile image for supported avatar-first platforms", (t) => {
   // Arrange
-  const relativeAssetPath = "cache/rich-authenticated/test-x-profile-image.jpg";
+  const relativeAssetPath = "cache/rich-authenticated/test-facebook-profile-image.jpg";
   const absoluteAssetPath = path.join(ROOT, "public", relativeAssetPath);
   fs.mkdirSync(path.dirname(absoluteAssetPath), { recursive: true });
   fs.writeFileSync(absoluteAssetPath, "test", "utf8");
@@ -24,21 +24,21 @@ test("cache validation backfills profile image for supported avatar-first platfo
     version: 1,
     updatedAt: "2026-03-07T00:00:00.000Z",
     entries: {
-      x: {
-        extractorId: "x-auth-browser",
-        linkId: "x",
-        sourceUrl: "https://x.com/pryszkie",
+      facebook: {
+        extractorId: "facebook-auth-browser",
+        linkId: "facebook",
+        sourceUrl: "https://www.facebook.com/peter.ryszkiewicz",
         capturedAt: "2026-03-07T00:00:00.000Z",
         metadata: {
-          title: "@pryszkie on X",
-          description: "Posts and updates from @pryszkie on X.",
+          title: "Peter Ryszkiewicz on Facebook",
+          description: "Profile and updates from Peter Ryszkiewicz on Facebook.",
           image: relativeAssetPath,
-          sourceLabel: "x.com",
+          sourceLabel: "facebook.com",
         },
         assets: {
           image: {
             path: relativeAssetPath,
-            sourceUrl: "https://unavatar.io/x/pryszkie",
+            sourceUrl: "https://example.com/facebook-avatar.jpg",
             contentType: "image/jpeg",
             bytes: 4,
             sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
@@ -46,10 +46,10 @@ test("cache validation backfills profile image for supported avatar-first platfo
         },
         diagnostics: {
           extractorVersion: "2026-03-07.1",
-          selectorProfile: "x-oembed-unavatar-v1",
+          selectorProfile: "facebook-profile-auth-v5",
           placeholderSignals: [],
-          capturedFromUrl: "https://twitter.com/pryszkie",
-          notes: ["cacheKey=x"],
+          capturedFromUrl: "https://www.facebook.com/peter.ryszkiewicz",
+          notes: ["cacheKey=facebook"],
         },
       },
     },
@@ -57,10 +57,10 @@ test("cache validation backfills profile image for supported avatar-first platfo
 
   // Act
   const result = validateAuthenticatedCacheEntry({
-    cacheKey: "x",
-    expectedLinkId: "x",
-    expectedExtractorId: "x-auth-browser",
-    expectedUrl: "https://x.com/pryszkie",
+    cacheKey: "facebook",
+    expectedLinkId: "facebook",
+    expectedExtractorId: "facebook-auth-browser",
+    expectedUrl: "https://www.facebook.com/peter.ryszkiewicz",
     warnAgeDays: 30,
     registry,
   });
@@ -70,7 +70,9 @@ test("cache validation backfills profile image for supported avatar-first platfo
   assert.equal(result.metadata?.image, relativeAssetPath);
   assert.equal(result.metadata?.profileImage, relativeAssetPath);
   assert.equal(
-    result.issues.some((issue) => issue.message.includes("missing expected x profile fields")),
+    result.issues.some((issue) =>
+      issue.message.includes("missing expected facebook profile fields"),
+    ),
     false,
   );
 });

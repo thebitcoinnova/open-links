@@ -33,7 +33,11 @@ When you find a new rich metadata fetch failure:
    - `data/policy/rich-authenticated-extractors.json`
    - `data/cache/rich-authenticated-cache.json`
    - committed assets under `public/cache/rich-authenticated/`
-8. Keep historical attempts; append updates instead of replacing old entries.
+8. If moving a blocked domain to built-in public augmentation, update:
+   - the public enrichment implementation
+   - `data/cache/rich-public-cache.json`
+   - any docs/remediation text that still imply `authenticatedExtractor`
+9. Keep historical attempts; append updates instead of replacing old entries.
 
 If a previously blocked domain becomes fetchable, add a timestamped verification entry and update the status table below.
 
@@ -44,8 +48,8 @@ These domains are currently treated as unsupported for direct unauthenticated me
 | Site | Example URL | First Recorded (UTC) | Last Verified (UTC) | Typical Response | Current Status | Current Workaround |
 |---|---|---|---|---|---|---|
 | LinkedIn | `https://www.linkedin.com/in/peter-ryszkiewicz/` | `2026-02-24T11:29:52Z` | `2026-02-24T11:45:37Z` | `HTTP 999`, authwall redirect script | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor`) or keep direct enrichment disabled/manual metadata |
-| Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-02-25T12:39:14Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=medium-auth-browser`), fallback to manual metadata |
-| X | `https://x.com/pryszkie` | `2026-02-26T09:55:42Z` | `2026-02-26T09:55:47Z` | `HTTP 200` shell response with missing `title`, `description`, and `image` | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=x-auth-browser`), fallback to manual metadata |
+| Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-02-25T12:39:14Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Prefer built-in public augmentation (RSS/feed path) and committed public cache, fallback to manual metadata |
+| X | `https://x.com/pryszkie` | `2026-02-26T09:55:42Z` | `2026-02-26T09:55:47Z` | `HTTP 200` shell response with missing `title`, `description`, and `image` | Unsupported direct fetch | Prefer built-in public augmentation (oEmbed + avatar path) and committed public cache, fallback to manual metadata |
 | Facebook | `https://www.facebook.com/peter.ryszkiewicz` | `2026-02-26T10:06:38Z` | `2026-02-26T10:06:49Z` | `HTTP 200` response with generic title and missing image metadata | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=facebook-auth-browser`), fallback to manual metadata |
 
 ## Findings Log
@@ -77,12 +81,12 @@ Operator setup command:
 
 - Link id: `medium`
 - URL: `https://medium.com/@peterryszkiewicz`
-- Latest decision: Use authenticated extractor cache (`links[].enrichment.authenticatedExtractor=medium-auth-browser`).
-- Reason: Direct profile fetch remains challenge-protected (`HTTP 403`) and browser automation still lands on Cloudflare verification pages.
+- Latest decision: Use built-in public augmentation through `bun run enrich:rich:strict`.
+- Reason: Direct profile fetch remains challenge-protected (`HTTP 403`), but the public RSS/feed endpoint is stable and now writes through the committed public cache instead of the authenticated cache.
 
-Operator setup command:
+Refresh command:
 
-- `bun run setup:rich-auth`
+- `bun run enrich:rich:strict`
 
 #### Attempt History
 
@@ -99,17 +103,18 @@ Operator setup command:
 | `2026-02-25T12:37:35Z` | `agent-browser` probe of profile URL (20s wait) | Challenge page persisted after longer wait |
 | `2026-02-25T12:37:45Z` | Fetch Medium feed endpoint `https://medium.com/feed/@peterryszkiewicz` | `HTTP 200` RSS XML with usable channel title/description/image |
 | `2026-02-25T12:38:57Z` | `bun run setup:rich-auth` with feed-based `medium-auth-browser` extractor | Cache entry captured (`cacheKey=medium`) and local asset committed under `public/cache/rich-authenticated/` |
+| `2026-03-07T23:12:09Z` | Public-first extractor audit + migration | Feed-based Medium support moved into built-in public augmentation and committed public cache; Medium no longer requires `authenticatedExtractor` |
 
 ### X
 
 - Link id: `x`
 - URL: `https://x.com/pryszkie`
-- Latest decision: Use authenticated extractor cache (`links[].enrichment.authenticatedExtractor=x-auth-browser`).
-- Reason: Direct fetch reproducibly returns `metadata_missing` under strict enrichment (`HTTP 200` response but missing `title`, `description`, `image`).
+- Latest decision: Use built-in public augmentation through `bun run enrich:rich:strict`.
+- Reason: Direct fetch reproducibly returns `metadata_missing` under strict enrichment (`HTTP 200` response but missing `title`, `description`, `image`), but public oEmbed plus avatar capture is stable and now writes through the committed public cache instead of the authenticated cache.
 
-Operator setup command:
+Refresh command:
 
-- `bun run setup:rich-auth`
+- `bun run enrich:rich:strict`
 
 #### Attempt History
 
@@ -118,6 +123,7 @@ Operator setup command:
 | `2026-02-26T09:55:42Z` | `bun run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-1.json --report /tmp/rich-report-x-direct-1.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
 | `2026-02-26T09:55:47Z` | `bun run enrich:rich:strict -- --links /tmp/openlinks-x-direct.json --out /tmp/rich-metadata-x-direct-2.json --report /tmp/rich-report-x-direct-2.json` | Blocking `metadata_missing`; `statusCode=200`; missing fields: `title`, `description`, `image` |
 | `2026-02-26T09:54:24Z` | `bun run setup:rich-auth` with `x-auth-browser` configured on link `x` | Cache entry captured (`cacheKey=x`) and local asset committed under `public/cache/rich-authenticated/` |
+| `2026-03-07T23:12:09Z` | Public-first extractor audit + migration | X support moved into built-in public augmentation via oEmbed + avatar capture and committed public cache; X no longer requires `authenticatedExtractor` |
 
 ### Facebook
 

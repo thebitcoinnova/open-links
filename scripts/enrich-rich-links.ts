@@ -29,6 +29,7 @@ import {
 } from "./enrichment/blockers-registry";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
+import { resolvePublicAugmentationTarget } from "./enrichment/public-augmentation";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
   computePublicCacheExpiresAt,
@@ -445,8 +446,18 @@ const mergeCachedPublicMetadata = (
 
 const formatDurationMs = (durationMs: number): string => `${Math.max(0, Math.round(durationMs))}ms`;
 
-const knownBlockerMessageFor = (match: KnownBlockerMatch): string =>
-  `Known direct-fetch blocker '${match.blocker.id}' matched host '${match.host}' via domain '${match.matchedDomain}'. ${match.blocker.summary}`;
+const knownBlockerMessageFor = (match: KnownBlockerMatch, detail?: string): string => {
+  const parts = [
+    `Known direct-fetch blocker '${match.blocker.id}' matched host '${match.host}' via domain '${match.matchedDomain}'.`,
+    match.blocker.summary,
+  ];
+
+  if (detail) {
+    parts.push(detail);
+  }
+
+  return parts.join(" ");
+};
 
 const knownBlockerRemediationFor = (match: KnownBlockerMatch): string => {
   const parts: string[] = [];
@@ -516,7 +527,9 @@ const printBlockingDiagnostics = (
   }
 
   console.error("Suggested commands:");
-  console.error("  - First-time authenticated cache setup: npm run setup:rich-auth");
+  if (entries.some((entry) => entry.reason === "authenticated_cache_missing")) {
+    console.error("  - First-time authenticated cache setup: npm run setup:rich-auth");
+  }
   console.error("  - Re-run diagnostics: npm run enrich:rich:strict");
   console.error(
     `  - Temporary bypass (local/emergency only): ${ENRICHMENT_BYPASS_ENV}=1 npm run build`,
@@ -877,9 +890,13 @@ const run = async () => {
       continue;
     }
 
+    const publicAugmentationTarget = resolvePublicAugmentationTarget({
+      url: link.url,
+      icon: link.icon,
+    });
     const knownBlockerMatch = resolveKnownBlockerMatch(link.url, blockersRegistry, "direct_fetch");
     const allowKnownBlocker = link.enrichment?.allowKnownBlocker === true;
-    if (knownBlockerMatch && !allowKnownBlocker) {
+    if (knownBlockerMatch && !allowKnownBlocker && !publicAugmentationTarget) {
       const reason: EnrichmentReason = "known_blocker";
       const metadata = mergeLinkMetadata(
         link.metadata,
@@ -929,10 +946,11 @@ const run = async () => {
     }
 
     const publicCacheKey = link.id;
+    const publicSourceUrl = publicAugmentationTarget?.sourceUrl ?? link.url;
     const cachedPublicEntry = resolvePublicCacheEntry(
       publicCacheRegistry,
       publicCacheKey,
-      link.url,
+      publicSourceUrl,
     );
 
     if (cachedPublicEntry?.fresh) {
@@ -979,7 +997,9 @@ const run = async () => {
       continue;
     }
 
-    const requestHeaders: Record<string, string> = {};
+    const requestHeaders: Record<string, string> = {
+      ...(publicAugmentationTarget?.headers ?? {}),
+    };
     if (cachedPublicEntry?.entry.etag) {
       requestHeaders["if-none-match"] = cachedPublicEntry.entry.etag;
     }
@@ -987,10 +1007,11 @@ const run = async () => {
       requestHeaders["if-modified-since"] = cachedPublicEntry.entry.lastModified;
     }
 
-    const fetched = await fetchMetadata(link.url, {
+    const fetched = await fetchMetadata(publicSourceUrl, {
       timeoutMs: config.timeoutMs,
       retries: config.retries,
       headers: requestHeaders,
+      acceptHeader: publicAugmentationTarget?.acceptHeader,
     });
 
     if (fetched.notModified && cachedPublicEntry) {
@@ -1056,6 +1077,9 @@ const run = async () => {
     }
 
     if (!fetched.ok || !fetched.html) {
+      const failureDetail =
+        fetched.error ??
+        `Failed to fetch public metadata source '${publicSourceUrl}' (status=${fetched.statusCode ?? "n/a"}).`;
       if (cachedPublicEntry && hasCacheablePublicMetadata(cachedPublicEntry.entry.metadata)) {
         const cachedMetadata = toEnrichmentMetadataFromPublicCache(
           cachedPublicEntry.entry.metadata,
@@ -1104,7 +1128,10 @@ const run = async () => {
         continue;
       }
 
-      const reason: EnrichmentReason = "fetch_failed";
+      const reason: EnrichmentReason =
+        knownBlockerMatch && !allowKnownBlocker && publicAugmentationTarget
+          ? "known_blocker"
+          : "fetch_failed";
       const metadata = mergeLinkMetadata(
         link.metadata,
         {
@@ -1124,7 +1151,7 @@ const run = async () => {
         supportedProfile,
         profileWarningContext.missingProfileFields,
       );
-      const blocking = isBlockingReason(reason, config.failOn);
+      const blocking = reason === "known_blocker" ? true : isBlockingReason(reason, config.failOn);
 
       entries.push({
         linkId: link.id,
@@ -1134,8 +1161,14 @@ const run = async () => {
         attempts: fetched.attempts,
         durationMs: fetched.durationMs,
         statusCode: fetched.statusCode,
-        message: fetched.error ?? makeEntryMessage("failed", reason),
-        remediation: remediationFor("failed", reason),
+        message:
+          reason === "known_blocker" && knownBlockerMatch
+            ? knownBlockerMessageFor(knownBlockerMatch, failureDetail)
+            : failureDetail,
+        remediation:
+          reason === "known_blocker" && knownBlockerMatch
+            ? knownBlockerRemediationFor(knownBlockerMatch)
+            : remediationFor("failed", reason),
         metadata,
         blocking,
         ...profileWarningContext,
@@ -1151,7 +1184,136 @@ const run = async () => {
       continue;
     }
 
-    const parsed = parseMetadata(fetched.html, link.url);
+    let parsed:
+      | {
+          metadata: EnrichmentMetadata;
+          completeness: "full" | "partial" | "none";
+          missing: Array<"title" | "description" | "image">;
+        }
+      | undefined;
+    let parseFailureMessage: string | undefined;
+
+    if (!publicAugmentationTarget) {
+      const genericParsed = parseMetadata(fetched.html, link.url);
+      parsed = {
+        metadata: genericParsed.metadata,
+        completeness: genericParsed.completeness,
+        missing: genericParsed.missing,
+      };
+    } else {
+      try {
+        parsed = publicAugmentationTarget.parse(fetched.html);
+      } catch (error: unknown) {
+        parsed = undefined;
+        parseFailureMessage = error instanceof Error ? error.message : String(error);
+      }
+    }
+
+    if (!parsed) {
+      if (cachedPublicEntry && hasCacheablePublicMetadata(cachedPublicEntry.entry.metadata)) {
+        const cachedMetadata = toEnrichmentMetadataFromPublicCache(
+          cachedPublicEntry.entry.metadata,
+        );
+        const cachedStatus = resolveCachedEntryStatus(cachedPublicEntry.entry.metadata);
+        const manualFallbackUsed =
+          !!cachedStatus.missingFields &&
+          config.allowManualMetadataFallback &&
+          hasManualMetadataFallback(link.metadata);
+        const metadata = mergeCachedPublicMetadata(
+          link,
+          supportedProfile,
+          handleForMetadata,
+          cachedMetadata,
+          cachedPublicEntry.entry.capturedAt,
+          cachedStatus.status,
+        );
+        const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+        warnForMissingProfileFields(
+          link.id,
+          link.url,
+          supportedProfile,
+          profileWarningContext.missingProfileFields,
+        );
+
+        entries.push({
+          linkId: link.id,
+          url: link.url,
+          status: cachedStatus.status,
+          reason: "public_cache",
+          attempts: fetched.attempts,
+          durationMs: fetched.durationMs,
+          statusCode: fetched.statusCode,
+          message: publicCacheMessageFor(true, manualFallbackUsed, false),
+          remediation: publicCacheRemediationFor(link.id, true),
+          metadata,
+          blocking: false,
+          manualFallbackUsed: manualFallbackUsed || undefined,
+          missingFields: cachedStatus.missingFields,
+          cacheKey: publicCacheKey,
+          cacheCapturedAt: cachedPublicEntry.entry.capturedAt,
+          staleCache: true,
+          ...profileWarningContext,
+        });
+        generatedLinks[link.id] = { metadata };
+        continue;
+      }
+
+      const reason: EnrichmentReason =
+        knownBlockerMatch && !allowKnownBlocker && publicAugmentationTarget
+          ? "known_blocker"
+          : "fetch_failed";
+      const metadata = mergeLinkMetadata(
+        link.metadata,
+        {
+          handle: handleForMetadata,
+          sourceLabel: link.enrichment?.sourceLabel,
+          sourceLabelVisible: link.enrichment?.sourceLabelVisible,
+          enrichmentStatus: "failed",
+          enrichmentReason: reason,
+          enrichedAt: generatedAt,
+        },
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(supportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        supportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
+      const blocking = reason === "known_blocker" ? true : isBlockingReason(reason, config.failOn);
+
+      entries.push({
+        linkId: link.id,
+        url: link.url,
+        status: "failed",
+        reason,
+        attempts: fetched.attempts,
+        durationMs: fetched.durationMs,
+        statusCode: fetched.statusCode,
+        message:
+          reason === "known_blocker" && knownBlockerMatch
+            ? knownBlockerMessageFor(knownBlockerMatch, parseFailureMessage)
+            : (parseFailureMessage ?? makeEntryMessage("failed", reason)),
+        remediation:
+          reason === "known_blocker" && knownBlockerMatch
+            ? knownBlockerRemediationFor(knownBlockerMatch)
+            : remediationFor("failed", reason),
+        metadata,
+        blocking,
+        ...profileWarningContext,
+      });
+
+      generatedLinks[link.id] = { metadata };
+
+      if (enforceStrictBlocking && config.failureMode === "immediate" && blocking) {
+        abortedEarly = true;
+        break;
+      }
+
+      continue;
+    }
+
     const enrichedMetadata = augmentSupportedSocialProfileMetadata({
       html: fetched.html,
       metadata: parsed.metadata,
@@ -1162,7 +1324,7 @@ const run = async () => {
     if (hasCacheablePublicMetadata(cacheMetadata)) {
       publicCacheRegistry.entries[publicCacheKey] = {
         linkId: link.id,
-        sourceUrl: link.url,
+        sourceUrl: publicSourceUrl,
         capturedAt: generatedAt,
         updatedAt: generatedAt,
         metadata: cacheMetadata,

@@ -1,21 +1,13 @@
 import { facebookAuthBrowserExtractor } from "./plugins/facebook-auth-browser";
-import { instagramAuthBrowserExtractor } from "./plugins/instagram-auth-browser";
 import { linkedinAuthBrowserExtractor } from "./plugins/linkedin-auth-browser";
 // AUTH_EXTRACTOR_IMPORTS_START
-import { mediumAuthBrowserExtractor } from "./plugins/medium-auth-browser";
-import { xAuthBrowserExtractor } from "./plugins/x-auth-browser";
-import { youtubeAuthBrowserExtractor } from "./plugins/youtube-auth-browser";
 import type { AuthenticatedExtractorPlugin, AuthenticatedExtractorsPolicyRegistry } from "./types";
 // AUTH_EXTRACTOR_IMPORTS_END
 
 const EXTRACTORS: Record<string, AuthenticatedExtractorPlugin> = {
   [linkedinAuthBrowserExtractor.id]: linkedinAuthBrowserExtractor,
   // AUTH_EXTRACTOR_MAP_START
-  [mediumAuthBrowserExtractor.id]: mediumAuthBrowserExtractor,
-  [xAuthBrowserExtractor.id]: xAuthBrowserExtractor,
   [facebookAuthBrowserExtractor.id]: facebookAuthBrowserExtractor,
-  [youtubeAuthBrowserExtractor.id]: youtubeAuthBrowserExtractor,
-  [instagramAuthBrowserExtractor.id]: instagramAuthBrowserExtractor,
   // AUTH_EXTRACTOR_MAP_END
 };
 

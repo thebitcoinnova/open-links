@@ -41,8 +41,7 @@
       "order": 3,
       "enabled": true,
       "enrichment": {
-        "enabled": true,
-        "authenticatedExtractor": "x-auth-browser"
+        "enabled": true
       },
       "custom": {}
     },
@@ -101,8 +100,7 @@
       "order": 7,
       "enabled": true,
       "enrichment": {
-        "enabled": true,
-        "authenticatedExtractor": "instagram-auth-browser"
+        "enabled": true
       },
       "custom": {}
     },
@@ -117,8 +115,7 @@
       "order": 8,
       "enabled": true,
       "enrichment": {
-        "enabled": true,
-        "authenticatedExtractor": "youtube-auth-browser"
+        "enabled": true
       },
       "custom": {}
     },
@@ -133,8 +130,7 @@
       "order": 9,
       "enabled": true,
       "enrichment": {
-        "enabled": true,
-        "authenticatedExtractor": "medium-auth-browser"
+        "enabled": true
       },
       "custom": {}
     },

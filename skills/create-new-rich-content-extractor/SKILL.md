@@ -74,6 +74,7 @@ npm run build
    - Extend existing public enrichment/parsing/normalization paths instead of authenticated cache infrastructure.
    - Gather only fields from the current OpenLinks metadata model that are actually needed.
    - Prefer keeping generic parsers generic and adding targeted augmentation/normalization after parsing when platform-specific logic is required.
+   - Current in-repo `public_augmented` examples: Medium (RSS/feed), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata).
    - Update handle resolver coverage when applicable:
      - `src/lib/identity/handle-resolver.ts`
      - `src/lib/identity/handle-resolver.test.ts`
@@ -93,6 +94,7 @@ npm run build
    - Update `data/policy/rich-enrichment-blockers.json`.
    - Update `docs/rich-metadata-fetch-blockers.md` with UTC-stamped attempts.
    - Record why public sources were rejected.
+   - Current in-repo `authenticated_required` examples: LinkedIn and Facebook.
 
 6. Scaffold the authenticated extractor only for `authenticated_required`.
 

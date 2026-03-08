@@ -45,8 +45,11 @@ test("passes conditional request headers and surfaces 304 revalidation details",
 test("returns response freshness headers on successful fetches", async (t) => {
   // Arrange
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () =>
-    new Response("<html><head><title>Example</title></head></html>", {
+  globalThis.fetch = async (_input, init) => {
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("accept"), "application/json");
+
+    return new Response("<html><head><title>Example</title></head></html>", {
       status: 200,
       headers: {
         etag: '"fresh"',
@@ -55,6 +58,7 @@ test("returns response freshness headers on successful fetches", async (t) => {
         date: "Sat, 07 Mar 2026 10:00:00 GMT",
       },
     });
+  };
   t.after(() => {
     globalThis.fetch = originalFetch;
   });
@@ -63,6 +67,7 @@ test("returns response freshness headers on successful fetches", async (t) => {
   const result = await fetchMetadata("https://example.com/profile", {
     timeoutMs: 1_000,
     retries: 0,
+    acceptHeader: "application/json",
   });
 
   // Assert

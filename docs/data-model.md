@@ -338,7 +338,7 @@ Per-link controls:
 
 - `enabled`
 - `allowKnownBlocker`: explicit override to force-attempt enrichment for a known blocked domain
-- `authenticatedExtractor`: use committed authenticated cache instead of direct fetch (for blocked domains)
+- `authenticatedExtractor`: use committed authenticated cache instead of public enrichment for true auth-required domains (currently LinkedIn and Facebook)
 - `authenticatedCacheKey`: optional cache-key override (default uses `link.id`)
 - `sourceLabel`
 - `sourceLabelVisible`
@@ -386,6 +386,8 @@ When an enrichment-enabled rich link URL matches a `status=blocked` registry ent
 When direct/public enrichment succeeds, OpenLinks writes normalized fetch-derived metadata into the committed public cache manifest. Later enrich runs reuse fresh cache entries or revalidate stale entries with conditional requests (`reason=public_cache`) instead of live-fetching every page on every run.
 
 If a direct/public fetch fails but a committed public cache entry already exists, enrichment reuses that stale cached metadata as a warning-level fallback. No raw public HTML snapshots are committed.
+
+Built-in public augmentation currently covers Medium (RSS/feed), X (oEmbed + avatar), Instagram (public page metadata), and YouTube (public page metadata) without using `authenticatedExtractor`.
 
 When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 

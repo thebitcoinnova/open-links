@@ -2,7 +2,7 @@ import {
   type SupportedSocialProfileTarget,
   normalizeSupportedSocialProfileMetadata,
 } from "../../src/lib/content/social-profile-fields";
-import { parseAudienceCount } from "../authenticated-extractors/plugins/social-profile-counts";
+import { parseAudienceCount } from "./social-profile-counts";
 import type { EnrichmentMetadata } from "./types";
 
 const safeTrim = (value: string | undefined): string | undefined => {

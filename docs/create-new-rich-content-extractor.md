@@ -99,6 +99,7 @@ When the chosen branch is `public_augmented`:
    - `data/cache/rich-public-cache.json`
    - `schema/rich-public-cache.schema.json`
    - no raw HTML snapshots
+   - current in-repo examples: Medium (RSS/feed), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata)
 5. Update handle coverage when applicable:
    - `src/lib/identity/handle-resolver.ts`
    - `src/lib/identity/handle-resolver.test.ts`
@@ -122,6 +123,7 @@ Only after public-source triage selects `authenticated_required`:
 2. Record narrative findings and attempts in `docs/rich-metadata-fetch-blockers.md` with UTC timestamps.
 3. Define current remediation until the authenticated path is live.
 4. Record why public sources were rejected.
+5. Current authenticated-only examples in this repository are LinkedIn and Facebook.
 
 ## Step 6: Scaffold the Extractor
 

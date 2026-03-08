@@ -74,4 +74,5 @@ bun run enrich:rich
 ## Current Scope Limits
 
 - Scope is currently `direct_fetch` only.
-- Authenticated/session-based enrichment is tracked separately in extractor/cache registries and is used when links configure `links[].enrichment.authenticatedExtractor`.
+- Public augmentation support can still exist for a blocked `direct_fetch` domain; blockers describe generic fetch behavior, not whether a built-in public workaround exists.
+- Authenticated/session-based enrichment is tracked separately in extractor/cache registries and is used only when links configure `links[].enrichment.authenticatedExtractor`.

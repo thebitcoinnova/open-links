@@ -5,6 +5,7 @@ export interface FetchMetadataOptions {
   retries: number;
   retryDelayMs?: number;
   headers?: Record<string, string>;
+  acceptHeader?: string;
 }
 
 export interface FetchMetadataResult {
@@ -112,6 +113,7 @@ export const fetchMetadata = async (
   const attemptsAllowed = retries + 1;
   const startedAt = performance.now();
   const requestHeaders = options.headers ?? {};
+  const acceptHeader = options.acceptHeader;
 
   let lastError = "Metadata fetch failed";
   let lastStatusCode: number | undefined;
@@ -120,7 +122,10 @@ export const fetchMetadata = async (
     | undefined;
 
   for (let attempt = 1; attempt <= attemptsAllowed; attempt += 1) {
-    const result = await fetchOnce(url, timeoutMs, requestHeaders);
+    const result = await fetchOnce(url, timeoutMs, {
+      ...requestHeaders,
+      ...(acceptHeader ? { accept: acceptHeader } : {}),
+    });
 
     if (result.ok && result.html) {
       return {

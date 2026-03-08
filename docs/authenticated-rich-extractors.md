@@ -1,6 +1,6 @@
 # Authenticated Rich Extractors
 
-This guide documents the authenticated-extractor framework for rich cards when direct metadata fetch is blocked (authwall, anti-bot, challenge pages).
+This guide documents the authenticated-extractor framework for rich cards when stable public sources are insufficient and authenticated browser capture is actually required.
 
 Authenticated extraction is a fallback workflow after public-source triage, not the default first move. Before adding or changing authenticated extractor support, first run the decision process in [`docs/create-new-rich-content-extractor.md`](docs/create-new-rich-content-extractor.md) and prefer `public_direct` or `public_augmented` whenever stable public sources can satisfy the required fields.
 
@@ -37,11 +37,16 @@ Under `links[].enrichment`:
 Current extractor ids in this repository:
 
 - `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session)
-- `medium-auth-browser` (Medium profile extraction via RSS feed capture path)
-- `x-auth-browser` (X profile extraction via oEmbed + avatar capture path)
-- `instagram-auth-browser` (Instagram public-page metadata capture + local image cache path)
-- `youtube-auth-browser` (YouTube public-page metadata capture + local image cache path)
 - `facebook-auth-browser` (Facebook profile extraction via authenticated browser session + profile image capture)
+
+Current public-augmentation examples that are no longer configured as authenticated extractors:
+
+- Medium (RSS/feed capture path)
+- X (oEmbed + avatar path)
+- Instagram (public page metadata capture)
+- YouTube (public page metadata capture)
+
+See `docs/rich-extractor-public-first-audit.md` for the branch audit that locked this split.
 
 ### Site-level
 
@@ -82,16 +87,8 @@ Useful filters:
 
 ```bash
 bun run auth:rich:sync -- --only-link linkedin
-bun run auth:rich:sync -- --only-link medium
-bun run auth:rich:sync -- --only-link x
-bun run auth:rich:sync -- --only-link instagram
-bun run auth:rich:sync -- --only-link youtube
 bun run auth:rich:sync -- --only-link facebook
 bun run auth:rich:sync -- --only-extractor linkedin-auth-browser
-bun run auth:rich:sync -- --only-extractor medium-auth-browser
-bun run auth:rich:sync -- --only-extractor x-auth-browser
-bun run auth:rich:sync -- --only-extractor instagram-auth-browser
-bun run auth:rich:sync -- --only-extractor youtube-auth-browser
 bun run auth:rich:sync -- --only-extractor facebook-auth-browser
 bun run auth:rich:sync -- --only-missing
 bun run auth:rich:sync -- --force
@@ -103,6 +100,8 @@ Behavior notes:
 - Full sync (`auth:rich:sync`) re-captures selected links.
 - `--only-missing` skips valid cache entries.
 - `--only-missing --force` refreshes selected links even when cache is valid.
+
+For Medium, X, Instagram, and YouTube, use `bun run enrich:rich:strict` instead. Those platforms now write through the committed public cache rather than the authenticated cache.
 
 ## Generic Auth Flow Assist
 
@@ -221,55 +220,6 @@ LinkedIn extractor session handling is autonomous after browser launch:
 - times out with explicit diagnostics if login or challenge flow is not completed
 
 No Enter key checkpoint is required.
-
-## Medium Extractor Behavior
-
-The Medium extractor (`medium-auth-browser`) uses a feed capture path:
-
-- resolves feed URL from profile URL (`https://medium.com/feed/<target>`)
-- parses feed channel metadata (`title`, `description`, image URL)
-- rejects challenge/placeholder responses
-- downloads image asset to `public/cache/rich-authenticated/`
-- writes cache entry with diagnostics notes (`feedUrl`, `cacheKey`)
-
-No interactive login is currently required for the Medium extractor path.
-
-## X Extractor Behavior
-
-The X extractor (`x-auth-browser`) uses an oEmbed + avatar path:
-
-- resolves handle from `x.com/<handle>` (or `twitter.com/<handle>`)
-- verifies profile availability via `https://publish.twitter.com/oembed`
-- generates stable title/description when oEmbed title is blank
-- captures image asset from `https://unavatar.io/x/<handle>` (fallback to X icon asset)
-- writes both `metadata.image` and `metadata.profileImage` so X links render on the profile-card path without a cache refresh
-- writes cache diagnostics including `handle`, `oembedUrl`, and placeholder checks
-
-No interactive login is currently required for the X extractor path.
-
-## Instagram Extractor Behavior
-
-The Instagram extractor (`instagram-auth-browser`) uses public page metadata capture:
-
-- supports `instagram.com` profile-style URLs and normalizes host/path for stable fetches
-- fetches page metadata (`title`, `description`, `image`) with strict required-field validation
-- rejects login-wall/challenge/not-found placeholder responses before cache write
-- downloads preview image to `public/cache/rich-authenticated/`
-- writes cache diagnostics including normalized capture URL and placeholder-signal checks
-
-No interactive login is currently required for the Instagram extractor path.
-
-## YouTube Extractor Behavior
-
-The YouTube extractor (`youtube-auth-browser`) uses public page metadata capture:
-
-- supports `youtube.com` and `youtu.be` URLs (short links normalize to canonical watch URLs)
-- fetches page metadata (`title`, `description`, `image`) with strict required-field validation
-- rejects consent/challenge/unavailable placeholder responses before cache write
-- downloads preview image to `public/cache/rich-authenticated/`
-- writes cache diagnostics including normalized capture URL and placeholder-signal checks
-
-No interactive login is currently required for the YouTube extractor path.
 
 ## Facebook Extractor Behavior
 
