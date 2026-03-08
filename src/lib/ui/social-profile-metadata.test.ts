@@ -144,6 +144,52 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
   assert.deepEqual(resolved.metrics, []);
 });
 
+test("formats X audience metrics from cached public-profile counts", () => {
+  // Arrange
+  const link = {
+    id: "x",
+    label: "X",
+    url: "https://x.com/pryszkie",
+    type: "rich",
+    icon: "x",
+    metadata: {
+      title: "@pryszkie on X",
+      image: "/generated/images/x-avatar.jpg",
+      followersCount: 1350,
+      followersCountRaw: "1,350 Followers",
+      followingCount: 643,
+      followingCountRaw: "643 Following",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "x");
+  assert.equal(resolved.displayName, "@pryszkie on X");
+  assert.deepEqual(resolved.metrics, [
+    {
+      kind: "followers",
+      label: "Followers",
+      count: 1350,
+      rawText: "1,350 Followers",
+      parsedCountCompactText: "1.4K",
+      displayLabel: "Followers",
+      displayText: "1.4K Followers",
+    },
+    {
+      kind: "following",
+      label: "Following",
+      count: 643,
+      rawText: "643 Following",
+      parsedCountCompactText: "643",
+      displayLabel: "Following",
+      displayText: "643 Following",
+    },
+  ]);
+});
+
 test("medium profile metadata cleans the feed title into a display name and treats the avatar as identity chrome", () => {
   // Arrange
   const link = {

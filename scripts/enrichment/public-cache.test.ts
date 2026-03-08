@@ -244,3 +244,34 @@ test("preserves Medium social metrics when feed refresh metadata does not includ
   assert.equal(merged.title, "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium");
   assert.equal(merged.image, "https://cdn-images-1.medium.com/refreshed-avatar.jpg");
 });
+
+test("preserves X audience metrics when oEmbed refresh metadata does not include them", () => {
+  // Arrange
+  const merged = mergePublicCacheMetadataForTarget({
+    targetId: "x-public-oembed",
+    previous: {
+      title: "@pryszkie on X",
+      description: "Posts and updates from @pryszkie on X.",
+      image: "https://unavatar.io/x/pryszkie",
+      profileImage: "https://unavatar.io/x/pryszkie",
+      followersCount: 1350,
+      followersCountRaw: "1,350 Followers",
+      followingCount: 643,
+      followingCountRaw: "643 Following",
+    },
+    next: {
+      title: "@pryszkie on X",
+      description: "Posts and updates from @pryszkie on X.",
+      image: "https://unavatar.io/x/pryszkie",
+      profileImage: "https://unavatar.io/x/pryszkie",
+      sourceLabel: "x.com",
+    },
+  });
+
+  // Assert
+  assert.equal(merged.followersCount, 1350);
+  assert.equal(merged.followersCountRaw, "1,350 Followers");
+  assert.equal(merged.followingCount, 643);
+  assert.equal(merged.followingCountRaw, "643 Following");
+  assert.equal(merged.sourceLabel, "x.com");
+});

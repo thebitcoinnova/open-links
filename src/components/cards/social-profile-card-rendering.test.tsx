@@ -73,6 +73,27 @@ const githubRichLink = {
   },
 } as const satisfies OpenLink;
 
+const xRichLink = {
+  id: "x",
+  label: "X",
+  url: "https://x.com/pryszkie",
+  type: "rich",
+  icon: "x",
+  description: "Short updates and project notes",
+  metadata: {
+    title: "@pryszkie on X",
+    description: "Posts and updates from @pryszkie on X.",
+    sourceLabel: "x.com",
+    handle: "pryszkie",
+    image: "/generated/images/x-avatar.jpg",
+    profileImage: "/generated/images/x-avatar.jpg",
+    followersCount: 1350,
+    followersCountRaw: "1,350 Followers",
+    followingCount: 643,
+    followingCountRaw: "643 Following",
+  },
+} as const satisfies OpenLink;
+
 const linkedinRichLink = {
   id: "linkedin",
   label: "LinkedIn",
@@ -239,6 +260,26 @@ test("github rich cards keep avatar identity and audience metrics in the shared 
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["90 followers", "87 following"],
+  );
+});
+
+test("x rich cards surface best-effort public audience metrics without changing layout chrome", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, xRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/x-avatar.jpg");
+  assert.equal(viewModel.title, "@pryszkie on X");
+  assert.equal(viewModel.description, "Posts and updates from @pryszkie on X.");
+  assert.deepEqual(
+    viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
+    ["handle:@pryszkie", "metric:1.4K Followers", "metric:643 Following"],
+  );
+  assert.equal(viewModel.footerSourceLabel, "x.com");
+  assert.deepEqual(
+    viewModel.socialProfile.metrics.map((metric) => metric.displayText),
+    ["1.4K Followers", "643 Following"],
   );
 });
 

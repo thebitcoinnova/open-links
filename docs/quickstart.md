@@ -130,10 +130,11 @@ Recommended first pass:
 bun run validate:data
 ```
 
-If you want Medium follower counts cached through the public browser path, run this before `dev` or after your Medium profile changes:
+If you want Medium or X audience metrics cached through the public browser path, run this before `dev` or after your profile changes:
 
 ```bash
 bun run public:rich:sync -- --only-link medium
+bun run public:rich:sync -- --only-link x
 ```
 
 ### Start dev server

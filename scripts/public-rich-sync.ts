@@ -3,8 +3,10 @@ import path from "node:path";
 import process from "node:process";
 import { resolveSupportedSocialProfile } from "../src/lib/content/social-profile-fields";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
-import type { MediumPublicProfileBrowserSnapshot } from "./enrichment/medium-public-browser";
-import { parseMediumPublicProfileMetrics } from "./enrichment/medium-public-browser";
+import {
+  type MediumPublicProfileBrowserSnapshot,
+  parseMediumPublicProfileMetrics,
+} from "./enrichment/medium-public-browser";
 import {
   PUBLIC_BROWSER_USER_AGENT,
   type PublicAugmentationTarget,
@@ -27,15 +29,22 @@ import {
   writePublicCacheRegistry,
 } from "./enrichment/public-cache";
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
+import {
+  type XPublicProfileBrowserSnapshot,
+  parseXPublicProfileMetrics,
+} from "./enrichment/x-public-browser";
 import { loadEmbeddedCode } from "./shared/embedded-code-loader";
 
 const ROOT = process.cwd();
 const DEFAULT_BROWSER_WAIT_MS = 8_000;
 const DEFAULT_FETCH_TIMEOUT_MS = 4_000;
 const DEFAULT_FETCH_RETRIES = 1;
-const MEDIUM_BROWSER_ARGS = ["--disable-blink-features=AutomationControlled"] as const;
+const PUBLIC_BROWSER_ARGS = ["--disable-blink-features=AutomationControlled"] as const;
 const MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/medium/extract-public-profile-metrics.js",
+);
+const X_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/x/extract-public-profile-metrics.js",
 );
 
 interface CliArgs {
@@ -70,23 +79,42 @@ interface MediumPublicTarget extends PublicAugmentationTarget {
   id: "medium-public-feed";
 }
 
+interface XPublicTarget extends PublicAugmentationTarget {
+  id: "x-public-oembed";
+}
+
+type SyncablePublicTarget = MediumPublicTarget | XPublicTarget;
+type SyncablePublicTargetId = SyncablePublicTarget["id"];
+type PublicBrowserAudienceSnapshot =
+  | MediumPublicProfileBrowserSnapshot
+  | XPublicProfileBrowserSnapshot;
+
+export interface PublicBrowserAudienceMetrics {
+  followersCount?: number;
+  followersCountRaw?: string;
+  followingCount?: number;
+  followingCountRaw?: string;
+  placeholderSignals: string[];
+}
+
 interface BootstrapBaseEntryInput {
   link: RichLinkInput;
-  target: MediumPublicTarget;
+  target: SyncablePublicTarget;
   existingEntry?: PublicCacheEntry;
   generatedAt: string;
 }
 
-export interface MediumBrowserCaptureResult {
+export interface PublicBrowserAudienceCaptureResult {
   ok: boolean;
   artifactPath: string;
-  metrics: ReturnType<typeof parseMediumPublicProfileMetrics>;
-  snapshot?: MediumPublicProfileBrowserSnapshot;
+  metrics: PublicBrowserAudienceMetrics;
+  snapshot?: PublicBrowserAudienceSnapshot;
   error?: string;
 }
 
-interface CaptureMediumMetricsInput {
+interface CapturePublicAudienceMetricsInput {
   link: RichLinkInput;
+  target: SyncablePublicTarget;
   headed: boolean;
   browserWaitMs: number;
   generatedAt: string;
@@ -97,7 +125,9 @@ export interface PublicRichSyncDependencies {
   loadPublicCache: (publicCachePath: string) => PublicCacheRegistry;
   writePublicCache: (publicCachePath: string, registry: PublicCacheRegistry) => void;
   bootstrapBaseEntry: (input: BootstrapBaseEntryInput) => Promise<PublicCacheEntry>;
-  captureMediumMetrics: (input: CaptureMediumMetricsInput) => Promise<MediumBrowserCaptureResult>;
+  captureAudienceMetrics: (
+    input: CapturePublicAudienceMetricsInput,
+  ) => Promise<PublicBrowserAudienceCaptureResult>;
   nowIso: () => string;
   log: (message: string) => void;
 }
@@ -185,10 +215,20 @@ const isMediumPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is MediumPublicTarget => target?.id === "medium-public-feed";
 
-const hasFollowersMetric = (entry: PublicCacheEntry | undefined): boolean =>
-  typeof entry?.metadata.followersCount === "number" ||
-  (typeof entry?.metadata.followersCountRaw === "string" &&
-    entry.metadata.followersCountRaw.trim().length > 0);
+const isXPublicTarget = (target: PublicAugmentationTarget | null): target is XPublicTarget =>
+  target?.id === "x-public-oembed";
+
+const isSyncablePublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is SyncablePublicTarget => isMediumPublicTarget(target) || isXPublicTarget(target);
+
+const hasDefinedAudienceMetric = (value: number | string | undefined): boolean => {
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+
+  return typeof value === "string" && value.trim().length > 0;
+};
 
 const hasBaseProfileMetadata = (entry: PublicCacheEntry | undefined): boolean => {
   if (!entry) {
@@ -208,6 +248,50 @@ const hasBaseProfileMetadata = (entry: PublicCacheEntry | undefined): boolean =>
     entry.metadata.handle.trim().length > 0
   );
 };
+
+const hasRequiredAudienceMetrics = (
+  targetId: SyncablePublicTargetId,
+  entry: PublicCacheEntry | undefined,
+): boolean => {
+  if (!entry) {
+    return false;
+  }
+
+  const hasFollowers =
+    hasDefinedAudienceMetric(entry.metadata.followersCount) ||
+    hasDefinedAudienceMetric(entry.metadata.followersCountRaw);
+
+  if (targetId === "medium-public-feed") {
+    return hasFollowers;
+  }
+
+  const hasFollowing =
+    hasDefinedAudienceMetric(entry.metadata.followingCount) ||
+    hasDefinedAudienceMetric(entry.metadata.followingCountRaw);
+
+  return hasFollowers && hasFollowing;
+};
+
+const skipReasonForTarget = (targetId: SyncablePublicTargetId): string =>
+  targetId === "medium-public-feed" ? "followers_present" : "audience_present";
+
+const skipMessageForTarget = (targetId: SyncablePublicTargetId): string =>
+  targetId === "medium-public-feed"
+    ? "followers already present"
+    : "followers and following already present";
+
+const missingMetricsReasonForTarget = (targetId: SyncablePublicTargetId): string =>
+  targetId === "medium-public-feed" ? "followers_missing" : "audience_missing";
+
+const captureSummaryForTarget = (
+  targetId: SyncablePublicTargetId,
+  metrics: PublicBrowserAudienceMetrics,
+): string =>
+  targetId === "medium-public-feed"
+    ? (metrics.followersCountRaw ?? "followers missing")
+    : `${metrics.followingCountRaw ?? "following missing"} / ${
+        metrics.followersCountRaw ?? "followers missing"
+      }`;
 
 const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
   ...entry,
@@ -233,14 +317,14 @@ const extractEvalResult = (value: unknown): Record<string, unknown> | null => {
   return value as Record<string, unknown>;
 };
 
-const buildMediumProfileConfig = (linkId: string, headed: boolean): PublicBrowserProfileConfig => ({
+const buildPublicProfileConfig = (linkId: string, headed: boolean): PublicBrowserProfileConfig => ({
   profilePath: toAbsolutePublicRichOutputPath("profiles", linkId),
   headed,
   userAgent: PUBLIC_BROWSER_USER_AGENT,
-  browserArgs: [...MEDIUM_BROWSER_ARGS],
+  browserArgs: [...PUBLIC_BROWSER_ARGS],
 });
 
-export const bootstrapMediumBaseEntry = async (
+export const bootstrapPublicBaseEntry = async (
   input: BootstrapBaseEntryInput,
 ): Promise<PublicCacheEntry> => {
   const fetched = await fetchMetadata(input.target.sourceUrl, {
@@ -252,7 +336,7 @@ export const bootstrapMediumBaseEntry = async (
 
   if (!fetched.ok || !fetched.html) {
     throw new Error(
-      `Unable to fetch Medium public feed '${input.target.sourceUrl}'. ${
+      `Unable to fetch public augmentation source '${input.target.sourceUrl}'. ${
         fetched.error ?? `HTTP ${fetched.statusCode ?? "unknown"}`
       }`,
     );
@@ -288,10 +372,102 @@ export const bootstrapMediumBaseEntry = async (
   };
 };
 
-export const captureMediumMetricsFromBrowser = async (
-  input: CaptureMediumMetricsInput,
-): Promise<MediumBrowserCaptureResult> => {
-  const config = buildMediumProfileConfig(input.link.id, input.headed);
+const extractMetricTexts = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const metricTexts = value
+    .map((entry) => safeTrim(entry))
+    .filter((entry): entry is string => Boolean(entry));
+
+  return metricTexts.length > 0 ? metricTexts : undefined;
+};
+
+const toMediumSnapshot = (
+  payload: Record<string, unknown> | null,
+): MediumPublicProfileBrowserSnapshot | undefined => {
+  if (!payload) {
+    return undefined;
+  }
+
+  return {
+    currentUrl: safeTrim(payload.currentUrl),
+    title: safeTrim(payload.title),
+    bodyText: safeTrim(payload.bodyText),
+    metricTexts: extractMetricTexts(payload.metricTexts),
+  };
+};
+
+const toXSnapshot = (
+  payload: Record<string, unknown> | null,
+): XPublicProfileBrowserSnapshot | undefined => {
+  if (!payload) {
+    return undefined;
+  }
+
+  return {
+    currentUrl: safeTrim(payload.currentUrl),
+    title: safeTrim(payload.title),
+    bodyText: safeTrim(payload.bodyText),
+    metricTexts: extractMetricTexts(payload.metricTexts),
+  };
+};
+
+const metricsSnippetForTarget = (targetId: SyncablePublicTargetId): string =>
+  targetId === "medium-public-feed"
+    ? MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET
+    : X_PUBLIC_PROFILE_METRICS_SNIPPET;
+
+const snapshotFromPayload = (
+  targetId: SyncablePublicTargetId,
+  payload: Record<string, unknown> | null,
+): PublicBrowserAudienceSnapshot | undefined =>
+  targetId === "medium-public-feed" ? toMediumSnapshot(payload) : toXSnapshot(payload);
+
+const parseAudienceMetricsForTarget = (
+  targetId: SyncablePublicTargetId,
+  snapshot: PublicBrowserAudienceSnapshot | undefined,
+): PublicBrowserAudienceMetrics =>
+  targetId === "medium-public-feed"
+    ? parseMediumPublicProfileMetrics((snapshot ?? {}) as MediumPublicProfileBrowserSnapshot)
+    : parseXPublicProfileMetrics((snapshot ?? {}) as XPublicProfileBrowserSnapshot);
+
+const buildAudienceCaptureError = (
+  targetId: SyncablePublicTargetId,
+  metrics: PublicBrowserAudienceMetrics,
+): string | undefined => {
+  if (metrics.placeholderSignals.length > 0) {
+    return `${
+      targetId === "medium-public-feed" ? "Medium" : "X"
+    } public browser capture saw placeholder content: ${metrics.placeholderSignals.join(", ")}.`;
+  }
+
+  if (targetId === "medium-public-feed" && !metrics.followersCountRaw) {
+    return "Medium public browser capture did not find a follower count.";
+  }
+
+  if (targetId === "x-public-oembed") {
+    if (!metrics.followersCountRaw && !metrics.followingCountRaw) {
+      return "X public browser capture did not find follower or following counts.";
+    }
+
+    if (!metrics.followersCountRaw) {
+      return "X public browser capture did not find a follower count.";
+    }
+
+    if (!metrics.followingCountRaw) {
+      return "X public browser capture did not find a following count.";
+    }
+  }
+
+  return undefined;
+};
+
+export const capturePublicAudienceMetricsFromBrowser = async (
+  input: CapturePublicAudienceMetricsInput,
+): Promise<PublicBrowserAudienceCaptureResult> => {
+  const config = buildPublicProfileConfig(input.link.id, input.headed);
   fs.mkdirSync(config.profilePath, { recursive: true });
 
   const artifactRelativePath = path.join(
@@ -299,14 +475,14 @@ export const captureMediumMetricsFromBrowser = async (
     `${input.link.id}-${fileTimestamp()}.json`,
   );
   const artifactAbsolutePath = absolutePath(artifactRelativePath);
-  let snapshot: MediumPublicProfileBrowserSnapshot | undefined;
+  let snapshot: PublicBrowserAudienceSnapshot | undefined;
   let error: string | undefined;
 
   try {
     runPublicBrowserJson(["open", input.link.url], config, {
       allowFailure: true,
     });
-    runPublicBrowserJson(["wait", "--load", "networkidle"], config, {
+    runPublicBrowserJson(["wait", "1500"], config, {
       allowFailure: true,
     });
     runPublicBrowserJson(["wait", String(input.browserWaitMs)], config, {
@@ -317,7 +493,7 @@ export const captureMediumMetricsFromBrowser = async (
       [
         "eval",
         "--base64",
-        Buffer.from(MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET, "utf8").toString("base64"),
+        Buffer.from(metricsSnippetForTarget(input.target.id), "utf8").toString("base64"),
       ],
       config,
       {
@@ -325,18 +501,7 @@ export const captureMediumMetricsFromBrowser = async (
       },
     );
     const payload = extractEvalResult(evalResult.response?.data);
-    snapshot = payload
-      ? {
-          currentUrl: safeTrim(payload.currentUrl),
-          title: safeTrim(payload.title),
-          bodyText: safeTrim(payload.bodyText),
-          metricTexts: Array.isArray(payload.metricTexts)
-            ? payload.metricTexts
-                .map((value) => safeTrim(value))
-                .filter((value): value is string => Boolean(value))
-            : undefined,
-        }
-      : undefined;
+    snapshot = snapshotFromPayload(input.target.id, payload);
   } catch (captureError: unknown) {
     error = captureError instanceof Error ? captureError.message : String(captureError);
   } finally {
@@ -345,17 +510,15 @@ export const captureMediumMetricsFromBrowser = async (
     });
   }
 
-  const metrics = parseMediumPublicProfileMetrics(snapshot ?? {});
-  if (!error && metrics.placeholderSignals.length > 0) {
-    error = `Medium public browser capture saw placeholder content: ${metrics.placeholderSignals.join(", ")}.`;
-  }
-  if (!error && !metrics.followersCountRaw) {
-    error = "Medium public browser capture did not find a follower count.";
+  const metrics = parseAudienceMetricsForTarget(input.target.id, snapshot);
+  if (!error) {
+    error = buildAudienceCaptureError(input.target.id, metrics);
   }
 
   writeJsonArtifact(artifactAbsolutePath, {
     timestamp: input.generatedAt,
     linkId: input.link.id,
+    targetId: input.target.id,
     targetUrl: input.link.url,
     headed: input.headed,
     browserWaitMs: input.browserWaitMs,
@@ -380,8 +543,8 @@ const defaultDependencies: PublicRichSyncDependencies = {
   loadPublicCache: (publicCachePath) => loadPublicCacheRegistry({ cachePath: publicCachePath }),
   writePublicCache: (publicCachePath, registry) =>
     writePublicCacheRegistry(publicCachePath, registry),
-  bootstrapBaseEntry: bootstrapMediumBaseEntry,
-  captureMediumMetrics: captureMediumMetricsFromBrowser,
+  bootstrapBaseEntry: bootstrapPublicBaseEntry,
+  captureAudienceMetrics: capturePublicAudienceMetricsFromBrowser,
   nowIso,
   log: (message) => console.log(message),
 };
@@ -409,12 +572,12 @@ export const runPublicRichSyncWithDependencies = async (
         metadataHandle: link.metadata?.handle,
       }),
     }))
-    .filter((candidate): candidate is { link: RichLinkInput; target: MediumPublicTarget } =>
-      isMediumPublicTarget(candidate.target),
+    .filter((candidate): candidate is { link: RichLinkInput; target: SyncablePublicTarget } =>
+      isSyncablePublicTarget(candidate.target),
     );
 
   if (candidates.length === 0) {
-    dependencies.log("No Medium public-augmentation links matched the sync filters.");
+    dependencies.log("No supported public-browser sync links matched the sync filters.");
     return {
       dirty: false,
       processed,
@@ -429,14 +592,20 @@ export const runPublicRichSyncWithDependencies = async (
     const generatedAt = dependencies.nowIso();
     const existingEntry = registry.entries[candidate.link.id];
 
-    if (args.onlyMissing && !args.force && hasFollowersMetric(existingEntry)) {
+    if (
+      args.onlyMissing &&
+      !args.force &&
+      hasRequiredAudienceMetrics(candidate.target.id, existingEntry)
+    ) {
       skipped += 1;
       entries.push({
         linkId: candidate.link.id,
         status: "skipped",
-        reason: "followers_present",
+        reason: skipReasonForTarget(candidate.target.id),
       });
-      dependencies.log(`[public:rich:sync] skip ${candidate.link.id}: followers already present.`);
+      dependencies.log(
+        `[public:rich:sync] skip ${candidate.link.id}: ${skipMessageForTarget(candidate.target.id)}.`,
+      );
       continue;
     }
 
@@ -455,23 +624,26 @@ export const runPublicRichSyncWithDependencies = async (
     }
 
     processed += 1;
-    const capture = await dependencies.captureMediumMetrics({
+    const capture = await dependencies.captureAudienceMetrics({
       link: candidate.link,
+      target: candidate.target,
       headed: args.headed,
       browserWaitMs: args.browserWaitMs,
       generatedAt,
     });
 
-    if (!capture.ok || !capture.metrics.followersCountRaw) {
+    if (!capture.ok) {
       failed += 1;
       entries.push({
         linkId: candidate.link.id,
         status: "failed",
-        reason: capture.error ?? "followers_missing",
+        reason: missingMetricsReasonForTarget(candidate.target.id),
         artifactPath: capture.artifactPath,
       });
       dependencies.log(
-        `[public:rich:sync] fail ${candidate.link.id}: ${capture.error ?? "followers missing"} (${capture.artifactPath})`,
+        `[public:rich:sync] fail ${candidate.link.id}: ${
+          capture.error ?? captureSummaryForTarget(candidate.target.id, capture.metrics)
+        } (${capture.artifactPath})`,
       );
       continue;
     }
@@ -501,7 +673,10 @@ export const runPublicRichSyncWithDependencies = async (
       artifactPath: capture.artifactPath,
     });
     dependencies.log(
-      `[public:rich:sync] synced ${candidate.link.id}: ${capture.metrics.followersCountRaw} (${capture.artifactPath})`,
+      `[public:rich:sync] synced ${candidate.link.id}: ${captureSummaryForTarget(
+        candidate.target.id,
+        capture.metrics,
+      )} (${capture.artifactPath})`,
     );
   }
 

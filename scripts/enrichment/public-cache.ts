@@ -315,7 +315,10 @@ export const mergePublicCacheMetadataForTarget = (input: {
   next: PublicCacheMetadata;
 }): PublicCacheMetadata => {
   const next = normalizeMetadata(input.next);
-  if (!input.previous || input.targetId !== "medium-public-feed") {
+  const preservesAudienceMetrics =
+    input.targetId === "medium-public-feed" || input.targetId === "x-public-oembed";
+
+  if (!input.previous || !preservesAudienceMetrics) {
     return next;
   }
 
