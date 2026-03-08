@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-type AvatarSyncStatus =
+export type AvatarSyncStatus =
   | "fetched"
   | "not_modified"
   | "cache_fresh"
@@ -13,7 +13,7 @@ interface ProfilePayload {
   avatar?: unknown;
 }
 
-interface ProfileAvatarManifest {
+export interface ProfileAvatarManifest {
   sourceUrl: string;
   resolvedPath: string;
   status: AvatarSyncStatus;
@@ -365,6 +365,71 @@ const buildManifest = (
   return manifest;
 };
 
+const normalizeManifest = (manifest: ProfileAvatarManifest): ProfileAvatarManifest => {
+  const normalized: ProfileAvatarManifest = {
+    sourceUrl: manifest.sourceUrl,
+    resolvedPath: normalizePublicPath(manifest.resolvedPath),
+    status: manifest.status,
+    updatedAt: manifest.updatedAt,
+  };
+
+  if (typeof manifest.etag === "string" && manifest.etag.trim().length > 0) {
+    normalized.etag = manifest.etag.trim();
+  }
+  if (typeof manifest.lastModified === "string" && manifest.lastModified.trim().length > 0) {
+    normalized.lastModified = manifest.lastModified.trim();
+  }
+  if (typeof manifest.cacheControl === "string" && manifest.cacheControl.trim().length > 0) {
+    normalized.cacheControl = manifest.cacheControl.trim();
+  }
+  if (typeof manifest.expiresAt === "string" && manifest.expiresAt.trim().length > 0) {
+    normalized.expiresAt = manifest.expiresAt.trim();
+  }
+  if (typeof manifest.warning === "string" && manifest.warning.trim().length > 0) {
+    normalized.warning = manifest.warning.trim();
+  }
+
+  return normalized;
+};
+
+const areManifestsEqual = (
+  left: ProfileAvatarManifest | null,
+  right: ProfileAvatarManifest,
+): boolean => {
+  if (!left) {
+    return false;
+  }
+
+  return JSON.stringify(normalizeManifest(left)) === JSON.stringify(normalizeManifest(right));
+};
+
+const hasSameManifestPayload = (
+  left: ProfileAvatarManifest,
+  right: ProfileAvatarManifest,
+): boolean =>
+  left.sourceUrl === right.sourceUrl &&
+  normalizePublicPath(left.resolvedPath) === normalizePublicPath(right.resolvedPath);
+
+export const stabilizeProfileAvatarManifest = (
+  previousManifest: ProfileAvatarManifest | null,
+  nextManifest: ProfileAvatarManifest,
+): ProfileAvatarManifest => {
+  if (!previousManifest || !hasSameManifestPayload(previousManifest, nextManifest)) {
+    return nextManifest;
+  }
+
+  const stabilized: ProfileAvatarManifest = {
+    ...nextManifest,
+    updatedAt: previousManifest.updatedAt,
+  };
+
+  if (nextManifest.status === "cache_fresh" || nextManifest.status === "not_modified") {
+    stabilized.status = previousManifest.status;
+  }
+
+  return stabilized;
+};
+
 const logWarning = (message: string) => {
   console.warn(`WARNING [avatar:sync] ${message}`);
 };
@@ -386,6 +451,12 @@ const run = async () => {
   const fallbackAbsolutePath = resolveManifestAssetAbsolutePath(fallbackResolvedPath);
   const fallbackExists = fs.existsSync(fallbackAbsolutePath);
   const shouldForce = options.force;
+  const writeStableManifest = (nextManifest: ProfileAvatarManifest) => {
+    const stabilizedManifest = stabilizeProfileAvatarManifest(manifest, nextManifest);
+    if (!areManifestsEqual(manifest, stabilizedManifest)) {
+      writeManifest(options.manifestPath, stabilizedManifest);
+    }
+  };
 
   if (!sourceUrl) {
     const warning = sourceUrlRaw
@@ -393,8 +464,7 @@ const run = async () => {
       : `Avatar URL is missing; using fallback asset '${fallbackResolvedPath}'.`;
 
     logWarning(warning);
-    writeManifest(
-      options.manifestPath,
+    writeStableManifest(
       buildManifest(
         {
           sourceUrl: sourceUrlRaw,
@@ -412,8 +482,7 @@ const run = async () => {
   }
 
   if (sourceMatchesCache && cachedAssetExists && !shouldForce && isFresh(manifest.expiresAt)) {
-    writeManifest(
-      options.manifestPath,
+    writeStableManifest(
       buildManifest(
         {
           sourceUrl,
@@ -452,8 +521,7 @@ const run = async () => {
     if (sourceMatchesCache && cachedAssetExists && manifest) {
       const warning = `Avatar fetch failed (${reason}). Reusing cached avatar '${normalizePublicPath(manifest.resolvedPath)}'.`;
       logWarning(warning);
-      writeManifest(
-        options.manifestPath,
+      writeStableManifest(
         buildManifest(
           {
             sourceUrl,
@@ -474,8 +542,7 @@ const run = async () => {
 
     const warning = `Avatar fetch failed (${reason}). Using fallback asset '${fallbackResolvedPath}'.`;
     logWarning(warning);
-    writeManifest(
-      options.manifestPath,
+    writeStableManifest(
       buildManifest(
         {
           sourceUrl,
@@ -515,8 +582,7 @@ const run = async () => {
       const etag = response.headers.get("etag") ?? manifest.etag;
       const lastModified = response.headers.get("last-modified") ?? manifest.lastModified;
 
-      writeManifest(
-        options.manifestPath,
+      writeStableManifest(
         buildManifest(
           {
             sourceUrl,
@@ -568,8 +634,7 @@ const run = async () => {
     const etag = response.headers.get("etag") ?? undefined;
     const lastModified = response.headers.get("last-modified") ?? undefined;
 
-    writeManifest(
-      options.manifestPath,
+    writeStableManifest(
       buildManifest(
         {
           sourceUrl,
@@ -597,8 +662,10 @@ const run = async () => {
   }
 };
 
-run().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`Avatar sync failed unexpectedly: ${message}`);
-  process.exit(1);
-});
+if (import.meta.main) {
+  run().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Avatar sync failed unexpectedly: ${message}`);
+    process.exit(1);
+  });
+}

@@ -2,6 +2,16 @@
 
 ## Current
 
+- [x] Stabilize public rich-cache entry timestamps so 304/header-only refreshes preserve `capturedAt` and `updatedAt` unless the cached metadata payload changes.
+- [x] Stabilize `public:rich:sync` so unchanged audience captures avoid dirty writes and retain existing cache timestamps.
+- [x] Stabilize generated image/avatar manifests so no-op runs preserve entry/root timestamps and persisted status, then verify with focused tests plus typecheck, validation, and build checks.
+
+### Completion Review
+
+- Result: Automatic public-cache writes now preserve `capturedAt` and `updatedAt` across `304` and metadata-equal refreshes, `public:rich:sync` now treats unchanged audience captures as no-ops instead of dirty writes, and the generated content-image/avatar manifests now preserve entry timestamps plus persisted `status` across `cache_fresh` and `not_modified` runs while only bumping root timestamps when the persisted manifest content actually changes.
+- Verification: `bun test scripts/enrichment/public-cache.test.ts scripts/public-rich-sync.test.ts scripts/sync-content-images.test.ts scripts/sync-profile-avatar.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and `bun run build` all passed.
+- Residual risk: The real `bun run build` still surfaced legitimate public-cache churn for Instagram/GitHub freshness data because upstream payload and header values changed during the run; that generated diff was reverted after verification so this patch stays code-only, but the repo will still record those real upstream changes whenever operators intentionally refresh committed cache artifacts.
+
 - [x] Make the non-Docker required CI lane canonical in `package.json`, including a dedicated local Docker parity script.
 - [x] Extend `scripts/hooks/pre-commit.sh` with staged-path-sensitive required CI parity checks plus tracked-output restage protection.
 - [x] Align `.github/workflows/ci.yml` messaging with the new local parity entrypoints, then verify normal and failure-path hook behavior before closing.

@@ -32,6 +32,8 @@ import { parseMetadata } from "./enrichment/parse-metadata";
 import { resolvePublicAugmentationTarget } from "./enrichment/public-augmentation";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
+  arePublicCacheEntriesEqual,
+  buildPublicCacheEntry,
   computePublicCacheExpiresAt,
   hasCacheablePublicMetadata,
   loadPublicCacheRegistry,
@@ -1008,6 +1010,7 @@ const run = async () => {
 
     const publicCacheKey = link.id;
     const publicSourceUrl = publicAugmentationTarget?.sourceUrl ?? link.url;
+    const existingPublicEntry = publicCacheRegistry.entries[publicCacheKey];
     const cachedPublicEntry = resolvePublicCacheEntry(
       publicCacheRegistry,
       publicCacheKey,
@@ -1086,18 +1089,24 @@ const run = async () => {
         computePublicCacheExpiresAt(cacheControl, fetched.responseDate) ??
         cachedPublicEntry.entry.expiresAt;
 
-      publicCacheRegistry.entries[publicCacheKey] = {
-        ...cachedPublicEntry.entry,
+      const refreshedEntry = buildPublicCacheEntry({
+        previous: existingPublicEntry,
+        linkId: link.id,
+        sourceUrl: publicSourceUrl,
+        metadata: cachedPublicEntry.entry.metadata,
         updatedAt: generatedAt,
         etag: fetched.etag ?? cachedPublicEntry.entry.etag,
         lastModified: fetched.lastModified ?? cachedPublicEntry.entry.lastModified,
         cacheControl,
         expiresAt,
-      };
-      publicCacheRegistry.updatedAt = generatedAt;
-      publicCacheDirty = true;
+      });
 
-      const refreshedEntry = publicCacheRegistry.entries[publicCacheKey];
+      if (!arePublicCacheEntriesEqual(existingPublicEntry, refreshedEntry)) {
+        publicCacheRegistry.entries[publicCacheKey] = refreshedEntry;
+        publicCacheRegistry.updatedAt = generatedAt;
+        publicCacheDirty = true;
+      }
+
       const cachedMetadata = toEnrichmentMetadataFromPublicCache(refreshedEntry.metadata);
       const cachedStatus = resolveCachedEntryStatus(refreshedEntry.metadata);
       const manualFallbackUsed =
@@ -1418,24 +1427,28 @@ const run = async () => {
     });
     const cacheMetadata = mergePublicCacheMetadataForTarget({
       targetId: publicAugmentationTarget?.id ?? null,
-      previous: publicCacheRegistry.entries[publicCacheKey]?.metadata,
+      previous: existingPublicEntry?.metadata,
       next: toPublicCacheMetadata(enrichedMetadata),
     });
 
     if (hasCacheablePublicMetadata(cacheMetadata)) {
-      publicCacheRegistry.entries[publicCacheKey] = {
+      const nextPublicEntry = buildPublicCacheEntry({
+        previous: existingPublicEntry,
         linkId: link.id,
         sourceUrl: publicSourceUrl,
-        capturedAt: generatedAt,
-        updatedAt: generatedAt,
         metadata: cacheMetadata,
+        updatedAt: generatedAt,
         etag: fetched.etag,
         lastModified: fetched.lastModified,
         cacheControl: fetched.cacheControl,
         expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
-      };
-      publicCacheRegistry.updatedAt = generatedAt;
-      publicCacheDirty = true;
+      });
+
+      if (!arePublicCacheEntriesEqual(existingPublicEntry, nextPublicEntry)) {
+        publicCacheRegistry.entries[publicCacheKey] = nextPublicEntry;
+        publicCacheRegistry.updatedAt = generatedAt;
+        publicCacheDirty = true;
+      }
     } else if (publicCacheRegistry.entries[publicCacheKey]) {
       delete publicCacheRegistry.entries[publicCacheKey];
       publicCacheRegistry.updatedAt = generatedAt;

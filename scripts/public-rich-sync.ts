@@ -25,6 +25,8 @@ import {
   DEFAULT_PUBLIC_CACHE_PATH,
   type PublicCacheEntry,
   type PublicCacheRegistry,
+  arePublicCacheEntriesEqual,
+  buildPublicCacheEntry,
   loadPublicCacheRegistry,
   mergePublicCacheMetadataForTarget,
   toPublicCacheMetadata,
@@ -662,7 +664,6 @@ export const runPublicRichSyncWithDependencies = async (
       throw new Error(`Internal error: working entry missing for '${candidate.link.id}'.`);
     }
 
-    nextEntry.updatedAt = generatedAt;
     nextEntry.metadata.followersCount = capture.metrics.followersCount;
     nextEntry.metadata.followersCountRaw = capture.metrics.followersCountRaw;
     if (capture.metrics.followingCount !== undefined) {
@@ -672,7 +673,32 @@ export const runPublicRichSyncWithDependencies = async (
       nextEntry.metadata.followingCountRaw = capture.metrics.followingCountRaw;
     }
 
-    registry.entries[candidate.link.id] = nextEntry;
+    const stabilizedEntry = buildPublicCacheEntry({
+      previous: workingEntry,
+      linkId: candidate.link.id,
+      sourceUrl: nextEntry.sourceUrl,
+      metadata: nextEntry.metadata,
+      updatedAt: generatedAt,
+      etag: nextEntry.etag,
+      lastModified: nextEntry.lastModified,
+      cacheControl: nextEntry.cacheControl,
+      expiresAt: nextEntry.expiresAt,
+    });
+
+    if (arePublicCacheEntriesEqual(workingEntry, stabilizedEntry)) {
+      skipped += 1;
+      entries.push({
+        linkId: candidate.link.id,
+        status: "skipped",
+        reason: "counts_unchanged",
+      });
+      dependencies.log(
+        `[public:rich:sync] no-op ${candidate.link.id}: captured audience metrics matched the committed cache.`,
+      );
+      continue;
+    }
+
+    registry.entries[candidate.link.id] = stabilizedEntry;
     registry.updatedAt = generatedAt;
     dirty = true;
     entries.push({

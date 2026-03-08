@@ -5,6 +5,7 @@ import process from "node:process";
 import test from "node:test";
 import { mergeMetadataWithManualSocialProfileOverrides } from "../../src/lib/content/social-profile-fields";
 import {
+  buildPublicCacheEntry,
   computePublicCacheExpiresAt,
   hasCacheablePublicMetadata,
   isPublicCacheFresh,
@@ -110,6 +111,75 @@ test("computes freshness from cache-control and classifies cached metadata compl
     status: "partial",
     missingFields: ["description"],
   });
+});
+
+test("preserves public cache timestamps when only revalidation headers change", () => {
+  // Arrange
+  const previous = {
+    linkId: "github",
+    sourceUrl: "https://github.com/pRizz",
+    capturedAt: "2026-03-07T12:00:00.000Z",
+    updatedAt: "2026-03-07T13:00:00.000Z",
+    metadata: {
+      title: "pRizz - Overview",
+      description: "Open source and experiments.",
+      image: "https://avatars.githubusercontent.com/u/1?v=4",
+    },
+    etag: '"old"',
+    cacheControl: "max-age=60",
+    expiresAt: "2026-03-07T13:01:00.000Z",
+  };
+
+  // Act
+  const next = buildPublicCacheEntry({
+    previous,
+    linkId: "github",
+    sourceUrl: "https://github.com/pRizz",
+    metadata: previous.metadata,
+    updatedAt: "2026-03-08T12:00:00.000Z",
+    etag: '"new"',
+    cacheControl: "max-age=300",
+    expiresAt: "2026-03-08T12:05:00.000Z",
+  });
+
+  // Assert
+  assert.equal(next.capturedAt, "2026-03-07T12:00:00.000Z");
+  assert.equal(next.updatedAt, "2026-03-07T13:00:00.000Z");
+  assert.equal(next.etag, '"new"');
+  assert.equal(next.cacheControl, "max-age=300");
+  assert.equal(next.expiresAt, "2026-03-08T12:05:00.000Z");
+});
+
+test("preserves capturedAt and bumps updatedAt when public cache metadata changes", () => {
+  // Arrange
+  const previous = {
+    linkId: "github",
+    sourceUrl: "https://github.com/pRizz",
+    capturedAt: "2026-03-07T12:00:00.000Z",
+    updatedAt: "2026-03-07T13:00:00.000Z",
+    metadata: {
+      title: "pRizz - Overview",
+      description: "Open source and experiments.",
+      image: "https://avatars.githubusercontent.com/u/1?v=4",
+    },
+  };
+
+  // Act
+  const next = buildPublicCacheEntry({
+    previous,
+    linkId: "github",
+    sourceUrl: "https://github.com/pRizz",
+    metadata: {
+      ...previous.metadata,
+      description: "Open source, experiments, and projects.",
+    },
+    updatedAt: "2026-03-08T12:00:00.000Z",
+  });
+
+  // Assert
+  assert.equal(next.capturedAt, "2026-03-07T12:00:00.000Z");
+  assert.equal(next.updatedAt, "2026-03-08T12:00:00.000Z");
+  assert.equal(next.metadata.description, "Open source, experiments, and projects.");
 });
 
 test("public cache helpers preserve Substack subscriber metadata", () => {

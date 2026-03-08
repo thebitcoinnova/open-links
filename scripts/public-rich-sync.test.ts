@@ -239,6 +239,72 @@ test("refreshes Medium counts without replacing the existing base cache entry fi
   assert.equal(result.registry.entries.medium?.metadata.followersCountRaw, "3.4K followers");
 });
 
+test("treats unchanged Medium counts as a no-op without rewriting cache timestamps", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.medium = {
+    ...createMediumBaseEntry(
+      "medium",
+      "2026-03-08T13:00:00.000Z",
+      "https://medium.com/feed/@peterryszkiewicz",
+    ),
+    updatedAt: "2026-03-08T14:00:00.000Z",
+    metadata: {
+      ...createMediumBaseEntry(
+        "medium",
+        "2026-03-08T13:00:00.000Z",
+        "https://medium.com/feed/@peterryszkiewicz",
+      ).metadata,
+      followersCount: 3400,
+      followersCountRaw: "3.4K followers",
+    },
+  };
+  let wroteRegistry = false;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [mediumLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {
+        wroteRegistry = true;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () =>
+        captureSuccess({
+          followersCount: 3400,
+          followersCountRaw: "3.4K followers",
+        }),
+      nowIso: () => "2026-03-08T16:00:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(wroteRegistry, false);
+  assert.equal(result.skipped, 1);
+  assert.equal(result.processed, 1);
+  assert.equal(result.registry.entries.medium?.capturedAt, "2026-03-08T13:00:00.000Z");
+  assert.equal(result.registry.entries.medium?.updatedAt, "2026-03-08T14:00:00.000Z");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "medium",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
 test("skips Medium sync in only-missing mode when followers are already cached", async () => {
   // Arrange
   const registry = emptyRegistry();

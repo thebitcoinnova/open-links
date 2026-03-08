@@ -3,14 +3,14 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-type ContentImageSyncStatus =
+export type ContentImageSyncStatus =
   | "fetched"
   | "not_modified"
   | "cache_fresh"
   | "cache_on_error"
   | "fallback_on_error";
 
-interface GeneratedContentImageEntry {
+export interface GeneratedContentImageEntry {
   sourceUrl: string;
   resolvedPath?: string;
   status: ContentImageSyncStatus;
@@ -24,7 +24,7 @@ interface GeneratedContentImageEntry {
   updatedAt: string;
 }
 
-interface GeneratedContentImagesManifest {
+export interface GeneratedContentImagesManifest {
   generatedAt: string;
   byUrl: Record<string, GeneratedContentImageEntry>;
 }
@@ -150,6 +150,15 @@ const maybeReadJson = <T>(relativePath: string): T | null => {
   } catch {
     return null;
   }
+};
+
+const trimToUndefined = (value: string | undefined): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 };
 
 const parseNumber = (value: string | undefined): number | undefined => {
@@ -455,8 +464,139 @@ const buildEntry = (
   return entry;
 };
 
+const normalizeEntry = (entry: GeneratedContentImageEntry): GeneratedContentImageEntry => {
+  const normalized: GeneratedContentImageEntry = {
+    sourceUrl: entry.sourceUrl,
+    status: entry.status,
+    updatedAt: entry.updatedAt,
+  };
+
+  if (trimToUndefined(entry.resolvedPath)) {
+    normalized.resolvedPath = trimToUndefined(entry.resolvedPath);
+  }
+  if (trimToUndefined(entry.etag)) {
+    normalized.etag = trimToUndefined(entry.etag);
+  }
+  if (trimToUndefined(entry.lastModified)) {
+    normalized.lastModified = trimToUndefined(entry.lastModified);
+  }
+  if (trimToUndefined(entry.cacheControl)) {
+    normalized.cacheControl = trimToUndefined(entry.cacheControl);
+  }
+  if (trimToUndefined(entry.expiresAt)) {
+    normalized.expiresAt = trimToUndefined(entry.expiresAt);
+  }
+  if (trimToUndefined(entry.contentType)) {
+    normalized.contentType = trimToUndefined(entry.contentType);
+  }
+  if (typeof entry.bytes === "number" && Number.isFinite(entry.bytes)) {
+    normalized.bytes = entry.bytes;
+  }
+  if (trimToUndefined(entry.warning)) {
+    normalized.warning = trimToUndefined(entry.warning);
+  }
+
+  return normalized;
+};
+
+const areEntriesEqual = (
+  left: GeneratedContentImageEntry | undefined,
+  right: GeneratedContentImageEntry | undefined,
+): boolean => {
+  if (!left || !right) {
+    return left === right;
+  }
+
+  return JSON.stringify(normalizeEntry(left)) === JSON.stringify(normalizeEntry(right));
+};
+
+const hasSamePayload = (
+  left: GeneratedContentImageEntry,
+  right: GeneratedContentImageEntry,
+): boolean =>
+  left.sourceUrl === right.sourceUrl &&
+  left.resolvedPath === right.resolvedPath &&
+  left.contentType === right.contentType &&
+  left.bytes === right.bytes;
+
+export const stabilizeContentImageEntry = (
+  previousEntry: GeneratedContentImageEntry | undefined,
+  nextEntry: GeneratedContentImageEntry,
+): GeneratedContentImageEntry => {
+  if (!previousEntry || !hasSamePayload(previousEntry, nextEntry)) {
+    return nextEntry;
+  }
+
+  const stabilized: GeneratedContentImageEntry = {
+    ...nextEntry,
+    updatedAt: previousEntry.updatedAt,
+  };
+
+  if (nextEntry.status === "cache_fresh" || nextEntry.status === "not_modified") {
+    stabilized.status = previousEntry.status;
+  }
+
+  return stabilized;
+};
+
+const areEntryMapsEqual = (
+  left: Record<string, GeneratedContentImageEntry>,
+  right: Record<string, GeneratedContentImageEntry>,
+): boolean => {
+  const leftKeys = Object.keys(left).sort();
+  const rightKeys = Object.keys(right).sort();
+  if (JSON.stringify(leftKeys) !== JSON.stringify(rightKeys)) {
+    return false;
+  }
+
+  return leftKeys.every((key) => areEntriesEqual(left[key], right[key]));
+};
+
+export const buildStableContentImagesManifest = (input: {
+  previousManifest: GeneratedContentImagesManifest | null;
+  byUrl: Record<string, GeneratedContentImageEntry>;
+  generatedAt: string;
+}): GeneratedContentImagesManifest => ({
+  generatedAt:
+    input.previousManifest && areEntryMapsEqual(input.previousManifest.byUrl, input.byUrl)
+      ? input.previousManifest.generatedAt
+      : input.generatedAt,
+  byUrl: input.byUrl,
+});
+
 const logWarning = (message: string) => {
   console.warn(`WARNING [images:sync] ${message}`);
+};
+
+const createRunSummary = () => ({
+  fetched: 0,
+  notModified: 0,
+  cacheFresh: 0,
+  cacheOnError: 0,
+  fallbackOnError: 0,
+});
+
+const recordRunStatus = (
+  summary: ReturnType<typeof createRunSummary>,
+  status: ContentImageSyncStatus,
+) => {
+  if (status === "fetched") {
+    summary.fetched += 1;
+    return;
+  }
+  if (status === "not_modified") {
+    summary.notModified += 1;
+    return;
+  }
+  if (status === "cache_fresh") {
+    summary.cacheFresh += 1;
+    return;
+  }
+  if (status === "cache_on_error") {
+    summary.cacheOnError += 1;
+    return;
+  }
+  summary.fallbackOnError += 1;
 };
 
 const collectCandidates = (
@@ -554,6 +694,7 @@ const run = async () => {
 
   const candidates = collectCandidates(linksPayload, generatedRichMetadata, sitePayload);
   const nextByUrl: Record<string, GeneratedContentImageEntry> = {};
+  const summary = createRunSummary();
 
   fs.mkdirSync(absolutePath(args.outputDir), { recursive: true });
 
@@ -574,34 +715,42 @@ const run = async () => {
     if (!httpUrl) {
       const warning = `Unsupported non-http image URL '${candidate}'. Runtime will use local fallback behavior.`;
       logWarning(warning);
-      nextByUrl[candidateKey] = buildEntry(
-        {
-          sourceUrl: candidate,
-          status: "fallback_on_error",
-        },
-        {
-          warning,
-        },
+      nextByUrl[candidateKey] = stabilizeContentImageEntry(
+        previousEntry,
+        buildEntry(
+          {
+            sourceUrl: candidate,
+            status: "fallback_on_error",
+          },
+          {
+            warning,
+          },
+        ),
       );
+      recordRunStatus(summary, "fallback_on_error");
       continue;
     }
 
     if (!args.force && previousEntry && cachedAssetExists && isFresh(previousEntry.expiresAt)) {
-      nextByUrl[candidateKey] = buildEntry(
-        {
-          sourceUrl: httpUrl,
-          resolvedPath: previousEntry.resolvedPath,
-          status: "cache_fresh",
-        },
-        {
-          etag: previousEntry.etag,
-          lastModified: previousEntry.lastModified,
-          cacheControl: previousEntry.cacheControl,
-          expiresAt: previousEntry.expiresAt,
-          contentType: previousEntry.contentType,
-          bytes: previousEntry.bytes,
-        },
+      nextByUrl[candidateKey] = stabilizeContentImageEntry(
+        previousEntry,
+        buildEntry(
+          {
+            sourceUrl: httpUrl,
+            resolvedPath: previousEntry.resolvedPath,
+            status: "cache_fresh",
+          },
+          {
+            etag: previousEntry.etag,
+            lastModified: previousEntry.lastModified,
+            cacheControl: previousEntry.cacheControl,
+            expiresAt: previousEntry.expiresAt,
+            contentType: previousEntry.contentType,
+            bytes: previousEntry.bytes,
+          },
+        ),
       );
+      recordRunStatus(summary, "cache_fresh");
       console.log(`OpenLinks content image sync: cache is fresh for '${httpUrl}'.`);
       continue;
     }
@@ -626,36 +775,44 @@ const run = async () => {
           previousEntry.resolvedPath,
         )}'.`;
         logWarning(warning);
-        nextByUrl[candidateKey] = buildEntry(
-          {
-            sourceUrl: httpUrl,
-            resolvedPath: previousEntry.resolvedPath,
-            status: "cache_on_error",
-          },
-          {
-            etag: previousEntry.etag,
-            lastModified: previousEntry.lastModified,
-            cacheControl: previousEntry.cacheControl,
-            expiresAt: previousEntry.expiresAt,
-            contentType: previousEntry.contentType,
-            bytes: previousEntry.bytes,
-            warning,
-          },
+        nextByUrl[candidateKey] = stabilizeContentImageEntry(
+          previousEntry,
+          buildEntry(
+            {
+              sourceUrl: httpUrl,
+              resolvedPath: previousEntry.resolvedPath,
+              status: "cache_on_error",
+            },
+            {
+              etag: previousEntry.etag,
+              lastModified: previousEntry.lastModified,
+              cacheControl: previousEntry.cacheControl,
+              expiresAt: previousEntry.expiresAt,
+              contentType: previousEntry.contentType,
+              bytes: previousEntry.bytes,
+              warning,
+            },
+          ),
         );
+        recordRunStatus(summary, "cache_on_error");
         return;
       }
 
       const warning = `Image fetch failed (${reason}) for '${httpUrl}'. Runtime will use local fallback behavior.`;
       logWarning(warning);
-      nextByUrl[candidateKey] = buildEntry(
-        {
-          sourceUrl: httpUrl,
-          status: "fallback_on_error",
-        },
-        {
-          warning,
-        },
+      nextByUrl[candidateKey] = stabilizeContentImageEntry(
+        previousEntry,
+        buildEntry(
+          {
+            sourceUrl: httpUrl,
+            status: "fallback_on_error",
+          },
+          {
+            warning,
+          },
+        ),
       );
+      recordRunStatus(summary, "fallback_on_error");
     };
 
     const controller = new AbortController();
@@ -682,21 +839,25 @@ const run = async () => {
         const etag = response.headers.get("etag") ?? previousEntry.etag;
         const lastModified = response.headers.get("last-modified") ?? previousEntry.lastModified;
 
-        nextByUrl[candidateKey] = buildEntry(
-          {
-            sourceUrl: httpUrl,
-            resolvedPath: previousEntry.resolvedPath,
-            status: "not_modified",
-          },
-          {
-            etag: etag ?? undefined,
-            lastModified: lastModified ?? undefined,
-            cacheControl: cacheControl ?? undefined,
-            expiresAt,
-            contentType: previousEntry.contentType,
-            bytes: previousEntry.bytes,
-          },
+        nextByUrl[candidateKey] = stabilizeContentImageEntry(
+          previousEntry,
+          buildEntry(
+            {
+              sourceUrl: httpUrl,
+              resolvedPath: previousEntry.resolvedPath,
+              status: "not_modified",
+            },
+            {
+              etag: etag ?? undefined,
+              lastModified: lastModified ?? undefined,
+              cacheControl: cacheControl ?? undefined,
+              expiresAt,
+              contentType: previousEntry.contentType,
+              bytes: previousEntry.bytes,
+            },
+          ),
         );
+        recordRunStatus(summary, "not_modified");
         console.log(`OpenLinks content image sync: not modified '${httpUrl}'.`);
         continue;
       }
@@ -745,22 +906,26 @@ const run = async () => {
         logWarning(warning);
       }
 
-      nextByUrl[candidateKey] = buildEntry(
-        {
-          sourceUrl: httpUrl,
-          resolvedPath,
-          status: "fetched",
-        },
-        {
-          etag,
-          lastModified,
-          cacheControl,
-          expiresAt,
-          contentType,
-          bytes: buffer.byteLength,
-          warning: warnings.length > 0 ? warnings.join(" ") : undefined,
-        },
+      nextByUrl[candidateKey] = stabilizeContentImageEntry(
+        previousEntry,
+        buildEntry(
+          {
+            sourceUrl: httpUrl,
+            resolvedPath,
+            status: "fetched",
+          },
+          {
+            etag,
+            lastModified,
+            cacheControl,
+            expiresAt,
+            contentType,
+            bytes: buffer.byteLength,
+            warning: warnings.length > 0 ? warnings.join(" ") : undefined,
+          },
+        ),
       );
+      recordRunStatus(summary, "fetched");
 
       console.log(
         `OpenLinks content image sync: fetched '${httpUrl}' -> '${normalizePublicPath(resolvedPath)}'.`,
@@ -773,36 +938,34 @@ const run = async () => {
     }
   }
 
-  const manifest: GeneratedContentImagesManifest = {
-    generatedAt: new Date().toISOString(),
+  const manifest = buildStableContentImagesManifest({
+    previousManifest,
     byUrl: nextByUrl,
-  };
+    generatedAt: new Date().toISOString(),
+  });
 
   const keepPaths = listReferencedResolvedPaths(manifest);
   garbageCollectOutput(args.outputDir, keepPaths);
 
-  writeManifest(args.manifestPath, manifest);
+  if (!previousManifest || JSON.stringify(previousManifest) !== JSON.stringify(manifest)) {
+    writeManifest(args.manifestPath, manifest);
+  }
 
-  const summary = {
+  const summaryOutput = {
     totalCandidates: candidates.length,
     trackedUrls: Object.keys(manifest.byUrl).length,
-    fetched: Object.values(manifest.byUrl).filter((entry) => entry.status === "fetched").length,
-    notModified: Object.values(manifest.byUrl).filter((entry) => entry.status === "not_modified")
-      .length,
-    cacheFresh: Object.values(manifest.byUrl).filter((entry) => entry.status === "cache_fresh")
-      .length,
-    cacheOnError: Object.values(manifest.byUrl).filter((entry) => entry.status === "cache_on_error")
-      .length,
-    fallbackOnError: Object.values(manifest.byUrl).filter(
-      (entry) => entry.status === "fallback_on_error",
-    ).length,
+    fetched: summary.fetched,
+    notModified: summary.notModified,
+    cacheFresh: summary.cacheFresh,
+    cacheOnError: summary.cacheOnError,
+    fallbackOnError: summary.fallbackOnError,
   };
 
   console.log("OpenLinks content image sync summary");
-  console.log(`Candidates: ${summary.totalCandidates}`);
-  console.log(`Tracked URL entries: ${summary.trackedUrls}`);
+  console.log(`Candidates: ${summaryOutput.totalCandidates}`);
+  console.log(`Tracked URL entries: ${summaryOutput.trackedUrls}`);
   console.log(
-    `Statuses: fetched=${summary.fetched}, not_modified=${summary.notModified}, cache_fresh=${summary.cacheFresh}, cache_on_error=${summary.cacheOnError}, fallback_on_error=${summary.fallbackOnError}`,
+    `Statuses: fetched=${summaryOutput.fetched}, not_modified=${summaryOutput.notModified}, cache_fresh=${summaryOutput.cacheFresh}, cache_on_error=${summaryOutput.cacheOnError}, fallback_on_error=${summaryOutput.fallbackOnError}`,
   );
   console.log(`Manifest: ${args.manifestPath}`);
   console.log(`Output directory: ${args.outputDir}`);
@@ -811,8 +974,10 @@ const run = async () => {
   }
 };
 
-run().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`Content image sync failed unexpectedly: ${message}`);
-  process.exit(1);
-});
+if (import.meta.main) {
+  run().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Content image sync failed unexpectedly: ${message}`);
+    process.exit(1);
+  });
+}

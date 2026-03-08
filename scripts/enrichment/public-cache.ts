@@ -139,6 +139,31 @@ const normalizeMetadata = (metadata: PublicCacheMetadata): PublicCacheMetadata =
   return normalized;
 };
 
+const normalizeEntry = (entry: PublicCacheEntry): PublicCacheEntry => {
+  const normalized: PublicCacheEntry = {
+    linkId: entry.linkId.trim(),
+    sourceUrl: entry.sourceUrl.trim(),
+    capturedAt: entry.capturedAt.trim(),
+    updatedAt: entry.updatedAt.trim(),
+    metadata: normalizeMetadata(entry.metadata),
+  };
+
+  if (trimToUndefined(entry.etag)) {
+    normalized.etag = trimToUndefined(entry.etag);
+  }
+  if (trimToUndefined(entry.lastModified)) {
+    normalized.lastModified = trimToUndefined(entry.lastModified);
+  }
+  if (trimToUndefined(entry.cacheControl)) {
+    normalized.cacheControl = trimToUndefined(entry.cacheControl);
+  }
+  if (trimToUndefined(entry.expiresAt)) {
+    normalized.expiresAt = trimToUndefined(entry.expiresAt);
+  }
+
+  return normalized;
+};
+
 const normalizeRegistry = (raw: PublicCacheRegistry): PublicCacheRegistry => {
   const entries: Record<string, PublicCacheEntry> = {};
 
@@ -353,6 +378,66 @@ export const mergePublicCacheMetadataForTarget = (input: {
   }
 
   return normalizeMetadata(merged);
+};
+
+export const arePublicCacheMetadataEqual = (
+  left: PublicCacheMetadata | undefined,
+  right: PublicCacheMetadata | undefined,
+): boolean =>
+  JSON.stringify(normalizeMetadata(left ?? {})) === JSON.stringify(normalizeMetadata(right ?? {}));
+
+export const arePublicCacheEntriesEqual = (
+  left: PublicCacheEntry | undefined,
+  right: PublicCacheEntry | undefined,
+): boolean => {
+  if (!left || !right) {
+    return left === right;
+  }
+
+  return JSON.stringify(normalizeEntry(left)) === JSON.stringify(normalizeEntry(right));
+};
+
+export const buildPublicCacheEntry = (input: {
+  previous?: PublicCacheEntry;
+  linkId: string;
+  sourceUrl: string;
+  metadata: PublicCacheMetadata;
+  updatedAt: string;
+  etag?: string;
+  lastModified?: string;
+  cacheControl?: string;
+  expiresAt?: string;
+}): PublicCacheEntry => {
+  const previous = input.previous ? normalizeEntry(input.previous) : undefined;
+  const nextMetadata = normalizeMetadata(input.metadata);
+  const payloadChanged =
+    !previous ||
+    previous.linkId !== input.linkId.trim() ||
+    previous.sourceUrl !== input.sourceUrl.trim() ||
+    !arePublicCacheMetadataEqual(previous.metadata, nextMetadata);
+
+  const entry: PublicCacheEntry = {
+    linkId: input.linkId.trim(),
+    sourceUrl: input.sourceUrl.trim(),
+    capturedAt: previous?.capturedAt ?? input.updatedAt,
+    updatedAt: payloadChanged ? input.updatedAt : (previous?.updatedAt ?? input.updatedAt),
+    metadata: nextMetadata,
+  };
+
+  if (trimToUndefined(input.etag)) {
+    entry.etag = trimToUndefined(input.etag);
+  }
+  if (trimToUndefined(input.lastModified)) {
+    entry.lastModified = trimToUndefined(input.lastModified);
+  }
+  if (trimToUndefined(input.cacheControl)) {
+    entry.cacheControl = trimToUndefined(input.cacheControl);
+  }
+  if (trimToUndefined(input.expiresAt)) {
+    entry.expiresAt = trimToUndefined(input.expiresAt);
+  }
+
+  return entry;
 };
 
 export const toPublicCacheMetadata = (metadata: EnrichmentMetadata): PublicCacheMetadata => {
