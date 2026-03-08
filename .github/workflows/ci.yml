@@ -52,14 +52,17 @@ jobs:
             echo "- Event: \`${{ github.event_name }}\`"
             echo "- Ref: \`${{ github.ref }}\`"
             echo "- Studio Docker guard changed-path match: \`${{ steps.studio_docker_changes.outputs.studio_docker }}\`"
-            echo "- Commands:"
-            echo "  - \`bun run typecheck\`"
-            echo "  - \`bun run build\`"
-            echo "  - \`bun run quality:check\`"
-            echo "  - \`bun run studio:test:integration\`"
-            echo "  - \`docker build -f packages/studio-api/Dockerfile .\` (conditional)"
-            echo "  - \`docker build -f packages/studio-web/Dockerfile .\` (conditional)"
-            echo "  - \`docker build -f packages/studio-worker/Dockerfile .\` (conditional)"
+            echo "- Local parity entrypoints:"
+            echo "  - \`bun run ci:required\`"
+            echo "  - \`bun run ci:required:docker\` (conditional)"
+            echo "- Lane commands:"
+            echo "  - \`bun run ci:required:typecheck\`"
+            echo "  - \`bun run ci:required:build\`"
+            echo "  - \`bun run ci:required:quality\`"
+            echo "  - \`bun run ci:required:studio-integration\`"
+            echo "  - \`bun run ci:required:docker:api\` (conditional)"
+            echo "  - \`bun run ci:required:docker:web\` (conditional)"
+            echo "  - \`bun run ci:required:docker:worker\` (conditional)"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run required checks
@@ -83,10 +86,10 @@ jobs:
           }
 
           failures=()
-          run_check "typecheck" bun run typecheck || failures+=("typecheck")
-          run_check "build" bun run build || failures+=("build")
-          run_check "quality_check" bun run quality:check || failures+=("quality:check")
-          run_check "studio_integration" bun run studio:test:integration || failures+=("studio:test:integration")
+          run_check "typecheck" bun run ci:required:typecheck || failures+=("typecheck")
+          run_check "build" bun run ci:required:build || failures+=("build")
+          run_check "quality_check" bun run ci:required:quality || failures+=("quality:check")
+          run_check "studio_integration" bun run ci:required:studio-integration || failures+=("studio:test:integration")
 
           if [[ "$STUDIO_DOCKER_CHANGED" == "true" ]]; then
             {
@@ -95,9 +98,9 @@ jobs:
               echo "- Running Studio Docker image builds in required lane."
             } >> "$GITHUB_STEP_SUMMARY"
 
-            run_check "studio_docker_api_build" docker build -f packages/studio-api/Dockerfile . || failures+=("studio:docker:api")
-            run_check "studio_docker_web_build" docker build -f packages/studio-web/Dockerfile . || failures+=("studio:docker:web")
-            run_check "studio_docker_worker_build" docker build -f packages/studio-worker/Dockerfile . || failures+=("studio:docker:worker")
+            run_check "studio_docker_api_build" bun run ci:required:docker:api || failures+=("studio:docker:api")
+            run_check "studio_docker_web_build" bun run ci:required:docker:web || failures+=("studio:docker:web")
+            run_check "studio_docker_worker_build" bun run ci:required:docker:worker || failures+=("studio:docker:worker")
           else
             {
               echo "### Studio Docker Guard"
@@ -119,14 +122,9 @@ jobs:
             echo "### ❌ Required checks failed"
             echo "- Failed commands: \`${{ steps.run_required.outputs.failures }}\`"
             echo "- Review log sections below and use local parity commands to reproduce."
-            echo "- Suggested commands:"
-            echo "  - \`bun run typecheck\`"
-            echo "  - \`bun run build\`"
-            echo "  - \`bun run quality:check\`"
-            echo "  - \`bun run studio:test:integration\`"
-            echo "  - \`docker build -f packages/studio-api/Dockerfile .\`"
-            echo "  - \`docker build -f packages/studio-web/Dockerfile .\`"
-            echo "  - \`docker build -f packages/studio-worker/Dockerfile .\`"
+            echo "- Suggested local parity commands:"
+            echo "  - \`bun run ci:required\`"
+            echo "  - \`bun run ci:required:docker\` (when the Studio Docker guard is triggered)"
             echo "- If Docker builds failed with frozen lockfile errors, run \`bun install\` and commit updated \`bun.lock\`."
           } >> "$GITHUB_STEP_SUMMARY"
 

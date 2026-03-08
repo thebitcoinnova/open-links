@@ -2,6 +2,10 @@
 
 ## Current
 
+- [x] Make the non-Docker required CI lane canonical in `package.json`, including a dedicated local Docker parity script.
+- [x] Extend `scripts/hooks/pre-commit.sh` with staged-path-sensitive required CI parity checks plus tracked-output restage protection.
+- [x] Align `.github/workflows/ci.yml` messaging with the new local parity entrypoints, then verify normal and failure-path hook behavior before closing.
+
 - [x] Fix non-payment card accessible-name semantics in the shared shell so action-oriented `aria-label` remains authoritative.
 - [x] Realign the accessibility/manual-smoke quality checks with `NonPaymentLinkCardShell` instead of the stale wrapper files.
 - [x] Add a rendered-markup regression test for simple and rich non-payment cards, then verify with `bun test src/components/cards/non-payment-card-accessibility.test.tsx`, `bun run typecheck`, `bun run build`, `bun run quality:check`, `bun run studio:test:integration`, and a final diff review.
@@ -24,6 +28,10 @@
 - [x] Add focused parser, cache-merge, UI, and sync-runner tests plus the Medium public-browser docs updates, then verify with the targeted and repo validation/build commands.
 
 ### Completion Review
+
+- Result: `package.json` now exposes canonical local CI parity entrypoints (`bun run ci:required` plus `bun run ci:required:docker`), the pre-commit hook keeps the existing fast staged checks and then runs the required CI lane when staged files touch CI-relevant paths, and the hook now blocks both pre-existing unstaged CI-relevant tracked edits and new tracked output drift from heavy parity checks.
+- Verification: `bun run hooks:precommit` passed with only `.codex/tasks/todo.md` staged and skipped the heavy parity phase; `bun run hooks:precommit` failed early with only `package.json` staged while `scripts/hooks/pre-commit.sh` remained unstaged; `bun run hooks:precommit` ran the full required lane plus all three Docker builds with all implementation files staged and then failed intentionally on tracked output drift in `data/cache/rich-public-cache.json`; `bun run ci:required`, `bun run biome:check`, `bun run studio:lint`, `bun run studio:typecheck`, and `bun run --filter @openlinks/studio-api test` passed.
+- Residual risk: The full staged parity path is now intentionally strict enough to stop commits when `build` refreshes tracked cache files, which is the intended safety behavior but will add friction on commits that depend on time-sensitive public cache refreshes. The Docker parity lane is also materially slower than the rest of the hook when package or Docker guard paths are staged.
 
 - Result: Shared non-payment cards now keep their action-oriented accessible name on `aria-label`, with `aria-labelledby` removed from the shared shell. The quality and manual-smoke checks now inspect `NonPaymentLinkCardShell`, and a new non-payment card accessibility test resolves simple and rich card trees to assert the expected label and description wiring.
 - Verification: `bun test src/components/cards/non-payment-card-accessibility.test.tsx`, `bun run typecheck`, `bun run build`, `bun run quality:check`, `bun run studio:test:integration`, and `bunx @biomejs/biome check scripts/quality/a11y.ts scripts/quality/manual-smoke.ts src/components/cards/non-payment-card-accessibility.test.tsx --files-ignore-unknown=true` passed.
