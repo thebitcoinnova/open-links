@@ -97,11 +97,12 @@ If your links use authenticated extractors (`links[].enrichment.authenticatedExt
 bun run setup:rich-auth
 ```
 
-If you use Medium or X rich links and want the optional public audience metrics cached locally, run:
+If you use Medium, X, or Primal rich links and want the optional public audience metrics cached locally, run:
 
 ```bash
 bun run public:rich:sync -- --only-link medium
 bun run public:rich:sync -- --only-link x
+bun run public:rich:sync -- --only-link primal
 ```
 
 ### 5) Update your data
@@ -212,7 +213,7 @@ High-signal deployment checks:
 - `bun run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
 - `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
 - `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
-- `bun run public:rich:sync` - refresh public browser-derived Medium/X profile audience metrics into `data/cache/rich-public-cache.json` (non-auth, operator-invoked).
+- `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal profile audience metrics into `data/cache/rich-public-cache.json` (non-auth, operator-invoked).
 - `bun run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
 - `bun run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
 - `bun run auth:rich:clear` - clear authenticated cache entries and unreferenced local assets (selector-driven; supports `--dry-run`).

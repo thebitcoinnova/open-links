@@ -316,7 +316,9 @@ export const mergePublicCacheMetadataForTarget = (input: {
 }): PublicCacheMetadata => {
   const next = normalizeMetadata(input.next);
   const preservesAudienceMetrics =
-    input.targetId === "medium-public-feed" || input.targetId === "x-public-oembed";
+    input.targetId === "medium-public-feed" ||
+    input.targetId === "primal-public-profile" ||
+    input.targetId === "x-public-oembed";
 
   if (!input.previous || !preservesAudienceMetrics) {
     return next;

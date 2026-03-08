@@ -1,21 +1,26 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-08T19:05:44.872Z",
+  "updatedAt": "2026-03-08T19:50:23.648Z",
   "entries": {
     "primal": {
       "linkId": "primal",
       "sourceUrl": "https://primal.net/peterryszkiewicz",
-      "capturedAt": "2026-03-08T18:05:23.868Z",
-      "updatedAt": "2026-03-08T18:05:23.868Z",
+      "capturedAt": "2026-03-08T19:50:23.648Z",
+      "updatedAt": "2026-03-08T19:50:23.648Z",
       "metadata": {
         "title": "Peter No Taxation Without Representation Ryszkiewicz",
         "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
         "image": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
+        "handle": "peterryszkiewicz",
         "sourceLabel": "primal.net",
-        "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg"
+        "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
+        "followersCount": 15,
+        "followersCountRaw": "15 followers",
+        "followingCount": 90,
+        "followingCountRaw": "90 following"
       },
       "cacheControl": "must-revalidate, proxy-revalidate, max-age=1",
-      "expiresAt": "2026-03-08T18:05:25.000Z"
+      "expiresAt": "2026-03-08T19:50:25.000Z"
     },
     "github": {
       "linkId": "github",

@@ -190,6 +190,52 @@ test("formats X audience metrics from cached public-profile counts", () => {
   ]);
 });
 
+test("formats Primal audience metrics from cached public-profile counts", () => {
+  // Arrange
+  const link = {
+    id: "primal",
+    label: "Primal",
+    url: "https://primal.net/peterryszkiewicz",
+    type: "rich",
+    icon: "primal",
+    metadata: {
+      title: "Peter No Taxation Without Representation Ryszkiewicz",
+      image: "/generated/images/primal-avatar.jpg",
+      followersCount: 15,
+      followersCountRaw: "15 followers",
+      followingCount: 90,
+      followingCountRaw: "90 following",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "primal");
+  assert.equal(resolved.displayName, "Peter No Taxation Without Representation Ryszkiewicz");
+  assert.deepEqual(resolved.metrics, [
+    {
+      kind: "followers",
+      label: "Followers",
+      count: 15,
+      rawText: "15 followers",
+      parsedCountCompactText: "15",
+      displayLabel: "followers",
+      displayText: "15 followers",
+    },
+    {
+      kind: "following",
+      label: "Following",
+      count: 90,
+      rawText: "90 following",
+      parsedCountCompactText: "90",
+      displayLabel: "following",
+      displayText: "90 following",
+    },
+  ]);
+});
+
 test("medium profile metadata cleans the feed title into a display name and treats the avatar as identity chrome", () => {
   // Arrange
   const link = {

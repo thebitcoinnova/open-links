@@ -39,6 +39,17 @@ const xLink = {
   },
 } as const;
 
+const primalLink = {
+  id: "primal",
+  label: "Primal",
+  url: "https://primal.net/peterryszkiewicz",
+  type: "rich",
+  icon: "primal",
+  metadata: {
+    handle: "peterryszkiewicz",
+  },
+} as const;
+
 const emptyRegistry = (): PublicCacheRegistry => ({
   version: 1,
   updatedAt: "2026-03-08T14:00:00.000Z",
@@ -85,6 +96,27 @@ const createXBaseEntry = (
     sourceLabel: "x.com",
   },
   cacheControl: "must-revalidate, max-age=3153600000",
+});
+
+const createPrimalBaseEntry = (
+  linkId: string,
+  generatedAt: string,
+  sourceUrl: string,
+  handle = "peterryszkiewicz",
+): PublicCacheEntry => ({
+  linkId,
+  sourceUrl,
+  capturedAt: generatedAt,
+  updatedAt: generatedAt,
+  metadata: {
+    title: "Peter No Taxation Without Representation Ryszkiewicz",
+    description: "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
+    image: "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+    profileImage: "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+    handle,
+    sourceLabel: "primal.net",
+  },
+  cacheControl: "must-revalidate, proxy-revalidate, max-age=1",
 });
 
 const captureSuccess = (
@@ -514,6 +546,195 @@ test("preserves existing X metrics when a refresh attempt fails", async () => {
       status: "failed",
       reason: "audience_missing",
       artifactPath: "output/playwright/public-rich-sync/x-failed.json",
+    },
+  ]);
+});
+
+test("bootstraps a missing Primal cache entry and overlays follower and following counts", async () => {
+  // Arrange
+  let bootstrapCalls = 0;
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "primal",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [primalLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: (_path, registry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(registry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        return createPrimalBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "primal-public-profile");
+        return captureSuccess(
+          {
+            followersCount: 15,
+            followersCountRaw: "15 followers",
+            followingCount: 90,
+            followingCountRaw: "90 following",
+          },
+          "output/playwright/public-rich-sync/primal-2026-03-08.json",
+        );
+      },
+      nowIso: () => "2026-03-08T19:30:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.processed, 1);
+  assert.equal(writtenRegistry?.entries.primal?.sourceUrl, "https://primal.net/peterryszkiewicz");
+  assert.equal(writtenRegistry?.entries.primal?.metadata.followersCountRaw, "15 followers");
+  assert.equal(writtenRegistry?.entries.primal?.metadata.followingCountRaw, "90 following");
+});
+
+test("skips Primal sync in only-missing mode when both audience metrics are already cached", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.primal = {
+    ...createPrimalBaseEntry(
+      "primal",
+      "2026-03-08T18:00:00.000Z",
+      "https://primal.net/peterryszkiewicz",
+    ),
+    metadata: {
+      ...createPrimalBaseEntry(
+        "primal",
+        "2026-03-08T18:00:00.000Z",
+        "https://primal.net/peterryszkiewicz",
+      ).metadata,
+      followersCount: 15,
+      followersCountRaw: "15 followers",
+      followingCount: 90,
+      followingCountRaw: "90 following",
+    },
+  };
+  let captureCalls = 0;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "primal",
+      onlyMissing: true,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [primalLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        return captureSuccess({
+          followersCount: 15,
+          followersCountRaw: "15 followers",
+          followingCount: 90,
+          followingCountRaw: "90 following",
+        });
+      },
+      nowIso: () => "2026-03-08T19:30:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(captureCalls, 0);
+  assert.equal(result.skipped, 1);
+  assert.equal(result.processed, 0);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "primal",
+      status: "skipped",
+      reason: "audience_present",
+    },
+  ]);
+});
+
+test("preserves existing Primal metrics when a refresh attempt fails", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.primal = {
+    ...createPrimalBaseEntry(
+      "primal",
+      "2026-03-08T18:00:00.000Z",
+      "https://primal.net/peterryszkiewicz",
+    ),
+    metadata: {
+      ...createPrimalBaseEntry(
+        "primal",
+        "2026-03-08T18:00:00.000Z",
+        "https://primal.net/peterryszkiewicz",
+      ).metadata,
+      followersCount: 15,
+      followersCountRaw: "15 followers",
+      followingCount: 90,
+      followingCountRaw: "90 following",
+    },
+  };
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "primal",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [primalLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/primal-failed.json",
+        metrics: {
+          followersCount: 15,
+          followersCountRaw: "15 followers",
+          placeholderSignals: [],
+        },
+        error: "Primal public browser capture did not find a following count.",
+      }),
+      nowIso: () => "2026-03-08T19:31:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.registry.entries.primal?.metadata.followersCountRaw, "15 followers");
+  assert.equal(result.registry.entries.primal?.metadata.followingCountRaw, "90 following");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "primal",
+      status: "failed",
+      reason: "audience_missing",
+      artifactPath: "output/playwright/public-rich-sync/primal-failed.json",
     },
   ]);
 });

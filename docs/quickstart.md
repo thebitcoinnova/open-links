@@ -130,11 +130,12 @@ Recommended first pass:
 bun run validate:data
 ```
 
-If you want Medium or X audience metrics cached through the public browser path, run this before `dev` or after your profile changes:
+If you want Medium, X, or Primal audience metrics cached through the public browser path, run this before `dev` or after your profile changes:
 
 ```bash
 bun run public:rich:sync -- --only-link medium
 bun run public:rich:sync -- --only-link x
+bun run public:rich:sync -- --only-link primal
 ```
 
 ### Start dev server

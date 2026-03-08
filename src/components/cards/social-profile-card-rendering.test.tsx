@@ -94,6 +94,27 @@ const xRichLink = {
   },
 } as const satisfies OpenLink;
 
+const primalRichLink = {
+  id: "primal",
+  label: "Primal",
+  url: "https://primal.net/peterryszkiewicz",
+  type: "rich",
+  icon: "primal",
+  description: "Nostr profile and notes",
+  metadata: {
+    title: "Peter No Taxation Without Representation Ryszkiewicz",
+    description: "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
+    sourceLabel: "primal.net",
+    handle: "peterryszkiewicz",
+    image: "/generated/images/primal-avatar.jpg",
+    profileImage: "/generated/images/primal-avatar.jpg",
+    followersCount: 15,
+    followersCountRaw: "15 followers",
+    followingCount: 90,
+    followingCountRaw: "90 following",
+  },
+} as const satisfies OpenLink;
+
 const linkedinRichLink = {
   id: "linkedin",
   label: "LinkedIn",
@@ -280,6 +301,29 @@ test("x rich cards surface best-effort public audience metrics without changing 
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["1.4K Followers", "643 Following"],
+  );
+});
+
+test("primal rich cards surface public audience metrics in the shared profile header row", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, primalRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/primal-avatar.jpg");
+  assert.equal(viewModel.title, "Peter No Taxation Without Representation Ryszkiewicz");
+  assert.equal(
+    viewModel.description,
+    "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
+  );
+  assert.deepEqual(
+    viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
+    ["handle:@peterryszkiewicz", "metric:15 followers", "metric:90 following"],
+  );
+  assert.equal(viewModel.footerSourceLabel, "primal.net");
+  assert.deepEqual(
+    viewModel.socialProfile.metrics.map((metric) => metric.displayText),
+    ["15 followers", "90 following"],
   );
 });
 

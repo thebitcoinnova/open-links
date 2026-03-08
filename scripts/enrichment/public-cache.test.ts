@@ -275,3 +275,36 @@ test("preserves X audience metrics when oEmbed refresh metadata does not include
   assert.equal(merged.followingCountRaw, "643 Following");
   assert.equal(merged.sourceLabel, "x.com");
 });
+
+test("preserves Primal audience metrics when profile refresh metadata does not include them", () => {
+  // Arrange
+  const merged = mergePublicCacheMetadataForTarget({
+    targetId: "primal-public-profile",
+    previous: {
+      title: "Peter No Taxation Without Representation Ryszkiewicz",
+      description:
+        "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
+      image: "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+      profileImage: "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+      followersCount: 15,
+      followersCountRaw: "15 followers",
+      followingCount: 90,
+      followingCountRaw: "90 following",
+    },
+    next: {
+      title: "Peter No Taxation Without Representation Ryszkiewicz",
+      description:
+        "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
+      image: "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+      profileImage: "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+      sourceLabel: "primal.net",
+    },
+  });
+
+  // Assert
+  assert.equal(merged.followersCount, 15);
+  assert.equal(merged.followersCountRaw, "15 followers");
+  assert.equal(merged.followingCount, 90);
+  assert.equal(merged.followingCountRaw, "90 following");
+  assert.equal(merged.sourceLabel, "primal.net");
+});

@@ -19,6 +19,7 @@ interface PublicAugmentationOutcome {
 
 export interface PublicAugmentationTarget {
   id:
+    | "primal-public-profile"
     | "medium-public-feed"
     | "substack-public-profile"
     | "x-public-oembed"
@@ -631,6 +632,24 @@ const parseMediumFeed = (sourceUrl: string, xml: string): PublicAugmentationOutc
   });
 };
 
+const parsePrimalPublicProfile = (sourceUrl: string, html: string): PublicAugmentationOutcome => {
+  const parsed = parseMetadata(html, sourceUrl);
+  const handleResolution = resolveHandleFromUrl({ url: sourceUrl, icon: "primal" });
+  const handle =
+    handleResolution.reason === "resolved" && handleResolution.extractorId === "primal"
+      ? handleResolution.handle
+      : undefined;
+
+  return resolveCompleteness({
+    title: safeTrim(parsed.metadata.title),
+    description: safeTrim(parsed.metadata.description),
+    image: safeTrim(parsed.metadata.image),
+    profileImage: safeTrim(parsed.metadata.image),
+    handle,
+    sourceLabel: "primal.net",
+  });
+};
+
 const parseSubstackPublicProfile = (
   input: {
     originalUrl: string;
@@ -798,6 +817,14 @@ export const resolvePublicAugmentationTarget = (
       id: "youtube-public-profile",
       sourceUrl,
       parse: (body) => parseYoutubePublicProfile(sourceUrl, body),
+    };
+  }
+
+  if (supportedProfile?.platform === "primal") {
+    return {
+      id: "primal-public-profile",
+      sourceUrl: input.url,
+      parse: (body) => parsePrimalPublicProfile(input.url, body),
     };
   }
 

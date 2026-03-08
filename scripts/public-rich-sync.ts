@@ -3,10 +3,12 @@ import path from "node:path";
 import process from "node:process";
 import { resolveSupportedSocialProfile } from "../src/lib/content/social-profile-fields";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
-import {
-  type MediumPublicProfileBrowserSnapshot,
-  parseMediumPublicProfileMetrics,
-} from "./enrichment/medium-public-browser";
+import { parseMediumPublicProfileMetrics } from "./enrichment/medium-public-browser";
+import { parsePrimalPublicProfileMetrics } from "./enrichment/primal-public-browser";
+import type {
+  PublicAudienceBrowserSnapshot,
+  PublicAudienceMetrics,
+} from "./enrichment/public-audience-browser";
 import {
   PUBLIC_BROWSER_USER_AGENT,
   type PublicAugmentationTarget,
@@ -29,10 +31,7 @@ import {
   writePublicCacheRegistry,
 } from "./enrichment/public-cache";
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
-import {
-  type XPublicProfileBrowserSnapshot,
-  parseXPublicProfileMetrics,
-} from "./enrichment/x-public-browser";
+import { parseXPublicProfileMetrics } from "./enrichment/x-public-browser";
 import { loadEmbeddedCode } from "./shared/embedded-code-loader";
 
 const ROOT = process.cwd();
@@ -42,6 +41,9 @@ const DEFAULT_FETCH_RETRIES = 1;
 const PUBLIC_BROWSER_ARGS = ["--disable-blink-features=AutomationControlled"] as const;
 const MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/medium/extract-public-profile-metrics.js",
+);
+const PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/primal/extract-public-profile-metrics.js",
 );
 const X_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/x/extract-public-profile-metrics.js",
@@ -83,19 +85,14 @@ interface XPublicTarget extends PublicAugmentationTarget {
   id: "x-public-oembed";
 }
 
-type SyncablePublicTarget = MediumPublicTarget | XPublicTarget;
-type SyncablePublicTargetId = SyncablePublicTarget["id"];
-type PublicBrowserAudienceSnapshot =
-  | MediumPublicProfileBrowserSnapshot
-  | XPublicProfileBrowserSnapshot;
-
-export interface PublicBrowserAudienceMetrics {
-  followersCount?: number;
-  followersCountRaw?: string;
-  followingCount?: number;
-  followingCountRaw?: string;
-  placeholderSignals: string[];
+interface PrimalPublicTarget extends PublicAugmentationTarget {
+  id: "primal-public-profile";
 }
+
+type SyncablePublicTarget = MediumPublicTarget | PrimalPublicTarget | XPublicTarget;
+type SyncablePublicTargetId = SyncablePublicTarget["id"];
+type PublicBrowserAudienceSnapshot = PublicAudienceBrowserSnapshot;
+export type PublicBrowserAudienceMetrics = PublicAudienceMetrics;
 
 interface BootstrapBaseEntryInput {
   link: RichLinkInput;
@@ -215,12 +212,17 @@ const isMediumPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is MediumPublicTarget => target?.id === "medium-public-feed";
 
+const isPrimalPublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is PrimalPublicTarget => target?.id === "primal-public-profile";
+
 const isXPublicTarget = (target: PublicAugmentationTarget | null): target is XPublicTarget =>
   target?.id === "x-public-oembed";
 
 const isSyncablePublicTarget = (
   target: PublicAugmentationTarget | null,
-): target is SyncablePublicTarget => isMediumPublicTarget(target) || isXPublicTarget(target);
+): target is SyncablePublicTarget =>
+  isMediumPublicTarget(target) || isPrimalPublicTarget(target) || isXPublicTarget(target);
 
 const hasDefinedAudienceMetric = (value: number | string | undefined): boolean => {
   if (typeof value === "number") {
@@ -243,11 +245,40 @@ const hasBaseProfileMetadata = (entry: PublicCacheEntry | undefined): boolean =>
     typeof entry.metadata.image === "string" &&
     entry.metadata.image.trim().length > 0 &&
     typeof entry.metadata.profileImage === "string" &&
-    entry.metadata.profileImage.trim().length > 0 &&
-    typeof entry.metadata.handle === "string" &&
-    entry.metadata.handle.trim().length > 0
+    entry.metadata.profileImage.trim().length > 0
   );
 };
+
+interface SyncableTargetBehavior {
+  label: string;
+  snippet: string;
+  parseMetrics: (snapshot: PublicAudienceBrowserSnapshot) => PublicBrowserAudienceMetrics;
+  requiresFollowingCount: boolean;
+}
+
+const SYNCABLE_TARGET_BEHAVIORS = {
+  "medium-public-feed": {
+    label: "Medium",
+    snippet: MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseMediumPublicProfileMetrics,
+    requiresFollowingCount: false,
+  },
+  "primal-public-profile": {
+    label: "Primal",
+    snippet: PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parsePrimalPublicProfileMetrics,
+    requiresFollowingCount: true,
+  },
+  "x-public-oembed": {
+    label: "X",
+    snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseXPublicProfileMetrics,
+    requiresFollowingCount: true,
+  },
+} as const satisfies Record<SyncablePublicTargetId, SyncableTargetBehavior>;
+
+const behaviorForTarget = (targetId: SyncablePublicTargetId): SyncableTargetBehavior =>
+  SYNCABLE_TARGET_BEHAVIORS[targetId];
 
 const hasRequiredAudienceMetrics = (
   targetId: SyncablePublicTargetId,
@@ -261,7 +292,7 @@ const hasRequiredAudienceMetrics = (
     hasDefinedAudienceMetric(entry.metadata.followersCount) ||
     hasDefinedAudienceMetric(entry.metadata.followersCountRaw);
 
-  if (targetId === "medium-public-feed") {
+  if (!behaviorForTarget(targetId).requiresFollowingCount) {
     return hasFollowers;
   }
 
@@ -273,21 +304,21 @@ const hasRequiredAudienceMetrics = (
 };
 
 const skipReasonForTarget = (targetId: SyncablePublicTargetId): string =>
-  targetId === "medium-public-feed" ? "followers_present" : "audience_present";
+  behaviorForTarget(targetId).requiresFollowingCount ? "audience_present" : "followers_present";
 
 const skipMessageForTarget = (targetId: SyncablePublicTargetId): string =>
-  targetId === "medium-public-feed"
-    ? "followers already present"
-    : "followers and following already present";
+  behaviorForTarget(targetId).requiresFollowingCount
+    ? "followers and following already present"
+    : "followers already present";
 
 const missingMetricsReasonForTarget = (targetId: SyncablePublicTargetId): string =>
-  targetId === "medium-public-feed" ? "followers_missing" : "audience_missing";
+  behaviorForTarget(targetId).requiresFollowingCount ? "audience_missing" : "followers_missing";
 
 const captureSummaryForTarget = (
   targetId: SyncablePublicTargetId,
   metrics: PublicBrowserAudienceMetrics,
 ): string =>
-  targetId === "medium-public-feed"
+  !behaviorForTarget(targetId).requiresFollowingCount
     ? (metrics.followersCountRaw ?? "followers missing")
     : `${metrics.followingCountRaw ?? "following missing"} / ${
         metrics.followersCountRaw ?? "followers missing"
@@ -384,24 +415,9 @@ const extractMetricTexts = (value: unknown): string[] | undefined => {
   return metricTexts.length > 0 ? metricTexts : undefined;
 };
 
-const toMediumSnapshot = (
+const toAudienceSnapshot = (
   payload: Record<string, unknown> | null,
-): MediumPublicProfileBrowserSnapshot | undefined => {
-  if (!payload) {
-    return undefined;
-  }
-
-  return {
-    currentUrl: safeTrim(payload.currentUrl),
-    title: safeTrim(payload.title),
-    bodyText: safeTrim(payload.bodyText),
-    metricTexts: extractMetricTexts(payload.metricTexts),
-  };
-};
-
-const toXSnapshot = (
-  payload: Record<string, unknown> | null,
-): XPublicProfileBrowserSnapshot | undefined => {
+): PublicAudienceBrowserSnapshot | undefined => {
   if (!payload) {
     return undefined;
   }
@@ -415,50 +431,43 @@ const toXSnapshot = (
 };
 
 const metricsSnippetForTarget = (targetId: SyncablePublicTargetId): string =>
-  targetId === "medium-public-feed"
-    ? MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET
-    : X_PUBLIC_PROFILE_METRICS_SNIPPET;
+  behaviorForTarget(targetId).snippet;
 
 const snapshotFromPayload = (
-  targetId: SyncablePublicTargetId,
   payload: Record<string, unknown> | null,
-): PublicBrowserAudienceSnapshot | undefined =>
-  targetId === "medium-public-feed" ? toMediumSnapshot(payload) : toXSnapshot(payload);
+): PublicBrowserAudienceSnapshot | undefined => toAudienceSnapshot(payload);
 
 const parseAudienceMetricsForTarget = (
   targetId: SyncablePublicTargetId,
   snapshot: PublicBrowserAudienceSnapshot | undefined,
-): PublicBrowserAudienceMetrics =>
-  targetId === "medium-public-feed"
-    ? parseMediumPublicProfileMetrics((snapshot ?? {}) as MediumPublicProfileBrowserSnapshot)
-    : parseXPublicProfileMetrics((snapshot ?? {}) as XPublicProfileBrowserSnapshot);
+): PublicBrowserAudienceMetrics => behaviorForTarget(targetId).parseMetrics(snapshot ?? {});
 
 const buildAudienceCaptureError = (
   targetId: SyncablePublicTargetId,
   metrics: PublicBrowserAudienceMetrics,
 ): string | undefined => {
   if (metrics.placeholderSignals.length > 0) {
-    return `${
-      targetId === "medium-public-feed" ? "Medium" : "X"
-    } public browser capture saw placeholder content: ${metrics.placeholderSignals.join(", ")}.`;
+    return `${behaviorForTarget(targetId).label} public browser capture saw placeholder content: ${metrics.placeholderSignals.join(
+      ", ",
+    )}.`;
   }
 
-  if (targetId === "medium-public-feed" && !metrics.followersCountRaw) {
-    return "Medium public browser capture did not find a follower count.";
+  if (!behaviorForTarget(targetId).requiresFollowingCount) {
+    return metrics.followersCountRaw
+      ? undefined
+      : `${behaviorForTarget(targetId).label} public browser capture did not find a follower count.`;
   }
 
-  if (targetId === "x-public-oembed") {
-    if (!metrics.followersCountRaw && !metrics.followingCountRaw) {
-      return "X public browser capture did not find follower or following counts.";
-    }
+  if (!metrics.followersCountRaw && !metrics.followingCountRaw) {
+    return `${behaviorForTarget(targetId).label} public browser capture did not find follower or following counts.`;
+  }
 
-    if (!metrics.followersCountRaw) {
-      return "X public browser capture did not find a follower count.";
-    }
+  if (!metrics.followersCountRaw) {
+    return `${behaviorForTarget(targetId).label} public browser capture did not find a follower count.`;
+  }
 
-    if (!metrics.followingCountRaw) {
-      return "X public browser capture did not find a following count.";
-    }
+  if (!metrics.followingCountRaw) {
+    return `${behaviorForTarget(targetId).label} public browser capture did not find a following count.`;
   }
 
   return undefined;
@@ -501,7 +510,7 @@ export const capturePublicAudienceMetricsFromBrowser = async (
       },
     );
     const payload = extractEvalResult(evalResult.response?.data);
-    snapshot = snapshotFromPayload(input.target.id, payload);
+    snapshot = snapshotFromPayload(payload);
   } catch (captureError: unknown) {
     error = captureError instanceof Error ? captureError.message : String(captureError);
   } finally {

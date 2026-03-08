@@ -22,6 +22,64 @@ test("resolves an X public augmentation target that uses oEmbed instead of direc
   assert.match(target.sourceUrl, /^https:\/\/publish\.twitter\.com\/oembed\?/);
 });
 
+test("resolves a Primal public augmentation target that fetches the profile page directly", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://primal.net/peterryszkiewicz",
+    icon: "primal",
+  });
+
+  // Assert
+  assert.ok(target);
+  assert.equal(target.id, "primal-public-profile");
+  assert.equal(target.sourceUrl, "https://primal.net/peterryszkiewicz");
+});
+
+test("parses Primal public profile metadata into an avatar-first payload", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://primal.net/peterryszkiewicz",
+    icon: "primal",
+  });
+  const html = `
+    <html>
+      <head>
+        <title>Peter No Taxation Without Representation Ryszkiewicz</title>
+        <meta property="og:title" content="Peter No Taxation Without Representation Ryszkiewicz" />
+        <meta
+          property="og:description"
+          content="Agentic engineer, making things in the AI space, Bitcoin space, and many others."
+        />
+        <meta
+          property="og:image"
+          content="https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg"
+        />
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "Peter No Taxation Without Representation Ryszkiewicz");
+  assert.equal(
+    parsed?.metadata.description,
+    "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
+  );
+  assert.equal(
+    parsed?.metadata.image,
+    "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+  );
+  assert.equal(
+    parsed?.metadata.profileImage,
+    "https://primal.net/media-cache?u=https%3A%2F%2Fexample.com%2Favatar.jpg",
+  );
+  assert.equal(parsed?.metadata.handle, "peterryszkiewicz");
+  assert.equal(parsed?.metadata.sourceLabel, "primal.net");
+});
+
 test("parses X oEmbed metadata into an avatar-first profile payload", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({
