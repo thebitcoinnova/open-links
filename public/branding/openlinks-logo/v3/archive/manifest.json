@@ -1,6 +1,6 @@
 {
   "version": "v3-archive",
-  "generatedAt": "2026-03-08T13:56:10.426Z",
+  "generatedAt": "2026-03-08T22:41:07.214Z",
   "constants": {
     "circle": {
       "cx": 50,
@@ -18,17 +18,17 @@
     "placement": "centered"
   },
   "canonical": {
-    "id": "inset--centerline-2x--centered--c10-l10",
-    "filename": "ol-mark--v3--inset--centerline-2x--centered--c10-l10.svg",
+    "id": "inset--centerline-2x--centered--c8.5-l8.5",
+    "filename": "ol-mark--v3--inset--centerline-2x--centered--c8.5-l8.5.svg",
     "stroke": {
-      "circle": 10,
-      "l": 10
+      "circle": 8.5,
+      "l": 8.5
     }
   },
   "comparisonSheetPath": "docs/assets/openlinks-logo/v3/openlinks-logo-variants.svg",
   "stats": {
-    "variantCount": 10,
-    "archivedVariantCount": 9
+    "variantCount": 11,
+    "archivedVariantCount": 10
   },
   "variants": [
     {
@@ -129,6 +129,39 @@
       "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
     },
     {
+      "id": "inset--centerline-2x--centered--c8.5-l8.5",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c8.5 / l8.5",
+      "annotation": "selected winner",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c8.5-l8.5.svg",
+      "stroke": {
+        "circle": 8.5,
+        "l": 8.5
+      },
+      "geometry": {
+        "xL": 38.596053,
+        "yTop": 27.192107,
+        "yBottom": 72.807893,
+        "xFootEnd": 61.403947
+      },
+      "metrics": {
+        "width": 22.807893,
+        "height": 45.615787,
+        "centerlineRatio": 2,
+        "outerRatio": 1.728503,
+        "topDistance": 25.5,
+        "cornerDistance": 25.5,
+        "endpointDistance": 25.5,
+        "usableRadius": 29.5,
+        "insetRadius": 25.5
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
       "id": "inset--centerline-2x--centered--c9-l9",
       "family": "inset",
       "ratioMode": "centerline-2x",
@@ -167,7 +200,6 @@
       "placement": "centered",
       "touchModel": "top+corner+endpoint tangent",
       "comparisonLabel": "c10 / l10",
-      "annotation": "selected winner",
       "filename": "ol-mark--v3--inset--centerline-2x--centered--c10-l10.svg",
       "stroke": {
         "circle": 10,

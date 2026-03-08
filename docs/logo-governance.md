@@ -4,10 +4,10 @@ This document defines the canonical OpenLinks logo asset paths and archive polic
 
 ## Current Active Logo
 
-- Winner label: `inset / centerline-2x / centered / c10-l10`
-- Winner id: `inset--centerline-2x--centered--c10-l10`
+- Winner label: `inset / centerline-2x / centered / c8.5-l8.5`
+- Winner id: `inset--centerline-2x--centered--c8.5-l8.5`
 - Winner source file:
-  - `public/branding/openlinks-logo/v3/ol-mark--v3--inset--centerline-2x--centered--c10-l10.svg`
+  - `public/branding/openlinks-logo/v3/ol-mark--v3--inset--centerline-2x--centered--c8.5-l8.5.svg`
 
 ## Canonical and Alias Paths
 

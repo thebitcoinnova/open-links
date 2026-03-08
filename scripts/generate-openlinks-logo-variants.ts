@@ -164,7 +164,7 @@ const V3_MANIFEST_PATH = path.join(V3_DIR, "manifest.json");
 const V3_ARCHIVE_MANIFEST_PATH = path.join(V3_ARCHIVE_DIR, "manifest.json");
 const V3_VERSION_CANONICAL_PATH = path.join(V3_DIR, "openlinks-logo.svg");
 const TOP_LEVEL_V3_ALIAS_PATH = path.join(LOGO_ROOT_DIR, "openlinks-logo-v3.svg");
-const V3_CANONICAL_ID = "inset--centerline-2x--centered--c10-l10";
+const V3_CANONICAL_ID = "inset--centerline-2x--centered--c8.5-l8.5";
 
 const COLOR = "#111111";
 const CANVAS_SIZE = 100;
@@ -186,13 +186,15 @@ const V3_FIXED_PLACEMENT = "centered" as const;
 const V3_INSET_MARGIN = 4;
 const V3_CAP: CapSpec = { linecap: "round", linejoin: "round" };
 
-const V3_WEIGHT_PRESETS: V3WeightPreset[] = Array.from({ length: 10 }, (_, index) => {
-  const weight = index + 6;
+const V3_WEIGHT_VALUES = [6, 7, 8, 8.5, 9, 10, 11, 12, 13, 14, 15] as const;
 
+const V3_WEIGHT_PRESETS: V3WeightPreset[] = V3_WEIGHT_VALUES.map((weight) => {
+  const label = Number.isInteger(weight) ? String(weight) : weight.toFixed(1);
   return {
     stroke: { circle: weight, l: weight },
-    comparisonLabel: `c${weight} / l${weight}`,
-    annotation: weight === 6 ? "baseline reference" : weight === 10 ? "selected winner" : undefined,
+    comparisonLabel: `c${label} / l${label}`,
+    annotation:
+      weight === 6 ? "baseline reference" : weight === 8.5 ? "selected winner" : undefined,
   };
 });
 
