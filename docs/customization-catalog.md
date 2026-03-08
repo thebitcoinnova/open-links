@@ -71,7 +71,7 @@ Coverage:
 - `descriptionSource`
 - `image`
 - `imageFit`
-- `mobileImageLayout`
+- `mobileImageLayout` (legacy no-op for unified non-payment card layout)
 - `sourceLabel`
 - `sourceLabelVisible`
 - `enrichmentStatus`
@@ -179,7 +179,7 @@ Coverage:
 - `descriptionSource`
 - `imageTreatment`
 - `imageFit`
-- `mobile.imageLayout`
+- `mobile.imageLayout` (legacy no-op for unified non-payment card layout)
 - `enrichment.enabledByDefault`
 - `enrichment.timeoutMs`
 - `enrichment.retries`

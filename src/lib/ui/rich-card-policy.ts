@@ -2,7 +2,6 @@ import type {
   OpenLink,
   RichCardDescriptionSource,
   RichCardImageFit,
-  RichCardMobileImageLayout,
   RichImageTreatment,
   SiteData,
   SourceLabelDefault,
@@ -14,20 +13,31 @@ import {
 
 export type ResolvedCardVariant = "simple" | "rich";
 
-export interface RichCardViewModel {
+export type NonPaymentCardLeadKind = "preview" | "avatar" | "icon";
+export type NonPaymentCardMetaKind = "handle" | "metric" | "source";
+export type NonPaymentCardVariant = ResolvedCardVariant;
+
+export interface NonPaymentCardMetaItem {
+  kind: NonPaymentCardMetaKind;
+  text: string;
+}
+
+export interface NonPaymentCardViewModel {
   title: string;
   description: string;
-  handleDisplay?: string;
-  previewImageUrl?: string;
   socialProfile: ResolvedSocialProfileMetadata;
+  leadKind: NonPaymentCardLeadKind;
+  leadImageUrl?: string;
+  headerMetaItems: NonPaymentCardMetaItem[];
   imageTreatment: RichImageTreatment;
   imageFit: RichCardImageFit;
-  mobileImageLayout: RichCardMobileImageLayout;
   sourceLabel?: string;
   showSourceLabel: boolean;
-  showProfileHeader: boolean;
-  showMetaHandle: boolean;
+  footerSourceLabel?: string;
+  showFooterIcon: boolean;
 }
+
+export type RichCardViewModel = NonPaymentCardViewModel;
 
 export const resolveRichRenderMode = (site: SiteData): "auto" | "simple" =>
   site.ui?.richCards?.renderMode === "simple" ? "simple" : "auto";
@@ -59,23 +69,6 @@ const resolveImageFit = (site: SiteData, link: OpenLink): RichCardImageFit => {
 
   // Preserve image content by default to avoid clipping wide social preview assets.
   return "contain";
-};
-
-const isMobileImageLayout = (value: unknown): value is RichCardMobileImageLayout =>
-  value === "inline" || value === "full-width";
-
-const resolveMobileImageLayout = (site: SiteData, link: OpenLink): RichCardMobileImageLayout => {
-  const linkValue = link.metadata?.mobileImageLayout;
-  if (isMobileImageLayout(linkValue)) {
-    return linkValue;
-  }
-
-  const siteValue = site.ui?.richCards?.mobile?.imageLayout;
-  if (isMobileImageLayout(siteValue)) {
-    return siteValue;
-  }
-
-  return "inline";
 };
 
 const urlDomain = (url: string | undefined): string => {
@@ -160,7 +153,77 @@ export const resolveRichCardVariant = (site: SiteData, link: OpenLink): Resolved
   return "rich";
 };
 
-export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCardViewModel => {
+const resolveLeadVisual = (
+  variant: NonPaymentCardVariant,
+  socialProfile: ResolvedSocialProfileMetadata,
+  imageTreatment: RichImageTreatment,
+): Pick<NonPaymentCardViewModel, "leadKind" | "leadImageUrl"> => {
+  if (
+    variant === "rich" &&
+    imageTreatment !== "off" &&
+    socialProfile.hasDistinctPreviewImage &&
+    socialProfile.previewImageUrl
+  ) {
+    return {
+      leadKind: "preview",
+      leadImageUrl: socialProfile.previewImageUrl,
+    };
+  }
+
+  if (socialProfile.usesProfileLayout) {
+    return {
+      leadKind: "avatar",
+      leadImageUrl: socialProfile.profileImageUrl,
+    };
+  }
+
+  return {
+    leadKind: "icon",
+    leadImageUrl: undefined,
+  };
+};
+
+const buildHeaderMetaItems = (
+  variant: NonPaymentCardVariant,
+  socialProfile: ResolvedSocialProfileMetadata,
+  sourcePresentation: LinkSourcePresentation,
+): NonPaymentCardMetaItem[] => {
+  const items: NonPaymentCardMetaItem[] = [];
+
+  if (socialProfile.handleDisplay) {
+    items.push({
+      kind: "handle",
+      text: socialProfile.handleDisplay,
+    });
+  }
+
+  for (const metric of socialProfile.metrics) {
+    items.push({
+      kind: "metric",
+      text: metric.displayText,
+    });
+  }
+
+  if (
+    items.length === 0 &&
+    variant === "rich" &&
+    sourcePresentation.showSourceLabel &&
+    sourcePresentation.sourceLabel
+  ) {
+    items.push({
+      kind: "source",
+      text: sourcePresentation.sourceLabel,
+    });
+  }
+
+  return items;
+};
+
+export const buildNonPaymentCardViewModel = (
+  site: SiteData,
+  link: OpenLink,
+  variant: NonPaymentCardVariant,
+): NonPaymentCardViewModel => {
   const metadata = link.metadata ?? {};
   const socialProfile = resolveSocialProfileMetadata(link);
   const configuredImageTreatment = resolveImageTreatment(site);
@@ -173,28 +236,35 @@ export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCard
       ? "off"
       : configuredImageTreatment;
   const imageFit = resolveImageFit(site, link);
-  const previewImageUrl =
-    imageTreatment === "off"
-      ? undefined
-      : socialProfile.hasDistinctPreviewImage
-        ? socialProfile.previewImageUrl
-        : !socialProfile.profileImageUrl
-          ? socialProfile.previewImageUrl
-          : undefined;
-  const showProfileHeader = socialProfile.usesProfileLayout;
+  const leadVisual = resolveLeadVisual(variant, socialProfile, imageTreatment);
+  const headerMetaItems = buildHeaderMetaItems(variant, socialProfile, sourcePresentation);
+  const footerSourceLabel =
+    sourcePresentation.showSourceLabel && sourcePresentation.sourceLabel
+      ? sourcePresentation.sourceLabel
+      : undefined;
+  const title =
+    variant === "simple" && !socialProfile.usesProfileLayout
+      ? link.label
+      : (socialProfile.displayName ?? metadata.title ?? link.label);
 
   return {
-    title: socialProfile.displayName ?? metadata.title ?? link.label,
+    title,
     description: resolveLinkCardDescription(site, link),
-    handleDisplay: socialProfile.handleDisplay,
-    previewImageUrl,
     socialProfile,
+    leadKind: leadVisual.leadKind,
+    leadImageUrl: leadVisual.leadImageUrl,
+    headerMetaItems,
     imageTreatment,
     imageFit,
-    mobileImageLayout: resolveMobileImageLayout(site, link),
     sourceLabel: sourcePresentation.sourceLabel,
     showSourceLabel: sourcePresentation.showSourceLabel,
-    showProfileHeader,
-    showMetaHandle: !showProfileHeader && Boolean(socialProfile.handleDisplay),
+    footerSourceLabel,
+    showFooterIcon: leadVisual.leadKind !== "icon",
   };
 };
+
+export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCardViewModel =>
+  buildNonPaymentCardViewModel(site, link, "rich");
+
+export const buildSimpleCardViewModel = (site: SiteData, link: OpenLink): NonPaymentCardViewModel =>
+  buildNonPaymentCardViewModel(site, link, "simple");

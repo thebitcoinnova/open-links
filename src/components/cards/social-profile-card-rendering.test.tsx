@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import {
+  buildNonPaymentCardViewModel,
   buildRichCardViewModel,
+  buildSimpleCardViewModel,
   resolveLinkCardDescription,
   resolveLinkSourcePresentation,
 } from "../../lib/ui/rich-card-policy";
@@ -115,20 +117,44 @@ const blogRichLink = {
   },
 } as const satisfies OpenLink;
 
-test("rich profile cards render avatar-first identity chrome without duplicating identical preview media", () => {
+const instagramSimpleLink = {
+  ...instagramProfileLink,
+  id: "instagram-simple",
+  type: "simple",
+} as const satisfies OpenLink;
+
+const workSimpleLink = {
+  id: "work",
+  label: "OpenLinks",
+  url: "https://openlinks.dev",
+  type: "simple",
+  icon: "globe",
+  description: "Open source links site",
+  metadata: {
+    title: "OpenLinks project site",
+    description: "Open source links site",
+    sourceLabel: "openlinks.dev",
+  },
+} as const satisfies OpenLink;
+
+test("rich profile cards resolve avatar leads, header metrics, and footer source context", () => {
   // Arrange
   const viewModel = buildRichCardViewModel(site, instagramProfileLink);
 
   // Assert
-  assert.equal(viewModel.showProfileHeader, true);
-  assert.equal(viewModel.showMetaHandle, false);
-  assert.equal(viewModel.previewImageUrl, undefined);
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/avatar.jpg");
   assert.equal(viewModel.title, "Peter Justice For The Victims Ryszkiewicz");
   assert.equal(
     viewModel.description,
     "86 Followers, 169 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
   );
-  assert.equal(viewModel.showSourceLabel, true);
+  assert.deepEqual(
+    viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
+    ["handle:@peterryszkiewicz", "metric:86 Followers", "metric:169 Following"],
+  );
+  assert.equal(viewModel.footerSourceLabel, "instagram.com");
+  assert.equal(viewModel.showFooterIcon, true);
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["86 Followers", "169 Following"],
@@ -157,76 +183,167 @@ test("shared presentation data stays ready for simple-card profile rendering", (
   );
 });
 
-test("github rich cards switch to profile layout with avatar identity and audience metrics", () => {
+test("github rich cards keep avatar identity and audience metrics in the shared layout model", () => {
   // Arrange
   const viewModel = buildRichCardViewModel(site, githubRichLink);
 
   // Assert
-  assert.equal(viewModel.showProfileHeader, true);
-  assert.equal(viewModel.showMetaHandle, false);
-  assert.equal(viewModel.handleDisplay, "@prizz");
-  assert.equal(viewModel.previewImageUrl, undefined);
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/github-avatar.jpg");
   assert.equal(viewModel.title, "pRizz");
   assert.equal(
     viewModel.description,
     "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
   );
-  assert.equal(viewModel.sourceLabel, "github.com");
-  assert.equal(viewModel.socialProfile.profileImageUrl, "/generated/images/github-avatar.jpg");
+  assert.deepEqual(
+    viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
+    ["handle:@prizz", "metric:90 followers", "metric:87 following"],
+  );
+  assert.equal(viewModel.footerSourceLabel, "github.com");
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["90 followers", "87 following"],
   );
 });
 
-test("linkedin rich cards switch to profile layout from authenticated metadata without duplicate preview media", () => {
+test("linkedin rich cards use avatar leads from authenticated metadata without duplicate preview media", () => {
   // Arrange
   const viewModel = buildRichCardViewModel(site, linkedinRichLink);
 
   // Assert
-  assert.equal(viewModel.showProfileHeader, true);
-  assert.equal(viewModel.showMetaHandle, false);
-  assert.equal(viewModel.handleDisplay, "@peter-ryszkiewicz");
-  assert.equal(viewModel.previewImageUrl, undefined);
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/cache/rich-authenticated/linkedin-avatar.jpg");
   assert.equal(viewModel.title, "Peter Ryszkiewicz");
   assert.equal(
     viewModel.description,
     "Talented software engineer, excited to work on new and challenging problems.",
   );
-  assert.equal(viewModel.sourceLabel, "linkedin.com");
-  assert.equal(
-    viewModel.socialProfile.profileImageUrl,
-    "/cache/rich-authenticated/linkedin-avatar.jpg",
-  );
+  assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peter-ryszkiewicz" }]);
+  assert.equal(viewModel.footerSourceLabel, "linkedin.com");
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 
-test("non-profile rich cards keep preview media and fallback metadata for preview layouts", () => {
+test("non-profile rich cards keep preview leads with compact header and footer source rows", () => {
   // Arrange
   const viewModel = buildRichCardViewModel(site, articleRichLink);
 
   // Assert
-  assert.equal(viewModel.showProfileHeader, false);
-  assert.equal(viewModel.showMetaHandle, false);
-  assert.equal(viewModel.handleDisplay, undefined);
-  assert.equal(viewModel.previewImageUrl, "/generated/images/article-preview.jpg");
+  assert.equal(viewModel.leadKind, "preview");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/article-preview.jpg");
   assert.equal(viewModel.title, "Engineering Notes");
   assert.equal(viewModel.description, "Shipping notes and technical writeups");
-  assert.equal(viewModel.sourceLabel, "notes.openlinks.dev");
+  assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "notes.openlinks.dev" }]);
+  assert.equal(viewModel.footerSourceLabel, "notes.openlinks.dev");
+  assert.equal(viewModel.showFooterIcon, true);
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 
-test("non-profile rich cards without preview media stay on the text-led fallback path", () => {
+test("non-profile rich cards without preview media fall back to icon-led shared layout", () => {
   // Arrange
   const viewModel = buildRichCardViewModel(site, blogRichLink);
 
   // Assert
-  assert.equal(viewModel.showProfileHeader, false);
-  assert.equal(viewModel.showMetaHandle, false);
-  assert.equal(viewModel.handleDisplay, undefined);
-  assert.equal(viewModel.previewImageUrl, undefined);
+  assert.equal(viewModel.leadKind, "icon");
+  assert.equal(viewModel.leadImageUrl, undefined);
   assert.equal(viewModel.title, "Engineering Notes");
   assert.equal(viewModel.description, "Shipping notes and technical writeups");
-  assert.equal(viewModel.sourceLabel, "notes.openlinks.dev");
-  assert.equal(viewModel.showSourceLabel, true);
+  assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "notes.openlinks.dev" }]);
+  assert.equal(viewModel.footerSourceLabel, "notes.openlinks.dev");
+  assert.equal(viewModel.showFooterIcon, false);
+});
+
+test("simple profile cards reuse avatar leads and footer source rows in the shared layout", () => {
+  // Arrange
+  const viewModel = buildSimpleCardViewModel(site, instagramSimpleLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/avatar.jpg");
+  assert.equal(viewModel.title, "Peter Justice For The Victims Ryszkiewicz");
+  assert.deepEqual(
+    viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
+    ["handle:@peterryszkiewicz", "metric:86 Followers", "metric:169 Following"],
+  );
+  assert.equal(viewModel.footerSourceLabel, "instagram.com");
+  assert.equal(viewModel.showFooterIcon, true);
+});
+
+test("simple icon-led cards keep the footer text row without duplicating the lead icon", () => {
+  // Arrange
+  const viewModel = buildSimpleCardViewModel(site, workSimpleLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "icon");
+  assert.equal(viewModel.leadImageUrl, undefined);
+  assert.equal(viewModel.title, "OpenLinks");
+  assert.deepEqual(viewModel.headerMetaItems, []);
+  assert.equal(viewModel.footerSourceLabel, "openlinks.dev");
+  assert.equal(viewModel.showFooterIcon, false);
+});
+
+test("rich-card image treatment controls preview-vs-fallback lead behavior", () => {
+  // Arrange
+  const thumbnailSite = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        imageTreatment: "thumbnail",
+      },
+    },
+  } as const satisfies SiteData;
+  const offSite = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        imageTreatment: "off",
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const coverViewModel = buildRichCardViewModel(site, articleRichLink);
+  const thumbnailViewModel = buildRichCardViewModel(thumbnailSite, articleRichLink);
+  const offViewModel = buildRichCardViewModel(offSite, articleRichLink);
+
+  // Assert
+  assert.equal(coverViewModel.imageTreatment, "cover");
+  assert.equal(coverViewModel.leadKind, "preview");
+  assert.equal(thumbnailViewModel.imageTreatment, "thumbnail");
+  assert.equal(thumbnailViewModel.leadKind, "preview");
+  assert.equal(offViewModel.imageTreatment, "off");
+  assert.equal(offViewModel.leadKind, "icon");
+  assert.equal(offViewModel.showFooterIcon, false);
+});
+
+test("deprecated mobile image-layout settings no longer affect non-payment card presentation", () => {
+  // Arrange
+  const fullWidthSite = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        mobile: {
+          imageLayout: "full-width",
+        },
+      },
+    },
+  } as const satisfies SiteData;
+  const fullWidthLink = {
+    ...articleRichLink,
+    metadata: {
+      ...articleRichLink.metadata,
+      mobileImageLayout: "full-width",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const inlineSiteViewModel = buildRichCardViewModel(site, articleRichLink);
+  const fullWidthSiteViewModel = buildRichCardViewModel(fullWidthSite, articleRichLink);
+  const fullWidthLinkViewModel = buildNonPaymentCardViewModel(site, fullWidthLink, "rich");
+
+  // Assert
+  assert.deepEqual(fullWidthSiteViewModel, inlineSiteViewModel);
+  assert.deepEqual(fullWidthLinkViewModel, inlineSiteViewModel);
 });

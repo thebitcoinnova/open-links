@@ -2,6 +2,19 @@
 
 ## Current
 
+- [x] Increase the default site-logo/icon sizing again so lead logos and source/footer logos render larger without per-card overrides.
+- [x] Verify the logo-size follow-up with `bun run biome:check` and `bun run build`, then review any generated-file churn before closing.
+
+- [x] Increase the global profile-avatar sizing so the profile header avatar and card avatar leads render larger.
+- [x] Increase the shared site-logo/icon sizing tokens so lead logos and footer/source logos render larger.
+- [x] Verify the sizing pass with `bun run biome:check` and `bun run build`, then review the diff for unintended layout regressions.
+
+- [x] Replace the split rich/simple non-payment card rendering paths with a shared lead-left card anatomy used by both `RichLinkCard` and `SimpleLinkCard`.
+- [x] Refactor the shared non-payment card presentation model so lead visual, header meta, description, and footer/source rows are resolved generically without the old profile-vs-preview layout branches.
+- [x] Converge base/responsive card CSS on the unified non-payment layout while keeping payment cards and theme selectors stable.
+- [x] Extend focused non-payment card tests and docs to cover the unified layout and the deprecated no-op mobile image-layout setting.
+- [x] Verify with `bun test src/components/cards/social-profile-card-rendering.test.tsx`, `bun run typecheck`, `bun run biome:check`, and `bun run build`, then review the final diff for unintended regressions.
+
 - [x] Add site-level and per-link rich-card description-source policy so fetched descriptions are the default but manual copy remains configurable.
 - [x] Replace the shared rich/simple description resolver heuristic with explicit fetched-vs-manual precedence.
 - [x] Add focused precedence tests and a dataset audit covering the current rich-link set and shared card paths.
@@ -52,6 +65,18 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: Default site logos/icons are now larger again. The global card-icon scale and base size were increased, the configured `normal` and `large` icon-size modes both step up, and the shared lead/footer logo tokens were increased so both main card logos and source/footer logos render larger without per-card overrides.
+- Verification: `bun run biome:check` and `bun run build` passed. The build path also passed `avatar:sync`, `enrich:rich:strict`, `images:sync`, and `validate:data`; `validate:data` still reports the existing non-blocking Substack handle warning.
+- Residual risk: This further increases logo weight globally, so if any card family now feels visually heavier than the avatars, the next adjustment should likely tune lead-logo tokens independently from the generic card-icon scale.
+
+- Result: Global avatar and site-logo sizing is now larger across the profile header and card surfaces. The profile header avatar scale/base were bumped, shared avatar lead tokens were increased for non-payment cards, and shared icon tokens were increased for lead logos plus footer/source logos.
+- Verification: `bun run biome:check` and `bun run build` passed. The build path also passed `avatar:sync`, `enrich:rich:strict`, `images:sync`, and `validate:data`; `validate:data` still reports the existing non-blocking Substack handle warning.
+- Residual risk: Because this is a global token bump, the largest impact will be in dense one-column sections and on smaller mobile viewports; if any specific theme feels too heavy after live review, the next adjustment should tune the shared size tokens rather than add one-off component overrides.
+
+- Result: Non-payment cards now share one lead-left anatomy across both `RichLinkCard` and `SimpleLinkCard`. Preview-rich cards, avatar/profile cards, and icon-led simple cards all resolve through the same presentation model and shared shell, while payment cards remain unchanged.
+- Verification: `bun test src/components/cards/social-profile-card-rendering.test.tsx`, `bun run typecheck`, `bun run biome:check`, and `bun run build` all passed. The build path also passed `avatar:sync`, `enrich:rich:strict`, `images:sync`, and `validate:data`; `validate:data` still reports the existing non-blocking Substack handle warning.
+- Residual risk: The new rich fallback header currently reuses the source label when no handle/metrics are available, so some non-profile rich cards may show the domain in both the summary row and footer row until a later polish pass decides whether that duplication should be reduced.
 
 - Result: Rich-link cards now resolve descriptions through an explicit policy instead of the old metric-duplication heuristic. Raw fetched `metadata.description` is the default across both rich cards and rich-link simple-card fallback mode, with `site.ui.richCards.descriptionSource` and `links[].metadata.descriptionSource` available when manual copy should win instead.
 - Verification: `bun test src/lib/ui/rich-card-description-sourcing.test.ts src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/social-profile-metadata.test.ts src/lib/content/social-profile-fields.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, and `bun run build` all passed.

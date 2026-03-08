@@ -462,7 +462,7 @@ Main presentation controls include:
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.imageFit`: `contain` (default preserve mode), `cover`
 - `richCards.descriptionSource`: `fetched` (default), `manual`
-- `richCards.mobile.imageLayout`: `inline` (default), `full-width`
+- `richCards.mobile.imageLayout`: legacy `inline` / `full-width` setting retained for backward compatibility; unified non-payment card layout now ignores it
 - `richCards.enrichment.publicCachePath`: path to committed public rich-cache manifest
 - `richCards.enrichment.authenticatedCachePath`: path to authenticated rich-cache manifest
 - `richCards.enrichment.authenticatedCacheWarnAgeDays`: stale warning threshold for authenticated cache entries
@@ -508,18 +508,12 @@ Migration note: previous behavior was effectively crop-first (`cover`). If you w
 
 #### `ui.richCards.mobile.imageLayout`
 
-Controls mobile rich-card image placement when rich-card images are present.
+Legacy mobile rich-card image placement setting retained for backward-compatible config/schema support.
 
-- `inline` (default): compact square image (~quarter viewport width) with wrapped text/content flow.
-- `full-width`: stacked full-width square image (legacy mobile behavior).
+- `inline`
+- `full-width`
 
-Resolution precedence:
-
-1. `links[].metadata.mobileImageLayout`
-2. `site.ui.richCards.mobile.imageLayout`
-3. fallback default: `inline`
-
-To keep the previous mobile style globally, set `site.ui.richCards.mobile.imageLayout` to `full-width`.
+Current runtime behavior: unified non-payment cards always use the shared lead-left layout across breakpoints, so this setting and `links[].metadata.mobileImageLayout` no longer affect rendering.
 
 #### `quality.seo` image materialization behavior
 

@@ -20,7 +20,7 @@
   }
 
   body .profile-avatar {
-    --profile-avatar-base: 68px;
+    --profile-avatar-base: 72px;
   }
 
   body .profile-actions {
@@ -59,11 +59,10 @@
 
   body .simple-link-card {
     padding-block: calc(var(--space-3) * var(--density-scale) + 0.1rem);
-    gap: var(--space-2);
   }
 
-  body .rich-link-card {
-    gap: calc(var(--space-3) * 0.95);
+  body .non-payment-card-shell {
+    column-gap: var(--space-2);
   }
 
   body .payment-card-header,
@@ -104,54 +103,8 @@
     height: min(360px, calc(100vw - var(--space-6)));
   }
 
-  body .rich-card-header-profile {
-    gap: var(--space-2);
-  }
-
-  body .rich-card-avatar {
-    width: var(--rich-card-avatar-mobile);
-    height: var(--rich-card-avatar-mobile);
-  }
-
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
-    .rich-card-body {
-    column-gap: var(--space-2);
-  }
-
-  body .rich-card-media {
-    min-height: 7.5rem;
-  }
-
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
-    .rich-card-media {
-    min-height: var(--card-rich-media-inline-mobile);
-  }
-
-  body
-    .rich-link-card[data-mobile-image-layout="inline"][data-has-preview-image="true"]
-    .rich-card-media {
-    width: min(100%, var(--card-rich-media-inline-mobile));
-  }
-
-  body
-    .rich-link-card[data-mobile-image-layout="full-width"][data-has-preview-image="true"]
-    .rich-card-media {
-    width: 100%;
-  }
-
-  body .simple-link-card[data-card-variant="simple"] .card-icon {
-    --simple-card-leading-visual-size: var(--card-rich-media-inline-mobile);
-  }
-
-  body .simple-card-avatar {
-    width: var(--simple-card-leading-visual-size);
-    height: var(--simple-card-leading-visual-size);
-  }
-
-  body .simple-card-profile-line,
-  body .simple-card-source {
+  body .non-payment-card-header-meta,
+  body .non-payment-card-footer {
     gap: 0.2rem 0.55rem;
   }
 
@@ -165,57 +118,26 @@
 }
 
 @media (min-width: 761px) {
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
-    .rich-card-body {
-    --rich-card-desktop-preview-min: var(--card-rich-media-inline-min);
-    --rich-card-desktop-preview-max: var(--card-rich-media-inline-max);
-
-    grid-template-columns:
-      minmax(var(--rich-card-desktop-preview-min), var(--rich-card-desktop-preview-max))
-      minmax(0, 1fr);
-    grid-template-areas:
-      "media header"
-      "media description"
-      "media meta";
-    column-gap: var(--space-3);
-    row-gap: var(--space-2);
-    align-items: start;
+  body .simple-link-card[data-lead-kind="icon"],
+  body .rich-link-card[data-lead-kind="icon"] {
+    --non-payment-card-lead-size: var(--non-payment-card-icon-desktop);
   }
 
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"].image-thumbnail
-    .rich-card-body {
-    --rich-card-desktop-preview-min: var(--card-rich-media-thumbnail-min);
-    --rich-card-desktop-preview-max: var(--card-rich-media-thumbnail-max);
+  body .simple-link-card[data-lead-kind="avatar"],
+  body .rich-link-card[data-lead-kind="avatar"] {
+    --non-payment-card-lead-size: clamp(
+      var(--rich-card-avatar-desktop-min),
+      var(--rich-card-avatar-desktop-fluid),
+      var(--rich-card-avatar-desktop-max)
+    );
   }
 
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
-    .rich-card-header {
-    grid-area: header;
+  body .rich-link-card[data-lead-kind="preview"] {
+    --non-payment-card-lead-size: var(--card-rich-media-inline-max);
   }
 
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
-    .rich-card-media {
-    grid-area: media;
-    width: 100%;
-    min-height: var(--rich-card-desktop-preview-max);
-    aspect-ratio: 1 / 1;
-    align-self: start;
-  }
-
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
-    .rich-card-description {
-    grid-area: description;
-  }
-
-  body
-    .rich-link-card[data-has-profile-layout="false"][data-has-preview-image="true"]
-    .rich-card-meta {
-    grid-area: meta;
+  body .rich-link-card.image-thumbnail[data-lead-kind="preview"] {
+    --non-payment-card-lead-size: var(--card-rich-media-thumbnail-max);
   }
 }
 

@@ -186,7 +186,7 @@ Agent should capture:
 - target size (`comfortable`, `compact`, `large`)
 - typography overrides (`ui.typography.global`, `ui.typography.themes`)
 - brand icon policy (`ui.brandIcons.colorMode`, `contrastMode`, `minContrastRatio`, `sizeMode`, `iconOverrides`)
-- rich-card policy (`ui.richCards.renderMode`, `sourceLabelDefault`, `imageTreatment`, `mobile.imageLayout`, `enrichment.*`)
+- rich-card policy (`ui.richCards.renderMode`, `sourceLabelDefault`, `imageTreatment`, legacy `mobile.imageLayout`, `enrichment.*`)
 - quality policy (`quality.reportPath`, `summaryPath`, `blockingDomains`, `seo.*`, `accessibility.*`, `performance.*`)
 
 Validation checkpoint:
