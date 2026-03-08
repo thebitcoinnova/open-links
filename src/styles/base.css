@@ -132,8 +132,8 @@ a:focus-visible {
 }
 
 .utility-logo {
-  width: clamp(1.35rem, 4vw, 1.6rem);
-  height: clamp(1.35rem, 4vw, 1.6rem);
+  width: clamp(1.65rem, 4.8vw, 1.95rem);
+  height: clamp(1.65rem, 4.8vw, 1.95rem);
   flex-shrink: 0;
   filter: var(--brand-logo-filter);
 }
