@@ -36,7 +36,7 @@ Under `links[].enrichment`:
 
 Current extractor ids in this repository:
 
-- `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session)
+- `linkedin-auth-browser` (LinkedIn profile extraction via authenticated browser session; cached image is reused as the avatar-first profile-card image)
 - `facebook-auth-browser` (Facebook profile extraction via authenticated browser session + profile image capture)
 
 Current public-augmentation examples that are no longer configured as authenticated extractors:

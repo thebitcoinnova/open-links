@@ -4,6 +4,7 @@ export type SupportedSocialProfilePlatform =
   | "facebook"
   | "github"
   | "instagram"
+  | "linkedin"
   | "primal"
   | "x"
   | "youtube";
@@ -42,6 +43,7 @@ const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
   facebook: ["profileImage"],
   github: ["profileImage", "followersCount", "followingCount"],
   instagram: ["profileImage", "followersCount", "followingCount"],
+  linkedin: ["profileImage"],
   primal: ["profileImage"],
   x: ["profileImage"],
   youtube: ["profileImage", "subscribersCount"],
@@ -146,6 +148,7 @@ export const resolveSupportedSocialProfile = (input: {
     resolution.extractorId !== "facebook" &&
     resolution.extractorId !== "github" &&
     resolution.extractorId !== "instagram" &&
+    resolution.extractorId !== "linkedin" &&
     resolution.extractorId !== "primal" &&
     resolution.extractorId !== "x" &&
     resolution.extractorId !== "youtube"

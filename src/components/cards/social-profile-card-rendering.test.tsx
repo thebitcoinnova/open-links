@@ -71,6 +71,21 @@ const githubRichLink = {
   },
 } as const satisfies OpenLink;
 
+const linkedinRichLink = {
+  id: "linkedin",
+  label: "LinkedIn",
+  url: "https://www.linkedin.com/in/peter-ryszkiewicz/",
+  type: "rich",
+  icon: "linkedin",
+  description: "Professional profile and recent work",
+  metadata: {
+    title: "Peter Ryszkiewicz | LinkedIn",
+    description: "Talented software engineer, excited to work on new and challenging problems.",
+    sourceLabel: "linkedin.com",
+    image: "/cache/rich-authenticated/linkedin-avatar.jpg",
+  },
+} as const satisfies OpenLink;
+
 const articleRichLink = {
   id: "article",
   label: "Engineering Notes",
@@ -156,6 +171,28 @@ test("github rich cards switch to profile layout with avatar identity and audien
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["90 followers", "87 following"],
   );
+});
+
+test("linkedin rich cards switch to profile layout from authenticated metadata without duplicate preview media", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, linkedinRichLink);
+
+  // Assert
+  assert.equal(viewModel.showProfileHeader, true);
+  assert.equal(viewModel.showMetaHandle, false);
+  assert.equal(viewModel.handleDisplay, "@peter-ryszkiewicz");
+  assert.equal(viewModel.previewImageUrl, undefined);
+  assert.equal(viewModel.title, "Peter Ryszkiewicz");
+  assert.equal(
+    viewModel.description,
+    "Talented software engineer, excited to work on new and challenging problems.",
+  );
+  assert.equal(viewModel.sourceLabel, "linkedin.com");
+  assert.equal(
+    viewModel.socialProfile.profileImageUrl,
+    "/cache/rich-authenticated/linkedin-avatar.jpg",
+  );
+  assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 
 test("non-profile rich cards keep preview media and fallback metadata for preview layouts", () => {

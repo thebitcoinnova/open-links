@@ -144,6 +144,37 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
   assert.deepEqual(resolved.metrics, []);
 });
 
+test("linkedin profile metadata reuses authenticated preview media and trims the site suffix from titles", () => {
+  // Arrange
+  const link = {
+    id: "linkedin",
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/in/peter-ryszkiewicz/",
+    type: "rich",
+    icon: "linkedin",
+    metadata: {
+      title: "Peter Ryszkiewicz | LinkedIn",
+      description: "Talented software engineer, excited to work on new and challenging problems.",
+      image: "/cache/rich-authenticated/linkedin-avatar.jpg",
+      sourceLabel: "linkedin.com",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "linkedin");
+  assert.equal(resolved.displayName, "Peter Ryszkiewicz");
+  assert.equal(resolved.handle, "peter-ryszkiewicz");
+  assert.equal(resolved.handleDisplay, "@peter-ryszkiewicz");
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/cache/rich-authenticated/linkedin-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/rich-authenticated/linkedin-avatar.jpg");
+  assert.deepEqual(resolved.metrics, []);
+});
+
 test("keeps GitHub metrics in profile order while treating the avatar image as identity chrome", () => {
   // Arrange
   const link = {

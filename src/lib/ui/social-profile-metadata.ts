@@ -87,6 +87,11 @@ const resolveDisplayNameFromTitle = (
       .trim();
   }
 
+  if (platform === "linkedin") {
+    const cleaned = rawTitle.replace(/\s*[|·•-]\s*LinkedIn$/iu, "").trim();
+    return cleaned.length > 0 ? cleaned : rawTitle;
+  }
+
   return rawTitle;
 };
 

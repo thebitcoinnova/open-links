@@ -2,6 +2,11 @@
 
 ## Current
 
+- [x] Add LinkedIn to the supported social-profile platform set so authenticated LinkedIn profile links normalize into avatar-first rich cards.
+- [x] Update LinkedIn profile metadata handling and rendering so cached `image` backfills `profileImage`, the display name drops the `| LinkedIn` suffix, and the card avoids duplicate preview media.
+- [x] Extend focused tests for LinkedIn supported-profile detection, metadata normalization, and rich-card rendering.
+- [x] Update docs to describe LinkedIn as authenticated and profile-card-capable, then verify with targeted tests plus enrichment/validation diagnostics.
+
 - [x] Audit the current authenticated extractor roster against the new public-first workflow and record the final branch decision for each platform.
 - [x] Add a public augmentation execution path for Medium, X, Instagram, and YouTube, including blocker-aware routing and public-cache integration.
 - [x] Remove Medium, X, Instagram, and YouTube from active authenticated extractor config/policy/cache usage while keeping LinkedIn and Facebook on the authenticated path.
@@ -42,6 +47,10 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: LinkedIn now participates in the shared supported social-profile path, so authenticated-cache metadata reuses the cached `image` as `profileImage`, trims the `| LinkedIn` title suffix, and renders the existing LinkedIn link as an avatar-first rich card without duplicate preview media.
+- Verification: `bun install`, `bun test src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts src/components/cards/social-profile-card-rendering.test.tsx`, `bun run typecheck`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run build`, and `bun run biome:check` all passed.
+- Residual risk: `bun run validate:data` still reports the existing non-blocking Substack handle warning, and the LinkedIn profile treatment still depends on the authenticated cache continuing to provide `title`, `description`, and `image`.
 
 - Result: Medium, X, Instagram, and YouTube now enrich through a first-class public augmentation layer backed by the committed public cache, while LinkedIn and Facebook remain the only active authenticated extractors. Known direct-fetch blockers no longer force Medium/X into auth-only remediation, the committed authenticated cache was pruned to LinkedIn/Facebook, and the extractor docs/skill examples now match the real branch split.
 - Verification: `bun test`, `bun run typecheck`, `bun run biome:check`, `bun run studio:lint`, `bun run studio:typecheck`, `bun run --filter @openlinks/studio-api test`, `bun run studio:test:integration`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run build`, and `bun run quality:check` all passed. Headed Playwright verification against `vite preview` confirmed desktop/mobile rendering still shows X on the profile-card path and Medium on the non-profile path after the migration.

@@ -329,6 +329,7 @@ Current profile-card-capable rich-link families include:
 
 - GitHub: avatar + follower/following counts when public profile HTML exposes them
 - Instagram: avatar + follower/following counts
+- LinkedIn: authenticated-cache-backed avatar-first profile cards
 - YouTube: avatar + subscriber counts
 - Primal, X, and Facebook: avatar-first profile cards without count guarantees in the current pass
 

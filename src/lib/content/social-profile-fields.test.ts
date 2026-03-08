@@ -42,17 +42,21 @@ test("supported social profile detection supports the expanded platform set but 
   // Arrange
   const instagramProfileUrl = "https://www.instagram.com/peterryszkiewicz/";
   const githubProfileUrl = "https://github.com/pRizz";
+  const linkedinProfileUrl = "https://www.linkedin.com/in/peter-ryszkiewicz/";
   const primalProfileUrl = "https://primal.net/peterryszkiewicz";
   const xProfileUrl = "https://x.com/pryszkie";
   const facebookProfileUrl = "https://www.facebook.com/peter.ryszkiewicz";
+  const linkedinFeedUrl = "https://www.linkedin.com/feed/";
   const youtubeVideoUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
   // Act
   const instagramProfile = resolveSupportedSocialProfile({ url: instagramProfileUrl });
   const githubProfile = resolveSupportedSocialProfile({ url: githubProfileUrl });
+  const linkedinProfile = resolveSupportedSocialProfile({ url: linkedinProfileUrl });
   const primalProfile = resolveSupportedSocialProfile({ url: primalProfileUrl });
   const xProfile = resolveSupportedSocialProfile({ url: xProfileUrl });
   const facebookProfile = resolveSupportedSocialProfile({ url: facebookProfileUrl });
+  const unsupportedLinkedinPage = resolveSupportedSocialProfile({ url: linkedinFeedUrl });
   const unsupportedProfile = resolveSupportedSocialProfile({ url: youtubeVideoUrl });
 
   // Assert
@@ -65,6 +69,11 @@ test("supported social profile detection supports the expanded platform set but 
     platform: "github",
     handle: "prizz",
     expectedFields: ["profileImage", "followersCount", "followingCount"],
+  });
+  assert.deepEqual(linkedinProfile, {
+    platform: "linkedin",
+    handle: "peter-ryszkiewicz",
+    expectedFields: ["profileImage"],
   });
   assert.deepEqual(primalProfile, {
     platform: "primal",
@@ -81,6 +90,7 @@ test("supported social profile detection supports the expanded platform set but 
     handle: "peter.ryszkiewicz",
     expectedFields: ["profileImage"],
   });
+  assert.equal(unsupportedLinkedinPage, null);
   assert.equal(unsupportedProfile, null);
 });
 
@@ -159,6 +169,30 @@ test("avatar-only supported platforms accept normalized preview images without a
   assert.deepEqual(normalized, {
     image: "cache/rich-authenticated/example-avatar.jpg",
     profileImage: "cache/rich-authenticated/example-avatar.jpg",
+  });
+  assert.deepEqual(missingFields, []);
+});
+
+test("linkedin profile normalization backfills profile image from authenticated preview media", () => {
+  // Arrange
+  const linkedinProfile = resolveSupportedSocialProfile({
+    url: "https://www.linkedin.com/in/peter-ryszkiewicz/",
+  });
+  assert.ok(linkedinProfile);
+
+  // Act
+  const normalized = normalizeSupportedSocialProfileMetadata(
+    {
+      image: "cache/rich-authenticated/linkedin-avatar.jpg",
+    },
+    linkedinProfile,
+  );
+  const missingFields = resolveMissingSupportedSocialProfileFields(normalized, linkedinProfile);
+
+  // Assert
+  assert.deepEqual(normalized, {
+    image: "cache/rich-authenticated/linkedin-avatar.jpg",
+    profileImage: "cache/rich-authenticated/linkedin-avatar.jpg",
   });
   assert.deepEqual(missingFields, []);
 });
