@@ -59,23 +59,48 @@ const writeIfChanged = (filePath: string, content: Buffer | string): boolean => 
   return true;
 };
 
-const extractCanonicalPathData = (canonicalSvg: string): string => {
+const extractCanonicalMarkSpec = (
+  canonicalSvg: string,
+): {
+  pathData: string;
+  circleRadius: number;
+  stroke: { circle: number; l: number };
+} => {
+  const circleMatch = canonicalSvg.match(
+    /<circle[^>]*\sr="([^"]+)"[^>]*\sstroke-width="([^"]+)"[^>]*\/?>/i,
+  );
+  if (!circleMatch?.[1] || !circleMatch[2]) {
+    throw new Error(`Unable to locate canonical ring spec in ${toRelative(CANONICAL_LOGO_PATH)}.`);
+  }
+
   const pathMatch = canonicalSvg.match(/<path[^>]*\sd="([^"]+)"[^>]*\/?>/i);
-  if (!pathMatch?.[1]) {
+  const pathStrokeMatch = canonicalSvg.match(/<path[^>]*\sstroke-width="([^"]+)"[^>]*\/?>/i);
+  if (!pathMatch?.[1] || !pathStrokeMatch?.[1]) {
     throw new Error(`Unable to locate canonical L path in ${toRelative(CANONICAL_LOGO_PATH)}.`);
   }
 
-  return pathMatch[1];
+  return {
+    pathData: pathMatch[1],
+    circleRadius: Number(circleMatch[1]),
+    stroke: {
+      circle: Number(circleMatch[2]),
+      l: Number(pathStrokeMatch[1]),
+    },
+  };
 };
 
-const buildBadgeSvg = (pathData: string): string =>
+const buildBadgeSvg = (input: {
+  pathData: string;
+  circleRadius: number;
+  stroke: { circle: number; l: number };
+}): string =>
   [
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title desc">',
     '  <title id="title">OpenLinks favicon badge</title>',
-    '  <desc id="desc">OpenLinks V2 logo mark in a high-contrast circular badge for tiny-icon legibility.</desc>',
+    '  <desc id="desc">OpenLinks logo mark in a high-contrast circular badge for tiny-icon legibility.</desc>',
     `  <circle cx="50" cy="50" r="49" fill="${BADGE_BG}" />`,
-    `  <circle cx="50" cy="50" r="38" fill="none" stroke="${BADGE_STROKE}" stroke-width="6" />`,
-    `  <path d="${pathData}" fill="none" stroke="${BADGE_STROKE}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />`,
+    `  <circle cx="50" cy="50" r="${input.circleRadius}" fill="none" stroke="${BADGE_STROKE}" stroke-width="${input.stroke.circle}" />`,
+    `  <path d="${input.pathData}" fill="none" stroke="${BADGE_STROKE}" stroke-width="${input.stroke.l}" stroke-linecap="round" stroke-linejoin="round" />`,
     "</svg>",
     "",
   ].join("\n");
@@ -177,8 +202,8 @@ export const generateOpenLinksBrandAssets = async (
   }
 
   const canonicalSvg = fs.readFileSync(CANONICAL_LOGO_PATH, "utf8");
-  const canonicalPathData = extractCanonicalPathData(canonicalSvg);
-  const badgeSvg = buildBadgeSvg(canonicalPathData);
+  const canonicalMarkSpec = extractCanonicalMarkSpec(canonicalSvg);
+  const badgeSvg = buildBadgeSvg(canonicalMarkSpec);
 
   for (const target of TARGETS) {
     await generateForTarget({

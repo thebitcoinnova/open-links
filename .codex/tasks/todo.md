@@ -2,6 +2,19 @@
 
 ## Current
 
+- [x] Promote the v3 `10/10` mark to the canonical winner so the active global aliases and runtime brand assets use it everywhere.
+- [x] Regenerate the logo manifests, SVG aliases, comparison sheet, and favicon/app-icon assets after the v3 winner switch.
+- [x] Verify the winner switch with regeneration, `bun run typecheck`, `bun run biome:check`, `bun run build`, and a final diff review.
+
+- [x] Extend the v3 OpenLinks thickness comparison set so it generates equal-weight variants from `6/6` through `15/15`.
+- [x] Regenerate the v3 SVGs, manifests, and comparison sheet after expanding the weight range.
+- [x] Verify the range expansion with regeneration, `bun run typecheck`, `bun run biome:check`, and a final diff review.
+
+- [x] Add a new v3 OpenLinks logo generation lane that explores thicker equal-weight strokes while keeping the v2 winner geometry family.
+- [x] Generate versioned v3 winner/archive SVG assets, manifests, and a comparison sheet, then promote the v3 `8/8` winner to the active global logo aliases.
+- [x] Update logo governance and brand-asset wording so the docs and runtime asset pipeline reflect v3 as the active mark.
+- [x] Verify the logo refresh with regeneration, `bun run typecheck`, `bun run build`, and a final diff review for unintended alias churn.
+
 - [x] Extend Substack public augmentation so custom-domain links fetch canonical `substack.com/@handle` profile data and persist subscriber counts without changing displayed source labels.
 - [x] Keep Medium on the public-only path with no follower-count support, and document the March 8, 2026 evidence for that decision in the extractor/blocker workflow docs.
 - [x] Verify the Substack subscriber-count change with focused enrichment/profile tests, then run repo enrichment/build checks and note any environment blockers.
@@ -184,6 +197,18 @@
 - [x] Verify with `bun run enrich:rich:strict`, `bun run validate:data`, `bun test`, and `bun run build`.
 
 ## Previous Completion Review
+
+- Result: The active v3 winner is now `10/10`, so the global logo aliases, the versioned v3 alias, the studio/public runtime SVG copies, and the regenerated favicon/app-icon assets all point at the thicker `c10-l10` mark instead of `c8-l8`.
+- Verification: `bun scripts/generate-openlinks-logo-variants.ts`, `bun run typecheck`, `bun run biome:check`, and `bun run build` all passed. Diff review confirmed the winner swap moved `c10-l10` into `public/branding/openlinks-logo/v3/` and archived `c8-l8` with the other non-winning v3 variants.
+- Residual risk: The active favicon badge now renders the `10/10` stroke weight, which is substantially denser at 16-32 px than the previous `8/8` mark and may still warrant a small-icon-specific override after browser-level review.
+
+- Result: The v3 thickness generator now produces the full equal-weight range from `6/6` through `15/15`, keeping `8/8` as the active winner while adding `11/11` through `15/15` to the archive and comparison sheet.
+- Verification: `bun scripts/generate-openlinks-logo-variants.ts`, `bun run typecheck`, and `bun run biome:check` all passed. Diff review confirmed the new churn is the expanded v3 archive/comparison outputs plus the expected manifest stats update from 5 to 10 variants.
+- Residual risk: The heaviest marks (`14/14` and `15/15`) are now available for review, but they compress the interior geometry substantially and may be too dense for tiny-size usage even if they remain mathematically valid.
+
+- Result: The logo asset generator now produces a new v3 thickness study based on the existing inset centered family, archives the non-winning `6/6`, `7/7`, `9/9`, and `10/10` variants, and promotes the `8/8` mark to the active global logo aliases and runtime brand assets.
+- Verification: `bun install`, `bun scripts/generate-openlinks-logo-variants.ts`, `bun run typecheck`, and `bun run build` all passed. Diff review confirmed the intentional churn is limited to the v3 logo lane, the active/global SVG aliases, the regenerated favicon/app-icon assets, and the expected v2 manifest alias cleanup.
+- Residual risk: The favicon badge now follows the active logo stroke weights, so if the thicker `8/8` treatment feels too dense at 16px in real browser chrome, the badge policy may need a future small-icon-specific weight override.
 
 - Result: `LinkSiteIcon` now defers palette recomputation until after the active theme state lands on `document.documentElement`, so the card icon chips no longer render one toggle behind dark/light mode.
 - Verification: `bun run typecheck`, `bun run quality:check`, and `bun run build` all passed. Playwright verification against the built preview confirmed the chips switch immediately on dark->light and light->dark toggles, while the utility/footer logos still invert correctly.

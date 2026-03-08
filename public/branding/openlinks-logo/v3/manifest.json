@@ -1,0 +1,33 @@
+{
+  "version": "v3-active",
+  "generatedAt": "2026-03-08T13:56:10.426Z",
+  "canonical": {
+    "id": "inset--centerline-2x--centered--c10-l10",
+    "file": "ol-mark--v3--inset--centerline-2x--centered--c10-l10.svg",
+    "family": "inset",
+    "ratioMode": "centerline-2x",
+    "placement": "centered",
+    "touchModel": "top+corner+endpoint tangent",
+    "stroke": {
+      "circle": 10,
+      "l": 10
+    },
+    "sourcePath": "public/branding/openlinks-logo/v3/ol-mark--v3--inset--centerline-2x--centered--c10-l10.svg"
+  },
+  "aliases": {
+    "versionAlias": "public/branding/openlinks-logo/v3/openlinks-logo.svg",
+    "globalPrimary": "public/branding/openlinks-logo/openlinks-logo.svg",
+    "globalV3Alias": "public/branding/openlinks-logo/openlinks-logo-v3.svg"
+  },
+  "archive": {
+    "directory": "public/branding/openlinks-logo/v3/archive",
+    "manifestPath": "public/branding/openlinks-logo/v3/archive/manifest.json"
+  },
+  "comparisonSheetPath": "docs/assets/openlinks-logo/v3/openlinks-logo-variants.svg",
+  "stats": {
+    "labelCount": 10,
+    "uniqueFileCount": 10,
+    "archivedUniqueFileCount": 9,
+    "baselineCount": 1
+  }
+}

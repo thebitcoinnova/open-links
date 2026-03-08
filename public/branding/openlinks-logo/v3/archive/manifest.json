@@ -1,0 +1,357 @@
+{
+  "version": "v3-archive",
+  "generatedAt": "2026-03-08T13:56:10.426Z",
+  "constants": {
+    "circle": {
+      "cx": 50,
+      "cy": 50,
+      "r": 38
+    },
+    "cap": {
+      "linecap": "round",
+      "linejoin": "round"
+    },
+    "color": "#111111",
+    "insetMargin": 4,
+    "family": "inset",
+    "ratioMode": "centerline-2x",
+    "placement": "centered"
+  },
+  "canonical": {
+    "id": "inset--centerline-2x--centered--c10-l10",
+    "filename": "ol-mark--v3--inset--centerline-2x--centered--c10-l10.svg",
+    "stroke": {
+      "circle": 10,
+      "l": 10
+    }
+  },
+  "comparisonSheetPath": "docs/assets/openlinks-logo/v3/openlinks-logo-variants.svg",
+  "stats": {
+    "variantCount": 10,
+    "archivedVariantCount": 9
+  },
+  "variants": [
+    {
+      "id": "inset--centerline-2x--centered--c6-l6",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c6 / l6",
+      "annotation": "baseline reference",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c6-l6.svg",
+      "stroke": {
+        "circle": 6,
+        "l": 6
+      },
+      "geometry": {
+        "xL": 37.478019,
+        "yTop": 24.956039,
+        "yBottom": 75.043961,
+        "xFootEnd": 62.521981
+      },
+      "metrics": {
+        "width": 25.043961,
+        "height": 50.087923,
+        "centerlineRatio": 2,
+        "outerRatio": 1.806726,
+        "topDistance": 28,
+        "cornerDistance": 28,
+        "endpointDistance": 28,
+        "usableRadius": 32,
+        "insetRadius": 28
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c7-l7",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c7 / l7",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c7-l7.svg",
+      "stroke": {
+        "circle": 7,
+        "l": 7
+      },
+      "geometry": {
+        "xL": 37.925233,
+        "yTop": 25.850466,
+        "yBottom": 74.149534,
+        "xFootEnd": 62.074767
+      },
+      "metrics": {
+        "width": 24.149534,
+        "height": 48.299068,
+        "centerlineRatio": 2,
+        "outerRatio": 1.775278,
+        "topDistance": 27,
+        "cornerDistance": 27,
+        "endpointDistance": 27,
+        "usableRadius": 31,
+        "insetRadius": 27
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c8-l8",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c8 / l8",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c8-l8.svg",
+      "stroke": {
+        "circle": 8,
+        "l": 8
+      },
+      "geometry": {
+        "xL": 38.372447,
+        "yTop": 26.744893,
+        "yBottom": 73.255107,
+        "xFootEnd": 61.627553
+      },
+      "metrics": {
+        "width": 23.255107,
+        "height": 46.510214,
+        "centerlineRatio": 2,
+        "outerRatio": 1.744042,
+        "topDistance": 26,
+        "cornerDistance": 26,
+        "endpointDistance": 26,
+        "usableRadius": 30,
+        "insetRadius": 26
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c9-l9",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c9 / l9",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c9-l9.svg",
+      "stroke": {
+        "circle": 9,
+        "l": 9
+      },
+      "geometry": {
+        "xL": 38.81966,
+        "yTop": 27.63932,
+        "yBottom": 72.36068,
+        "xFootEnd": 61.18034
+      },
+      "metrics": {
+        "width": 22.36068,
+        "height": 44.72136,
+        "centerlineRatio": 2,
+        "outerRatio": 1.713016,
+        "topDistance": 25,
+        "cornerDistance": 25,
+        "endpointDistance": 25,
+        "usableRadius": 29,
+        "insetRadius": 25
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c10-l10",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c10 / l10",
+      "annotation": "selected winner",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c10-l10.svg",
+      "stroke": {
+        "circle": 10,
+        "l": 10
+      },
+      "geometry": {
+        "xL": 39.266874,
+        "yTop": 28.533747,
+        "yBottom": 71.466253,
+        "xFootEnd": 60.733126
+      },
+      "metrics": {
+        "width": 21.466253,
+        "height": 42.932505,
+        "centerlineRatio": 2,
+        "outerRatio": 1.682199,
+        "topDistance": 24,
+        "cornerDistance": 24,
+        "endpointDistance": 24,
+        "usableRadius": 28,
+        "insetRadius": 24
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c11-l11",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c11 / l11",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c11-l11.svg",
+      "stroke": {
+        "circle": 11,
+        "l": 11
+      },
+      "geometry": {
+        "xL": 39.714087,
+        "yTop": 29.428175,
+        "yBottom": 70.571825,
+        "xFootEnd": 60.285913
+      },
+      "metrics": {
+        "width": 20.571825,
+        "height": 41.143651,
+        "centerlineRatio": 2,
+        "outerRatio": 1.651588,
+        "topDistance": 23,
+        "cornerDistance": 23,
+        "endpointDistance": 23,
+        "usableRadius": 27,
+        "insetRadius": 23
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c12-l12",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c12 / l12",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c12-l12.svg",
+      "stroke": {
+        "circle": 12,
+        "l": 12
+      },
+      "geometry": {
+        "xL": 40.161301,
+        "yTop": 30.322602,
+        "yBottom": 69.677398,
+        "xFootEnd": 59.838699
+      },
+      "metrics": {
+        "width": 19.677398,
+        "height": 39.354796,
+        "centerlineRatio": 2,
+        "outerRatio": 1.621181,
+        "topDistance": 22,
+        "cornerDistance": 22,
+        "endpointDistance": 22,
+        "usableRadius": 26,
+        "insetRadius": 22
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c13-l13",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c13 / l13",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c13-l13.svg",
+      "stroke": {
+        "circle": 13,
+        "l": 13
+      },
+      "geometry": {
+        "xL": 40.608514,
+        "yTop": 31.217029,
+        "yBottom": 68.782971,
+        "xFootEnd": 59.391486
+      },
+      "metrics": {
+        "width": 18.782971,
+        "height": 37.565942,
+        "centerlineRatio": 2,
+        "outerRatio": 1.590976,
+        "topDistance": 21,
+        "cornerDistance": 21,
+        "endpointDistance": 21,
+        "usableRadius": 25,
+        "insetRadius": 21
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c14-l14",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c14 / l14",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c14-l14.svg",
+      "stroke": {
+        "circle": 14,
+        "l": 14
+      },
+      "geometry": {
+        "xL": 41.055728,
+        "yTop": 32.111456,
+        "yBottom": 67.888544,
+        "xFootEnd": 58.944272
+      },
+      "metrics": {
+        "width": 17.888544,
+        "height": 35.777088,
+        "centerlineRatio": 2,
+        "outerRatio": 1.560971,
+        "topDistance": 20,
+        "cornerDistance": 20,
+        "endpointDistance": 20,
+        "usableRadius": 24,
+        "insetRadius": 20
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    },
+    {
+      "id": "inset--centerline-2x--centered--c15-l15",
+      "family": "inset",
+      "ratioMode": "centerline-2x",
+      "placement": "centered",
+      "touchModel": "top+corner+endpoint tangent",
+      "comparisonLabel": "c15 / l15",
+      "filename": "ol-mark--v3--inset--centerline-2x--centered--c15-l15.svg",
+      "stroke": {
+        "circle": 15,
+        "l": 15
+      },
+      "geometry": {
+        "xL": 41.502942,
+        "yTop": 33.005883,
+        "yBottom": 66.994117,
+        "xFootEnd": 58.497058
+      },
+      "metrics": {
+        "width": 16.994117,
+        "height": 33.988233,
+        "centerlineRatio": 2,
+        "outerRatio": 1.531164,
+        "topDistance": 19,
+        "cornerDistance": 19,
+        "endpointDistance": 19,
+        "usableRadius": 23,
+        "insetRadius": 19
+      },
+      "solver": "closed-form",
+      "solverNotes": ["top/corner/endpoint are all tangent to target radius"]
+    }
+  ]
+}

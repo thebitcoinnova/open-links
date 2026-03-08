@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title desc">
   <title id="title">OpenLinks favicon badge</title>
-  <desc id="desc">OpenLinks V2 logo mark in a high-contrast circular badge for tiny-icon legibility.</desc>
+  <desc id="desc">OpenLinks logo mark in a high-contrast circular badge for tiny-icon legibility.</desc>
   <circle cx="50" cy="50" r="49" fill="#111111" />
-  <circle cx="50" cy="50" r="38" fill="none" stroke="#ffffff" stroke-width="6" />
-  <path d="M37.478 24.956 V75.044 H62.522" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#ffffff" stroke-width="10" />
+  <path d="M39.2669 28.5337 V71.4663 H60.7331" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

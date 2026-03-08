@@ -1,6 +1,6 @@
 {
   "version": "v2-active",
-  "generatedAt": "2026-03-03T11:08:02.530Z",
+  "generatedAt": "2026-03-08T13:56:10.389Z",
   "canonical": {
     "id": "inset--centerline-2x--centered",
     "file": "ol-mark--v2--inset--centerline-2x--centered.svg",
@@ -12,7 +12,6 @@
   },
   "aliases": {
     "versionAlias": "public/branding/openlinks-logo/v2/openlinks-logo.svg",
-    "globalPrimary": "public/branding/openlinks-logo/openlinks-logo.svg",
     "globalV2Alias": "public/branding/openlinks-logo/openlinks-logo-v2.svg"
   },
   "archive": {
