@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-08T13:53:19.008Z",
+  "updatedAt": "2026-03-08T14:01:15.932Z",
   "entries": {
     "primal": {
       "linkId": "primal",
       "sourceUrl": "https://primal.net/peterryszkiewicz",
-      "capturedAt": "2026-03-08T13:18:24.885Z",
-      "updatedAt": "2026-03-08T13:18:24.885Z",
+      "capturedAt": "2026-03-08T14:01:15.932Z",
+      "updatedAt": "2026-03-08T14:01:15.932Z",
       "metadata": {
         "title": "Peter No Taxation Without Representation Ryszkiewicz",
         "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
@@ -15,13 +15,13 @@
         "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg"
       },
       "cacheControl": "must-revalidate, proxy-revalidate, max-age=1",
-      "expiresAt": "2026-03-08T13:18:26.000Z"
+      "expiresAt": "2026-03-08T14:01:17.000Z"
     },
     "github": {
       "linkId": "github",
       "sourceUrl": "https://github.com/pRizz",
-      "capturedAt": "2026-03-08T13:18:24.885Z",
-      "updatedAt": "2026-03-08T13:18:24.885Z",
+      "capturedAt": "2026-03-08T14:01:15.932Z",
+      "updatedAt": "2026-03-08T14:01:15.932Z",
       "metadata": {
         "title": "pRizz - Overview",
         "description": "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
@@ -33,15 +33,15 @@
         "followingCount": 87,
         "followingCountRaw": "87 following"
       },
-      "etag": "W/\"f317234c928f98f0cb5038ac488ec38f\"",
+      "etag": "W/\"38c163a889f58368e5e2e2e57113ab49\"",
       "cacheControl": "max-age=0, private, must-revalidate",
-      "expiresAt": "2026-03-08T13:18:25.000Z"
+      "expiresAt": "2026-03-08T14:01:16.000Z"
     },
     "substack": {
       "linkId": "substack",
       "sourceUrl": "https://substack.com/@peterryszkiewicz",
-      "capturedAt": "2026-03-08T13:53:19.008Z",
-      "updatedAt": "2026-03-08T13:53:19.008Z",
+      "capturedAt": "2026-03-08T14:01:15.932Z",
+      "updatedAt": "2026-03-08T14:01:15.932Z",
       "metadata": {
         "title": "Peter Ryszkiewicz",
         "description": "Software Engineer",
@@ -73,8 +73,8 @@
     "instagram": {
       "linkId": "instagram",
       "sourceUrl": "https://www.instagram.com/peterryszkiewicz/",
-      "capturedAt": "2026-03-08T13:18:24.885Z",
-      "updatedAt": "2026-03-08T13:18:24.885Z",
+      "capturedAt": "2026-03-08T14:01:15.932Z",
+      "updatedAt": "2026-03-08T14:01:15.932Z",
       "metadata": {
         "title": "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz) • Instagram photos and videos",
         "description": "86 Followers, 172 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
@@ -91,8 +91,8 @@
     "youtube": {
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
-      "capturedAt": "2026-03-08T13:18:24.885Z",
-      "updatedAt": "2026-03-08T13:18:24.885Z",
+      "capturedAt": "2026-03-08T14:01:15.932Z",
+      "updatedAt": "2026-03-08T14:01:15.932Z",
       "metadata": {
         "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
         "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
@@ -103,13 +103,13 @@
         "subscribersCountRaw": "11 subscribers"
       },
       "cacheControl": "no-cache, no-store, max-age=0, must-revalidate",
-      "expiresAt": "2026-03-08T13:18:26.000Z"
+      "expiresAt": "2026-03-08T14:01:17.000Z"
     },
     "medium": {
       "linkId": "medium",
       "sourceUrl": "https://medium.com/feed/@peterryszkiewicz",
-      "capturedAt": "2026-03-08T13:05:30.165Z",
-      "updatedAt": "2026-03-08T13:05:30.165Z",
+      "capturedAt": "2026-03-08T14:01:15.932Z",
+      "updatedAt": "2026-03-08T14:01:15.932Z",
       "metadata": {
         "title": "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
         "description": "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
@@ -119,7 +119,7 @@
         "profileImage": "https://cdn-images-1.medium.com/fit/c/150/150/0*_SAmj5J9y1Pv5Ri0."
       },
       "cacheControl": "private, must-revalidate, max-age=900",
-      "expiresAt": "2026-03-08T13:20:32.000Z"
+      "expiresAt": "2026-03-08T14:16:18.000Z"
     }
   }
 }
