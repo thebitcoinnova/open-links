@@ -98,12 +98,12 @@ test("supported social profile detection supports the expanded platform set but 
   assert.deepEqual(substackProfile, {
     platform: "substack",
     handle: "peterryszkiewicz",
-    expectedFields: ["profileImage"],
+    expectedFields: ["profileImage", "subscribersCount"],
   });
   assert.deepEqual(substackCustomDomainProfile, {
     platform: "substack",
     handle: "peterryszkiewicz",
-    expectedFields: ["profileImage"],
+    expectedFields: ["profileImage", "subscribersCount"],
   });
   assert.deepEqual(xProfile, {
     platform: "x",
@@ -144,6 +144,28 @@ test("raw audience text satisfies supported-profile warning checks when numeric 
   // Assert
   assert.deepEqual(missingWithRawSubscriberText, []);
   assert.deepEqual(missingWithoutAvatar, ["profileImage"]);
+});
+
+test("substack subscriber raw text satisfies supported-profile warning checks", () => {
+  // Arrange
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+    metadataHandle: "@peterryszkiewicz",
+  });
+  assert.ok(supportedProfile);
+
+  // Act
+  const missingFields = resolveMissingSupportedSocialProfileFields(
+    {
+      profileImage: "https://example.com/substack-avatar.jpg",
+      subscribersCountRaw: "10 subscribers",
+    },
+    supportedProfile,
+  );
+
+  // Assert
+  assert.deepEqual(missingFields, []);
 });
 
 test("supported profile normalization backfills profile image from preview image", () => {
@@ -244,7 +266,7 @@ test("substack profile normalization does not treat preview images as profile av
   assert.deepEqual(normalized, {
     image: "https://substackcdn.com/image/fetch/subscribe-card.jpg",
   });
-  assert.deepEqual(missingFields, ["profileImage"]);
+  assert.deepEqual(missingFields, ["profileImage", "subscribersCount"]);
 });
 
 test("linkedin profile normalization backfills profile image from authenticated preview media", () => {

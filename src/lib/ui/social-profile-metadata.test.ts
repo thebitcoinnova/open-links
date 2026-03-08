@@ -187,6 +187,8 @@ test("substack custom-domain metadata uses the explicit handle and strips the si
       image: "/generated/images/substack-avatar.jpg",
       profileImage: "/generated/images/substack-avatar.jpg",
       handle: "peterryszkiewicz",
+      subscribersCount: 10,
+      subscribersCountRaw: "10 subscribers",
       sourceLabel: "peter.ryszkiewicz.us",
     },
   } as const;
@@ -203,6 +205,17 @@ test("substack custom-domain metadata uses the explicit handle and strips the si
   assert.equal(resolved.hasDistinctPreviewImage, false);
   assert.equal(resolved.profileImageUrl, "/generated/images/substack-avatar.jpg");
   assert.equal(resolved.previewImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.deepEqual(resolved.metrics, [
+    {
+      kind: "subscribers",
+      label: "Subscribers",
+      count: 10,
+      rawText: "10 subscribers",
+      parsedCountCompactText: "10",
+      displayLabel: "subscribers",
+      displayText: "10 subscribers",
+    },
+  ]);
 });
 
 test("linkedin profile metadata reuses authenticated preview media and trims the site suffix from titles", () => {

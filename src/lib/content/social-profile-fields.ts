@@ -48,7 +48,7 @@ const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
   linkedin: ["profileImage"],
   medium: ["profileImage"],
   primal: ["profileImage"],
-  substack: ["profileImage"],
+  substack: ["profileImage", "subscribersCount"],
   x: ["profileImage"],
   youtube: ["profileImage", "subscribersCount"],
 } as const satisfies Record<SupportedSocialProfilePlatform, readonly ExpectedSocialProfileField[]>;

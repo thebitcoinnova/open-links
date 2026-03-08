@@ -2,6 +2,10 @@
 
 ## Current
 
+- [x] Extend Substack public augmentation so custom-domain links fetch canonical `substack.com/@handle` profile data and persist subscriber counts without changing displayed source labels.
+- [x] Keep Medium on the public-only path with no follower-count support, and document the March 8, 2026 evidence for that decision in the extractor/blocker workflow docs.
+- [x] Verify the Substack subscriber-count change with focused enrichment/profile tests, then run repo enrichment/build checks and note any environment blockers.
+
 - [x] Clarify footer source labels for known-platform custom domains using a shared formatter instead of raw host-only copy.
 - [x] Add focused footer-label tests for canonical domains, custom domains, hidden labels, and simple-card reuse.
 - [x] Verify the footer-label change with targeted tests plus typecheck, biome, and build checks.
@@ -73,6 +77,10 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: Substack rich links now fetch count-bearing public metadata from canonical `substack.com/@handle` profile pages when a handle is known, while preserving the original link host for `sourceLabel` and UI footer rendering. The committed public cache now persists Substack subscriber counts, and Medium remains on the public-only path without follower-count support.
+- Verification: `bun install --frozen-lockfile`, `bun test scripts/enrichment/public-augmentation.test.ts`, `bun test src/lib/content/social-profile-fields.test.ts`, `bun test src/lib/ui/social-profile-metadata.test.ts`, `bun test scripts/enrichment/public-cache.test.ts`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run build`, `bun run biome:check`, `bun run studio:lint`, `bun run typecheck`, `bun run studio:typecheck`, `bun run --filter @openlinks/studio-api test`, and `bun run studio:test:integration` all passed.
+- Residual risk: Substack exact subscriber counts currently depend on the canonical public `substack.com/@handle` preload shape; if Substack removes or renames `profile.subscriberCountString` / `profile.subscriberCountNumber`, the public path will fall back to core profile metadata without escalating to authenticated extraction.
 
 - Result: Known-platform links on custom domains now clarify the footer/source row as `Platform · domain` while leaving canonical platform hosts and non-host manual labels unchanged. This is implemented only in the footer formatter, so header/source fallback text and other card copy remain as they were.
 - Verification: `bun test src/lib/ui/rich-card-footer-labels.test.ts src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/rich-card-description-sourcing.test.ts`, `bun run typecheck`, `bun run biome:check`, and `bun run build` all passed.

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-08T13:18:24.885Z",
+  "updatedAt": "2026-03-08T13:53:19.008Z",
   "entries": {
     "primal": {
       "linkId": "primal",
@@ -39,16 +39,18 @@
     },
     "substack": {
       "linkId": "substack",
-      "sourceUrl": "https://peter.ryszkiewicz.us/",
-      "capturedAt": "2026-03-08T13:18:24.885Z",
-      "updatedAt": "2026-03-08T13:18:24.885Z",
+      "sourceUrl": "https://substack.com/@peterryszkiewicz",
+      "capturedAt": "2026-03-08T13:53:19.008Z",
+      "updatedAt": "2026-03-08T13:53:19.008Z",
       "metadata": {
         "title": "Peter Ryszkiewicz",
         "description": "Software Engineer",
-        "image": "https://substack-post-media.s3.amazonaws.com/public/images/45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
+        "image": "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
         "handle": "peterryszkiewicz",
         "sourceLabel": "peter.ryszkiewicz.us",
-        "profileImage": "https://substack-post-media.s3.amazonaws.com/public/images/45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg"
+        "profileImage": "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
+        "subscribersCount": 10,
+        "subscribersCountRaw": "10 subscribers"
       },
       "cacheControl": "no-cache"
     },

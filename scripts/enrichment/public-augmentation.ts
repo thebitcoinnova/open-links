@@ -64,6 +64,21 @@ interface SubstackPublishedByline {
   photoUrl?: string;
 }
 
+interface SubstackProfileMetadata {
+  name?: string;
+  handle?: string;
+  bio?: string;
+  photoUrl?: string;
+  subscribersCount?: number;
+  subscribersCountRaw?: string;
+}
+
+interface ResolvePublicAugmentationTargetInput {
+  url: string;
+  icon?: string;
+  metadataHandle?: unknown;
+}
+
 const SUBSTACK_JSON_LD_PATTERN =
   /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
 const SUBSTACK_PRELOADS_PATTERN = /window\._preloads\s*=\s*JSON\.parse\(("(?:(?:\\.)|[^"\\])*")\)/s;
@@ -120,6 +135,14 @@ const toAbsoluteUrl = (value: string | undefined, baseUrl: string): string | und
 
   try {
     return new URL(value, baseUrl).toString();
+  } catch {
+    return undefined;
+  }
+};
+
+const toSourceLabel = (url: string): string | undefined => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
     return undefined;
   }
@@ -212,6 +235,30 @@ const resolveSubstackPublicationMetadata = (
   };
 };
 
+const resolveSubstackProfileMetadata = (
+  preloads: Record<string, unknown> | undefined,
+): SubstackProfileMetadata | undefined => {
+  if (!preloads || !isRecord(preloads.profile)) {
+    return undefined;
+  }
+
+  const subscribersCountRaw = safeTrim(preloads.profile.subscriberCountString);
+  const subscribersCountNumber =
+    typeof preloads.profile.subscriberCountNumber === "number" &&
+    Number.isFinite(preloads.profile.subscriberCountNumber)
+      ? preloads.profile.subscriberCountNumber
+      : undefined;
+
+  return {
+    name: safeTrim(preloads.profile.name),
+    handle: safeTrim(preloads.profile.handle),
+    bio: safeTrim(preloads.profile.bio),
+    photoUrl: safeTrim(preloads.profile.photo_url),
+    subscribersCount: subscribersCountNumber ?? parseAudienceCount(subscribersCountRaw),
+    subscribersCountRaw,
+  };
+};
+
 const extractSubstackPublishedByline = (
   root: Record<string, unknown> | undefined,
 ): SubstackPublishedByline | undefined => {
@@ -252,6 +299,7 @@ const extractSubstackPublishedByline = (
 
 const resolveSubstackCanonicalHandle = (
   person: SubstackJsonLdPerson | undefined,
+  profile: SubstackProfileMetadata | undefined,
   byline: SubstackPublishedByline | undefined,
   publication: SubstackPublicationMetadata | undefined,
 ): string | undefined => {
@@ -265,7 +313,11 @@ const resolveSubstackCanonicalHandle = (
     return canonicalResolution.handle;
   }
 
-  return normalizeHandle(byline?.handle) ?? normalizeHandle(publication?.subdomain);
+  return (
+    normalizeHandle(profile?.handle) ??
+    normalizeHandle(byline?.handle) ??
+    normalizeHandle(publication?.subdomain)
+  );
 };
 
 const detectMediumPlaceholderSignals = (xml: string): string[] => {
@@ -434,7 +486,7 @@ const resolveYoutubeTargetUrl = (sourceUrl: string): string => {
   return `https://www.youtube.com/${first}`;
 };
 
-const isLikelySubstackProfileUrl = (input: { url: string; icon?: string }): boolean => {
+const isLikelySubstackProfileUrl = (input: ResolvePublicAugmentationTargetInput): boolean => {
   const resolution = resolveHandleFromUrl(input);
   if (resolution.extractorId !== "substack") {
     return false;
@@ -463,6 +515,9 @@ const isLikelySubstackProfileUrl = (input: { url: string; icon?: string }): bool
 
   return segments.length === 0;
 };
+
+const buildSubstackCanonicalProfileUrl = (handle: string): string =>
+  `https://substack.com/@${encodeURIComponent(handle)}`;
 
 const buildXOEmbedUrl = (sourceUrl: string): string => {
   const handle = resolveXHandle(sourceUrl);
@@ -576,34 +631,48 @@ const parseMediumFeed = (sourceUrl: string, xml: string): PublicAugmentationOutc
   });
 };
 
-const parseSubstackPublicProfile = (sourceUrl: string, html: string): PublicAugmentationOutcome => {
-  const parsed = parseMetadata(html, sourceUrl);
+const parseSubstackPublicProfile = (
+  input: {
+    originalUrl: string;
+    fetchUrl: string;
+  },
+  html: string,
+): PublicAugmentationOutcome => {
+  const parsed = parseMetadata(html, input.fetchUrl);
   const person = extractSubstackJsonLdPerson(html);
   const preloads = extractSubstackPreloads(html);
+  const profile = resolveSubstackProfileMetadata(preloads);
   const publication = resolveSubstackPublicationMetadata(preloads);
   const byline = extractSubstackPublishedByline(preloads);
   const profileImage = toAbsoluteUrl(
-    safeTrim(person?.image) ?? safeTrim(byline?.photoUrl) ?? safeTrim(publication?.logoUrl),
-    sourceUrl,
+    safeTrim(person?.image) ??
+      safeTrim(profile?.photoUrl) ??
+      safeTrim(byline?.photoUrl) ??
+      safeTrim(publication?.logoUrl),
+    input.fetchUrl,
   );
   const image = profileImage ?? safeTrim(parsed.metadata.image);
 
   return resolveCompleteness({
     title:
       safeTrim(person?.name) ??
+      safeTrim(profile?.name) ??
       safeTrim(publication?.name) ??
       safeTrim(byline?.name) ??
       safeTrim(parsed.metadata.title),
     description:
       safeTrim(person?.jobTitle) ??
+      safeTrim(profile?.bio) ??
       safeTrim(publication?.heroText) ??
       safeTrim(byline?.bio) ??
       safeTrim(person?.description) ??
       safeTrim(parsed.metadata.description),
     image,
     profileImage,
-    handle: resolveSubstackCanonicalHandle(person, byline, publication),
-    sourceLabel: parsed.metadata.sourceLabel,
+    handle: resolveSubstackCanonicalHandle(person, profile, byline, publication),
+    subscribersCount: profile?.subscribersCount,
+    subscribersCountRaw: profile?.subscribersCountRaw,
+    sourceLabel: toSourceLabel(input.originalUrl) ?? parsed.metadata.sourceLabel,
   });
 };
 
@@ -710,10 +779,9 @@ const parseYoutubePublicProfile = (sourceUrl: string, html: string): PublicAugme
   });
 };
 
-export const resolvePublicAugmentationTarget = (input: {
-  url: string;
-  icon?: string;
-}): PublicAugmentationTarget | null => {
+export const resolvePublicAugmentationTarget = (
+  input: ResolvePublicAugmentationTargetInput,
+): PublicAugmentationTarget | null => {
   const supportedProfile = resolveSupportedSocialProfile(input);
   if (supportedProfile?.platform === "instagram") {
     const sourceUrl = resolveInstagramTargetUrl(input.url);
@@ -734,14 +802,25 @@ export const resolvePublicAugmentationTarget = (input: {
   }
 
   if (isLikelySubstackProfileUrl(input)) {
+    const sourceUrl =
+      supportedProfile?.platform === "substack"
+        ? buildSubstackCanonicalProfileUrl(supportedProfile.handle)
+        : input.url;
     return {
       id: "substack-public-profile",
-      sourceUrl: input.url,
+      sourceUrl,
       headers: {
         "accept-language": "en-US,en;q=0.9",
         "user-agent": BROWSER_USER_AGENT,
       },
-      parse: (body) => parseSubstackPublicProfile(input.url, body),
+      parse: (body) =>
+        parseSubstackPublicProfile(
+          {
+            originalUrl: input.url,
+            fetchUrl: sourceUrl,
+          },
+          body,
+        ),
     };
   }
 

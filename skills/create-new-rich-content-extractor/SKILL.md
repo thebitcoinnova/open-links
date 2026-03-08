@@ -37,6 +37,7 @@ Use this skill when OpenLinks is missing rich metadata for a link and you need t
    - If not, inspect stable public sources such as:
      - page metadata,
      - public profile HTML,
+     - canonical first-party profile pages for custom-domain accounts when they expose richer public metadata,
      - oEmbed,
      - RSS/feed data,
      - public avatar or image endpoints.
@@ -74,7 +75,10 @@ npm run build
    - Extend existing public enrichment/parsing/normalization paths instead of authenticated cache infrastructure.
    - Gather only fields from the current OpenLinks metadata model that are actually needed.
    - Prefer keeping generic parsers generic and adding targeted augmentation/normalization after parsing when platform-specific logic is required.
-   - Current in-repo `public_augmented` examples: Medium (RSS/feed), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata).
+   - Current in-repo `public_augmented` examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata).
+   - Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
+   - A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
+   - Count-only gaps do not justify authenticated extraction when the platform already has a stable public path for the rest of the metadata.
    - Update handle resolver coverage when applicable:
      - `src/lib/identity/handle-resolver.ts`
      - `src/lib/identity/handle-resolver.test.ts`

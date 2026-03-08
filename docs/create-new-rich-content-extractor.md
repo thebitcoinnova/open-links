@@ -49,6 +49,7 @@ Start here for every case. Do not scaffold an authenticated extractor before com
 3. Inspect stable public sources that could fill the gap:
    - page metadata,
    - public profile HTML,
+   - canonical first-party profile pages for custom-domain accounts when they expose richer public metadata,
    - oEmbed,
    - RSS/feed data,
    - public avatar/image endpoints.
@@ -99,16 +100,19 @@ When the chosen branch is `public_augmented`:
    - `data/cache/rich-public-cache.json`
    - `schema/rich-public-cache.schema.json`
    - no raw HTML snapshots
-   - current in-repo examples: Medium (RSS/feed), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata)
-5. Update handle coverage when applicable:
+   - current in-repo examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata)
+5. Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
+6. A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
+7. Count-only gaps do not justify authenticated extraction when the platform already has a stable public path for the rest of the metadata.
+8. Update handle coverage when applicable:
    - `src/lib/identity/handle-resolver.ts`
    - `src/lib/identity/handle-resolver.test.ts`
-6. Do not touch:
+9. Do not touch:
    - `data/policy/rich-authenticated-extractors.json`
    - `data/cache/rich-authenticated-cache.json`
    - `public/cache/rich-authenticated/*`
-7. Validate:
-
+10. Validate:
+ 
 ```bash
 bun run validate:data
 bun run enrich:rich:strict

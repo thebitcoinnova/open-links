@@ -111,6 +111,33 @@ test("computes freshness from cache-control and classifies cached metadata compl
   });
 });
 
+test("public cache helpers preserve Substack subscriber metadata", () => {
+  // Arrange
+  const metadata = toPublicCacheMetadata({
+    title: "Peter Ryszkiewicz",
+    description: "Software Engineer",
+    image: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+    profileImage: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+    subscribersCount: 10,
+    subscribersCountRaw: "10 subscribers",
+    sourceLabel: "peter.ryszkiewicz.us",
+  });
+
+  // Act
+  const enriched = toEnrichmentMetadataFromPublicCache(metadata);
+
+  // Assert
+  assert.deepEqual(enriched, {
+    title: "Peter Ryszkiewicz",
+    description: "Software Engineer",
+    image: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+    profileImage: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+    subscribersCount: 10,
+    subscribersCountRaw: "10 subscribers",
+    sourceLabel: "peter.ryszkiewicz.us",
+  });
+});
+
 test("public cache metadata remains lower precedence than manual overrides", () => {
   // Arrange
   const cached = toEnrichmentMetadataFromPublicCache(
@@ -142,6 +169,35 @@ test("public cache metadata remains lower precedence than manual overrides", () 
     profileImage: "https://example.com/manual-avatar.jpg",
     followersCount: 12,
     followersCountRaw: "12 followers",
+  });
+});
+
+test("manual overrides remain higher precedence than cached Substack subscriber metadata", () => {
+  // Arrange
+  const cached = toEnrichmentMetadataFromPublicCache(
+    toPublicCacheMetadata({
+      profileImage: "https://example.com/generated-substack-avatar.jpg",
+      subscribersCount: 10,
+      subscribersCountRaw: "10 subscribers",
+      sourceLabel: "peter.ryszkiewicz.us",
+    }),
+  );
+
+  // Act
+  const merged = mergeMetadataWithManualSocialProfileOverrides(
+    {
+      subscribersCount: 25,
+      subscribersCountRaw: "25 subscribers",
+    },
+    cached,
+  );
+
+  // Assert
+  assert.deepEqual(merged, {
+    profileImage: "https://example.com/generated-substack-avatar.jpg",
+    subscribersCount: 25,
+    subscribersCountRaw: "25 subscribers",
+    sourceLabel: "peter.ryszkiewicz.us",
   });
 });
 

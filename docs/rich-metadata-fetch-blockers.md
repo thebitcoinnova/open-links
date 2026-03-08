@@ -48,7 +48,7 @@ These domains are currently treated as unsupported for direct unauthenticated me
 | Site | Example URL | First Recorded (UTC) | Last Verified (UTC) | Typical Response | Current Status | Current Workaround |
 |---|---|---|---|---|---|---|
 | LinkedIn | `https://www.linkedin.com/in/peter-ryszkiewicz/` | `2026-02-24T11:29:52Z` | `2026-02-24T11:45:37Z` | `HTTP 999`, authwall redirect script | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor`) or keep direct enrichment disabled/manual metadata |
-| Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-02-25T12:39:14Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Prefer built-in public augmentation (RSS/feed path) and committed public cache, fallback to manual metadata |
+| Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-03-08T13:43:43Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Prefer built-in public augmentation (RSS/feed path) and committed public cache; follower counts remain unsupported without a stable public source |
 | X | `https://x.com/pryszkie` | `2026-02-26T09:55:42Z` | `2026-02-26T09:55:47Z` | `HTTP 200` shell response with missing `title`, `description`, and `image` | Unsupported direct fetch | Prefer built-in public augmentation (oEmbed + avatar path) and committed public cache, fallback to manual metadata |
 | Facebook | `https://www.facebook.com/peter.ryszkiewicz` | `2026-02-26T10:06:38Z` | `2026-02-26T10:06:49Z` | `HTTP 200` response with generic title and missing image metadata | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=facebook-auth-browser`), fallback to manual metadata |
 
@@ -82,7 +82,7 @@ Operator setup command:
 - Link id: `medium`
 - URL: `https://medium.com/@peterryszkiewicz`
 - Latest decision: Use built-in public augmentation through `bun run enrich:rich:strict`.
-- Reason: Direct profile fetch remains challenge-protected (`HTTP 403`), but the public RSS/feed endpoint is stable and now writes through the committed public cache instead of the authenticated cache.
+- Reason: Direct profile/about/latest fetch remains challenge-protected (`HTTP 403`), while the public RSS/feed endpoint is stable for title/description/image only and still does not expose follower counts. Medium stays on the public-only path; follower counts remain unsupported until a stable public source exists.
 
 Refresh command:
 
@@ -104,6 +104,8 @@ Refresh command:
 | `2026-02-25T12:37:45Z` | Fetch Medium feed endpoint `https://medium.com/feed/@peterryszkiewicz` | `HTTP 200` RSS XML with usable channel title/description/image |
 | `2026-02-25T12:38:57Z` | `bun run setup:rich-auth` with feed-based `medium-auth-browser` extractor | Cache entry captured (`cacheKey=medium`) and local asset committed under `public/cache/rich-authenticated/` |
 | `2026-03-07T23:12:09Z` | Public-first extractor audit + migration | Feed-based Medium support moved into built-in public augmentation and committed public cache; Medium no longer requires `authenticatedExtractor` |
+| `2026-03-08T13:28:27Z` | Browser-like `HEAD`/`GET` probe of `https://medium.com/@peterryszkiewicz` | `HTTP 403`; Cloudflare challenge persisted (`cf-mitigated: challenge`) |
+| `2026-03-08T13:43:43Z` | Browser-like fetch probes of `/@peterryszkiewicz/about`, `/@peterryszkiewicz/latest`, and the profile URL plus feed text inspection | Profile-family pages still returned Cloudflare challenge content; feed remained usable for title/description/image but exposed no follower-count field, so follower support stays out of scope for the public path |
 
 ### X
 

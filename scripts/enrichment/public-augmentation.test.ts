@@ -96,6 +96,20 @@ test("resolves a Substack public augmentation target for a custom-domain profile
   const target = resolvePublicAugmentationTarget({
     url: "https://peter.ryszkiewicz.us/",
     icon: "substack",
+    metadataHandle: "@peterryszkiewicz",
+  });
+
+  // Assert
+  assert.ok(target);
+  assert.equal(target.id, "substack-public-profile");
+  assert.equal(target.sourceUrl, "https://substack.com/@peterryszkiewicz");
+});
+
+test("falls back to the original Substack URL when no canonical handle is available", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
   });
 
   // Assert
@@ -145,6 +159,41 @@ test("parses Substack profile metadata from JSON-LD and ignores the subscribe-ca
     parsed?.metadata.image,
     "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
   );
+  assert.equal(
+    parsed?.metadata.profileImage,
+    "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+  );
+});
+
+test("preserves a Substack custom-domain source label while reading subscriber counts from the canonical profile", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+    metadataHandle: "@peterryszkiewicz",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Peter Ryszkiewicz | Substack" />
+        <meta property="og:description" content="Software Engineer" />
+        <script>
+          window._preloads = JSON.parse("{\\"profile\\":{\\"name\\":\\"Peter Ryszkiewicz\\",\\"handle\\":\\"peterryszkiewicz\\",\\"bio\\":\\"Software Engineer\\",\\"photo_url\\":\\"https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg\\",\\"subscriberCountString\\":\\"10 subscribers\\",\\"subscriberCountNumber\\":10}}")
+        </script>
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(target?.sourceUrl, "https://substack.com/@peterryszkiewicz");
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.sourceLabel, "peter.ryszkiewicz.us");
+  assert.equal(parsed?.metadata.handle, "peterryszkiewicz");
+  assert.equal(parsed?.metadata.subscribersCount, 10);
+  assert.equal(parsed?.metadata.subscribersCountRaw, "10 subscribers");
   assert.equal(
     parsed?.metadata.profileImage,
     "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",

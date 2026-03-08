@@ -390,7 +390,7 @@ When direct/public enrichment succeeds, OpenLinks writes normalized fetch-derive
 
 If a direct/public fetch fails but a committed public cache entry already exists, enrichment reuses that stale cached metadata as a warning-level fallback. No raw public HTML snapshots are committed.
 
-Built-in public augmentation currently covers Medium (RSS/feed), X (oEmbed + avatar), Instagram (public page metadata), and YouTube (public page metadata) without using `authenticatedExtractor`.
+Built-in public augmentation currently covers Medium (RSS/feed), Substack (canonical public profile fetch with original source-label preservation), X (oEmbed + avatar), Instagram (public page metadata), and YouTube (public page metadata) without using `authenticatedExtractor`.
 
 When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 

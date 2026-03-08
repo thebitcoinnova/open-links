@@ -947,6 +947,7 @@ const run = async () => {
     const publicAugmentationTarget = resolvePublicAugmentationTarget({
       url: link.url,
       icon: link.icon,
+      metadataHandle: handleForMetadata,
     });
     const knownBlockerMatch = resolveKnownBlockerMatch(link.url, blockersRegistry, "direct_fetch");
     const allowKnownBlocker = link.enrichment?.allowKnownBlocker === true;
