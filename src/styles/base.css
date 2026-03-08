@@ -67,8 +67,12 @@ a:focus-visible {
   --rich-card-avatar-desktop-fluid: 11.8vw;
   --rich-card-avatar-desktop-max: 6rem;
   --rich-card-avatar-mobile: 4.9rem;
-  --non-payment-card-icon-desktop: 11.6rem;
-  --non-payment-card-icon-mobile: clamp(6rem, 31vw, 7.8rem);
+  --non-payment-card-icon-desktop: clamp(
+    calc(var(--rich-card-avatar-desktop-min) + 0.25rem),
+    calc(var(--rich-card-avatar-desktop-fluid) + 0.25rem),
+    calc(var(--rich-card-avatar-desktop-max) + 0.25rem)
+  );
+  --non-payment-card-icon-mobile: calc(var(--rich-card-avatar-mobile) + 0.25rem);
   --non-payment-card-footer-icon-size: 2rem;
 }
 
@@ -477,7 +481,7 @@ a:focus-visible {
 
 .non-payment-card-lead-icon .card-icon {
   --card-icon-box-size: var(--non-payment-card-lead-size);
-  --card-icon-glyph-size: calc(var(--non-payment-card-lead-size) * 0.44);
+  --card-icon-glyph-size: calc(var(--non-payment-card-lead-size) * 0.5);
 }
 
 .non-payment-card-summary {
