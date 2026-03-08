@@ -1,5 +1,6 @@
 import type {
   OpenLink,
+  RichCardDescriptionSource,
   RichCardImageFit,
   RichCardMobileImageLayout,
   RichImageTreatment,
@@ -98,6 +99,9 @@ const resolveMetadataText = (value: unknown): string | undefined => {
   return normalized.length > 0 ? normalized : undefined;
 };
 
+const isDescriptionSource = (value: unknown): value is RichCardDescriptionSource =>
+  value === "fetched" || value === "manual";
+
 export interface LinkSourcePresentation {
   sourceLabel?: string;
   showSourceLabel: boolean;
@@ -119,29 +123,29 @@ export const resolveLinkSourcePresentation = (
   };
 };
 
-export const resolveLinkCardDescription = (
-  link: OpenLink,
-  socialProfile?: ResolvedSocialProfileMetadata,
-): string => {
+const resolveDescriptionSource = (site: SiteData, link: OpenLink): RichCardDescriptionSource => {
+  if (isDescriptionSource(link.metadata?.descriptionSource)) {
+    return link.metadata.descriptionSource;
+  }
+
+  if (isDescriptionSource(site.ui?.richCards?.descriptionSource)) {
+    return site.ui.richCards.descriptionSource;
+  }
+
+  return "fetched";
+};
+
+export const resolveLinkCardDescription = (site: SiteData, link: OpenLink): string => {
   const metadataDescription = resolveMetadataText(link.metadata?.description);
-  const fallbackDescription = link.description ?? urlDomain(link.url);
+  const manualDescription = resolveMetadataText(link.description);
+  const fallbackDescription = urlDomain(link.url);
+  const descriptionSource = resolveDescriptionSource(site, link);
 
-  if (!metadataDescription) {
-    return fallbackDescription;
+  if (descriptionSource === "manual") {
+    return manualDescription ?? metadataDescription ?? fallbackDescription;
   }
 
-  if (socialProfile?.usesProfileLayout && link.description) {
-    const normalizedDescription = metadataDescription.toLowerCase();
-    const repeatsMetricCopy = socialProfile.metrics.some((metric) =>
-      metric.rawText ? normalizedDescription.includes(metric.rawText.toLowerCase()) : false,
-    );
-
-    if (repeatsMetricCopy) {
-      return link.description;
-    }
-  }
-
-  return metadataDescription;
+  return metadataDescription ?? manualDescription ?? fallbackDescription;
 };
 
 export const resolveRichCardVariant = (site: SiteData, link: OpenLink): ResolvedCardVariant => {
@@ -181,7 +185,7 @@ export const buildRichCardViewModel = (site: SiteData, link: OpenLink): RichCard
 
   return {
     title: socialProfile.displayName ?? metadata.title ?? link.label,
-    description: resolveLinkCardDescription(link, socialProfile),
+    description: resolveLinkCardDescription(site, link),
     handleDisplay: socialProfile.handleDisplay,
     previewImageUrl,
     socialProfile,

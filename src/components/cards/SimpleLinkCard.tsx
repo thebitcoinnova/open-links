@@ -30,7 +30,7 @@ export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
   const sourceId = () => `simple-link-source-${safeId(props.link.id)}`;
   const socialProfile = () => resolveSocialProfileMetadata(props.link);
   const sourcePresentation = () => resolveLinkSourcePresentation(props.site, props.link);
-  const description = () => resolveLinkCardDescription(props.link, socialProfile());
+  const description = () => resolveLinkCardDescription(props.site, props.link);
   const title = () =>
     socialProfile().usesProfileLayout
       ? (socialProfile().displayName ?? props.link.label)

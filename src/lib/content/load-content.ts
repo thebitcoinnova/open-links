@@ -45,6 +45,7 @@ export type SourceLabelDefault = "show" | "hide";
 export type RichImageTreatment = "cover" | "thumbnail" | "off";
 export type RichCardImageFit = "cover" | "contain";
 export type RichCardMobileImageLayout = "inline" | "full-width";
+export type RichCardDescriptionSource = "fetched" | "manual";
 export type QualityDomain = "seo" | "accessibility" | "performance" | "manual-smoke";
 
 export interface QualitySeoMetadata {
@@ -104,6 +105,7 @@ export interface SiteQualityConfig {
 export interface RichLinkMetadata extends SocialProfileMetadataFields {
   title?: string;
   description?: string;
+  descriptionSource?: RichCardDescriptionSource;
   image?: string;
   imageFit?: RichCardImageFit;
   mobileImageLayout?: RichCardMobileImageLayout;
@@ -244,6 +246,7 @@ export interface SiteData {
     richCards?: {
       renderMode?: RichCardRenderMode;
       sourceLabelDefault?: SourceLabelDefault;
+      descriptionSource?: RichCardDescriptionSource;
       imageTreatment?: RichImageTreatment;
       imageFit?: RichCardImageFit;
       mobile?: {

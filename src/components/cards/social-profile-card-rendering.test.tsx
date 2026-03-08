@@ -124,7 +124,10 @@ test("rich profile cards render avatar-first identity chrome without duplicating
   assert.equal(viewModel.showMetaHandle, false);
   assert.equal(viewModel.previewImageUrl, undefined);
   assert.equal(viewModel.title, "Peter Justice For The Victims Ryszkiewicz");
-  assert.equal(viewModel.description, "Photos and stories");
+  assert.equal(
+    viewModel.description,
+    "86 Followers, 169 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+  );
   assert.equal(viewModel.showSourceLabel, true);
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
@@ -136,7 +139,7 @@ test("shared presentation data stays ready for simple-card profile rendering", (
   // Act
   const socialProfile = resolveSocialProfileMetadata(instagramProfileLink);
   const sourcePresentation = resolveLinkSourcePresentation(site, instagramProfileLink);
-  const description = resolveLinkCardDescription(instagramProfileLink, socialProfile);
+  const description = resolveLinkCardDescription(site, instagramProfileLink);
 
   // Assert
   assert.equal(socialProfile.usesProfileLayout, true);
@@ -148,7 +151,10 @@ test("shared presentation data stays ready for simple-card profile rendering", (
   );
   assert.equal(sourcePresentation.sourceLabel, "instagram.com");
   assert.equal(sourcePresentation.showSourceLabel, true);
-  assert.equal(description, "Photos and stories");
+  assert.equal(
+    description,
+    "86 Followers, 169 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+  );
 });
 
 test("github rich cards switch to profile layout with avatar identity and audience metrics", () => {

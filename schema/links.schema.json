@@ -167,6 +167,10 @@
           "properties": {
             "title": { "type": "string" },
             "description": { "type": "string" },
+            "descriptionSource": {
+              "type": "string",
+              "enum": ["fetched", "manual"]
+            },
             "image": { "type": "string", "format": "uri" },
             "profileImage": { "type": "string", "minLength": 1 },
             "handle": { "type": "string" },

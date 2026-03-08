@@ -2,6 +2,11 @@
 
 ## Current
 
+- [x] Add site-level and per-link rich-card description-source policy so fetched descriptions are the default but manual copy remains configurable.
+- [x] Replace the shared rich/simple description resolver heuristic with explicit fetched-vs-manual precedence.
+- [x] Add focused precedence tests and a dataset audit covering the current rich-link set and shared card paths.
+- [x] Update docs/schema coverage for description-source controls and verify with the rich-card/runtime build checks.
+
 - [x] Add LinkedIn to the supported social-profile platform set so authenticated LinkedIn profile links normalize into avatar-first rich cards.
 - [x] Update LinkedIn profile metadata handling and rendering so cached `image` backfills `profileImage`, the display name drops the `| LinkedIn` suffix, and the card avoids duplicate preview media.
 - [x] Extend focused tests for LinkedIn supported-profile detection, metadata normalization, and rich-card rendering.
@@ -47,6 +52,10 @@
 - [x] Verify desktop/mobile layout plus share fallback behavior, then record results.
 
 ## Completion Review
+
+- Result: Rich-link cards now resolve descriptions through an explicit policy instead of the old metric-duplication heuristic. Raw fetched `metadata.description` is the default across both rich cards and rich-link simple-card fallback mode, with `site.ui.richCards.descriptionSource` and `links[].metadata.descriptionSource` available when manual copy should win instead.
+- Verification: `bun test src/lib/ui/rich-card-description-sourcing.test.ts src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/social-profile-metadata.test.ts src/lib/content/social-profile-fields.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, and `bun run build` all passed.
+- Residual risk: Because the new default is raw fetched descriptions, some platforms may now show boilerplate-heavy copy until a later sanitization pass adds platform-specific cleanup. `validate:data` still reports the existing non-blocking Substack handle warning.
 
 - Result: LinkedIn now participates in the shared supported social-profile path, so authenticated-cache metadata reuses the cached `image` as `profileImage`, trims the `| LinkedIn` title suffix, and renders the existing LinkedIn link as an avatar-first rich card without duplicate preview media.
 - Verification: `bun install`, `bun test src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts src/components/cards/social-profile-card-rendering.test.tsx`, `bun run typecheck`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, `bun run build`, and `bun run biome:check` all passed.

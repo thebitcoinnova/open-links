@@ -297,6 +297,7 @@ Supported keys include:
 
 - `title`
 - `description`
+- `descriptionSource`: `fetched` (prefer fetched metadata description), `manual` (prefer top-level `links[].description`)
 - `image`
 - `profileImage`
 - `handle` (canonical username/handle without leading `@`; runtime renders as `@handle`)
@@ -460,6 +461,7 @@ Main presentation controls include:
 - `brandIcons.sizeMode`: `normal`, `large`
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.imageFit`: `contain` (default preserve mode), `cover`
+- `richCards.descriptionSource`: `fetched` (default), `manual`
 - `richCards.mobile.imageLayout`: `inline` (default), `full-width`
 - `richCards.enrichment.publicCachePath`: path to committed public rich-cache manifest
 - `richCards.enrichment.authenticatedCachePath`: path to authenticated rich-cache manifest
@@ -479,6 +481,15 @@ Main presentation controls include:
 - `footer.showLastUpdated`: toggle subtle build-time UTC timestamp display
 
 Rich-card policy settings live under `ui.richCards`.
+
+Description selection precedence for rich links:
+
+1. `links[].metadata.descriptionSource`
+2. `site.ui.richCards.descriptionSource`
+3. default `fetched`
+
+`fetched` resolves descriptions as `metadata.description -> links[].description -> URL/domain fallback`.
+`manual` resolves descriptions as `links[].description -> metadata.description -> URL/domain fallback`.
 
 #### `ui.richCards.imageFit`
 

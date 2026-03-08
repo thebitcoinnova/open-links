@@ -1,0 +1,201 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import type { LinksData, OpenLink, RichLinkMetadata, SiteData } from "../content/load-content";
+import { mergeMetadataWithManualSocialProfileOverrides } from "../content/social-profile-fields";
+import { buildRichCardViewModel, resolveLinkCardDescription } from "./rich-card-policy";
+
+const site = {
+  title: "OpenLinks",
+  description: "Profile links",
+  theme: {
+    active: "openlinks",
+    available: ["openlinks"],
+  },
+  ui: {
+    richCards: {
+      renderMode: "auto",
+    },
+  },
+} as const satisfies SiteData;
+
+const richLink = {
+  id: "instagram",
+  label: "Instagram",
+  url: "https://www.instagram.com/peterryszkiewicz/",
+  type: "rich",
+  icon: "instagram",
+  description: "Photos and stories",
+  metadata: {
+    description:
+      "86 Followers, 172 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+  },
+} as const satisfies OpenLink;
+
+const readJson = <T>(relativePath: string): T =>
+  JSON.parse(readFileSync(new URL(relativePath, import.meta.url), "utf8")) as T;
+
+test("defaults rich-link descriptions to fetched metadata over manual copy", () => {
+  // Act
+  const description = resolveLinkCardDescription(site, richLink);
+
+  // Assert
+  assert.equal(
+    description,
+    "86 Followers, 172 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+  );
+});
+
+test("site policy can prefer manual descriptions over fetched metadata", () => {
+  // Arrange
+  const manualSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      richCards: {
+        ...site.ui.richCards,
+        descriptionSource: "manual",
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const description = resolveLinkCardDescription(manualSite, richLink);
+
+  // Assert
+  assert.equal(description, "Photos and stories");
+});
+
+test("per-link description source overrides the site default", () => {
+  // Arrange
+  const manualSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      richCards: {
+        ...site.ui.richCards,
+        descriptionSource: "manual",
+      },
+    },
+  } as const satisfies SiteData;
+  const fetchedOverrideLink = {
+    ...richLink,
+    metadata: {
+      ...richLink.metadata,
+      descriptionSource: "fetched",
+    },
+  } as const satisfies OpenLink;
+  const manualOverrideLink = {
+    ...richLink,
+    metadata: {
+      ...richLink.metadata,
+      descriptionSource: "manual",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const fetchedOverride = resolveLinkCardDescription(manualSite, fetchedOverrideLink);
+  const manualOverride = resolveLinkCardDescription(site, manualOverrideLink);
+
+  // Assert
+  assert.equal(
+    fetchedOverride,
+    "86 Followers, 172 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+  );
+  assert.equal(manualOverride, "Photos and stories");
+});
+
+test("falls back from the preferred description source to the remaining available source", () => {
+  // Arrange
+  const manualSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      richCards: {
+        ...site.ui.richCards,
+        descriptionSource: "manual",
+      },
+    },
+  } as const satisfies SiteData;
+  const fetchedOnlyLink = {
+    ...richLink,
+    description: undefined,
+  } as const satisfies OpenLink;
+  const manualOnlyLink = {
+    ...richLink,
+    metadata: {
+      descriptionSource: "fetched",
+    },
+  } as const satisfies OpenLink;
+  const domainFallbackLink = {
+    ...richLink,
+    description: undefined,
+    metadata: undefined,
+  } as const satisfies OpenLink;
+
+  // Act
+  const fetchedOnly = resolveLinkCardDescription(manualSite, fetchedOnlyLink);
+  const manualOnly = resolveLinkCardDescription(site, manualOnlyLink);
+  const domainFallback = resolveLinkCardDescription(site, domainFallbackLink);
+
+  // Assert
+  assert.equal(
+    fetchedOnly,
+    "86 Followers, 172 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+  );
+  assert.equal(manualOnly, "Photos and stories");
+  assert.equal(domainFallback, "instagram.com");
+});
+
+test("dataset audit defaults current rich links to fetched descriptions across card paths", () => {
+  // Arrange
+  const datasetSite = readJson<SiteData>("../../../data/site.json");
+  const linksData = readJson<LinksData>("../../../data/links.json");
+  const publicCache = readJson<{
+    entries?: Record<string, { linkId?: string; metadata?: RichLinkMetadata }>;
+  }>("../../../data/cache/rich-public-cache.json");
+  const authenticatedCache = readJson<{
+    entries?: Record<string, { linkId?: string; metadata?: RichLinkMetadata }>;
+  }>("../../../data/cache/rich-authenticated-cache.json");
+  const publicMetadataByLinkId = new Map<string, RichLinkMetadata>();
+  const authenticatedMetadataByLinkId = new Map<string, RichLinkMetadata>();
+
+  for (const entry of Object.values(publicCache.entries ?? {})) {
+    if (entry.linkId && entry.metadata) {
+      publicMetadataByLinkId.set(entry.linkId, entry.metadata);
+    }
+  }
+
+  for (const entry of Object.values(authenticatedCache.entries ?? {})) {
+    if (entry.linkId && entry.metadata) {
+      authenticatedMetadataByLinkId.set(entry.linkId, entry.metadata);
+    }
+  }
+
+  const richLinks = linksData.links
+    .filter((link) => link.enabled !== false && link.type === "rich")
+    .map((link) => {
+      const generatedMetadata =
+        authenticatedMetadataByLinkId.get(link.id) ?? publicMetadataByLinkId.get(link.id);
+      const mergedMetadata = mergeMetadataWithManualSocialProfileOverrides(
+        link.metadata,
+        generatedMetadata,
+      );
+      return mergedMetadata ? { ...link, metadata: mergedMetadata } : link;
+    });
+
+  // Assert
+  assert.deepEqual(
+    richLinks.map((link) => link.id),
+    ["primal", "github", "x", "linkedin", "facebook", "instagram", "youtube", "medium", "substack"],
+  );
+
+  for (const link of richLinks) {
+    assert.ok(link.metadata?.description, `expected fetched description for ${link.id}`);
+    const sharedDescription = resolveLinkCardDescription(datasetSite, link);
+    const richDescription = buildRichCardViewModel(datasetSite, link).description;
+
+    assert.equal(sharedDescription, link.metadata.description);
+    assert.equal(richDescription, link.metadata.description);
+  }
+});

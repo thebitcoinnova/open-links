@@ -68,6 +68,7 @@ Coverage:
 
 - `title`
 - `description`
+- `descriptionSource`
 - `image`
 - `imageFit`
 - `mobileImageLayout`
@@ -175,6 +176,7 @@ Coverage:
 
 - `renderMode`
 - `sourceLabelDefault`
+- `descriptionSource`
 - `imageTreatment`
 - `imageFit`
 - `mobile.imageLayout`

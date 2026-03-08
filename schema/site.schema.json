@@ -295,6 +295,11 @@
               "type": "string",
               "enum": ["show", "hide"]
             },
+            "descriptionSource": {
+              "type": "string",
+              "enum": ["fetched", "manual"],
+              "default": "fetched"
+            },
             "imageTreatment": {
               "type": "string",
               "enum": ["cover", "thumbnail", "off"]
