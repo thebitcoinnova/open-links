@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-08T19:50:23.648Z",
+  "updatedAt": "2026-03-08T20:34:49.144Z",
   "entries": {
     "primal": {
       "linkId": "primal",
       "sourceUrl": "https://primal.net/peterryszkiewicz",
-      "capturedAt": "2026-03-08T19:50:23.648Z",
-      "updatedAt": "2026-03-08T19:50:23.648Z",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
       "metadata": {
         "title": "Peter No Taxation Without Representation Ryszkiewicz",
         "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
@@ -20,13 +20,13 @@
         "followingCountRaw": "90 following"
       },
       "cacheControl": "must-revalidate, proxy-revalidate, max-age=1",
-      "expiresAt": "2026-03-08T19:50:25.000Z"
+      "expiresAt": "2026-03-08T20:34:50.000Z"
     },
     "github": {
       "linkId": "github",
       "sourceUrl": "https://github.com/pRizz",
-      "capturedAt": "2026-03-08T18:05:23.868Z",
-      "updatedAt": "2026-03-08T18:05:23.868Z",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
       "metadata": {
         "title": "pRizz - Overview",
         "description": "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
@@ -38,15 +38,15 @@
         "followingCount": 87,
         "followingCountRaw": "87 following"
       },
-      "etag": "W/\"870ac95aed99b28f3bbed04a7669ca7a\"",
+      "etag": "W/\"adbe66506468730515573ccd082f8d7a\"",
       "cacheControl": "max-age=0, private, must-revalidate",
-      "expiresAt": "2026-03-08T18:05:24.000Z"
+      "expiresAt": "2026-03-08T20:34:49.000Z"
     },
     "substack": {
       "linkId": "substack",
       "sourceUrl": "https://substack.com/@peterryszkiewicz",
-      "capturedAt": "2026-03-08T18:05:23.868Z",
-      "updatedAt": "2026-03-08T18:05:23.868Z",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
       "metadata": {
         "title": "Peter Ryszkiewicz",
         "description": "Software Engineer",
@@ -82,8 +82,8 @@
     "instagram": {
       "linkId": "instagram",
       "sourceUrl": "https://www.instagram.com/peterryszkiewicz/",
-      "capturedAt": "2026-03-08T18:05:23.868Z",
-      "updatedAt": "2026-03-08T18:05:23.868Z",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
       "metadata": {
         "title": "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz) • Instagram photos and videos",
         "description": "86 Followers, 173 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
@@ -100,8 +100,8 @@
     "youtube": {
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
-      "capturedAt": "2026-03-08T18:05:23.868Z",
-      "updatedAt": "2026-03-08T18:05:23.868Z",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
       "metadata": {
         "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
         "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
@@ -112,13 +112,13 @@
         "subscribersCountRaw": "11 subscribers"
       },
       "cacheControl": "no-cache, no-store, max-age=0, must-revalidate",
-      "expiresAt": "2026-03-08T18:05:25.000Z"
+      "expiresAt": "2026-03-08T20:34:50.000Z"
     },
     "medium": {
       "linkId": "medium",
       "sourceUrl": "https://medium.com/feed/@peterryszkiewicz",
-      "capturedAt": "2026-03-08T18:04:11.600Z",
-      "updatedAt": "2026-03-08T18:04:11.600Z",
+      "capturedAt": "2026-03-08T20:22:24.909Z",
+      "updatedAt": "2026-03-08T20:22:24.909Z",
       "metadata": {
         "title": "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
         "description": "Stories by Peter (Justice for the Victims) Ryszkiewicz on Medium",
@@ -130,7 +130,7 @@
         "followersCountRaw": "3.3K followers"
       },
       "cacheControl": "private, must-revalidate, max-age=900",
-      "expiresAt": "2026-03-08T18:19:13.000Z"
+      "expiresAt": "2026-03-08T20:37:26.000Z"
     }
   }
 }

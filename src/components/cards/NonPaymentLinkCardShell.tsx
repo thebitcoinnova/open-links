@@ -69,7 +69,6 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       target={target()}
       rel={rel()}
       aria-label={ariaLabel()}
-      aria-labelledby={titleId()}
       aria-describedby={ariaDescribedBy()}
       data-interaction={interaction()}
       data-link-type={props.link.type}

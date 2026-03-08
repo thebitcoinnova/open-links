@@ -134,8 +134,7 @@ export const runA11yChecks = ({
   const issues: QualityIssue[] = [];
 
   const routeIndex = readText(rootDir, "src/routes/index.tsx");
-  const simpleCard = readText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
-  const richCard = readText(rootDir, "src/components/cards/RichLinkCard.tsx");
+  const nonPaymentCardShell = readText(rootDir, "src/components/cards/NonPaymentLinkCardShell.tsx");
   const utilityBar = readText(rootDir, "src/components/layout/TopUtilityBar.tsx");
   const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
   const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
@@ -153,47 +152,42 @@ export const runA11yChecks = ({
     });
   }
 
-  if (!simpleCard.includes("aria-label")) {
+  if (!nonPaymentCardShell.includes("aria-label")) {
     issues.push({
       domain: "accessibility",
       level: "error",
-      code: "A11Y_SIMPLE_CARD_LABEL_MISSING",
-      scope: "src/components/cards/SimpleLinkCard.tsx",
-      message: "Simple link card anchor is missing explicit accessible labeling.",
-      remediation: "Add aria-label/labelled-by semantics describing destination and action.",
+      code: "A11Y_NON_PAYMENT_CARD_LABEL_MISSING",
+      scope: "src/components/cards/NonPaymentLinkCardShell.tsx",
+      message:
+        "Shared non-payment card anchor is missing explicit action-oriented accessible labeling.",
+      remediation:
+        "Keep aria-label on the shared non-payment card anchor so it describes the destination and action.",
     });
   }
 
-  if (!simpleCard.includes("aria-describedby")) {
-    issues.push({
-      domain: "accessibility",
-      level: "warning",
-      code: "A11Y_SIMPLE_CARD_DESCRIPTION_MISSING",
-      scope: "src/components/cards/SimpleLinkCard.tsx",
-      message: "Simple link cards are missing aria-describedby semantics.",
-      remediation: "Add aria-describedby for destination/context detail text on simple cards.",
-    });
-  }
-
-  if (!richCard.includes("aria-label")) {
+  if (nonPaymentCardShell.includes("aria-labelledby")) {
     issues.push({
       domain: "accessibility",
       level: "error",
-      code: "A11Y_RICH_CARD_LABEL_MISSING",
-      scope: "src/components/cards/RichLinkCard.tsx",
-      message: "Rich link card anchor is missing explicit accessible labeling.",
-      remediation: "Add aria-label/labelled-by semantics describing rich card destination.",
+      code: "A11Y_NON_PAYMENT_CARD_LABELLEDBY_PRESENT",
+      scope: "src/components/cards/NonPaymentLinkCardShell.tsx",
+      message:
+        "Shared non-payment card anchor should not use aria-labelledby because it overrides the action-oriented accessible name.",
+      remediation:
+        "Use aria-label as the accessible name source for non-payment cards and keep supplemental context in aria-describedby.",
     });
   }
 
-  if (!richCard.includes("aria-describedby")) {
+  if (!nonPaymentCardShell.includes("aria-describedby")) {
     issues.push({
       domain: "accessibility",
       level: "warning",
-      code: "A11Y_RICH_CARD_DESCRIPTION_MISSING",
-      scope: "src/components/cards/RichLinkCard.tsx",
-      message: "Rich link cards are missing aria-describedby semantics.",
-      remediation: "Add aria-describedby pointing to rich-card description/source content.",
+      code: "A11Y_NON_PAYMENT_CARD_DESCRIPTION_MISSING",
+      scope: "src/components/cards/NonPaymentLinkCardShell.tsx",
+      message:
+        "Shared non-payment card anchor is missing aria-describedby semantics for supplemental context.",
+      remediation:
+        "Keep aria-describedby on the shared non-payment card anchor so description and source context remain available to assistive tech.",
     });
   }
 

@@ -2,6 +2,10 @@
 
 ## Current
 
+- [x] Fix non-payment card accessible-name semantics in the shared shell so action-oriented `aria-label` remains authoritative.
+- [x] Realign the accessibility/manual-smoke quality checks with `NonPaymentLinkCardShell` instead of the stale wrapper files.
+- [x] Add a rendered-markup regression test for simple and rich non-payment cards, then verify with `bun test src/components/cards/non-payment-card-accessibility.test.tsx`, `bun run typecheck`, `bun run build`, `bun run quality:check`, `bun run studio:test:integration`, and a final diff review.
+
 - [x] Promote the v3 `10/10` mark to the canonical winner so the active global aliases and runtime brand assets use it everywhere.
 - [x] Regenerate the logo manifests, SVG aliases, comparison sheet, and favicon/app-icon assets after the v3 winner switch.
 - [x] Verify the winner switch with regeneration, `bun run typecheck`, `bun run biome:check`, `bun run build`, and a final diff review.
@@ -20,6 +24,10 @@
 - [x] Add focused parser, cache-merge, UI, and sync-runner tests plus the Medium public-browser docs updates, then verify with the targeted and repo validation/build commands.
 
 ### Completion Review
+
+- Result: Shared non-payment cards now keep their action-oriented accessible name on `aria-label`, with `aria-labelledby` removed from the shared shell. The quality and manual-smoke checks now inspect `NonPaymentLinkCardShell`, and a new non-payment card accessibility test resolves simple and rich card trees to assert the expected label and description wiring.
+- Verification: `bun test src/components/cards/non-payment-card-accessibility.test.tsx`, `bun run typecheck`, `bun run build`, `bun run quality:check`, `bun run studio:test:integration`, and `bunx @biomejs/biome check scripts/quality/a11y.ts scripts/quality/manual-smoke.ts src/components/cards/non-payment-card-accessibility.test.tsx --files-ignore-unknown=true` passed.
+- Residual risk: Full `bun run biome:check` still reports formatting drift in generated JSON files under `data/generated/`, which is outside this CI accessibility fix. Diff review also confirmed the pre-existing unrelated change in `data/cache/rich-public-cache.json` remains untouched.
 
 - Result: Medium now stays on the `public_augmented` path, with a separate `bun run public:rich:sync` command that uses a public browser profile to capture follower counts into `data/cache/rich-public-cache.json` while feed-based enrichment preserves those counts on later refreshes.
 - Verification: `bun install`, `bun test scripts/enrichment/medium-public-browser.test.ts scripts/enrichment/public-cache.test.ts scripts/public-rich-sync.test.ts src/lib/ui/social-profile-metadata.test.ts src/components/cards/social-profile-card-rendering.test.tsx`, `bun run typecheck`, `bun run biome:check`, `bun run enrich:rich:strict`, and `bun run build` passed. `bun run public:rich:sync -- --only-link medium` succeeded once and wrote the Medium public cache/artifact, then a second immediate rerun failed cleanly on a Cloudflare placeholder without mutating the cache.

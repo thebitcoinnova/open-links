@@ -20,8 +20,15 @@ export const runManualSmokeChecks = ({
   const routeIndex = readText(rootDir, "src/routes/index.tsx");
   const simpleCard = readText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
   const richCard = readText(rootDir, "src/components/cards/RichLinkCard.tsx");
+  const nonPaymentCardShell = readText(rootDir, "src/components/cards/NonPaymentLinkCardShell.tsx");
   const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
   const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
+  const sharedNonPaymentCardHasActionLabel =
+    nonPaymentCardShell.includes("<a") &&
+    nonPaymentCardShell.includes("aria-label") &&
+    !nonPaymentCardShell.includes("aria-labelledby");
+  const simpleCardUsesSharedShell = simpleCard.includes("NonPaymentLinkCardShell");
+  const richCardUsesSharedShell = richCard.includes("NonPaymentLinkCardShell");
 
   const checks: ManualSmokeCheckResult[] = [
     {
@@ -49,25 +56,26 @@ export const runManualSmokeChecks = ({
       label:
         checklistLabels[2] ??
         "Simple cards expose meaningful action labels and are keyboard activatable.",
-      status: simpleCard.includes("<a") && simpleCard.includes("aria-label") ? "pass" : "fail",
+      status: simpleCardUsesSharedShell && sharedNonPaymentCardHasActionLabel ? "pass" : "fail",
       details:
-        simpleCard.includes("<a") && simpleCard.includes("aria-label")
-          ? "Simple card anchor and aria-label detected."
-          : "Simple card anchor/label semantics are incomplete.",
+        simpleCardUsesSharedShell && sharedNonPaymentCardHasActionLabel
+          ? "Simple card delegates to the shared shell with an action-oriented aria-label."
+          : "Simple card shared anchor semantics are incomplete.",
       remediation:
-        "Ensure simple cards are anchors with explicit action-oriented accessible naming.",
+        "Ensure simple cards delegate to the shared non-payment shell and keep action-oriented aria-label semantics there.",
     },
     {
       id: "rich-card-action",
       label:
         checklistLabels[3] ??
         "Rich cards expose meaningful action labels and are keyboard activatable.",
-      status: richCard.includes("<a") && richCard.includes("aria-label") ? "pass" : "fail",
+      status: richCardUsesSharedShell && sharedNonPaymentCardHasActionLabel ? "pass" : "fail",
       details:
-        richCard.includes("<a") && richCard.includes("aria-label")
-          ? "Rich card anchor and aria-label detected."
-          : "Rich card anchor/label semantics are incomplete.",
-      remediation: "Ensure rich cards are anchors with explicit destination labeling.",
+        richCardUsesSharedShell && sharedNonPaymentCardHasActionLabel
+          ? "Rich card delegates to the shared shell with an action-oriented aria-label."
+          : "Rich card shared anchor semantics are incomplete.",
+      remediation:
+        "Ensure rich cards delegate to the shared non-payment shell and keep action-oriented destination labeling there.",
     },
     {
       id: "utility-controls-menu",
