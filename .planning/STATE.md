@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 08.1 execution planning for custom profile description separation ahead of the Phase 9 docs and regression pass
+**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface
 
 ## Current Position
 
-Phase: 08.1-custom-profile-descriptions
-Plan: 0 of 3 (phase planned)
-Status: Ready to execute Phase 08.1
+Phase: 09-docs-regression-hardening-social-cards
+Plan: 0 of 0 (phase not planned)
+Status: Ready to discuss Phase 9
 Queued Follow-up Phase: 10-configurable-rich-card-description-image-row
-Last activity: 2026-03-09 - Inserted Phase 08.1 and drafted execution plans for custom profile description separation across metadata, cards, Studio, and extractor guidance.
+Last activity: 2026-03-08 - Completed Phase 08.1 custom profile descriptions and verified DATA-10, DATA-11, UI-10, and DOC-07.
 
-Progress: [#####-----] 55%
+Progress: [########--] 77%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 25 min
-- Total execution time: 9.2 hours
+- Total plans completed: 25
+- Average duration: 28 min
+- Total execution time: 11.8 hours
 
 **By Phase:**
 
@@ -36,10 +36,11 @@ Progress: [#####-----] 55%
 | 6 | 3 | 4 min | 1 min |
 | 7 | 3 | 25 min | 8 min |
 | 8 | 3 | 45 min | 15 min |
+| 08.1 | 3 | 154 min | 51 min |
 
 **Recent Trend:**
-- Last 3 plans: 18 min, 12 min, 15 min
-- Trend: Stable
+- Last 3 plans: 29 min, 72 min, 53 min
+- Trend: Variable
 
 *Updated after each plan completion*
 
@@ -55,6 +56,8 @@ Progress: [#####-----] 55%
 - Suppress duplicate preview media when a social profile avatar and preview resolve to the same asset.
 - Reuse shared description/source logic across rich and simple cards so render-mode switches do not fork profile behavior.
 - Treat profile-authored descriptions as a separate metadata field from fetched page/header descriptions instead of overloading the existing `description` field.
+- Supported social profile cards should prefer explicit `profileDescription` when present, while non-profile links stay on the existing fetched/manual description rules.
+- X profile bios should come from the public rendered DOM, while LinkedIn can reconcile the public generic description with the cached authenticated bio without forcing a new auth refresh.
 
 ### Roadmap Evolution
 
@@ -64,8 +67,8 @@ Progress: [#####-----] 55%
 
 ### Pending Todos
 
-- Phase 08.1 custom profile description separation is planned and ready for execution.
-- Phase 9 still needs docs and regression hardening for the expanded profile metadata fields, card states, and maintainer customization guidance after Phase 08.1 lands.
+- Phase 9 needs docs and regression hardening for the expanded profile metadata fields, card states, Studio guidance, and maintainer customization guidance after Phase 08.1.
+- Phase 10 remains queued for configurable rich-card description image rows after Phase 9.
 
 ### Blockers/Concerns
 
@@ -75,6 +78,6 @@ Progress: [#####-----] 55%
 
 ## Session Continuity
 
-Last session: 2026-03-09 22:07
-Stopped at: Phase 08.1 planned with three execution plans; next step is to execute 08.1-01.
-Resume file: .planning/phases/08.1-custom-profile-descriptions/08.1-01-PLAN.md
+Last session: 2026-03-08 22:21
+Stopped at: Phase 08.1 complete and verified; next step is to discuss or plan Phase 9.
+Resume file: .planning/ROADMAP.md
