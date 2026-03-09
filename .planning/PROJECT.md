@@ -14,8 +14,9 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 
 **Target features:**
 - Persist profile-centric metadata such as handle, profile image, and follower/following/subscriber-style counts in saved link data for supported domains.
+- Separate profile-authored descriptions from fetched page/header descriptions when a supported platform exposes both surfaces.
 - Refresh simple and rich cards so profile-style links show circular profile imagery, handles, audience stats, and source context without losing existing description/content cues.
-- Update extractor guidance and docs so maintainers understand supported coverage, manual overrides, and fallback behavior.
+- Update extractor guidance, Studio editing flows, and docs so maintainers understand supported coverage, profile-description capture, manual overrides, and fallback behavior.
 
 ## Current State
 
@@ -41,8 +42,9 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 ### Active (v1.1 scope)
 
 - [ ] Supported profile-style links can persist social identity metadata such as handle, profile image, and audience counts in saved link data.
+- [ ] Supported profile-style links can persist a profile-authored description separately from the generic fetched page description.
 - [ ] Simple and rich cards present supported social links as profile-like surfaces without regressing current description, branding, and fallback rendering.
-- [ ] Maintainer docs and examples explain the new social metadata fields, extractor coverage, and override/fallback paths.
+- [ ] Maintainer docs, Studio flows, and examples explain the new social metadata fields, profile-description capture, and override/fallback paths.
 
 ### Out of Scope
 

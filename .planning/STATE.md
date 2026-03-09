@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-07)
+See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 9 preparation for docs and regression hardening around the social profile card refresh
+**Current focus:** Phase 08.1 execution planning for custom profile description separation ahead of the Phase 9 docs and regression pass
 
 ## Current Position
 
-Phase: 09-docs-regression-hardening-social-cards
-Plan: 0 of 0 (phase not planned)
-Status: Ready to discuss Phase 9
-Last activity: 2026-03-07 - Completed Phase 8 social profile card UI refresh and verified UI-07 through UI-09.
+Phase: 08.1-custom-profile-descriptions
+Plan: 0 of 3 (phase planned)
+Status: Ready to execute Phase 08.1
+Last activity: 2026-03-09 - Inserted Phase 08.1 and drafted execution plans for custom profile description separation across metadata, cards, Studio, and extractor guidance.
 
-Progress: [######----] 67%
+Progress: [#####-----] 55%
 
 ## Performance Metrics
 
@@ -53,11 +53,16 @@ Progress: [######----] 67%
 - Use the full profile-style card treatment only when supported profile metadata is present; keep unsupported cards in a quieter unified fallback shell.
 - Suppress duplicate preview media when a social profile avatar and preview resolve to the same asset.
 - Reuse shared description/source logic across rich and simple cards so render-mode switches do not fork profile behavior.
+- Treat profile-authored descriptions as a separate metadata field from fetched page/header descriptions instead of overloading the existing `description` field.
+
+### Roadmap Evolution
+
+- Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 
 ### Pending Todos
 
-- Phase 9 needs docs and regression hardening for the new profile metadata fields, card states, and maintainer customization guidance.
-- Audit custom per-platform profile descriptions so user-authored bios can be stored separately from fetched header descriptions and rendered intentionally in rich cards and Studio.
+- Phase 08.1 custom profile description separation is planned and ready for execution.
+- Phase 9 still needs docs and regression hardening for the expanded profile metadata fields, card states, and maintainer customization guidance after Phase 08.1 lands.
 
 ### Blockers/Concerns
 
@@ -67,6 +72,6 @@ Progress: [######----] 67%
 
 ## Session Continuity
 
-Last session: 2026-03-07 13:37
-Stopped at: Phase 8 complete and verified; Phase 9 is ready for discussion/planning.
-Resume file: .planning/ROADMAP.md
+Last session: 2026-03-09 22:07
+Stopped at: Phase 08.1 planned with three execution plans; next step is to execute 08.1-01.
+Resume file: .planning/phases/08.1-custom-profile-descriptions/08.1-01-PLAN.md

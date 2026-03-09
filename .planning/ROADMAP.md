@@ -4,17 +4,17 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Phase 8 complete; Phase 9 ready for discussion (updated 2026-03-07)
-**Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.  
-**Phases:** 7-9  
-**Requirements mapped:** 9/9 (6 complete)
+**Status:** Phase 8 complete; inserted Phase 08.1 planned ahead of Phase 9 (updated 2026-03-09)
+**Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.
+**Phases:** 7-9 plus inserted Phase 08.1
+**Requirements mapped:** 13/13 (6 complete)
 
 ### Phase 7: Social Profile Metadata Pipeline
 
-**Directory:** `07-social-profile-metadata-pipeline`  
+**Directory:** `07-social-profile-metadata-pipeline`
 **Status:** Complete 2026-03-07
-**Goal:** Extend schemas, generated metadata, validation, and extractor outputs so supported links can persist profile avatar and audience stats.  
-**Depends on:** Phase 6  
+**Goal:** Extend schemas, generated metadata, validation, and extractor outputs so supported links can persist profile avatar and audience stats.
+**Depends on:** Phase 6
 **Plans:** 3/3 complete
 **Requirements:** DATA-07, DATA-08, DATA-09
 
@@ -30,10 +30,10 @@
 
 ### Phase 8: Social Profile Card UI Refresh
 
-**Directory:** `08-social-profile-card-ui-refresh`  
+**Directory:** `08-social-profile-card-ui-refresh`
 **Status:** Complete 2026-03-07
-**Goal:** Rebuild simple and rich card presentation around profile identity cues while preserving existing content and source context.  
-**Depends on:** Phase 7  
+**Goal:** Rebuild simple and rich card presentation around profile identity cues while preserving existing content and source context.
+**Depends on:** Phase 7
 **Plans:** 3/3 complete
 **Requirements:** UI-07, UI-08, UI-09
 
@@ -47,12 +47,31 @@
 - [x] 08-02: Refresh simple-card layout and responsive rules for compact audience stats.
 - [x] 08-03: Finish styling/accessibility polish across breakpoints and fallback states.
 
+### Phase 08.1: Custom Profile Descriptions (INSERTED)
+
+**Directory:** `08.1-custom-profile-descriptions`
+**Status:** Planned 2026-03-09
+**Goal:** Distinguish profile-authored bios from fetched page/header descriptions across metadata capture, runtime rendering, Studio editing, and extractor guidance.
+**Depends on:** Phase 8
+**Planned plans:** 3
+**Requirements:** DATA-10, DATA-11, UI-10, DOC-07
+
+**Success criteria:**
+1. Metadata contracts can store `profileDescription` separately from the existing fetched/manual page description without breaking current fallback behavior.
+2. Supported public and authenticated profile sources are audited and persist `profileDescription` where the platform exposes a distinct user-authored bio, with X validated first.
+3. Social-profile cards and Studio can intentionally surface the profile-authored description while non-profile links keep the current description rules.
+
+**Planned plan areas:**
+- 08.1-01: Extend schemas, types, and merge rules for distinct profile description fields.
+- 08.1-02: Audit supported platform capture/cache paths and extractor guidance to persist profile descriptions.
+- 08.1-03: Update card rendering, Studio editing surface, and regression coverage for profile descriptions.
+
 ### Phase 9: Docs + Regression Hardening for Social Cards
 
-**Directory:** `09-docs-regression-hardening-social-cards`  
-**Goal:** Document the new metadata model and lock down rendering and fallback behavior with targeted tests and verification guidance.  
-**Depends on:** Phase 8  
-**Planned plans:** 2  
+**Directory:** `09-docs-regression-hardening-social-cards`
+**Goal:** Document the expanded metadata model and lock down rendering and fallback behavior with targeted tests and verification guidance.
+**Depends on:** Phase 08.1
+**Planned plans:** 2
 **Requirements:** DOC-05, DOC-06, QUAL-06
 
 **Success criteria:**
@@ -67,7 +86,7 @@
 ## Milestones
 
 - ✅ **v1.0** — Shipped 2026-02-23. 6 phases, 16 plans. [Archive](./milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1** — Defined 2026-03-07. 3 phases planned (7-9), 2 complete.
+- 🚧 **v1.1** — Defined 2026-03-07. 4 phases planned (including inserted Phase 08.1), 2 complete.
 
 ## Historical References
 
