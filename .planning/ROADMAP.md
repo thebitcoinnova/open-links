@@ -4,7 +4,7 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Phase 08.1 complete; Phase 9 ready for planning; Phase 10 queued (updated 2026-03-08)
+**Status:** Phase 08.1 complete; Phase 9 ready for planning; Phase 10 completed ahead of dependency order (updated 2026-03-09)
 **Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.
 **Phases:** 7-10 plus inserted Phase 08.1
 **Requirements mapped:** 13/13 (10 complete)
@@ -86,12 +86,20 @@
 ### Phase 10: Configurable Rich Card Description Image Row
 
 **Directory:** `10-configurable-rich-card-description-image-row`
+**Status:** Complete 2026-03-09
 **Goal:** Keep profile-centric rich-card headers intact while optionally rendering a separate full-width description image row when preview media is distinct from the profile image.
 **Depends on:** Phase 9
-**Plans:** 0 plans
+**Plans:** 3/3 complete
 
-Plans:
-- [ ] TBD (run `$gsd-plan-phase 10` to break down)
+**Success criteria:**
+1. Maintainers can control the extra rich-card description-image row globally and per site/platform without disturbing avatar-first profile headers.
+2. Rich-card media capture and validation preserve meaningful profile-vs-preview image separation for supported profile sources and stop requiring unused preview media when the row is disabled.
+3. Rich cards render the new full-width description-image row between the description and footer/source context with regression coverage and maintainer-facing configuration docs.
+
+**Completed plan areas:**
+- [x] 10-01: Add global/per-site description-image-row policy resolution and view-model support.
+- [x] 10-02: Preserve meaningful distinct preview images and align validation with avatar-first profile cards.
+- [x] 10-03: Render the full-width description-image row, update docs, and lock in regression coverage.
 
 **Details:**
 Add a follow-up rich-card layout pass for Substack-style links and similar cases where profile imagery and description/preview imagery serve different purposes. Keep the first row focused on profile identity, keep the description/source row intact, and add an optional third row for a full-width description image when it improves the card. Make the extra row configurable both globally and per-site so maintainers can opt in or out without losing the existing profile treatment.

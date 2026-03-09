@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface
+**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface, with the Phase 10 rich-card description-image-row follow-up already implemented
 
 ## Current Position
 
 Phase: 09-docs-regression-hardening-social-cards
 Plan: 0 of 0 (phase not planned)
 Status: Ready to discuss Phase 9
-Queued Follow-up Phase: 10-configurable-rich-card-description-image-row
-Last activity: 2026-03-08 - Completed Phase 08.1 custom profile descriptions and verified DATA-10, DATA-11, UI-10, and DOC-07.
+Completed Follow-up Phase: 10-configurable-rich-card-description-image-row
+Last activity: 2026-03-09 - Completed Phase 10 rich-card description-image-row work ahead of the original dependency order and verified config, parser, renderer, docs, and validation coverage.
 
-Progress: [########--] 77%
+Progress: [########--] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
-- Average duration: 28 min
-- Total execution time: 11.8 hours
+- Total plans completed: 28
+- Average duration: 27 min
+- Total execution time: 12.8 hours
 
 **By Phase:**
 
@@ -37,10 +37,11 @@ Progress: [########--] 77%
 | 7 | 3 | 25 min | 8 min |
 | 8 | 3 | 45 min | 15 min |
 | 08.1 | 3 | 154 min | 51 min |
+| 10 | 3 | 60 min | 20 min |
 
 **Recent Trend:**
-- Last 3 plans: 29 min, 72 min, 53 min
-- Trend: Variable
+- Last 3 plans: 20 min, 22 min, 18 min
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -64,11 +65,12 @@ Progress: [########--] 77%
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
+- 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
 
 ### Pending Todos
 
 - Phase 9 needs docs and regression hardening for the expanded profile metadata fields, card states, Studio guidance, and maintainer customization guidance after Phase 08.1.
-- Phase 10 remains queued for configurable rich-card description image rows after Phase 9.
+- Phase 10 no longer blocks future card-template experimentation; the shared shell now supports an additional rich-only media row without forking the card system.
 
 ### Blockers/Concerns
 
@@ -78,6 +80,6 @@ Progress: [########--] 77%
 
 ## Session Continuity
 
-Last session: 2026-03-08 22:21
-Stopped at: Phase 08.1 complete and verified; next step is to discuss or plan Phase 9.
+Last session: 2026-03-09 03:16
+Stopped at: Phase 10 completed and verified out of dependency order; the next planned milestone step is to discuss or plan Phase 9.
 Resume file: .planning/ROADMAP.md
