@@ -121,15 +121,19 @@ export const parseMetadata = (html: string, url: string): ParsedMetadata => {
     "twitter:description",
     "description",
   ]);
-  const image = toAbsoluteUrl(
-    extractMetaContent(html, ["og:image", "twitter:image", "twitter:image:src"]),
+  const ogImage = toAbsoluteUrl(extractMetaContent(html, ["og:image"]), url);
+  const twitterImage = toAbsoluteUrl(
+    extractMetaContent(html, ["twitter:image", "twitter:image:src"]),
     url,
   );
+  const image = ogImage ?? twitterImage;
 
   const metadata: EnrichmentMetadata = {
     title,
     description,
     image,
+    ogImage,
+    twitterImage,
     sourceLabel: toSourceLabel(url),
   };
 

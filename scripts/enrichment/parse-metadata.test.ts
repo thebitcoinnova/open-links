@@ -21,6 +21,9 @@ test("decodes decimal and hex numeric entities in metadata text", () => {
   // Assert
   assert.equal(parsed.metadata.title, "Alice @home • test");
   assert.equal(parsed.metadata.description, "Status #1 & growing");
+  assert.equal(parsed.metadata.ogImage, "https://example.com/image.jpg");
+  assert.equal(parsed.metadata.twitterImage, undefined);
+  assert.equal(parsed.metadata.image, "https://example.com/image.jpg");
 });
 
 test("preserves named entity decoding behavior and adds apos support", () => {
@@ -76,7 +79,29 @@ test("decodes entity-encoded image query params and preserves absolute URL resol
   const parsed = parseMetadata(html, "https://example.com/profile");
 
   // Assert
+  assert.equal(parsed.metadata.ogImage, "https://example.com/image.jpg?size=100&fit=crop");
+  assert.equal(parsed.metadata.twitterImage, undefined);
   assert.equal(parsed.metadata.image, "https://example.com/image.jpg?size=100&fit=crop");
+});
+
+test("preserves distinct og and twitter image provenance while defaulting image to ogImage", () => {
+  // Arrange
+  const html = documentWithMeta(
+    [
+      '<meta property="og:title" content="Title" />',
+      '<meta property="og:description" content="Description" />',
+      '<meta property="og:image" content="/og-image.jpg" />',
+      '<meta name="twitter:image" content="/twitter-image.jpg" />',
+    ].join(""),
+  );
+
+  // Act
+  const parsed = parseMetadata(html, "https://example.com/profile");
+
+  // Assert
+  assert.equal(parsed.metadata.ogImage, "https://example.com/og-image.jpg");
+  assert.equal(parsed.metadata.twitterImage, "https://example.com/twitter-image.jpg");
+  assert.equal(parsed.metadata.image, "https://example.com/og-image.jpg");
 });
 
 test("keeps completeness classification unchanged", () => {

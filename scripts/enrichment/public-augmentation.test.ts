@@ -218,6 +218,7 @@ test("parses Substack profile metadata from JSON-LD and ignores the subscribe-ca
     parsed?.metadata.image,
     "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
   );
+  assert.equal(parsed?.metadata.ogImage, "https://substackcdn.com/image/fetch/subscribe-card.jpg");
   assert.equal(
     parsed?.metadata.profileImage,
     "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
@@ -260,6 +261,10 @@ test("preserves a distinct Substack social image when it differs from the profil
   assert.equal(parsed?.completeness, "full");
   assert.equal(
     parsed?.metadata.image,
+    "https://substackcdn.com/image/fetch/$s_!DDCm!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fapi%2Fv1%2Fprofile%2Fassets%2F10297976%2Flight%3FaspectRatio%3Dlink%26version%3D1",
+  );
+  assert.equal(
+    parsed?.metadata.ogImage,
     "https://substackcdn.com/image/fetch/$s_!DDCm!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fapi%2Fv1%2Fprofile%2Fassets%2F10297976%2Flight%3FaspectRatio%3Dlink%26version%3D1",
   );
   assert.equal(

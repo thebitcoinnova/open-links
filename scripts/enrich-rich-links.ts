@@ -223,6 +223,8 @@ const pickDefined = (metadata: EnrichmentMetadata): EnrichmentMetadata => {
   if (metadata.title) result.title = metadata.title;
   if (metadata.description) result.description = metadata.description;
   if (metadata.image) result.image = metadata.image;
+  if (metadata.ogImage) result.ogImage = metadata.ogImage;
+  if (metadata.twitterImage) result.twitterImage = metadata.twitterImage;
   if (metadata.handle) result.handle = metadata.handle;
   if (metadata.sourceLabel) result.sourceLabel = metadata.sourceLabel;
   if (typeof metadata.sourceLabelVisible === "boolean") {

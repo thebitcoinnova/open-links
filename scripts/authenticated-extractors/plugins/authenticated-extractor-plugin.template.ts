@@ -89,8 +89,9 @@ const ensureSession = async (
 const extract = async (
   context: AuthenticatedExtractorExtractContext,
 ): Promise<AuthenticatedExtractorExtractResult> => {
-  // TODO: replace with extractor-specific metadata + image capture.
-  // Required: reject placeholder/authwall outputs and write local committed assets.
+  // TODO: replace with extractor-specific metadata + image-role capture.
+  // Required: reject placeholder/authwall outputs, preserve image/profileImage/ogImage/twitterImage when available,
+  // and write local committed assets with per-role assets.* entries.
   throw new Error(
     `Extractor '${EXTRACTOR_ID}' extraction is not implemented yet. selectorProfile=${SELECTOR_PROFILE}; linkId=${context.linkId}`,
   );

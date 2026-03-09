@@ -76,3 +76,103 @@ test("cache validation backfills profile image for supported avatar-first platfo
     false,
   );
 });
+
+test("cache validation accepts explicit authenticated asset roles when local image provenance is preserved", (t) => {
+  // Arrange
+  const imagePath = "cache/rich-authenticated/test-linkedin-preview.jpg";
+  const profilePath = "cache/rich-authenticated/test-linkedin-avatar.jpg";
+  const ogPath = "cache/rich-authenticated/test-linkedin-og.jpg";
+  const twitterPath = "cache/rich-authenticated/test-linkedin-twitter.jpg";
+  const relativePaths = [imagePath, profilePath, ogPath, twitterPath];
+
+  for (const relativePath of relativePaths) {
+    const absolutePath = path.join(ROOT, "public", relativePath);
+    fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+    fs.writeFileSync(absolutePath, "test", "utf8");
+  }
+
+  t.after(() => {
+    for (const relativePath of relativePaths) {
+      const absolutePath = path.join(ROOT, "public", relativePath);
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
+    }
+  });
+
+  const registry: AuthenticatedCacheRegistry = {
+    version: 1,
+    updatedAt: "2026-03-09T00:00:00.000Z",
+    entries: {
+      linkedin: {
+        extractorId: "linkedin-auth-browser",
+        linkId: "linkedin",
+        sourceUrl: "https://www.linkedin.com/in/peter-ryszkiewicz/",
+        capturedAt: "2026-03-09T00:00:00.000Z",
+        metadata: {
+          title: "Peter Ryszkiewicz | LinkedIn",
+          description:
+            "Talented software engineer, excited to work on new and challenging problems.",
+          image: imagePath,
+          profileImage: profilePath,
+          ogImage: ogPath,
+          twitterImage: twitterPath,
+          sourceLabel: "linkedin.com",
+        },
+        assets: {
+          image: {
+            path: imagePath,
+            sourceUrl: "https://example.com/linkedin-preview.jpg",
+            contentType: "image/jpeg",
+            bytes: 4,
+            sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          },
+          profileImage: {
+            path: profilePath,
+            sourceUrl: "https://example.com/linkedin-avatar.jpg",
+            contentType: "image/jpeg",
+            bytes: 4,
+            sha256: "1123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          },
+          ogImage: {
+            path: ogPath,
+            sourceUrl: "https://example.com/linkedin-og.jpg",
+            contentType: "image/jpeg",
+            bytes: 4,
+            sha256: "2123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          },
+          twitterImage: {
+            path: twitterPath,
+            sourceUrl: "https://example.com/linkedin-twitter.jpg",
+            contentType: "image/jpeg",
+            bytes: 4,
+            sha256: "3123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          },
+        },
+        diagnostics: {
+          extractorVersion: "2026-03-09.1",
+          selectorProfile: "linkedin-profile-v1",
+          placeholderSignals: [],
+          capturedFromUrl: "https://www.linkedin.com/in/peter-ryszkiewicz/",
+        },
+      },
+    },
+  };
+
+  // Act
+  const result = validateAuthenticatedCacheEntry({
+    cacheKey: "linkedin",
+    expectedLinkId: "linkedin",
+    expectedExtractorId: "linkedin-auth-browser",
+    expectedUrl: "https://www.linkedin.com/in/peter-ryszkiewicz/",
+    warnAgeDays: 30,
+    registry,
+  });
+
+  // Assert
+  assert.equal(result.valid, true);
+  assert.equal(result.metadata?.image, imagePath);
+  assert.equal(result.metadata?.profileImage, profilePath);
+  assert.equal(result.metadata?.ogImage, ogPath);
+  assert.equal(result.metadata?.twitterImage, twitterPath);
+});

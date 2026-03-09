@@ -20,6 +20,8 @@ export interface PublicCacheMetadata {
   description?: string;
   profileDescription?: string;
   image?: string;
+  ogImage?: string;
+  twitterImage?: string;
   profileImage?: string;
   handle?: string;
   followersCount?: number;
@@ -216,6 +218,10 @@ const normalizeMetadata = (metadata: PublicCacheMetadata): PublicCacheMetadata =
     normalized.profileDescription = trimToUndefined(metadata.profileDescription);
   }
   if (trimToUndefined(metadata.image)) normalized.image = trimToUndefined(metadata.image);
+  if (trimToUndefined(metadata.ogImage)) normalized.ogImage = trimToUndefined(metadata.ogImage);
+  if (trimToUndefined(metadata.twitterImage)) {
+    normalized.twitterImage = trimToUndefined(metadata.twitterImage);
+  }
   if (trimToUndefined(metadata.handle)) normalized.handle = trimToUndefined(metadata.handle);
   if (trimToUndefined(metadata.sourceLabel)) {
     normalized.sourceLabel = trimToUndefined(metadata.sourceLabel);
@@ -406,6 +412,14 @@ const extractMetadataFromRaw = (raw: unknown): PublicCacheMetadata => {
   const maybeImage = metadataRecord.image;
   if (typeof maybeImage === "string") {
     metadata.image = maybeImage;
+  }
+  const maybeOgImage = metadataRecord.ogImage;
+  if (typeof maybeOgImage === "string") {
+    metadata.ogImage = maybeOgImage;
+  }
+  const maybeTwitterImage = metadataRecord.twitterImage;
+  if (typeof maybeTwitterImage === "string") {
+    metadata.twitterImage = maybeTwitterImage;
   }
   const maybeHandle = metadataRecord.handle;
   if (typeof maybeHandle === "string") {
@@ -875,6 +889,12 @@ export const toPublicCacheMetadata = (metadata: EnrichmentMetadata): PublicCache
   }
   if (typeof metadata.image === "string" && metadata.image.trim().length > 0) {
     cacheMetadata.image = metadata.image.trim();
+  }
+  if (typeof metadata.ogImage === "string" && metadata.ogImage.trim().length > 0) {
+    cacheMetadata.ogImage = metadata.ogImage.trim();
+  }
+  if (typeof metadata.twitterImage === "string" && metadata.twitterImage.trim().length > 0) {
+    cacheMetadata.twitterImage = metadata.twitterImage.trim();
   }
   if (typeof metadata.handle === "string" && metadata.handle.trim().length > 0) {
     cacheMetadata.handle = metadata.handle.trim();

@@ -24,6 +24,8 @@ Use this skill when OpenLinks is missing rich metadata for a link and you need t
   - `description`
   - `profileDescription` when the platform exposes a distinct user-authored bio
   - `image`
+  - `ogImage`
+  - `twitterImage`
   - `profileImage`
   - `handle`
   - audience counts when applicable
@@ -79,6 +81,7 @@ npm run build
    - When a platform exposes both a generic page description and a profile-authored bio, persist them separately as `description` and `profileDescription`.
    - Prefer keeping generic parsers generic and adding targeted augmentation/normalization after parsing when platform-specific logic is required.
    - Current in-repo `public_augmented` examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata).
+   - Preserve `ogImage` and `twitterImage` separately when they are discoverable, even if `image` intentionally chooses only one render candidate.
    - Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
    - A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
    - Count-only gaps do not justify authenticated extraction when the platform already has a stable public path for the rest of the metadata.
@@ -114,6 +117,8 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
    - Load browser `eval` snippets from dedicated files via `scripts/shared/embedded-code-loader.ts`.
    - Implement `ensureSession` with transition monitoring + ask-first action confirmation.
    - Implement `extract` with metadata quality checks and local asset download.
+   - When available, capture image roles distinctly: `image`, `profileImage`, `ogImage`, `twitterImage`.
+   - When multiple roles share the same source, reuse the same committed local asset path, but still emit per-role metadata fields and `assets.*` entries.
 
 8. For both `public_augmented` and `authenticated_required`, update handle coverage when applicable.
    - If the domain family exposes user/profile handles, update `src/lib/identity/handle-resolver.ts`.

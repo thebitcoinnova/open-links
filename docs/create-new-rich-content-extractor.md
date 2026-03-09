@@ -42,6 +42,8 @@ Start here for every case. Do not scaffold an authenticated extractor before com
    - `title`
    - `description`
    - `image`
+   - `ogImage`
+   - `twitterImage`
    - `profileImage`
    - `handle`
    - audience counts when applicable
@@ -103,6 +105,7 @@ When the chosen branch is `public_augmented`:
    - local runtime overlay schema: `schema/rich-public-cache.runtime.schema.json`
    - no raw HTML snapshots
    - current in-repo examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata)
+   - preserve `ogImage` and `twitterImage` separately when the source exposes them, even if `image` intentionally chooses only one render candidate
 5. A `public_augmented` implementation may use a separate operator-invoked public browser refresh when a public page exposes extra metadata that direct HTTP fetch cannot reliably reach. That browser step must update the committed public cache for material metadata changes and may update the local runtime overlay for volatile revalidation state, but it must not run during normal `build` / `dev` enrichment.
 6. Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
 7. A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
@@ -222,9 +225,11 @@ When state is `unknown`:
 
 - load authenticated page
 - extract usable `title`, `description`, `image`
+- capture `profileImage`, `ogImage`, and `twitterImage` distinctly when the authenticated page exposes them
 - reject placeholder/authwall outputs
-- download image to `public/cache/rich-authenticated/`
-- return metadata with local asset path
+- download each distinct image role to `public/cache/rich-authenticated/`
+- reuse the same local asset path when multiple roles share the same source URL
+- return per-role metadata fields with matching `assets.*` entries
 - keep browser DOM extraction snippets in dedicated files under `scripts/embedded-code/browser/...`
 
 ## Step 8: Selector and Quality Strategy

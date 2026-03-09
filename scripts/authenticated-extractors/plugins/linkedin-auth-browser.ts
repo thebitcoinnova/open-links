@@ -379,10 +379,18 @@ const extract = async (
       title: payload.title,
       description: payload.description,
       image: imageAsset.path,
+      profileImage: imageAsset.path,
       sourceLabel: resolveSourceLabel(context.sourceUrl),
     },
     assets: {
       image: {
+        path: imageAsset.path,
+        sourceUrl: payload.imageUrl,
+        contentType: imageAsset.contentType,
+        bytes: imageAsset.bytes,
+        sha256: imageAsset.sha256,
+      },
+      profileImage: {
         path: imageAsset.path,
         sourceUrl: payload.imageUrl,
         contentType: imageAsset.contentType,

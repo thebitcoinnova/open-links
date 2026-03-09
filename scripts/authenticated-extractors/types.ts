@@ -41,7 +41,16 @@ export interface AuthenticatedCacheMetadata extends SocialProfileMetadataFields 
   title: string;
   description: string;
   image: string;
+  ogImage?: string;
+  twitterImage?: string;
   sourceLabel?: string;
+}
+
+export interface AuthenticatedCacheAssets {
+  image: AuthenticatedCacheImageAsset;
+  profileImage?: AuthenticatedCacheImageAsset;
+  ogImage?: AuthenticatedCacheImageAsset;
+  twitterImage?: AuthenticatedCacheImageAsset;
 }
 
 export interface AuthenticatedCacheDiagnostics {
@@ -58,9 +67,7 @@ export interface AuthenticatedCacheEntry {
   sourceUrl: string;
   capturedAt: string;
   metadata: AuthenticatedCacheMetadata;
-  assets: {
-    image: AuthenticatedCacheImageAsset;
-  };
+  assets: AuthenticatedCacheAssets;
   diagnostics: AuthenticatedCacheDiagnostics;
 }
 
@@ -136,9 +143,7 @@ export interface AuthenticatedExtractorExtractContext {
 export interface AuthenticatedExtractorExtractResult {
   capturedAt: string;
   metadata: AuthenticatedCacheMetadata;
-  assets: {
-    image: AuthenticatedCacheImageAsset;
-  };
+  assets: AuthenticatedCacheAssets;
   diagnostics: AuthenticatedCacheDiagnostics;
 }
 

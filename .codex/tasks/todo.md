@@ -13,6 +13,16 @@
 - Verification: `bun test scripts/validate-data.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and a full `bun run hooks:precommit` pass all succeeded. Smoke verification also temporarily removed `data/generated/rich-metadata.json`, `data/generated/content-images.json`, and `data/generated/rich-enrichment-report.json`, then confirmed `bun run validate:data:hook` and `bun run ci:required:hook:build` passed for an unrelated staged path (`scripts/sync-profile-avatar.ts`) but failed for a rich-input staged path (`data/links.json`).
 - Residual risk: The staged-path trigger list is now the source of truth for hook-mode rich-artifact checks. Future rich-generation inputs need to be added there, or hook mode could skip checks that should remain blocking.
 
+- [x] Extend rich metadata, public cache, authenticated cache, and manual link schemas/types to preserve `ogImage` and `twitterImage` alongside `image` and `profileImage`.
+- [x] Refactor generic parsing, public augmentation, authenticated extraction, and image-localization flows so all distinct image roles are preserved and cached locally.
+- [x] Refresh committed public/auth cache data where possible, update maintainer docs and extractor skill guidance, and verify with parser/cache/image-sync/build checks.
+
+### Completion Review
+
+- Result: Rich metadata now preserves four distinct image roles: `image` (render image), `profileImage` (identity image), `ogImage`, and `twitterImage`. Generic parsing keeps OG/Twitter provenance separate, public augmentation carries those fields through, authenticated cache types/assets support per-role image entries, and runtime image localization now materializes all four fields when local assets exist.
+- Verification: `bun test scripts/enrichment/parse-metadata.test.ts scripts/enrichment/public-augmentation.test.ts scripts/enrichment/public-cache.test.ts scripts/sync-content-images.test.ts scripts/authenticated-extractors/cache.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run studio:lint`, `bun run studio:typecheck`, `bun run --filter @openlinks/studio-api test`, `bun run studio:test:integration`, `bun run quality:embedded-code`, `bun run setup:rich-auth`, `bun run auth:rich:sync -- --only-link facebook --force`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, and `bun run build` passed. `bun run auth:rich:sync -- --only-link linkedin --force` failed because `AGENT_BROWSER_ENCRYPTION_KEY` is not configured locally.
+- Residual risk: Facebook was re-captured from real extractor output, but LinkedIn could not be refreshed in this session due the missing `AGENT_BROWSER_ENCRYPTION_KEY`. The existing committed LinkedIn cache still validates, but it does not yet have newly captured per-role image metadata from a fresh extractor run.
+
 - [x] Split `data/cache/rich-public-cache.json` into committed stable metadata plus ignored runtime revalidation state.
 - [x] Refactor enrichment/public-sync cache writes so header-only refreshes update only the runtime overlay and stable metadata changes remain the only tracked writes.
 - [x] Update schemas, docs, cache audit/tests, and verification so the public cache split is enforced and documented.

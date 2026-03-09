@@ -7,7 +7,7 @@ Authenticated extraction is a fallback workflow after public-source triage, not 
 ## Purpose
 
 For links configured with `links[].enrichment.authenticatedExtractor`, OpenLinks does not perform direct HTTP metadata fetch during enrichment.
-Instead, enrichment reads committed metadata/image assets from the authenticated cache manifest.
+Instead, enrichment reads committed metadata/image-role assets from the authenticated cache manifest.
 
 If cache data is missing or invalid, enrichment and validation fail early in all lanes unless bypass is active.
 Build/dev remain non-interactive and do not auto-open browsers.
@@ -74,6 +74,13 @@ bun run setup:rich-auth
 If no configured authenticated links are missing cache data, it exits 0 as a no-op.
 
 `setup:rich-auth` is idempotent by design.
+
+Authenticated cache image-role rules:
+
+- `metadata.image` stays the canonical render image.
+- `metadata.profileImage` is the canonical identity/avatar image.
+- `metadata.ogImage` and `metadata.twitterImage` preserve source provenance when an extractor can identify them.
+- `assets.image`, `assets.profileImage`, `assets.ogImage`, and `assets.twitterImage` may point at the same committed local asset path when the underlying source URL is the same.
 
 ## Full Sync Workflow
 
@@ -234,6 +241,7 @@ The Facebook extractor (`facebook-auth-browser`) uses an authenticated browser-s
 - rejects login-wall, challenge placeholders, and generic non-profile image assets
 - downloads the detected profile image with current browser cookies and writes a local cached asset
 - writes both `metadata.image` and `metadata.profileImage` so Facebook links render on the profile-card path
+- preserves `metadata.ogImage` plus `assets.ogImage` when an authenticated page exposes a distinct Open Graph image
 - writes cache diagnostics including state signals and captured URL/session context
 
 LinkedIn debug commands:

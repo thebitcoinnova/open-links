@@ -30,14 +30,29 @@ export interface GeneratedContentImagesManifest {
 }
 
 interface RichMetadataPayload {
-  links?: Record<string, { metadata?: { image?: unknown; profileImage?: unknown } }>;
+  links?: Record<
+    string,
+    {
+      metadata?: {
+        image?: unknown;
+        profileImage?: unknown;
+        ogImage?: unknown;
+        twitterImage?: unknown;
+      };
+    }
+  >;
 }
 
 interface LinksPayload {
   links?: Array<{
     id?: unknown;
     type?: unknown;
-    metadata?: { image?: unknown; profileImage?: unknown };
+    metadata?: {
+      image?: unknown;
+      profileImage?: unknown;
+      ogImage?: unknown;
+      twitterImage?: unknown;
+    };
   }>;
 }
 
@@ -599,7 +614,7 @@ const recordRunStatus = (
   summary.fallbackOnError += 1;
 };
 
-const collectCandidates = (
+export const collectCandidates = (
   linksPayload: LinksPayload,
   generatedRichMetadata: RichMetadataPayload | null,
   sitePayload: SitePayload,
@@ -623,8 +638,12 @@ const collectCandidates = (
     const candidateValues = [
       generatedMetadata?.image,
       generatedMetadata?.profileImage,
+      generatedMetadata?.ogImage,
+      generatedMetadata?.twitterImage,
       manualMetadata?.image,
       manualMetadata?.profileImage,
+      manualMetadata?.ogImage,
+      manualMetadata?.twitterImage,
     ];
 
     for (const candidateValue of candidateValues) {

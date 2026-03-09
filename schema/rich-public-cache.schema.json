@@ -58,6 +58,14 @@
                 "type": "string",
                 "minLength": 1
               },
+              "ogImage": {
+                "type": "string",
+                "minLength": 1
+              },
+              "twitterImage": {
+                "type": "string",
+                "minLength": 1
+              },
               "profileImage": {
                 "type": "string",
                 "minLength": 1

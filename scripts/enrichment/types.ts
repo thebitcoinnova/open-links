@@ -31,6 +31,8 @@ export interface EnrichmentMetadata extends SocialProfileMetadataFields {
   title?: string;
   description?: string;
   image?: string;
+  ogImage?: string;
+  twitterImage?: string;
   handle?: string;
   sourceLabel?: string;
   sourceLabelVisible?: boolean;

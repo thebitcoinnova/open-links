@@ -43,6 +43,7 @@ interface FacebookInspection {
   snapshot: AuthFlowSnapshot;
   heading?: string;
   imageUrl?: string;
+  metaImageUrl?: string;
 }
 
 interface FacebookImageCandidate {
@@ -579,6 +580,7 @@ const inspectFacebookFlow = async (config: BrowserSessionConfig): Promise<Facebo
     },
     heading,
     imageUrl,
+    metaImageUrl,
   };
 };
 
@@ -843,6 +845,10 @@ const extract = async (
     }
 
     const imageAsset = await downloadImageAsset(config, context, inspection.imageUrl);
+    const ogImageAsset =
+      inspection.metaImageUrl && inspection.metaImageUrl !== inspection.imageUrl
+        ? await downloadImageAsset(config, context, inspection.metaImageUrl)
+        : undefined;
     const decodedHeading = inspection.heading ? decodeHtmlEntities(inspection.heading) : undefined;
     const fallbackDisplayName = formatIdentifierDisplayName(target.identifier);
     const displayName =
@@ -857,6 +863,7 @@ const extract = async (
         description,
         image: imageAsset.path,
         profileImage: imageAsset.path,
+        ogImage: ogImageAsset?.path,
         sourceLabel: resolveSourceLabel(context.sourceUrl),
       },
       assets: {
@@ -867,6 +874,22 @@ const extract = async (
           bytes: imageAsset.bytes,
           sha256: imageAsset.sha256,
         },
+        profileImage: {
+          path: imageAsset.path,
+          sourceUrl: imageAsset.sourceUrl,
+          contentType: imageAsset.contentType,
+          bytes: imageAsset.bytes,
+          sha256: imageAsset.sha256,
+        },
+        ogImage: ogImageAsset
+          ? {
+              path: ogImageAsset.path,
+              sourceUrl: ogImageAsset.sourceUrl,
+              contentType: ogImageAsset.contentType,
+              bytes: ogImageAsset.bytes,
+              sha256: ogImageAsset.sha256,
+            }
+          : undefined,
       },
       diagnostics: {
         extractorVersion: EXTRACTOR_VERSION,

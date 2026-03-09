@@ -288,6 +288,7 @@ Payment rails can include explicit app links via `payment.rails[].appLinks` for 
   - baked files in `public/generated/images/<content-hash>.<ext>`
   - manifest `data/generated/content-images.json`
 - Runtime rich-card `metadata.image` values resolve to baked local paths when available.
+- Runtime also localizes `metadata.ogImage`, `metadata.twitterImage`, and `metadata.profileImage` when baked local assets are available.
 - If a link would render as a rich card without a materialized preview image, `bun run validate:data` (and therefore `bun run build`/`bun run dev`) now fails with remediation guidance.
 - Force refresh is available via `bun run images:sync -- --force` or `OPENLINKS_IMAGES_FORCE=1`.
 
@@ -298,8 +299,10 @@ Supported keys include:
 - `title`
 - `description`
 - `descriptionSource`: `fetched` (prefer fetched metadata description), `manual` (prefer top-level `links[].description`)
-- `image`
-- `profileImage`
+- `image`: canonical render image used by cards today
+- `ogImage`: raw Open Graph image candidate when present
+- `twitterImage`: raw Twitter card image candidate when present
+- `profileImage`: canonical identity/avatar image
 - `handle` (canonical username/handle without leading `@`; runtime renders as `@handle`)
 - `followersCount`
 - `followersCountRaw`
@@ -316,6 +319,14 @@ Supported keys include:
 - `enrichmentReason`
 - `enrichedAt`
 - `custom`
+
+Image-role rules:
+
+- `image` remains the backward-compatible preview/render image for card rendering.
+- `ogImage` and `twitterImage` preserve source provenance separately instead of being folded into `image`.
+- Generic metadata parsing defaults `image` to `ogImage ?? twitterImage`.
+- Platform-specific augmentation may keep low-value placeholders in `ogImage`/`twitterImage` for completeness while choosing a different `image` for rendering.
+- `profileImage` is independent from all preview/social image roles and may equal `image`.
 
 #### URL-first handle extraction (v1)
 

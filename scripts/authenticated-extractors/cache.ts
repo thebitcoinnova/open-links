@@ -74,6 +74,8 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
         description: entry.metadata.description.trim(),
         profileDescription: entry.metadata.profileDescription?.trim(),
         image: entry.metadata.image.trim(),
+        ogImage: entry.metadata.ogImage?.trim(),
+        twitterImage: entry.metadata.twitterImage?.trim(),
         profileImage: entry.metadata.profileImage?.trim(),
         followersCountRaw: entry.metadata.followersCountRaw?.trim(),
         followingCountRaw: entry.metadata.followingCountRaw?.trim(),
@@ -88,6 +90,33 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
           contentType: entry.assets.image.contentType.trim(),
           sha256: entry.assets.image.sha256.trim().toLowerCase(),
         },
+        profileImage: entry.assets.profileImage
+          ? {
+              ...entry.assets.profileImage,
+              path: entry.assets.profileImage.path.trim(),
+              sourceUrl: entry.assets.profileImage.sourceUrl.trim(),
+              contentType: entry.assets.profileImage.contentType.trim(),
+              sha256: entry.assets.profileImage.sha256.trim().toLowerCase(),
+            }
+          : undefined,
+        ogImage: entry.assets.ogImage
+          ? {
+              ...entry.assets.ogImage,
+              path: entry.assets.ogImage.path.trim(),
+              sourceUrl: entry.assets.ogImage.sourceUrl.trim(),
+              contentType: entry.assets.ogImage.contentType.trim(),
+              sha256: entry.assets.ogImage.sha256.trim().toLowerCase(),
+            }
+          : undefined,
+        twitterImage: entry.assets.twitterImage
+          ? {
+              ...entry.assets.twitterImage,
+              path: entry.assets.twitterImage.path.trim(),
+              sourceUrl: entry.assets.twitterImage.sourceUrl.trim(),
+              contentType: entry.assets.twitterImage.contentType.trim(),
+              sha256: entry.assets.twitterImage.sha256.trim().toLowerCase(),
+            }
+          : undefined,
       },
       diagnostics: {
         ...entry.diagnostics,
@@ -170,6 +199,8 @@ const toEnrichmentMetadata = (entry: AuthenticatedCacheEntry): EnrichmentMetadat
   description: entry.metadata.description,
   profileDescription: entry.metadata.profileDescription,
   image: entry.metadata.image,
+  ogImage: entry.metadata.ogImage,
+  twitterImage: entry.metadata.twitterImage,
   profileImage: entry.metadata.profileImage,
   followersCount: entry.metadata.followersCount,
   followersCountRaw: entry.metadata.followersCountRaw,
@@ -253,16 +284,45 @@ export const validateAuthenticatedCacheEntry = (
     });
   }
 
-  if (metadata.profileImage && !hasUrlScheme(metadata.profileImage)) {
-    const profileImageAbsolutePath = resolvePublicAssetAbsolutePath(metadata.profileImage);
-    if (!fs.existsSync(profileImageAbsolutePath)) {
+  const validateOptionalImageAsset = (
+    field: "profileImage" | "ogImage" | "twitterImage",
+    metadataValue: string | undefined,
+  ) => {
+    if (!metadataValue || hasUrlScheme(metadataValue)) {
+      return;
+    }
+
+    const asset = rawEntry.assets[field];
+    if (!asset) {
       issues.push({
         level: "error",
-        message: `Cache entry '${input.cacheKey}' profile image asset is missing at '${path.relative(ROOT, profileImageAbsolutePath)}'.`,
+        message: `Cache entry '${input.cacheKey}' metadata.${field} is set but assets.${field} is missing.`,
+        remediation: `Run npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${input.expectedLinkId}) and commit the refreshed authenticated cache assets.`,
+      });
+      return;
+    }
+
+    if (normalizePublicPath(asset.path) !== normalizePublicPath(metadataValue)) {
+      issues.push({
+        level: "error",
+        message: `Cache entry '${input.cacheKey}' metadata.${field} does not match assets.${field}.path.`,
+        remediation: `Keep metadata.${field} and assets.${field}.path aligned to the same committed local asset path.`,
+      });
+    }
+
+    const absoluteAssetPath = resolvePublicAssetAbsolutePath(asset.path);
+    if (!fs.existsSync(absoluteAssetPath)) {
+      issues.push({
+        level: "error",
+        message: `Cache entry '${input.cacheKey}' ${field} asset is missing at '${path.relative(ROOT, absoluteAssetPath)}'.`,
         remediation: `Run npm run setup:rich-auth (or npm run auth:rich:sync -- --only-link ${input.expectedLinkId}) and commit generated assets under public/cache/rich-authenticated/.`,
       });
     }
-  }
+  };
+
+  validateOptionalImageAsset("profileImage", metadata.profileImage);
+  validateOptionalImageAsset("ogImage", metadata.ogImage);
+  validateOptionalImageAsset("twitterImage", metadata.twitterImage);
 
   const cachedSourceHost = (() => {
     try {

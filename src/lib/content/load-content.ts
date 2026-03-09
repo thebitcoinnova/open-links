@@ -113,6 +113,8 @@ export interface RichLinkMetadata extends SocialProfileMetadataFields {
   description?: string;
   descriptionSource?: RichCardDescriptionSource;
   image?: string;
+  ogImage?: string;
+  twitterImage?: string;
   imageFit?: RichCardImageFit;
   mobileImageLayout?: RichCardMobileImageLayout;
   handle?: string;
@@ -526,7 +528,7 @@ const localizeRichMetadataImages = (
     const metadataRecord = { ...link.metadata } as Record<string, unknown>;
     let mutated = false;
 
-    for (const field of ["image", "profileImage"] as const) {
+    for (const field of ["image", "profileImage", "ogImage", "twitterImage"] as const) {
       const candidate = metadataRecord[field];
       if (typeof candidate !== "string" || candidate.trim().length === 0) {
         continue;
