@@ -57,6 +57,7 @@ Progress: [######----] 67%
 ### Pending Todos
 
 - Phase 9 needs docs and regression hardening for the new profile metadata fields, card states, and maintainer customization guidance.
+- Audit custom per-platform profile descriptions so user-authored bios can be stored separately from fetched header descriptions and rendered intentionally in rich cards and Studio.
 
 ### Blockers/Concerns
 
