@@ -4,6 +4,9 @@
   const metricTexts = [];
   const seen = new Set();
   const selectors = ["a", "button", "span", "div", "p", "li", "h1", "h2", "h3"];
+  const profileDescription = normalize(
+    document.querySelector('[data-testid="UserDescription"]')?.textContent || "",
+  );
 
   for (const node of document.querySelectorAll(selectors.join(","))) {
     const text = normalize(node.textContent || "");
@@ -24,5 +27,6 @@
     title: document.title,
     bodyText: normalize(document.body?.innerText || ""),
     metricTexts,
+    profileDescription: profileDescription || undefined,
   };
 })();

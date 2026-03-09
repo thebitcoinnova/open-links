@@ -761,12 +761,16 @@ export const mergePublicCacheMetadataForTarget = (input: {
   };
   const mergedRecord = merged as Record<string, number | string | undefined>;
   const previousRecord = input.previous as Record<string, unknown>;
-  const fieldsToPreserve = [
-    "followersCount",
-    "followersCountRaw",
-    "followingCount",
-    "followingCountRaw",
-  ] as const;
+  const fieldsToPreserve =
+    input.targetId === "x-public-oembed"
+      ? ([
+          "followersCount",
+          "followersCountRaw",
+          "followingCount",
+          "followingCountRaw",
+          "profileDescription",
+        ] as const)
+      : (["followersCount", "followersCountRaw", "followingCount", "followingCountRaw"] as const);
 
   for (const field of fieldsToPreserve) {
     if (hasDefinedMetadataValue(mergedRecord[field])) {

@@ -14,6 +14,30 @@ const safeTrim = (value: string | undefined): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+export const reconcileSupportedProfileDescriptionMetadata = (input: {
+  supportedProfile: SupportedSocialProfileTarget | null;
+  metadata: EnrichmentMetadata;
+  publicMetadata?: Pick<EnrichmentMetadata, "description">;
+}): EnrichmentMetadata => {
+  if (input.supportedProfile?.platform !== "linkedin") {
+    return input.metadata;
+  }
+
+  const cachedDescription = safeTrim(input.metadata.description);
+  const publicDescription = safeTrim(input.publicMetadata?.description);
+  const existingProfileDescription = safeTrim(input.metadata.profileDescription);
+
+  if (!cachedDescription || !publicDescription || cachedDescription === publicDescription) {
+    return input.metadata;
+  }
+
+  return {
+    ...input.metadata,
+    description: publicDescription,
+    profileDescription: existingProfileDescription ?? cachedDescription,
+  };
+};
+
 const GITHUB_AUDIENCE_PATTERNS = {
   followers:
     /href="[^"]+\?tab=followers"[\s\S]{0,1600}?<span[^>]*class="[^"]*text-bold[^"]*"[^>]*>\s*([^<]+?)\s*<\/span>[\s\S]{0,120}?\bfollowers\b/i,

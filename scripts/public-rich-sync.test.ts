@@ -432,7 +432,7 @@ test("force mode overrides only-missing and only-link filters to target the sele
   assert.equal(result.registry.entries["medium-two"]?.metadata.followersCountRaw, "901 followers");
 });
 
-test("bootstraps a missing X cache entry and overlays follower and following counts", async () => {
+test("bootstraps a missing X cache entry and overlays follower, following, and profile description", async () => {
   // Arrange
   let bootstrapCalls = 0;
   let writtenRegistry: PublicCacheRegistry | undefined;
@@ -466,6 +466,8 @@ test("bootstraps a missing X cache entry and overlays follower and following cou
             followersCountRaw: "1,350 Followers",
             followingCount: 643,
             followingCountRaw: "643 Following",
+            profileDescription:
+              "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
           },
           "output/playwright/public-rich-sync/x-2026-03-08.json",
         );
@@ -485,6 +487,10 @@ test("bootstraps a missing X cache entry and overlays follower and following cou
   );
   assert.equal(writtenRegistry?.entries.x?.metadata.followersCountRaw, "1,350 Followers");
   assert.equal(writtenRegistry?.entries.x?.metadata.followingCountRaw, "643 Following");
+  assert.equal(
+    writtenRegistry?.entries.x?.metadata.profileDescription,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
 });
 
 test("X sync in only-missing mode still refreshes when one audience metric is absent", async () => {
@@ -533,6 +539,8 @@ test("X sync in only-missing mode still refreshes when one audience metric is ab
           followersCountRaw: "1,350 Followers",
           followingCount: 643,
           followingCountRaw: "643 Following",
+          profileDescription:
+            "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
         });
       },
       nowIso: () => "2026-03-08T18:12:00.000Z",
@@ -545,6 +553,77 @@ test("X sync in only-missing mode still refreshes when one audience metric is ab
   assert.equal(result.skipped, 0);
   assert.equal(result.processed, 1);
   assert.equal(result.registry.entries.x?.metadata.followingCountRaw, "643 Following");
+  assert.equal(
+    result.registry.entries.x?.metadata.profileDescription,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
+});
+
+test("X sync in only-missing mode refreshes when profile description is absent", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.x = {
+    ...createXBaseEntry(
+      "x",
+      "2026-03-08T17:00:00.000Z",
+      "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
+    ),
+    metadata: {
+      ...createXBaseEntry(
+        "x",
+        "2026-03-08T17:00:00.000Z",
+        "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
+      ).metadata,
+      followersCount: 1350,
+      followersCountRaw: "1,350 Followers",
+      followingCount: 643,
+      followingCountRaw: "643 Following",
+    },
+  };
+  let captureCalls = 0;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "x",
+      onlyMissing: true,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [xLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        return captureSuccess({
+          followersCount: 1350,
+          followersCountRaw: "1,350 Followers",
+          followingCount: 643,
+          followingCountRaw: "643 Following",
+          profileDescription:
+            "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+        });
+      },
+      nowIso: () => "2026-03-08T18:12:30.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(captureCalls, 1);
+  assert.equal(result.skipped, 0);
+  assert.equal(result.processed, 1);
+  assert.equal(
+    result.registry.entries.x?.metadata.profileDescription,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
 });
 
 test("preserves existing X metrics when a refresh attempt fails", async () => {
@@ -566,6 +645,8 @@ test("preserves existing X metrics when a refresh attempt fails", async () => {
       followersCountRaw: "1,350 Followers",
       followingCount: 643,
       followingCountRaw: "643 Following",
+      profileDescription:
+        "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
     },
   };
 
@@ -606,11 +687,15 @@ test("preserves existing X metrics when a refresh attempt fails", async () => {
   assert.equal(result.failed, 1);
   assert.equal(result.registry.entries.x?.metadata.followersCountRaw, "1,350 Followers");
   assert.equal(result.registry.entries.x?.metadata.followingCountRaw, "643 Following");
+  assert.equal(
+    result.registry.entries.x?.metadata.profileDescription,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
   assert.deepEqual(result.entries, [
     {
       linkId: "x",
       status: "failed",
-      reason: "audience_missing",
+      reason: "profile_metadata_missing",
       artifactPath: "output/playwright/public-rich-sync/x-failed.json",
     },
   ]);

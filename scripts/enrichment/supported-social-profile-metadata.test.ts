@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   augmentSupportedSocialProfileMetadata,
   parseGithubProfileMetadata,
+  reconcileSupportedProfileDescriptionMetadata,
 } from "./supported-social-profile-metadata";
 
 test("parses GitHub follower and following counts with raw text preserved", () => {
@@ -51,4 +52,63 @@ test("augments supported profile metadata by backfilling profile image for avata
   // Assert
   assert.equal(augmented.image, "/generated/images/x-avatar.jpg");
   assert.equal(augmented.profileImage, "/generated/images/x-avatar.jpg");
+});
+
+test("reconciles LinkedIn public and authenticated descriptions into separate fields", () => {
+  // Arrange
+  const metadata = {
+    title: "Peter Ryszkiewicz | LinkedIn",
+    description: "Talented software engineer, excited to work on new and challenging problems.",
+    image: "/cache/rich-authenticated/linkedin-avatar.jpg",
+  };
+
+  // Act
+  const reconciled = reconcileSupportedProfileDescriptionMetadata({
+    supportedProfile: {
+      platform: "linkedin",
+      handle: "peter-ryszkiewicz",
+      expectedFields: ["profileImage"],
+    },
+    metadata,
+    publicMetadata: {
+      description:
+        "Talented software engineer, excited to work on new and challenging problems. · Experience: Venmo · Education: Illinois Institute of Technology · Location: Chicago · 190 connections on LinkedIn. View Peter Ryszkiewicz’s profile on LinkedIn, a professional community of 1 billion members.",
+    },
+  });
+
+  // Assert
+  assert.equal(
+    reconciled.description,
+    "Talented software engineer, excited to work on new and challenging problems. · Experience: Venmo · Education: Illinois Institute of Technology · Location: Chicago · 190 connections on LinkedIn. View Peter Ryszkiewicz’s profile on LinkedIn, a professional community of 1 billion members.",
+  );
+  assert.equal(
+    reconciled.profileDescription,
+    "Talented software engineer, excited to work on new and challenging problems.",
+  );
+});
+
+test("keeps single-surface profile descriptions unchanged for non-LinkedIn platforms", () => {
+  // Arrange
+  const metadata = {
+    title: "pRizz - Overview",
+    description:
+      "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
+  };
+
+  // Act
+  const reconciled = reconcileSupportedProfileDescriptionMetadata({
+    supportedProfile: {
+      platform: "github",
+      handle: "prizz",
+      expectedFields: ["profileImage", "followersCount", "followingCount"],
+    },
+    metadata,
+    publicMetadata: {
+      description:
+        "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
+    },
+  });
+
+  // Assert
+  assert.deepEqual(reconciled, metadata);
 });

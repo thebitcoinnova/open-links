@@ -540,6 +540,9 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
   return extracted ? decodeHtmlEntities(extracted).replace(/^@/, "") : fallbackHandle;
 };
 
+const buildGenericXDescription = (displayHandle: string): string =>
+  `Posts and updates from @${displayHandle} on X.`;
+
 export const parseInstagramProfileMetadata = (
   description: string | undefined,
 ): InstagramProfileMetadata => {
@@ -725,7 +728,7 @@ const parseXOEmbed = (sourceUrl: string, payloadText: string): PublicAugmentatio
   const avatarUrl = `https://unavatar.io/x/${encodeURIComponent(displayHandle)}`;
   return resolveCompleteness({
     title: safeTrim(payload.title) ?? `@${displayHandle} on X`,
-    description: `Posts and updates from @${displayHandle} on X.`,
+    description: buildGenericXDescription(displayHandle),
     image: avatarUrl,
     profileImage: avatarUrl,
     sourceLabel: "x.com",

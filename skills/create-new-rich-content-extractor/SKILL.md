@@ -22,6 +22,7 @@ Use this skill when OpenLinks is missing rich metadata for a link and you need t
 - Fields needed from the current metadata model:
   - `title`
   - `description`
+  - `profileDescription` when the platform exposes a distinct user-authored bio
   - `image`
   - `profileImage`
   - `handle`
@@ -33,6 +34,7 @@ Use this skill when OpenLinks is missing rich metadata for a link and you need t
 
 1. Run public-source triage first.
    - Determine which current metadata fields are missing or incorrect.
+   - Distinguish generic page/header descriptions from profile-authored descriptions when both exist.
    - Check whether existing direct enrichment already returns those fields.
    - If not, inspect stable public sources such as:
      - page metadata,
@@ -74,6 +76,7 @@ npm run build
 4. If the branch is `public_augmented`, implement public support end-to-end.
    - Extend existing public enrichment/parsing/normalization paths instead of authenticated cache infrastructure.
    - Gather only fields from the current OpenLinks metadata model that are actually needed.
+   - When a platform exposes both a generic page description and a profile-authored bio, persist them separately as `description` and `profileDescription`.
    - Prefer keeping generic parsers generic and adding targeted augmentation/normalization after parsing when platform-specific logic is required.
    - Current in-repo `public_augmented` examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata).
    - Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.

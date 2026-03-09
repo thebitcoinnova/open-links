@@ -99,6 +99,7 @@ test("parses X oEmbed metadata into an avatar-first profile payload", () => {
   assert.equal(parsed?.completeness, "full");
   assert.equal(parsed?.metadata.title, "@pryszkie on X");
   assert.equal(parsed?.metadata.description, "Posts and updates from @pryszkie on X.");
+  assert.equal(parsed?.metadata.profileDescription, undefined);
   assert.equal(parsed?.metadata.image, "https://unavatar.io/x/pryszkie");
   assert.equal(parsed?.metadata.profileImage, "https://unavatar.io/x/pryszkie");
 });

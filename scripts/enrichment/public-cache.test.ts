@@ -423,6 +423,8 @@ test("preserves X audience metrics when oEmbed refresh metadata does not include
     previous: {
       title: "@pryszkie on X",
       description: "Posts and updates from @pryszkie on X.",
+      profileDescription:
+        "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
       image: "https://unavatar.io/x/pryszkie",
       profileImage: "https://unavatar.io/x/pryszkie",
       followersCount: 1350,
@@ -444,6 +446,10 @@ test("preserves X audience metrics when oEmbed refresh metadata does not include
   assert.equal(merged.followersCountRaw, "1,350 Followers");
   assert.equal(merged.followingCount, 643);
   assert.equal(merged.followingCountRaw, "643 Following");
+  assert.equal(
+    merged.profileDescription,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
   assert.equal(merged.sourceLabel, "x.com");
 });
 

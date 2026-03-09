@@ -8,6 +8,7 @@ export interface PublicAudienceBrowserSnapshot {
   title?: string;
   bodyText?: string;
   metricTexts?: string[];
+  profileDescription?: string;
 }
 
 export interface PublicAudienceMetrics {
@@ -15,6 +16,7 @@ export interface PublicAudienceMetrics {
   followersCountRaw?: string;
   followingCount?: number;
   followingCountRaw?: string;
+  profileDescription?: string;
   placeholderSignals: string[];
 }
 

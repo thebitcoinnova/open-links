@@ -89,17 +89,18 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-03-08T19:05:44.872Z",
+      "updatedAt": "2026-03-09T03:13:19.407Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
+        "profileDescription": "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
         "followersCount": 1351,
         "followersCountRaw": "1,351 Followers",
-        "followingCount": 643,
-        "followingCountRaw": "643 Following"
+        "followingCount": 648,
+        "followingCountRaw": "648 Following"
       }
     },
     "youtube": {

@@ -256,6 +256,7 @@ interface SyncableTargetBehavior {
   snippet: string;
   parseMetrics: (snapshot: PublicAudienceBrowserSnapshot) => PublicBrowserAudienceMetrics;
   requiresFollowingCount: boolean;
+  requiresProfileDescription: boolean;
 }
 
 const SYNCABLE_TARGET_BEHAVIORS = {
@@ -264,18 +265,21 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     snippet: MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseMediumPublicProfileMetrics,
     requiresFollowingCount: false,
+    requiresProfileDescription: false,
   },
   "primal-public-profile": {
     label: "Primal",
     snippet: PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parsePrimalPublicProfileMetrics,
     requiresFollowingCount: true,
+    requiresProfileDescription: false,
   },
   "x-public-oembed": {
     label: "X",
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
     requiresFollowingCount: true,
+    requiresProfileDescription: true,
   },
 } as const satisfies Record<SyncablePublicTargetId, SyncableTargetBehavior>;
 
@@ -301,20 +305,33 @@ const hasRequiredAudienceMetrics = (
   const hasFollowing =
     hasDefinedAudienceMetric(entry.metadata.followingCount) ||
     hasDefinedAudienceMetric(entry.metadata.followingCountRaw);
+  const hasProfileDescription =
+    !behaviorForTarget(targetId).requiresProfileDescription ||
+    hasDefinedAudienceMetric(entry.metadata.profileDescription);
 
-  return hasFollowers && hasFollowing;
+  return hasFollowers && hasFollowing && hasProfileDescription;
 };
 
 const skipReasonForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresFollowingCount ? "audience_present" : "followers_present";
+  behaviorForTarget(targetId).requiresProfileDescription
+    ? "profile_metadata_present"
+    : behaviorForTarget(targetId).requiresFollowingCount
+      ? "audience_present"
+      : "followers_present";
 
 const skipMessageForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresFollowingCount
-    ? "followers and following already present"
-    : "followers already present";
+  behaviorForTarget(targetId).requiresProfileDescription
+    ? "followers, following, and profile description already present"
+    : behaviorForTarget(targetId).requiresFollowingCount
+      ? "followers and following already present"
+      : "followers already present";
 
 const missingMetricsReasonForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresFollowingCount ? "audience_missing" : "followers_missing";
+  behaviorForTarget(targetId).requiresProfileDescription
+    ? "profile_metadata_missing"
+    : behaviorForTarget(targetId).requiresFollowingCount
+      ? "audience_missing"
+      : "followers_missing";
 
 const captureSummaryForTarget = (
   targetId: SyncablePublicTargetId,
@@ -322,9 +339,17 @@ const captureSummaryForTarget = (
 ): string =>
   !behaviorForTarget(targetId).requiresFollowingCount
     ? (metrics.followersCountRaw ?? "followers missing")
-    : `${metrics.followingCountRaw ?? "following missing"} / ${
-        metrics.followersCountRaw ?? "followers missing"
-      }`;
+    : behaviorForTarget(targetId).requiresProfileDescription
+      ? `${metrics.followingCountRaw ?? "following missing"} / ${
+          metrics.followersCountRaw ?? "followers missing"
+        } / ${
+          metrics.profileDescription
+            ? "profile description captured"
+            : "profile description missing"
+        }`
+      : `${metrics.followingCountRaw ?? "following missing"} / ${
+          metrics.followersCountRaw ?? "followers missing"
+        }`;
 
 const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
   ...entry,
@@ -430,6 +455,7 @@ const toAudienceSnapshot = (
     title: safeTrim(payload.title),
     bodyText: safeTrim(payload.bodyText),
     metricTexts: extractMetricTexts(payload.metricTexts),
+    profileDescription: safeTrim(payload.profileDescription),
   };
 };
 
@@ -471,6 +497,13 @@ const buildAudienceCaptureError = (
 
   if (!metrics.followingCountRaw) {
     return `${behaviorForTarget(targetId).label} public browser capture did not find a following count.`;
+  }
+
+  if (
+    behaviorForTarget(targetId).requiresProfileDescription &&
+    !metrics.profileDescription?.trim().length
+  ) {
+    return `${behaviorForTarget(targetId).label} public browser capture did not find a profile description.`;
   }
 
   return undefined;
@@ -672,6 +705,9 @@ export const runPublicRichSyncWithDependencies = async (
     }
     if (capture.metrics.followingCountRaw) {
       nextEntry.metadata.followingCountRaw = capture.metrics.followingCountRaw;
+    }
+    if (capture.metrics.profileDescription) {
+      nextEntry.metadata.profileDescription = capture.metrics.profileDescription;
     }
 
     const stabilizedEntry = buildPublicCacheEntry({

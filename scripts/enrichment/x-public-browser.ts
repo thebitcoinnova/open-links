@@ -21,8 +21,13 @@ export const detectXPublicBrowserPlaceholderSignals = (
 
 export const parseXPublicProfileMetrics = (
   snapshot: XPublicProfileBrowserSnapshot,
-): XPublicProfileMetrics =>
-  parsePublicAudienceMetrics({
+): XPublicProfileMetrics => ({
+  ...parsePublicAudienceMetrics({
     snapshot,
     placeholderChecks: X_BROWSER_PLACEHOLDER_CHECKS,
-  });
+  }),
+  profileDescription:
+    typeof snapshot.profileDescription === "string" && snapshot.profileDescription.trim().length > 0
+      ? snapshot.profileDescription.trim()
+      : undefined,
+});

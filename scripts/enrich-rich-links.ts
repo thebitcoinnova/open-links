@@ -45,7 +45,10 @@ import {
   writePublicCacheRegistry,
 } from "./enrichment/public-cache";
 import { writeEnrichmentReport } from "./enrichment/report";
-import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
+import {
+  augmentSupportedSocialProfileMetadata,
+  reconcileSupportedProfileDescriptionMetadata,
+} from "./enrichment/supported-social-profile-metadata";
 import type {
   EnrichmentFailureMode,
   EnrichmentFailureReason,
@@ -267,6 +270,39 @@ const resolveSupportedProfileForMetadata = (
     icon: link.icon,
     metadataHandle: metadata.handle,
   }) ?? fallbackSupportedProfile;
+
+const maybeReconcileAuthenticatedProfileDescriptions = async (input: {
+  link: LinkInput & { type: "rich"; url: string };
+  supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>;
+  metadata: EnrichmentMetadata;
+  config: ResolvedConfig;
+}): Promise<EnrichmentMetadata> => {
+  if (input.supportedProfile?.platform !== "linkedin") {
+    return input.metadata;
+  }
+
+  if (
+    typeof input.metadata.profileDescription === "string" &&
+    input.metadata.profileDescription.trim().length > 0
+  ) {
+    return input.metadata;
+  }
+
+  const fetched = await fetchMetadata(input.link.url, {
+    timeoutMs: input.config.timeoutMs,
+    retries: input.config.retries,
+  });
+
+  if (!fetched.ok || !fetched.html) {
+    return input.metadata;
+  }
+
+  return reconcileSupportedProfileDescriptionMetadata({
+    supportedProfile: input.supportedProfile,
+    metadata: input.metadata,
+    publicMetadata: parseMetadata(fetched.html, input.link.url).metadata,
+  });
+};
 
 const resolveProfileWarningContext = (
   supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>,
@@ -893,14 +929,20 @@ const run = async () => {
       }
 
       const reason: EnrichmentReason = "authenticated_cache";
+      const authenticatedMetadata = await maybeReconcileAuthenticatedProfileDescriptions({
+        link,
+        supportedProfile,
+        metadata: cacheValidation.metadata,
+        config,
+      });
       const metadata = mergeLinkMetadata(
         link.metadata,
         {
-          ...cacheValidation.metadata,
-          handle: handleForMetadata ?? cacheValidation.metadata.handle,
+          ...authenticatedMetadata,
+          handle: handleForMetadata ?? authenticatedMetadata.handle,
           sourceLabel:
             link.enrichment?.sourceLabel ??
-            cacheValidation.metadata.sourceLabel ??
+            authenticatedMetadata.sourceLabel ??
             extractor.domains[0],
           sourceLabelVisible: link.enrichment?.sourceLabelVisible,
           enrichmentStatus: "fetched",
