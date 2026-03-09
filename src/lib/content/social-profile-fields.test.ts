@@ -11,12 +11,14 @@ test("manual social profile fields override generated values without changing ge
   // Arrange
   const manual = {
     title: "Manual title",
+    profileDescription: "Manual profile description",
     profileImage: "https://example.com/manual-avatar.jpg",
     followersCount: 12,
     followersCountRaw: "12 followers",
   };
   const generated = {
     title: "Generated title",
+    profileDescription: "Generated profile description",
     image: "https://example.com/generated-preview.jpg",
     profileImage: "https://example.com/generated-avatar.jpg",
     followersCount: 24,
@@ -30,11 +32,34 @@ test("manual social profile fields override generated values without changing ge
   // Assert
   assert.deepEqual(merged, {
     title: "Generated title",
+    profileDescription: "Manual profile description",
     image: "https://example.com/generated-preview.jpg",
     profileImage: "https://example.com/manual-avatar.jpg",
     followersCount: 12,
     followersCountRaw: "12 followers",
     followingCount: 8,
+  });
+});
+
+test("profile description stays additive when only generated metadata provides it", () => {
+  // Arrange
+  const manual = {
+    title: "Manual title",
+  };
+  const generated = {
+    title: "Generated title",
+    profileDescription: "Generated profile description",
+    image: "https://example.com/generated-preview.jpg",
+  };
+
+  // Act
+  const merged = mergeMetadataWithManualSocialProfileOverrides(manual, generated);
+
+  // Assert
+  assert.deepEqual(merged, {
+    title: "Generated title",
+    profileDescription: "Generated profile description",
+    image: "https://example.com/generated-preview.jpg",
   });
 });
 

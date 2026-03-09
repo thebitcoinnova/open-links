@@ -18,6 +18,7 @@ export const DEFAULT_PUBLIC_CACHE_RUNTIME_SCHEMA_PATH =
 export interface PublicCacheMetadata {
   title?: string;
   description?: string;
+  profileDescription?: string;
   image?: string;
   profileImage?: string;
   handle?: string;
@@ -211,6 +212,9 @@ const normalizeMetadata = (metadata: PublicCacheMetadata): PublicCacheMetadata =
   if (trimToUndefined(metadata.description)) {
     normalized.description = trimToUndefined(metadata.description);
   }
+  if (trimToUndefined(metadata.profileDescription)) {
+    normalized.profileDescription = trimToUndefined(metadata.profileDescription);
+  }
   if (trimToUndefined(metadata.image)) normalized.image = trimToUndefined(metadata.image);
   if (trimToUndefined(metadata.handle)) normalized.handle = trimToUndefined(metadata.handle);
   if (trimToUndefined(metadata.sourceLabel)) {
@@ -394,6 +398,10 @@ const extractMetadataFromRaw = (raw: unknown): PublicCacheMetadata => {
   const maybeDescription = metadataRecord.description;
   if (typeof maybeDescription === "string") {
     metadata.description = maybeDescription;
+  }
+  const maybeProfileDescription = metadataRecord.profileDescription;
+  if (typeof maybeProfileDescription === "string") {
+    metadata.profileDescription = maybeProfileDescription;
   }
   const maybeImage = metadataRecord.image;
   if (typeof maybeImage === "string") {
@@ -854,6 +862,12 @@ export const toPublicCacheMetadata = (metadata: EnrichmentMetadata): PublicCache
   }
   if (typeof metadata.description === "string" && metadata.description.trim().length > 0) {
     cacheMetadata.description = metadata.description.trim();
+  }
+  if (
+    typeof metadata.profileDescription === "string" &&
+    metadata.profileDescription.trim().length > 0
+  ) {
+    cacheMetadata.profileDescription = metadata.profileDescription.trim();
   }
   if (typeof metadata.image === "string" && metadata.image.trim().length > 0) {
     cacheMetadata.image = metadata.image.trim();

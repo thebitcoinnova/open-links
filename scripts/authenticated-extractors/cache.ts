@@ -72,6 +72,7 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
         ...entry.metadata,
         title: entry.metadata.title.trim(),
         description: entry.metadata.description.trim(),
+        profileDescription: entry.metadata.profileDescription?.trim(),
         image: entry.metadata.image.trim(),
         profileImage: entry.metadata.profileImage?.trim(),
         followersCountRaw: entry.metadata.followersCountRaw?.trim(),
@@ -167,6 +168,7 @@ const toAgeDays = (capturedAt: string): number | undefined => {
 const toEnrichmentMetadata = (entry: AuthenticatedCacheEntry): EnrichmentMetadata => ({
   title: entry.metadata.title,
   description: entry.metadata.description,
+  profileDescription: entry.metadata.profileDescription,
   image: entry.metadata.image,
   profileImage: entry.metadata.profileImage,
   followersCount: entry.metadata.followersCount,

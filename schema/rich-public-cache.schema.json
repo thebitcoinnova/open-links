@@ -50,6 +50,10 @@
                 "type": "string",
                 "minLength": 1
               },
+              "profileDescription": {
+                "type": "string",
+                "minLength": 1
+              },
               "image": {
                 "type": "string",
                 "minLength": 1

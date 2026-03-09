@@ -167,6 +167,7 @@
           "properties": {
             "title": { "type": "string" },
             "description": { "type": "string" },
+            "profileDescription": { "type": "string" },
             "descriptionSource": {
               "type": "string",
               "enum": ["fetched", "manual"]

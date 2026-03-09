@@ -16,12 +16,14 @@ export type SocialProfileMetricRawField =
   | "followingCountRaw"
   | "subscribersCountRaw";
 export type SocialProfileMetadataField =
+  | "profileDescription"
   | "profileImage"
   | SocialProfileMetricField
   | SocialProfileMetricRawField;
 export type ExpectedSocialProfileField = "profileImage" | SocialProfileMetricField;
 
 export interface SocialProfileMetadataFields {
+  profileDescription?: string;
   profileImage?: string;
   followersCount?: number;
   followersCountRaw?: string;
@@ -70,6 +72,7 @@ const isSupportedSocialProfilePlatform = (
   typeof value === "string" && value in EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM;
 
 export const SOCIAL_PROFILE_METADATA_FIELDS = [
+  "profileDescription",
   "profileImage",
   "followersCount",
   "followersCountRaw",

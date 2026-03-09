@@ -60,6 +60,7 @@ test("round-trips stable and runtime public cache manifests through disk with no
           metadata: {
             title: "  Peter Ryszkiewicz  ",
             description: "  Open source and experiments. ",
+            profileDescription: "  Builder of agentic OSS. ",
             image: "https://avatars.githubusercontent.com/u/1?v=4",
             handle: " @pRizz ",
             sourceLabel: " github.com ",
@@ -90,6 +91,7 @@ test("round-trips stable and runtime public cache manifests through disk with no
   assert.deepEqual(registry.entries.github?.metadata, {
     title: "Peter Ryszkiewicz",
     description: "Open source and experiments.",
+    profileDescription: "Builder of agentic OSS.",
     image: "https://avatars.githubusercontent.com/u/1?v=4",
     handle: "@pRizz",
     sourceLabel: "github.com",
@@ -281,6 +283,7 @@ test("public cache helpers preserve Substack subscriber metadata", () => {
   const metadata = toPublicCacheMetadata({
     title: "Peter Ryszkiewicz",
     description: "Software Engineer",
+    profileDescription: "Builder of agentic OSS.",
     image: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
     profileImage: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
     subscribersCount: 10,
@@ -295,6 +298,7 @@ test("public cache helpers preserve Substack subscriber metadata", () => {
   assert.deepEqual(enriched, {
     title: "Peter Ryszkiewicz",
     description: "Software Engineer",
+    profileDescription: "Builder of agentic OSS.",
     image: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
     profileImage: "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
     subscribersCount: 10,
@@ -309,6 +313,7 @@ test("public cache metadata remains lower precedence than manual overrides", () 
     toPublicCacheMetadata({
       title: "Generated title",
       description: "Generated description",
+      profileDescription: "Generated profile description",
       image: "https://example.com/generated.jpg",
       profileImage: "https://example.com/generated-avatar.jpg",
       followersCount: 24,
@@ -319,6 +324,7 @@ test("public cache metadata remains lower precedence than manual overrides", () 
   // Act
   const merged = mergeMetadataWithManualSocialProfileOverrides(
     {
+      profileDescription: "Manual profile description",
       profileImage: "https://example.com/manual-avatar.jpg",
       followersCount: 12,
       followersCountRaw: "12 followers",
@@ -330,6 +336,7 @@ test("public cache metadata remains lower precedence than manual overrides", () 
   assert.deepEqual(merged, {
     title: "Generated title",
     description: "Generated description",
+    profileDescription: "Manual profile description",
     image: "https://example.com/generated.jpg",
     profileImage: "https://example.com/manual-avatar.jpg",
     followersCount: 12,
