@@ -83,14 +83,16 @@ const xRichLink = {
   metadata: {
     title: "@pryszkie on X",
     description: "Posts and updates from @pryszkie on X.",
+    profileDescription:
+      "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
     sourceLabel: "x.com",
     handle: "pryszkie",
     image: "/generated/images/x-avatar.jpg",
     profileImage: "/generated/images/x-avatar.jpg",
     followersCount: 1350,
     followersCountRaw: "1,350 Followers",
-    followingCount: 643,
-    followingCountRaw: "643 Following",
+    followingCount: 648,
+    followingCountRaw: "648 Following",
   },
 } as const satisfies OpenLink;
 
@@ -124,7 +126,10 @@ const linkedinRichLink = {
   description: "Professional profile and recent work",
   metadata: {
     title: "Peter Ryszkiewicz | LinkedIn",
-    description: "Talented software engineer, excited to work on new and challenging problems.",
+    description:
+      "Talented software engineer, excited to work on new and challenging problems. · Experience: Venmo · Education: Illinois Institute of Technology · Location: Chicago · 190 connections on LinkedIn. View Peter Ryszkiewicz’s profile on LinkedIn, a professional community of 1 billion members.",
+    profileDescription:
+      "Talented software engineer, excited to work on new and challenging problems.",
     sourceLabel: "linkedin.com",
     image: "/cache/rich-authenticated/linkedin-avatar.jpg",
   },
@@ -292,15 +297,18 @@ test("x rich cards surface best-effort public audience metrics without changing 
   assert.equal(viewModel.leadKind, "avatar");
   assert.equal(viewModel.leadImageUrl, "/generated/images/x-avatar.jpg");
   assert.equal(viewModel.title, "@pryszkie on X");
-  assert.equal(viewModel.description, "Posts and updates from @pryszkie on X.");
+  assert.equal(
+    viewModel.description,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
   assert.deepEqual(
     viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
-    ["handle:@pryszkie", "metric:1.4K Followers", "metric:643 Following"],
+    ["handle:@pryszkie", "metric:1.4K Followers", "metric:648 Following"],
   );
   assert.equal(viewModel.footerSourceLabel, "x.com");
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
-    ["1.4K Followers", "643 Following"],
+    ["1.4K Followers", "648 Following"],
   );
 });
 

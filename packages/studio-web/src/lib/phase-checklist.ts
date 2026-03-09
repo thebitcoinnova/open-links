@@ -66,6 +66,12 @@ export const phaseChecklist: PhaseChecklist[] = [
       { id: "p4-1", label: "Guided forms for core files", status: "done", priority: "P0" },
       { id: "p4-2", label: "Advanced JSON editor", status: "done", priority: "P0" },
       { id: "p4-3", label: "Expanded site.ui coverage", status: "in_progress", priority: "P1" },
+      {
+        id: "p4-4",
+        label: "Profile description field editing for rich social links",
+        status: "in_progress",
+        priority: "P1",
+      },
     ],
   },
   {

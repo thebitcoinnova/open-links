@@ -147,6 +147,56 @@ test("falls back from the preferred description source to the remaining availabl
   assert.equal(domainFallback, "instagram.com");
 });
 
+test("supported profile links prefer profile descriptions over generic description-source policy", () => {
+  // Arrange
+  const profileLink = {
+    id: "x",
+    label: "X",
+    url: "https://x.com/pryszkie",
+    type: "rich",
+    icon: "x",
+    description: "Manual link copy",
+    metadata: {
+      description: "Posts and updates from @pryszkie on X.",
+      profileDescription:
+        "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+      descriptionSource: "manual",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const description = resolveLinkCardDescription(site, profileLink);
+
+  // Assert
+  assert.equal(
+    description,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
+});
+
+test("non-profile links ignore profileDescription and keep existing description rules", () => {
+  // Arrange
+  const nonProfileLink = {
+    id: "article",
+    label: "Article",
+    url: "https://example.com/article",
+    type: "rich",
+    icon: "notion",
+    description: "Manual article copy",
+    metadata: {
+      description: "Fetched article copy",
+      profileDescription: "Should not be used for a non-profile link",
+      descriptionSource: "fetched",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const description = resolveLinkCardDescription(site, nonProfileLink);
+
+  // Assert
+  assert.equal(description, "Fetched article copy");
+});
+
 test("dataset audit defaults current rich links to fetched descriptions across card paths", () => {
   // Arrange
   const datasetSite = readJson<SiteData>("../../../data/site.json");
@@ -194,8 +244,9 @@ test("dataset audit defaults current rich links to fetched descriptions across c
     assert.ok(link.metadata?.description, `expected fetched description for ${link.id}`);
     const sharedDescription = resolveLinkCardDescription(datasetSite, link);
     const richDescription = buildRichCardViewModel(datasetSite, link).description;
+    const expectedDescription = link.metadata.profileDescription ?? link.metadata.description;
 
-    assert.equal(sharedDescription, link.metadata.description);
-    assert.equal(richDescription, link.metadata.description);
+    assert.equal(sharedDescription, expectedDescription);
+    assert.equal(richDescription, expectedDescription);
   }
 });

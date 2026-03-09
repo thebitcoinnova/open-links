@@ -90,6 +90,42 @@ export default function EditorPage() {
     });
   };
 
+  const updateLinkMetadata = (index: number, field: string, value: string) => {
+    const loaded = content();
+    if (!loaded) return;
+
+    const linksArr = Array.isArray((loaded.links as { links?: unknown[] }).links)
+      ? ([...(loaded.links as { links: Record<string, unknown>[] }).links] as Record<
+          string,
+          unknown
+        >[])
+      : [];
+
+    const existing = linksArr[index] ?? {};
+    const existingMetadata =
+      typeof existing.metadata === "object" &&
+      existing.metadata !== null &&
+      !Array.isArray(existing.metadata)
+        ? { ...(existing.metadata as Record<string, unknown>) }
+        : {};
+
+    if (value.trim().length === 0) {
+      delete existingMetadata[field];
+    } else {
+      existingMetadata[field] = value;
+    }
+
+    linksArr[index] = {
+      ...existing,
+      metadata: Object.keys(existingMetadata).length > 0 ? existingMetadata : undefined,
+    };
+
+    setContent({
+      ...loaded,
+      links: { ...(loaded.links as Record<string, unknown>), links: linksArr },
+    });
+  };
+
   const addLink = () => {
     const loaded = content();
     if (!loaded) return;
@@ -265,6 +301,28 @@ export default function EditorPage() {
                               placeholder="type"
                             />
                           </div>
+                          <Show when={String(link.type ?? "simple") === "rich"}>
+                            <div class="mt-3 space-y-2">
+                              <p class="text-xs uppercase tracking-widest text-slate-400">
+                                Profile description
+                              </p>
+                              <Textarea
+                                rows={3}
+                                value={String(
+                                  ((link.metadata as Record<string, unknown> | undefined)
+                                    ?.profileDescription ?? "") as string,
+                                )}
+                                onInput={(event) =>
+                                  updateLinkMetadata(
+                                    index(),
+                                    "profileDescription",
+                                    event.currentTarget.value,
+                                  )
+                                }
+                                placeholder="Profile description for supported social profile links"
+                              />
+                            </div>
+                          </Show>
                         </div>
                       )}
                     </For>

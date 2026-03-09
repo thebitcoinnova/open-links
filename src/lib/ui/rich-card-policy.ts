@@ -186,7 +186,15 @@ const resolveDescriptionSource = (site: SiteData, link: OpenLink): RichCardDescr
   return "fetched";
 };
 
-export const resolveLinkCardDescription = (site: SiteData, link: OpenLink): string => {
+export const resolveLinkCardDescription = (
+  site: SiteData,
+  link: OpenLink,
+  socialProfile = resolveSocialProfileMetadata(link),
+): string => {
+  if (socialProfile.platform && socialProfile.profileDescription) {
+    return socialProfile.profileDescription;
+  }
+
   const metadataDescription = resolveMetadataText(link.metadata?.description);
   const manualDescription = resolveMetadataText(link.description);
   const fallbackDescription = urlDomain(link.url);
@@ -307,7 +315,7 @@ export const buildNonPaymentCardViewModel = (
 
   return {
     title,
-    description: resolveLinkCardDescription(site, link),
+    description: resolveLinkCardDescription(site, link, socialProfile),
     socialProfile,
     leadKind: leadVisual.leadKind,
     leadImageUrl: leadVisual.leadImageUrl,

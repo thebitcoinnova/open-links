@@ -21,6 +21,7 @@ export interface SocialAudienceMetric {
 export interface ResolvedSocialProfileMetadata {
   platform?: HandleExtractorId;
   displayName?: string;
+  profileDescription?: string;
   handle?: string;
   handleDisplay?: string;
   usesProfileLayout: boolean;
@@ -159,6 +160,7 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     ) ?? metadata;
   const platform = resolvedHandle.resolution.extractorId;
   const metrics: SocialAudienceMetric[] = [];
+  const profileDescription = resolveMetadataText(normalizedMetadata.profileDescription);
   const profileImageUrl = resolveMetadataText(normalizedMetadata.profileImage);
   const previewImageUrl = resolveMetadataText(normalizedMetadata.image);
   const displayName = resolveDisplayNameFromTitle(
@@ -192,6 +194,7 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     platform,
     displayName:
       displayName ?? (supportedProfile ? resolvedHandle.displayHandle : undefined) ?? link.label,
+    profileDescription,
     handle: resolvedHandle.handle,
     handleDisplay: resolvedHandle.displayHandle,
     usesProfileLayout: Boolean(supportedProfile || profileImageUrl || metrics.length > 0),

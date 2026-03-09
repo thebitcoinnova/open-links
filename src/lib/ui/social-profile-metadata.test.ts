@@ -126,6 +126,8 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
     icon: "x",
     metadata: {
       title: "@pryszkie on X",
+      profileDescription:
+        "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
       image: "/generated/images/x-avatar.jpg",
       sourceLabel: "x.com",
     },
@@ -137,6 +139,10 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
   // Assert
   assert.equal(resolved.platform, "x");
   assert.equal(resolved.displayName, "@pryszkie on X");
+  assert.equal(
+    resolved.profileDescription,
+    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
+  );
   assert.equal(resolved.usesProfileLayout, true);
   assert.equal(resolved.hasDistinctPreviewImage, false);
   assert.equal(resolved.profileImageUrl, "/generated/images/x-avatar.jpg");
@@ -333,7 +339,10 @@ test("linkedin profile metadata reuses authenticated preview media and trims the
     icon: "linkedin",
     metadata: {
       title: "Peter Ryszkiewicz | LinkedIn",
-      description: "Talented software engineer, excited to work on new and challenging problems.",
+      description:
+        "Talented software engineer, excited to work on new and challenging problems. · Experience: Venmo · Education: Illinois Institute of Technology · Location: Chicago · 190 connections on LinkedIn. View Peter Ryszkiewicz’s profile on LinkedIn, a professional community of 1 billion members.",
+      profileDescription:
+        "Talented software engineer, excited to work on new and challenging problems.",
       image: "/cache/rich-authenticated/linkedin-avatar.jpg",
       sourceLabel: "linkedin.com",
     },
@@ -345,6 +354,10 @@ test("linkedin profile metadata reuses authenticated preview media and trims the
   // Assert
   assert.equal(resolved.platform, "linkedin");
   assert.equal(resolved.displayName, "Peter Ryszkiewicz");
+  assert.equal(
+    resolved.profileDescription,
+    "Talented software engineer, excited to work on new and challenging problems.",
+  );
   assert.equal(resolved.handle, "peter-ryszkiewicz");
   assert.equal(resolved.handleDisplay, "@peter-ryszkiewicz");
   assert.equal(resolved.usesProfileLayout, true);
