@@ -64,6 +64,18 @@ const collectElements = (node: RenderedNode): RenderedElement[] => {
 const firstElementOfType = (node: RenderedNode, type: string): RenderedElement | undefined =>
   collectElements(node).find((element) => element.type === type);
 
+const firstElementWithClass = (
+  node: RenderedNode,
+  className: string,
+): RenderedElement | undefined =>
+  collectElements(node).find((element) => {
+    const classValue = element.props.class;
+    return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
+  });
+
+const elementIndex = (node: RenderedNode, matcher: (element: RenderedElement) => boolean): number =>
+  collectElements(node).findIndex(matcher);
+
 const assertSharedCardTree = (
   tree: RenderedNode,
   expected: {
@@ -132,6 +144,23 @@ const richGithubLink = {
   },
 } as const satisfies OpenLink;
 
+const richSubstackLink = {
+  id: "substack",
+  label: "Substack",
+  url: "https://peter.ryszkiewicz.us/",
+  type: "rich",
+  icon: "substack",
+  description: "Newsletter and long-form writing",
+  metadata: {
+    title: "Peter Ryszkiewicz | Substack",
+    description: "Software Engineer",
+    sourceLabel: "peter.ryszkiewicz.us",
+    handle: "peterryszkiewicz",
+    image: "/generated/images/substack-preview.jpg",
+    profileImage: "/generated/images/substack-avatar.jpg",
+  },
+} as const satisfies OpenLink;
+
 const simpleGithubLink = {
   ...richGithubLink,
   id: "github-simple",
@@ -177,4 +206,46 @@ test("rich non-payment cards render action-oriented accessible props from the sh
     metaId: "rich-link-meta-github",
     sourceId: "rich-link-source-github",
   });
+});
+
+test("rich cards keep description-image rows decorative and ordered after the description", () => {
+  // Act
+  const tree = RichLinkCard({
+    link: richSubstackLink,
+    viewModel: buildRichCardViewModel(site, richSubstackLink),
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Assert
+  const anchor = firstElementOfType(tree, "a");
+  const descriptionImage = firstElementWithClass(tree, "non-payment-card-description-image");
+  const descriptionIndex = elementIndex(
+    tree,
+    (element) => element.props.id === "rich-link-description-substack",
+  );
+  const descriptionImageIndex = elementIndex(
+    tree,
+    (element) =>
+      typeof element.props.class === "string" &&
+      element.props.class.split(/\s+/u).includes("non-payment-card-description-image"),
+  );
+  const footerIndex = elementIndex(tree, (element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" && classValue.split(/\s+/u).includes("non-payment-card-footer")
+    );
+  });
+
+  assert.ok(anchor);
+  assert.equal(anchor.props["data-has-description-image-row"], "true");
+  assert.ok(descriptionImage);
+  assert.equal(descriptionImage.props["aria-hidden"], "true");
+  assert.ok(descriptionIndex >= 0);
+  assert.ok(descriptionImageIndex > descriptionIndex);
+  assert.ok(footerIndex > descriptionImageIndex);
+
+  const image = firstElementOfType(descriptionImage.props.children as RenderedNode, "img");
+  assert.ok(image);
+  assert.equal(image.props.alt, "");
 });

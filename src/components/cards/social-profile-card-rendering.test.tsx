@@ -166,7 +166,7 @@ const substackRichLink = {
     description: "Software Engineer",
     sourceLabel: "peter.ryszkiewicz.us",
     handle: "peterryszkiewicz",
-    image: "/generated/images/substack-avatar.jpg",
+    image: "/generated/images/substack-preview.jpg",
     profileImage: "/generated/images/substack-avatar.jpg",
   },
 } as const satisfies OpenLink;
@@ -238,6 +238,8 @@ test("rich profile cards resolve avatar leads, header metrics, and footer source
   );
   assert.equal(viewModel.footerSourceLabel, "instagram.com");
   assert.equal(viewModel.showFooterIcon, true);
+  assert.equal(viewModel.showDescriptionImageRow, false);
+  assert.equal(viewModel.descriptionImageUrl, undefined);
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["86 Followers", "169 Following"],
@@ -283,6 +285,7 @@ test("github rich cards keep avatar identity and audience metrics in the shared 
     ["handle:@prizz", "metric:90 followers", "metric:87 following"],
   );
   assert.equal(viewModel.footerSourceLabel, "github.com");
+  assert.equal(viewModel.showDescriptionImageRow, false);
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["90 followers", "87 following"],
@@ -306,6 +309,7 @@ test("x rich cards surface best-effort public audience metrics without changing 
     ["handle:@pryszkie", "metric:1.4K Followers", "metric:648 Following"],
   );
   assert.equal(viewModel.footerSourceLabel, "x.com");
+  assert.equal(viewModel.showDescriptionImageRow, false);
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["1.4K Followers", "648 Following"],
@@ -329,6 +333,7 @@ test("primal rich cards surface public audience metrics in the shared profile he
     ["handle:@peterryszkiewicz", "metric:15 followers", "metric:90 following"],
   );
   assert.equal(viewModel.footerSourceLabel, "primal.net");
+  assert.equal(viewModel.showDescriptionImageRow, false);
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["15 followers", "90 following"],
@@ -349,6 +354,7 @@ test("linkedin rich cards use avatar leads from authenticated metadata without d
   );
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peter-ryszkiewicz" }]);
   assert.equal(viewModel.footerSourceLabel, "linkedin.com");
+  assert.equal(viewModel.showDescriptionImageRow, false);
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 
@@ -366,6 +372,7 @@ test("medium rich cards treat the feed avatar as the profile lead and clean the 
     { kind: "metric", text: "3.3K followers" },
   ]);
   assert.equal(viewModel.footerSourceLabel, "medium.com");
+  assert.equal(viewModel.showDescriptionImageRow, false);
   assert.deepEqual(
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["3.3K followers"],
@@ -379,11 +386,74 @@ test("substack custom-domain rich cards use the explicit handle and avatar-first
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
   assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.showDescriptionImageRow, true);
+  assert.equal(viewModel.descriptionImageUrl, "/generated/images/substack-preview.jpg");
   assert.equal(viewModel.title, "Peter Ryszkiewicz");
   assert.equal(viewModel.description, "Software Engineer");
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peterryszkiewicz" }]);
   assert.equal(viewModel.footerSourceLabel, "Substack · peter.ryszkiewicz.us");
   assert.deepEqual(viewModel.socialProfile.metrics, []);
+});
+
+test("description-image-row policy can suppress the extra media row without reverting rich profile cards to preview leads", () => {
+  // Arrange
+  const imageRowOffSite = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        descriptionImageRow: {
+          default: "off",
+        },
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const viewModel = buildRichCardViewModel(imageRowOffSite, substackRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.showDescriptionImageRow, false);
+  assert.equal(viewModel.descriptionImageUrl, undefined);
+});
+
+test("site-specific description-image-row overrides only affect the targeted rich profile sites", () => {
+  // Arrange
+  const siteOverrideConfig = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        descriptionImageRow: {
+          default: "auto",
+          sites: {
+            substack: "off",
+          },
+        },
+      },
+    },
+  } as const satisfies SiteData;
+  const githubDistinctPreviewLink = {
+    ...githubRichLink,
+    id: "github-preview",
+    metadata: {
+      ...githubRichLink.metadata,
+      image: "/generated/images/github-preview.jpg",
+      profileImage: "/generated/images/github-avatar.jpg",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const substackViewModel = buildRichCardViewModel(siteOverrideConfig, substackRichLink);
+  const githubViewModel = buildRichCardViewModel(siteOverrideConfig, githubDistinctPreviewLink);
+
+  // Assert
+  assert.equal(substackViewModel.showDescriptionImageRow, false);
+  assert.equal(githubViewModel.leadKind, "avatar");
+  assert.equal(githubViewModel.showDescriptionImageRow, true);
+  assert.equal(githubViewModel.descriptionImageUrl, "/generated/images/github-preview.jpg");
 });
 
 test("non-profile rich cards keep preview leads with compact header and footer source rows", () => {
@@ -398,6 +468,8 @@ test("non-profile rich cards keep preview leads with compact header and footer s
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "notes.openlinks.dev" }]);
   assert.equal(viewModel.footerSourceLabel, "Notion · notes.openlinks.dev");
   assert.equal(viewModel.showFooterIcon, true);
+  assert.equal(viewModel.showDescriptionImageRow, false);
+  assert.equal(viewModel.descriptionImageUrl, undefined);
   assert.deepEqual(viewModel.socialProfile.metrics, []);
 });
 
@@ -413,6 +485,7 @@ test("non-profile rich cards without preview media fall back to icon-led shared 
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "notes.openlinks.dev" }]);
   assert.equal(viewModel.footerSourceLabel, "Notion · notes.openlinks.dev");
   assert.equal(viewModel.showFooterIcon, false);
+  assert.equal(viewModel.showDescriptionImageRow, false);
 });
 
 test("simple profile cards reuse avatar leads and footer source rows in the shared layout", () => {
@@ -429,6 +502,7 @@ test("simple profile cards reuse avatar leads and footer source rows in the shar
   );
   assert.equal(viewModel.footerSourceLabel, "instagram.com");
   assert.equal(viewModel.showFooterIcon, true);
+  assert.equal(viewModel.showDescriptionImageRow, false);
 });
 
 test("simple icon-led cards keep the footer text row without duplicating the lead icon", () => {
@@ -473,11 +547,14 @@ test("rich-card image treatment controls preview-vs-fallback lead behavior", () 
   // Assert
   assert.equal(coverViewModel.imageTreatment, "cover");
   assert.equal(coverViewModel.leadKind, "preview");
+  assert.equal(coverViewModel.showDescriptionImageRow, false);
   assert.equal(thumbnailViewModel.imageTreatment, "thumbnail");
   assert.equal(thumbnailViewModel.leadKind, "preview");
+  assert.equal(thumbnailViewModel.showDescriptionImageRow, false);
   assert.equal(offViewModel.imageTreatment, "off");
   assert.equal(offViewModel.leadKind, "icon");
   assert.equal(offViewModel.showFooterIcon, false);
+  assert.equal(offViewModel.showDescriptionImageRow, false);
 });
 
 test("deprecated mobile image-layout settings no longer affect non-payment card presentation", () => {

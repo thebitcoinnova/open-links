@@ -82,6 +82,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       data-has-profile-layout={props.viewModel.socialProfile.usesProfileLayout ? "true" : "false"}
       data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
       data-has-footer={showFooter() ? "true" : "false"}
+      data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
     >
       <span class="non-payment-card-shell">
         <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
@@ -129,6 +130,18 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         <span class="non-payment-card-description" id={descriptionId()}>
           {props.viewModel.description}
         </span>
+
+        <Show
+          when={
+            props.cardVariant === "rich" &&
+            props.viewModel.showDescriptionImageRow &&
+            props.viewModel.descriptionImageUrl
+          }
+        >
+          <span class="rich-card-media non-payment-card-description-image" aria-hidden="true">
+            <img src={props.viewModel.descriptionImageUrl} alt="" loading="lazy" />
+          </span>
+        </Show>
 
         <Show when={showFooter()}>
           <span class="non-payment-card-footer">

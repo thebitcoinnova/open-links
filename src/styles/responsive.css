@@ -139,6 +139,10 @@
   body .rich-link-card.image-thumbnail[data-lead-kind="preview"] {
     --non-payment-card-lead-size: var(--card-rich-media-thumbnail-max);
   }
+
+  body .rich-link-card[data-has-description-image-row="true"] .non-payment-card-description-image {
+    min-height: clamp(10rem, 20vw, 12rem);
+  }
 }
 
 @media (min-width: 980px) {

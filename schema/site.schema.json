@@ -309,6 +309,28 @@
               "enum": ["cover", "contain"],
               "default": "contain"
             },
+            "descriptionImageRow": {
+              "type": "object",
+              "properties": {
+                "default": {
+                  "type": "string",
+                  "enum": ["auto", "off"],
+                  "default": "auto"
+                },
+                "sites": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "enum": ["auto", "off"]
+                  }
+                }
+              },
+              "additionalProperties": true
+            },
             "mobile": {
               "type": "object",
               "properties": {

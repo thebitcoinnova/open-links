@@ -1,5 +1,6 @@
 import type {
   OpenLink,
+  RichCardDescriptionImageRowMode,
   RichCardDescriptionSource,
   RichCardImageFit,
   RichImageTreatment,
@@ -29,6 +30,8 @@ export interface NonPaymentCardViewModel {
   socialProfile: ResolvedSocialProfileMetadata;
   leadKind: NonPaymentCardLeadKind;
   leadImageUrl?: string;
+  showDescriptionImageRow: boolean;
+  descriptionImageUrl?: string;
   headerMetaItems: NonPaymentCardMetaItem[];
   imageTreatment: RichImageTreatment;
   imageFit: RichCardImageFit;
@@ -70,6 +73,27 @@ const resolveImageFit = (site: SiteData, link: OpenLink): RichCardImageFit => {
 
   // Preserve image content by default to avoid clipping wide social preview assets.
   return "contain";
+};
+
+const isDescriptionImageRowMode = (value: unknown): value is RichCardDescriptionImageRowMode =>
+  value === "auto" || value === "off";
+
+const normalizeHost = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/^www\./u, "");
+
+const extractNormalizedHostFromUrl = (url?: string): string | undefined => {
+  if (!url) {
+    return undefined;
+  }
+
+  try {
+    return normalizeHost(new URL(url).hostname);
+  } catch {
+    return undefined;
+  }
 };
 
 const urlDomain = (url: string | undefined): string => {
@@ -153,6 +177,39 @@ export const resolveLinkSourcePresentation = (
   };
 };
 
+const resolveDescriptionImageRowMode = (
+  site: SiteData,
+  link: OpenLink,
+  sourcePresentation: LinkSourcePresentation,
+): RichCardDescriptionImageRowMode => {
+  const rowConfig = site.ui?.richCards?.descriptionImageRow;
+  const siteOverrides = rowConfig?.sites ?? {};
+  const overrideCandidates = new Set<string>();
+  const normalizedUrlHost = extractNormalizedHostFromUrl(link.url);
+  const normalizedSourceLabel = normalizeHostLikeLabel(sourcePresentation.sourceLabel);
+  const knownSite = resolveKnownSite(link.icon, link.url);
+
+  if (normalizedUrlHost) {
+    overrideCandidates.add(normalizedUrlHost);
+  }
+
+  if (normalizedSourceLabel) {
+    overrideCandidates.add(normalizedSourceLabel);
+  }
+
+  if (knownSite?.id) {
+    overrideCandidates.add(knownSite.id);
+  }
+
+  for (const key of overrideCandidates) {
+    if (isDescriptionImageRowMode(siteOverrides[key])) {
+      return siteOverrides[key];
+    }
+  }
+
+  return rowConfig?.default === "off" ? "off" : "auto";
+};
+
 export const resolveFooterSourceLabel = (
   link: Pick<OpenLink, "icon" | "url">,
   sourceLabel: string | undefined,
@@ -224,6 +281,13 @@ const resolveLeadVisual = (
   socialProfile: ResolvedSocialProfileMetadata,
   imageTreatment: RichImageTreatment,
 ): Pick<NonPaymentCardViewModel, "leadKind" | "leadImageUrl"> => {
+  if (socialProfile.usesProfileLayout) {
+    return {
+      leadKind: "avatar",
+      leadImageUrl: socialProfile.profileImageUrl,
+    };
+  }
+
   if (
     variant === "rich" &&
     imageTreatment !== "off" &&
@@ -233,13 +297,6 @@ const resolveLeadVisual = (
     return {
       leadKind: "preview",
       leadImageUrl: socialProfile.previewImageUrl,
-    };
-  }
-
-  if (socialProfile.usesProfileLayout) {
-    return {
-      leadKind: "avatar",
-      leadImageUrl: socialProfile.profileImageUrl,
     };
   }
 
@@ -303,6 +360,14 @@ export const buildNonPaymentCardViewModel = (
       : configuredImageTreatment;
   const imageFit = resolveImageFit(site, link);
   const leadVisual = resolveLeadVisual(variant, socialProfile, imageTreatment);
+  const descriptionImageRowMode = resolveDescriptionImageRowMode(site, link, sourcePresentation);
+  const showDescriptionImageRow =
+    variant === "rich" &&
+    socialProfile.usesProfileLayout &&
+    imageTreatment !== "off" &&
+    descriptionImageRowMode !== "off" &&
+    socialProfile.hasDistinctPreviewImage &&
+    Boolean(socialProfile.previewImageUrl);
   const headerMetaItems = buildHeaderMetaItems(variant, socialProfile, sourcePresentation);
   const footerSourceLabel =
     sourcePresentation.showSourceLabel && sourcePresentation.sourceLabel
@@ -319,6 +384,8 @@ export const buildNonPaymentCardViewModel = (
     socialProfile,
     leadKind: leadVisual.leadKind,
     leadImageUrl: leadVisual.leadImageUrl,
+    showDescriptionImageRow,
+    descriptionImageUrl: showDescriptionImageRow ? socialProfile.previewImageUrl : undefined,
     headerMetaItems,
     imageTreatment,
     imageFit,

@@ -295,7 +295,7 @@ test("substack custom-domain metadata uses the explicit handle and strips the si
     icon: "substack",
     metadata: {
       title: "Peter Ryszkiewicz | Substack",
-      image: "/generated/images/substack-avatar.jpg",
+      image: "/generated/images/substack-preview.jpg",
       profileImage: "/generated/images/substack-avatar.jpg",
       handle: "peterryszkiewicz",
       subscribersCount: 10,
@@ -313,9 +313,9 @@ test("substack custom-domain metadata uses the explicit handle and strips the si
   assert.equal(resolved.handle, "peterryszkiewicz");
   assert.equal(resolved.handleDisplay, "@peterryszkiewicz");
   assert.equal(resolved.usesProfileLayout, true);
-  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.hasDistinctPreviewImage, true);
   assert.equal(resolved.profileImageUrl, "/generated/images/substack-avatar.jpg");
-  assert.equal(resolved.previewImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/generated/images/substack-preview.jpg");
   assert.deepEqual(resolved.metrics, [
     {
       kind: "subscribers",

@@ -224,6 +224,50 @@ test("parses Substack profile metadata from JSON-LD and ignores the subscribe-ca
   );
 });
 
+test("preserves a distinct Substack social image when it differs from the profile avatar", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Peter Ryszkiewicz | Substack" />
+        <meta property="og:description" content="Software Engineer" />
+        <meta
+          property="og:image"
+          content="https://substackcdn.com/image/fetch/$s_!DDCm!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fapi%2Fv1%2Fprofile%2Fassets%2F10297976%2Flight%3FaspectRatio%3Dlink%26version%3D1"
+        />
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": "Peter Ryszkiewicz",
+            "url": "https://substack.com/@peterryszkiewicz",
+            "jobTitle": "Software Engineer",
+            "image": "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg"
+          }
+        </script>
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(
+    parsed?.metadata.image,
+    "https://substackcdn.com/image/fetch/$s_!DDCm!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fapi%2Fv1%2Fprofile%2Fassets%2F10297976%2Flight%3FaspectRatio%3Dlink%26version%3D1",
+  );
+  assert.equal(
+    parsed?.metadata.profileImage,
+    "https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg",
+  );
+});
+
 test("preserves a Substack custom-domain source label while reading subscriber counts from the canonical profile", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({

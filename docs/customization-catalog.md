@@ -182,6 +182,8 @@ Coverage:
 - `descriptionSource`
 - `imageTreatment`
 - `imageFit`
+- `descriptionImageRow.default`
+- `descriptionImageRow.sites`
 - `mobile.imageLayout` (legacy no-op for unified non-payment card layout)
 - `enrichment.enabledByDefault`
 - `enrichment.timeoutMs`
@@ -207,6 +209,15 @@ Operational commands tied to this category:
 - `bun run auth:rich:sync -- --only-link <link-id> --force` (force refresh even when cache is valid)
 - `bun run auth:rich:clear -- --only-link <link-id>` (clear cache entry + unreferenced asset before recapture)
 - `bun run auth:extractor:new -- --id <id> --domains <csv> --summary \"<summary>\"` (new extractor scaffold)
+
+High-signal examples:
+
+- Disable the extra rich-card description-image row globally:
+  - `"descriptionImageRow": { "default": "off" }`
+- Disable it for one site while leaving the global default on:
+  - `"descriptionImageRow": { "default": "auto", "sites": { "substack": "off" } }`
+- Target one exact custom-domain host:
+  - `"descriptionImageRow": { "default": "auto", "sites": { "peter.ryszkiewicz.us": "off" } }`
 
 ## 11) `site.quality` (`site-quality`)
 

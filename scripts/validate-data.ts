@@ -3,11 +3,13 @@ import path from "node:path";
 import process from "node:process";
 import addFormats from "ajv-formats";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
+import type { OpenLink, SiteData } from "../src/lib/content/load-content";
 import {
   mergeMetadataWithManualSocialProfileOverrides,
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
 } from "../src/lib/content/social-profile-fields";
+import { buildRichCardViewModel } from "../src/lib/ui/rich-card-policy";
 import {
   DEFAULT_AUTH_CACHE_PATH,
   loadAuthenticatedCacheRegistry,
@@ -358,6 +360,46 @@ const hasRichRenderCandidates = (
   );
 };
 
+const richLinkNeedsPreviewValidation = (
+  siteData: Record<string, unknown>,
+  rawLink: Record<string, unknown>,
+  generatedMetadata: Record<string, unknown> | undefined,
+): boolean => {
+  const metadata = isRecord(rawLink.metadata) ? rawLink.metadata : undefined;
+  const mergedMetadata = mergeMetadataWithManualSocialProfileOverrides(metadata, generatedMetadata);
+  const mergedLink = {
+    ...rawLink,
+    metadata: mergedMetadata,
+  } as unknown as OpenLink;
+  const viewModel = buildRichCardViewModel(siteData as SiteData, mergedLink);
+
+  return viewModel.leadKind === "preview" || viewModel.showDescriptionImageRow;
+};
+
+const hasRichPreviewValidationCandidates = (
+  linksData: Record<string, unknown>,
+  siteData: Record<string, unknown>,
+  generatedMetadataByLink: Record<string, Record<string, unknown>>,
+): boolean => {
+  if (resolveRichRenderMode(siteData) === "simple") {
+    return false;
+  }
+
+  const links = Array.isArray(linksData.links) ? linksData.links : [];
+
+  return links.some(
+    (rawLink) =>
+      isRecord(rawLink) &&
+      rawLink.type === "rich" &&
+      rawLink.enabled !== false &&
+      richLinkNeedsPreviewValidation(
+        siteData,
+        rawLink,
+        generatedMetadataByLink[toStringOrUndefined(rawLink.id) ?? ""],
+      ),
+  );
+};
+
 const hasUrlScheme = (value: string): boolean => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value);
 
 const toCanonicalHttpUrl = (value: string): string | null => {
@@ -478,10 +520,11 @@ const richCardPreviewImageIssues = (
     const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
     const metadata = isRecord(rawLink.metadata) ? rawLink.metadata : {};
     const generatedMetadata = generatedMetadataByLink[linkId] ?? {};
-    const mergedMetadata: Record<string, unknown> = {
-      ...metadata,
-      ...generatedMetadata,
-    };
+    const mergedMetadata =
+      mergeMetadataWithManualSocialProfileOverrides(metadata, generatedMetadata) ?? {};
+    if (!richLinkNeedsPreviewValidation(siteData, rawLink, generatedMetadata)) {
+      return;
+    }
     const previewImage = toStringOrUndefined(mergedMetadata.image);
     const imageAvailability = resolvePreviewImageAvailability(
       previewImage,
@@ -1068,8 +1111,16 @@ export const run = () => {
     const contentImagesRead = tryReadJsonFile<GeneratedContentImagesPayload>(
       DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
     );
+    const generatedMetadataByLink = metadataRead.value
+      ? resolveGeneratedMetadataByLink(metadataRead.value)
+      : {};
+    const needsPreviewValidation = hasRichPreviewValidationCandidates(
+      linksData,
+      siteData,
+      generatedMetadataByLink,
+    );
 
-    if (!metadataRead.value) {
+    if (needsPreviewValidation && !metadataRead.value) {
       issues.push({
         level: "error",
         source: metadataPath,
@@ -1080,7 +1131,7 @@ export const run = () => {
       });
     }
 
-    if (!contentImagesRead.value) {
+    if (needsPreviewValidation && !contentImagesRead.value) {
       issues.push({
         level: "error",
         source: DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
@@ -1091,9 +1142,7 @@ export const run = () => {
       });
     }
 
-    if (metadataRead.value && contentImagesRead.value) {
-      const generatedMetadataByLink = resolveGeneratedMetadataByLink(metadataRead.value);
-
+    if (needsPreviewValidation && metadataRead.value && contentImagesRead.value) {
       issues.push(
         ...richCardPreviewImageIssues(
           args.linksPath,

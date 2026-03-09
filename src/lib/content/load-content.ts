@@ -46,7 +46,13 @@ export type RichImageTreatment = "cover" | "thumbnail" | "off";
 export type RichCardImageFit = "cover" | "contain";
 export type RichCardMobileImageLayout = "inline" | "full-width";
 export type RichCardDescriptionSource = "fetched" | "manual";
+export type RichCardDescriptionImageRowMode = "auto" | "off";
 export type QualityDomain = "seo" | "accessibility" | "performance" | "manual-smoke";
+
+export interface RichCardDescriptionImageRowConfig {
+  default?: RichCardDescriptionImageRowMode;
+  sites?: Record<string, RichCardDescriptionImageRowMode>;
+}
 
 export interface QualitySeoMetadata {
   title?: string;
@@ -249,6 +255,7 @@ export interface SiteData {
       descriptionSource?: RichCardDescriptionSource;
       imageTreatment?: RichImageTreatment;
       imageFit?: RichCardImageFit;
+      descriptionImageRow?: RichCardDescriptionImageRowConfig;
       mobile?: {
         imageLayout?: RichCardMobileImageLayout;
       };

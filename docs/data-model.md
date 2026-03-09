@@ -465,6 +465,8 @@ Main presentation controls include:
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.imageFit`: `contain` (default preserve mode), `cover`
 - `richCards.descriptionSource`: `fetched` (default), `manual`
+- `richCards.descriptionImageRow.default`: `auto` (default) or `off` for the extra full-width rich-card media row
+- `richCards.descriptionImageRow.sites`: optional override map keyed by exact hostnames or known site ids such as `substack`
 - `richCards.mobile.imageLayout`: legacy `inline` / `full-width` setting retained for backward compatibility; unified non-payment card layout now ignores it
 - `richCards.enrichment.publicCachePath`: path to committed public rich-cache manifest
 - `richCards.enrichment.authenticatedCachePath`: path to authenticated rich-cache manifest
@@ -508,6 +510,28 @@ Resolution precedence:
 3. fallback default: `contain`
 
 Migration note: previous behavior was effectively crop-first (`cover`). If you want that look globally, set `site.ui.richCards.imageFit` to `cover`.
+
+#### `ui.richCards.descriptionImageRow`
+
+Controls the optional full-width media row used by rich profile cards when `metadata.image` is distinct from `metadata.profileImage`.
+
+- `default`
+  - `auto` (default): show the row when the card is rich, profile-oriented, and has a distinct preview image
+  - `off`: never render the extra row
+- `sites`
+  - optional override map keyed by exact hostnames (`peter.ryszkiewicz.us`) or known site ids (`substack`, `github`, `medium`)
+
+Resolution precedence:
+
+1. Exact hostname key from the link URL or host-like source label
+2. Known site id from the link icon/URL
+3. `site.ui.richCards.descriptionImageRow.default`
+
+Additional notes:
+
+- The row is rich-card only; simple cards ignore it.
+- `richCards.imageTreatment: "off"` also suppresses the row.
+- Cards without a distinct preview image continue to render only the avatar/header plus description/footer flow.
 
 #### `ui.richCards.mobile.imageLayout`
 

@@ -442,6 +442,14 @@ a:focus-visible {
   align-items: start;
 }
 
+.rich-link-card[data-has-description-image-row="true"] .non-payment-card-shell {
+  grid-template-areas:
+    "lead summary"
+    "lead description"
+    "media media"
+    "footer footer";
+}
+
 .non-payment-card-lead {
   grid-area: lead;
   width: var(--non-payment-card-lead-size);
@@ -519,6 +527,14 @@ a:focus-visible {
   font-size: var(--page-type-caption);
   line-height: var(--line-height-card-description);
   white-space: normal;
+}
+
+.non-payment-card-description-image {
+  grid-area: media;
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(9.5rem, 34vw, 11.5rem);
+  aspect-ratio: 1.9 / 1;
 }
 
 .non-payment-card-footer {

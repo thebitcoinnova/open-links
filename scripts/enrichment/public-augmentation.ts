@@ -236,6 +236,9 @@ const resolveSubstackPublicationMetadata = (
   };
 };
 
+const isSubstackGenericPreviewImage = (value: string | undefined): boolean =>
+  Boolean(value && /subscribe-card/iu.test(value));
+
 const resolveSubstackProfileMetadata = (
   preloads: Record<string, unknown> | undefined,
 ): SubstackProfileMetadata | undefined => {
@@ -673,7 +676,15 @@ const parseSubstackPublicProfile = (
       safeTrim(publication?.logoUrl),
     input.fetchUrl,
   );
-  const image = profileImage ?? safeTrim(parsed.metadata.image);
+  const parsedPreviewImage =
+    toAbsoluteUrl(safeTrim(parsed.metadata.image), input.fetchUrl) ??
+    safeTrim(parsed.metadata.image);
+  const image =
+    parsedPreviewImage &&
+    parsedPreviewImage !== profileImage &&
+    !isSubstackGenericPreviewImage(parsedPreviewImage)
+      ? parsedPreviewImage
+      : (profileImage ?? parsedPreviewImage);
 
   return resolveCompleteness({
     title:

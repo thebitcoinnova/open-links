@@ -32,6 +32,23 @@ const richLink = {
   },
 } as const satisfies OpenLink;
 
+const distinctPreviewProfileLink = {
+  id: "substack",
+  label: "Substack",
+  url: "https://peter.ryszkiewicz.us/",
+  type: "rich",
+  icon: "substack",
+  description: "Newsletter and long-form writing",
+  metadata: {
+    title: "Peter Ryszkiewicz | Substack",
+    description: "Software Engineer",
+    sourceLabel: "peter.ryszkiewicz.us",
+    handle: "peterryszkiewicz",
+    image: "/generated/images/substack-preview.jpg",
+    profileImage: "/generated/images/substack-avatar.jpg",
+  },
+} as const satisfies OpenLink;
+
 const readJson = <T>(relativePath: string): T =>
   JSON.parse(readFileSync(new URL(relativePath, import.meta.url), "utf8")) as T;
 
@@ -249,4 +266,86 @@ test("dataset audit defaults current rich links to fetched descriptions across c
     assert.equal(sharedDescription, expectedDescription);
     assert.equal(richDescription, expectedDescription);
   }
+});
+
+test("description image rows default to auto for rich profile cards with distinct preview media", () => {
+  // Act
+  const richViewModel = buildRichCardViewModel(site, distinctPreviewProfileLink);
+
+  // Assert
+  assert.equal(richViewModel.leadKind, "avatar");
+  assert.equal(richViewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(richViewModel.showDescriptionImageRow, true);
+  assert.equal(richViewModel.descriptionImageUrl, "/generated/images/substack-preview.jpg");
+});
+
+test("site policy can disable description image rows globally", () => {
+  // Arrange
+  const imageRowOffSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      richCards: {
+        ...site.ui.richCards,
+        descriptionImageRow: {
+          default: "off",
+        },
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const richViewModel = buildRichCardViewModel(imageRowOffSite, distinctPreviewProfileLink);
+
+  // Assert
+  assert.equal(richViewModel.leadKind, "avatar");
+  assert.equal(richViewModel.showDescriptionImageRow, false);
+  assert.equal(richViewModel.descriptionImageUrl, undefined);
+});
+
+test("host-level description image row overrides win without changing the global default", () => {
+  // Arrange
+  const hostOverrideSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      richCards: {
+        ...site.ui.richCards,
+        descriptionImageRow: {
+          default: "auto",
+          sites: {
+            "peter.ryszkiewicz.us": "off",
+          },
+        },
+      },
+    },
+  } as const satisfies SiteData;
+  const githubDistinctPreviewLink = {
+    id: "github",
+    label: "GitHub",
+    url: "https://github.com/pRizz",
+    type: "rich",
+    icon: "github",
+    description: "Code, experiments, and open-source projects",
+    metadata: {
+      title: "pRizz - Overview",
+      description: "An agentic engineer and builder.",
+      sourceLabel: "github.com",
+      handle: "prizz",
+      image: "/generated/images/github-preview.jpg",
+      profileImage: "/generated/images/github-avatar.jpg",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const hostOverrideViewModel = buildRichCardViewModel(
+    hostOverrideSite,
+    distinctPreviewProfileLink,
+  );
+  const unaffectedViewModel = buildRichCardViewModel(hostOverrideSite, githubDistinctPreviewLink);
+
+  // Assert
+  assert.equal(hostOverrideViewModel.showDescriptionImageRow, false);
+  assert.equal(unaffectedViewModel.showDescriptionImageRow, true);
+  assert.equal(unaffectedViewModel.descriptionImageUrl, "/generated/images/github-preview.jpg");
 });
