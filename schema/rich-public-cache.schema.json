@@ -3,7 +3,7 @@
   "$id": "https://open-links.dev/schema/rich-public-cache.schema.json",
   "title": "OpenLinks Public Rich Metadata Cache",
   "type": "object",
-  "required": ["version", "updatedAt", "entries"],
+  "required": ["version", "entries"],
   "properties": {
     "$schema": {
       "type": "string",
@@ -12,10 +12,6 @@
     "version": {
       "type": "integer",
       "const": 1
-    },
-    "updatedAt": {
-      "type": "string",
-      "format": "date-time"
     },
     "entries": {
       "type": "object",
@@ -96,22 +92,6 @@
               }
             },
             "additionalProperties": false
-          },
-          "etag": {
-            "type": "string",
-            "minLength": 1
-          },
-          "lastModified": {
-            "type": "string",
-            "minLength": 1
-          },
-          "cacheControl": {
-            "type": "string",
-            "minLength": 1
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "additionalProperties": false

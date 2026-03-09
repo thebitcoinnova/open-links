@@ -1,27 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-08T20:34:49.144Z",
   "entries": {
-    "primal": {
-      "linkId": "primal",
-      "sourceUrl": "https://primal.net/peterryszkiewicz",
-      "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-03-08T20:34:49.144Z",
-      "metadata": {
-        "title": "Peter No Taxation Without Representation Ryszkiewicz",
-        "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
-        "image": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
-        "handle": "peterryszkiewicz",
-        "sourceLabel": "primal.net",
-        "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
-        "followersCount": 15,
-        "followersCountRaw": "15 followers",
-        "followingCount": 90,
-        "followingCountRaw": "90 following"
-      },
-      "cacheControl": "must-revalidate, proxy-revalidate, max-age=1",
-      "expiresAt": "2026-03-08T20:34:50.000Z"
-    },
     "github": {
       "linkId": "github",
       "sourceUrl": "https://github.com/pRizz",
@@ -37,47 +16,7 @@
         "followersCountRaw": "90 followers",
         "followingCount": 87,
         "followingCountRaw": "87 following"
-      },
-      "etag": "W/\"adbe66506468730515573ccd082f8d7a\"",
-      "cacheControl": "max-age=0, private, must-revalidate",
-      "expiresAt": "2026-03-08T20:34:49.000Z"
-    },
-    "substack": {
-      "linkId": "substack",
-      "sourceUrl": "https://substack.com/@peterryszkiewicz",
-      "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-03-08T20:34:49.144Z",
-      "metadata": {
-        "title": "Peter Ryszkiewicz",
-        "description": "Software Engineer",
-        "image": "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
-        "handle": "peterryszkiewicz",
-        "sourceLabel": "peter.ryszkiewicz.us",
-        "profileImage": "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
-        "subscribersCount": 10,
-        "subscribersCountRaw": "10 subscribers"
-      },
-      "cacheControl": "no-cache"
-    },
-    "x": {
-      "linkId": "x",
-      "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
-      "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-03-08T19:05:44.872Z",
-      "metadata": {
-        "title": "@pryszkie on X",
-        "description": "Posts and updates from @pryszkie on X.",
-        "image": "https://unavatar.io/x/pryszkie",
-        "sourceLabel": "x.com",
-        "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1351,
-        "followersCountRaw": "1,351 Followers",
-        "followingCount": 643,
-        "followingCountRaw": "643 Following"
-      },
-      "lastModified": "Sun, 08 Mar 2026 19:05:45 GMT",
-      "cacheControl": "must-revalidate, max-age=3153600000",
-      "expiresAt": "2126-02-12T19:05:45.000Z"
+      }
     },
     "instagram": {
       "linkId": "instagram",
@@ -94,25 +33,7 @@
         "followersCountRaw": "86 Followers",
         "followingCount": 173,
         "followingCountRaw": "173 Following"
-      },
-      "cacheControl": "private, no-cache, no-store, must-revalidate"
-    },
-    "youtube": {
-      "linkId": "youtube",
-      "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
-      "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-03-08T20:34:49.144Z",
-      "metadata": {
-        "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
-        "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
-        "image": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
-        "sourceLabel": "youtube.com",
-        "profileImage": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 11,
-        "subscribersCountRaw": "11 subscribers"
-      },
-      "cacheControl": "no-cache, no-store, max-age=0, must-revalidate",
-      "expiresAt": "2026-03-08T20:34:50.000Z"
+      }
     },
     "medium": {
       "linkId": "medium",
@@ -128,9 +49,73 @@
         "profileImage": "https://cdn-images-1.medium.com/fit/c/150/150/0*_SAmj5J9y1Pv5Ri0.",
         "followersCount": 3300,
         "followersCountRaw": "3.3K followers"
-      },
-      "cacheControl": "private, must-revalidate, max-age=900",
-      "expiresAt": "2026-03-08T20:37:26.000Z"
+      }
+    },
+    "primal": {
+      "linkId": "primal",
+      "sourceUrl": "https://primal.net/peterryszkiewicz",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
+      "metadata": {
+        "title": "Peter No Taxation Without Representation Ryszkiewicz",
+        "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
+        "image": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
+        "handle": "peterryszkiewicz",
+        "sourceLabel": "primal.net",
+        "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
+        "followersCount": 15,
+        "followersCountRaw": "15 followers",
+        "followingCount": 90,
+        "followingCountRaw": "90 following"
+      }
+    },
+    "substack": {
+      "linkId": "substack",
+      "sourceUrl": "https://substack.com/@peterryszkiewicz",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
+      "metadata": {
+        "title": "Peter Ryszkiewicz",
+        "description": "Software Engineer",
+        "image": "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
+        "handle": "peterryszkiewicz",
+        "sourceLabel": "peter.ryszkiewicz.us",
+        "profileImage": "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
+        "subscribersCount": 10,
+        "subscribersCountRaw": "10 subscribers"
+      }
+    },
+    "x": {
+      "linkId": "x",
+      "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
+      "capturedAt": "2026-03-08T19:05:44.872Z",
+      "updatedAt": "2026-03-08T19:05:44.872Z",
+      "metadata": {
+        "title": "@pryszkie on X",
+        "description": "Posts and updates from @pryszkie on X.",
+        "image": "https://unavatar.io/x/pryszkie",
+        "sourceLabel": "x.com",
+        "profileImage": "https://unavatar.io/x/pryszkie",
+        "followersCount": 1351,
+        "followersCountRaw": "1,351 Followers",
+        "followingCount": 643,
+        "followingCountRaw": "643 Following"
+      }
+    },
+    "youtube": {
+      "linkId": "youtube",
+      "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
+      "capturedAt": "2026-03-08T20:34:49.144Z",
+      "updatedAt": "2026-03-08T20:34:49.144Z",
+      "metadata": {
+        "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
+        "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
+        "image": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
+        "sourceLabel": "youtube.com",
+        "profileImage": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
+        "subscribersCount": 11,
+        "subscribersCountRaw": "11 subscribers"
+      }
     }
   }
 }

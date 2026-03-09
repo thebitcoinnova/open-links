@@ -31,42 +31,60 @@ test("loads a missing public cache manifest as an empty registry", () => {
   assert.deepEqual(registry.entries, {});
 });
 
-test("round-trips a public cache manifest through disk with normalized metadata", (t) => {
+test("round-trips stable and runtime public cache manifests through disk with normalized metadata", (t) => {
   // Arrange
   const cachePath = "tmp/tests/rich-public-cache.json";
+  const runtimePath = "tmp/tests/rich-public-cache.runtime.json";
   const absoluteCachePath = path.join(ROOT, cachePath);
+  const absoluteRuntimePath = path.join(ROOT, runtimePath);
   t.after(() => {
     if (fs.existsSync(absoluteCachePath)) {
       fs.rmSync(absoluteCachePath, { force: true });
     }
+    if (fs.existsSync(absoluteRuntimePath)) {
+      fs.rmSync(absoluteRuntimePath, { force: true });
+    }
   });
 
-  writePublicCacheRegistry(cachePath, {
-    version: 1,
-    updatedAt: "2026-03-07T12:00:00.000Z",
-    entries: {
-      github: {
-        linkId: "github",
-        sourceUrl: "https://github.com/pRizz",
-        capturedAt: "2026-03-07T12:00:00.000Z",
-        updatedAt: "2026-03-07T12:05:00.000Z",
-        metadata: {
-          title: "  Peter Ryszkiewicz  ",
-          description: "  Open source and experiments. ",
-          image: "https://avatars.githubusercontent.com/u/1?v=4",
-          handle: " @pRizz ",
-          sourceLabel: " github.com ",
-          followersCount: 90,
-          followersCountRaw: " 90 followers ",
+  writePublicCacheRegistry(
+    cachePath,
+    {
+      version: 1,
+      updatedAt: "2026-03-07T12:00:00.000Z",
+      entries: {
+        github: {
+          linkId: "github",
+          sourceUrl: "https://github.com/pRizz",
+          capturedAt: "2026-03-07T12:00:00.000Z",
+          updatedAt: "2026-03-07T12:05:00.000Z",
+          metadata: {
+            title: "  Peter Ryszkiewicz  ",
+            description: "  Open source and experiments. ",
+            image: "https://avatars.githubusercontent.com/u/1?v=4",
+            handle: " @pRizz ",
+            sourceLabel: " github.com ",
+            followersCount: 90,
+            followersCountRaw: " 90 followers ",
+          },
+          etag: ' "abc" ',
+          cacheControl: " max-age=300 ",
+          checkedAt: " 2026-03-07T12:05:00.000Z ",
         },
-        etag: ' "abc" ',
-        cacheControl: " max-age=300 ",
       },
     },
-  });
+    {
+      runtimePath,
+    },
+  );
 
   // Act
-  const registry = loadPublicCacheRegistry({ cachePath });
+  const registry = loadPublicCacheRegistry({ cachePath, runtimePath });
+  const stableOnDisk = JSON.parse(fs.readFileSync(absoluteCachePath, "utf8")) as {
+    entries: Record<string, Record<string, unknown>>;
+  };
+  const runtimeOnDisk = JSON.parse(fs.readFileSync(absoluteRuntimePath, "utf8")) as {
+    entries: Record<string, Record<string, unknown>>;
+  };
 
   // Assert
   assert.deepEqual(registry.entries.github?.metadata, {
@@ -80,6 +98,79 @@ test("round-trips a public cache manifest through disk with normalized metadata"
   });
   assert.equal(registry.entries.github?.etag, '"abc"');
   assert.equal(registry.entries.github?.cacheControl, "max-age=300");
+  assert.equal(registry.entries.github?.checkedAt, "2026-03-07T12:05:00.000Z");
+  assert.equal("updatedAt" in stableOnDisk, false);
+  assert.deepEqual(Object.keys(stableOnDisk.entries), ["github"]);
+  assert.equal("etag" in stableOnDisk.entries.github, false);
+  assert.equal("cacheControl" in stableOnDisk.entries.github, false);
+  assert.equal(runtimeOnDisk.entries.github.etag, '"abc"');
+  assert.equal(runtimeOnDisk.entries.github.cacheControl, "max-age=300");
+  assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-07T12:05:00.000Z");
+});
+
+test("loads a legacy single-file public cache and migrates volatile fields into runtime state", (t) => {
+  // Arrange
+  const cachePath = "tmp/tests/legacy-rich-public-cache.json";
+  const runtimePath = "tmp/tests/legacy-rich-public-cache.runtime.json";
+  const absoluteCachePath = path.join(ROOT, cachePath);
+  const absoluteRuntimePath = path.join(ROOT, runtimePath);
+  t.after(() => {
+    if (fs.existsSync(absoluteCachePath)) {
+      fs.rmSync(absoluteCachePath, { force: true });
+    }
+    if (fs.existsSync(absoluteRuntimePath)) {
+      fs.rmSync(absoluteRuntimePath, { force: true });
+    }
+  });
+
+  fs.mkdirSync(path.dirname(absoluteCachePath), { recursive: true });
+  fs.writeFileSync(
+    absoluteCachePath,
+    `${JSON.stringify(
+      {
+        version: 1,
+        updatedAt: "2026-03-08T15:00:00.000Z",
+        entries: {
+          github: {
+            linkId: "github",
+            sourceUrl: "https://github.com/pRizz",
+            capturedAt: "2026-03-07T12:00:00.000Z",
+            updatedAt: "2026-03-07T13:00:00.000Z",
+            metadata: {
+              title: "pRizz - Overview",
+              description: "Open source and experiments.",
+              image: "https://avatars.githubusercontent.com/u/1?v=4",
+            },
+            etag: '"legacy"',
+            cacheControl: "max-age=300",
+            expiresAt: "2026-03-08T15:05:00.000Z",
+          },
+        },
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  // Act
+  const registry = loadPublicCacheRegistry({ cachePath, runtimePath });
+  writePublicCacheRegistry(cachePath, registry, { runtimePath });
+  const stableOnDisk = JSON.parse(fs.readFileSync(absoluteCachePath, "utf8")) as {
+    entries: Record<string, Record<string, unknown>>;
+  };
+  const runtimeOnDisk = JSON.parse(fs.readFileSync(absoluteRuntimePath, "utf8")) as {
+    entries: Record<string, Record<string, unknown>>;
+  };
+
+  // Assert
+  assert.equal(registry.entries.github?.etag, '"legacy"');
+  assert.equal(registry.entries.github?.expiresAt, "2026-03-08T15:05:00.000Z");
+  assert.equal(registry.entries.github?.checkedAt, "2026-03-08T15:00:00.000Z");
+  assert.equal("updatedAt" in stableOnDisk, false);
+  assert.equal("etag" in stableOnDisk.entries.github, false);
+  assert.equal(runtimeOnDisk.entries.github.expiresAt, "2026-03-08T15:05:00.000Z");
+  assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-08T15:00:00.000Z");
 });
 
 test("computes freshness from cache-control and classifies cached metadata completeness", () => {
@@ -128,6 +219,7 @@ test("preserves public cache timestamps when only revalidation headers change", 
     etag: '"old"',
     cacheControl: "max-age=60",
     expiresAt: "2026-03-07T13:01:00.000Z",
+    checkedAt: "2026-03-07T13:01:00.000Z",
   };
 
   // Act
@@ -140,6 +232,7 @@ test("preserves public cache timestamps when only revalidation headers change", 
     etag: '"new"',
     cacheControl: "max-age=300",
     expiresAt: "2026-03-08T12:05:00.000Z",
+    checkedAt: "2026-03-08T12:00:00.000Z",
   });
 
   // Assert
@@ -148,6 +241,7 @@ test("preserves public cache timestamps when only revalidation headers change", 
   assert.equal(next.etag, '"new"');
   assert.equal(next.cacheControl, "max-age=300");
   assert.equal(next.expiresAt, "2026-03-08T12:05:00.000Z");
+  assert.equal(next.checkedAt, "2026-03-08T12:00:00.000Z");
 });
 
 test("preserves capturedAt and bumps updatedAt when public cache metadata changes", () => {

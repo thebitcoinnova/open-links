@@ -101,7 +101,7 @@ Behavior notes:
 - `--only-missing` skips valid cache entries.
 - `--only-missing --force` refreshes selected links even when cache is valid.
 
-For Medium, X, Instagram, and YouTube, use `bun run enrich:rich:strict` instead. Those platforms now write through the committed public cache rather than the authenticated cache.
+For Medium, X, Instagram, and YouTube, use `bun run enrich:rich:strict` instead. Those platforms now write material metadata through the committed public cache and keep volatile revalidation state in the local public-cache runtime overlay rather than the authenticated cache.
 
 ## Generic Auth Flow Assist
 

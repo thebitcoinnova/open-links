@@ -1099,6 +1099,7 @@ const run = async () => {
         lastModified: fetched.lastModified ?? cachedPublicEntry.entry.lastModified,
         cacheControl,
         expiresAt,
+        checkedAt: generatedAt,
       });
 
       if (!arePublicCacheEntriesEqual(existingPublicEntry, refreshedEntry)) {
@@ -1442,6 +1443,7 @@ const run = async () => {
         lastModified: fetched.lastModified,
         cacheControl: fetched.cacheControl,
         expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
+        checkedAt: generatedAt,
       });
 
       if (!arePublicCacheEntriesEqual(existingPublicEntry, nextPublicEntry)) {

@@ -11,6 +11,9 @@ const ROOT = process.cwd();
 
 export const DEFAULT_PUBLIC_CACHE_PATH = "data/cache/rich-public-cache.json";
 export const DEFAULT_PUBLIC_CACHE_SCHEMA_PATH = "schema/rich-public-cache.schema.json";
+export const DEFAULT_PUBLIC_CACHE_RUNTIME_PATH = "data/cache/rich-public-cache.runtime.json";
+export const DEFAULT_PUBLIC_CACHE_RUNTIME_SCHEMA_PATH =
+  "schema/rich-public-cache.runtime.schema.json";
 
 export interface PublicCacheMetadata {
   title?: string;
@@ -27,16 +30,33 @@ export interface PublicCacheMetadata {
   sourceLabel?: string;
 }
 
-export interface PublicCacheEntry {
+export interface PublicCacheStableEntry {
   linkId: string;
   sourceUrl: string;
   capturedAt: string;
   updatedAt: string;
   metadata: PublicCacheMetadata;
+}
+
+export interface PublicCacheRuntimeEntry {
   etag?: string;
   lastModified?: string;
   cacheControl?: string;
   expiresAt?: string;
+  checkedAt?: string;
+}
+
+export interface PublicCacheEntry extends PublicCacheStableEntry, PublicCacheRuntimeEntry {}
+
+export interface PublicCacheStableRegistry {
+  version: 1;
+  entries: Record<string, PublicCacheStableEntry>;
+}
+
+export interface PublicCacheRuntimeRegistry {
+  version: 1;
+  updatedAt: string;
+  entries: Record<string, PublicCacheRuntimeEntry>;
 }
 
 export interface PublicCacheRegistry {
@@ -55,6 +75,11 @@ export interface ResolvedPublicCacheEntry {
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
+
+const deriveRuntimePath = (cachePath: string): string =>
+  cachePath.endsWith(".json")
+    ? `${cachePath.slice(0, -".json".length)}.runtime.json`
+    : `${cachePath}.runtime.json`;
 
 const normalizePath = (instancePath: string): string => {
   if (!instancePath || instancePath === "/") {
@@ -96,6 +121,18 @@ const trimToUndefined = (value: string | undefined): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const asRecord = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+};
+
+const sortEntries = <T>(entries: Record<string, T>): Record<string, T> =>
+  Object.fromEntries(
+    Object.entries(entries).sort(([left], [right]) => left.localeCompare(right)),
+  ) as Record<string, T>;
+
 const hasDefinedMetadataValue = (value: unknown): boolean => {
   if (typeof value === "number") {
     return Number.isFinite(value);
@@ -106,6 +143,64 @@ const hasDefinedMetadataValue = (value: unknown): boolean => {
   }
 
   return value !== undefined;
+};
+
+const pickLatestIso = (
+  current: string | undefined,
+  candidate: string | undefined,
+): string | undefined => {
+  const currentIso = trimToUndefined(current);
+  const candidateIso = trimToUndefined(candidate);
+
+  if (!candidateIso) {
+    return currentIso;
+  }
+  if (!currentIso) {
+    return candidateIso;
+  }
+
+  const currentMs = Date.parse(currentIso);
+  const candidateMs = Date.parse(candidateIso);
+  if (!Number.isFinite(candidateMs)) {
+    return currentIso;
+  }
+  if (!Number.isFinite(currentMs)) {
+    return candidateIso;
+  }
+
+  return candidateMs > currentMs ? candidateIso : currentIso;
+};
+
+const deriveRegistryUpdatedAt = (
+  entries: Record<string, Pick<PublicCacheEntry, "updatedAt" | "checkedAt">>,
+  fallback?: string,
+): string => {
+  let latest = trimToUndefined(fallback);
+
+  for (const entry of Object.values(entries)) {
+    latest = pickLatestIso(latest, entry.updatedAt);
+    latest = pickLatestIso(latest, entry.checkedAt);
+  }
+
+  return latest ?? new Date().toISOString();
+};
+
+const validateJsonWithSchema = (
+  schemaPath: string,
+  payload: unknown,
+  failureLabel: string,
+): void => {
+  const schema = readJsonFileOrThrow(schemaPath) as AnySchema;
+  const ajv = new Ajv2020({ allErrors: true, strict: false });
+  addFormats(ajv);
+
+  const validate = ajv.compile(schema);
+  const valid = validate(payload);
+  if (!valid) {
+    throw new Error(
+      [failureLabel, "Schema validation errors:", formatSchemaErrors(validate.errors)].join("\n"),
+    );
+  }
 };
 
 const normalizeMetadata = (metadata: PublicCacheMetadata): PublicCacheMetadata => {
@@ -139,14 +234,16 @@ const normalizeMetadata = (metadata: PublicCacheMetadata): PublicCacheMetadata =
   return normalized;
 };
 
-const normalizeEntry = (entry: PublicCacheEntry): PublicCacheEntry => {
-  const normalized: PublicCacheEntry = {
-    linkId: entry.linkId.trim(),
-    sourceUrl: entry.sourceUrl.trim(),
-    capturedAt: entry.capturedAt.trim(),
-    updatedAt: entry.updatedAt.trim(),
-    metadata: normalizeMetadata(entry.metadata),
-  };
+const normalizeStableEntry = (entry: PublicCacheStableEntry): PublicCacheStableEntry => ({
+  linkId: entry.linkId.trim(),
+  sourceUrl: entry.sourceUrl.trim(),
+  capturedAt: entry.capturedAt.trim(),
+  updatedAt: entry.updatedAt.trim(),
+  metadata: normalizeMetadata(entry.metadata),
+});
+
+const normalizeRuntimeEntry = (entry: PublicCacheRuntimeEntry): PublicCacheRuntimeEntry => {
+  const normalized: PublicCacheRuntimeEntry = {};
 
   if (trimToUndefined(entry.etag)) {
     normalized.etag = trimToUndefined(entry.etag);
@@ -160,32 +257,320 @@ const normalizeEntry = (entry: PublicCacheEntry): PublicCacheEntry => {
   if (trimToUndefined(entry.expiresAt)) {
     normalized.expiresAt = trimToUndefined(entry.expiresAt);
   }
+  if (trimToUndefined(entry.checkedAt)) {
+    normalized.checkedAt = trimToUndefined(entry.checkedAt);
+  }
 
   return normalized;
 };
 
-const normalizeRegistry = (raw: PublicCacheRegistry): PublicCacheRegistry => {
-  const entries: Record<string, PublicCacheEntry> = {};
+const normalizeEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
+  ...normalizeStableEntry(entry),
+  ...normalizeRuntimeEntry(entry),
+});
+
+const hasRuntimeFields = (entry: PublicCacheRuntimeEntry | undefined): boolean => {
+  if (!entry) {
+    return false;
+  }
+
+  return (
+    trimToUndefined(entry.etag) !== undefined ||
+    trimToUndefined(entry.lastModified) !== undefined ||
+    trimToUndefined(entry.cacheControl) !== undefined ||
+    trimToUndefined(entry.expiresAt) !== undefined ||
+    trimToUndefined(entry.checkedAt) !== undefined
+  );
+};
+
+const normalizeStableRegistry = (raw: PublicCacheStableRegistry): PublicCacheStableRegistry => {
+  const entries: Record<string, PublicCacheStableEntry> = {};
 
   for (const [cacheKey, entry] of Object.entries(raw.entries)) {
-    entries[cacheKey.trim()] = {
-      linkId: entry.linkId.trim(),
-      sourceUrl: entry.sourceUrl.trim(),
-      capturedAt: entry.capturedAt.trim(),
-      updatedAt: entry.updatedAt.trim(),
-      metadata: normalizeMetadata(entry.metadata),
-      etag: trimToUndefined(entry.etag),
-      lastModified: trimToUndefined(entry.lastModified),
-      cacheControl: trimToUndefined(entry.cacheControl),
-      expiresAt: trimToUndefined(entry.expiresAt),
-    };
+    entries[cacheKey.trim()] = normalizeStableEntry(entry);
   }
 
   return {
     version: 1,
-    updatedAt: raw.updatedAt.trim(),
-    entries,
+    entries: sortEntries(entries),
   };
+};
+
+const normalizeRuntimeRegistry = (raw: PublicCacheRuntimeRegistry): PublicCacheRuntimeRegistry => {
+  const entries: Record<string, PublicCacheRuntimeEntry> = {};
+
+  for (const [cacheKey, entry] of Object.entries(raw.entries)) {
+    const normalizedEntry = normalizeRuntimeEntry(entry);
+    if (hasRuntimeFields(normalizedEntry)) {
+      entries[cacheKey.trim()] = normalizedEntry;
+    }
+  }
+
+  const sortedEntries = sortEntries(entries);
+
+  return {
+    version: 1,
+    updatedAt: deriveRegistryUpdatedAt(
+      Object.fromEntries(
+        Object.entries(sortedEntries).map(([cacheKey, entry]) => [
+          cacheKey,
+          {
+            updatedAt: raw.updatedAt.trim(),
+            checkedAt: entry.checkedAt,
+          },
+        ]),
+      ) as Record<string, Pick<PublicCacheEntry, "updatedAt" | "checkedAt">>,
+      raw.updatedAt,
+    ),
+    entries: sortedEntries,
+  };
+};
+
+const mergeStableAndRuntimeRegistries = (
+  stable: PublicCacheStableRegistry,
+  runtime: PublicCacheRuntimeRegistry,
+): PublicCacheRegistry => {
+  const entries: Record<string, PublicCacheEntry> = {};
+
+  for (const [cacheKey, stableEntry] of Object.entries(stable.entries)) {
+    entries[cacheKey] = normalizeEntry({
+      ...stableEntry,
+      ...(runtime.entries[cacheKey] ?? {}),
+    });
+  }
+
+  return {
+    version: 1,
+    updatedAt: deriveRegistryUpdatedAt(entries, runtime.updatedAt),
+    entries: sortEntries(entries),
+  };
+};
+
+const splitRegistry = (
+  registry: PublicCacheRegistry,
+): {
+  stable: PublicCacheStableRegistry;
+  runtime: PublicCacheRuntimeRegistry;
+} => {
+  const stableEntries: Record<string, PublicCacheStableEntry> = {};
+  const runtimeEntries: Record<string, PublicCacheRuntimeEntry> = {};
+
+  for (const [cacheKey, entry] of Object.entries(registry.entries)) {
+    const normalizedEntry = normalizeEntry(entry);
+    stableEntries[cacheKey.trim()] = normalizeStableEntry(normalizedEntry);
+
+    const runtimeEntry = normalizeRuntimeEntry(normalizedEntry);
+    if (hasRuntimeFields(runtimeEntry)) {
+      runtimeEntries[cacheKey.trim()] = runtimeEntry;
+    }
+  }
+
+  return {
+    stable: normalizeStableRegistry({
+      version: 1,
+      entries: stableEntries,
+    }),
+    runtime: normalizeRuntimeRegistry({
+      version: 1,
+      updatedAt: deriveRegistryUpdatedAt(registry.entries, registry.updatedAt),
+      entries: runtimeEntries,
+    }),
+  };
+};
+
+const extractMetadataFromRaw = (raw: unknown): PublicCacheMetadata => {
+  const metadataRecord = asRecord(raw);
+  if (!metadataRecord) {
+    return {};
+  }
+
+  const metadata: PublicCacheMetadata = {};
+  const metadataOutput = metadata as Record<string, number | string | undefined>;
+
+  const maybeTitle = metadataRecord.title;
+  if (typeof maybeTitle === "string") {
+    metadata.title = maybeTitle;
+  }
+  const maybeDescription = metadataRecord.description;
+  if (typeof maybeDescription === "string") {
+    metadata.description = maybeDescription;
+  }
+  const maybeImage = metadataRecord.image;
+  if (typeof maybeImage === "string") {
+    metadata.image = maybeImage;
+  }
+  const maybeHandle = metadataRecord.handle;
+  if (typeof maybeHandle === "string") {
+    metadata.handle = maybeHandle;
+  }
+  const maybeSourceLabel = metadataRecord.sourceLabel;
+  if (typeof maybeSourceLabel === "string") {
+    metadata.sourceLabel = maybeSourceLabel;
+  }
+
+  for (const field of SOCIAL_PROFILE_METADATA_FIELDS) {
+    const value = metadataRecord[field];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      metadataOutput[field] = value;
+      continue;
+    }
+    if (typeof value === "string") {
+      metadataOutput[field] = value;
+    }
+  }
+
+  return metadata;
+};
+
+const parseStableRegistryFile = (
+  cachePath: string,
+  schemaPath: string,
+  runtimeSchemaPath: string,
+): {
+  stable: PublicCacheStableRegistry;
+  legacyRuntime: PublicCacheRuntimeRegistry;
+} => {
+  const absoluteCachePath = absolutePath(cachePath);
+
+  if (!fs.existsSync(absoluteCachePath)) {
+    return {
+      stable: {
+        version: 1,
+        entries: {},
+      },
+      legacyRuntime: {
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        entries: {},
+      },
+    };
+  }
+
+  const raw = readJsonFileOrThrow(cachePath);
+  const rawRegistry = asRecord(raw);
+  if (!rawRegistry) {
+    throw new Error(`Invalid public cache registry at ${cachePath}: expected an object root.`);
+  }
+
+  if (rawRegistry.version !== 1) {
+    throw new Error(`Invalid public cache registry at ${cachePath}: expected version=1.`);
+  }
+
+  const rawEntries = asRecord(rawRegistry.entries);
+  if (!rawEntries) {
+    throw new Error(
+      `Invalid public cache registry at ${cachePath}: expected an object at $.entries.`,
+    );
+  }
+
+  const legacyUpdatedAt =
+    typeof rawRegistry.updatedAt === "string" ? trimToUndefined(rawRegistry.updatedAt) : undefined;
+  const stableEntries: Record<string, PublicCacheStableEntry> = {};
+  const legacyRuntimeEntries: Record<string, PublicCacheRuntimeEntry> = {};
+
+  for (const [cacheKey, rawEntryValue] of Object.entries(rawEntries)) {
+    const rawEntry = asRecord(rawEntryValue);
+    if (!rawEntry) {
+      throw new Error(
+        `Invalid public cache registry at ${cachePath}: expected an object at $.entries.${cacheKey}.`,
+      );
+    }
+
+    stableEntries[cacheKey.trim()] = {
+      linkId: typeof rawEntry.linkId === "string" ? rawEntry.linkId : "",
+      sourceUrl: typeof rawEntry.sourceUrl === "string" ? rawEntry.sourceUrl : "",
+      capturedAt: typeof rawEntry.capturedAt === "string" ? rawEntry.capturedAt : "",
+      updatedAt: typeof rawEntry.updatedAt === "string" ? rawEntry.updatedAt : "",
+      metadata: extractMetadataFromRaw(rawEntry.metadata),
+    };
+
+    const runtimeEntry = normalizeRuntimeEntry({
+      etag: typeof rawEntry.etag === "string" ? rawEntry.etag : undefined,
+      lastModified: typeof rawEntry.lastModified === "string" ? rawEntry.lastModified : undefined,
+      cacheControl: typeof rawEntry.cacheControl === "string" ? rawEntry.cacheControl : undefined,
+      expiresAt: typeof rawEntry.expiresAt === "string" ? rawEntry.expiresAt : undefined,
+      checkedAt:
+        typeof rawEntry.checkedAt === "string"
+          ? rawEntry.checkedAt
+          : (legacyUpdatedAt ??
+            (typeof rawEntry.updatedAt === "string" ? rawEntry.updatedAt : undefined)),
+    });
+
+    if (hasRuntimeFields(runtimeEntry)) {
+      legacyRuntimeEntries[cacheKey.trim()] = runtimeEntry;
+    }
+  }
+
+  const stable = normalizeStableRegistry({
+    version: 1,
+    entries: stableEntries,
+  });
+  const legacyRuntime = normalizeRuntimeRegistry({
+    version: 1,
+    updatedAt: legacyUpdatedAt ?? deriveRegistryUpdatedAt(stable.entries),
+    entries: legacyRuntimeEntries,
+  });
+
+  validateJsonWithSchema(schemaPath, stable, `Invalid public cache registry at ${cachePath}.`);
+  validateJsonWithSchema(
+    runtimeSchemaPath,
+    legacyRuntime,
+    `Invalid public cache runtime registry derived from ${cachePath}.`,
+  );
+
+  return {
+    stable,
+    legacyRuntime,
+  };
+};
+
+const loadRuntimeRegistry = (
+  runtimePath: string,
+  runtimeSchemaPath: string,
+): PublicCacheRuntimeRegistry => {
+  const absoluteRuntimePath = absolutePath(runtimePath);
+
+  if (!fs.existsSync(absoluteRuntimePath)) {
+    return {
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      entries: {},
+    };
+  }
+
+  const runtime = readJsonFileOrThrow(runtimePath);
+  validateJsonWithSchema(
+    runtimeSchemaPath,
+    runtime,
+    `Invalid public cache runtime registry at ${runtimePath}.`,
+  );
+
+  return normalizeRuntimeRegistry(runtime as PublicCacheRuntimeRegistry);
+};
+
+const mergeRuntimeRegistries = (
+  base: PublicCacheRuntimeRegistry,
+  overlay: PublicCacheRuntimeRegistry,
+): PublicCacheRuntimeRegistry => {
+  const entries: Record<string, PublicCacheRuntimeEntry> = {};
+  const cacheKeys = new Set([...Object.keys(base.entries), ...Object.keys(overlay.entries)]);
+
+  for (const cacheKey of cacheKeys) {
+    const entry = normalizeRuntimeEntry({
+      ...(base.entries[cacheKey] ?? {}),
+      ...(overlay.entries[cacheKey] ?? {}),
+    });
+
+    if (hasRuntimeFields(entry)) {
+      entries[cacheKey] = entry;
+    }
+  }
+
+  return normalizeRuntimeRegistry({
+    version: 1,
+    updatedAt: pickLatestIso(base.updatedAt, overlay.updatedAt) ?? new Date().toISOString(),
+    entries,
+  });
 };
 
 export const createEmptyPublicCacheRegistry = (
@@ -199,42 +584,56 @@ export const createEmptyPublicCacheRegistry = (
 export const loadPublicCacheRegistry = (options?: {
   cachePath?: string;
   schemaPath?: string;
+  runtimePath?: string;
+  runtimeSchemaPath?: string;
 }): PublicCacheRegistry => {
   const cachePath = options?.cachePath ?? DEFAULT_PUBLIC_CACHE_PATH;
   const schemaPath = options?.schemaPath ?? DEFAULT_PUBLIC_CACHE_SCHEMA_PATH;
-  const schema = readJsonFileOrThrow(schemaPath) as AnySchema;
-  const absoluteCachePath = absolutePath(cachePath);
+  const runtimePath = options?.runtimePath ?? deriveRuntimePath(cachePath);
+  const runtimeSchemaPath =
+    options?.runtimeSchemaPath ??
+    (cachePath === DEFAULT_PUBLIC_CACHE_PATH
+      ? DEFAULT_PUBLIC_CACHE_RUNTIME_SCHEMA_PATH
+      : DEFAULT_PUBLIC_CACHE_RUNTIME_SCHEMA_PATH);
 
-  if (!fs.existsSync(absoluteCachePath)) {
-    return createEmptyPublicCacheRegistry();
-  }
+  const { stable, legacyRuntime } = parseStableRegistryFile(
+    cachePath,
+    schemaPath,
+    runtimeSchemaPath,
+  );
+  const runtimeFromDisk = loadRuntimeRegistry(runtimePath, runtimeSchemaPath);
+  const runtime = mergeRuntimeRegistries(legacyRuntime, runtimeFromDisk);
 
-  const registry = readJsonFileOrThrow(cachePath);
-  const ajv = new Ajv2020({ allErrors: true, strict: false });
-  addFormats(ajv);
+  return mergeStableAndRuntimeRegistries(stable, runtime);
+};
 
-  const validate = ajv.compile(schema);
-  const valid = validate(registry);
-  if (!valid) {
-    throw new Error(
-      [
-        `Invalid public cache registry at ${cachePath}.`,
-        "Schema validation errors:",
-        formatSchemaErrors(validate.errors),
-      ].join("\n"),
-    );
-  }
-
-  return normalizeRegistry(registry as PublicCacheRegistry);
+const writeJsonFile = (relativePath: string, payload: unknown): void => {
+  const absolute = absolutePath(relativePath);
+  fs.mkdirSync(path.dirname(absolute), { recursive: true });
+  fs.writeFileSync(absolute, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 };
 
 export const writePublicCacheRegistry = (
   cachePath: string,
   registry: PublicCacheRegistry,
+  options?: {
+    runtimePath?: string;
+  },
 ): void => {
-  const absolute = absolutePath(cachePath);
-  fs.mkdirSync(path.dirname(absolute), { recursive: true });
-  fs.writeFileSync(absolute, `${JSON.stringify(registry, null, 2)}\n`, "utf8");
+  const runtimePath = options?.runtimePath ?? deriveRuntimePath(cachePath);
+  const { stable, runtime } = splitRegistry(registry);
+
+  writeJsonFile(cachePath, stable);
+
+  const absoluteRuntimePath = absolutePath(runtimePath);
+  if (Object.keys(runtime.entries).length === 0) {
+    if (fs.existsSync(absoluteRuntimePath)) {
+      fs.rmSync(absoluteRuntimePath, { force: true });
+    }
+    return;
+  }
+
+  writeJsonFile(runtimePath, runtime);
 };
 
 const parseMaxAgeSeconds = (cacheControl: string | undefined): number | undefined => {
@@ -407,6 +806,7 @@ export const buildPublicCacheEntry = (input: {
   lastModified?: string;
   cacheControl?: string;
   expiresAt?: string;
+  checkedAt?: string;
 }): PublicCacheEntry => {
   const previous = input.previous ? normalizeEntry(input.previous) : undefined;
   const nextMetadata = normalizeMetadata(input.metadata);
@@ -435,6 +835,11 @@ export const buildPublicCacheEntry = (input: {
   }
   if (trimToUndefined(input.expiresAt)) {
     entry.expiresAt = trimToUndefined(input.expiresAt);
+  }
+
+  const checkedAt = trimToUndefined(input.checkedAt) ?? trimToUndefined(previous?.checkedAt);
+  if (checkedAt) {
+    entry.checkedAt = checkedAt;
   }
 
   return entry;

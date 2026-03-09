@@ -213,7 +213,7 @@ High-signal deployment checks:
 - `bun run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
 - `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
 - `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
-- `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal profile audience metrics into `data/cache/rich-public-cache.json` (non-auth, operator-invoked).
+- `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal profile audience metrics into the committed stable cache at `data/cache/rich-public-cache.json` and the local runtime overlay at `data/cache/rich-public-cache.runtime.json` (non-auth, operator-invoked).
 - `bun run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
 - `bun run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
 - `bun run auth:rich:clear` - clear authenticated cache entries and unreferenced local assets (selector-driven; supports `--dry-run`).

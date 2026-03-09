@@ -402,6 +402,7 @@ export const bootstrapPublicBaseEntry = async (
     lastModified: fetched.lastModified,
     cacheControl: fetched.cacheControl,
     expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
+    checkedAt: input.generatedAt,
   };
 };
 
@@ -683,6 +684,7 @@ export const runPublicRichSyncWithDependencies = async (
       lastModified: nextEntry.lastModified,
       cacheControl: nextEntry.cacheControl,
       expiresAt: nextEntry.expiresAt,
+      checkedAt: nextEntry.checkedAt,
     });
 
     if (arePublicCacheEntriesEqual(workingEntry, stabilizedEntry)) {

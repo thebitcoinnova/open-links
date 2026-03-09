@@ -2,6 +2,17 @@
 
 ## Current
 
+- [x] Split `data/cache/rich-public-cache.json` into committed stable metadata plus ignored runtime revalidation state.
+- [x] Refactor enrichment/public-sync cache writes so header-only refreshes update only the runtime overlay and stable metadata changes remain the only tracked writes.
+- [x] Update schemas, docs, cache audit/tests, and verification so the public cache split is enforced and documented.
+- [x] Verify with `bun test scripts/enrichment/public-cache.test.ts scripts/public-rich-sync.test.ts scripts/fetch-cache-audit.test.ts`, `bun run validate:data`, and `bun run typecheck`.
+
+### Completion Review
+
+- Result: `rich-public-cache.json` now stores only committed stable metadata, while volatile revalidation state moves into the ignored `data/cache/rich-public-cache.runtime.json` overlay. The shared cache helper transparently loads legacy single-file manifests, splits them on write, sorts keys deterministically, and keeps the caller-facing merged registry shape intact for enrichment and public sync.
+- Verification: `bun test scripts/enrichment/public-cache.test.ts scripts/public-rich-sync.test.ts scripts/fetch-cache-audit.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run enrich:rich:strict` twice, and `bun run images:sync` passed. The second strict enrichment run left `data/cache/rich-public-cache.json` byte-identical while only the ignored runtime overlay changed, which confirms the merge-conflict reduction goal.
+- Residual risk: `bun run validate:data` still fails in this worktree because the repo’s current rich-card image materialization state leaves several `links[].metadata.image` values unmapped in `data/generated/content-images.json`. That failure reproduces after regeneration and is outside this cache-split change.
+
 - [x] Add a repeatable fetch/cache audit that inventories build-time and enrichment network paths and marks any non-cached exceptions explicitly.
 - [x] Expose the audit through a dedicated package script so it can run in the same verification flow as enrichment checks.
 - [x] Verify with `bun test scripts/fetch-cache-audit.test.ts`, `bun run audit:fetch-cache`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run avatar:sync`, and `bun run validate:data`.

@@ -356,7 +356,7 @@ Site-level default enrichment behavior is defined in `site.ui.richCards.enrichme
 - `retries`: retry count after the first attempt.
 - `metadataPath`: generated metadata output path.
 - `reportPath`: generated enrichment report path.
-- `publicCachePath`: committed public metadata cache manifest path (default `data/cache/rich-public-cache.json`).
+- `publicCachePath`: committed stable public metadata cache manifest path (default `data/cache/rich-public-cache.json`).
 - `authenticatedCachePath`: authenticated cache manifest path (default `data/cache/rich-authenticated-cache.json`).
 - `authenticatedCacheWarnAgeDays`: stale-cache warning threshold in days (default `30`, warning-only).
 - `failureMode`: `immediate` (default) or `aggregate`.
@@ -374,6 +374,8 @@ Canonical public enrichment cache registry:
 
 - `data/cache/rich-public-cache.json`
 - `schema/rich-public-cache.schema.json`
+- local runtime overlay: `data/cache/rich-public-cache.runtime.json` (gitignored)
+- local runtime overlay schema: `schema/rich-public-cache.runtime.schema.json`
 
 Canonical authenticated extractor + cache registries:
 
@@ -386,9 +388,9 @@ Canonical authenticated extractor + cache registries:
 
 When an enrichment-enabled rich link URL matches a `status=blocked` registry entry, enrichment fails early with reason `known_blocker` unless `links[].enrichment.allowKnownBlocker=true` is set for that link.
 
-When direct/public enrichment succeeds, OpenLinks writes normalized fetch-derived metadata into the committed public cache manifest. Later enrich runs reuse fresh cache entries or revalidate stale entries with conditional requests (`reason=public_cache`) instead of live-fetching every page on every run.
+When direct/public enrichment succeeds, OpenLinks writes normalized fetch-derived metadata into the committed public cache manifest. Volatile revalidation state (`etag`, `lastModified`, `cacheControl`, `expiresAt`, `checkedAt`) is stored separately in the local runtime overlay. Later enrich runs reuse fresh cache entries from that overlay or revalidate stale entries with conditional requests (`reason=public_cache`) instead of live-fetching every page on every run.
 
-If a direct/public fetch fails but a committed public cache entry already exists, enrichment reuses that stale cached metadata as a warning-level fallback. No raw public HTML snapshots are committed.
+If a direct/public fetch fails but a committed public cache entry already exists, enrichment reuses that stale cached metadata as a warning-level fallback. No raw public HTML snapshots are committed, and header-only refreshes no longer rewrite tracked cache timestamps.
 
 Built-in public augmentation currently covers Medium (RSS/feed), Substack (canonical public profile fetch with original source-label preservation), X (oEmbed + avatar), Instagram (public page metadata), and YouTube (public page metadata) without using `authenticatedExtractor`.
 

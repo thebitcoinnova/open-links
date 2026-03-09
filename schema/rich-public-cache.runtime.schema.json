@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-links.dev/schema/rich-public-cache.runtime.schema.json",
+  "title": "OpenLinks Public Rich Metadata Runtime Cache",
+  "type": "object",
+  "required": ["version", "updatedAt", "entries"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "etag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lastModified": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cacheControl": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
