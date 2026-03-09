@@ -48,7 +48,7 @@ const profileAvatarScale = (site: SiteData): number => {
   if (typeof value === "number" && value > 0 && value <= 4) {
     return value;
   }
-  return 1.5;
+  return 1.7;
 };
 
 export const resolveLayoutPreferences = (site: SiteData): LayoutPreferences => ({

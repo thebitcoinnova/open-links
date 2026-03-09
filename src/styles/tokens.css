@@ -20,13 +20,13 @@
   --density-scale: 1;
   --target-size: 44px;
 
-  --type-title: clamp(1.7rem, 4vw, 2.4rem);
-  --type-headline: clamp(1.05rem, 2.3vw, 1.2rem);
-  --type-body: 1rem;
-  --type-caption: 0.88rem;
-  --type-card-title: 1.02rem;
-  --type-link-title: 0.98rem;
-  --type-icon: 1.48rem;
+  --type-title: clamp(1.88rem, 4.35vw, 2.65rem);
+  --type-headline: clamp(1.14rem, 2.45vw, 1.32rem);
+  --type-body: 1.05rem;
+  --type-caption: 0.94rem;
+  --type-card-title: 1.1rem;
+  --type-link-title: 1.06rem;
+  --type-icon: 1.56rem;
 
   --line-height-title: 1.05;
   --line-height-body: 1.55;

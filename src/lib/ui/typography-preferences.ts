@@ -51,14 +51,20 @@ const VALID_TRANSFORMS = new Set<TypographyTransformMode>([
 const SCALE_PRESETS: Record<TypographyScaleMode, Partial<TypographyOverrides>> = {
   fixed: {},
   compact: {
-    sizeTitle: "clamp(1.5rem, 3.2vw, 2.05rem)",
-    sizeHeadline: "clamp(0.95rem, 2vw, 1.08rem)",
-    sizeCaption: "0.82rem",
+    sizeTitle: "clamp(1.66rem, 3.55vw, 2.25rem)",
+    sizeHeadline: "clamp(1rem, 2.08vw, 1.14rem)",
+    sizeBody: "0.98rem",
+    sizeCaption: "0.86rem",
+    sizeCardTitle: "1.01rem",
+    sizeLinkTitle: "0.98rem",
   },
   expressive: {
-    sizeTitle: "clamp(1.9rem, 4.5vw, 2.75rem)",
-    sizeHeadline: "clamp(1.15rem, 2.4vw, 1.3rem)",
-    sizeCaption: "0.93rem",
+    sizeTitle: "clamp(2.08rem, 4.8vw, 2.95rem)",
+    sizeHeadline: "clamp(1.22rem, 2.65vw, 1.42rem)",
+    sizeBody: "1.11rem",
+    sizeCaption: "0.99rem",
+    sizeCardTitle: "1.18rem",
+    sizeLinkTitle: "1.14rem",
   },
 };
 

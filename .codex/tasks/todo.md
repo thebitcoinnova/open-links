@@ -13,6 +13,16 @@
 - Verification: `bun test scripts/enrichment/public-cache.test.ts scripts/public-rich-sync.test.ts scripts/fetch-cache-audit.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run enrich:rich:strict` twice, and `bun run images:sync` passed. The second strict enrichment run left `data/cache/rich-public-cache.json` byte-identical while only the ignored runtime overlay changed, which confirms the merge-conflict reduction goal.
 - Residual risk: `bun run validate:data` still fails in this worktree because the repo’s current rich-card image materialization state leaves several `links[].metadata.image` values unmapped in `data/generated/content-images.json`. That failure reproduces after regeneration and is outside this cache-split change.
 
+- [x] Increase the public-site default typography baseline so titles, body copy, captions, and card text render larger without requiring per-site overrides.
+- [x] Increase the public-site default profile avatar, avatar-led card image, link-card site icon, and chrome logo sizing through shared layout/style defaults.
+- [x] Add focused resolver tests for layout and typography defaults/overrides, then verify with `bun run biome:check`, `bun run typecheck`, and `bun run build`.
+
+### Completion Review
+
+- Result: The public OpenLinks page now renders larger by default through shared defaults only. Typography tokens were raised, the `compact` and `expressive` presets were recalibrated around the new baseline, the fallback `profileAvatarScale` default increased, shared avatar/icon/logo CSS variables were bumped, and new resolver tests now cover the layout and typography default/override paths.
+- Verification: `bun test src/lib/ui/layout-preferences.test.ts src/lib/ui/typography-preferences.test.ts`, `bun run biome:check`, `bun run typecheck`, and `bun run build` passed after installing the repo-locked dependencies with `bun install --frozen-lockfile`. A lightweight Playwright spot-check against `bun run preview -- --host 127.0.0.1 --port 4173` loaded the page successfully at desktop (`1440x1400`) and mobile (`390x844`) viewports. The transient `data/cache/rich-public-cache.json` churn from `bun run build` was reverted so the final diff stays code-only.
+- Residual risk: This is a global default-size bump, so the biggest remaining risk is theme-specific visual weight or long-title wrapping that only shows up on content variants beyond the current local dataset. Future tuning should stay in the shared token/CSS-variable layer rather than adding per-component overrides.
+
 - [x] Add a repeatable fetch/cache audit that inventories build-time and enrichment network paths and marks any non-cached exceptions explicitly.
 - [x] Expose the audit through a dedicated package script so it can run in the same verification flow as enrichment checks.
 - [x] Verify with `bun test scripts/fetch-cache-audit.test.ts`, `bun run audit:fetch-cache`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run avatar:sync`, and `bun run validate:data`.
