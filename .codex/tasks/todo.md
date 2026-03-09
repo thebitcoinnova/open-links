@@ -2,6 +2,16 @@
 
 ## Current
 
+- [x] Add a repeatable fetch/cache audit that inventories build-time and enrichment network paths and marks any non-cached exceptions explicitly.
+- [x] Expose the audit through a dedicated package script so it can run in the same verification flow as enrichment checks.
+- [x] Verify with `bun test scripts/fetch-cache-audit.test.ts`, `bun run audit:fetch-cache`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run avatar:sync`, and `bun run validate:data`.
+
+### Completion Review
+
+- Result: The repo now has a repeatable fetch/cache audit in `scripts/fetch-cache-audit.test.ts` plus `bun run audit:fetch-cache`, which inventories every direct `fetch(...)` callsite, asserts the shared metadata fetch helper is only used by cache-writing enrichment entrypoints, and requires explicit classification for cache-backed, diagnostic-only, and runtime-only fetches.
+- Verification: `bun test scripts/fetch-cache-audit.test.ts`, `bun run audit:fetch-cache`, `bun run typecheck`, `bun run enrich:rich:strict`, `bun run avatar:sync`, `bun run images:sync`, and `bun run validate:data` all passed. The transient `data/cache/rich-public-cache.json` revalidation churn from the live enrichment pass was reverted after verification so the change stays code-only.
+- Residual risk: The automated audit currently governs direct `fetch(...)` callsites, not every browser-driven network navigation. Public browser sync and authenticated extractor browser flows were manually re-audited in this pass and still write through their cache/artifact pipelines, but a future fully-automated browser-network inventory would tighten that gap further.
+
 - [x] Add hook-only `ci:required:hook:build` and `ci:required:hook:quality` scripts so pre-commit required parity can verify the repo without regenerating tracked outputs.
 - [x] Switch `scripts/hooks/pre-commit.sh` heavy parity lanes from mutating `ci:required:build` / `ci:required:quality` to the new hook-only non-mutating commands while keeping the existing drift guard.
 - [x] Update `docs/quickstart.md` and verify staged hook behavior so commit-time parity no longer creates incidental tracked cache churn.
