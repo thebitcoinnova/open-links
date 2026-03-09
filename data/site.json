@@ -35,7 +35,7 @@
     "richCards": {
       "renderMode": "auto",
       "sourceLabelDefault": "show",
-      "imageTreatment": "cover",
+      "imageTreatment": "off",
       "imageFit": "contain",
       "mobile": {
         "imageLayout": "inline"

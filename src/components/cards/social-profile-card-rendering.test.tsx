@@ -419,6 +419,29 @@ test("description-image-row policy can suppress the extra media row without reve
   assert.equal(viewModel.descriptionImageUrl, undefined);
 });
 
+test("image treatment off keeps avatar leads for rich profile cards while suppressing preview media", () => {
+  // Arrange
+  const offSite = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        imageTreatment: "off",
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const viewModel = buildRichCardViewModel(offSite, substackRichLink);
+
+  // Assert
+  assert.equal(viewModel.imageTreatment, "off");
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.showDescriptionImageRow, false);
+  assert.equal(viewModel.descriptionImageUrl, undefined);
+});
+
 test("site-specific description-image-row overrides only affect the targeted rich profile sites", () => {
   // Arrange
   const siteOverrideConfig = {

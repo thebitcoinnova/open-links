@@ -2,6 +2,26 @@
 
 ## Current
 
+- [x] Turn off preview-derived rich-card media globally through the existing `site.ui.richCards.imageTreatment` setting.
+- [x] Add a focused regression proving `imageTreatment: "off"` still preserves Substack's avatar-led profile card while suppressing preview media.
+- [x] Verify with `bun test src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/rich-card-description-sourcing.test.ts`, `bun run validate:data`, and `bun run build`.
+
+### Completion Review
+
+- Result: The live OpenLinks site config now sets `site.ui.richCards.imageTreatment` to `off`, so preview-derived Open Graph-style media is hidden across rich cards by default while social-profile avatars remain visible. No enrichment metadata, public/authenticated caches, generated image manifests, or SEO image fields were changed.
+- Verification: `bun test src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/rich-card-description-sourcing.test.ts`, `bun run validate:data`, and `bun run build` passed on March 9, 2026. The new focused regression confirms Substack still renders with an avatar lead when preview media is globally disabled, and the existing non-profile regression still confirms preview-led cards fall back to icon-led rendering when `imageTreatment` is off.
+- Residual risk: The page-level policy now hides preview media for all present and future rich cards until intentionally reversed, so any future non-profile rich link that should keep a preview image will require revisiting the global setting rather than only a per-site override.
+
+- [x] Verify the current Substack public rich-cache entry still preserves distinct `image`, `ogImage`, `twitterImage`, `profileImage`, and subscriber metadata under the new storage model.
+- [x] Refresh the generated rich metadata and baked image assets so the Substack preview/avatar files exist locally in `public/generated/images/`.
+- [x] Verify with `bun install --frozen-lockfile`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, and `bun run build`.
+
+### Completion Review
+
+- Result: The Substack link (`substack`, source label `peter.ryszkiewicz.us`) is healthy under the new split storage model. Stable source metadata remains in `data/cache/rich-public-cache.json`, generated rich metadata was rebuilt in `data/generated/rich-metadata.json`, and baked local image assets now exist again under `public/generated/images/` with URL-to-file mappings in `data/generated/content-images.json`. The regenerated Substack metadata still carries distinct `image`/`ogImage`/`twitterImage` plus `profileImage`, and includes `subscribersCount=10`.
+- Verification: `bun install --frozen-lockfile`, `bun run avatar:sync`, `bun run enrich:rich:strict`, `bun run images:sync`, `bun run validate:data`, and `bun run build` all passed on March 9, 2026. The baked Substack assets resolved to `public/generated/images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg` (preview/OG/Twitter image) and `public/generated/images/507a2bdb6baf0c2930e28c0f5a30f7c7b7f88ccbe6aef3975d7aa26a7ccb9e57.jpg` (profile avatar). `git status --short` was clean after verification.
+- Residual risk: The committed public cache still stores the canonical remote Substack CDN URLs by design; runtime localization depends on `data/generated/content-images.json` and `public/generated/images/` being regenerated in environments that do not already have those generated artifacts present.
+
 - [x] Add a hook-aware `validate:data` mode that skips generated rich-artifact checks unless staged paths touch rich metadata/image inputs.
 - [x] Route Husky and hook-only CI parity through `validate:data:hook` with a staged-path file under `.cache/openlinks-precommit/`.
 - [x] Add validator coverage plus hook smoke verification so unrelated stale rich artifacts no longer force `git commit --no-verify`.
