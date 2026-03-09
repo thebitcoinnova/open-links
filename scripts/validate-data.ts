@@ -42,14 +42,17 @@ import {
 import { type ValidationIssue, runPolicyRules } from "./validation/rules";
 
 type OutputFormat = "human" | "json";
+export type ValidationMode = "full" | "hook";
 
 type ArgMap = {
   strict: boolean;
   format: OutputFormat;
+  mode: ValidationMode;
   profilePath: string;
   linksPath: string;
   sitePath: string;
   enrichmentReportPath?: string;
+  changedPathsFile?: string;
 };
 
 const ROOT = process.cwd();
@@ -57,6 +60,35 @@ const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
 const DEFAULT_AUTH_CACHE_WARN_AGE_DAYS = 30;
 const DEFAULT_ENRICHMENT_METADATA_PATH = "data/generated/rich-metadata.json";
 const DEFAULT_CONTENT_IMAGES_MANIFEST_PATH = "data/generated/content-images.json";
+export const DEFAULT_HOOK_CHANGED_PATHS_PATH = ".cache/openlinks-precommit/staged-files.txt";
+const HOOK_SKIP_RICH_ARTIFACT_CHECKS_MESSAGE =
+  "Hook mode skipped generated rich-artifact checks because staged paths did not touch rich metadata/image inputs.";
+
+const HOOK_RICH_ARTIFACT_TRIGGER_EXACT_PATHS = new Set([
+  "data/links.json",
+  "data/site.json",
+  "data/generated/rich-metadata.json",
+  "data/generated/content-images.json",
+  "data/generated/rich-enrichment-report.json",
+  "schema/links.schema.json",
+  "schema/site.schema.json",
+  "scripts/enrich-rich-links.ts",
+  "scripts/sync-content-images.ts",
+  "scripts/validate-data.ts",
+]);
+
+const HOOK_RICH_ARTIFACT_TRIGGER_PREFIXES = [
+  "data/cache/",
+  "public/cache/rich-authenticated/",
+  "scripts/enrichment/",
+  "scripts/validation/",
+  "src/lib/content/",
+] as const;
+
+export interface HookRichArtifactCheckDecision {
+  shouldRun: boolean;
+  humanNote?: string;
+}
 
 interface GeneratedRichMetadataPayload {
   links?: Record<string, { metadata?: Record<string, unknown> }>;
@@ -85,14 +117,93 @@ const parseArgs = (): ArgMap => {
 
   const formatRaw = getFlagValue("--format");
   const format: OutputFormat = formatRaw === "json" ? "json" : "human";
+  const modeRaw = getFlagValue("--mode");
+  const mode: ValidationMode = modeRaw === "hook" ? "hook" : "full";
 
   return {
     strict: args.includes("--strict"),
     format,
+    mode,
     profilePath: getFlagValue("--profile") ?? "data/profile.json",
     linksPath: getFlagValue("--links") ?? "data/links.json",
     sitePath: getFlagValue("--site") ?? "data/site.json",
     enrichmentReportPath: getFlagValue("--enrichment-report"),
+    changedPathsFile: getFlagValue("--changed-paths-file"),
+  };
+};
+
+const normalizeRepoPath = (value: string): string =>
+  value
+    .replaceAll("\\", "/")
+    .replace(/^\.?\//, "")
+    .trim();
+
+export const pathTouchesHookRichArtifactInputs = (repoPath: string): boolean => {
+  const normalized = normalizeRepoPath(repoPath);
+  if (normalized.length === 0) {
+    return false;
+  }
+
+  if (HOOK_RICH_ARTIFACT_TRIGGER_EXACT_PATHS.has(normalized)) {
+    return true;
+  }
+
+  return HOOK_RICH_ARTIFACT_TRIGGER_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+};
+
+const tryReadChangedPaths = (
+  changedPathsFile: string,
+): { paths: string[] | null; errorMessage?: string } => {
+  try {
+    const absolute = absolutePath(changedPathsFile);
+    const contents = fs.readFileSync(absolute, "utf8");
+    return {
+      paths: contents
+        .split(/\r?\n/u)
+        .map((entry) => normalizeRepoPath(entry))
+        .filter((entry) => entry.length > 0),
+    };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      paths: null,
+      errorMessage: message,
+    };
+  }
+};
+
+export const resolveHookRichArtifactCheckDecision = (input: {
+  mode: ValidationMode;
+  changedPathsFile?: string;
+}): HookRichArtifactCheckDecision => {
+  if (input.mode === "full") {
+    return { shouldRun: true };
+  }
+
+  if (!input.changedPathsFile) {
+    return {
+      shouldRun: true,
+      humanNote:
+        "Hook mode could not find a changed-paths file, so generated rich-artifact checks fell back to full validation.",
+    };
+  }
+
+  const changedPaths = tryReadChangedPaths(input.changedPathsFile);
+  if (!changedPaths.paths) {
+    return {
+      shouldRun: true,
+      humanNote:
+        `Hook mode could not read '${input.changedPathsFile}', so generated rich-artifact checks fell back to full validation. ${changedPaths.errorMessage ?? ""}`.trim(),
+    };
+  }
+
+  if (changedPaths.paths.some((entry) => pathTouchesHookRichArtifactInputs(entry))) {
+    return { shouldRun: true };
+  }
+
+  return {
+    shouldRun: false,
+    humanNote: HOOK_SKIP_RICH_ARTIFACT_CHECKS_MESSAGE,
   };
 };
 
@@ -840,7 +951,7 @@ const enrichmentIssues = (
   return issues;
 };
 
-const run = () => {
+export const run = () => {
   const args = parseArgs();
 
   const profileSchema = readJsonFile<Record<string, unknown>>("schema/profile.schema.json");
@@ -945,7 +1056,13 @@ const run = () => {
     });
   }
 
-  if (hasRichRenderCandidates(linksData, siteData)) {
+  const hasRichCandidates = hasRichRenderCandidates(linksData, siteData);
+  const hookRichArtifactDecision = resolveHookRichArtifactCheckDecision({
+    mode: args.mode,
+    changedPathsFile: args.changedPathsFile,
+  });
+
+  if (hasRichCandidates && hookRichArtifactDecision.shouldRun) {
     const metadataPath = resolveEnrichmentMetadataPath(siteData);
     const metadataRead = tryReadJsonFile<GeneratedRichMetadataPayload>(metadataPath);
     const contentImagesRead = tryReadJsonFile<GeneratedContentImagesPayload>(
@@ -1000,16 +1117,18 @@ const run = () => {
     }
   }
 
-  issues.push(
-    ...enrichmentIssues(
-      enrichmentReportPath,
-      enrichmentReport,
-      args.strict,
-      bypassActive,
-      suppressedKnownBlockerLinkIds,
-      suppressedAuthenticatedCacheLinkIds,
-    ),
-  );
+  if (hookRichArtifactDecision.shouldRun) {
+    issues.push(
+      ...enrichmentIssues(
+        enrichmentReportPath,
+        enrichmentReport,
+        args.strict,
+        bypassActive,
+        suppressedKnownBlockerLinkIds,
+        suppressedAuthenticatedCacheLinkIds,
+      ),
+    );
+  }
 
   const errors = sortIssues(issues.filter((issue) => issue.level === "error"));
   const warnings = sortIssues(issues.filter((issue) => issue.level === "warning"));
@@ -1050,6 +1169,11 @@ const run = () => {
     },
   };
 
+  if (args.format === "human" && hookRichArtifactDecision.humanNote) {
+    console.log(hookRichArtifactDecision.humanNote);
+    console.log("");
+  }
+
   if (args.format === "human" && hasAuthenticatedSetupIssue && !bypassActive) {
     console.log(
       "Hint: authenticated rich cache setup is required. Run `npm run setup:rich-auth`, commit updated cache/assets, then rerun validation/build.",
@@ -1066,4 +1190,6 @@ const run = () => {
   process.exit(result.success ? 0 : 1);
 };
 
-run();
+if (import.meta.main) {
+  run();
+}

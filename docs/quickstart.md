@@ -67,7 +67,8 @@ bun run prepare
 Hook behavior:
 
 - Always runs staged Biome auto-fix/check and re-stages updates.
-- Runs `bun run validate:data` only when staged paths touch `data/`, `schema/`, or `scripts/`.
+- Runs `bun run validate:data:hook` only when staged paths touch `data/`, `schema/`, or `scripts/`.
+- Commit-time validation is hook-aware for generated rich artifacts: it still runs schema/policy/config checks, but only enforces generated rich metadata/image checks when staged paths touch rich metadata/image inputs.
 - Runs `bun run typecheck` only when staged paths touch TS/config inputs.
 - Runs `bun run quality:embedded-code` only when staged paths touch `scripts/`.
 - Runs `bun run studio:check` only when staged paths touch `packages/` or `docs/studio-self-serve.md`.
@@ -77,6 +78,7 @@ Hook behavior:
   - `bun run ci:required:hook:quality`
   - `bun run ci:required:studio-integration`
 - Does **not** run tracked-output generators like `avatar:sync`, `enrich:rich*`, or `images:sync` during commit-time parity.
+- Full repo-wide rich-artifact validation still happens in normal `bun run validate:data`, `bun run build`, and CI.
 - Writes hook-only quality artifacts under `.cache/openlinks-precommit/` (gitignored).
 
 Temporary bypass options:

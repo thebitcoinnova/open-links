@@ -39,6 +39,9 @@ if [ -z "$staged_files" ]; then
   exit 0
 fi
 
+mkdir -p .cache/openlinks-precommit
+printf "%s\n" "$staged_files" > .cache/openlinks-precommit/staged-files.txt
+
 echo "pre-commit: running lockfile sync guard"
 if ! bun scripts/hooks/check-lockfile-sync.ts; then
   echo "pre-commit: lockfile sync guard failed."
@@ -121,8 +124,8 @@ run_required_ci_parity() {
 
 if matches_paths '^(data/|schema/|scripts/)'; then
   echo "pre-commit: running data validation (staged paths touched data/schema/scripts)"
-  if ! bun run validate:data; then
-    echo "pre-commit: bun run validate:data failed."
+  if ! bun run validate:data:hook; then
+    echo "pre-commit: bun run validate:data:hook failed."
     echo "Action: fix validation errors, then restage and commit again."
     exit 1
   fi

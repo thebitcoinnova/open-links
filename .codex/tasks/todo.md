@@ -2,6 +2,17 @@
 
 ## Current
 
+- [x] Add a hook-aware `validate:data` mode that skips generated rich-artifact checks unless staged paths touch rich metadata/image inputs.
+- [x] Route Husky and hook-only CI parity through `validate:data:hook` with a staged-path file under `.cache/openlinks-precommit/`.
+- [x] Add validator coverage plus hook smoke verification so unrelated stale rich artifacts no longer force `git commit --no-verify`.
+- [x] Verify with `bun run typecheck`, `bun run biome:check`, targeted validator tests, `bun run hooks:precommit`, `bun run validate:data`, and `bun run ci:required:hook:build`.
+
+### Completion Review
+
+- Result: `validate:data` now supports a hook-aware mode that reads `.cache/openlinks-precommit/staged-files.txt` and skips generated rich-artifact checks unless staged paths touch rich metadata/image inputs. Husky and `ci:required:hook:build` now route through `validate:data:hook`, while normal `validate:data`, `build`, and CI keep full repo-wide strictness.
+- Verification: `bun test scripts/validate-data.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and a full `bun run hooks:precommit` pass all succeeded. Smoke verification also temporarily removed `data/generated/rich-metadata.json`, `data/generated/content-images.json`, and `data/generated/rich-enrichment-report.json`, then confirmed `bun run validate:data:hook` and `bun run ci:required:hook:build` passed for an unrelated staged path (`scripts/sync-profile-avatar.ts`) but failed for a rich-input staged path (`data/links.json`).
+- Residual risk: The staged-path trigger list is now the source of truth for hook-mode rich-artifact checks. Future rich-generation inputs need to be added there, or hook mode could skip checks that should remain blocking.
+
 - [x] Split `data/cache/rich-public-cache.json` into committed stable metadata plus ignored runtime revalidation state.
 - [x] Refactor enrichment/public-sync cache writes so header-only refreshes update only the runtime overlay and stable metadata changes remain the only tracked writes.
 - [x] Update schemas, docs, cache audit/tests, and verification so the public cache split is enforced and documented.
