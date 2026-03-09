@@ -12,6 +12,7 @@ See: .planning/PROJECT.md (updated 2026-03-09)
 Phase: 08.1-custom-profile-descriptions
 Plan: 0 of 3 (phase planned)
 Status: Ready to execute Phase 08.1
+Queued Follow-up Phase: 10-configurable-rich-card-description-image-row
 Last activity: 2026-03-09 - Inserted Phase 08.1 and drafted execution plans for custom profile description separation across metadata, cards, Studio, and extractor guidance.
 
 Progress: [#####-----] 55%
@@ -58,6 +59,8 @@ Progress: [#####-----] 55%
 ### Roadmap Evolution
 
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
+
+- 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 
 ### Pending Todos
 

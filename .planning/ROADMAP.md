@@ -4,9 +4,9 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Phase 8 complete; inserted Phase 08.1 planned ahead of Phase 9 (updated 2026-03-09)
+**Status:** Phase 8 complete; inserted Phase 08.1 planned ahead of Phase 9; Phase 10 queued (updated 2026-03-09)
 **Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.
-**Phases:** 7-9 plus inserted Phase 08.1
+**Phases:** 7-10 plus inserted Phase 08.1
 **Requirements mapped:** 13/13 (6 complete)
 
 ### Phase 7: Social Profile Metadata Pipeline
@@ -83,10 +83,23 @@
 - 09-01: Update data-model and extractor docs with profile metadata/count coverage.
 - 09-02: Add rendering regression coverage and milestone-level verification notes for the new card states.
 
+### Phase 10: Configurable Rich Card Description Image Row
+
+**Directory:** `10-configurable-rich-card-description-image-row`
+**Goal:** Keep profile-centric rich-card headers intact while optionally rendering a separate full-width description image row when preview media is distinct from the profile image.
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run `$gsd-plan-phase 10` to break down)
+
+**Details:**
+Add a follow-up rich-card layout pass for Substack-style links and similar cases where profile imagery and description/preview imagery serve different purposes. Keep the first row focused on profile identity, keep the description/source row intact, and add an optional third row for a full-width description image when it improves the card. Make the extra row configurable both globally and per-site so maintainers can opt in or out without losing the existing profile treatment.
+
 ## Milestones
 
 - ✅ **v1.0** — Shipped 2026-02-23. 6 phases, 16 plans. [Archive](./milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1** — Defined 2026-03-07. 4 phases planned (including inserted Phase 08.1), 2 complete.
+- 🚧 **v1.1** — Defined 2026-03-07. 5 phases planned (including inserted Phase 08.1), 2 complete.
 
 ## Historical References
 
