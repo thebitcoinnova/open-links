@@ -2,6 +2,16 @@
 
 ## Current
 
+- [x] Add hook-only `ci:required:hook:build` and `ci:required:hook:quality` scripts so pre-commit required parity can verify the repo without regenerating tracked outputs.
+- [x] Switch `scripts/hooks/pre-commit.sh` heavy parity lanes from mutating `ci:required:build` / `ci:required:quality` to the new hook-only non-mutating commands while keeping the existing drift guard.
+- [x] Update `docs/quickstart.md` and verify staged hook behavior so commit-time parity no longer creates incidental tracked cache churn.
+
+### Completion Review
+
+- Result: pre-commit required parity now stays in place but runs through hook-only non-mutating build/quality commands. The hook still performs the same heavy gate on CI-relevant staged paths, but it now validates against committed/generated artifacts instead of regenerating tracked cache files during commit.
+- Verification: `bun run ci:required:hook:build`, `bun run ci:required:hook:quality`, `bun run hooks:precommit`, `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, `bun run build`, and `bun run studio:test:integration` passed. Additional hook scenarios confirmed heavy parity is skipped for non-CI-relevant staged files and that the hook still refuses parity when unrelated unstaged CI-relevant tracked files are present.
+- Residual risk: the hook’s post-parity tracked-drift guard remains important because future script changes could reintroduce tracked mutations; this change removes the known `build`/quality churn path but does not weaken that protection.
+
 - [x] Stabilize public rich-cache entry timestamps so 304/header-only refreshes preserve `capturedAt` and `updatedAt` unless the cached metadata payload changes.
 - [x] Stabilize `public:rich:sync` so unchanged audience captures avoid dirty writes and retain existing cache timestamps.
 - [x] Stabilize generated image/avatar manifests so no-op runs preserve entry/root timestamps and persisted status, then verify with focused tests plus typecheck, validation, and build checks.

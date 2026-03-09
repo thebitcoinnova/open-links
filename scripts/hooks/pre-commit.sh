@@ -93,8 +93,8 @@ run_required_ci_parity() {
   local failure
 
   run_check "typecheck" bun run ci:required:typecheck || failures+=("typecheck")
-  run_check "build" bun run ci:required:build || failures+=("build")
-  run_check "quality_check" bun run ci:required:quality || failures+=("quality:check")
+  run_check "build" bun run ci:required:hook:build || failures+=("build")
+  run_check "quality_check" bun run ci:required:hook:quality || failures+=("quality:check")
   run_check "studio_integration" bun run ci:required:studio-integration || failures+=("studio:test:integration")
 
   if matches_paths "$STUDIO_DOCKER_REGEX"; then
@@ -186,10 +186,10 @@ if matches_paths "$CI_REQUIRED_REGEX"; then
   new_unstaged_tracked="$(collect_new_paths "$pre_parity_unstaged_tracked" "$post_parity_unstaged_tracked")"
 
   if [ -n "$new_unstaged_tracked" ]; then
-    echo "pre-commit: required CI parity changed tracked files that are not staged."
+    echo "pre-commit: non-mutating required CI parity unexpectedly changed tracked files that are not staged."
     echo "Files:"
     print_path_list "$new_unstaged_tracked"
-    echo "Action: review those diffs, stage intended updates explicitly, and rerun the commit."
+    echo "Action: investigate the command that mutated tracked files; pre-commit parity should be read-only for tracked outputs now."
     parity_failed=1
   fi
 

@@ -71,7 +71,13 @@ Hook behavior:
 - Runs `bun run typecheck` only when staged paths touch TS/config inputs.
 - Runs `bun run quality:embedded-code` only when staged paths touch `scripts/`.
 - Runs `bun run studio:check` only when staged paths touch `packages/` or `docs/studio-self-serve.md`.
-- Does **not** run `build`, `ci:required`, `enrich:rich*`, or `images:sync`.
+- Runs a non-mutating required parity lane on CI-relevant staged paths:
+  - `bun run ci:required:typecheck`
+  - `bun run ci:required:hook:build`
+  - `bun run ci:required:hook:quality`
+  - `bun run ci:required:studio-integration`
+- Does **not** run tracked-output generators like `avatar:sync`, `enrich:rich*`, or `images:sync` during commit-time parity.
+- Writes hook-only quality artifacts under `.cache/openlinks-precommit/` (gitignored).
 
 Temporary bypass options:
 
