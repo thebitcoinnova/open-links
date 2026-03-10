@@ -6,6 +6,13 @@ Use this catalog when `customization_path=customization-audit` in `docs/openclaw
 
 For behavior-level examples and fallback rules, use `docs/data-model.md`. For manual QA and automated regression references around the current social-card, analytics, and share surfaces, use `docs/social-card-verification.md`.
 
+Recommended workflow posture:
+
+- Prefer the repo's AI workflows/skills and automation docs for routine CRUD.
+- Prefer the Studio webapp when the self-serve editor covers your workflow.
+- Use this catalog as the knob inventory/reference layer.
+- Drop to manual JSON edits only when you need the lower-level fallback path.
+
 ## Audit Category IDs (for `focus_areas`)
 
 Use these IDs when `audit_scope=focused`:

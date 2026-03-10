@@ -4,6 +4,8 @@ This guide is for developers who want an AI agent to help customize their OpenLi
 
 Use it as a step-by-step checklist. Every step includes an opt-out path so you can stop automation and edit manually.
 
+This is the recommended repo-native CRUD path when you want an AI agent to update your OpenLinks data. If you want browser-based CRUD instead, prefer `docs/studio-self-serve.md`. Direct file editing remains the lower-level fallback, not the default workflow.
+
 For OpenClaw automation-first execution, use:
 
 - `docs/openclaw-bootstrap.md` for first-time setup,
@@ -16,6 +18,8 @@ Use this wizard when you want to:
 - bootstrap a personalized site quickly,
 - make repeatable content updates,
 - keep changes reviewable through normal git commits.
+
+If you already know you want deterministic day-2 maintenance in an existing repo, prefer `docs/openclaw-update-crud.md`. If you want browser-based CRUD instead of repo-local editing, prefer `docs/studio-self-serve.md`.
 
 Do not use this as a replacement for understanding your repository. Keep final review human-owned.
 

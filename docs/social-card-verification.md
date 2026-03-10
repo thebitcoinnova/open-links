@@ -10,6 +10,8 @@ Use this guide after changing any of the profile-oriented card surfaces:
 
 For the canonical field contract, use `docs/data-model.md`. For data-driven knob inventory, use `docs/customization-catalog.md`.
 
+If this guide surfaces a docs or behavior issue, prefer fixing it through the repo AI workflows/skills or the Studio webapp when that path fits the change. Manual JSON editing is still the lower-level fallback, but it should not be the implied default maintainer workflow.
+
 ## Quick Checklist
 
 - [ ] Desktop: supported social profile cards still render avatar-first identity rows, handles, and audience metrics where available.

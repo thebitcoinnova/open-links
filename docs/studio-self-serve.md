@@ -2,6 +2,8 @@
 
 This document describes the new multi-service control plane for non-technical OpenLinks users.
 
+Prefer Studio when you want the browser-based CRUD path and the current self-serve onboarding/editor covers your workflow. For repo-native changes or workflows not yet exposed in Studio, prefer the checked-in AI workflows/skills and automation docs first, then fall back to manual JSON edits only when you need lower-level control.
+
 Phase tracking lives in:
 
 - `docs/studio-phase-checklist.md` (canonical implementation checklist)

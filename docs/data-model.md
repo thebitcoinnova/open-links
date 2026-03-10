@@ -10,6 +10,22 @@ The app renders from these files after validation. This document explains what e
 
 For a complete day-2 audit checklist of every data-driven customization area, use `docs/customization-catalog.md`.
 
+## Recommended CRUD Path
+
+Treat this document as the canonical contract/reference layer, not the default first editing surface.
+
+Recommended order:
+
+1. Prefer the repo's AI workflows/skills and automation docs for routine CRUD.
+2. Prefer the Studio webapp when the browser-based self-serve editor covers your workflow.
+3. Edit `data/*.json` directly only when you want lower-level control or need the manual fallback path.
+
+Supporting docs:
+
+- `docs/openclaw-update-crud.md`
+- `docs/ai-guided-customization.md`
+- `docs/studio-self-serve.md`
+
 ## Guiding Principles
 
 - Keep core fields in schema-defined keys.
@@ -58,6 +74,8 @@ Schema: `schema/profile.schema.json`
 - `custom` (extension namespace)
 
 ### Starter profile preset
+
+If you are using the recommended AI or Studio paths, treat the JSON examples below as reference shapes the tools should produce, not as proof that hand-editing is the preferred workflow.
 
 ```json
 {
@@ -189,6 +207,8 @@ For supported profile links, start with the link shell and let build-time enrich
 ```
 
 When enrichment succeeds, runtime can reuse the normalized metadata for avatar-first profile rendering, handle display, audience metrics, follower-history snapshots, and card analytics availability without requiring manual metadata in `data/links.json`.
+
+If you are using AI workflows or Studio for CRUD, this is the reference shape to target. Directly editing `data/links.json` is the manual fallback path.
 
 ### Grouping and ordering behavior
 
@@ -929,6 +949,8 @@ You can use these ready presets directly:
 - `data/examples/invalid/` for testing validation and CI checks.
 
 ## Recommended Edit Loop
+
+For most maintainers, prefer the AI-assisted or Studio paths above and use the loop below only when you intentionally choose the manual fallback path.
 
 1. Update JSON in `data/`.
 2. Run `bun run validate:data`.

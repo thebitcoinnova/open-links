@@ -11,7 +11,11 @@
 
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
 
-This project is developer-first: fork the repo, edit JSON, push, and publish.
+This project is developer-first, but that does not mean raw JSON should be your default CRUD surface. For most maintainers, the recommended path is:
+
+1. Use the repo's AI workflows/skills and checked-in automation docs for repo-native CRUD.
+2. Use the Studio webapp when the browser-based self-serve editor fits your workflow.
+3. Drop to direct JSON edits only when you need lower-level control or a manual fallback.
 <!-- OPENLINKS_SCREENSHOT_START -->
 ![OpenLinks preview](docs/assets/openlinks-preview.png)
 <!-- OPENLINKS_SCREENSHOT_END -->
@@ -56,6 +60,12 @@ This project is developer-first: fork the repo, edit JSON, push, and publish.
 ## Quickstart
 
 For full walkthrough and troubleshooting, see [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md).
+
+### Recommended CRUD Paths
+
+- Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), or [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md).
+- Preferred for browser-based CRUD: use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when the self-serve onboarding/editor already covers your workflow.
+- Manual fallback: edit `data/*.json` directly only when you intentionally want the lower-level path or need to work outside the currently supported AI/Studio flows.
 
 ### 1) OpenClaw Bootstrap (Recommended)
 
@@ -113,7 +123,14 @@ bun run followers:history:sync
 
 ### 5) Update your data
 
-Edit these files:
+Preferred path:
+
+- use the repo AI workflows/skills and the docs above for routine CRUD
+- use OpenLinks Studio when you want the browser-based self-serve path
+
+Manual fallback:
+
+- edit these files directly when you need the lower-level path
 
 - `data/profile.json` - identity and profile details.
 - `data/links.json` - simple/rich/payment links, groups, ordering.
@@ -159,10 +176,10 @@ If you want an AI agent workflow with explicit checkpoints and manual opt-outs, 
 Recommended flow:
 
 1. Start with [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md).
-2. Use [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md) while shaping content.
-3. Use [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md) for complete day-2 data-driven audits.
-4. Use [Social Card Verification Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/social-card-verification.md) after changing profile-card metadata, follower history, analytics, or share behavior.
-5. Run the AI wizard to automate repeatable CRUD updates.
+2. Prefer [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md) or [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md) for routine repo-native CRUD.
+3. Use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when you want the browser-based self-serve path.
+4. Use [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md) and [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md) as the contract/reference layer.
+5. Use [Social Card Verification Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/social-card-verification.md) after changing profile-card metadata, follower history, analytics, or share behavior.
 
 ## First GitHub Pages Deploy (Quick Path)
 
