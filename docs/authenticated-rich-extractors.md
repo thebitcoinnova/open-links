@@ -48,6 +48,13 @@ Current public-augmentation examples that are no longer configured as authentica
 
 See `docs/rich-extractor-public-first-audit.md` for the branch audit that locked this split.
 
+Current support split at a glance:
+
+- `authenticated_required`: LinkedIn, Facebook
+- `public_augmented` / public-first: GitHub, Instagram, Medium, Primal, Substack, X, YouTube
+
+Follower-history snapshots do not read a separate extractor-specific store. They consume the same normalized metadata that runtime uses for profile cards, so either public augmentation or authenticated cache can supply the audience fields that later flow into `public/history/followers/index.json` and the per-platform CSVs.
+
 ### Site-level
 
 Under `site.ui.richCards.enrichment`:
@@ -109,6 +116,11 @@ Behavior notes:
 - `--only-missing --force` refreshes selected links even when cache is valid.
 
 For Medium, X, Instagram, and YouTube, use `bun run enrich:rich:strict` instead. Those platforms now write material metadata through the committed public cache and keep volatile revalidation state in the local public-cache runtime overlay rather than the authenticated cache.
+
+If you are validating the end-user social-card surface rather than extractor internals, pair this guide with:
+
+- `docs/data-model.md` for the canonical metadata/runtime contract
+- `docs/social-card-verification.md` for the current manual QA checklist and automated coverage map
 
 ## Generic Auth Flow Assist
 

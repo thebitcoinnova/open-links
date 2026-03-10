@@ -4,10 +4,10 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Phase 08.1 complete; Phase 9 still pending docs/regression hardening; Phase 10, Phase 11, and Phase 12 completed ahead of the original dependency order (updated 2026-03-10)
+**Status:** All v1.1 phases complete; milestone ready for audit (updated 2026-03-10)
 **Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.
 **Phases:** 7-12 plus inserted Phase 08.1
-**Requirements mapped:** 13/13 original v1.1 requirements mapped (10 complete); Phase 11 follow-up scope is now delivered outside the original requirement catalog
+**Requirements mapped:** 13/13 original v1.1 requirements mapped (13 complete); Phase 11 and Phase 12 follow-up scope were delivered outside the original requirement catalog
 
 ### Phase 7: Social Profile Metadata Pipeline
 
@@ -69,9 +69,10 @@
 ### Phase 9: Docs + Regression Hardening for Social Cards
 
 **Directory:** `09-docs-regression-hardening-social-cards`
+**Status:** Complete 2026-03-10
 **Goal:** Document the expanded metadata model and lock down rendering and fallback behavior with targeted tests and verification guidance.
 **Depends on:** Phase 08.1
-**Planned plans:** 2
+**Plans:** 2/2 complete
 **Requirements:** DOC-05, DOC-06, QUAL-06
 
 **Success criteria:**
@@ -79,9 +80,12 @@
 2. Examples and customization docs show both profile-style and fallback card usage.
 3. Automated and documented manual verification cover follower-count rendering and no-metadata fallback cases.
 
-**Planned plan areas:**
-- 09-01: Update data-model and extractor docs with profile metadata/count coverage.
-- 09-02: Add rendering regression coverage and milestone-level verification notes for the new card states.
+**Completed plan areas:**
+- [x] 09-01: Update data-model and extractor docs with profile metadata/count coverage.
+- [x] 09-02: Add rendering regression coverage and milestone-level verification notes for the new card states.
+
+**Details:**
+Phase 9 closed the original v1.1 milestone by turning `docs/data-model.md` into the canonical social-card contract, refreshing the customization/extractor docs to match the current public-vs-authenticated support split, adding a dedicated `docs/social-card-verification.md` guide, and broadening generic-state regression coverage across profile cards, fallback cards, share actions, and follower-history artifacts.
 
 ### Phase 10: Configurable Rich Card Description Image Row
 

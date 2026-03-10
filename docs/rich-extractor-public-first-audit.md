@@ -17,8 +17,33 @@ Current public-profile reference examples outside the authenticated framework:
 
 - GitHub: public HTML augmentation for avatar + follower/following counts
 - Primal: generic public enrichment with profile-image normalization
+- Substack: canonical public profile fetch with original custom-domain source-label preservation
 
 Current authenticated reference examples:
 
 - LinkedIn: interactive auth/session workflow
 - Facebook: interactive auth/session workflow
+
+## Downstream Social-Card Consumers
+
+This public-first/authenticated-required split now feeds multiple runtime and artifact surfaces:
+
+- avatar-first social profile cards
+- `profileDescription` precedence for supported profile links
+- card/header audience metrics
+- append-only follower-history artifacts under `public/history/followers/`
+- analytics and share verification flows documented in `docs/social-card-verification.md`
+
+## Current Audience-History Participants
+
+As of `2026-03-10`, the public follower-history index currently exposes:
+
+- GitHub
+- Instagram
+- Medium
+- Primal
+- Substack
+- X
+- YouTube
+
+Those entries are published through `public/history/followers/index.json` and per-platform CSVs. The history pipeline is intentionally append-only and keeps audit columns for `linkId`, `platform`, `handle`, and `canonicalUrl` so maintainers can trace how a row was produced later.

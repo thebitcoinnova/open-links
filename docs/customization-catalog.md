@@ -4,6 +4,8 @@ This document is the canonical inventory of all data-driven customization knobs 
 
 Use this catalog when `customization_path=customization-audit` in `docs/openclaw-update-crud.md`.
 
+For behavior-level examples and fallback rules, use `docs/data-model.md`. For manual QA and automated regression references around the current social-card, analytics, and share surfaces, use `docs/social-card-verification.md`.
+
 ## Audit Category IDs (for `focus_areas`)
 
 Use these IDs when `audit_scope=focused`:
@@ -68,10 +70,19 @@ Coverage:
 
 - `title`
 - `description`
+- `profileDescription`
 - `descriptionSource`
 - `image`
+- `profileImage`
 - `imageFit`
 - `mobileImageLayout` (legacy no-op for unified non-payment card layout)
+- `handle`
+- `followersCount`
+- `followersCountRaw`
+- `followingCount`
+- `followingCountRaw`
+- `subscribersCount`
+- `subscribersCountRaw`
 - `sourceLabel`
 - `sourceLabelVisible`
 - `enrichmentStatus`
@@ -80,6 +91,13 @@ Coverage:
 - `custom`
 
 Notes:
+`profileDescription` is only used for supported social profile links and takes precedence over the generic fetched/manual description-source policy when present.
+
+Audience-count fields (`followersCount*`, `followingCount*`, `subscribersCount*`) power two downstream surfaces:
+
+- profile-card header metrics
+- follower-history snapshots under `public/history/followers/`
+
 `sourceLabel` still defines the displayed source/domain string, but known-platform custom domains are clarified automatically in card footers as `Platform · domain`.
 
 ## 5) `links[].enrichment` (`links-enrichment`)
@@ -190,6 +208,7 @@ Coverage:
 - `enrichment.retries`
 - `enrichment.metadataPath`
 - `enrichment.reportPath`
+- `enrichment.publicCachePath`
 - `enrichment.authenticatedCachePath`
 - `enrichment.authenticatedCacheWarnAgeDays`
 - `enrichment.failureMode`
@@ -199,11 +218,19 @@ Coverage:
 Related policy source:
 
 - `data/policy/rich-enrichment-blockers.json`
+- `data/cache/rich-public-cache.json`
 - `data/policy/rich-authenticated-extractors.json`
 - `data/cache/rich-authenticated-cache.json`
 
+Related public artifact surface:
+
+- `public/history/followers/index.json`
+- `public/history/followers/*.csv`
+
 Operational commands tied to this category:
 
+- `bun run public:rich:sync -- --only-link <link-id>` (refresh public audience/profile cache entries where supported)
+- `bun run followers:history:sync` (append public follower/subscriber snapshots into the public history artifacts)
 - `bun run setup:rich-auth` (first-run capture for missing/invalid authenticated cache entries)
 - `bun run auth:rich:sync -- --only-link <link-id>` (single-link capture)
 - `bun run auth:rich:sync -- --only-link <link-id> --force` (force refresh even when cache is valid)
@@ -212,12 +239,24 @@ Operational commands tied to this category:
 
 High-signal examples:
 
+- Minimal supported profile link that lets enrichment populate avatar/metrics:
+  - `{"id":"github","label":"GitHub","url":"https://github.com/pRizz","type":"rich","icon":"github","description":"Code, experiments, and open-source projects","enrichment":{"enabled":true}}`
+- Manual profile-description override for a supported profile card:
+  - `{"metadata":{"handle":"pryszkie","profileDescription":"We the people demand justice for the victims.","sourceLabel":"x.com"}}`
+- Explicit handle for a custom-domain Substack profile:
+  - `{"metadata":{"handle":"peterryszkiewicz"}}`
 - Disable the extra rich-card description-image row globally:
   - `"descriptionImageRow": { "default": "off" }`
 - Disable it for one site while leaving the global default on:
   - `"descriptionImageRow": { "default": "auto", "sites": { "substack": "off" } }`
 - Target one exact custom-domain host:
   - `"descriptionImageRow": { "default": "auto", "sites": { "peter.ryszkiewicz.us": "off" } }`
+
+Derived behavior without dedicated config keys:
+
+- Card analytics actions appear only when the follower-history index has a matching entry for that link.
+- Card share actions are available on non-payment cards even when analytics/history is unavailable.
+- Profile-header share uses a clean-URL payload so copy fallback remains browser-paste-safe.
 
 ## 11) `site.quality` (`site-quality`)
 

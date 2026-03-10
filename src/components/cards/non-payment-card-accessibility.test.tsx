@@ -181,6 +181,21 @@ const plainSimpleLink = {
   },
 } as const satisfies OpenLink;
 
+const articleRichLink = {
+  id: "article",
+  label: "Engineering Notes",
+  url: "https://notes.openlinks.dev/launch-notes",
+  type: "rich",
+  icon: "notion",
+  description: "Shipping notes and technical writeups",
+  metadata: {
+    title: "Engineering Notes",
+    description: "Shipping notes and technical writeups",
+    image: "/generated/images/article-preview.jpg",
+    sourceLabel: "notes.openlinks.dev",
+  },
+} as const satisfies OpenLink;
+
 const brandIconOptions = resolveBrandIconOptions(site as SiteData);
 
 test("simple non-payment cards render action-oriented accessible props from the shared shell", () => {
@@ -219,6 +234,25 @@ test("rich non-payment cards render action-oriented accessible props from the sh
     descriptionId: "rich-link-description-github",
     metaId: "rich-link-meta-github",
     sourceId: "rich-link-source-github",
+  });
+});
+
+test("non-profile rich fallback cards keep action-oriented accessible props from the shared shell", () => {
+  // Act
+  const tree = RichLinkCard({
+    link: articleRichLink,
+    viewModel: buildRichCardViewModel(site, articleRichLink),
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Assert
+  assertSharedCardTree(tree, {
+    ariaLabel: "Open Engineering Notes in a new tab",
+    describedBy: "rich-link-description-article rich-link-meta-article rich-link-source-article",
+    descriptionId: "rich-link-description-article",
+    metaId: "rich-link-meta-article",
+    sourceId: "rich-link-source-article",
   });
 });
 

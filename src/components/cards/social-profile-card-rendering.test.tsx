@@ -206,6 +206,12 @@ const instagramSimpleLink = {
   type: "simple",
 } as const satisfies OpenLink;
 
+const substackSimpleLink = {
+  ...substackRichLink,
+  id: "substack-simple",
+  type: "simple",
+} as const satisfies OpenLink;
+
 const workSimpleLink = {
   id: "work",
   label: "OpenLinks",
@@ -526,6 +532,18 @@ test("simple profile cards reuse avatar leads and footer source rows in the shar
   assert.equal(viewModel.footerSourceLabel, "instagram.com");
   assert.equal(viewModel.showFooterIcon, true);
   assert.equal(viewModel.showDescriptionImageRow, false);
+});
+
+test("simple profile cards do not render description-image rows even when preview media is distinct", () => {
+  // Arrange
+  const viewModel = buildSimpleCardViewModel(site, substackSimpleLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.showDescriptionImageRow, false);
+  assert.equal(viewModel.descriptionImageUrl, undefined);
+  assert.equal(viewModel.footerSourceLabel, "Substack · peter.ryszkiewicz.us");
 });
 
 test("simple icon-led cards keep the footer text row without duplicating the lead icon", () => {

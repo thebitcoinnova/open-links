@@ -161,7 +161,8 @@ Recommended flow:
 1. Start with [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md).
 2. Use [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md) while shaping content.
 3. Use [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md) for complete day-2 data-driven audits.
-4. Run the AI wizard to automate repeatable CRUD updates.
+4. Use [Social Card Verification Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/social-card-verification.md) after changing profile-card metadata, follower history, analytics, or share behavior.
+5. Run the AI wizard to automate repeatable CRUD updates.
 
 ## First GitHub Pages Deploy (Quick Path)
 

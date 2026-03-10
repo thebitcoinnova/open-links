@@ -120,6 +120,10 @@ test("follower history filtering and point-building preserve sorted time series"
     filterFollowerHistoryRows(rows, "30d", new Date("2026-03-10T08:00:00.000Z")).length,
     2,
   );
+  assert.equal(
+    filterFollowerHistoryRows(rows, "all", new Date("2026-03-10T08:00:00.000Z")).length,
+    3,
+  );
 
   assert.deepEqual(
     buildFollowerHistoryPoints(rows, "growth").map((point) => point.value),

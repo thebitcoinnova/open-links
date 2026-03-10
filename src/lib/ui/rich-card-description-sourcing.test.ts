@@ -191,6 +191,37 @@ test("supported profile links prefer profile descriptions over generic descripti
   );
 });
 
+test("supported profile links without profileDescription still obey description-source fallback rules", () => {
+  // Arrange
+  const mediumProfileLink = {
+    id: "medium",
+    label: "Medium",
+    url: "https://medium.com/@peterryszkiewicz",
+    type: "rich",
+    icon: "medium",
+    description: "Manual medium copy",
+    metadata: {
+      description: "Fetched medium copy",
+      descriptionSource: "manual",
+    },
+  } as const satisfies OpenLink;
+  const fetchedOverrideLink = {
+    ...mediumProfileLink,
+    metadata: {
+      ...mediumProfileLink.metadata,
+      descriptionSource: "fetched",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const manualDescription = resolveLinkCardDescription(site, mediumProfileLink);
+  const fetchedDescription = resolveLinkCardDescription(site, fetchedOverrideLink);
+
+  // Assert
+  assert.equal(manualDescription, "Manual medium copy");
+  assert.equal(fetchedDescription, "Fetched medium copy");
+});
+
 test("non-profile links ignore profileDescription and keep existing description rules", () => {
   // Arrange
   const nonProfileLink = {

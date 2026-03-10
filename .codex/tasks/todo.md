@@ -2,6 +2,26 @@
 
 ## Current
 
+- [x] Refresh the canonical docs for social-card metadata, follower-history artifacts, and the current public-vs-authenticated extractor split.
+- [x] Expand generic-state regression coverage across profile cards, fallback cards, clean share behavior, and append-only follower-history artifacts.
+- [x] Add a dedicated maintainer verification guide and update milestone planning state to mark Phase 9 and v1.1 complete.
+
+### Completion Review
+
+- Result: Phase 9 is complete. The repo now has a canonical social-card contract in `docs/data-model.md`, an expanded `docs/customization-catalog.md`, aligned extractor-audit docs, and a new `docs/social-card-verification.md` guide. The automated regression net now covers additional generic states across simple/rich profile cards, fallback cards, profile share behavior, URL-safe share fallback, and follower-history CSV/header preservation.
+- Verification: `bun test src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/rich-card-description-sourcing.test.ts src/components/cards/non-payment-card-accessibility.test.tsx src/components/profile/ProfileHeader.test.tsx src/lib/share/share-link.test.ts src/lib/analytics/follower-history.test.ts scripts/follower-history/append-history.test.ts`, `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and `bun run build` all passed.
+- Residual risk: Phase 9 intentionally treats docs drift as part of the regression surface, so future social-card changes need to keep `docs/social-card-verification.md` and the deep-dive docs updated alongside code/test changes. The repo-level performance-budget issue on `/` also still exists independently of this docs/regression phase.
+
+- [x] Review the Phase 9 context, research, requirements, and recent GSD plan-file patterns before drafting execution plans.
+- [x] Split Phase 9 into a docs deep-dive wave and a regression-plus-verification wave with concrete artifacts and verification steps.
+- [x] Update planning state so the roadmap and state files reflect that Phase 9 is now planned and ready for execution.
+
+### Completion Review
+
+- Result: Phase 9 now has a complete two-plan execution set under `.planning/phases/09-docs-regression-hardening-social-cards/`. Wave 1 updates the canonical docs surfaces for profile metadata, public follower-history artifacts, extractor coverage, and social-card customization. Wave 2 expands generic-state regression coverage and adds a dedicated maintainer verification guide that blends checklist-style QA, narrative walkthroughs, automated coverage references, and public artifact checks.
+- Verification: Reviewed `09-CONTEXT.md`, `09-RESEARCH.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`, the existing docs/test seams, and recent plan-file examples before drafting. After writing the plan files, reviewed the planning-state diff to confirm Phase 9 now reads as planned and ready to execute.
+- Residual risk: The plan intentionally assumes a new dedicated verification doc (`docs/social-card-verification.md`) is the cleanest way to keep manual QA discoverable without bloating `docs/data-model.md`. If execution reveals that doc should instead live as a section inside an existing doc, that can still be adjusted within Plan 09-02 without changing the overall wave split.
+
 - [x] Inspect the current profile share implementation, card action seam, and Phase 12 planning artifacts before coding.
 - [x] Extract a shared native-share plus clipboard-fallback utility and migrate the profile header to it.
 - [x] Add the card-level share button to the right of analytics on history-aware cards and preserve sibling action semantics.

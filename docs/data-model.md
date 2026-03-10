@@ -169,6 +169,27 @@ Known-site logo rendering is contrast-aware by default: brand color is preferred
 }
 ```
 
+### Minimal social profile starter
+
+For supported profile links, start with the link shell and let build-time enrichment plus the committed public/authenticated caches fill in the richer metadata:
+
+```json
+{
+  "id": "github",
+  "label": "GitHub",
+  "url": "https://github.com/pRizz",
+  "type": "rich",
+  "icon": "github",
+  "description": "Code, experiments, and open-source projects",
+  "enabled": true,
+  "enrichment": {
+    "enabled": true
+  }
+}
+```
+
+When enrichment succeeds, runtime can reuse the normalized metadata for avatar-first profile rendering, handle display, audience metrics, follower-history snapshots, and card analytics availability without requiring manual metadata in `data/links.json`.
+
 ### Grouping and ordering behavior
 
 OpenLinks supports grouped or flat list presentation.
@@ -298,6 +319,7 @@ Supported keys include:
 
 - `title`
 - `description`
+- `profileDescription`: profile-authored bio/summary for supported social profile links; when present, this wins over generic description-source rules
 - `descriptionSource`: `fetched` (prefer fetched metadata description), `manual` (prefer top-level `links[].description`)
 - `image`: canonical render image used by cards today
 - `ogImage`: raw Open Graph image candidate when present
@@ -328,6 +350,33 @@ Image-role rules:
 - Platform-specific augmentation may keep low-value placeholders in `ogImage`/`twitterImage` for completeness while choosing a different `image` for rendering.
 - `profileImage` is independent from all preview/social image roles and may equal `image`.
 
+Minimal manual override example:
+
+```json
+{
+  "id": "x",
+  "label": "X",
+  "url": "https://x.com/pryszkie",
+  "type": "rich",
+  "icon": "x",
+  "description": "Short updates and project notes",
+  "metadata": {
+    "handle": "pryszkie",
+    "profileDescription": "We the people demand justice for the victims.",
+    "sourceLabel": "x.com"
+  },
+  "enrichment": {
+    "enabled": true
+  }
+}
+```
+
+Runtime notes:
+
+- `profileDescription` only changes card copy for supported social profile links. Non-profile links continue to use `descriptionSource` plus the existing fetched/manual fallback order.
+- `followersCount*`, `followingCount*`, and `subscribersCount*` drive the profile-header metric chips on supported social cards.
+- Those audience fields also feed the follower-history pipeline when a nightly or local `bun run followers:history:sync` snapshot is taken.
+
 #### URL-first handle extraction (v1)
 
 - Runtime and enrichment use URL-only handle extraction (no HTML/meta-tag scraping).
@@ -342,9 +391,15 @@ Current profile-card-capable rich-link families include:
 
 - GitHub: avatar + follower/following counts when public profile HTML exposes them
 - Instagram: avatar + follower/following counts
-- LinkedIn: authenticated-cache-backed avatar-first profile cards
+- LinkedIn: authenticated-cache-backed avatar-first profile cards, including `profileDescription` when the cached metadata provides it
+- Medium: avatar-first profile cards with public follower-count augmentation
+- Primal: avatar-first profile cards with public follower/following metrics when available
+- Substack: avatar-first profile cards with subscriber counts and custom-domain support via explicit/manual handle fallback
+- X: avatar-first profile cards with best-effort public follower/following metrics and optional `profileDescription`
 - YouTube: avatar + subscriber counts
-- Primal, X, and Facebook: avatar-first profile cards without count guarantees in the current pass
+- Facebook: authenticated-cache-backed avatar-first profile cards without audience-count guarantees in the current pass
+
+Profile styling is still data-driven rather than a separate link type. A supported social profile URL plus the normalized metadata above is what flips a card onto the avatar-first profile path.
 
 #### Enrichment policy (`links[].enrichment`)
 
@@ -409,6 +464,77 @@ When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses 
 
 `bun run dev` and `bun run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations.  
 Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
+
+#### Public follower-history artifacts
+
+OpenLinks can publish append-only follower/subscriber snapshots for the profile-oriented platforms that currently expose audience counts.
+
+Canonical public outputs:
+
+- `public/history/followers/index.json`
+- `public/history/followers/<platform>.csv`
+
+Update command:
+
+```bash
+bun run followers:history:sync
+```
+
+History rules:
+
+- one row is appended per nightly/local snapshot run even if the count is unchanged
+- observed drops are preserved exactly as captured
+- rows stay append-only unless a maintainer manually edits the CSV later
+- each row keeps audit columns: `observedAt`, `linkId`, `platform`, `handle`, `canonicalUrl`, `audienceKind`, `audienceCount`, `audienceCountRaw`, `source`
+
+Current `index.json` shape:
+
+```json
+{
+  "version": 1,
+  "updatedAt": "2026-03-10T02:29:19.676Z",
+  "entries": [
+    {
+      "linkId": "github",
+      "label": "GitHub",
+      "platform": "github",
+      "handle": "prizz",
+      "canonicalUrl": "https://github.com/pRizz",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/github.csv",
+      "latestAudienceCount": 90,
+      "latestAudienceCountRaw": "90 followers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    }
+  ]
+}
+```
+
+Representative CSV:
+
+```csv
+observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audienceCountRaw,source
+2026-03-10T02:29:19.676Z,github,github,prizz,https://github.com/pRizz,followers,90,90 followers,public-cache
+```
+
+The follower-history sync reads the normalized audience metadata that runtime also uses for profile-card header metrics. That means both public-augmented and authenticated-cache-backed profiles can contribute history when they expose a primary audience field.
+
+#### Analytics and share surfaces
+
+The social-card system now exposes a few behavior-only surfaces that are driven by the data above rather than separate config keys:
+
+- Profile header:
+  - analytics button appears when follower-history index data is available
+  - share button is always present and uses a clean-URL native-share/copy payload
+- Card header row:
+  - analytics button appears only for cards that have public follower-history data
+  - share button appears on non-payment cards, including cards without history
+- Analytics UI:
+  - default range is `30D`
+  - available presets are `30D`, `90D`, `180D`, and `All`
+  - charts stay mostly separate by platform unless a future charting change can preserve legible multi-axis comparison
+
+Use `docs/social-card-verification.md` for the current manual QA checklist and automated coverage map for these surfaces.
 
 First-run authenticated setup command:
 
@@ -816,5 +942,6 @@ You can use these ready presets directly:
 - Fast setup and deployment path: `docs/quickstart.md`
 - AI-assisted change flow: `docs/ai-guided-customization.md`
 - Exhaustive customization checklist: `docs/customization-catalog.md`
+- Social-card verification guide: `docs/social-card-verification.md`
 - Authenticated extractor architecture/workflow: `docs/authenticated-rich-extractors.md`
 - New extractor implementation workflow: `docs/create-new-rich-content-extractor.md`

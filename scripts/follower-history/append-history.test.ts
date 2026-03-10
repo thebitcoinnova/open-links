@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import test from "node:test";
+import { FOLLOWER_HISTORY_COLUMNS } from "../../src/lib/analytics/follower-history";
 import {
   appendFollowerHistoryRows,
   buildFollowerHistoryCsvRepoPath,
@@ -62,8 +63,13 @@ test("appendFollowerHistoryRows creates and appends rows without rewriting colum
 
   assert.equal(first.changed, true);
   assert.equal(second.changed, true);
+  assert.equal(csvPath, "tmp/tests/follower-history/tmp-platform.csv");
   assert.equal(readFollowerHistoryCsvFile(csvPath).length, 2);
   assert.equal(second.rows[1]?.observedAt, "2026-03-11T07:00:00.000Z");
+  assert.equal(
+    fs.readFileSync(absoluteCsvPath, "utf8").split(/\r?\n/u)[0],
+    FOLLOWER_HISTORY_COLUMNS.join(","),
+  );
 });
 
 test("writeFollowerHistoryIndex writes sorted public entries", (t) => {

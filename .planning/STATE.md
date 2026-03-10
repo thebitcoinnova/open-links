@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface, with Phase 10, Phase 11, and Phase 12 follow-up work already implemented ahead of the original dependency order
+**Current focus:** Milestone audit and closeout after completing Phase 9 and finishing all v1.1 social-card, analytics, and share work
 
 ## Current Position
 
 Phase: 09-docs-regression-hardening-social-cards
-Plan: 0 of 0 (phase not planned)
-Status: Ready to discuss Phase 9 after completing the out-of-order Phase 12 card-sharing follow-up
+Plan: 2 of 2 complete
+Status: v1.1 milestone complete; ready for audit
 Completed Follow-up Phase: 12-add-share-button-in-each-card-next-to-analytics
-Last activity: 2026-03-10 - Closed the Phase 12 UAT gaps by making profile/card share copy URL-clean and widening card-level share visibility beyond the analytics subset.
+Last activity: 2026-03-10 - Completed Phase 9 with canonical social-card docs, a dedicated verification guide, and broader generic-state coverage for profile/fallback cards plus follower-history/share behavior.
 
-Progress: [########--] 86%
+Progress: [##########] 100%
 
 ## Performance Metrics
 
@@ -73,7 +73,7 @@ Progress: [########--] 86%
 
 ### Pending Todos
 
-- Phase 9 needs docs and regression hardening for the expanded profile metadata fields, card states, Studio guidance, maintainer customization guidance, and the new follower-history analytics surface.
+- Audit the completed v1.1 milestone before archiving it or starting a new milestone.
 - Phase 10 no longer blocks future card-template experimentation; the shared shell now supports an additional rich-only media row without forking the card system.
 - Phase 12 no longer blocks broader docs/regression coverage; card-level sharing now matches the current native/fallback share posture and action-row layout.
 
@@ -87,5 +87,5 @@ Progress: [########--] 86%
 ## Session Continuity
 
 Last session: 2026-03-10 02:30
-Stopped at: Phase 11 completed and verified out of dependency order; the next planned milestone step is to discuss or plan Phase 9.
+Stopped at: All v1.1 phases complete; the next milestone step is `$gsd-audit-milestone`.
 Resume file: .planning/ROADMAP.md

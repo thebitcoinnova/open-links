@@ -90,3 +90,18 @@ test("profile header flips the analytics button label when the analytics view is
   const buttons = collectElements(tree).filter((element) => element.type === "button");
   assert.equal(buttons[0]?.props["aria-label"], "Back to links");
 });
+
+test("profile header still renders share when analytics is unavailable", () => {
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+  }) as RenderedNode;
+
+  const buttons = collectElements(tree).filter((element) => element.type === "button");
+  assert.equal(buttons.length, 1);
+  assert.equal(buttons[0]?.props["aria-label"], "Share profile");
+});

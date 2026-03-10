@@ -76,6 +76,32 @@ test("shareLink omits title and text in url-only mode", async () => {
   restoreGlobals();
 });
 
+test("shareLink keeps clipboard fallback URL-only when requested", async () => {
+  let copiedValue = "";
+  setNavigator({
+    clipboard: {
+      writeText: async (value: string) => {
+        copiedValue = value;
+      },
+    } as Clipboard,
+  } as unknown as Navigator);
+
+  const result = await shareLink({
+    mode: "url-only",
+    text: "This should not be copied",
+    title: "GitHub",
+    url: "https://github.com/pRizz",
+  });
+
+  assert.equal(copiedValue, "https://github.com/pRizz");
+  assert.deepEqual(result, {
+    message: "Link copied",
+    status: "copied",
+  });
+
+  restoreGlobals();
+});
+
 test("shareLink returns dismissed when native share is aborted", async () => {
   setNavigator({
     canShare: () => true,

@@ -22,13 +22,13 @@
 
 ### Documentation & Extensibility
 
-- [ ] **DOC-05**: Maintainer docs explain the new profile metadata fields, supported extractor coverage, and manual override/fallback paths.
-- [ ] **DOC-06**: Docs and examples show how the refreshed card presentation uses profile metadata and how maintainers can customize or opt out of the profile-style treatment.
+- [x] **DOC-05**: Maintainer docs explain the new profile metadata fields, supported extractor coverage, and manual override/fallback paths.
+- [x] **DOC-06**: Docs and examples show how the refreshed card presentation uses profile metadata and how maintainers can customize or opt out of the profile-style treatment.
 - [x] **DOC-07**: Studio/editor workflows expose the profile-authored description field and extractor guidance explains when to capture it separately from page descriptions.
 
 ### Quality & Verification
 
-- [ ] **QUAL-06**: Maintainer can verify the refreshed cards and metadata fallbacks through targeted automated coverage and documented manual checks.
+- [x] **QUAL-06**: Maintainer can verify the refreshed cards and metadata fallbacks through targeted automated coverage and documented manual checks.
 
 ## Future Requirements
 
@@ -58,10 +58,10 @@
 | UI-08 | Phase 8 | Complete |
 | UI-09 | Phase 8 | Complete |
 | UI-10 | Phase 08.1 | Complete |
-| DOC-05 | Phase 9 | Pending |
-| DOC-06 | Phase 9 | Pending |
+| DOC-05 | Phase 9 | Complete |
+| DOC-06 | Phase 9 | Complete |
 | DOC-07 | Phase 08.1 | Complete |
-| QUAL-06 | Phase 9 | Pending |
+| QUAL-06 | Phase 9 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 13 total
@@ -70,4 +70,4 @@
 
 ---
 *Requirements defined: 2026-03-07*
-*Last updated: 2026-03-08 after completing Phase 08.1*
+*Last updated: 2026-03-10 after completing Phase 9*
