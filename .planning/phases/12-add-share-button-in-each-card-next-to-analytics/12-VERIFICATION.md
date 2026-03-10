@@ -1,14 +1,14 @@
 ---
 phase: 12-add-share-button-in-each-card-next-to-analytics
-verified: 2026-03-10T09:10:00Z
+verified: 2026-03-10T10:55:00Z
 status: passed
-score: 11/11 must-haves verified
+score: 14/14 must-haves verified
 ---
 
 # Phase 12: Add Share Button in Each Card Next to Analytics Verification Report
 
 **Phase Goal:** Add a native web-share button to each history-aware card, placed to the right of the analytics button, without regressing card semantics or the current analytics controls.  
-**Verified:** 2026-03-10T09:10:00Z  
+**Verified:** 2026-03-10T10:55:00Z  
 **Status:** passed
 
 ## Goal Achievement
@@ -35,8 +35,11 @@ score: 11/11 must-haves verified
 | 12-02 | Share sits immediately to the right of analytics in the card action row. | ✓ VERIFIED | `src/components/cards/NonPaymentLinkCardShell.tsx`, `src/styles/base.css`, and built-preview snapshot. |
 | 12-02 | The share action targets the card destination URL and falls back cleanly. | ✓ VERIFIED | `src/routes/index.tsx` resolves card-specific share payloads and `share-link` tests cover fallback behavior. |
 | 12-02 | Cards without history data do not render a broken action row. | ✓ VERIFIED | `src/components/cards/non-payment-card-accessibility.test.tsx` includes a no-action-row guard case. |
+| 12-03 | Profile share copy stays URL-clean for direct paste use. | ✓ VERIFIED | `src/lib/share/share-link.ts` now supports `mode="url-only"`, and `ProfileHeader.tsx` uses it. |
+| 12-03 | Card share copy stays URL-clean for direct paste use. | ✓ VERIFIED | Card share actions in `src/routes/index.tsx` now use the same `url-only` mode. |
+| 12-03 | Cards without history still render share while history-aware cards keep analytics then share. | ✓ VERIFIED | `src/routes/index.tsx` now resolves share for all shareable cards and analytics only for history-aware cards, with regression coverage in `src/components/cards/non-payment-card-accessibility.test.tsx`. |
 
-**Score:** 8/8 plan must-have groups verified
+**Score:** 11/11 plan must-have groups verified
 
 ### Required Artifact Checks
 
@@ -47,10 +50,11 @@ score: 11/11 must-haves verified
 | `src/components/profile/ProfileHeader.tsx` | Profile share migrated onto the shared helper | ✓ EXISTS + SUBSTANTIVE | No longer owns duplicate share plumbing. |
 | `src/components/cards/NonPaymentLinkCardShell.tsx` | Ordered analytics/share sibling action row | ✓ EXISTS + SUBSTANTIVE | Renders two-button card actions with inline feedback. |
 | `src/routes/index.tsx` | Card-level share action resolution | ✓ EXISTS + SUBSTANTIVE | Resolves ordered analytics/share actions for history-aware cards. |
+| `src/lib/share/share-link.ts` | Copy-safe share payload control | ✓ EXISTS + SUBSTANTIVE | Supports URL-only share payloads for copy-oriented use cases. |
 | `src/styles/base.css` | Two-button action-row layout | ✓ EXISTS + SUBSTANTIVE | Keeps the action pair aligned in the card header area. |
 | `src/components/cards/non-payment-card-accessibility.test.tsx` | Regression coverage for order and no-action cases | ✓ EXISTS + SUBSTANTIVE | Locks in ordered action row and preserved anchor semantics. |
 
-**Artifacts:** 7/7 verified
+**Artifacts:** 8/8 verified
 
 ## Requirements Coverage
 
@@ -84,5 +88,5 @@ None.
 **Total verification time:** 1 execution session
 
 ---
-*Verified: 2026-03-10T09:10:00Z*
+*Verified: 2026-03-10T10:55:00Z*
 *Verifier: Codex (orchestrated execution)*

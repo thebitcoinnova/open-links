@@ -13,7 +13,7 @@ Phase: 09-docs-regression-hardening-social-cards
 Plan: 0 of 0 (phase not planned)
 Status: Ready to discuss Phase 9 after completing the out-of-order Phase 12 card-sharing follow-up
 Completed Follow-up Phase: 12-add-share-button-in-each-card-next-to-analytics
-Last activity: 2026-03-10 - Completed Phase 12 by adding card-level native share actions beside analytics buttons while Phase 9 remains the next unfinished milestone step.
+Last activity: 2026-03-10 - Closed the Phase 12 UAT gaps by making profile/card share copy URL-clean and widening card-level share visibility beyond the analytics subset.
 
 Progress: [########--] 86%
 
