@@ -4,9 +4,9 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Phase 08.1 complete; Phase 9 still pending docs/regression hardening; Phase 10 and Phase 11 completed ahead of the original dependency order (updated 2026-03-10)
+**Status:** Phase 08.1 complete; Phase 9 still pending docs/regression hardening; Phase 10, Phase 11, and Phase 12 completed ahead of the original dependency order (updated 2026-03-10)
 **Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.
-**Phases:** 7-11 plus inserted Phase 08.1
+**Phases:** 7-12 plus inserted Phase 08.1
 **Requirements mapped:** 13/13 original v1.1 requirements mapped (10 complete); Phase 11 follow-up scope is now delivered outside the original requirement catalog
 
 ### Phase 7: Social Profile Metadata Pipeline
@@ -126,10 +126,31 @@ Add a follow-up rich-card layout pass for Substack-style links and similar cases
 **Details:**
 Favor one CSV per platform so new networks can be added or removed without reshaping one large shared history table. The completed implementation now publishes `public/history/followers/*.csv` plus an index manifest, updates them through a nightly GitHub Actions workflow that deploys in the same run, and lazy-loads an ECharts-based analytics surface from both the profile header and history-aware cards.
 
+### Phase 12: Add Share Button in Each Card Next to Analytics
+
+**Directory:** `12-add-share-button-in-each-card-next-to-analytics`
+**Status:** Complete 2026-03-10
+**Goal:** Add a native web-share button to each history-aware card, placed to the right of the analytics button, without regressing card semantics or the current analytics controls.
+**Depends on:** Phase 11
+**Plans:** 2/2 complete
+**Requirements:** Follow-up scope outside the original v1.1 requirement catalog
+
+**Success criteria:**
+1. Cards that currently expose analytics actions also expose a card-level share button immediately to the right of analytics.
+2. The share action invokes the native Web Share flow when available and falls back cleanly when it is not.
+3. Card-level share and analytics actions remain visually aligned in the card header area without breaking the anchor semantics or mobile layout.
+
+**Completed plan areas:**
+- [x] 12-01: Define the shared card-action contract and native-share fallback behavior for card-level sharing.
+- [x] 12-02: Render the new share button next to analytics, add focused regression/accessibility coverage, and verify desktop/mobile layout.
+
+**Details:**
+Keep the card share affordance aligned with the current profile-level share behavior, but scoped to the specific card destination rather than the whole profile. The completed implementation now uses a shared Web Share utility for both profile and card surfaces, exposes analytics then share on history-aware cards, and preserves the sibling card-action semantics established in Phase 11.
+
 ## Milestones
 
 - ✅ **v1.0** — Shipped 2026-02-23. 6 phases, 16 plans. [Archive](./milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1** — Defined 2026-03-07. 6 phases planned (including inserted Phase 08.1), 5 complete.
+- 🚧 **v1.1** — Defined 2026-03-07. 7 phases planned (including inserted Phase 08.1), 6 complete.
 
 ## Historical References
 

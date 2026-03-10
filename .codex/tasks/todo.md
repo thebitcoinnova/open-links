@@ -2,6 +2,28 @@
 
 ## Current
 
+- [x] Inspect the current profile share implementation, card action seam, and Phase 12 planning artifacts before coding.
+- [x] Extract a shared native-share plus clipboard-fallback utility and migrate the profile header to it.
+- [x] Add the card-level share button to the right of analytics on history-aware cards and preserve sibling action semantics.
+- [x] Verify with focused share/card tests plus `bun run typecheck`, `bun run biome:check`, `bun run build`, and a built-preview browser snapshot.
+
+### Completion Review
+
+- Result: Phase 12 is fully implemented. The repo now has a shared `src/lib/share/share-link.ts` utility that centralizes native Web Share and clipboard fallback behavior, the profile header uses that shared helper instead of duplicating browser logic, and history-aware cards now render an ordered analytics-then-share action row with inline share feedback while preserving the card anchor semantics from Phase 11.
+- Verification: Focused tests for the share helper, profile header, and card action row all passed. Repo-level verification also passed with `bun run typecheck`, `bun run biome:check`, and `bun run build`. A Playwright built-preview snapshot of `http://127.0.0.1:4173/` confirmed that history-aware cards render analytics then share in the visible action row.
+- Residual risk: The existing repo-wide performance-budget overrun for `/` still exists independently of this phase, and the built-preview browser check covered the desktop action row only. If Phase 9 revisits the card/action layout more broadly, it should keep an eye on mobile spacing and the already-known bundle-budget signal.
+
+- [x] Inspect the new Phase 12 roadmap entry plus the current profile/card share seams before drafting plans.
+- [x] Research the native Web Share API constraints and the existing local reuse points for card-level sharing.
+- [x] Create the two Phase 12 execution plans covering shared share-utility extraction and the visible card-level share button rollout.
+- [x] Verify the Phase 12 plan set against the roadmap goal, current card-action architecture, and native-share constraints.
+
+### Completion Review
+
+- Result: Phase 12 now has a complete two-plan execution set under `.planning/phases/12-add-share-button-in-each-card-next-to-analytics/`. The plans split the work into: Wave 1 extracting a shared native-share + clipboard-fallback utility that keeps profile and card sharing aligned, and Wave 2 rendering the new card-level share button immediately to the right of analytics with focused regression/accessibility coverage.
+- Verification: Reviewed the Phase 12 roadmap entry, the current `ProfileHeader` share implementation, the existing card analytics action seam in `NonPaymentLinkCardShell`, and the Phase 11 research/plan patterns. Added `12-RESEARCH.md` with official Web Share API references and verified the final plan structure manually against the roadmap success criteria and current code seams.
+- Residual risk: The formal requirement catalog still does not assign requirement IDs to the Phase 11/12 follow-up scope, so the new plans use `requirements: []`. If strict traceability is needed before execution, that requirement mapping should be defined separately.
+
 - [x] Implement the Phase 11 history contract, append-only sync command, public CSV/index artifacts, and validator coverage.
 - [x] Add the nightly follower-history workflow, local package-script parity, and maintainer README docs.
 - [x] Build the ECharts-based analytics surface with a profile-header entry point, card-level modal entry points, and lazy-loaded chart bundles.

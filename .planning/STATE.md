@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface, with Phase 10 and Phase 11 follow-up work already implemented ahead of the original dependency order
+**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface, with Phase 10, Phase 11, and Phase 12 follow-up work already implemented ahead of the original dependency order
 
 ## Current Position
 
 Phase: 09-docs-regression-hardening-social-cards
 Plan: 0 of 0 (phase not planned)
-Status: Ready to discuss Phase 9 after completing the out-of-order Phase 11 analytics follow-up
-Completed Follow-up Phase: 10-configurable-rich-card-description-image-row
-Last activity: 2026-03-10 - Closed the Phase 11 UAT gap for card analytics visibility and header placement after the main Phase 11 implementation shipped.
+Status: Ready to discuss Phase 9 after completing the out-of-order Phase 12 card-sharing follow-up
+Completed Follow-up Phase: 12-add-share-button-in-each-card-next-to-analytics
+Last activity: 2026-03-10 - Completed Phase 12 by adding card-level native share actions beside analytics buttons while Phase 9 remains the next unfinished milestone step.
 
-Progress: [########--] 83%
+Progress: [########--] 86%
 
 ## Performance Metrics
 
@@ -68,11 +68,14 @@ Progress: [########--] 83%
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
 - 2026-03-10: Phase 11 added for append-only public follower-history CSVs and an app surface to chart audience growth across tracked platforms.
 - 2026-03-10: Phase 11 completed with public history CSV artifacts, a nightly commit-and-deploy workflow, and a lazy-loaded analytics UI reachable from the profile header and history-aware cards.
+- 2026-03-10: Phase 12 added for card-level native share actions positioned beside the new analytics buttons.
+- 2026-03-10: Phase 12 completed with a shared Web Share utility, profile/card share parity, and a two-button card action row for history-aware cards.
 
 ### Pending Todos
 
 - Phase 9 needs docs and regression hardening for the expanded profile metadata fields, card states, Studio guidance, maintainer customization guidance, and the new follower-history analytics surface.
 - Phase 10 no longer blocks future card-template experimentation; the shared shell now supports an additional rich-only media row without forking the card system.
+- Phase 12 no longer blocks broader docs/regression coverage; card-level sharing now matches the current native/fallback share posture and action-row layout.
 
 ### Blockers/Concerns
 
@@ -80,7 +83,6 @@ Progress: [########--] 83%
 - Audience parsing still depends on platform-specific text surfaces, so new extractors must keep parsed counts and raw text aligned.
 - The current dataset still exercises the social profile treatment primarily through rich cards; broader template branching and grid/toggle layout ideas remain future work.
 - The analytics surface now lazy-loads a dedicated chart chunk successfully, but that on-demand chunk is still substantial and should stay code-split as Phase 9 and later work evolve it.
-- Card-level analytics actions now appear on first load, but the Phase 11 UAT session should be rerun by the user to formally close the diagnosed issue report.
 
 ## Session Continuity
 
