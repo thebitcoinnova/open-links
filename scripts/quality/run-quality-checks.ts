@@ -23,6 +23,7 @@ import type {
 type OutputFormat = "human" | "json";
 
 interface ArgMap {
+  excludeDomains: QualityDomain[];
   strict: boolean;
   format: OutputFormat;
   reportPath?: string;
@@ -32,6 +33,7 @@ interface ArgMap {
 }
 
 const ROOT = process.cwd();
+const ALL_QUALITY_DOMAINS = ["seo", "accessibility", "performance", "manual-smoke"] as const;
 
 const readJson = <T>(relativePath: string): T => {
   const absolutePath = path.isAbsolute(relativePath) ? relativePath : path.join(ROOT, relativePath);
@@ -48,8 +50,22 @@ const parseArgs = (): ArgMap => {
   };
 
   const formatRaw = getFlagValue("--format");
+  const excludeDomains = args
+    .flatMap((value, index) => {
+      if (value !== "--exclude-domain") {
+        return [];
+      }
+
+      const nextValue = args[index + 1];
+      return typeof nextValue === "string" ? nextValue.split(",") : [];
+    })
+    .map((value) => value.trim())
+    .filter((value): value is QualityDomain =>
+      ["seo", "accessibility", "performance", "manual-smoke"].includes(value),
+    );
 
   return {
+    excludeDomains,
     strict: args.includes("--strict"),
     format: formatRaw === "json" ? "json" : "human",
     reportPath: getFlagValue("--report"),
@@ -80,16 +96,20 @@ const collectRemediationChecklist = (issues: QualityIssue[]): Record<string, str
   return output;
 };
 
-const resolveBlockingDomains = (policy?: QualityPolicy): QualityDomain[] => {
+const resolveBlockingDomains = (
+  policy: QualityPolicy | undefined,
+  excludeDomains: readonly QualityDomain[],
+): QualityDomain[] => {
   const configured = policy?.blockingDomains?.filter((domain) =>
-    ["seo", "accessibility", "performance", "manual-smoke"].includes(domain),
+    ALL_QUALITY_DOMAINS.includes(domain),
   ) as QualityDomain[] | undefined;
 
   if (configured && configured.length > 0) {
-    return configured;
+    return configured.filter((domain) => !excludeDomains.includes(domain));
   }
 
-  return ["seo", "accessibility", "performance"];
+  const defaultBlockingDomains: QualityDomain[] = ["seo", "accessibility", "performance"];
+  return defaultBlockingDomains.filter((domain) => !excludeDomains.includes(domain));
 };
 
 const buildResult = (
@@ -155,9 +175,9 @@ const run = () => {
     a11yResult,
     perfResult,
     manualSmokeResult.domainResult,
-  ];
+  ].filter((domainResult) => !args.excludeDomains.includes(domainResult.domain));
 
-  const blockingDomains = resolveBlockingDomains(qualityPolicy);
+  const blockingDomains = resolveBlockingDomains(qualityPolicy, args.excludeDomains);
   const result = buildResult(
     args.strict,
     reportPath,

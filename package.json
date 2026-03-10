@@ -13,7 +13,7 @@
     "ci:required": "bun run ci:required:typecheck && bun run ci:required:build && bun run ci:required:quality && bun run ci:required:studio-integration",
     "audit:fetch-cache": "bun test scripts/fetch-cache-audit.test.ts",
     "ci:required:hook:build": "bun run validate:data:hook && vite build",
-    "ci:required:hook:quality": "bun scripts/quality/run-quality-checks.ts --report .cache/openlinks-precommit/quality-report.json --summary .cache/openlinks-precommit/quality-report.md",
+    "ci:required:hook:quality": "bun scripts/quality/run-quality-checks.ts --exclude-domain performance --report .cache/openlinks-precommit/quality-report.json --summary .cache/openlinks-precommit/quality-report.md",
     "ci:required:docker:api": "docker build -f packages/studio-api/Dockerfile .",
     "ci:required:docker:web": "docker build -f packages/studio-web/Dockerfile .",
     "ci:required:docker:worker": "docker build -f packages/studio-worker/Dockerfile .",
