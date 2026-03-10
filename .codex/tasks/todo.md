@@ -2,6 +2,27 @@
 
 ## Current
 
+- [x] Implement the Phase 11 history contract, append-only sync command, public CSV/index artifacts, and validator coverage.
+- [x] Add the nightly follower-history workflow, local package-script parity, and maintainer README docs.
+- [x] Build the ECharts-based analytics surface with a profile-header entry point, card-level modal entry points, and lazy-loaded chart bundles.
+- [x] Verify with focused history/profile tests plus `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and `bun run build`.
+
+### Completion Review
+
+- Result: Phase 11 is fully implemented. The repo now publishes append-only follower-history CSVs under `public/history/followers/`, tracks them with a public `index.json` manifest, refreshes them via `bun run followers:history:sync`, and includes a nightly GitHub Actions workflow that commits the refreshed artifacts to `main` and deploys Pages in the same run. The public app now lazy-loads an ECharts analytics surface that is reachable from a new profile-header analytics button and from analytics buttons on cards with history data.
+- Verification: Focused tests for the history contract, validator drift checks, card analytics button semantics, and profile-header analytics toggle all passed. Repo-level verification also passed with `bun run typecheck`, `bun run biome:check`, `bun run validate:data`, and `bun run build`. The final build shows the default route chunk at `216.68 kB` gzip `76.25 kB`, with analytics split into separate lazy chunks instead of inflating the main bundle.
+- Residual risk: The on-demand analytics chart chunk remains sizable even after lazy loading, and the nightly workflow currently refreshes public audience data only. If future follower-history work expands authenticated audience capture or comparison modes, Phase 9 should preserve the lazy-loading boundary and revisit the workflow/data-refresh posture before broadening scope.
+
+- [x] Load the Phase 11 context, research, and existing GSD plan-file patterns before drafting execution plans.
+- [x] Create the three Phase 11 execution plans covering the history contract, nightly publication path, and analytics UI surface.
+- [x] Verify the Phase 11 plan set against the roadmap goal, locked context decisions, and the workflow/deploy caveat uncovered in research.
+
+### Completion Review
+
+- Result: Phase 11 now has a complete three-plan execution set under `.planning/phases/11-historical-follower-tracking-growth-charts/`. The plans sequence the work as: Wave 1 contract and shared loader/validator groundwork, Wave 2 nightly GitHub Actions publication with an explicit deploy path that does not rely on suppressed `GITHUB_TOKEN` fan-out, and Wave 3 the ECharts-based analytics surface with a profile-header entry point plus card-level modal entry points.
+- Verification: Reviewed `11-CONTEXT.md`, `11-RESEARCH.md`, the current roadmap entry, and prior phase plan patterns before drafting. After writing the plans, reviewed the generated files and dependency/wave structure with `sed` and `git diff` to confirm the plans stay aligned with the locked product decisions and the repo’s existing GSD frontmatter/task format.
+- Residual risk: The Phase 11 plans intentionally leave requirement IDs as `requirements: []` because the roadmap marked Phase 11 requirements as TBD during planning and no new requirement catalog entry was added in this turn. If you want formal traceability before execution, the next pass should define Phase 11 requirement IDs in `.planning/REQUIREMENTS.md` or a milestone follow-up doc.
+
 - [x] Turn off preview-derived rich-card media globally through the existing `site.ui.richCards.imageTreatment` setting.
 - [x] Add a focused regression proving `imageTreatment: "off"` still preserves Substack's avatar-led profile card while suppressing preview media.
 - [x] Verify with `bun test src/components/cards/social-profile-card-rendering.test.tsx src/lib/ui/rich-card-description-sourcing.test.ts`, `bun run validate:data`, and `bun run build`.

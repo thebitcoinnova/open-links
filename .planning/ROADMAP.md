@@ -4,10 +4,10 @@
 
 ### v1.1 - Social Profile Metadata + Card Refresh
 
-**Status:** Phase 08.1 complete; Phase 9 ready for planning; Phase 10 completed ahead of dependency order (updated 2026-03-09)
+**Status:** Phase 08.1 complete; Phase 9 still pending docs/regression hardening; Phase 10 and Phase 11 completed ahead of the original dependency order (updated 2026-03-10)
 **Goal:** Make supported social links feel like real profile cards by persisting audience metadata and refreshing card presentation around profile identity.
-**Phases:** 7-10 plus inserted Phase 08.1
-**Requirements mapped:** 13/13 (10 complete)
+**Phases:** 7-11 plus inserted Phase 08.1
+**Requirements mapped:** 13/13 original v1.1 requirements mapped (10 complete); Phase 11 follow-up scope is now delivered outside the original requirement catalog
 
 ### Phase 7: Social Profile Metadata Pipeline
 
@@ -104,10 +104,32 @@
 **Details:**
 Add a follow-up rich-card layout pass for Substack-style links and similar cases where profile imagery and description/preview imagery serve different purposes. Keep the first row focused on profile identity, keep the description/source row intact, and add an optional third row for a full-width description image when it improves the card. Make the extra row configurable both globally and per-site so maintainers can opt in or out without losing the existing profile treatment.
 
+### Phase 11: Historical Follower Tracking + Growth Charts
+
+**Directory:** `11-historical-follower-tracking-growth-charts`
+**Status:** Complete 2026-03-10
+**Goal:** Persist nightly follower snapshots into publicly accessible append-only per-platform CSV histories, then add an app surface for cross-platform follower-growth charts with a SolidJS-friendly charting choice.
+**Depends on:** Phase 10
+**Plans:** 3/3 complete
+**Requirements:** Follow-up scope outside the original v1.1 requirement catalog
+
+**Success criteria:**
+1. Nightly follower-count collection appends to platform-specific CSV histories without forcing a shared all-platform column layout.
+2. GitHub Actions can publish updated follower-history CSVs directly to `main`, and the generated CSV assets remain publicly accessible for the site and external consumers.
+3. The app exposes a follower-growth view that charts every tracked platform count over time, with the SolidJS charting library choice researched and documented.
+
+**Completed plan areas:**
+- [x] 11-01: Define append-only per-platform CSV schemas, storage locations, and nightly snapshot-writing rules.
+- [x] 11-02: Wire the publication path so GitHub Actions can update and ship the public follower-history CSV assets safely.
+- [x] 11-03: Research SolidJS-compatible chart libraries, select the graphing approach, and build the follower-growth analytics surface.
+
+**Details:**
+Favor one CSV per platform so new networks can be added or removed without reshaping one large shared history table. The completed implementation now publishes `public/history/followers/*.csv` plus an index manifest, updates them through a nightly GitHub Actions workflow that deploys in the same run, and lazy-loads an ECharts-based analytics surface from both the profile header and history-aware cards.
+
 ## Milestones
 
 - ✅ **v1.0** — Shipped 2026-02-23. 6 phases, 16 plans. [Archive](./milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1** — Defined 2026-03-07. 5 phases planned (including inserted Phase 08.1), 3 complete.
+- 🚧 **v1.1** — Defined 2026-03-07. 6 phases planned (including inserted Phase 08.1), 5 complete.
 
 ## Historical References
 

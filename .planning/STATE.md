@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface, with the Phase 10 rich-card description-image-row follow-up already implemented
+**Current focus:** Phase 9 planning for docs and regression hardening around the expanded profile-description metadata surface, with Phase 10 and Phase 11 follow-up work already implemented ahead of the original dependency order
 
 ## Current Position
 
 Phase: 09-docs-regression-hardening-social-cards
 Plan: 0 of 0 (phase not planned)
-Status: Ready to discuss Phase 9
+Status: Ready to discuss Phase 9 after completing the out-of-order Phase 11 analytics follow-up
 Completed Follow-up Phase: 10-configurable-rich-card-description-image-row
-Last activity: 2026-03-09 - Completed Phase 10 rich-card description-image-row work ahead of the original dependency order and verified config, parser, renderer, docs, and validation coverage.
+Last activity: 2026-03-10 - Completed Phase 11 for public follower-history CSVs, nightly publication, and a lazy-loaded ECharts analytics surface while Phase 9 remains the next unfinished milestone step.
 
-Progress: [########--] 80%
+Progress: [########--] 83%
 
 ## Performance Metrics
 
@@ -66,10 +66,12 @@ Progress: [########--] 80%
 
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
+- 2026-03-10: Phase 11 added for append-only public follower-history CSVs and an app surface to chart audience growth across tracked platforms.
+- 2026-03-10: Phase 11 completed with public history CSV artifacts, a nightly commit-and-deploy workflow, and a lazy-loaded analytics UI reachable from the profile header and history-aware cards.
 
 ### Pending Todos
 
-- Phase 9 needs docs and regression hardening for the expanded profile metadata fields, card states, Studio guidance, and maintainer customization guidance after Phase 08.1.
+- Phase 9 needs docs and regression hardening for the expanded profile metadata fields, card states, Studio guidance, maintainer customization guidance, and the new follower-history analytics surface.
 - Phase 10 no longer blocks future card-template experimentation; the shared shell now supports an additional rich-only media row without forking the card system.
 
 ### Blockers/Concerns
@@ -77,9 +79,10 @@ Progress: [########--] 80%
 - Only Instagram and YouTube have first-pass audience extraction; broader social coverage remains future work.
 - Audience parsing still depends on platform-specific text surfaces, so new extractors must keep parsed counts and raw text aligned.
 - The current dataset still exercises the social profile treatment primarily through rich cards; broader template branching and grid/toggle layout ideas remain future work.
+- The analytics surface now lazy-loads a dedicated chart chunk successfully, but that on-demand chunk is still substantial and should stay code-split as Phase 9 and later work evolve it.
 
 ## Session Continuity
 
-Last session: 2026-03-09 03:16
-Stopped at: Phase 10 completed and verified out of dependency order; the next planned milestone step is to discuss or plan Phase 9.
+Last session: 2026-03-10 02:30
+Stopped at: Phase 11 completed and verified out of dependency order; the next planned milestone step is to discuss or plan Phase 9.
 Resume file: .planning/ROADMAP.md
