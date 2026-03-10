@@ -13,7 +13,7 @@ Phase: 09-docs-regression-hardening-social-cards
 Plan: 0 of 0 (phase not planned)
 Status: Ready to discuss Phase 9 after completing the out-of-order Phase 11 analytics follow-up
 Completed Follow-up Phase: 10-configurable-rich-card-description-image-row
-Last activity: 2026-03-10 - Completed Phase 11 for public follower-history CSVs, nightly publication, and a lazy-loaded ECharts analytics surface while Phase 9 remains the next unfinished milestone step.
+Last activity: 2026-03-10 - Closed the Phase 11 UAT gap for card analytics visibility and header placement after the main Phase 11 implementation shipped.
 
 Progress: [########--] 83%
 
@@ -80,6 +80,7 @@ Progress: [########--] 83%
 - Audience parsing still depends on platform-specific text surfaces, so new extractors must keep parsed counts and raw text aligned.
 - The current dataset still exercises the social profile treatment primarily through rich cards; broader template branching and grid/toggle layout ideas remain future work.
 - The analytics surface now lazy-loads a dedicated chart chunk successfully, but that on-demand chunk is still substantial and should stay code-split as Phase 9 and later work evolve it.
+- Card-level analytics actions now appear on first load, but the Phase 11 UAT session should be rerun by the user to formally close the diagnosed issue report.
 
 ## Session Continuity
 

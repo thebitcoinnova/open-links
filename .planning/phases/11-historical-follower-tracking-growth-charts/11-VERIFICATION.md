@@ -1,14 +1,14 @@
 ---
 phase: 11-historical-follower-tracking-growth-charts
-verified: 2026-03-10T02:30:00Z
+verified: 2026-03-10T08:55:00Z
 status: passed
-score: 16/16 must-haves verified
+score: 20/20 must-haves verified
 ---
 
 # Phase 11: Historical Follower Tracking + Growth Charts Verification Report
 
 **Phase Goal:** Persist nightly follower snapshots into publicly accessible append-only per-platform CSV histories, then add an app surface for cross-platform follower-growth charts with a SolidJS-friendly charting choice.  
-**Verified:** 2026-03-10T02:30:00Z  
+**Verified:** 2026-03-10T08:55:00Z  
 **Status:** passed
 
 ## Goal Achievement
@@ -40,8 +40,11 @@ score: 16/16 must-haves verified
 | 11-03 | Cards with history data expose a platform analytics icon and modal while cards without history remain unchanged. | ✓ VERIFIED | `src/components/cards/NonPaymentLinkCardShell.tsx`, `src/components/analytics/FollowerHistoryModal.tsx`, and `src/components/cards/non-payment-card-accessibility.test.tsx`. |
 | 11-03 | Single-platform views can toggle between raw counts and growth rate. | ✓ VERIFIED | `src/components/analytics/FollowerHistoryModal.tsx` and `src/components/analytics/FollowerHistoryChart.tsx`. |
 | 11-03 | The chart bundle stays off the default route path through lazy loading. | ✓ VERIFIED | `src/routes/index.tsx` lazy-loads both analytics components, and the build output shows separate analytics chunks from the main route bundle. |
+| 11-04 | History-aware cards expose analytics actions on first page load without visiting the page-level analytics view first. | ✓ VERIFIED | `src/routes/index.tsx` now passes a reactive analytics resolver into the card components, and Playwright snapshot evidence from the local preview shows first-load card buttons for all history-aware links. |
+| 11-04 | The card analytics control aligns with the card header row instead of reading like a separate side column. | ✓ VERIFIED | `src/components/cards/NonPaymentLinkCardShell.tsx` now reserves space in `non-payment-card-title-row`, and `src/styles/base.css` positions the sibling button against that title row rather than padding the whole card. |
+| 11-04 | Card anchors keep their existing accessible naming while the analytics action remains a separate button. | ✓ VERIFIED | `src/components/cards/non-payment-card-accessibility.test.tsx` confirms the anchor semantics remain intact while the analytics button stays separate. |
 
-**Score:** 13/13 plan must-have groups verified
+**Score:** 16/16 plan must-have groups verified
 
 ### Required Artifact Checks
 
@@ -55,9 +58,10 @@ score: 16/16 must-haves verified
 | `src/components/analytics/FollowerHistoryChart.tsx` | Chart primitive for raw/growth views | ✓ EXISTS + SUBSTANTIVE | Lazy-loadable ECharts wrapper. |
 | `src/components/analytics/FollowerHistoryModal.tsx` | Platform drill-down modal | ✓ EXISTS + SUBSTANTIVE | Reuses the shared chart primitive and range/mode controls. |
 | `src/routes/index.tsx` | Analytics page and modal orchestration | ✓ EXISTS + SUBSTANTIVE | Fetches published history and exposes both analytics entry points. |
+| `src/components/cards/NonPaymentLinkCardShell.tsx` | Reactive card-header analytics action placement | ✓ EXISTS + SUBSTANTIVE | Uses a reactive accessor for analytics availability and reserves header-row space for the action. |
 | `README.md` | Maintainer-facing workflow and command docs | ✓ EXISTS + SUBSTANTIVE | Documents workflow name, artifact paths, and local parity commands. |
 
-**Artifacts:** 9/9 verified
+**Artifacts:** 10/10 verified
 
 ## Requirements Coverage
 
@@ -67,10 +71,12 @@ Phase 11 did not receive formal requirement IDs during planning; the roadmap exp
 
 - `bun test src/lib/analytics/follower-history.test.ts scripts/follower-history/append-history.test.ts scripts/validate-data.test.ts src/components/cards/non-payment-card-accessibility.test.tsx src/components/profile/ProfileHeader.test.tsx` -> passed
 - `bun run followers:history:sync` -> passed
+- `bun test src/components/cards/non-payment-card-accessibility.test.tsx` -> passed
 - `bun run typecheck` -> passed
 - `bun run biome:check` -> passed
 - `bun run validate:data` -> passed
 - `bun run build` -> passed
+- Playwright CLI snapshot of the local preview at `http://127.0.0.1:4173/` -> confirmed history-aware cards show analytics buttons on first load before opening the page-level analytics view
 
 ## Anti-Patterns Found
 
@@ -87,10 +93,10 @@ None.
 ## Verification Metadata
 
 **Verification approach:** roadmap truths + plan must-haves + artifact checks + build/test evidence  
-**Automated checks:** 6 passed, 0 failed  
+**Automated checks:** 7 passed, 0 failed  
 **Human checks required:** 0  
 **Total verification time:** 1 execution session
 
 ---
-*Verified: 2026-03-10T02:30:00Z*
+*Verified: 2026-03-10T08:55:00Z*
 *Verifier: Codex (orchestrated execution)*
