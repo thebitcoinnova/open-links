@@ -50,7 +50,7 @@ This project is developer-first: fork the repo, edit JSON, push, and publish.
 
 - User auth/account system.
 - CMS or WYSIWYG editor.
-- Built-in analytics.
+- Traffic analytics or pageview dashboards.
 - Plugin marketplace.
 
 ## Quickstart
@@ -103,6 +103,12 @@ If you use Medium, X, or Primal rich links and want the optional public audience
 bun run public:rich:sync -- --only-link medium
 bun run public:rich:sync -- --only-link x
 bun run public:rich:sync -- --only-link primal
+```
+
+If you want to refresh the public follower-history artifacts locally before the nightly automation does it on `main`, run:
+
+```bash
+bun run followers:history:sync
 ```
 
 ### 5) Update your data
@@ -214,6 +220,7 @@ High-signal deployment checks:
 - `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
 - `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
 - `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal profile audience metrics into the committed stable cache at `data/cache/rich-public-cache.json` and the local runtime overlay at `data/cache/rich-public-cache.runtime.json` (non-auth, operator-invoked).
+- `bun run followers:history:sync` - append the current follower/subscriber snapshots into the public CSV history files under `public/history/followers/` and refresh `public/history/followers/index.json`.
 - `bun run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
 - `bun run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
 - `bun run auth:rich:clear` - clear authenticated cache entries and unreferenced local assets (selector-driven; supports `--dry-run`).
@@ -231,6 +238,18 @@ High-signal deployment checks:
 - `bun run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build.
 - `bun run preview` - serve built output.
 - `bun run typecheck` - TypeScript checks.
+
+### Nightly follower history
+
+- Workflow: `.github/workflows/nightly-follower-history.yml`
+- Public artifacts:
+  - `public/history/followers/*.csv`
+  - `public/history/followers/index.json`
+- Local parity:
+  - `bun run public:rich:sync`
+  - `bun run followers:history:sync`
+  - `bun run build`
+- The workflow commits directly to `main` and deploys Pages in the same run. This avoids depending on downstream workflow fan-out from a bot-authored push.
 
 ### Authenticated Cache Lifecycle
 

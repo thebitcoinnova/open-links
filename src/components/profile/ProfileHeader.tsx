@@ -1,9 +1,12 @@
 import { For, Show, createSignal, onCleanup } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
-import { IconShare } from "../../lib/icons/custom-icons";
+import { IconAnalytics, IconShare } from "../../lib/icons/custom-icons";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
+  analyticsActive?: boolean;
+  analyticsAvailable?: boolean;
+  onAnalyticsToggle?: () => void;
   richness?: "minimal" | "standard" | "rich";
 }
 
@@ -75,6 +78,8 @@ const copyToClipboard = async (value: string): Promise<boolean> => {
 };
 
 export const ProfileHeader = (props: ProfileHeaderProps) => {
+  const analyticsActive = () => props.analyticsActive ?? false;
+  const analyticsAvailable = () => props.analyticsAvailable ?? false;
   const richness = () => props.richness ?? "standard";
   const contacts = () => orderedContactEntries(props.profile.contact);
   const [shareStatus, setShareStatus] = createSignal("");
@@ -127,6 +132,18 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         <div class="profile-actions" aria-label="Profile sharing actions">
           <div class="profile-title-row">
             <h1>{props.profile.name}</h1>
+            <Show when={analyticsAvailable() && props.onAnalyticsToggle}>
+              <button
+                type="button"
+                class="profile-analytics-button"
+                data-active={analyticsActive() ? "true" : "false"}
+                aria-label={analyticsActive() ? "Back to links" : "View follower analytics"}
+                title={analyticsActive() ? "Back to links" : "View follower analytics"}
+                onClick={() => props.onAnalyticsToggle?.()}
+              >
+                <IconAnalytics class="profile-action-button-icon" aria-hidden="true" />
+              </button>
+            </Show>
             <button
               type="button"
               class="profile-share-button"
@@ -134,7 +151,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
               title="Share profile"
               onClick={() => handleShareProfile()}
             >
-              <IconShare class="profile-share-button-icon" aria-hidden="true" />
+              <IconShare class="profile-action-button-icon" aria-hidden="true" />
             </button>
           </div>
           <Show when={shareStatus()}>

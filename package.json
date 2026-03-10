@@ -37,6 +37,7 @@
     "enrich:rich": "bun scripts/enrich-rich-links.ts",
     "enrich:rich:strict": "bun scripts/enrich-rich-links.ts --strict",
     "public:rich:sync": "bun scripts/public-rich-sync.ts",
+    "followers:history:sync": "bun scripts/sync-follower-history.ts",
     "linkedin:debug:bootstrap": "bun scripts/oneoff/linkedin-debug-bootstrap.ts",
     "linkedin:debug:login": "bun scripts/oneoff/linkedin-login-session.ts",
     "linkedin:debug:validate": "bun scripts/oneoff/linkedin-metadata-validate.ts",
@@ -79,6 +80,7 @@
     "studio:check": "bun run studio:typecheck && bun run studio:lint && bun run studio:format:check && bun run studio:test:integration"
   },
   "dependencies": {
+    "echarts": "^6.0.0",
     "qr-code-styling": "^1.9.2",
     "simple-icons": "^15.22.0",
     "solid-js": "^1.9.11"

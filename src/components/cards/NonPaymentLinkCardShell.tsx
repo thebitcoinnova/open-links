@@ -1,13 +1,21 @@
 import { For, Show } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
+import { IconAnalytics } from "../../lib/icons/custom-icons";
 import type {
   NonPaymentCardMetaItem,
   NonPaymentCardViewModel,
 } from "../../lib/ui/rich-card-policy";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 
+export interface CardAnalyticsButtonProps {
+  ariaLabel: string;
+  onClick: () => void;
+  title?: string;
+}
+
 export interface NonPaymentLinkCardShellProps {
+  analyticsButton?: CardAnalyticsButtonProps;
   link: OpenLink;
   viewModel: NonPaymentCardViewModel;
   rootClassName: string;
@@ -63,90 +71,53 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       : `Open ${props.viewModel.title}`;
 
   return (
-    <a
-      class={props.rootClassName}
-      href={props.link.url}
-      target={target()}
-      rel={rel()}
-      aria-label={ariaLabel()}
-      aria-describedby={ariaDescribedBy()}
-      data-interaction={interaction()}
-      data-link-type={props.link.type}
-      data-card-variant={props.cardVariant}
-      data-image-fit={props.viewModel.imageFit}
-      data-image-treatment={props.viewModel.imageTreatment}
-      data-lead-kind={props.viewModel.leadKind}
-      data-has-avatar={props.viewModel.socialProfile.profileImageUrl ? "true" : "false"}
-      data-has-preview-image={props.viewModel.leadKind === "preview" ? "true" : "false"}
-      data-has-metrics={props.viewModel.socialProfile.metrics.length > 0 ? "true" : "false"}
-      data-has-profile-layout={props.viewModel.socialProfile.usesProfileLayout ? "true" : "false"}
-      data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
-      data-has-footer={showFooter() ? "true" : "false"}
-      data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
+    <div
+      class="non-payment-card-frame"
+      data-has-analytics={props.analyticsButton ? "true" : "false"}
     >
-      <span class="non-payment-card-shell">
-        <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
-          <Show when={props.viewModel.leadKind === "preview" && props.viewModel.leadImageUrl}>
-            <span class="rich-card-media non-payment-card-lead-media" aria-hidden="true">
-              <img src={props.viewModel.leadImageUrl} alt="" loading="lazy" />
-            </span>
-          </Show>
-          <Show when={props.viewModel.leadKind === "avatar"}>
-            <Show
-              when={props.viewModel.leadImageUrl}
-              fallback={<span class="card-lead-avatar card-lead-avatar-empty" aria-hidden="true" />}
-            >
-              <span class="card-lead-avatar" aria-hidden="true">
+      <a
+        class={props.rootClassName}
+        href={props.link.url}
+        target={target()}
+        rel={rel()}
+        aria-label={ariaLabel()}
+        aria-describedby={ariaDescribedBy()}
+        data-interaction={interaction()}
+        data-link-type={props.link.type}
+        data-card-variant={props.cardVariant}
+        data-image-fit={props.viewModel.imageFit}
+        data-image-treatment={props.viewModel.imageTreatment}
+        data-lead-kind={props.viewModel.leadKind}
+        data-has-avatar={props.viewModel.socialProfile.profileImageUrl ? "true" : "false"}
+        data-has-preview-image={props.viewModel.leadKind === "preview" ? "true" : "false"}
+        data-has-metrics={props.viewModel.socialProfile.metrics.length > 0 ? "true" : "false"}
+        data-has-profile-layout={props.viewModel.socialProfile.usesProfileLayout ? "true" : "false"}
+        data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
+        data-has-footer={showFooter() ? "true" : "false"}
+        data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
+        data-has-analytics={props.analyticsButton ? "true" : "false"}
+      >
+        <span class="non-payment-card-shell">
+          <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
+            <Show when={props.viewModel.leadKind === "preview" && props.viewModel.leadImageUrl}>
+              <span class="rich-card-media non-payment-card-lead-media" aria-hidden="true">
                 <img src={props.viewModel.leadImageUrl} alt="" loading="lazy" />
               </span>
             </Show>
-          </Show>
-          <Show when={props.viewModel.leadKind === "icon"}>
-            <span class="non-payment-card-lead-icon" aria-hidden="true">
-              <LinkSiteIcon
-                icon={props.link.icon}
-                url={props.link.url}
-                label={props.link.label}
-                options={props.brandIconOptions}
-                themeFingerprint={props.themeFingerprint}
-              />
-            </span>
-          </Show>
-        </span>
-
-        <span class="non-payment-card-summary">
-          <strong class="non-payment-card-title" id={titleId()}>
-            {props.viewModel.title}
-          </strong>
-          <Show when={hasHeaderMeta()}>
-            <span class="non-payment-card-header-meta" id={metaId()}>
-              <For each={props.viewModel.headerMetaItems}>
-                {(item) => <span class={metaItemClassName(item)}>{item.text}</span>}
-              </For>
-            </span>
-          </Show>
-        </span>
-
-        <span class="non-payment-card-description" id={descriptionId()}>
-          {props.viewModel.description}
-        </span>
-
-        <Show
-          when={
-            props.cardVariant === "rich" &&
-            props.viewModel.showDescriptionImageRow &&
-            props.viewModel.descriptionImageUrl
-          }
-        >
-          <span class="rich-card-media non-payment-card-description-image" aria-hidden="true">
-            <img src={props.viewModel.descriptionImageUrl} alt="" loading="lazy" />
-          </span>
-        </Show>
-
-        <Show when={showFooter()}>
-          <span class="non-payment-card-footer">
-            <Show when={props.viewModel.showFooterIcon}>
-              <span class="non-payment-card-footer-icon">
+            <Show when={props.viewModel.leadKind === "avatar"}>
+              <Show
+                when={props.viewModel.leadImageUrl}
+                fallback={
+                  <span class="card-lead-avatar card-lead-avatar-empty" aria-hidden="true" />
+                }
+              >
+                <span class="card-lead-avatar" aria-hidden="true">
+                  <img src={props.viewModel.leadImageUrl} alt="" loading="lazy" />
+                </span>
+              </Show>
+            </Show>
+            <Show when={props.viewModel.leadKind === "icon"}>
+              <span class="non-payment-card-lead-icon" aria-hidden="true">
                 <LinkSiteIcon
                   icon={props.link.icon}
                   url={props.link.url}
@@ -156,15 +127,72 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
                 />
               </span>
             </Show>
-            <Show when={hasFooterSource()}>
-              <span class="non-payment-card-source-label" id={sourceId()}>
-                {props.viewModel.footerSourceLabel}
+          </span>
+
+          <span class="non-payment-card-summary">
+            <strong class="non-payment-card-title" id={titleId()}>
+              {props.viewModel.title}
+            </strong>
+            <Show when={hasHeaderMeta()}>
+              <span class="non-payment-card-header-meta" id={metaId()}>
+                <For each={props.viewModel.headerMetaItems}>
+                  {(item) => <span class={metaItemClassName(item)}>{item.text}</span>}
+                </For>
               </span>
             </Show>
           </span>
-        </Show>
-      </span>
-    </a>
+
+          <span class="non-payment-card-description" id={descriptionId()}>
+            {props.viewModel.description}
+          </span>
+
+          <Show
+            when={
+              props.cardVariant === "rich" &&
+              props.viewModel.showDescriptionImageRow &&
+              props.viewModel.descriptionImageUrl
+            }
+          >
+            <span class="rich-card-media non-payment-card-description-image" aria-hidden="true">
+              <img src={props.viewModel.descriptionImageUrl} alt="" loading="lazy" />
+            </span>
+          </Show>
+
+          <Show when={showFooter()}>
+            <span class="non-payment-card-footer">
+              <Show when={props.viewModel.showFooterIcon}>
+                <span class="non-payment-card-footer-icon">
+                  <LinkSiteIcon
+                    icon={props.link.icon}
+                    url={props.link.url}
+                    label={props.link.label}
+                    options={props.brandIconOptions}
+                    themeFingerprint={props.themeFingerprint}
+                  />
+                </span>
+              </Show>
+              <Show when={hasFooterSource()}>
+                <span class="non-payment-card-source-label" id={sourceId()}>
+                  {props.viewModel.footerSourceLabel}
+                </span>
+              </Show>
+            </span>
+          </Show>
+        </span>
+      </a>
+
+      <Show when={props.analyticsButton}>
+        <button
+          type="button"
+          class="card-analytics-button"
+          aria-label={props.analyticsButton?.ariaLabel}
+          title={props.analyticsButton?.title ?? props.analyticsButton?.ariaLabel}
+          onClick={() => props.analyticsButton?.onClick()}
+        >
+          <IconAnalytics class="card-analytics-button-icon" aria-hidden="true" />
+        </button>
+      </Show>
+    </div>
   );
 };
 

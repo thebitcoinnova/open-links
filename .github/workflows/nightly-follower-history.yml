@@ -1,0 +1,103 @@
+name: Nightly Follower History
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: nightly-follower-history-main
+  cancel-in-progress: false
+
+jobs:
+  sync-and-deploy:
+    name: Sync Follower History and Deploy
+    runs-on: ubuntu-latest
+    env:
+      PAGES_BASE_MODE: project
+      BASE_PATH: ""
+      REPO_NAME_OVERRIDE: ""
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install agent-browser binaries
+        run: npx --yes agent-browser install
+
+      - name: Refresh public audience cache
+        run: bun run public:rich:sync
+
+      - name: Append follower history snapshots
+        run: bun run followers:history:sync
+
+      - name: Build site
+        run: bun run build
+
+      - name: Commit and push follower-history artifacts
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/cache/rich-public-cache.json
+          git add public/history/followers/index.json
+          if compgen -G "public/history/followers/*.csv" > /dev/null; then
+            git add public/history/followers/*.csv
+          fi
+
+          if git diff --cached --quiet; then
+            echo "push_result=no_changes" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "data(followers): refresh nightly history"
+          git push origin HEAD:main
+          echo "push_result=pushed" >> "$GITHUB_OUTPUT"
+
+      - name: Configure Pages
+        if: steps.publish.outputs.push_result == 'pushed'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: steps.publish.outputs.push_result == 'pushed'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+      - name: Deploy Pages
+        if: steps.publish.outputs.push_result == 'pushed'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo "## Nightly Follower History"
+            echo "- Event: \`${{ github.event_name }}\`"
+            echo "- Result: \`${{ steps.publish.outputs.push_result || 'unknown' }}\`"
+            echo "- Local parity:"
+            echo "  - \`bun run public:rich:sync\`"
+            echo "  - \`bun run followers:history:sync\`"
+            echo "  - \`bun run build\`"
+            echo "- Direct deploy is handled in this workflow because bot-authored pushes should not rely on downstream workflow fan-out."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,9 +1,10 @@
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { buildSimpleCardViewModel } from "../../lib/ui/rich-card-policy";
-import NonPaymentLinkCardShell from "./NonPaymentLinkCardShell";
+import NonPaymentLinkCardShell, { type CardAnalyticsButtonProps } from "./NonPaymentLinkCardShell";
 
 export interface SimpleLinkCardProps {
+  analyticsButton?: CardAnalyticsButtonProps;
   link: OpenLink;
   site: SiteData;
   target?: "_blank" | "_self";
@@ -18,6 +19,7 @@ export const SimpleLinkCard = (props: SimpleLinkCardProps) => {
 
   return (
     <NonPaymentLinkCardShell
+      analyticsButton={props.analyticsButton}
       link={props.link}
       viewModel={viewModel()}
       rootClassName="simple-link-card"

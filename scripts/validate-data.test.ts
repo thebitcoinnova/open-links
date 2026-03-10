@@ -4,6 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import test from "node:test";
 import {
+  followerHistoryArtifactIssues,
   pathTouchesHookRichArtifactInputs,
   resolveHookRichArtifactCheckDecision,
 } from "./validate-data";
@@ -109,4 +110,113 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   assert.equal(exactTriggered, true);
   assert.equal(prefixTriggered, true);
   assert.equal(unrelatedTriggered, false);
+});
+
+test("follower-history validation accepts matching index and CSV artifacts", (t) => {
+  const historyRepoRoot = "public/history/test-follower-history";
+  const indexPath = `${historyRepoRoot}/index.json`;
+  const csvPath = `${historyRepoRoot}/github.csv`;
+  const absoluteDir = path.join(ROOT, historyRepoRoot);
+  fs.mkdirSync(absoluteDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(ROOT, csvPath),
+    `${[
+      "observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audienceCountRaw,source",
+      "2026-03-10T07:00:00.000Z,github,github,prizz,https://github.com/pRizz,followers,90,90 followers,public-cache",
+    ].join("\n")}\n`,
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(ROOT, indexPath),
+    `${JSON.stringify(
+      {
+        version: 1,
+        updatedAt: "2026-03-10T07:00:00.000Z",
+        entries: [
+          {
+            linkId: "github",
+            label: "GitHub",
+            platform: "github",
+            handle: "prizz",
+            canonicalUrl: "https://github.com/pRizz",
+            audienceKind: "followers",
+            csvPath: "history/test-follower-history/github.csv",
+            latestAudienceCount: 90,
+            latestAudienceCountRaw: "90 followers",
+            latestObservedAt: "2026-03-10T07:00:00.000Z",
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  t.after(() => {
+    fs.rmSync(absoluteDir, { recursive: true, force: true });
+  });
+
+  const issues = followerHistoryArtifactIssues({
+    historyRepoRoot,
+    indexPath,
+    publicRoot: "history/test-follower-history",
+  });
+
+  assert.deepEqual(issues, []);
+});
+
+test("follower-history validation reports index drift against the latest CSV row", (t) => {
+  const historyRepoRoot = "public/history/test-follower-history-drift";
+  const indexPath = `${historyRepoRoot}/index.json`;
+  const csvPath = `${historyRepoRoot}/x.csv`;
+  const absoluteDir = path.join(ROOT, historyRepoRoot);
+  fs.mkdirSync(absoluteDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(ROOT, csvPath),
+    `${[
+      "observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audienceCountRaw,source",
+      '"2026-03-10T07:00:00.000Z",x,x,pryszkie,https://x.com/pryszkie,followers,1351,"1,351 Followers",public-cache',
+    ].join("\n")}\n`,
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(ROOT, indexPath),
+    `${JSON.stringify(
+      {
+        version: 1,
+        updatedAt: "2026-03-10T07:00:00.000Z",
+        entries: [
+          {
+            linkId: "x",
+            label: "X",
+            platform: "x",
+            handle: "pryszkie",
+            canonicalUrl: "https://x.com/pryszkie",
+            audienceKind: "followers",
+            csvPath: "history/test-follower-history-drift/x.csv",
+            latestAudienceCount: 1300,
+            latestAudienceCountRaw: "1,300 Followers",
+            latestObservedAt: "2026-03-10T07:00:00.000Z",
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  t.after(() => {
+    fs.rmSync(absoluteDir, { recursive: true, force: true });
+  });
+
+  const issues = followerHistoryArtifactIssues({
+    historyRepoRoot,
+    indexPath,
+    publicRoot: "history/test-follower-history-drift",
+  });
+
+  assert.equal(issues.length, 1);
+  assert.match(issues[0]?.message ?? "", /does not match the latest row/u);
 });

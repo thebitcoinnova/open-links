@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-10T02:29:19.676Z",
+  "entries": [
+    {
+      "linkId": "github",
+      "label": "GitHub",
+      "platform": "github",
+      "handle": "prizz",
+      "canonicalUrl": "https://github.com/pRizz",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/github.csv",
+      "latestAudienceCount": 90,
+      "latestAudienceCountRaw": "90 followers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    },
+    {
+      "linkId": "instagram",
+      "label": "Instagram",
+      "platform": "instagram",
+      "handle": "peterryszkiewicz",
+      "canonicalUrl": "https://www.instagram.com/peterryszkiewicz/",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/instagram.csv",
+      "latestAudienceCount": 88,
+      "latestAudienceCountRaw": "88 Followers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    },
+    {
+      "linkId": "medium",
+      "label": "Medium",
+      "platform": "medium",
+      "handle": "peterryszkiewicz",
+      "canonicalUrl": "https://medium.com/@peterryszkiewicz",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/medium.csv",
+      "latestAudienceCount": 3300,
+      "latestAudienceCountRaw": "3.3K followers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    },
+    {
+      "linkId": "primal",
+      "label": "Primal",
+      "platform": "primal",
+      "handle": "peterryszkiewicz",
+      "canonicalUrl": "https://primal.net/peterryszkiewicz",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/primal.csv",
+      "latestAudienceCount": 15,
+      "latestAudienceCountRaw": "15 followers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    },
+    {
+      "linkId": "substack",
+      "label": "Substack",
+      "platform": "substack",
+      "handle": "peterryszkiewicz",
+      "canonicalUrl": "https://peter.ryszkiewicz.us/",
+      "audienceKind": "subscribers",
+      "csvPath": "history/followers/substack.csv",
+      "latestAudienceCount": 10,
+      "latestAudienceCountRaw": "10 subscribers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    },
+    {
+      "linkId": "x",
+      "label": "X",
+      "platform": "x",
+      "handle": "pryszkie",
+      "canonicalUrl": "https://x.com/pryszkie",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/x.csv",
+      "latestAudienceCount": 1351,
+      "latestAudienceCountRaw": "1,351 Followers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    },
+    {
+      "linkId": "youtube",
+      "label": "YouTube",
+      "platform": "youtube",
+      "handle": "peterryszkiewicz4354",
+      "canonicalUrl": "https://www.youtube.com/@peterryszkiewicz4354",
+      "audienceKind": "subscribers",
+      "csvPath": "history/followers/youtube.csv",
+      "latestAudienceCount": 11,
+      "latestAudienceCountRaw": "11 subscribers",
+      "latestObservedAt": "2026-03-10T02:29:19.676Z"
+    }
+  ]
+}

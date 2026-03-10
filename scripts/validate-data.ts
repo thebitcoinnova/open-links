@@ -3,6 +3,13 @@ import path from "node:path";
 import process from "node:process";
 import addFormats from "ajv-formats";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
+import {
+  FOLLOWER_HISTORY_INDEX_PUBLIC_PATH,
+  FOLLOWER_HISTORY_PUBLIC_ROOT,
+  normalizeFollowerHistoryRows,
+  parseFollowerHistoryCsv,
+  parseFollowerHistoryIndex,
+} from "../src/lib/analytics/follower-history";
 import type { OpenLink, SiteData } from "../src/lib/content/load-content";
 import {
   mergeMetadataWithManualSocialProfileOverrides,
@@ -62,6 +69,8 @@ const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
 const DEFAULT_AUTH_CACHE_WARN_AGE_DAYS = 30;
 const DEFAULT_ENRICHMENT_METADATA_PATH = "data/generated/rich-metadata.json";
 const DEFAULT_CONTENT_IMAGES_MANIFEST_PATH = "data/generated/content-images.json";
+const DEFAULT_FOLLOWER_HISTORY_REPO_ROOT = "public/history/followers";
+const DEFAULT_FOLLOWER_HISTORY_INDEX_PATH = `public/${FOLLOWER_HISTORY_INDEX_PUBLIC_PATH}`;
 export const DEFAULT_HOOK_CHANGED_PATHS_PATH = ".cache/openlinks-precommit/staged-files.txt";
 const HOOK_SKIP_RICH_ARTIFACT_CHECKS_MESSAGE =
   "Hook mode skipped generated rich-artifact checks because staged paths did not touch rich metadata/image inputs.";
@@ -245,6 +254,16 @@ const resolveEnrichmentMetadataPath = (site: Record<string, unknown>): string =>
 const tryReadJsonFile = <T>(relativePath: string): { value: T | null; errorMessage?: string } => {
   try {
     return { value: readJsonFile<T>(relativePath) };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { value: null, errorMessage: message };
+  }
+};
+
+const readTextFile = (relativePath: string): { value: string | null; errorMessage?: string } => {
+  try {
+    const absolute = absolutePath(relativePath);
+    return { value: fs.readFileSync(absolute, "utf8") };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     return { value: null, errorMessage: message };
@@ -450,6 +469,204 @@ const resolveGeneratedContentImagesByUrl = (
   }
 
   return byUrl;
+};
+
+const resolveHistoryRepoPath = (
+  csvPath: string,
+  publicRoot: string,
+  repoRoot: string,
+): string | null => {
+  const normalizedCsvPath = normalizeRepoPath(csvPath);
+  const normalizedPublicRoot = normalizeRepoPath(publicRoot);
+  const normalizedRepoRoot = normalizeRepoPath(repoRoot);
+
+  if (!normalizedCsvPath.startsWith(`${normalizedPublicRoot}/`)) {
+    return null;
+  }
+
+  return `${normalizedRepoRoot}/${normalizedCsvPath.slice(normalizedPublicRoot.length + 1)}`;
+};
+
+export const followerHistoryArtifactIssues = (input?: {
+  historyRepoRoot?: string;
+  indexPath?: string;
+  publicRoot?: string;
+}): ValidationIssue[] => {
+  const historyRepoRoot = input?.historyRepoRoot ?? DEFAULT_FOLLOWER_HISTORY_REPO_ROOT;
+  const indexPath = input?.indexPath ?? DEFAULT_FOLLOWER_HISTORY_INDEX_PATH;
+  const publicRoot = input?.publicRoot ?? FOLLOWER_HISTORY_PUBLIC_ROOT;
+  const issues: ValidationIssue[] = [];
+  const indexRead = tryReadJsonFile<unknown>(indexPath);
+
+  if (!indexRead.value) {
+    issues.push({
+      level: "error",
+      source: indexPath,
+      path: "$",
+      message: "Follower-history index not found.",
+      remediation:
+        "Run `bun scripts/sync-follower-history.ts` (or the package-script wrapper once wired), commit the generated files under public history, then rerun validation.",
+    });
+    return issues;
+  }
+
+  let index: ReturnType<typeof parseFollowerHistoryIndex>;
+  try {
+    index = parseFollowerHistoryIndex(indexRead.value);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push({
+      level: "error",
+      source: indexPath,
+      path: "$",
+      message: `Follower-history index is invalid. ${message}`,
+      remediation:
+        "Regenerate the follower-history index from the sync command and ensure it stays aligned with the committed CSV artifacts.",
+    });
+    return issues;
+  }
+
+  const referencedCsvRepoPaths = new Set<string>();
+  const seenLinkIds = new Set<string>();
+
+  for (const entry of index.entries) {
+    if (seenLinkIds.has(entry.linkId)) {
+      issues.push({
+        level: "error",
+        source: indexPath,
+        path: "$.entries",
+        message: `Follower-history index contains duplicate linkId '${entry.linkId}'.`,
+        remediation:
+          "Keep one index entry per link id and regenerate the index from the sync command.",
+      });
+      continue;
+    }
+
+    seenLinkIds.add(entry.linkId);
+
+    const repoCsvPath = resolveHistoryRepoPath(entry.csvPath, publicRoot, historyRepoRoot);
+    if (!repoCsvPath) {
+      issues.push({
+        level: "error",
+        source: indexPath,
+        path: "$.entries",
+        message: `Follower-history index entry '${entry.linkId}' points to '${entry.csvPath}', which is outside '${publicRoot}/'.`,
+        remediation:
+          "Keep follower-history CSV paths under the configured public history root and regenerate the index.",
+      });
+      continue;
+    }
+
+    referencedCsvRepoPaths.add(normalizeRepoPath(repoCsvPath));
+    const csvRead = readTextFile(repoCsvPath);
+    if (!csvRead.value) {
+      issues.push({
+        level: "error",
+        source: repoCsvPath,
+        path: "$",
+        message: `Follower-history CSV for '${entry.linkId}' is missing.`,
+        remediation:
+          "Regenerate the follower-history CSV artifacts so the index only references files that exist on disk.",
+      });
+      continue;
+    }
+
+    let rows: ReturnType<typeof parseFollowerHistoryCsv>;
+    try {
+      rows = parseFollowerHistoryCsv(csvRead.value);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      issues.push({
+        level: "error",
+        source: repoCsvPath,
+        path: "$",
+        message: `Follower-history CSV for '${entry.linkId}' is invalid. ${message}`,
+        remediation:
+          "Regenerate the follower-history CSV so it uses the locked header and row contract.",
+      });
+      continue;
+    }
+
+    if (rows.length === 0) {
+      issues.push({
+        level: "error",
+        source: repoCsvPath,
+        path: "$",
+        message: `Follower-history CSV for '${entry.linkId}' has no rows.`,
+        remediation: "Append at least one history row before committing the CSV artifact.",
+      });
+      continue;
+    }
+
+    if (rows.some((row) => row.platform !== entry.platform)) {
+      issues.push({
+        level: "error",
+        source: repoCsvPath,
+        path: "$.platform",
+        message: `Follower-history CSV '${repoCsvPath}' mixes rows from outside the '${entry.platform}' platform.`,
+        remediation: "Keep one CSV per platform and move mismatched rows into the correct file.",
+      });
+    }
+
+    const matchingRows = normalizeFollowerHistoryRows(
+      rows.filter((row) => row.linkId === entry.linkId),
+    );
+    if (matchingRows.length === 0) {
+      issues.push({
+        level: "error",
+        source: repoCsvPath,
+        path: "$.linkId",
+        message: `Follower-history CSV '${repoCsvPath}' has no rows for indexed link '${entry.linkId}'.`,
+        remediation:
+          "Regenerate the CSV and index so each indexed link points at a file containing its own history rows.",
+      });
+      continue;
+    }
+
+    const latestRow = matchingRows[matchingRows.length - 1];
+    if (
+      latestRow.audienceKind !== entry.audienceKind ||
+      latestRow.audienceCount !== entry.latestAudienceCount ||
+      latestRow.audienceCountRaw !== entry.latestAudienceCountRaw ||
+      latestRow.observedAt !== entry.latestObservedAt ||
+      latestRow.canonicalUrl !== entry.canonicalUrl ||
+      latestRow.handle !== entry.handle
+    ) {
+      issues.push({
+        level: "error",
+        source: indexPath,
+        path: "$.entries",
+        message: `Follower-history index entry '${entry.linkId}' does not match the latest row in '${entry.csvPath}'.`,
+        remediation:
+          "Regenerate the follower-history index after updating CSV artifacts so latest count, timestamp, URL, and handle fields stay in sync.",
+      });
+    }
+  }
+
+  const historyRootAbsolute = absolutePath(historyRepoRoot);
+  if (fs.existsSync(historyRootAbsolute)) {
+    for (const directoryEntry of fs.readdirSync(historyRootAbsolute, { withFileTypes: true })) {
+      if (!directoryEntry.isFile() || !directoryEntry.name.endsWith(".csv")) {
+        continue;
+      }
+
+      const repoCsvPath = normalizeRepoPath(
+        path.join(historyRepoRoot, directoryEntry.name).replaceAll("\\", "/"),
+      );
+      if (!referencedCsvRepoPaths.has(repoCsvPath)) {
+        issues.push({
+          level: "error",
+          source: repoCsvPath,
+          path: "$",
+          message: `Follower-history CSV '${repoCsvPath}' is not referenced by the index.`,
+          remediation:
+            "Regenerate the follower-history index or remove stale CSV files so file/index parity is preserved.",
+        });
+      }
+    }
+  }
+
+  return issues;
 };
 
 const resolvePreviewImageAvailability = (
@@ -1178,6 +1395,8 @@ export const run = () => {
       ),
     );
   }
+
+  issues.push(...followerHistoryArtifactIssues());
 
   const errors = sortIssues(issues.filter((issue) => issue.level === "error"));
   const warnings = sortIssues(issues.filter((issue) => issue.level === "warning"));

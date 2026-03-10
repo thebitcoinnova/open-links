@@ -2,10 +2,14 @@ import {
   For,
   Match,
   Show,
+  Suspense,
   Switch,
   createEffect,
   createMemo,
+  createResource,
   createSignal,
+  lazy,
+  onCleanup,
   onMount,
 } from "solid-js";
 import PaymentLinkCard from "../components/cards/PaymentLinkCard";
@@ -17,6 +21,16 @@ import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import ThemeToggle from "../components/theme/ThemeToggle";
+import {
+  FOLLOWER_HISTORY_INDEX_PUBLIC_PATH,
+  type FollowerHistoryIndex,
+  type FollowerHistoryMode,
+  type FollowerHistoryRange,
+  type FollowerHistoryRow,
+  buildFollowerHistoryAvailabilityMap,
+  parseFollowerHistoryCsv,
+  parseFollowerHistoryIndex,
+} from "../lib/analytics/follower-history";
 import { loadContent, resolveGeneratedContentImageUrl } from "../lib/content/load-content";
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
 import { isPaymentCapableLink } from "../lib/payments/types";
@@ -66,6 +80,23 @@ const sections = resolveLinkSections(
   composition.grouping,
 ) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
+
+const ANALYTICS_QUERY_KEY = "analytics";
+const ANALYTICS_QUERY_VALUE = "all";
+const RANGE_OPTIONS: Array<{ label: string; value: FollowerHistoryRange }> = [
+  { label: "30D", value: "30d" },
+  { label: "90D", value: "90d" },
+  { label: "180D", value: "180d" },
+  { label: "All", value: "all" },
+];
+const FollowerHistoryChart = lazy(() => import("../components/analytics/FollowerHistoryChart"));
+const FollowerHistoryModal = lazy(() => import("../components/analytics/FollowerHistoryModal"));
+
+const historyAssetUrl = (assetPath: string): string => {
+  const base = import.meta.env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  return `${normalizedBase}${assetPath.replace(/^\/+/, "")}`;
+};
 
 const ensureMetaTag = (attr: "name" | "property", key: string, contentValue: string) => {
   const selector = `meta[${attr}=\"${key}\"]`;
@@ -135,13 +166,135 @@ const targetForLink = (url?: string): "_blank" | "_self" => {
   return url.startsWith("http://") || url.startsWith("https://") ? "_blank" : "_self";
 };
 
+const readAnalyticsPageState = (): boolean => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    return (
+      new URL(window.location.href).searchParams.get(ANALYTICS_QUERY_KEY) === ANALYTICS_QUERY_VALUE
+    );
+  } catch {
+    return false;
+  }
+};
+
+const writeAnalyticsPageState = (open: boolean) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const nextUrl = new URL(window.location.href);
+  if (open) {
+    nextUrl.searchParams.set(ANALYTICS_QUERY_KEY, ANALYTICS_QUERY_VALUE);
+  } else {
+    nextUrl.searchParams.delete(ANALYTICS_QUERY_KEY);
+  }
+
+  window.history.pushState({}, "", nextUrl);
+};
+
+const fetchFollowerHistoryIndex = async (): Promise<FollowerHistoryIndex | null> => {
+  try {
+    const response = await fetch(historyAssetUrl(FOLLOWER_HISTORY_INDEX_PUBLIC_PATH));
+    if (!response.ok) {
+      return null;
+    }
+
+    return parseFollowerHistoryIndex(await response.json());
+  } catch {
+    return null;
+  }
+};
+
+const fetchFollowerHistoryRows = async (csvPath: string): Promise<FollowerHistoryRow[]> => {
+  const response = await fetch(historyAssetUrl(csvPath));
+  if (!response.ok) {
+    throw new Error(`Unable to load follower history from ${csvPath}.`);
+  }
+
+  return parseFollowerHistoryCsv(await response.text());
+};
+
+const describeAnalyticsRange = (range: FollowerHistoryRange): string => {
+  if (range === "all") {
+    return "all available history";
+  }
+
+  return range.replace("d", " days");
+};
+
 export default function RouteIndex() {
   const [mode, setMode] = createSignal<UiMode>("dark");
+  const [analyticsPageOpen, setAnalyticsPageOpen] = createSignal(false);
+  const [analyticsRange, setAnalyticsRange] = createSignal<FollowerHistoryRange>("30d");
+  const [modalRange, setModalRange] = createSignal<FollowerHistoryRange>("30d");
+  const [modalMode, setModalMode] = createSignal<FollowerHistoryMode>("raw");
+  const [selectedHistoryLinkId, setSelectedHistoryLinkId] = createSignal<string | null>(null);
+
   const canToggle = createMemo(() => canToggleMode(modePolicy));
   const themeFingerprint = () => `${themeSelection.active}:${mode()}`;
 
+  const [historyIndex] = createResource(fetchFollowerHistoryIndex);
+
+  const historyAvailability = createMemo(() => buildFollowerHistoryAvailabilityMap(historyIndex()));
+  const analyticsEntries = createMemo(() => historyIndex()?.entries ?? []);
+  const analyticsAvailable = createMemo(() => analyticsEntries().length > 0);
+  const selectedHistoryEntry = createMemo(() => {
+    const selectedLinkId = selectedHistoryLinkId();
+    return selectedLinkId ? historyAvailability().get(selectedLinkId) : undefined;
+  });
+
+  const [allHistoryRows] = createResource(
+    () => (analyticsPageOpen() ? (historyIndex()?.updatedAt ?? null) : null),
+    async () => {
+      const entries = analyticsEntries();
+      const resolved = await Promise.all(
+        entries.map(
+          async (entry) => [entry.linkId, await fetchFollowerHistoryRows(entry.csvPath)] as const,
+        ),
+      );
+      return new Map<string, FollowerHistoryRow[]>(resolved);
+    },
+  );
+
+  const [selectedHistoryRows] = createResource(
+    () => selectedHistoryEntry()?.csvPath ?? null,
+    async (csvPath) => (csvPath ? fetchFollowerHistoryRows(csvPath) : []),
+  );
+
+  const syncAnalyticsStateFromLocation = () => {
+    setAnalyticsPageOpen(readAnalyticsPageState());
+  };
+
+  const toggleAnalyticsPage = () => {
+    const nextOpen = !analyticsPageOpen();
+    writeAnalyticsPageState(nextOpen);
+    setAnalyticsPageOpen(nextOpen);
+    setSelectedHistoryLinkId(null);
+  };
+
+  const openHistoryModal = (linkId: string) => {
+    setModalRange("30d");
+    setModalMode("raw");
+    setSelectedHistoryLinkId(linkId);
+  };
+
+  const closeHistoryModal = () => {
+    setSelectedHistoryLinkId(null);
+  };
+
   const renderCard = (link: (typeof content.links)[number]) => {
     const target = targetForLink(link.url);
+    const historyEntry = historyAvailability().get(link.id);
+    const analyticsButton = historyEntry
+      ? {
+          ariaLabel: `View ${link.label} follower history`,
+          onClick: () => openHistoryModal(link.id),
+          title: `View ${link.label} follower history`,
+        }
+      : undefined;
 
     if (isPaymentCapableLink(link)) {
       return (
@@ -159,6 +312,7 @@ export default function RouteIndex() {
     if (resolveRichCardVariant(content.site, link) === "rich") {
       return (
         <RichLinkCard
+          analyticsButton={analyticsButton}
           link={link}
           viewModel={buildRichCardViewModel(content.site, link)}
           target={target}
@@ -171,6 +325,7 @@ export default function RouteIndex() {
 
     return (
       <SimpleLinkCard
+        analyticsButton={analyticsButton}
         link={link}
         site={content.site}
         target={target}
@@ -184,6 +339,14 @@ export default function RouteIndex() {
   onMount(() => {
     setMode(resolveInitialMode(modePolicy));
     applySeoMetadata();
+    syncAnalyticsStateFromLocation();
+    window.addEventListener("popstate", syncAnalyticsStateFromLocation);
+  });
+
+  onCleanup(() => {
+    if (typeof window !== "undefined") {
+      window.removeEventListener("popstate", syncAnalyticsStateFromLocation);
+    }
   });
 
   createEffect(() => {
@@ -206,6 +369,16 @@ export default function RouteIndex() {
     setMode(nextMode);
     persistModePreference(modePolicy, nextMode);
   };
+
+  const profileHeader = () => (
+    <ProfileHeader
+      profile={content.profile}
+      richness={composition.profileRichness}
+      analyticsAvailable={analyticsAvailable()}
+      analyticsActive={analyticsPageOpen()}
+      onAnalyticsToggle={analyticsAvailable() ? toggleAnalyticsPage : undefined}
+    />
+  );
 
   return (
     <main
@@ -242,28 +415,100 @@ export default function RouteIndex() {
         </UtilityControlsMenu>
       </TopUtilityBar>
 
-      <For each={composition.blocks}>
-        {(block) => (
-          <Switch>
-            <Match when={block === "profile"}>
-              <ProfileHeader profile={content.profile} richness={composition.profileRichness} />
-            </Match>
-            <Match when={block === "links"}>
-              <For each={sections}>
-                {(section) => (
-                  <LinkSection
-                    section={section}
-                    showHeading={showGroupHeading}
-                    groupingStyle={composition.grouping}
+      <Show
+        when={analyticsPageOpen()}
+        fallback={
+          <For each={composition.blocks}>
+            {(block) => (
+              <Switch>
+                <Match when={block === "profile"}>{profileHeader()}</Match>
+                <Match when={block === "links"}>
+                  <For each={sections}>
+                    {(section) => (
+                      <LinkSection
+                        section={section}
+                        showHeading={showGroupHeading}
+                        groupingStyle={composition.grouping}
+                      >
+                        {(link) => renderCard(link)}
+                      </LinkSection>
+                    )}
+                  </For>
+                </Match>
+              </Switch>
+            )}
+          </For>
+        }
+      >
+        {profileHeader()}
+
+        <section class="analytics-page" aria-label="Follower analytics">
+          <div class="analytics-page-header">
+            <div>
+              <h2>Follower Analytics</h2>
+              <p>Showing {describeAnalyticsRange(analyticsRange())} of public follower history.</p>
+            </div>
+            <div class="analytics-control-group" aria-label="Analytics time range">
+              <For each={RANGE_OPTIONS}>
+                {(option) => (
+                  <button
+                    type="button"
+                    class="analytics-chip"
+                    data-active={analyticsRange() === option.value ? "true" : "false"}
+                    onClick={() => setAnalyticsRange(option.value)}
                   >
-                    {(link) => renderCard(link)}
-                  </LinkSection>
+                    {option.label}
+                  </button>
                 )}
               </For>
-            </Match>
-          </Switch>
-        )}
-      </For>
+            </div>
+          </div>
+
+          <Show when={historyIndex.loading}>
+            <p class="analytics-empty-state">Loading follower history…</p>
+          </Show>
+          <Show when={historyIndex.error}>
+            <p class="analytics-empty-state">Follower history could not be loaded.</p>
+          </Show>
+          <Show
+            when={!historyIndex.loading && !historyIndex.error && analyticsEntries().length === 0}
+          >
+            <p class="analytics-empty-state">No public follower history is published yet.</p>
+          </Show>
+
+          <div class="analytics-grid">
+            <Suspense fallback={<p class="analytics-empty-state">Loading charts…</p>}>
+              <For each={analyticsEntries()}>
+                {(entry) => (
+                  <section class="analytics-card">
+                    <div class="analytics-card-header">
+                      <div>
+                        <h3>{entry.label}</h3>
+                        <p>{entry.latestAudienceCountRaw}</p>
+                      </div>
+                      <button
+                        type="button"
+                        class="analytics-open-button"
+                        onClick={() => openHistoryModal(entry.linkId)}
+                      >
+                        Open chart
+                      </button>
+                    </div>
+
+                    <FollowerHistoryChart
+                      audienceKind={entry.audienceKind}
+                      mode="raw"
+                      range={analyticsRange()}
+                      rows={allHistoryRows()?.get(entry.linkId) ?? []}
+                      themeFingerprint={themeFingerprint()}
+                    />
+                  </section>
+                )}
+              </For>
+            </Suspense>
+          </div>
+        </section>
+      </Show>
 
       <SiteFooter
         preferences={footerPreferences}
@@ -271,6 +516,20 @@ export default function RouteIndex() {
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
       />
+
+      <Suspense fallback={null}>
+        <FollowerHistoryModal
+          entry={selectedHistoryEntry()}
+          mode={modalMode()}
+          onClose={closeHistoryModal}
+          onModeChange={setModalMode}
+          onRangeChange={setModalRange}
+          open={Boolean(selectedHistoryLinkId())}
+          range={modalRange()}
+          rows={selectedHistoryRows() ?? []}
+          themeFingerprint={themeFingerprint()}
+        />
+      </Suspense>
     </main>
   );
 }
