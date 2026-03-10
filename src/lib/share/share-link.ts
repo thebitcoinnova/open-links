@@ -1,4 +1,5 @@
 export interface ShareLinkInput {
+  mode?: "rich" | "url-only";
   text?: string;
   title: string;
   url: string;
@@ -52,12 +53,14 @@ const copyToClipboard = async (value: string): Promise<boolean> => {
 
 const toSharePayload = (input: ShareLinkInput): ShareData => {
   const payload: ShareData = {
-    title: input.title,
     url: input.url,
   };
 
-  if (typeof input.text === "string" && input.text.trim().length > 0) {
-    payload.text = input.text.trim();
+  if (input.mode !== "url-only") {
+    payload.title = input.title;
+    if (typeof input.text === "string" && input.text.trim().length > 0) {
+      payload.text = input.text.trim();
+    }
   }
 
   return payload;

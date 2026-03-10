@@ -53,6 +53,29 @@ test("shareLink prefers native share when available", async () => {
   restoreGlobals();
 });
 
+test("shareLink omits title and text in url-only mode", async () => {
+  let sharedPayload: ShareData | undefined;
+  setNavigator({
+    canShare: () => true,
+    share: async (payload: ShareData) => {
+      sharedPayload = payload;
+    },
+  } as unknown as Navigator);
+
+  await shareLink({
+    mode: "url-only",
+    text: "This should not leak into copy payloads",
+    title: "GitHub",
+    url: "https://github.com/pRizz",
+  });
+
+  assert.deepEqual(sharedPayload, {
+    url: "https://github.com/pRizz",
+  });
+
+  restoreGlobals();
+});
+
 test("shareLink returns dismissed when native share is aborted", async () => {
   setNavigator({
     canShare: () => true,

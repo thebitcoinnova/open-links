@@ -312,13 +312,30 @@ test("history-aware cards expose analytics then share as sibling actions without
   assert.ok(firstElementWithClass(tree, "non-payment-card-title-row"));
 });
 
-test("cards without resolved actions do not render the new card action row", () => {
+test("cards without history still render a share-only action row", () => {
   const tree = SimpleLinkCard({
+    resolveCardActions: () => [
+      {
+        ariaLabel: "Share OpenLinks",
+        kind: "share",
+        onClick: () => Promise.resolve({ message: "Link copied", status: "copied" as const }),
+      },
+    ],
     link: plainSimpleLink,
     site,
     brandIconOptions,
     themeFingerprint: "test",
   }) as RenderedNode;
 
-  assert.equal(firstElementWithClass(tree, "card-action-row"), undefined);
+  const actionRow = firstElementWithClass(tree, "card-action-row");
+  const buttons = collectElements(tree).filter((element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" && classValue.split(/\s+/u).includes("card-action-button")
+    );
+  });
+
+  assert.ok(actionRow);
+  assert.equal(buttons.length, 1);
+  assert.equal(buttons[0]?.props["aria-label"], "Share OpenLinks");
 });

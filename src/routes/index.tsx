@@ -290,8 +290,23 @@ export default function RouteIndex() {
     const target = targetForLink(link.url);
     const resolveCardActions = () => {
       const historyEntry = historyAvailability().get(link.id);
+      const shareUrl = link.url;
+      const shareAction = shareUrl
+        ? {
+            ariaLabel: `Share ${link.label}`,
+            kind: "share" as const,
+            onClick: () =>
+              shareLink({
+                mode: "url-only",
+                title: link.label,
+                url: shareUrl,
+              }),
+            title: `Share ${link.label}`,
+          }
+        : undefined;
+
       if (!historyEntry) {
-        return [];
+        return shareAction ? [shareAction] : [];
       }
 
       return [
@@ -304,17 +319,7 @@ export default function RouteIndex() {
           },
           title: `View ${link.label} follower history`,
         },
-        {
-          ariaLabel: `Share ${link.label}`,
-          kind: "share" as const,
-          onClick: () =>
-            shareLink({
-              text: link.description,
-              title: link.label,
-              url: link.url ?? "",
-            }),
-          title: `Share ${link.label}`,
-        },
+        ...(shareAction ? [shareAction] : []),
       ];
     };
 

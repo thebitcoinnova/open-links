@@ -34,6 +34,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
 
   const handleShareProfile = async () => {
     const result = await shareLink({
+      mode: "url-only",
       text: props.profile.headline,
       title: props.profile.name,
       url: resolveDocumentShareUrl(),
