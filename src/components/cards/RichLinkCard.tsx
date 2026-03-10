@@ -4,7 +4,7 @@ import type { RichCardViewModel } from "../../lib/ui/rich-card-policy";
 import NonPaymentLinkCardShell, { type CardAnalyticsButtonProps } from "./NonPaymentLinkCardShell";
 
 export interface RichLinkCardProps {
-  analyticsButton?: CardAnalyticsButtonProps;
+  resolveAnalyticsButton?: () => CardAnalyticsButtonProps | undefined;
   link: OpenLink;
   viewModel: RichCardViewModel;
   target?: "_blank" | "_self";
@@ -16,7 +16,7 @@ export interface RichLinkCardProps {
 
 export const RichLinkCard = (props: RichLinkCardProps) => (
   <NonPaymentLinkCardShell
-    analyticsButton={props.analyticsButton}
+    resolveAnalyticsButton={props.resolveAnalyticsButton}
     link={props.link}
     viewModel={props.viewModel}
     rootClassName={`rich-link-card image-${props.viewModel.imageTreatment}`}

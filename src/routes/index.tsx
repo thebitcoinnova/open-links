@@ -287,14 +287,18 @@ export default function RouteIndex() {
 
   const renderCard = (link: (typeof content.links)[number]) => {
     const target = targetForLink(link.url);
-    const historyEntry = historyAvailability().get(link.id);
-    const analyticsButton = historyEntry
-      ? {
-          ariaLabel: `View ${link.label} follower history`,
-          onClick: () => openHistoryModal(link.id),
-          title: `View ${link.label} follower history`,
-        }
-      : undefined;
+    const resolveAnalyticsButton = () => {
+      const historyEntry = historyAvailability().get(link.id);
+      if (!historyEntry) {
+        return undefined;
+      }
+
+      return {
+        ariaLabel: `View ${link.label} follower history`,
+        onClick: () => openHistoryModal(link.id),
+        title: `View ${link.label} follower history`,
+      };
+    };
 
     if (isPaymentCapableLink(link)) {
       return (
@@ -312,7 +316,7 @@ export default function RouteIndex() {
     if (resolveRichCardVariant(content.site, link) === "rich") {
       return (
         <RichLinkCard
-          analyticsButton={analyticsButton}
+          resolveAnalyticsButton={resolveAnalyticsButton}
           link={link}
           viewModel={buildRichCardViewModel(content.site, link)}
           target={target}
@@ -325,7 +329,7 @@ export default function RouteIndex() {
 
     return (
       <SimpleLinkCard
-        analyticsButton={analyticsButton}
+        resolveAnalyticsButton={resolveAnalyticsButton}
         link={link}
         site={content.site}
         target={target}

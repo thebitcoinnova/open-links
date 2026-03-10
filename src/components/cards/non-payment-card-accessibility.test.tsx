@@ -253,10 +253,10 @@ test("rich cards keep description-image rows decorative and ordered after the de
 test("history-aware cards expose a sibling analytics button without changing anchor semantics", () => {
   // Act
   const tree = RichLinkCard({
-    analyticsButton: {
+    resolveAnalyticsButton: () => ({
       ariaLabel: "View GitHub follower history",
       onClick: () => undefined,
-    },
+    }),
     link: richGithubLink,
     viewModel: buildRichCardViewModel(site, richGithubLink),
     brandIconOptions,
@@ -271,4 +271,9 @@ test("history-aware cards expose a sibling analytics button without changing anc
   assert.equal(anchor.props["aria-label"], "Open pRizz in a new tab");
   assert.ok(button);
   assert.equal(button.props["aria-label"], "View GitHub follower history");
+  assert.equal(
+    firstElementWithClass(tree, "non-payment-card-summary")?.props["data-has-analytics"],
+    "true",
+  );
+  assert.ok(firstElementWithClass(tree, "non-payment-card-title-row"));
 });

@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { IconAnalytics } from "../../lib/icons/custom-icons";
@@ -15,7 +15,7 @@ export interface CardAnalyticsButtonProps {
 }
 
 export interface NonPaymentLinkCardShellProps {
-  analyticsButton?: CardAnalyticsButtonProps;
+  resolveAnalyticsButton?: () => CardAnalyticsButtonProps | undefined;
   link: OpenLink;
   viewModel: NonPaymentCardViewModel;
   rootClassName: string;
@@ -42,6 +42,7 @@ const metaItemClassName = (item: NonPaymentCardMetaItem): string => {
 };
 
 export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => {
+  const analyticsButton = createMemo(() => props.resolveAnalyticsButton?.());
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const interaction = () => props.interaction ?? "minimal";
@@ -71,10 +72,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       : `Open ${props.viewModel.title}`;
 
   return (
-    <div
-      class="non-payment-card-frame"
-      data-has-analytics={props.analyticsButton ? "true" : "false"}
-    >
+    <div class="non-payment-card-frame" data-has-analytics={analyticsButton() ? "true" : "false"}>
       <a
         class={props.rootClassName}
         href={props.link.url}
@@ -95,7 +93,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
         data-has-footer={showFooter() ? "true" : "false"}
         data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
-        data-has-analytics={props.analyticsButton ? "true" : "false"}
+        data-has-analytics={analyticsButton() ? "true" : "false"}
       >
         <span class="non-payment-card-shell">
           <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
@@ -129,10 +127,15 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
             </Show>
           </span>
 
-          <span class="non-payment-card-summary">
-            <strong class="non-payment-card-title" id={titleId()}>
-              {props.viewModel.title}
-            </strong>
+          <span
+            class="non-payment-card-summary"
+            data-has-analytics={analyticsButton() ? "true" : "false"}
+          >
+            <span class="non-payment-card-title-row">
+              <strong class="non-payment-card-title" id={titleId()}>
+                {props.viewModel.title}
+              </strong>
+            </span>
             <Show when={hasHeaderMeta()}>
               <span class="non-payment-card-header-meta" id={metaId()}>
                 <For each={props.viewModel.headerMetaItems}>
@@ -181,13 +184,13 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         </span>
       </a>
 
-      <Show when={props.analyticsButton}>
+      <Show when={analyticsButton()}>
         <button
           type="button"
           class="card-analytics-button"
-          aria-label={props.analyticsButton?.ariaLabel}
-          title={props.analyticsButton?.title ?? props.analyticsButton?.ariaLabel}
-          onClick={() => props.analyticsButton?.onClick()}
+          aria-label={analyticsButton()?.ariaLabel}
+          title={analyticsButton()?.title ?? analyticsButton()?.ariaLabel}
+          onClick={() => analyticsButton()?.onClick()}
         >
           <IconAnalytics class="card-analytics-button-icon" aria-hidden="true" />
         </button>
