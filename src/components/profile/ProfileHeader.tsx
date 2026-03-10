@@ -1,6 +1,7 @@
 import { For, Show, createSignal, onCleanup } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
 import { IconAnalytics, IconShare } from "../../lib/icons/custom-icons";
+import { resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
@@ -14,68 +15,6 @@ const orderedContactEntries = (contact?: Record<string, string>) =>
   Object.entries(contact ?? {}).sort((left, right) => left[0].localeCompare(right[0]));
 
 const STATUS_RESET_DELAY_MS = 3000;
-
-const resolveShareUrl = (): string => {
-  if (typeof window === "undefined") {
-    return "/";
-  }
-
-  const canonicalHref = document
-    .querySelector<HTMLLinkElement>('link[rel="canonical"]')
-    ?.getAttribute("href")
-    ?.trim();
-
-  if (!canonicalHref) {
-    return window.location.href;
-  }
-
-  try {
-    return new URL(canonicalHref, window.location.href).toString();
-  } catch {
-    return window.location.href;
-  }
-};
-
-const fallbackCopyText = (value: string): boolean => {
-  if (typeof document === "undefined") {
-    return false;
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = value;
-  textarea.setAttribute("readonly", "true");
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  textarea.style.pointerEvents = "none";
-  textarea.style.inset = "0";
-
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-
-  let copied = false;
-  try {
-    copied = document.execCommand("copy");
-  } catch {
-    copied = false;
-  }
-
-  document.body.removeChild(textarea);
-  return copied;
-};
-
-const copyToClipboard = async (value: string): Promise<boolean> => {
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(value);
-      return true;
-    } catch {
-      return fallbackCopyText(value);
-    }
-  }
-
-  return fallbackCopyText(value);
-};
 
 export const ProfileHeader = (props: ProfileHeaderProps) => {
   const analyticsActive = () => props.analyticsActive ?? false;
@@ -94,26 +33,15 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   };
 
   const handleShareProfile = async () => {
-    const shareUrl = resolveShareUrl();
+    const result = await shareLink({
+      text: props.profile.headline,
+      title: props.profile.name,
+      url: resolveDocumentShareUrl(),
+    });
 
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        await navigator.share({
-          title: props.profile.name,
-          text: props.profile.headline,
-          url: shareUrl,
-        });
-        setTimedShareStatus("Share opened");
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-      }
+    if (result.status !== "dismissed") {
+      setTimedShareStatus(result.message);
     }
-
-    const copied = await copyToClipboard(shareUrl);
-    setTimedShareStatus(copied ? "Link copied" : "Share failed");
   };
 
   onCleanup(() => {

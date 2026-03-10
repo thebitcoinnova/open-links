@@ -39,6 +39,7 @@ import {
   resolveBasePathFromUrl,
   resolveSeoMetadata,
 } from "../lib/seo/resolve-seo-metadata";
+import { shareLink } from "../lib/share/share-link";
 import {
   type UiMode,
   applyThemeState,
@@ -287,17 +288,34 @@ export default function RouteIndex() {
 
   const renderCard = (link: (typeof content.links)[number]) => {
     const target = targetForLink(link.url);
-    const resolveAnalyticsButton = () => {
+    const resolveCardActions = () => {
       const historyEntry = historyAvailability().get(link.id);
       if (!historyEntry) {
-        return undefined;
+        return [];
       }
 
-      return {
-        ariaLabel: `View ${link.label} follower history`,
-        onClick: () => openHistoryModal(link.id),
-        title: `View ${link.label} follower history`,
-      };
+      return [
+        {
+          ariaLabel: `View ${link.label} follower history`,
+          kind: "analytics" as const,
+          onClick: () => {
+            openHistoryModal(link.id);
+            return undefined;
+          },
+          title: `View ${link.label} follower history`,
+        },
+        {
+          ariaLabel: `Share ${link.label}`,
+          kind: "share" as const,
+          onClick: () =>
+            shareLink({
+              text: link.description,
+              title: link.label,
+              url: link.url ?? "",
+            }),
+          title: `Share ${link.label}`,
+        },
+      ];
     };
 
     if (isPaymentCapableLink(link)) {
@@ -316,7 +334,7 @@ export default function RouteIndex() {
     if (resolveRichCardVariant(content.site, link) === "rich") {
       return (
         <RichLinkCard
-          resolveAnalyticsButton={resolveAnalyticsButton}
+          resolveCardActions={resolveCardActions}
           link={link}
           viewModel={buildRichCardViewModel(content.site, link)}
           target={target}
@@ -329,7 +347,7 @@ export default function RouteIndex() {
 
     return (
       <SimpleLinkCard
-        resolveAnalyticsButton={resolveAnalyticsButton}
+        resolveCardActions={resolveCardActions}
         link={link}
         site={content.site}
         target={target}

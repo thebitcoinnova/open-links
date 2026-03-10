@@ -167,6 +167,20 @@ const simpleGithubLink = {
   type: "simple",
 } as const satisfies OpenLink;
 
+const plainSimpleLink = {
+  id: "openlinks",
+  label: "OpenLinks",
+  url: "https://openlinks.us",
+  type: "simple",
+  icon: "github",
+  description: "Project homepage preview card with fallback defaults",
+  metadata: {
+    title: "OpenLinks",
+    description: "Project homepage preview card with fallback defaults",
+    sourceLabel: "openlinks.us",
+  },
+} as const satisfies OpenLink;
+
 const brandIconOptions = resolveBrandIconOptions(site as SiteData);
 
 test("simple non-payment cards render action-oriented accessible props from the shared shell", () => {
@@ -250,13 +264,21 @@ test("rich cards keep description-image rows decorative and ordered after the de
   assert.equal(image.props.alt, "");
 });
 
-test("history-aware cards expose a sibling analytics button without changing anchor semantics", () => {
+test("history-aware cards expose analytics then share as sibling actions without changing anchor semantics", () => {
   // Act
   const tree = RichLinkCard({
-    resolveAnalyticsButton: () => ({
-      ariaLabel: "View GitHub follower history",
-      onClick: () => undefined,
-    }),
+    resolveCardActions: () => [
+      {
+        ariaLabel: "View GitHub follower history",
+        kind: "analytics",
+        onClick: () => undefined,
+      },
+      {
+        ariaLabel: "Share GitHub",
+        kind: "share",
+        onClick: () => Promise.resolve({ message: "Link copied", status: "copied" as const }),
+      },
+    ],
     link: richGithubLink,
     viewModel: buildRichCardViewModel(site, richGithubLink),
     brandIconOptions,
@@ -265,15 +287,38 @@ test("history-aware cards expose a sibling analytics button without changing anc
 
   // Assert
   const anchor = firstElementOfType(tree, "a");
-  const button = firstElementWithClass(tree, "card-analytics-button");
+  const actionRow = firstElementWithClass(tree, "card-action-row");
+  const buttons = collectElements(tree).filter((element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" && classValue.split(/\s+/u).includes("card-action-button")
+    );
+  });
 
   assert.ok(anchor);
   assert.equal(anchor.props["aria-label"], "Open pRizz in a new tab");
-  assert.ok(button);
-  assert.equal(button.props["aria-label"], "View GitHub follower history");
+  assert.ok(actionRow);
+  assert.equal(buttons.length, 2);
+  assert.equal(buttons[0]?.props["aria-label"], "View GitHub follower history");
+  assert.equal(buttons[1]?.props["aria-label"], "Share GitHub");
   assert.equal(
     firstElementWithClass(tree, "non-payment-card-summary")?.props["data-has-analytics"],
+    undefined,
+  );
+  assert.equal(
+    firstElementWithClass(tree, "non-payment-card-summary")?.props["data-has-actions"],
     "true",
   );
   assert.ok(firstElementWithClass(tree, "non-payment-card-title-row"));
+});
+
+test("cards without resolved actions do not render the new card action row", () => {
+  const tree = SimpleLinkCard({
+    link: plainSimpleLink,
+    site,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  assert.equal(firstElementWithClass(tree, "card-action-row"), undefined);
 });

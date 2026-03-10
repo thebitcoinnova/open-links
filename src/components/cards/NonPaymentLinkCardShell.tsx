@@ -1,7 +1,8 @@
-import { For, Show, createMemo } from "solid-js";
+import { For, Show, createMemo, createSignal, onCleanup } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
-import { IconAnalytics } from "../../lib/icons/custom-icons";
+import { IconAnalytics, IconShare } from "../../lib/icons/custom-icons";
+import type { ShareLinkResult } from "../../lib/share/share-link";
 import type {
   NonPaymentCardMetaItem,
   NonPaymentCardViewModel,
@@ -10,12 +11,13 @@ import LinkSiteIcon from "../icons/LinkSiteIcon";
 
 export interface CardAnalyticsButtonProps {
   ariaLabel: string;
-  onClick: () => void;
+  kind: "analytics" | "share";
+  onClick: () => undefined | Promise<ShareLinkResult | undefined>;
   title?: string;
 }
 
 export interface NonPaymentLinkCardShellProps {
-  resolveAnalyticsButton?: () => CardAnalyticsButtonProps | undefined;
+  resolveCardActions?: () => CardAnalyticsButtonProps[];
   link: OpenLink;
   viewModel: NonPaymentCardViewModel;
   rootClassName: string;
@@ -42,7 +44,7 @@ const metaItemClassName = (item: NonPaymentCardMetaItem): string => {
 };
 
 export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => {
-  const analyticsButton = createMemo(() => props.resolveAnalyticsButton?.());
+  const cardActions = createMemo(() => props.resolveCardActions?.() ?? []);
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const interaction = () => props.interaction ?? "minimal";
@@ -70,9 +72,35 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
     target() === "_blank"
       ? `Open ${props.viewModel.title} in a new tab`
       : `Open ${props.viewModel.title}`;
+  const [actionStatus, setActionStatus] = createSignal("");
+  let resetTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const setTimedActionStatus = (message: string) => {
+    setActionStatus(message);
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+    }
+    resetTimer = setTimeout(() => setActionStatus(""), 3000);
+  };
+
+  const handleCardAction = async (action: CardAnalyticsButtonProps) => {
+    const maybeResult = (await action.onClick()) as ShareLinkResult | undefined;
+    if (maybeResult && maybeResult.status !== "dismissed" && maybeResult.message.length > 0) {
+      setTimedActionStatus(maybeResult.message);
+    }
+  };
+
+  onCleanup(() => {
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+    }
+  });
 
   return (
-    <div class="non-payment-card-frame" data-has-analytics={analyticsButton() ? "true" : "false"}>
+    <div
+      class="non-payment-card-frame"
+      data-has-actions={cardActions().length > 0 ? "true" : "false"}
+    >
       <a
         class={props.rootClassName}
         href={props.link.url}
@@ -93,7 +121,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
         data-has-footer={showFooter() ? "true" : "false"}
         data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
-        data-has-analytics={analyticsButton() ? "true" : "false"}
+        data-has-actions={cardActions().length > 0 ? "true" : "false"}
       >
         <span class="non-payment-card-shell">
           <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
@@ -129,7 +157,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
 
           <span
             class="non-payment-card-summary"
-            data-has-analytics={analyticsButton() ? "true" : "false"}
+            data-has-actions={cardActions().length > 0 ? "true" : "false"}
           >
             <span class="non-payment-card-title-row">
               <strong class="non-payment-card-title" id={titleId()}>
@@ -142,6 +170,11 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
                   {(item) => <span class={metaItemClassName(item)}>{item.text}</span>}
                 </For>
               </span>
+            </Show>
+            <Show when={actionStatus()}>
+              <output class="non-payment-card-action-status" aria-live="polite">
+                {actionStatus()}
+              </output>
             </Show>
           </span>
 
@@ -184,16 +217,27 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         </span>
       </a>
 
-      <Show when={analyticsButton()}>
-        <button
-          type="button"
-          class="card-analytics-button"
-          aria-label={analyticsButton()?.ariaLabel}
-          title={analyticsButton()?.title ?? analyticsButton()?.ariaLabel}
-          onClick={() => analyticsButton()?.onClick()}
-        >
-          <IconAnalytics class="card-analytics-button-icon" aria-hidden="true" />
-        </button>
+      <Show when={cardActions().length > 0}>
+        <span class="card-action-row" aria-label="Card actions">
+          <For each={cardActions()}>
+            {(action) => (
+              <button
+                type="button"
+                class={`card-action-button card-action-button-${action.kind}`}
+                aria-label={action.ariaLabel}
+                title={action.title ?? action.ariaLabel}
+                onClick={() => handleCardAction(action)}
+              >
+                <Show
+                  when={action.kind === "analytics"}
+                  fallback={<IconShare class="card-action-button-icon" aria-hidden="true" />}
+                >
+                  <IconAnalytics class="card-action-button-icon" aria-hidden="true" />
+                </Show>
+              </button>
+            )}
+          </For>
+        </span>
       </Show>
     </div>
   );

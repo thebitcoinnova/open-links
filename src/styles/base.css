@@ -492,10 +492,17 @@ a:focus-visible {
   min-width: 0;
 }
 
-.card-analytics-button {
+.card-action-row {
   position: absolute;
   top: calc(var(--space-3) * var(--density-scale) + 0.05rem);
   right: calc(var(--space-3) * var(--density-scale));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  z-index: 1;
+}
+
+.card-action-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -508,23 +515,22 @@ a:focus-visible {
   border-radius: 999px;
   box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 14%, transparent);
   cursor: pointer;
-  z-index: 1;
   transition: border-color var(--motion-fast), transform var(--motion-fast), box-shadow
     var(--motion-fast), background-color var(--motion-fast);
 }
 
-.card-analytics-button:hover {
+.card-action-button:hover {
   border-color: var(--border-strong);
   transform: translateY(-1px);
   box-shadow: 0 14px 24px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
-.card-analytics-button:focus-visible {
+.card-action-button:focus-visible {
   box-shadow: var(--shadow-focus);
   border-color: var(--accent-strong);
 }
 
-.card-analytics-button-icon {
+.card-action-button-icon {
   width: 1.05rem;
   height: 1.05rem;
   flex: 0 0 auto;
@@ -689,8 +695,8 @@ a:focus-visible {
   min-width: 0;
 }
 
-.non-payment-card-summary[data-has-analytics="true"] .non-payment-card-title-row {
-  padding-right: calc(var(--page-target-size) + 0.8rem);
+.non-payment-card-summary[data-has-actions="true"] .non-payment-card-title-row {
+  padding-right: calc((var(--page-target-size) * 2) + 1.1rem);
 }
 
 .non-payment-card-title {
@@ -708,6 +714,11 @@ a:focus-visible {
   color: color-mix(in srgb, var(--text-primary) 76%, var(--text-muted) 24%);
   font-size: var(--page-type-caption);
   line-height: var(--line-height-card-description);
+}
+
+.non-payment-card-action-status {
+  color: var(--text-muted);
+  font-size: var(--page-type-caption);
 }
 
 .non-payment-card-description {
