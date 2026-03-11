@@ -1,8 +1,9 @@
-import { For, Show, createMemo, createSignal, onCleanup } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { IconAnalytics, IconShare } from "../../lib/icons/custom-icons";
 import type { ShareLinkResult } from "../../lib/share/share-link";
+import { showActionToast } from "../../lib/ui/action-toast";
 import type {
   NonPaymentCardMetaItem,
   NonPaymentCardViewModel,
@@ -72,29 +73,10 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
     target() === "_blank"
       ? `Open ${props.viewModel.title} in a new tab`
       : `Open ${props.viewModel.title}`;
-  const [actionStatus, setActionStatus] = createSignal("");
-  let resetTimer: ReturnType<typeof setTimeout> | undefined;
-
-  const setTimedActionStatus = (message: string) => {
-    setActionStatus(message);
-    if (resetTimer) {
-      clearTimeout(resetTimer);
-    }
-    resetTimer = setTimeout(() => setActionStatus(""), 3000);
-  };
 
   const handleCardAction = async (action: CardAnalyticsButtonProps) => {
-    const maybeResult = (await action.onClick()) as ShareLinkResult | undefined;
-    if (maybeResult && maybeResult.status !== "dismissed" && maybeResult.message.length > 0) {
-      setTimedActionStatus(maybeResult.message);
-    }
+    showActionToast((await action.onClick()) as ShareLinkResult | undefined);
   };
-
-  onCleanup(() => {
-    if (resetTimer) {
-      clearTimeout(resetTimer);
-    }
-  });
 
   return (
     <div
@@ -170,11 +152,6 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
                   {(item) => <span class={metaItemClassName(item)}>{item.text}</span>}
                 </For>
               </span>
-            </Show>
-            <Show when={actionStatus()}>
-              <output class="non-payment-card-action-status" aria-live="polite">
-                {actionStatus()}
-              </output>
             </Show>
           </span>
 

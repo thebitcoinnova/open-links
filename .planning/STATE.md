@@ -5,15 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Next milestone definition after archiving v1.1 and accepting the remaining quality/performance debt as backlog
+**Current focus:** Define the next versioned milestone now that the Phase 13 toast-feedback follow-up is complete
 
 ## Current Position
 
-Phase: none (milestone archived)
-Plan: n/a
-Status: v1.1 archived; ready for `$gsd-new-milestone`
+Phase: 13 (complete)
+Plan: 13-01, 13-02
+Status: Phase 13 complete; ready for `$gsd-new-milestone`
+Next Phase: none (define the next versioned milestone)
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-10 - Archived v1.1 after audit, roadmap/requirements archival, and release tagging prep.
+Last activity: 2026-03-11 - Completed Phase 13 with shell-level toasts, shared clipboard fallback, and built-preview verification.
 
 Progress: [##########] 100%
 
@@ -63,13 +64,14 @@ Progress: [##########] 100%
 ### Roadmap Evolution
 
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
-
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
 - 2026-03-10: Phase 11 added for append-only public follower-history CSVs and an app surface to chart audience growth across tracked platforms.
 - 2026-03-10: Phase 11 completed with public history CSV artifacts, a nightly commit-and-deploy workflow, and a lazy-loaded analytics UI reachable from the profile header and history-aware cards.
 - 2026-03-10: Phase 12 added for card-level native share actions positioned beside the new analytics buttons.
 - 2026-03-10: Phase 12 completed with a shared Web Share utility, profile/card share parity, and a two-button card action row for history-aware cards.
+- 2026-03-11: Phase 13 added as a post-v1.1 follow-up to replace inline action feedback with toast-based UI while deferring dialog-library standardization.
+- 2026-03-11: Phase 13 completed with a shell-level `solid-sonner` toaster, shared clipboard fallback reuse, payment-copy toast feedback, and desktop/mobile built-preview verification.
 
 ### Pending Todos
 
@@ -86,6 +88,6 @@ Progress: [##########] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-10 02:30
-Stopped at: v1.1 archived; the next milestone step is `$gsd-new-milestone`.
+Last session: 2026-03-11 11:05
+Stopped at: Phase 13 complete; the next planning step is `$gsd-new-milestone`.
 Resume file: .planning/ROADMAP.md

@@ -12,6 +12,7 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
+import { Toaster, toast } from "solid-sonner";
 import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
@@ -50,6 +51,7 @@ import {
   resolveModePolicy,
 } from "../lib/theme/mode-controller";
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
+import { ACTION_TOAST_OPTIONS, registerActionToastClient } from "../lib/ui/action-toast";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
@@ -73,6 +75,12 @@ const typography = resolveTypographyPreferences({
   site: content.site,
   activeTheme: themeSelection.active,
   typographyScale: layout.typographyScale,
+});
+
+registerActionToastClient({
+  error: (message) => toast.error(message),
+  info: (message) => toast.info(message),
+  success: (message) => toast.success(message),
 });
 
 const sections = resolveLinkSections(
@@ -542,6 +550,17 @@ export default function RouteIndex() {
         buildTimestampIso={__OPENLINKS_BUILD_TIMESTAMP__}
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
+      />
+
+      <Toaster
+        containerAriaLabel="Action notifications"
+        duration={ACTION_TOAST_OPTIONS.duration}
+        mobileOffset={{ bottom: 16, left: 16, right: 16 }}
+        position="bottom-center"
+        richColors
+        theme={mode() === "dark" ? "dark" : "light"}
+        toastOptions={ACTION_TOAST_OPTIONS}
+        visibleToasts={4}
       />
 
       <Suspense fallback={null}>

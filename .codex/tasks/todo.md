@@ -12,6 +12,34 @@
 - Verification: In a fresh temp copy, `bun install --frozen-lockfile`, `bun run build`, `bun scripts/quality/run-quality-checks.ts --format json --report /tmp/open-links-ci-quality.json --summary /tmp/open-links-ci-quality.md`, and `bun run ci:required` all passed. The quality JSON report now shows `performance: pass`, and the final diff review confirmed that only `data/site.json` and `.codex/tasks/todo.md` changed.
 - Residual risk: The analytics chart chunk is still large by design, so future analytics expansion should revisit the implementation before adding more runtime weight. This change only restores CI to the currently accepted baseline.
 
+- [x] Add a shell-level `solid-sonner` toaster and migrate profile/card share feedback off inline status outputs.
+- [x] Extract a shared clipboard helper, move payment-rail copy feedback onto toasts, and retire the old inline status styling.
+- [x] Verify Phase 13 with focused tests, `bun run biome:check`, `bun run typecheck`, `bun run build`, and a built-preview browser check.
+
+### Completion Review
+
+- Result: Phase 13 is fully implemented. The public site now mounts a single `solid-sonner` toaster, profile and card share surfaces no longer manage inline timer-driven status outputs, share fallback and payment-rail copy reuse one clipboard helper, payment-copy buttons keep stable `Copy` labels, and the new toast surface is lightly themed to fit the existing site shell.
+- Verification: `bun test src/lib/share/copy-to-clipboard.test.ts src/lib/share/share-link.test.ts src/components/cards/PaymentLinkCard.test.tsx src/components/profile/ProfileHeader.test.tsx src/components/cards/non-payment-card-accessibility.test.tsx`, `bun run biome:check`, `bun run typecheck`, and `bun run build` all passed. A Playwright built-preview check of `http://127.0.0.1:4173/` then forced clipboard fallback and confirmed `Link copied` toasts render bottom-center on desktop and stay within the `390x844` mobile viewport.
+- Residual risk: The new dependency slightly increases the main route bundle, and the repo still carries the pre-existing `/` budget overrun plus the large lazy analytics chunk. If future feedback work also wants dialog standardization, that should stay a separate decision instead of expanding this toast phase retroactively.
+
+- [x] Research Phase 13's toast-library fit, current action-feedback seams, and the minimal rollout scope for the public site.
+- [x] Create Phase 13 research plus the execution plans for toast-host setup, share/card migration, and payment-copy normalization.
+- [x] Update planning state so Phase 13 is marked planned and ready for `$gsd-execute-phase 13`.
+
+### Completion Review
+
+- Result: Added `.planning/phases/13-replace-inline-action-feedback-with-toasts/13-RESEARCH.md` plus two execution plans. Wave 1 installs `solid-sonner`, mounts a single public-site toaster, and migrates profile/card share feedback off local inline status outputs. Wave 2 extracts a shared clipboard helper, moves payment-rail copy feedback onto the same toast path, and finishes toast theming plus regression coverage. `.planning/ROADMAP.md` and `.planning/STATE.md` now mark Phase 13 as planned and ready for execution.
+- Verification: Reviewed the current share/card/payment seams, the recent Phase 12 planning patterns, the new research and plan files on disk, and the resulting planning-state diff to confirm the phase stays scoped to transient public-site action feedback while explicitly deferring dialog-library standardization.
+- Residual risk: Phase 13 still adds a new runtime dependency to a route that already carries known `/` bundle-budget debt, so execution needs to watch bundle impact and keep the toast integration narrow. If `solid-sonner` styling cannot be made to fit the current site shell cleanly, execution may need a small theme shim but should not reopen the library choice without evidence.
+
+- [x] Add a post-v1.1 Phase 13 for toast-based action feedback to the active roadmap queue and state tracking.
+
+### Completion Review
+
+- Result: Added Phase 13, `Replace Inline Action Feedback with Toasts`, to `.planning/ROADMAP.md` as a post-v1.1 follow-up queue item, updated `.planning/STATE.md` so the next actionable planning command is `$gsd-plan-phase 13`, and kept the next versioned milestone intentionally undefined.
+- Verification: Reviewed the active roadmap, archived `v1.1` roadmap, and resulting planning-state diff to confirm Phase 13 is sequential after Phase 12, carries the recommended `solid-sonner` direction, and does not reopen or renumber archived milestone phases.
+- Residual risk: This is an unversioned follow-up phase, so the project still needs a later `$gsd-new-milestone` pass to formalize `v1.2` scope. Dialog standardization also remains intentionally deferred until the app has enough modal surface area to justify it.
+
 - [x] Refresh the canonical docs for social-card metadata, follower-history artifacts, and the current public-vs-authenticated extractor split.
 - [x] Expand generic-state regression coverage across profile cards, fallback cards, clean share behavior, and append-only follower-history artifacts.
 - [x] Add a dedicated maintainer verification guide and update milestone planning state to mark Phase 9 and v1.1 complete.

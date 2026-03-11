@@ -373,3 +373,23 @@ test("cards without history still render a share-only action row", () => {
   assert.equal(buttons.length, 1);
   assert.equal(buttons[0]?.props["aria-label"], "Share OpenLinks");
 });
+
+test("card action surfaces no longer render inline action status outputs", () => {
+  const tree = RichLinkCard({
+    resolveCardActions: () => [
+      {
+        ariaLabel: "Share GitHub",
+        kind: "share",
+        onClick: () => Promise.resolve({ message: "Link copied", status: "copied" as const }),
+      },
+    ],
+    link: richGithubLink,
+    viewModel: buildRichCardViewModel(site, richGithubLink),
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  const outputElement = firstElementOfType(tree, "output");
+
+  assert.equal(outputElement, undefined);
+});

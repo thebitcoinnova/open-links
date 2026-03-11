@@ -39,10 +39,6 @@
     min-height: calc(var(--page-target-size) + 0.15rem);
   }
 
-  body .profile-share-status {
-    margin-top: 0;
-  }
-
   body .utility-actions {
     gap: var(--space-1);
   }

@@ -15,6 +15,8 @@ import type {
   PaymentQrStyle,
   PaymentRail,
 } from "../../lib/payments/types";
+import { copyToClipboard } from "../../lib/share/copy-to-clipboard";
+import { showActionToast } from "../../lib/ui/action-toast";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 import PaymentQrFullscreen from "../payments/PaymentQrFullscreen";
 import StyledPaymentQr from "../payments/StyledPaymentQr";
@@ -62,10 +64,7 @@ const clampLogoSize = (value: number | undefined): number => {
 export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const [toggledQrRailIds, setToggledQrRailIds] = createSignal<Set<string>>(new Set());
   const [fullscreenRailId, setFullscreenRailId] = createSignal<string | undefined>();
-  const [copiedRailId, setCopiedRailId] = createSignal<string | undefined>();
   const [fullscreenCtaLabel, setFullscreenCtaLabel] = createSignal("Open Full Screen");
-
-  let copiedResetTimer: ReturnType<typeof setTimeout> | undefined;
 
   const siteQrDefaults = createMemo(() => props.site.ui?.payments?.qr);
   const rails = createMemo(() => resolveEnabledPaymentRails(props.link.payment));
@@ -204,25 +203,16 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     | string
     | undefined => (railEntry.action.openInNewTab ? "noopener noreferrer" : undefined);
 
-  const copyRailValue = async (railId: string, value: string | undefined) => {
-    if (!value || typeof navigator === "undefined" || !navigator.clipboard) {
+  const copyRailValue = async (label: string, value: string | undefined) => {
+    if (!value) {
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedRailId(railId);
-
-      if (copiedResetTimer) {
-        clearTimeout(copiedResetTimer);
-      }
-
-      copiedResetTimer = setTimeout(() => {
-        setCopiedRailId(undefined);
-      }, 1600);
-    } catch {
-      // Ignore clipboard failures on insecure contexts.
-    }
+    const copied = await copyToClipboard(value);
+    showActionToast({
+      message: copied ? `${label} copied` : `Could not copy ${label}`,
+      status: copied ? "copied" : "failed",
+    });
   };
 
   createEffect(() => {
@@ -248,12 +238,6 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     onCleanup(() => {
       media.removeEventListener("change", updateLabel);
     });
-  });
-
-  onCleanup(() => {
-    if (copiedResetTimer) {
-      clearTimeout(copiedResetTimer);
-    }
   });
 
   const activeFullscreenRail = createMemo(() => {
@@ -340,10 +324,12 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                       <button
                         type="button"
                         class="payment-rail-button"
-                        onClick={() => copyRailValue(railId, railEntry.action.copyValue)}
+                        onClick={() =>
+                          copyRailValue(railEntry.action.label, railEntry.action.copyValue)
+                        }
                         aria-label={`Copy ${railEntry.action.label} payment value`}
                       >
-                        {copiedRailId() === railId ? "Copied" : "Copy"}
+                        Copy
                       </button>
                     </Show>
 

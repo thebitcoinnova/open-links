@@ -1,7 +1,8 @@
-import { For, Show, createSignal, onCleanup } from "solid-js";
+import { For, Show } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
 import { IconAnalytics, IconShare } from "../../lib/icons/custom-icons";
 import { resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
+import { showActionToast } from "../../lib/ui/action-toast";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
@@ -14,42 +15,22 @@ export interface ProfileHeaderProps {
 const orderedContactEntries = (contact?: Record<string, string>) =>
   Object.entries(contact ?? {}).sort((left, right) => left[0].localeCompare(right[0]));
 
-const STATUS_RESET_DELAY_MS = 3000;
-
 export const ProfileHeader = (props: ProfileHeaderProps) => {
   const analyticsActive = () => props.analyticsActive ?? false;
   const analyticsAvailable = () => props.analyticsAvailable ?? false;
   const richness = () => props.richness ?? "standard";
   const contacts = () => orderedContactEntries(props.profile.contact);
-  const [shareStatus, setShareStatus] = createSignal("");
-  let resetTimer: ReturnType<typeof setTimeout> | undefined;
-
-  const setTimedShareStatus = (message: string) => {
-    setShareStatus(message);
-    if (resetTimer) {
-      clearTimeout(resetTimer);
-    }
-    resetTimer = setTimeout(() => setShareStatus(""), STATUS_RESET_DELAY_MS);
-  };
 
   const handleShareProfile = async () => {
-    const result = await shareLink({
-      mode: "url-only",
-      text: props.profile.headline,
-      title: props.profile.name,
-      url: resolveDocumentShareUrl(),
-    });
-
-    if (result.status !== "dismissed") {
-      setTimedShareStatus(result.message);
-    }
+    showActionToast(
+      await shareLink({
+        mode: "url-only",
+        text: props.profile.headline,
+        title: props.profile.name,
+        url: resolveDocumentShareUrl(),
+      }),
+    );
   };
-
-  onCleanup(() => {
-    if (resetTimer) {
-      clearTimeout(resetTimer);
-    }
-  });
 
   return (
     <section class="profile-header" aria-label="Profile">
@@ -83,11 +64,6 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
               <IconShare class="profile-action-button-icon" aria-hidden="true" />
             </button>
           </div>
-          <Show when={shareStatus()}>
-            <output class="profile-share-status" aria-live="polite">
-              {shareStatus()}
-            </output>
-          </Show>
         </div>
 
         <Show when={props.profile.headline}>

@@ -57,6 +57,9 @@ const collectElements = (node: RenderedNode): RenderedElement[] => {
   return [node, ...collectElements(node.props.children as RenderedNode)];
 };
 
+const firstElementOfType = (node: RenderedNode, type: string): RenderedElement | undefined =>
+  collectElements(node).find((element) => element.type === type);
+
 test("profile header renders analytics and share buttons in order when analytics is available", () => {
   const tree = ProfileHeader({
     analyticsAvailable: true,
@@ -104,4 +107,19 @@ test("profile header still renders share when analytics is unavailable", () => {
   const buttons = collectElements(tree).filter((element) => element.type === "button");
   assert.equal(buttons.length, 1);
   assert.equal(buttons[0]?.props["aria-label"], "Share profile");
+});
+
+test("profile header no longer renders an inline share status output", () => {
+  const tree = ProfileHeader({
+    analyticsAvailable: true,
+    onAnalyticsToggle: () => undefined,
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+  }) as RenderedNode;
+
+  assert.equal(firstElementOfType(tree, "output"), undefined);
 });
