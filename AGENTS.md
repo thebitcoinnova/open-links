@@ -141,6 +141,18 @@ When implementing or modifying OpenLinks Studio (`packages/studio-*`), agents mu
    - [`packages/studio-web/src/lib/phase-checklist.ts`](packages/studio-web/src/lib/phase-checklist.ts)
 3. If Studio status changes materially, include checklist updates in the same change batch.
 
+## TODO Cleanup (Required for Task Tracking)
+
+When updating the active task tracker file (`tasks/todo.md` or `.codex/tasks/todo.md`):
+
+1. Check the file length after recording the current task update.
+2. If the file exceeds 300 lines, prune old completed history in the same change batch.
+3. A completed block is the checked task list for finished work plus its associated `### Completion Review` section.
+4. Delete completed blocks in-place; do not archive them to another file.
+5. Remove the oldest completed blocks first and keep the 3 most recent completed blocks in the main TODO file.
+6. Never delete unchecked items, the current active/in-progress section, or `lessons.md`.
+7. If the TODO file still exceeds 300 lines after keeping all incomplete work and the 3 most recent completed blocks, leave it as-is rather than deleting active context.
+
 ## References
 
 - [`README.md`](README.md)
