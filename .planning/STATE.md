@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Milestone audit and closeout after completing Phase 9 and finishing all v1.1 social-card, analytics, and share work
+**Current focus:** Next milestone definition after archiving v1.1 and accepting the remaining quality/performance debt as backlog
 
 ## Current Position
 
-Phase: 09-docs-regression-hardening-social-cards
-Plan: 2 of 2 complete
-Status: v1.1 milestone complete; ready for audit
-Completed Follow-up Phase: 12-add-share-button-in-each-card-next-to-analytics
-Last activity: 2026-03-10 - Completed Phase 9 with canonical social-card docs, a dedicated verification guide, and broader generic-state coverage for profile/fallback cards plus follower-history/share behavior.
+Phase: none (milestone archived)
+Plan: n/a
+Status: v1.1 archived; ready for `$gsd-new-milestone`
+Completed Milestone: v1.1-social-profile-metadata-card-refresh
+Last activity: 2026-03-10 - Archived v1.1 after audit, roadmap/requirements archival, and release tagging prep.
 
 Progress: [##########] 100%
 
@@ -73,19 +73,19 @@ Progress: [##########] 100%
 
 ### Pending Todos
 
-- Audit the completed v1.1 milestone before archiving it or starting a new milestone.
-- Phase 10 no longer blocks future card-template experimentation; the shared shell now supports an additional rich-only media row without forking the card system.
-- Phase 12 no longer blocks broader docs/regression coverage; card-level sharing now matches the current native/fallback share posture and action-row layout.
+- Start the next milestone with `$gsd-new-milestone`.
+- Decide whether the next milestone should prioritize performance debt, SEO cleanup, broader social coverage, or further product-surface expansion.
+- Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 
 ### Blockers/Concerns
 
-- Only Instagram and YouTube have first-pass audience extraction; broader social coverage remains future work.
-- Audience parsing still depends on platform-specific text surfaces, so new extractors must keep parsed counts and raw text aligned.
-- The current dataset still exercises the social profile treatment primarily through rich cards; broader template branching and grid/toggle layout ideas remain future work.
-- The analytics surface now lazy-loads a dedicated chart chunk successfully, but that on-demand chunk is still substantial and should stay code-split as Phase 9 and later work evolve it.
+- `bun run quality:check` still fails the `/` performance budgets for both mobile and desktop.
+- SEO still warns that social preview metadata is using the deterministic fallback image.
+- Broader social audience extraction coverage remains future work, and new extractors still need parsed counts plus raw text to stay aligned.
+- The analytics surface now lazy-loads a dedicated chart chunk successfully, but that on-demand chunk is still substantial and should stay code-split or be reduced in a later pass.
 
 ## Session Continuity
 
 Last session: 2026-03-10 02:30
-Stopped at: All v1.1 phases complete; the next milestone step is `$gsd-audit-milestone`.
+Stopped at: v1.1 archived; the next milestone step is `$gsd-new-milestone`.
 Resume file: .planning/ROADMAP.md
