@@ -96,7 +96,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-03-09T03:13:19.407Z",
+      "updatedAt": "2026-03-11T07:18:10.562Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -104,10 +104,10 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1351,
-        "followersCountRaw": "1,351 Followers",
-        "followingCount": 648,
-        "followingCountRaw": "648 Following"
+        "followersCount": 1349,
+        "followersCountRaw": "1,349 Followers",
+        "followingCount": 647,
+        "followingCountRaw": "647 Following"
       }
     },
     "youtube": {
