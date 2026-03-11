@@ -136,8 +136,9 @@ export const IconAnalytics: Component<IconProps> = (props: IconProps) => (
   >
     <title>Analytics</title>
     <path d="M4 19h16" />
-    <path d="M7 16V10" />
-    <path d="M12 16V6" />
-    <path d="M17 16v-4" />
+    <path d="M6 16v-3" />
+    <path d="M10 16v-6" />
+    <path d="M14 16V7" />
+    <path d="M18 16V4" />
   </svg>
 );
