@@ -3,7 +3,15 @@ import path from "node:path";
 
 interface Args {
   readmePath: string;
-  anchorLine: string;
+  anchorLines: string[];
+  imagePath: string;
+  imageAlt: string;
+  startMarker: string;
+  endMarker: string;
+}
+
+interface UpdateReadmeScreenshotBlockArgs {
+  anchorLines: string[];
   imagePath: string;
   imageAlt: string;
   startMarker: string;
@@ -11,6 +19,12 @@ interface Args {
 }
 
 const ROOT = process.cwd();
+const DEFAULT_SCREENSHOT_ANCHOR = "<!-- OPENLINKS_SCREENSHOT_ANCHOR -->";
+const LEGACY_SCREENSHOT_ANCHOR_LINES = [
+  DEFAULT_SCREENSHOT_ANCHOR,
+  "This project is developer-first, but that does not mean raw JSON should be your default CRUD surface. For most maintainers, the recommended path is:",
+  "This project is developer-first: fork the repo, edit JSON, push, and publish.",
+];
 
 const parseArgs = (): Args => {
   const rawArgs = process.argv.slice(2);
@@ -21,11 +35,11 @@ const parseArgs = (): Args => {
     return rawArgs[index + 1];
   };
 
+  const maybeAnchorLine = getFlag("--anchor");
+
   return {
     readmePath: getFlag("--readme") ?? "README.md",
-    anchorLine:
-      getFlag("--anchor") ??
-      "This project is developer-first: fork the repo, edit JSON, push, and publish.",
+    anchorLines: maybeAnchorLine ? [maybeAnchorLine] : LEGACY_SCREENSHOT_ANCHOR_LINES,
     imagePath: getFlag("--image-path") ?? "docs/assets/openlinks-preview.png",
     imageAlt: getFlag("--image-alt") ?? "OpenLinks preview",
     startMarker: getFlag("--start-marker") ?? "<!-- OPENLINKS_SCREENSHOT_START -->",
@@ -54,11 +68,23 @@ const normalizeTrailingWhitespace = (lines: string[]): string[] => {
   return normalized;
 };
 
-const run = (): void => {
-  const args = parseArgs();
-  const readmeAbsolutePath = resolveAbsolutePath(args.readmePath);
+const resolveAnchorIndex = (lines: string[], anchorLines: string[]): number => {
+  for (const anchorLine of anchorLines) {
+    const index = lines.indexOf(anchorLine);
+    if (index >= 0) {
+      return index;
+    }
+  }
 
-  const originalContent = fs.readFileSync(readmeAbsolutePath, "utf8");
+  throw new Error(
+    `README anchor line not found. Checked: ${anchorLines.map((line) => JSON.stringify(line)).join(", ")}`,
+  );
+};
+
+export const updateReadmeScreenshotBlock = (
+  originalContent: string,
+  args: UpdateReadmeScreenshotBlockArgs,
+): string => {
   const newline = originalContent.includes("\r\n") ? "\r\n" : "\n";
   const lines = originalContent.split(/\r?\n/);
 
@@ -90,10 +116,7 @@ const run = (): void => {
     cleanedLines = [...lines.slice(0, start), ...lines.slice(maybeEnd + 1)];
   }
 
-  const anchorIndex = cleanedLines.indexOf(args.anchorLine);
-  if (anchorIndex < 0) {
-    throw new Error(`README anchor line not found: "${args.anchorLine}"`);
-  }
+  const anchorIndex = resolveAnchorIndex(cleanedLines, args.anchorLines);
 
   const screenshotBlock = [
     args.startMarker,
@@ -112,7 +135,15 @@ const run = (): void => {
     ...afterAnchor,
   ]);
 
-  const updatedContent = `${updatedLines.join(newline)}${newline}`;
+  return `${updatedLines.join(newline)}${newline}`;
+};
+
+const run = (): void => {
+  const args = parseArgs();
+  const readmeAbsolutePath = resolveAbsolutePath(args.readmePath);
+
+  const originalContent = fs.readFileSync(readmeAbsolutePath, "utf8");
+  const updatedContent = updateReadmeScreenshotBlock(originalContent, args);
   if (updatedContent !== originalContent) {
     fs.writeFileSync(readmeAbsolutePath, updatedContent, "utf8");
     console.log(`Updated README screenshot block at ${args.readmePath}.`);
@@ -122,4 +153,6 @@ const run = (): void => {
   console.log(`README screenshot block already up to date at ${args.readmePath}.`);
 };
 
-run();
+if (import.meta.main) {
+  run();
+}

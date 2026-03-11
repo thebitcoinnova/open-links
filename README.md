@@ -16,6 +16,7 @@ This project is developer-first, but that does not mean raw JSON should be your 
 1. Use the repo's AI workflows/skills and checked-in automation docs for repo-native CRUD.
 2. Use the Studio webapp when the browser-based self-serve editor fits your workflow.
 3. Drop to direct JSON edits only when you need lower-level control or a manual fallback.
+<!-- OPENLINKS_SCREENSHOT_ANCHOR -->
 <!-- OPENLINKS_SCREENSHOT_START -->
 ![OpenLinks preview](docs/assets/openlinks-preview.png)
 <!-- OPENLINKS_SCREENSHOT_END -->
