@@ -24,7 +24,10 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   const handleShareProfile = async () => {
     showActionToast(
       await shareLink({
+        copiedMessage: `${props.profile.name} link shared`,
+        failedMessage: `Could not share ${props.profile.name}`,
         mode: "url-only",
+        sharedMessage: `${props.profile.name} link shared`,
         text: props.profile.headline,
         title: props.profile.name,
         url: resolveDocumentShareUrl(),

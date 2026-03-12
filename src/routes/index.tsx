@@ -78,9 +78,8 @@ const typography = resolveTypographyPreferences({
 });
 
 registerActionToastClient({
+  default: (message) => toast(message),
   error: (message) => toast.error(message),
-  info: (message) => toast.info(message),
-  success: (message) => toast.success(message),
 });
 
 const sections = resolveLinkSections(
@@ -305,7 +304,10 @@ export default function RouteIndex() {
             kind: "share" as const,
             onClick: () =>
               shareLink({
+                copiedMessage: `${link.label} link shared`,
+                failedMessage: `Could not share ${link.label}`,
                 mode: "url-only",
+                sharedMessage: `${link.label} link shared`,
                 title: link.label,
                 url: shareUrl,
               }),

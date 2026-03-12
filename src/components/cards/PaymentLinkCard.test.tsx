@@ -126,18 +126,30 @@ test("payment rail copy buttons keep stable copy labels", () => {
   assert.equal(copyButtons[0]?.props.children, "Copy");
 });
 
+test("payment cards still expose the fullscreen QR button when QR fullscreen is enabled", () => {
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  const fullscreenButtons = collectElements(tree).filter(
+    (element) => element.type === "button" && element.props.children === "Open Full Screen",
+  );
+
+  assert.equal(fullscreenButtons.length, 1);
+});
+
 test("payment rail copy actions emit a toast when clipboard copy succeeds", async () => {
-  const calls: Array<{ message: string; variant: "error" | "info" | "success" }> = [];
+  const calls: Array<{ message: string; variant: "default" | "error" }> = [];
 
   registerActionToastClient({
+    default: (message: string) => {
+      calls.push({ message, variant: "default" });
+    },
     error: (message) => {
       calls.push({ message, variant: "error" });
-    },
-    info: (message) => {
-      calls.push({ message, variant: "info" });
-    },
-    success: (message) => {
-      calls.push({ message, variant: "success" });
     },
   });
 
@@ -163,7 +175,7 @@ test("payment rail copy actions emit a toast when clipboard copy succeeds", asyn
 
   await (copyButton.props.onClick as () => Promise<void>)();
 
-  assert.deepEqual(calls, [{ message: "Bitcoin copied", variant: "success" }]);
+  assert.deepEqual(calls, [{ message: "Bitcoin copied", variant: "default" }]);
 
   clearActionToastClient();
   restoreNavigator();

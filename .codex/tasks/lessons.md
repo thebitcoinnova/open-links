@@ -23,3 +23,21 @@
 - What went wrong: I improved the Phase 9 docs around the data model and verification surfaces, but I did not make the preferred maintainer workflow explicit enough: the recommended CRUD path is via the repo AI skills or the Studio webapp, not raw JSON editing by default.
 - Preventive rule: When writing maintainer docs for editable data surfaces, state the recommended CRUD path explicitly and distinguish it from the lower-level/manual fallback path.
 - Trigger signal to catch it earlier: The docs talk extensively about fields, examples, and direct file edits, but do not clearly prioritize the AI-skill and Studio workflows near the top.
+
+## 2026-03-11
+
+- What went wrong: I treated a resolved native Web Share promise as if it meant the user had merely opened the share sheet, but on the user's platform the same flow can end with the share-sheet Copy action, making a `Share opened` toast misleading.
+- Preventive rule: When the platform share sheet does not reveal which target the user picked, do not toast a guessed post-selection outcome; only show copy-specific feedback when the app itself performed the copy or has explicit signal.
+- Trigger signal to catch it earlier: A Web Share flow is followed by an OS/browser target like `Copy`, but the API surface only returns success/dismissal with no selected-target detail.
+
+## 2026-03-11
+
+- What went wrong: I fixed the misleading `Share opened` toast by silencing native-share success entirely, but that removed the only completion acknowledgement the user still expected from the Share flow.
+- Preventive rule: When softening an ambiguous success message, preserve an explicit completion acknowledgement unless the user asked for silence; prefer changing the wording over removing the signal altogether.
+- Trigger signal to catch it earlier: A user reports a misleading toast on success, but the interaction still clearly benefits from some visible “done” feedback.
+
+## 2026-03-11
+
+- What went wrong: I shifted the share-success wording toward copy-specific language (`link copied`) even after the user asked for more generic share feedback.
+- Preventive rule: When success wording is meant to cover multiple underlying completion paths, choose user-facing copy that reflects the broader intent (`shared`) rather than the implementation detail (`copied`).
+- Trigger signal to catch it earlier: The success state can happen through more than one mechanism, or the user explicitly asks for more generic wording.

@@ -459,14 +459,98 @@ a:focus-visible {
   font-size: var(--page-type-caption);
 }
 
-.analytics-modal-backdrop {
+@keyframes app-dialog-overlay-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes app-dialog-overlay-exit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes app-dialog-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes app-dialog-content-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(0.2rem) scale(0.985);
+  }
+}
+
+.app-dialog-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  opacity: 0;
+}
+
+.app-dialog-overlay[data-expanded] {
+  animation: app-dialog-overlay-enter var(--app-dialog-overlay-motion, var(--motion-mid)) both;
+}
+
+.app-dialog-overlay[data-closed] {
+  animation: app-dialog-overlay-exit var(--app-dialog-overlay-motion, var(--motion-mid)) both;
+}
+
+.app-dialog-positioner {
+  position: fixed;
+  inset: 0;
   display: grid;
   place-items: center;
+  padding: var(--app-dialog-padding, 0);
+  pointer-events: none;
+  z-index: var(--app-dialog-z-index, 1);
+}
+
+.app-dialog-content {
+  pointer-events: auto;
+  outline: none;
+  opacity: 0;
+  transform: translateY(0.2rem) scale(0.985);
+  transform-origin: center;
+}
+
+.app-dialog-content[data-expanded] {
+  animation: app-dialog-content-enter var(--app-dialog-content-motion, var(--motion-mid)) both;
+}
+
+.app-dialog-content[data-closed] {
+  animation: app-dialog-content-exit var(--app-dialog-content-motion, var(--motion-mid)) both;
+}
+
+.analytics-modal-backdrop {
+  z-index: 40;
   background: color-mix(in srgb, var(--surface-bg) 72%, transparent 28%);
   backdrop-filter: blur(10px);
+}
+
+.analytics-modal-positioner {
+  --app-dialog-z-index: 41;
 }
 
 .analytics-modal {
@@ -478,10 +562,6 @@ a:focus-visible {
   color: var(--text-primary);
   padding: var(--space-4);
   box-shadow: 0 24px 48px color-mix(in srgb, var(--surface-bg) 44%, transparent 56%);
-}
-
-.analytics-modal::backdrop {
-  display: none;
 }
 
 .analytics-modal-header {
@@ -992,14 +1072,14 @@ a:focus-visible {
 }
 
 .payment-qr-fullscreen-backdrop {
-  position: fixed;
-  inset: 0;
   z-index: 120;
-  display: grid;
-  place-items: center;
   background: color-mix(in srgb, #000 72%, transparent 28%);
   backdrop-filter: blur(3px);
-  padding: var(--space-4);
+}
+
+.payment-qr-fullscreen-positioner {
+  --app-dialog-padding: var(--space-4);
+  --app-dialog-z-index: 121;
 }
 
 .payment-qr-fullscreen-dialog {

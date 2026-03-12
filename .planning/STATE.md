@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Define the next versioned milestone now that the Phase 13 toast-feedback follow-up is complete
+**Current focus:** Define the next versioned milestone now that the Phase 14 dialog-library follow-up is complete
 
 ## Current Position
 
-Phase: 13 (complete)
-Plan: 13-01, 13-02
-Status: Phase 13 complete; ready for `$gsd-new-milestone`
-Next Phase: none (define the next versioned milestone)
+Phase: 14 (complete)
+Plan: 14-01, 14-02, 14-03
+Status: Phase 14 complete; ready for `$gsd-new-milestone`
+Next Phase: 14 - Refactor Dialogs to Use a Modal Library
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-11 - Completed Phase 13 with shell-level toasts, shared clipboard fallback, and built-preview verification.
+Last activity: 2026-03-11 - Completed Phase 14 with a shared Kobalte-backed dialog wrapper and migrated analytics/payment modal consumers.
 
 Progress: [##########] 100%
 
@@ -72,6 +72,8 @@ Progress: [##########] 100%
 - 2026-03-10: Phase 12 completed with a shared Web Share utility, profile/card share parity, and a two-button card action row for history-aware cards.
 - 2026-03-11: Phase 13 added as a post-v1.1 follow-up to replace inline action feedback with toast-based UI while deferring dialog-library standardization.
 - 2026-03-11: Phase 13 completed with a shell-level `solid-sonner` toaster, shared clipboard fallback reuse, payment-copy toast feedback, and desktop/mobile built-preview verification.
+- 2026-03-11: Phase 14 added as a post-v1.1 follow-up to replace the hand-rolled dialog/modal implementation with a library-backed solution.
+- 2026-03-11: Phase 14 completed with a shared `AppDialog` wrapper backed by `@kobalte/core`, plus migrated analytics/payment modal consumers and analytics built-preview verification.
 
 ### Pending Todos
 
@@ -88,6 +90,6 @@ Progress: [##########] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-11 11:05
-Stopped at: Phase 13 complete; the next planning step is `$gsd-new-milestone`.
+Last session: 2026-03-11 14:50
+Stopped at: Phase 14 complete; the next planning step is `$gsd-new-milestone`.
 Resume file: .planning/ROADMAP.md

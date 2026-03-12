@@ -3,7 +3,7 @@ export interface ToastableActionResult {
   status: "copied" | "dismissed" | "failed" | "shared";
 }
 
-type ActionToastVariant = "error" | "info" | "success";
+type ActionToastVariant = "default" | "error";
 
 export interface ActionToastDescriptor {
   message: string;
@@ -11,9 +11,8 @@ export interface ActionToastDescriptor {
 }
 
 export interface ActionToastClient {
+  default: (message: string) => void;
   error: (message: string) => void;
-  info: (message: string) => void;
-  success: (message: string) => void;
 }
 
 export const ACTION_TOAST_OPTIONS = {
@@ -28,7 +27,7 @@ const defaultActionToastMessages: Record<
 > = {
   copied: "Copied",
   failed: "Action failed",
-  shared: "Share opened",
+  shared: "",
 };
 
 let maybeRegisteredActionToastClient: ActionToastClient | undefined;
@@ -53,6 +52,10 @@ export const resolveActionToastDescriptor = (
       ? maybeResult.message.trim()
       : defaultActionToastMessages[maybeResult.status];
 
+  if (message.length === 0) {
+    return undefined;
+  }
+
   if (maybeResult.status === "failed") {
     return {
       message,
@@ -60,16 +63,9 @@ export const resolveActionToastDescriptor = (
     };
   }
 
-  if (maybeResult.status === "shared") {
-    return {
-      message,
-      variant: "info",
-    };
-  }
-
   return {
     message,
-    variant: "success",
+    variant: "default",
   };
 };
 

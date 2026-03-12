@@ -80,6 +80,7 @@
     "studio:check": "bun run studio:typecheck && bun run studio:lint && bun run studio:format:check && bun run studio:test:integration"
   },
   "dependencies": {
+    "@kobalte/core": "0.13.11",
     "echarts": "^6.0.0",
     "qr-code-styling": "^1.9.2",
     "simple-icons": "^15.22.0",

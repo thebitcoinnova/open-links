@@ -95,6 +95,10 @@
     width: calc(100vw - var(--space-4));
   }
 
+  body .payment-qr-fullscreen-positioner {
+    --app-dialog-padding: var(--space-2);
+  }
+
   body .payment-qr-fullscreen-canvas {
     width: min(360px, calc(100vw - var(--space-6)));
     height: min(360px, calc(100vw - var(--space-6)));

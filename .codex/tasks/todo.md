@@ -2,6 +2,34 @@
 
 ## Current
 
+- [x] Add `@kobalte/core` and build one shared dialog wrapper for the public-site modal surfaces.
+- [x] Migrate the payment QR fullscreen and follower-history analytics modals onto the shared wrapper without changing their controlled open-state seams.
+- [x] Verify Phase 14 with focused dialog/payment/share regressions, `bun run biome:check`, `bun run typecheck`, `bun run build`, and a built-preview analytics modal browser check.
+
+### Completion Review
+
+- Result: Phase 14 is fully implemented. The public site now uses a shared `AppDialog` wrapper backed by `@kobalte/core`, the payment QR fullscreen modal and the follower-history modal no longer maintain their own duplicated `<dialog>` plumbing, and the existing route/card controlled-state seams remain intact. Shared dialog shell styles now sit under `app-dialog` overlay/positioner/content hooks, with the existing analytics/payment classes layered on top.
+- Verification: `bun test src/components/dialog/AppDialog.test.tsx src/components/analytics/FollowerHistoryModal.test.tsx src/components/cards/PaymentLinkCard.test.tsx src/lib/share/share-link.test.ts src/lib/ui/action-toast.test.ts src/components/profile/ProfileHeader.test.tsx src/components/cards/non-payment-card-accessibility.test.tsx`, `bun run biome:check`, `bun run typecheck`, and `bun run build` all passed. A Playwright built-preview check of `http://127.0.0.1:4173/` then opened the GitHub analytics modal, confirmed one overlay/positioner/content stack, and verified the modal still fit within a `390x844` viewport after resizing. The current dataset exposes zero payment cards, so direct browser verification for payment fullscreen was not possible in this run and stayed covered by the focused automated tests.
+- Residual risk: Adding `@kobalte/core` increases the main route bundle, and the live dataset still lacks a payment-card browser verification target. If future work adds payment cards back to the public dataset or introduces more dialog surfaces, it should recheck the dialog bundle impact and add a live browser verification path for payment fullscreen.
+
+- [x] Research Phase 14's dialog-library fit, current modal seams, and the safest migration order for the public-site dialogs.
+- [x] Create Phase 14 research plus the execution plans for shared dialog-shell setup, payment fullscreen migration, and analytics modal migration.
+- [x] Update planning state so Phase 14 is marked planned and ready for `$gsd-execute-phase 14`.
+
+### Completion Review
+
+- Result: Added `.planning/phases/14-refactor-dialogs-to-use-a-modal-library/14-RESEARCH.md` plus three execution plans. Wave 1 adopts `@kobalte/core` and builds a shared dialog shell, Wave 2 migrates the simpler payment QR fullscreen flow, and Wave 3 migrates the follower-history modal while preserving the lazy chart route flow. `.planning/ROADMAP.md` and `.planning/STATE.md` now mark Phase 14 as planned and ready for execution.
+- Verification: Reviewed the current modal components, route/card open-state seams, dialog styling hooks, the Kobalte and Ark UI official dialog docs, current npm metadata for both libraries, and the resulting planning-state diff to confirm the phase stays scoped to replacing duplicated dialog mechanics rather than reopening the entire UI system.
+- Residual risk: Phase 14 adds another runtime dependency to a route that already carries known `/` bundle-budget debt, and it currently assumes `@kobalte/core` is the lowest-risk dialog choice. If execution reveals integration blockers or larger-than-expected bundle impact, the next pass may need to reassess the library choice or split the analytics modal migration further.
+
+- [x] Add a post-v1.1 Phase 14 for modal-library adoption to the active roadmap queue and state tracking.
+
+### Completion Review
+
+- Result: Added Phase 14, `Refactor Dialogs to Use a Modal Library`, to `.planning/ROADMAP.md` as the next post-v1.1 follow-up. Updated `.planning/STATE.md` so the next planning command is `$gsd-plan-phase 14`, while keeping the next versioned milestone intentionally undefined.
+- Verification: Reviewed the active roadmap/state, confirmed Phase 14 is the next integer phase after Phase 13, and verified the new phase directory path and planning-state diff stay isolated from the current uncommitted share-toast code changes.
+- Residual risk: This is still an unversioned follow-up phase. If the eventual modal-library refactor broadens into a larger UI-system decision, the next planning pass should re-evaluate whether it still belongs as a phase or needs to be folded into the next versioned milestone.
+
 - [x] Reproduce the broken March 10, 2026 CI `quality_check` lane locally and confirm the failing performance metrics from a clean temp copy.
 - [x] Retune the site performance budgets in `data/site.json` with headroom for the current follower-history analytics bundle baseline without changing CI workflows or analytics code.
 - [x] Verify the retuned budgets with temp-copy `bun run build`, `bun scripts/quality/run-quality-checks.ts --format json`, `bun run ci:required`, and a final diff review.

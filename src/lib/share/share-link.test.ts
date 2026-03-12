@@ -35,6 +35,7 @@ test("shareLink prefers native share when available", async () => {
   } as unknown as Navigator);
 
   const result = await shareLink({
+    sharedMessage: "GitHub link shared",
     text: "Code, experiments, and open-source projects",
     title: "GitHub",
     url: "https://github.com/pRizz",
@@ -46,7 +47,7 @@ test("shareLink prefers native share when available", async () => {
     url: "https://github.com/pRizz",
   });
   assert.deepEqual(result, {
-    message: "Share opened",
+    message: "GitHub link shared",
     status: "shared",
   });
 
@@ -87,6 +88,7 @@ test("shareLink keeps clipboard fallback URL-only when requested", async () => {
   } as unknown as Navigator);
 
   const result = await shareLink({
+    copiedMessage: "GitHub link shared",
     mode: "url-only",
     text: "This should not be copied",
     title: "GitHub",
@@ -95,7 +97,7 @@ test("shareLink keeps clipboard fallback URL-only when requested", async () => {
 
   assert.equal(copiedValue, "https://github.com/pRizz");
   assert.deepEqual(result, {
-    message: "Link copied",
+    message: "GitHub link shared",
     status: "copied",
   });
 
@@ -134,13 +136,14 @@ test("shareLink falls back to clipboard copy when native share is unavailable", 
   } as unknown as Navigator);
 
   const result = await shareLink({
+    copiedMessage: "GitHub link shared",
     title: "GitHub",
     url: "https://github.com/pRizz",
   });
 
   assert.equal(copiedValue, "https://github.com/pRizz");
   assert.deepEqual(result, {
-    message: "Link copied",
+    message: "GitHub link shared",
     status: "copied",
   });
 

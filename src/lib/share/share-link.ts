@@ -1,7 +1,10 @@
 import { copyToClipboard } from "./copy-to-clipboard";
 
 export interface ShareLinkInput {
+  copiedMessage?: string;
+  failedMessage?: string;
   mode?: "rich" | "url-only";
+  sharedMessage?: string;
   text?: string;
   title: string;
   url: string;
@@ -58,7 +61,7 @@ export const shareLink = async (input: ShareLinkInput): Promise<ShareLinkResult>
       try {
         await navigator.share(payload);
         return {
-          message: "Share opened",
+          message: input.sharedMessage ?? "",
           status: "shared",
         };
       } catch (error) {
@@ -75,11 +78,11 @@ export const shareLink = async (input: ShareLinkInput): Promise<ShareLinkResult>
   const copied = await copyToClipboard(input.url);
   return copied
     ? {
-        message: "Link copied",
+        message: input.copiedMessage ?? "Link shared",
         status: "copied",
       }
     : {
-        message: "Share failed",
+        message: input.failedMessage ?? "Share failed",
         status: "failed",
       };
 };
