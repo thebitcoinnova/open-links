@@ -1,4 +1,34 @@
-# AGENTS: Rich Enrichment Failure Triage and Extractor Escalation
+<!-- coding-and-architecture-requirements:begin -->
+<!-- source-repository: https://github.com/bright-builds-llc/coding-and-architecture-requirements -->
+<!-- version-pin: main -->
+<!-- canonical-entrypoint: https://github.com/bright-builds-llc/coding-and-architecture-requirements/blob/main/standards/index.md -->
+<!-- audit-manifest: coding-and-architecture-requirements.audit.md -->
+<!-- coding-and-architecture-requirements:end -->
+
+# AGENTS: OpenLinks Local Adoption Layer
+
+This repository adopts the Bright Builds coding and architecture requirements.
+This file is the local OpenLinks supplement and operational policy layer.
+
+Read this file first, then the pinned canonical standards entrypoint, then any
+relevant canonical standards pages, and finally apply `standards-overrides.md`
+for deliberate local deviations.
+
+## Canonical Standards Source
+
+- Standards repository: `https://github.com/bright-builds-llc/coding-and-architecture-requirements`
+- Version pin: `main`
+- Canonical entrypoint: `https://github.com/bright-builds-llc/coding-and-architecture-requirements/blob/main/standards/index.md`
+- Local overrides: `standards-overrides.md`
+- Audit manifest: `coding-and-architecture-requirements.audit.md`
+
+## Local Precedence
+
+- This file wins when it is more specific than the canonical standards.
+- `standards-overrides.md` records explicit local deviations from the canonical standards.
+- OpenLinks-specific operational rules for rich enrichment, Studio delivery tracking, and task hygiene remain mandatory for this repo.
+
+## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.
 
