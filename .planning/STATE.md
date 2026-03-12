@@ -80,6 +80,7 @@ Progress: [##########] 100%
 - Start the next milestone with `$gsd-new-milestone`.
 - Decide whether the next milestone should prioritize performance debt, SEO cleanup, broader social coverage, or further product-surface expansion.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
+- Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
 ### Blockers/Concerns
 
