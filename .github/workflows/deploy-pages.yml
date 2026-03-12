@@ -51,17 +51,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
       - name: Validate deployment configuration
         shell: bash
         env:
           DISPATCH_BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
           DISPATCH_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
         run: bash scripts/github-actions/deploy-pages.sh validate-config
-
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Attempt CI artifact reuse
         id: download_ci_artifact
