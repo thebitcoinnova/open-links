@@ -46,97 +46,27 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Required checks summary
-        run: |
-          {
-            echo "## CI Required Checks"
-            echo "- Event: \`${{ github.event_name }}\`"
-            echo "- Ref: \`${{ github.ref }}\`"
-            echo "- Studio Docker guard changed-path match: \`${{ steps.studio_docker_changes.outputs.studio_docker }}\`"
-            echo "- Local parity entrypoints:"
-            echo "  - \`bun run ci:required\`"
-            echo "  - \`bun run ci:required:docker\` (conditional)"
-            echo "- Lane commands:"
-            echo "  - \`bun run ci:required:typecheck\`"
-            echo "  - \`bun run ci:required:build\`"
-            echo "  - \`bun run ci:required:quality\`"
-            echo "  - \`bun run ci:required:studio-integration\`"
-            echo "  - \`bun run ci:required:docker:api\` (conditional)"
-            echo "  - \`bun run ci:required:docker:web\` (conditional)"
-            echo "  - \`bun run ci:required:docker:worker\` (conditional)"
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          STUDIO_DOCKER_CHANGED: ${{ steps.studio_docker_changes.outputs.studio_docker }}
+        run: bash scripts/github-actions/ci.sh required-summary
 
       - name: Run required checks
         id: run_required
         shell: bash
         env:
           STUDIO_DOCKER_CHANGED: ${{ steps.studio_docker_changes.outputs.studio_docker }}
-        run: |
-          set -o pipefail
-          mkdir -p .ci-diagnostics/required
-
-          run_check() {
-            local key="$1"
-            shift
-            local log_file=".ci-diagnostics/required/${key}.log"
-            echo "::group::${key}"
-            "$@" 2>&1 | tee "$log_file"
-            local status=${PIPESTATUS[0]}
-            echo "::endgroup::"
-            return $status
-          }
-
-          failures=()
-          run_check "typecheck" bun run ci:required:typecheck || failures+=("typecheck")
-          run_check "build" bun run ci:required:build || failures+=("build")
-          run_check "quality_check" bun run ci:required:quality || failures+=("quality:check")
-          run_check "studio_integration" bun run ci:required:studio-integration || failures+=("studio:test:integration")
-
-          if [[ "$STUDIO_DOCKER_CHANGED" == "true" ]]; then
-            {
-              echo "### Studio Docker Guard"
-              echo "- Triggered by path changes."
-              echo "- Running Studio Docker image builds in required lane."
-            } >> "$GITHUB_STEP_SUMMARY"
-
-            run_check "studio_docker_api_build" bun run ci:required:docker:api || failures+=("studio:docker:api")
-            run_check "studio_docker_web_build" bun run ci:required:docker:web || failures+=("studio:docker:web")
-            run_check "studio_docker_worker_build" bun run ci:required:docker:worker || failures+=("studio:docker:worker")
-          else
-            {
-              echo "### Studio Docker Guard"
-              echo "- Skipped by path filter (no Studio Docker/dependency file changes)."
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          if ((${#failures[@]} > 0)); then
-            echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-
-          echo "failures=none" >> "$GITHUB_OUTPUT"
+        run: bash scripts/github-actions/ci.sh run-required
 
       - name: Required check failure summary
         if: failure()
-        run: |
-          {
-            echo "### ❌ Required checks failed"
-            echo "- Failed commands: \`${{ steps.run_required.outputs.failures }}\`"
-            echo "- Review log sections below and use local parity commands to reproduce."
-            echo "- Suggested local parity commands:"
-            echo "  - \`bun run ci:required\`"
-            echo "  - \`bun run ci:required:docker\` (when the Studio Docker guard is triggered)"
-            echo "- If Docker builds failed with frozen lockfile errors, run \`bun install\` and commit updated \`bun.lock\`."
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          FAILED_COMMANDS: ${{ steps.run_required.outputs.failures }}
+        run: bash scripts/github-actions/ci.sh required-failure-summary
 
       - name: Replay required raw logs
         if: failure()
         shell: bash
-        run: |
-          echo "Replaying required-check logs (raw):"
-          for file in .ci-diagnostics/required/*.log; do
-            echo "----- ${file} -----"
-            cat "$file"
-          done
+        run: bash scripts/github-actions/ci.sh replay-logs required
 
       - name: Upload required diagnostics artifact
         if: failure()
@@ -149,24 +79,12 @@ jobs:
 
       - name: Comment on PR for required-check failure
         if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const failed = `${{ steps.run_required.outputs.failures }}` || 'unknown';
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = [
-              '### ❌ OpenLinks CI required checks failed',
-              `- Failed commands: \`${failed}\``,
-              '- Workflow summary includes remediation steps and raw diagnostics replay.',
-              '- Artifact: `ci-diagnostics-required` (uploaded on failure).',
-              `- Run details: ${runUrl}`
-            ].join('\n');
-
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: context.payload.pull_request.number,
-              body
-            });
+        env:
+          COMMENT_KIND: required
+          FAILED_COMMANDS: ${{ steps.run_required.outputs.failures }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/github-actions/comment-pr.mjs
 
       - name: Upload deployment artifact
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -179,13 +97,7 @@ jobs:
 
       - name: Record deploy handoff contract
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          {
-            echo "### Deploy Handoff Artifact"
-            echo "- Artifact name: \`openlinks-dist\`"
-            echo "- Producer workflow: \`CI\`"
-            echo "- Intended consumer: \`Deploy Pages\` workflow"
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bash scripts/github-actions/ci.sh deploy-handoff-summary
 
   strict-signals:
     name: Strict Signals (Non-Blocking)
@@ -208,63 +120,23 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Strict checks summary
-        run: |
-          {
-            echo "## Strict Signal Lane (Phase 5 Non-Blocking)"
-            echo "- Commands:"
-            echo "  - \`bun run build:strict\`"
-            echo "  - \`bun run quality:strict\`"
-            echo "- Policy: strict failures are warning signals in this phase."
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bash scripts/github-actions/ci.sh strict-summary
 
       - name: Run strict checks
         id: run_strict
         shell: bash
-        run: |
-          set -o pipefail
-          mkdir -p .ci-diagnostics/strict
-
-          run_check() {
-            local key="$1"
-            shift
-            local log_file=".ci-diagnostics/strict/${key}.log"
-            echo "::group::${key}"
-            "$@" 2>&1 | tee "$log_file"
-            local status=${PIPESTATUS[0]}
-            echo "::endgroup::"
-            return $status
-          }
-
-          failures=()
-          run_check "build_strict" bun run build:strict || failures+=("build:strict")
-          run_check "quality_strict" bun run quality:strict || failures+=("quality:strict")
-
-          if ((${#failures[@]} > 0)); then
-            echo "failures=${failures[*]}" >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-
-          echo "failures=none" >> "$GITHUB_OUTPUT"
+        run: bash scripts/github-actions/ci.sh run-strict
 
       - name: Report strict warning signal
         if: steps.run_strict.outcome == 'failure'
-        run: |
-          {
-            echo "### ⚠ Strict checks reported failures (non-blocking)"
-            echo "- Failed strict commands: \`${{ steps.run_strict.outputs.failures }}\`"
-            echo "- Required checks passed, so this does not block merge/deploy in Phase 5."
-            echo "- Address strict diagnostics before advancing quality gates."
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          FAILED_COMMANDS: ${{ steps.run_strict.outputs.failures }}
+        run: bash scripts/github-actions/ci.sh strict-warning-summary
 
       - name: Replay strict raw logs
         if: steps.run_strict.outcome == 'failure'
         shell: bash
-        run: |
-          echo "Replaying strict-check logs (raw):"
-          for file in .ci-diagnostics/strict/*.log; do
-            echo "----- ${file} -----"
-            cat "$file"
-          done
+        run: bash scripts/github-actions/ci.sh replay-logs strict
 
       - name: Upload strict diagnostics artifact
         if: steps.run_strict.outcome == 'failure'
@@ -277,21 +149,9 @@ jobs:
 
       - name: Comment on PR for strict warning signal
         if: steps.run_strict.outcome == 'failure' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const failed = `${{ steps.run_strict.outputs.failures }}` || 'unknown';
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = [
-              '### ⚠ OpenLinks strict checks failed (non-blocking in Phase 5)',
-              `- Failed commands: \`${failed}\``,
-              '- Required checks passed; this signal does not block merge/deploy in this phase.',
-              '- Artifact: `ci-diagnostics-strict` (uploaded on strict failure).',
-              `- Run details: ${runUrl}`
-            ].join('\n');
-
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: context.payload.pull_request.number,
-              body
-            });
+        env:
+          COMMENT_KIND: strict
+          FAILED_COMMANDS: ${{ steps.run_strict.outputs.failures }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/github-actions/comment-pr.mjs

@@ -43,25 +43,11 @@ jobs:
       - name: Resolve deterministic build timestamp
         id: build_timestamp
         shell: bash
-        run: |
-          echo "value=$(git show -s --format=%cI "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+        run: bash scripts/github-actions/readme-screenshot-sync.sh resolve-build-timestamp
 
       - name: Validate screenshot base environment
         shell: bash
-        run: |
-          set -euo pipefail
-          if [ "${PAGES_BASE_MODE:-}" != "root" ]; then
-            echo "::error::PAGES_BASE_MODE must be 'root' for README screenshot workflow."
-            exit 1
-          fi
-          if [ -n "${BASE_PATH:-}" ]; then
-            echo "::error::BASE_PATH must be empty for README screenshot workflow."
-            exit 1
-          fi
-          if [ -n "${REPO_NAME_OVERRIDE:-}" ]; then
-            echo "::error::REPO_NAME_OVERRIDE must be empty for README screenshot workflow."
-            exit 1
-          fi
+        run: bash scripts/github-actions/readme-screenshot-sync.sh validate-env
 
       - name: Build site
         env:
@@ -74,93 +60,15 @@ jobs:
       - name: Start preview server
         id: preview
         shell: bash
-        run: |
-          set -euo pipefail
-          bun run preview --host 127.0.0.1 --port 4173 --strictPort > /tmp/openlinks-preview.log 2>&1 &
-          echo "pid=$!" >> "$GITHUB_OUTPUT"
+        run: bash scripts/github-actions/readme-screenshot-sync.sh start-preview
 
       - name: Wait for preview readiness
         shell: bash
-        run: |
-          set -euo pipefail
-          for _ in {1..60}; do
-            if curl --silent --show-error --fail http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-
-          echo "::error::Preview server did not become ready within 60 seconds."
-          echo "::group::Preview log"
-          cat /tmp/openlinks-preview.log
-          echo "::endgroup::"
-          exit 1
+        run: bash scripts/github-actions/readme-screenshot-sync.sh wait-preview
 
       - name: Capture README screenshot
         shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p docs/assets
-
-          script_src="$(sed -n 's|.*<script type=\"module\" crossorigin src=\"\([^\"]*\)\".*|\1|p' dist/index.html | head -n 1)"
-          if [ -z "$script_src" ]; then
-            echo "::error::Unable to resolve script src from dist/index.html."
-            sed -n '1,120p' dist/index.html
-            exit 1
-          fi
-
-          capture_path="/"
-          if [[ "$script_src" == */assets/* ]]; then
-            maybe_prefix="${script_src%%/assets/*}"
-            if [ -n "$maybe_prefix" ] && [ "$maybe_prefix" != "$script_src" ]; then
-              capture_path="${maybe_prefix}/"
-            fi
-          fi
-
-          capture_url="http://127.0.0.1:4173${capture_path}"
-          asset_url="http://127.0.0.1:4173${script_src}"
-          echo "Resolved capture_url=${capture_url}"
-          echo "Resolved asset_url=${asset_url}"
-
-          ready=false
-          for _ in {1..60}; do
-            if curl --silent --show-error --fail "$capture_url" > /dev/null && \
-               curl --silent --show-error --fail "$asset_url" > /dev/null; then
-              ready=true
-              break
-            fi
-            sleep 1
-          done
-
-          if [ "$ready" != "true" ]; then
-            echo "::error::Preview did not become ready with matching HTML and asset URLs."
-            echo "::group::dist/index.html"
-            sed -n '1,160p' dist/index.html
-            echo "::endgroup::"
-            echo "::group::Preview log"
-            cat /tmp/openlinks-preview.log
-            echo "::endgroup::"
-            echo "::group::Root HTML (first 120 lines)"
-            curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
-            echo "::endgroup::"
-            echo "::group::Capture URL HTML (first 120 lines)"
-            curl --silent "$capture_url" | sed -n '1,120p'
-            echo "::endgroup::"
-            exit 1
-          fi
-
-          npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
-            --timeout=120000 \
-            --wait-for-selector=".profile-header" \
-            --wait-for-timeout=1200 \
-            "$capture_url" \
-            docs/assets/openlinks-preview.png
-
-          bytes="$(wc -c < docs/assets/openlinks-preview.png)"
-          if [ "$bytes" -lt 20000 ]; then
-            echo "::error::Captured screenshot is unexpectedly small (${bytes} bytes)."
-            exit 1
-          fi
+        run: bash scripts/github-actions/readme-screenshot-sync.sh capture-screenshot
 
       - name: Update README screenshot block
         run: bun scripts/ci/upsert-readme-screenshot.ts
@@ -168,43 +76,20 @@ jobs:
       - name: Stop preview server
         if: always() && steps.preview.outputs.pid != ''
         shell: bash
-        run: |
-          kill "${{ steps.preview.outputs.pid }}" 2>/dev/null || true
+        env:
+          PREVIEW_PID: ${{ steps.preview.outputs.pid }}
+        run: bash scripts/github-actions/readme-screenshot-sync.sh stop-preview
 
       - name: Publish changes
         id: publish
         shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add README.md docs/assets/openlinks-preview.png
-
-          if git diff --cached --quiet; then
-            echo "push_result=no_changes" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          git commit -m "docs(readme): refresh OpenLinks screenshot"
-
-          if git push origin HEAD:main; then
-            echo "push_result=pushed" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "push_result=blocked" >> "$GITHUB_OUTPUT"
+        run: bash scripts/github-actions/readme-screenshot-sync.sh publish-changes
 
       - name: Publish summary
         if: always()
-        run: |
-          {
-            echo "## README Screenshot Sync"
-            echo "- Result: \`${{ steps.publish.outputs.push_result || 'unknown' }}\`"
-            echo "- Files in scope:"
-            echo "  - \`README.md\`"
-            echo "  - \`docs/assets/openlinks-preview.png\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PUSH_RESULT: ${{ steps.publish.outputs.push_result }}
+        run: bash scripts/github-actions/readme-screenshot-sync.sh publish-summary
 
   fallback-pr:
     name: Sync README Screenshot (Fallback PR)
@@ -234,25 +119,11 @@ jobs:
       - name: Resolve deterministic build timestamp
         id: build_timestamp
         shell: bash
-        run: |
-          echo "value=$(git show -s --format=%cI "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+        run: bash scripts/github-actions/readme-screenshot-sync.sh resolve-build-timestamp
 
       - name: Validate screenshot base environment
         shell: bash
-        run: |
-          set -euo pipefail
-          if [ "${PAGES_BASE_MODE:-}" != "root" ]; then
-            echo "::error::PAGES_BASE_MODE must be 'root' for README screenshot workflow."
-            exit 1
-          fi
-          if [ -n "${BASE_PATH:-}" ]; then
-            echo "::error::BASE_PATH must be empty for README screenshot workflow."
-            exit 1
-          fi
-          if [ -n "${REPO_NAME_OVERRIDE:-}" ]; then
-            echo "::error::REPO_NAME_OVERRIDE must be empty for README screenshot workflow."
-            exit 1
-          fi
+        run: bash scripts/github-actions/readme-screenshot-sync.sh validate-env
 
       - name: Build site
         env:
@@ -265,93 +136,15 @@ jobs:
       - name: Start preview server
         id: preview
         shell: bash
-        run: |
-          set -euo pipefail
-          bun run preview --host 127.0.0.1 --port 4173 --strictPort > /tmp/openlinks-preview.log 2>&1 &
-          echo "pid=$!" >> "$GITHUB_OUTPUT"
+        run: bash scripts/github-actions/readme-screenshot-sync.sh start-preview
 
       - name: Wait for preview readiness
         shell: bash
-        run: |
-          set -euo pipefail
-          for _ in {1..60}; do
-            if curl --silent --show-error --fail http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-
-          echo "::error::Preview server did not become ready within 60 seconds."
-          echo "::group::Preview log"
-          cat /tmp/openlinks-preview.log
-          echo "::endgroup::"
-          exit 1
+        run: bash scripts/github-actions/readme-screenshot-sync.sh wait-preview
 
       - name: Capture README screenshot
         shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p docs/assets
-
-          script_src="$(sed -n 's|.*<script type=\"module\" crossorigin src=\"\([^\"]*\)\".*|\1|p' dist/index.html | head -n 1)"
-          if [ -z "$script_src" ]; then
-            echo "::error::Unable to resolve script src from dist/index.html."
-            sed -n '1,120p' dist/index.html
-            exit 1
-          fi
-
-          capture_path="/"
-          if [[ "$script_src" == */assets/* ]]; then
-            maybe_prefix="${script_src%%/assets/*}"
-            if [ -n "$maybe_prefix" ] && [ "$maybe_prefix" != "$script_src" ]; then
-              capture_path="${maybe_prefix}/"
-            fi
-          fi
-
-          capture_url="http://127.0.0.1:4173${capture_path}"
-          asset_url="http://127.0.0.1:4173${script_src}"
-          echo "Resolved capture_url=${capture_url}"
-          echo "Resolved asset_url=${asset_url}"
-
-          ready=false
-          for _ in {1..60}; do
-            if curl --silent --show-error --fail "$capture_url" > /dev/null && \
-               curl --silent --show-error --fail "$asset_url" > /dev/null; then
-              ready=true
-              break
-            fi
-            sleep 1
-          done
-
-          if [ "$ready" != "true" ]; then
-            echo "::error::Preview did not become ready with matching HTML and asset URLs."
-            echo "::group::dist/index.html"
-            sed -n '1,160p' dist/index.html
-            echo "::endgroup::"
-            echo "::group::Preview log"
-            cat /tmp/openlinks-preview.log
-            echo "::endgroup::"
-            echo "::group::Root HTML (first 120 lines)"
-            curl --silent "http://127.0.0.1:4173/" | sed -n '1,120p'
-            echo "::endgroup::"
-            echo "::group::Capture URL HTML (first 120 lines)"
-            curl --silent "$capture_url" | sed -n '1,120p'
-            echo "::endgroup::"
-            exit 1
-          fi
-
-          npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
-            --timeout=120000 \
-            --wait-for-selector=".profile-header" \
-            --wait-for-timeout=1200 \
-            "$capture_url" \
-            docs/assets/openlinks-preview.png
-
-          bytes="$(wc -c < docs/assets/openlinks-preview.png)"
-          if [ "$bytes" -lt 20000 ]; then
-            echo "::error::Captured screenshot is unexpectedly small (${bytes} bytes)."
-            exit 1
-          fi
+        run: bash scripts/github-actions/readme-screenshot-sync.sh capture-screenshot
 
       - name: Update README screenshot block
         run: bun scripts/ci/upsert-readme-screenshot.ts
@@ -359,20 +152,14 @@ jobs:
       - name: Stop preview server
         if: always() && steps.preview.outputs.pid != ''
         shell: bash
-        run: |
-          kill "${{ steps.preview.outputs.pid }}" 2>/dev/null || true
+        env:
+          PREVIEW_PID: ${{ steps.preview.outputs.pid }}
+        run: bash scripts/github-actions/readme-screenshot-sync.sh stop-preview
 
       - name: Check for changes
         id: changes
         shell: bash
-        run: |
-          set -euo pipefail
-          git add README.md docs/assets/openlinks-preview.png
-          if git diff --cached --quiet; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          fi
+        run: bash scripts/github-actions/readme-screenshot-sync.sh check-changes
 
       - name: Create fallback PR
         if: steps.changes.outputs.has_changes == 'true'

@@ -31,6 +31,7 @@ interface CliArgs {
   linksPath: string;
   observedAt?: string;
   publicCachePath: string;
+  summaryJsonPath?: string;
 }
 
 interface LinksPayload {
@@ -43,6 +44,32 @@ interface HistorySnapshot {
   row: FollowerHistoryRow;
 }
 
+export interface HistoryRunSnapshotSummary {
+  audienceCount: number;
+  audienceCountRaw: string;
+  audienceKind: FollowerHistoryRow["audienceKind"];
+  csvChanged?: boolean;
+  csvPath: string;
+  handle: string;
+  label: string;
+  linkId: string;
+  platform: string;
+  rowCount?: number;
+  source: FollowerHistorySource;
+}
+
+export type HistoryRunStatus = "dry_run" | "no_snapshots" | "written";
+
+export interface HistoryRunSummary {
+  dryRun: boolean;
+  indexChanged: boolean;
+  indexEntryCount: number;
+  observedAt: string;
+  snapshotCount: number;
+  snapshots: HistoryRunSnapshotSummary[];
+  status: HistoryRunStatus;
+}
+
 const ROOT = process.cwd();
 
 const absolutePath = (value: string): string =>
@@ -50,6 +77,12 @@ const absolutePath = (value: string): string =>
 
 const readJson = <T>(relativePath: string): T =>
   JSON.parse(fs.readFileSync(absolutePath(relativePath), "utf8")) as T;
+
+const writeJsonFile = (relativePath: string, value: unknown) => {
+  const absolute = absolutePath(relativePath);
+  fs.mkdirSync(path.dirname(absolute), { recursive: true });
+  fs.writeFileSync(absolute, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+};
 
 const trimToUndefined = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
@@ -89,6 +122,7 @@ const resolveArgs = (argv = process.argv.slice(2)): CliArgs => {
     linksPath: getFlagValue("--links") ?? "data/links.json",
     observedAt: getFlagValue("--observed-at"),
     publicCachePath: getFlagValue("--public-cache") ?? DEFAULT_PUBLIC_CACHE_PATH,
+    summaryJsonPath: getFlagValue("--summary-json"),
   };
 };
 
@@ -222,7 +256,49 @@ const buildIndexEntries = (snapshots: readonly HistorySnapshot[]): FollowerHisto
     .filter((entry): entry is FollowerHistoryIndexEntry => entry !== null)
     .sort((left, right) => left.platform.localeCompare(right.platform));
 
-export const run = (args = resolveArgs()) => {
+export const createHistoryRunSummary = (input: {
+  dryRun: boolean;
+  indexChanged: boolean;
+  indexEntryCount: number;
+  observedAt: string;
+  snapshots: HistoryRunSnapshotSummary[];
+  status: HistoryRunStatus;
+}): HistoryRunSummary => ({
+  dryRun: input.dryRun,
+  indexChanged: input.indexChanged,
+  indexEntryCount: input.indexEntryCount,
+  observedAt: input.observedAt,
+  snapshotCount: input.snapshots.length,
+  snapshots: input.snapshots,
+  status: input.status,
+});
+
+export const writeHistoryRunSummary = (summaryPath: string, summary: HistoryRunSummary): void => {
+  writeJsonFile(summaryPath, summary);
+};
+
+const buildSnapshotSummary = (
+  snapshot: HistorySnapshot,
+  options?: {
+    csvChanged?: boolean;
+    csvPath?: string;
+    rowCount?: number;
+  },
+): HistoryRunSnapshotSummary => ({
+  audienceCount: snapshot.row.audienceCount,
+  audienceCountRaw: snapshot.row.audienceCountRaw,
+  audienceKind: snapshot.row.audienceKind,
+  csvChanged: options?.csvChanged,
+  csvPath: options?.csvPath ?? buildFollowerHistoryCsvRepoPath(snapshot.platform),
+  handle: snapshot.row.handle,
+  label: snapshot.label,
+  linkId: snapshot.row.linkId,
+  platform: snapshot.platform,
+  rowCount: options?.rowCount,
+  source: snapshot.row.source,
+});
+
+export const run = (args = resolveArgs()): HistoryRunSummary => {
   const observedAt = args.observedAt ?? new Date().toISOString();
   if (!Number.isFinite(Date.parse(observedAt))) {
     throw new Error(`Invalid observedAt timestamp '${observedAt}'.`);
@@ -237,10 +313,26 @@ export const run = (args = resolveArgs()) => {
     authenticatedRegistry,
     observedAt,
   );
+  const finish = (summary: HistoryRunSummary): HistoryRunSummary => {
+    if (args.summaryJsonPath) {
+      writeHistoryRunSummary(args.summaryJsonPath, summary);
+    }
+
+    return summary;
+  };
 
   if (snapshots.length === 0) {
     console.log("No follower-history snapshots were eligible for capture.");
-    return;
+    return finish(
+      createHistoryRunSummary({
+        dryRun: args.dryRun,
+        indexChanged: false,
+        indexEntryCount: 0,
+        observedAt,
+        snapshots: [],
+        status: "no_snapshots",
+      }),
+    );
   }
 
   if (args.dryRun) {
@@ -256,18 +348,46 @@ export const run = (args = resolveArgs()) => {
         ].join(" | "),
       );
     }
-    return;
+
+    return finish(
+      createHistoryRunSummary({
+        dryRun: true,
+        indexChanged: false,
+        indexEntryCount: 0,
+        observedAt,
+        snapshots: snapshots.map((snapshot) => buildSnapshotSummary(snapshot)),
+        status: "dry_run",
+      }),
+    );
   }
 
-  for (const snapshot of snapshots) {
-    appendFollowerHistoryRows({
+  const writtenSnapshots = snapshots.map((snapshot) => {
+    const appendResult = appendFollowerHistoryRows({
       platform: snapshot.platform,
       rows: [snapshot.row],
     });
-  }
+    return {
+      appendResult,
+      snapshot,
+    };
+  });
 
   const indexEntries = buildIndexEntries(snapshots);
-  writeFollowerHistoryIndex(indexEntries, observedAt);
+  const indexChanged = writeFollowerHistoryIndex(indexEntries, observedAt);
+  const summary = createHistoryRunSummary({
+    dryRun: false,
+    indexChanged,
+    indexEntryCount: indexEntries.length,
+    observedAt,
+    snapshots: writtenSnapshots.map(({ appendResult, snapshot }) =>
+      buildSnapshotSummary(snapshot, {
+        csvChanged: appendResult.changed,
+        csvPath: appendResult.csvPath,
+        rowCount: appendResult.rows.length,
+      }),
+    ),
+    status: "written",
+  });
 
   console.log(`Wrote ${snapshots.length} follower-history snapshot(s) at ${observedAt}.`);
   for (const entry of indexEntries) {
@@ -275,6 +395,10 @@ export const run = (args = resolveArgs()) => {
       `${entry.platform}: ${entry.latestAudienceCountRaw} -> ${entry.csvPath} (${entry.linkId})`,
     );
   }
+
+  return finish(summary);
 };
 
-run();
+if (import.meta.main) {
+  run();
+}

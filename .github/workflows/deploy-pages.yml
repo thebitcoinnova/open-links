@@ -56,24 +56,7 @@ jobs:
         env:
           DISPATCH_BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
           DISPATCH_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
-        run: |
-          set -euo pipefail
-
-          if [[ "$DISPATCH_BASE_MODE" != "project" && "$DISPATCH_BASE_MODE" != "root" && "$DISPATCH_BASE_MODE" != "auto" ]]; then
-            echo "::error::Invalid base_mode '$DISPATCH_BASE_MODE'. Use one of: project, root, auto."
-            exit 1
-          fi
-
-          if [[ -n "$DISPATCH_BASE_PATH" ]]; then
-            if [[ "$DISPATCH_BASE_PATH" != /* ]]; then
-              echo "::error::base_path must start with '/'. Example: /open-links/"
-              exit 1
-            fi
-            if [[ "$DISPATCH_BASE_PATH" != */ ]]; then
-              echo "::error::base_path must end with '/'. Example: /open-links/"
-              exit 1
-            fi
-          fi
+        run: bash scripts/github-actions/deploy-pages.sh validate-config
 
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -94,41 +77,17 @@ jobs:
       - name: Resolve deploy artifact strategy
         id: artifact_strategy
         shell: bash
-        run: |
-          strategy_reason=""
-          if [ -d dist ] && [ -n "$(find dist -mindepth 1 -print -quit)" ]; then
-            echo "reuse=true" >> "$GITHUB_OUTPUT"
-            echo "reason=ci-artifact-reuse" >> "$GITHUB_OUTPUT"
-            strategy_reason="ci-artifact-reuse"
-          else
-            echo "reuse=false" >> "$GITHUB_OUTPUT"
-            echo "reason=rebuild-fallback" >> "$GITHUB_OUTPUT"
-            strategy_reason="rebuild-fallback"
-          fi
-
-          {
-            echo "## Pages Deploy Artifact Strategy"
-            echo "- Strategy: \`${strategy_reason}\`"
-            echo "- CI artifact reuse preferred; rebuild used only when artifact is unavailable."
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bash scripts/github-actions/deploy-pages.sh resolve-artifact-strategy
 
       - name: Capture deploy diagnostics context
         shell: bash
         env:
+          ARTIFACT_STRATEGY_REASON: ${{ steps.artifact_strategy.outputs.reason }}
           DISPATCH_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
           DISPATCH_BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
           DISPATCH_REPO_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_name_override || '' }}
-        run: |
-          mkdir -p .deploy-diagnostics
-          {
-            echo "event_name=${{ github.event_name }}"
-            echo "ref=${{ github.ref }}"
-            echo "head_branch=${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}"
-            echo "artifact_strategy=${{ steps.artifact_strategy.outputs.reason }}"
-            echo "base_mode=${DISPATCH_BASE_MODE}"
-            echo "base_path=${DISPATCH_BASE_PATH}"
-            echo "repo_override=${DISPATCH_REPO_OVERRIDE}"
-          } > .deploy-diagnostics/context.txt
+          HEAD_BRANCH: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}
+        run: bash scripts/github-actions/deploy-pages.sh capture-context
 
       - name: Setup Bun
         if: steps.artifact_strategy.outputs.reuse != 'true'
@@ -150,12 +109,7 @@ jobs:
 
       - name: Verify deployable artifact
         shell: bash
-        run: |
-          if [ ! -d dist ] || [ -z "$(find dist -mindepth 1 -print -quit)" ]; then
-            echo "::error::No deployable dist artifact found."
-            echo "::error::Remediation: ensure CI uploaded 'openlinks-dist' or rerun manual deploy to trigger rebuild fallback."
-            exit 1
-          fi
+        run: bash scripts/github-actions/deploy-pages.sh verify-artifact
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -180,11 +134,4 @@ jobs:
 
       - name: Deployment remediation summary
         if: failure()
-        run: |
-          {
-            echo "### ❌ GitHub Pages deployment failed"
-            echo "- Verify repository Pages settings use **GitHub Actions** as source."
-            echo "- Confirm CI workflow succeeded on \`main\` and produced artifact \`openlinks-dist\`."
-            echo "- If dispatching manually, ensure \`base_path\` starts and ends with \`/\` when provided."
-            echo "- Download \`deploy-pages-diagnostics\` artifact for deployment context details."
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bash scripts/github-actions/deploy-pages.sh failure-summary
