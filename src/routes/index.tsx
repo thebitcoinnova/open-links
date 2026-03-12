@@ -16,12 +16,17 @@ import { Toaster, toast } from "solid-sonner";
 import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
+import AnimatedPageSwap from "../components/layout/AnimatedPageSwap";
 import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
 import SiteFooter from "../components/layout/SiteFooter";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import ThemeToggle from "../components/theme/ThemeToggle";
+import {
+  readAnalyticsPageState,
+  writeAnalyticsPageState,
+} from "../lib/analytics/analytics-page-query";
 import {
   FOLLOWER_HISTORY_INDEX_PUBLIC_PATH,
   type FollowerHistoryIndex,
@@ -89,14 +94,13 @@ const sections = resolveLinkSections(
 ) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
 
-const ANALYTICS_QUERY_KEY = "analytics";
-const ANALYTICS_QUERY_VALUE = "all";
 const RANGE_OPTIONS: Array<{ label: string; value: FollowerHistoryRange }> = [
   { label: "30D", value: "30d" },
   { label: "90D", value: "90d" },
   { label: "180D", value: "180d" },
   { label: "All", value: "all" },
 ];
+type PageViewKey = "analytics" | "links";
 const FollowerHistoryChart = lazy(() => import("../components/analytics/FollowerHistoryChart"));
 const FollowerHistoryModal = lazy(() => import("../components/analytics/FollowerHistoryModal"));
 
@@ -174,35 +178,6 @@ const targetForLink = (url?: string): "_blank" | "_self" => {
   return url.startsWith("http://") || url.startsWith("https://") ? "_blank" : "_self";
 };
 
-const readAnalyticsPageState = (): boolean => {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  try {
-    return (
-      new URL(window.location.href).searchParams.get(ANALYTICS_QUERY_KEY) === ANALYTICS_QUERY_VALUE
-    );
-  } catch {
-    return false;
-  }
-};
-
-const writeAnalyticsPageState = (open: boolean) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const nextUrl = new URL(window.location.href);
-  if (open) {
-    nextUrl.searchParams.set(ANALYTICS_QUERY_KEY, ANALYTICS_QUERY_VALUE);
-  } else {
-    nextUrl.searchParams.delete(ANALYTICS_QUERY_KEY);
-  }
-
-  window.history.pushState({}, "", nextUrl);
-};
-
 const fetchFollowerHistoryIndex = async (): Promise<FollowerHistoryIndex | null> => {
   try {
     const response = await fetch(historyAssetUrl(FOLLOWER_HISTORY_INDEX_PUBLIC_PATH));
@@ -235,7 +210,7 @@ const describeAnalyticsRange = (range: FollowerHistoryRange): string => {
 
 export default function RouteIndex() {
   const [mode, setMode] = createSignal<UiMode>("dark");
-  const [analyticsPageOpen, setAnalyticsPageOpen] = createSignal(false);
+  const [analyticsPageOpen, setAnalyticsPageOpen] = createSignal(readAnalyticsPageState());
   const [analyticsRange, setAnalyticsRange] = createSignal<FollowerHistoryRange>("30d");
   const [modalRange, setModalRange] = createSignal<FollowerHistoryRange>("30d");
   const [modalMode, setModalMode] = createSignal<FollowerHistoryMode>("raw");
@@ -407,14 +382,110 @@ export default function RouteIndex() {
     persistModePreference(modePolicy, nextMode);
   };
 
-  const profileHeader = () => (
+  const profileHeader = (analyticsActive: boolean) => (
     <ProfileHeader
       profile={content.profile}
       richness={composition.profileRichness}
       analyticsAvailable={analyticsAvailable()}
-      analyticsActive={analyticsPageOpen()}
+      analyticsActive={analyticsActive}
       onAnalyticsToggle={analyticsAvailable() ? toggleAnalyticsPage : undefined}
     />
+  );
+
+  const renderLinksPage = () => (
+    <For each={composition.blocks}>
+      {(block) => (
+        <Switch>
+          <Match when={block === "profile"}>{profileHeader(false)}</Match>
+          <Match when={block === "links"}>
+            <For each={sections}>
+              {(section) => (
+                <LinkSection
+                  section={section}
+                  showHeading={showGroupHeading}
+                  groupingStyle={composition.grouping}
+                >
+                  {(link) => renderCard(link)}
+                </LinkSection>
+              )}
+            </For>
+          </Match>
+        </Switch>
+      )}
+    </For>
+  );
+
+  const renderAnalyticsPage = () => (
+    <>
+      {profileHeader(true)}
+
+      <section class="analytics-page" aria-label="Follower analytics">
+        <div class="analytics-page-header">
+          <div>
+            <h2>Follower Analytics</h2>
+            <p>Showing {describeAnalyticsRange(analyticsRange())} of public follower history.</p>
+          </div>
+          <div class="analytics-control-group" aria-label="Analytics time range">
+            <For each={RANGE_OPTIONS}>
+              {(option) => (
+                <button
+                  type="button"
+                  class="analytics-chip"
+                  data-active={analyticsRange() === option.value ? "true" : "false"}
+                  onClick={() => setAnalyticsRange(option.value)}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+
+        <Show when={historyIndex.loading}>
+          <p class="analytics-empty-state">Loading follower history…</p>
+        </Show>
+        <Show when={historyIndex.error}>
+          <p class="analytics-empty-state">Follower history could not be loaded.</p>
+        </Show>
+        <Show
+          when={!historyIndex.loading && !historyIndex.error && analyticsEntries().length === 0}
+        >
+          <p class="analytics-empty-state">No public follower history is published yet.</p>
+        </Show>
+
+        <div class="analytics-grid">
+          <Suspense fallback={<p class="analytics-empty-state">Loading charts…</p>}>
+            <For each={analyticsEntries()}>
+              {(entry) => (
+                <section class="analytics-card">
+                  <div class="analytics-card-header">
+                    <div>
+                      <h3>{entry.label}</h3>
+                      <p>{entry.latestAudienceCountRaw}</p>
+                    </div>
+                    <button
+                      type="button"
+                      class="analytics-open-button"
+                      onClick={() => openHistoryModal(entry.linkId)}
+                    >
+                      Open chart
+                    </button>
+                  </div>
+
+                  <FollowerHistoryChart
+                    audienceKind={entry.audienceKind}
+                    mode="raw"
+                    range={analyticsRange()}
+                    rows={allHistoryRows()?.get(entry.linkId) ?? []}
+                    themeFingerprint={themeFingerprint()}
+                  />
+                </section>
+              )}
+            </For>
+          </Suspense>
+        </div>
+      </section>
+    </>
   );
 
   return (
@@ -452,100 +523,10 @@ export default function RouteIndex() {
         </UtilityControlsMenu>
       </TopUtilityBar>
 
-      <Show
-        when={analyticsPageOpen()}
-        fallback={
-          <For each={composition.blocks}>
-            {(block) => (
-              <Switch>
-                <Match when={block === "profile"}>{profileHeader()}</Match>
-                <Match when={block === "links"}>
-                  <For each={sections}>
-                    {(section) => (
-                      <LinkSection
-                        section={section}
-                        showHeading={showGroupHeading}
-                        groupingStyle={composition.grouping}
-                      >
-                        {(link) => renderCard(link)}
-                      </LinkSection>
-                    )}
-                  </For>
-                </Match>
-              </Switch>
-            )}
-          </For>
-        }
-      >
-        {profileHeader()}
-
-        <section class="analytics-page" aria-label="Follower analytics">
-          <div class="analytics-page-header">
-            <div>
-              <h2>Follower Analytics</h2>
-              <p>Showing {describeAnalyticsRange(analyticsRange())} of public follower history.</p>
-            </div>
-            <div class="analytics-control-group" aria-label="Analytics time range">
-              <For each={RANGE_OPTIONS}>
-                {(option) => (
-                  <button
-                    type="button"
-                    class="analytics-chip"
-                    data-active={analyticsRange() === option.value ? "true" : "false"}
-                    onClick={() => setAnalyticsRange(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </div>
-          </div>
-
-          <Show when={historyIndex.loading}>
-            <p class="analytics-empty-state">Loading follower history…</p>
-          </Show>
-          <Show when={historyIndex.error}>
-            <p class="analytics-empty-state">Follower history could not be loaded.</p>
-          </Show>
-          <Show
-            when={!historyIndex.loading && !historyIndex.error && analyticsEntries().length === 0}
-          >
-            <p class="analytics-empty-state">No public follower history is published yet.</p>
-          </Show>
-
-          <div class="analytics-grid">
-            <Suspense fallback={<p class="analytics-empty-state">Loading charts…</p>}>
-              <For each={analyticsEntries()}>
-                {(entry) => (
-                  <section class="analytics-card">
-                    <div class="analytics-card-header">
-                      <div>
-                        <h3>{entry.label}</h3>
-                        <p>{entry.latestAudienceCountRaw}</p>
-                      </div>
-                      <button
-                        type="button"
-                        class="analytics-open-button"
-                        onClick={() => openHistoryModal(entry.linkId)}
-                      >
-                        Open chart
-                      </button>
-                    </div>
-
-                    <FollowerHistoryChart
-                      audienceKind={entry.audienceKind}
-                      mode="raw"
-                      range={analyticsRange()}
-                      rows={allHistoryRows()?.get(entry.linkId) ?? []}
-                      themeFingerprint={themeFingerprint()}
-                    />
-                  </section>
-                )}
-              </For>
-            </Suspense>
-          </div>
-        </section>
-      </Show>
+      <AnimatedPageSwap
+        activeKey={analyticsPageOpen() ? ("analytics" as PageViewKey) : ("links" as PageViewKey)}
+        renderView={(key) => (key === "analytics" ? renderAnalyticsPage() : renderLinksPage())}
+      />
 
       <SiteFooter
         preferences={footerPreferences}

@@ -372,6 +372,58 @@ a:focus-visible {
   gap: calc(var(--space-3) * var(--density-scale));
 }
 
+@keyframes page-swap-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.992);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes page-swap-view-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-0.18rem) scale(0.992);
+  }
+}
+
+.page-swap-stack {
+  display: grid;
+  align-items: start;
+}
+
+.page-swap-view {
+  grid-area: 1 / 1;
+  min-width: 0;
+  opacity: 1;
+  transform: none;
+  transform-origin: center top;
+}
+
+.page-swap-view[data-expanded] {
+  animation: page-swap-view-enter var(--page-swap-motion, var(--motion-mid)) both;
+  z-index: 1;
+}
+
+.page-swap-view[data-closed] {
+  animation: page-swap-view-exit var(--page-swap-motion, var(--motion-mid)) both;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-swap-view[data-entered] {
+  z-index: 1;
+}
+
 .analytics-page {
   display: grid;
   gap: var(--space-3);

@@ -164,6 +164,11 @@ export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {
       return;
     }
 
+    if (filteredRows().length === 0) {
+      chart.clear();
+      return;
+    }
+
     props.themeFingerprint;
     chart.setOption(option(), true);
     chart.resize();
@@ -176,11 +181,15 @@ export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {
 
   return (
     <div class="follower-history-chart">
-      {filteredRows().length > 0 ? (
-        <div ref={chartElement} style={{ height: `${props.height ?? 280}px`, width: "100%" }} />
-      ) : (
+      <div
+        aria-hidden={filteredRows().length === 0 ? "true" : undefined}
+        hidden={filteredRows().length === 0}
+        ref={chartElement}
+        style={{ height: `${props.height ?? 280}px`, width: "100%" }}
+      />
+      {filteredRows().length === 0 ? (
         <p class="analytics-empty-state">No history in this range yet.</p>
-      )}
+      ) : null}
     </div>
   );
 };

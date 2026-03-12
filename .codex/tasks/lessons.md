@@ -41,3 +41,9 @@
 - What went wrong: I shifted the share-success wording toward copy-specific language (`link copied`) even after the user asked for more generic share feedback.
 - Preventive rule: When success wording is meant to cover multiple underlying completion paths, choose user-facing copy that reflects the broader intent (`shared`) rather than the implementation detail (`copied`).
 - Trigger signal to catch it earlier: The success state can happen through more than one mechanism, or the user explicitly asks for more generic wording.
+
+## 2026-03-11
+
+- What went wrong: I added the page-level analytics transition with `analyticsPageOpen` still defaulting to `false` and only syncing from the URL in `onMount`, which broke the refresh-into-analytics untoggle path because the first render did not honor `?analytics=all`.
+- Preventive rule: When route or query params control which major view is initially active, seed the initial signal/state directly from the URL before mount instead of relying on a post-mount synchronization effect.
+- Trigger signal to catch it earlier: A feature introduces animated view swapping or other stateful first-render logic while the same view can also be opened via a persisted URL query parameter.
