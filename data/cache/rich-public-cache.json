@@ -96,7 +96,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-03-11T07:18:10.562Z",
+      "updatedAt": "2026-03-12T07:18:47.305Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -104,17 +104,17 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1349,
-        "followersCountRaw": "1,349 Followers",
-        "followingCount": 647,
-        "followingCountRaw": "647 Following"
+        "followersCount": 1351,
+        "followersCountRaw": "1,351 Followers",
+        "followingCount": 646,
+        "followingCountRaw": "646 Following"
       }
     },
     "youtube": {
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@peterryszkiewicz4354",
       "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-03-09T09:33:47.270Z",
+      "updatedAt": "2026-03-12T07:19:28.396Z",
       "metadata": {
         "title": "Peter NoTaxationWithoutRepresentation Ryszkiewicz",
         "description": "Our politicians no longer represent us; we must do a tax strike; no taxation without representation. How to Fix the United States: https://open.substack.com/...",
@@ -122,9 +122,7 @@
         "ogImage": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
         "twitterImage": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
-        "profileImage": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 11,
-        "subscribersCountRaw": "11 subscribers"
+        "profileImage": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj"
       }
     }
   }
