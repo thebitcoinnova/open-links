@@ -119,6 +119,18 @@ export const phaseChecklist: PhaseChecklist[] = [
         status: "done",
         priority: "P1",
       },
+      {
+        id: "p7-6",
+        label: "Security review checklist and incident runbook",
+        status: "done",
+        priority: "P1",
+      },
+      {
+        id: "p7-7",
+        label: "Launch checklist and production incident playbook",
+        status: "todo",
+        priority: "P1",
+      },
     ],
   },
 ];

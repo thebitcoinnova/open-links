@@ -79,7 +79,7 @@ Use this file as the source of truth for implementation status, priorities, and 
 - [x] `P0` End-to-end integration tests for auth/provision/save/sync
 - [x] `P0` Production env placeholder fail-fast preflight for Studio build targets (`web`/`api`/`worker`)
 - [x] `P1` Accessibility remediation for onboarding/editor interaction semantics and live status messaging
-- [ ] `P1` Security review checklist and runbook completion
+- [x] `P1` Security review checklist and runbook completion
 - [ ] `P1` Launch checklist and production incident playbook
 
 ## Backlog and Future Ideas
