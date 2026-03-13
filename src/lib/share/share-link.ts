@@ -15,6 +15,12 @@ export interface ShareLinkResult {
   status: "copied" | "dismissed" | "failed" | "shared";
 }
 
+export interface CopyLinkInput {
+  copiedMessage?: string;
+  failedMessage?: string;
+  url: string;
+}
+
 const toSharePayload = (input: ShareLinkInput): ShareData => {
   const payload: ShareData = {
     url: input.url,
@@ -51,6 +57,19 @@ export const resolveDocumentShareUrl = (fallback = "/"): string => {
   }
 };
 
+export const copyLink = async (input: CopyLinkInput): Promise<ShareLinkResult> => {
+  const copied = await copyToClipboard(input.url);
+  return copied
+    ? {
+        message: input.copiedMessage ?? "Link copied",
+        status: "copied",
+      }
+    : {
+        message: input.failedMessage ?? "Copy failed",
+        status: "failed",
+      };
+};
+
 export const shareLink = async (input: ShareLinkInput): Promise<ShareLinkResult> => {
   const payload = toSharePayload(input);
 
@@ -75,14 +94,9 @@ export const shareLink = async (input: ShareLinkInput): Promise<ShareLinkResult>
     }
   }
 
-  const copied = await copyToClipboard(input.url);
-  return copied
-    ? {
-        message: input.copiedMessage ?? "Link shared",
-        status: "copied",
-      }
-    : {
-        message: input.failedMessage ?? "Share failed",
-        status: "failed",
-      };
+  return copyLink({
+    copiedMessage: input.copiedMessage ?? "Link shared",
+    failedMessage: input.failedMessage ?? "Share failed",
+    url: input.url,
+  });
 };

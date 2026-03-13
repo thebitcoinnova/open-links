@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveDocumentShareUrl, shareLink } from "./share-link";
+import { copyLink, resolveDocumentShareUrl, shareLink } from "./share-link";
 
 const originalNavigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
 const originalDocumentDescriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
@@ -145,6 +145,56 @@ test("shareLink falls back to clipboard copy when native share is unavailable", 
   assert.deepEqual(result, {
     message: "GitHub link shared",
     status: "copied",
+  });
+
+  restoreGlobals();
+});
+
+test("copyLink copies the URL directly when clipboard is available", async () => {
+  let copiedValue = "";
+  setNavigator({
+    clipboard: {
+      writeText: async (value: string) => {
+        copiedValue = value;
+      },
+    } as Clipboard,
+  } as unknown as Navigator);
+
+  const result = await copyLink({
+    copiedMessage: "GitHub link copied",
+    url: "https://github.com/pRizz",
+  });
+
+  assert.equal(copiedValue, "https://github.com/pRizz");
+  assert.deepEqual(result, {
+    message: "GitHub link copied",
+    status: "copied",
+  });
+
+  restoreGlobals();
+});
+
+test("copyLink returns failed when no clipboard path succeeds", async () => {
+  setNavigator({
+    clipboard: {
+      writeText: async () => {
+        throw new Error("clipboard unavailable");
+      },
+    } as unknown as Clipboard,
+  } as unknown as Navigator);
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: undefined,
+  });
+
+  const result = await copyLink({
+    failedMessage: "Could not copy GitHub link",
+    url: "https://github.com/pRizz",
+  });
+
+  assert.deepEqual(result, {
+    message: "Could not copy GitHub link",
+    status: "failed",
   });
 
   restoreGlobals();

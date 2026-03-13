@@ -45,7 +45,7 @@ import {
   resolveBasePathFromUrl,
   resolveSeoMetadata,
 } from "../lib/seo/resolve-seo-metadata";
-import { shareLink } from "../lib/share/share-link";
+import { copyLink, shareLink } from "../lib/share/share-link";
 import {
   type UiMode,
   applyThemeState,
@@ -273,25 +273,38 @@ export default function RouteIndex() {
     const resolveCardActions = () => {
       const historyEntry = historyAvailability().get(link.id);
       const shareUrl = link.url;
-      const shareAction = shareUrl
-        ? {
-            ariaLabel: `Share ${link.label}`,
-            kind: "share" as const,
-            onClick: () =>
-              shareLink({
-                copiedMessage: `${link.label} link shared`,
-                failedMessage: `Could not share ${link.label}`,
-                mode: "url-only",
-                sharedMessage: `${link.label} link shared`,
-                title: link.label,
-                url: shareUrl,
-              }),
-            title: `Share ${link.label}`,
-          }
-        : undefined;
+      const shareActions = shareUrl
+        ? [
+            {
+              ariaLabel: `Share ${link.label}`,
+              kind: "share" as const,
+              onClick: () =>
+                shareLink({
+                  copiedMessage: `${link.label} link shared`,
+                  failedMessage: `Could not share ${link.label}`,
+                  mode: "url-only",
+                  sharedMessage: `${link.label} link shared`,
+                  title: link.label,
+                  url: shareUrl,
+                }),
+              title: `Share ${link.label}`,
+            },
+            {
+              ariaLabel: `Copy ${link.label} link`,
+              kind: "copy" as const,
+              onClick: () =>
+                copyLink({
+                  copiedMessage: `${link.label} link copied`,
+                  failedMessage: `Could not copy ${link.label} link`,
+                  url: shareUrl,
+                }),
+              title: `Copy ${link.label} link`,
+            },
+          ]
+        : [];
 
       if (!historyEntry) {
-        return shareAction ? [shareAction] : [];
+        return shareActions;
       }
 
       return [
@@ -304,7 +317,7 @@ export default function RouteIndex() {
           },
           title: `View ${link.label} follower history`,
         },
-        ...(shareAction ? [shareAction] : []),
+        ...shareActions,
       ];
     };
 

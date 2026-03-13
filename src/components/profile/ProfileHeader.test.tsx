@@ -75,6 +75,7 @@ test("profile header renders analytics and share buttons in order when analytics
   const buttons = collectElements(tree).filter((element) => element.type === "button");
   assert.equal(buttons[0]?.props["aria-label"], "View follower analytics");
   assert.equal(buttons[1]?.props["aria-label"], "Share profile");
+  assert.equal(buttons[2]?.props["aria-label"], "Copy profile link");
 });
 
 test("profile header flips the analytics button label when the analytics view is active", () => {
@@ -92,6 +93,8 @@ test("profile header flips the analytics button label when the analytics view is
 
   const buttons = collectElements(tree).filter((element) => element.type === "button");
   assert.equal(buttons[0]?.props["aria-label"], "Back to links");
+  assert.equal(buttons[1]?.props["aria-label"], "Share profile");
+  assert.equal(buttons[2]?.props["aria-label"], "Copy profile link");
 });
 
 test("profile header still renders share when analytics is unavailable", () => {
@@ -105,8 +108,9 @@ test("profile header still renders share when analytics is unavailable", () => {
   }) as RenderedNode;
 
   const buttons = collectElements(tree).filter((element) => element.type === "button");
-  assert.equal(buttons.length, 1);
+  assert.equal(buttons.length, 2);
   assert.equal(buttons[0]?.props["aria-label"], "Share profile");
+  assert.equal(buttons[1]?.props["aria-label"], "Copy profile link");
 });
 
 test("profile header no longer renders an inline share status output", () => {

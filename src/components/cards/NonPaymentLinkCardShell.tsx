@@ -1,7 +1,7 @@
 import { For, Show, createMemo } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
-import { IconAnalytics, IconShare } from "../../lib/icons/custom-icons";
+import { IconAnalytics, IconCopy, IconShare } from "../../lib/icons/custom-icons";
 import type { ShareLinkResult } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
 import type {
@@ -10,15 +10,15 @@ import type {
 } from "../../lib/ui/rich-card-policy";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 
-export interface CardAnalyticsButtonProps {
+export interface CardActionButtonProps {
   ariaLabel: string;
-  kind: "analytics" | "share";
+  kind: "analytics" | "copy" | "share";
   onClick: () => undefined | Promise<ShareLinkResult | undefined>;
   title?: string;
 }
 
 export interface NonPaymentLinkCardShellProps {
-  resolveCardActions?: () => CardAnalyticsButtonProps[];
+  resolveCardActions?: () => CardActionButtonProps[];
   link: OpenLink;
   viewModel: NonPaymentCardViewModel;
   rootClassName: string;
@@ -74,8 +74,20 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       ? `Open ${props.viewModel.title} in a new tab`
       : `Open ${props.viewModel.title}`;
 
-  const handleCardAction = async (action: CardAnalyticsButtonProps) => {
+  const handleCardAction = async (action: CardActionButtonProps) => {
     showActionToast((await action.onClick()) as ShareLinkResult | undefined);
+  };
+
+  const resolveActionIcon = (kind: CardActionButtonProps["kind"]) => {
+    if (kind === "analytics") {
+      return <IconAnalytics class="card-action-button-icon" aria-hidden="true" />;
+    }
+
+    if (kind === "copy") {
+      return <IconCopy class="card-action-button-icon" aria-hidden="true" />;
+    }
+
+    return <IconShare class="card-action-button-icon" aria-hidden="true" />;
   };
 
   return (
@@ -205,12 +217,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
                 title={action.title ?? action.ariaLabel}
                 onClick={() => handleCardAction(action)}
               >
-                <Show
-                  when={action.kind === "analytics"}
-                  fallback={<IconShare class="card-action-button-icon" aria-hidden="true" />}
-                >
-                  <IconAnalytics class="card-action-button-icon" aria-hidden="true" />
-                </Show>
+                {resolveActionIcon(action.kind)}
               </button>
             )}
           </For>

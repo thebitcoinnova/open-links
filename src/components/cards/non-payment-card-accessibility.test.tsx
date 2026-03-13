@@ -312,6 +312,12 @@ test("history-aware cards expose analytics then share as sibling actions without
         kind: "share",
         onClick: () => Promise.resolve({ message: "Link copied", status: "copied" as const }),
       },
+      {
+        ariaLabel: "Copy GitHub link",
+        kind: "copy",
+        onClick: () =>
+          Promise.resolve({ message: "GitHub link copied", status: "copied" as const }),
+      },
     ],
     link: richGithubLink,
     viewModel: buildRichCardViewModel(site, richGithubLink),
@@ -332,9 +338,10 @@ test("history-aware cards expose analytics then share as sibling actions without
   assert.ok(anchor);
   assert.equal(anchor.props["aria-label"], "Open pRizz in a new tab");
   assert.ok(actionRow);
-  assert.equal(buttons.length, 2);
+  assert.equal(buttons.length, 3);
   assert.equal(buttons[0]?.props["aria-label"], "View GitHub follower history");
   assert.equal(buttons[1]?.props["aria-label"], "Share GitHub");
+  assert.equal(buttons[2]?.props["aria-label"], "Copy GitHub link");
   assert.equal(
     firstElementWithClass(tree, "non-payment-card-summary")?.props["data-has-analytics"],
     undefined,
@@ -346,13 +353,19 @@ test("history-aware cards expose analytics then share as sibling actions without
   assert.ok(firstElementWithClass(tree, "non-payment-card-title-row"));
 });
 
-test("cards without history still render a share-only action row", () => {
+test("cards without history still render share and copy sibling actions", () => {
   const tree = SimpleLinkCard({
     resolveCardActions: () => [
       {
         ariaLabel: "Share OpenLinks",
         kind: "share",
         onClick: () => Promise.resolve({ message: "Link copied", status: "copied" as const }),
+      },
+      {
+        ariaLabel: "Copy OpenLinks link",
+        kind: "copy",
+        onClick: () =>
+          Promise.resolve({ message: "OpenLinks link copied", status: "copied" as const }),
       },
     ],
     link: plainSimpleLink,
@@ -370,8 +383,9 @@ test("cards without history still render a share-only action row", () => {
   });
 
   assert.ok(actionRow);
-  assert.equal(buttons.length, 1);
+  assert.equal(buttons.length, 2);
   assert.equal(buttons[0]?.props["aria-label"], "Share OpenLinks");
+  assert.equal(buttons[1]?.props["aria-label"], "Copy OpenLinks link");
 });
 
 test("card action surfaces no longer render inline action status outputs", () => {

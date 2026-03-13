@@ -32,7 +32,8 @@
   }
 
   body .profile-analytics-button,
-  body .profile-share-button {
+  body .profile-share-button,
+  body .profile-copy-button {
     width: calc(var(--page-target-size) + 0.15rem);
     height: calc(var(--page-target-size) + 0.15rem);
     min-width: calc(var(--page-target-size) + 0.15rem);

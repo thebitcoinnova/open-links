@@ -122,6 +122,24 @@ export const IconShare: Component<IconProps> = (props: IconProps) => (
   </svg>
 );
 
+/** Generic copy icon (24x24 stroke-based). */
+export const IconCopy: Component<IconProps> = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    {...props}
+  >
+    <title>Copy</title>
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M15 5H6a2 2 0 00-2 2v9" />
+  </svg>
+);
+
 /** Generic analytics icon (24x24 stroke-based). */
 export const IconAnalytics: Component<IconProps> = (props: IconProps) => (
   <svg

@@ -245,8 +245,16 @@ a:focus-visible {
   gap: var(--space-1);
 }
 
+.profile-sharing-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
 .profile-analytics-button,
-.profile-share-button {
+.profile-share-button,
+.profile-copy-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -269,25 +277,24 @@ a:focus-visible {
     var(--motion-fast), background-color var(--motion-fast);
 }
 
-.profile-share-button {
-  margin-left: auto;
-}
-
 .profile-analytics-button:hover,
-.profile-share-button:hover {
+.profile-share-button:hover,
+.profile-copy-button:hover {
   border-color: var(--border-strong);
   transform: translateY(-1px);
   box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .profile-analytics-button:active,
-.profile-share-button:active {
+.profile-share-button:active,
+.profile-copy-button:active {
   transform: translateY(0);
   box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .profile-analytics-button:focus-visible,
-.profile-share-button:focus-visible {
+.profile-share-button:focus-visible,
+.profile-copy-button:focus-visible {
   box-shadow: var(--shadow-focus);
   border-color: var(--accent-strong);
 }

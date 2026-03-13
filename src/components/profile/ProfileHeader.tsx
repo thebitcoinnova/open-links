@@ -1,7 +1,7 @@
 import { For, Show } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
-import { IconAnalytics, IconShare } from "../../lib/icons/custom-icons";
-import { resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
+import { IconAnalytics, IconCopy, IconShare } from "../../lib/icons/custom-icons";
+import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
 
 export interface ProfileHeaderProps {
@@ -35,6 +35,16 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     );
   };
 
+  const handleCopyProfileLink = async () => {
+    showActionToast(
+      await copyLink({
+        copiedMessage: "Profile link copied",
+        failedMessage: "Could not copy profile link",
+        url: resolveDocumentShareUrl(),
+      }),
+    );
+  };
+
   return (
     <section class="profile-header" aria-label="Profile">
       <Show when={props.profile.avatar && richness() !== "minimal"}>
@@ -57,15 +67,26 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
                 <IconAnalytics class="profile-action-button-icon" aria-hidden="true" />
               </button>
             </Show>
-            <button
-              type="button"
-              class="profile-share-button"
-              aria-label="Share profile"
-              title="Share profile"
-              onClick={() => handleShareProfile()}
-            >
-              <IconShare class="profile-action-button-icon" aria-hidden="true" />
-            </button>
+            <span class="profile-sharing-actions">
+              <button
+                type="button"
+                class="profile-share-button"
+                aria-label="Share profile"
+                title="Share profile"
+                onClick={() => handleShareProfile()}
+              >
+                <IconShare class="profile-action-button-icon" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                class="profile-copy-button"
+                aria-label="Copy profile link"
+                title="Copy profile link"
+                onClick={() => handleCopyProfileLink()}
+              >
+                <IconCopy class="profile-action-button-icon" aria-hidden="true" />
+              </button>
+            </span>
           </div>
         </div>
 

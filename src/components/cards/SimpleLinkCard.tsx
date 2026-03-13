@@ -1,10 +1,10 @@
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { buildSimpleCardViewModel } from "../../lib/ui/rich-card-policy";
-import NonPaymentLinkCardShell, { type CardAnalyticsButtonProps } from "./NonPaymentLinkCardShell";
+import NonPaymentLinkCardShell, { type CardActionButtonProps } from "./NonPaymentLinkCardShell";
 
 export interface SimpleLinkCardProps {
-  resolveCardActions?: () => CardAnalyticsButtonProps[];
+  resolveCardActions?: () => CardActionButtonProps[];
   link: OpenLink;
   site: SiteData;
   target?: "_blank" | "_self";

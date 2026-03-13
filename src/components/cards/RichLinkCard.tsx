@@ -1,10 +1,10 @@
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import type { RichCardViewModel } from "../../lib/ui/rich-card-policy";
-import NonPaymentLinkCardShell, { type CardAnalyticsButtonProps } from "./NonPaymentLinkCardShell";
+import NonPaymentLinkCardShell, { type CardActionButtonProps } from "./NonPaymentLinkCardShell";
 
 export interface RichLinkCardProps {
-  resolveCardActions?: () => CardAnalyticsButtonProps[];
+  resolveCardActions?: () => CardActionButtonProps[];
   link: OpenLink;
   viewModel: RichCardViewModel;
   target?: "_blank" | "_self";
