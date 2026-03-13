@@ -128,7 +128,7 @@ export const phaseChecklist: PhaseChecklist[] = [
       {
         id: "p7-7",
         label: "Launch checklist and production incident playbook",
-        status: "todo",
+        status: "done",
         priority: "P1",
       },
     ],

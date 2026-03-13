@@ -9,6 +9,7 @@ Phase tracking lives in:
 - `docs/studio-phase-checklist.md` (canonical implementation checklist)
 - `packages/studio-web/src/lib/phase-checklist.ts` (in-app roadmap data)
 - `docs/studio-security-review.md` (security review checklist + incident runbook)
+- `docs/studio-launch-playbook.md` (launch checklist + availability incident playbook)
 
 ## Services
 
@@ -196,4 +197,5 @@ Required app permissions:
 - Content saves commit directly to fork default branch (`main` by default).
 - Upstream sync conflicts disable auto-sync for the affected repo and require manual intervention.
 - Use `docs/studio-security-review.md` before production launch and after any auth/session/webhook security change.
+- Use `docs/studio-launch-playbook.md` for go-live sequencing, smoke tests, rollback, and non-security production incidents.
 - Update `docs/studio-phase-checklist.md` whenever Studio scope/status changes.
