@@ -64,6 +64,7 @@
     "studio:web:dev": "bun run --filter @openlinks/studio-web dev",
     "studio:api:dev": "bun run --filter @openlinks/studio-api dev",
     "studio:worker:dev": "bun run --filter @openlinks/studio-worker dev",
+    "studio:web:test": "bun run --filter @openlinks/studio-web test",
     "studio:web:build": "bun run --filter @openlinks/studio-web build",
     "studio:api:build": "bun run --filter @openlinks/studio-api build",
     "studio:worker:build": "bun run --filter @openlinks/studio-worker build",
@@ -79,7 +80,7 @@
     "studio:format": "bunx @biomejs/biome format --write packages docs/studio-self-serve.md",
     "studio:format:check": "bunx @biomejs/biome format packages docs/studio-self-serve.md",
     "studio:fix": "bunx @biomejs/biome check --write packages docs/studio-self-serve.md",
-    "studio:check": "bun run studio:typecheck && bun run studio:lint && bun run studio:format:check && bun run studio:test:integration"
+    "studio:check": "bun run studio:typecheck && bun run studio:lint && bun run studio:format:check && bun run studio:web:test && bun run studio:test:integration"
   },
   "dependencies": {
     "@kobalte/core": "0.13.11",

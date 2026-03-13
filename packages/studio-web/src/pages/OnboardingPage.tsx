@@ -1,8 +1,10 @@
 import PageShell from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
+import ButtonLink from "@/components/ui/button-link";
 import { Card } from "@/components/ui/card";
+import StatusNotice from "@/components/ui/status-notice";
+import type { LiveRegionTone } from "@/lib/accessibility";
 import { api } from "@/lib/api";
-import { A } from "@solidjs/router";
 import { Show, createResource, createSignal, onCleanup, onMount } from "solid-js";
 
 const githubInstallUrl =
@@ -45,7 +47,7 @@ export default function OnboardingPage() {
   const [repos, { refetch: refetchRepos }] = createResource(() => (me() ? api.listRepos() : null));
   const [provisioning, setProvisioning] = createSignal(false);
   const [authStarting, setAuthStarting] = createSignal(false);
-  const [message, setMessage] = createSignal<string | null>(null);
+  const [message, setMessage] = createSignal<{ text: string; tone: LiveRegionTone } | null>(null);
   const [captchaToken, setCaptchaToken] = createSignal<string | null>(null);
   const [captchaError, setCaptchaError] = createSignal<string | null>(null);
   let turnstileContainer: HTMLDivElement | undefined;
@@ -108,7 +110,7 @@ export default function OnboardingPage() {
 
   const startGitHubAuth = async () => {
     if (captchaRequired && !turnstileSiteKey) {
-      setMessage("Security check is not configured.");
+      setMessage({ text: "Security check is not configured.", tone: "alert" });
       return;
     }
 
@@ -119,7 +121,7 @@ export default function OnboardingPage() {
       const response = await api.startGithubAuth(captchaToken() ?? undefined);
       window.location.assign(response.authorizeUrl);
     } catch (error) {
-      setMessage(formatAuthStartError(error));
+      setMessage({ text: formatAuthStartError(error), tone: "alert" });
       setCaptchaToken(null);
       if (captchaRequired && turnstileWidgetId && window.turnstile) {
         window.turnstile.reset(turnstileWidgetId);
@@ -147,10 +149,16 @@ export default function OnboardingPage() {
     setMessage(null);
     try {
       const result = await api.provisionRepo();
-      setMessage(`Provisioned ${result.repo.owner}/${result.repo.name}`);
+      setMessage({
+        text: `Provisioned ${result.repo.owner}/${result.repo.name}`,
+        tone: "status",
+      });
       await Promise.all([refetchStatus(), refetchRepos()]);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to provision fork");
+      setMessage({
+        text: error instanceof Error ? error.message : "Failed to provision fork",
+        tone: "alert",
+      });
     } finally {
       setProvisioning(false);
     }
@@ -168,9 +176,9 @@ export default function OnboardingPage() {
             permissions are complete.
           </p>
           <Show when={message()}>
-            <p class="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200">
-              {message()}
-            </p>
+            {(resolvedMessage) => (
+              <StatusNotice tone={resolvedMessage().tone}>{resolvedMessage().text}</StatusNotice>
+            )}
           </Show>
         </Card>
 
@@ -210,6 +218,7 @@ export default function OnboardingPage() {
                 }
               >
                 <div
+                  aria-label="Security check"
                   class="min-h-[68px] rounded-md border border-slate-700 bg-slate-900/60 p-2"
                   ref={(element) => {
                     turnstileContainer = element;
@@ -217,14 +226,14 @@ export default function OnboardingPage() {
                 />
               </Show>
               <Show when={captchaError()}>
-                <p class="text-xs text-rose-300">{captchaError()}</p>
+                {(error) => <StatusNotice tone="alert">{error()}</StatusNotice>}
               </Show>
             </div>
           </Show>
           <div class="flex gap-2">
-            <a href="https://github.com/signup" target="_blank" rel="noreferrer">
-              <Button variant="outline">Create GitHub account</Button>
-            </a>
+            <ButtonLink external href="https://github.com/signup" variant="outline">
+              Create GitHub account
+            </ButtonLink>
             <Button variant="primary" onClick={startGitHubAuth} disabled={!canStartGitHubAuth()}>
               {authStarting() ? "Connecting..." : "Connect GitHub"}
             </Button>
@@ -236,9 +245,9 @@ export default function OnboardingPage() {
           <p class="text-sm text-slate-300">
             Install your GitHub App to enable fork, commit, and sync operations.
           </p>
-          <a href={githubInstallUrl} target="_blank" rel="noreferrer">
-            <Button variant="outline">Install App</Button>
-          </a>
+          <ButtonLink external href={githubInstallUrl} variant="outline">
+            Install App
+          </ButtonLink>
         </Card>
 
         <Card class="space-y-3">
@@ -258,11 +267,7 @@ export default function OnboardingPage() {
             when={latestRepoId()}
             fallback={<p class="text-xs text-slate-400">Provision a fork first.</p>}
           >
-            {(repoId) => (
-              <A href={`/editor/${repoId()}`}>
-                <Button variant="primary">Open editor</Button>
-              </A>
-            )}
+            {(repoId) => <ButtonLink href={`/editor/${repoId()}`}>Open editor</ButtonLink>}
           </Show>
         </Card>
       </section>

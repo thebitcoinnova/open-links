@@ -7,6 +7,7 @@
     "dev": "vite --port 4173",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "bun test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome check src index.html vite.config.ts tailwind.config.ts",
     "format": "biome format --write src index.html vite.config.ts tailwind.config.ts",

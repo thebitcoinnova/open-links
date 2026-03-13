@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildFollowerHistoryAccessibleSummary,
   buildFollowerHistoryAvailabilityMap,
   buildFollowerHistoryCsvPublicPath,
   buildFollowerHistoryPoints,
+  describeFollowerHistoryRange,
   filterFollowerHistoryRows,
   parseCompactAudienceCount,
   parseFollowerHistoryCsv,
@@ -158,4 +160,46 @@ test("index parsing and availability maps stay keyed by link id", () => {
   const availability = buildFollowerHistoryAvailabilityMap(index);
   assert.equal(availability.get("github")?.platform, "github");
   assert.equal(availability.get("github")?.csvPath, "history/followers/github.csv");
+});
+
+test("range descriptions use friendly copy for analytics summaries", () => {
+  assert.equal(describeFollowerHistoryRange("30d"), "30 days");
+  assert.equal(describeFollowerHistoryRange("all"), "all available history");
+});
+
+test("accessible history summaries describe latest count and change over time", () => {
+  const rows = [
+    {
+      observedAt: "2026-03-01T07:00:00.000Z",
+      linkId: "github",
+      platform: "github",
+      handle: "prizz",
+      canonicalUrl: "https://github.com/pRizz",
+      audienceKind: "followers",
+      audienceCount: 80,
+      audienceCountRaw: "80 followers",
+      source: "public-cache",
+    },
+    {
+      observedAt: "2026-03-10T07:00:00.000Z",
+      linkId: "github",
+      platform: "github",
+      handle: "prizz",
+      canonicalUrl: "https://github.com/pRizz",
+      audienceKind: "followers",
+      audienceCount: 90,
+      audienceCountRaw: "90 followers",
+      source: "public-cache",
+    },
+  ] as const;
+
+  assert.equal(
+    buildFollowerHistoryAccessibleSummary({
+      audienceKind: "followers",
+      label: "GitHub",
+      rangeDescription: "30 days",
+      rows,
+    }),
+    "GitHub followers history for 30 days. Latest count 90 followers. up 10 from 80 followers on Mar 1, 2026 to 90 followers on Mar 10, 2026.",
+  );
 });

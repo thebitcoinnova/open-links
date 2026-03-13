@@ -113,6 +113,12 @@ export const phaseChecklist: PhaseChecklist[] = [
         status: "done",
         priority: "P0",
       },
+      {
+        id: "p7-5",
+        label: "Accessibility remediation for onboarding/editor interaction semantics",
+        status: "done",
+        priority: "P1",
+      },
     ],
   },
 ];

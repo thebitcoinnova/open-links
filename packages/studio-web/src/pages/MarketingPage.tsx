@@ -1,7 +1,6 @@
 import PageShell from "@/components/layout/PageShell";
-import { Button } from "@/components/ui/button";
+import ButtonLink from "@/components/ui/button-link";
 import { Card } from "@/components/ui/card";
-import { A } from "@solidjs/router";
 import { CheckCircle2, Rocket, ShieldCheck, WandSparkles } from "lucide-solid";
 import { For } from "solid-js";
 
@@ -41,21 +40,20 @@ export default function MarketingPage() {
             simple place for all your links.
           </p>
           <div class="flex flex-wrap items-center gap-3">
-            <A href="/onboarding">
-              <Button size="lg" class="bg-white text-ink hover:bg-slate-100">
-                Get started free
-              </Button>
-            </A>
-            <A href="/roadmap">
-              <Button size="lg" variant="outline">
-                View product roadmap
-              </Button>
-            </A>
-            <a href="https://github.com/pRizz/open-links" target="_blank" rel="noreferrer">
-              <Button variant="ghost" size="lg">
-                Learn more
-              </Button>
-            </a>
+            <ButtonLink class="bg-white text-ink hover:bg-slate-100" href="/onboarding" size="lg">
+              Get started free
+            </ButtonLink>
+            <ButtonLink href="/roadmap" size="lg" variant="outline">
+              View product roadmap
+            </ButtonLink>
+            <ButtonLink
+              external
+              href="https://github.com/pRizz/open-links"
+              size="lg"
+              variant="ghost"
+            >
+              Learn more
+            </ButtonLink>
           </div>
         </div>
       </section>

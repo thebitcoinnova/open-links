@@ -65,6 +65,13 @@ export interface FollowerHistoryPoint {
   delta: number;
 }
 
+export interface FollowerHistoryAccessibleSummaryOptions {
+  audienceKind: FollowerHistoryAudienceKind;
+  label: string;
+  rangeDescription: string;
+  rows: readonly FollowerHistoryRow[];
+}
+
 export interface FollowerHistoryLikeMetadata {
   followersCount?: number;
   followersCountRaw?: string;
@@ -467,6 +474,54 @@ export const buildFollowerHistoryPoints = (
       value: mode === "growth" ? delta : row.audienceCount,
     };
   });
+};
+
+export const describeFollowerHistoryRange = (range: FollowerHistoryRange): string => {
+  if (range === "all") {
+    return "all available history";
+  }
+
+  return range.replace("d", " days");
+};
+
+const formatObservedAt = (value: string): string =>
+  new Date(value).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+export const buildFollowerHistoryAccessibleSummary = ({
+  audienceKind,
+  label,
+  rangeDescription,
+  rows,
+}: FollowerHistoryAccessibleSummaryOptions): string | null => {
+  if (rows.length === 0) {
+    return `${label} has no published ${audienceKind} history for ${rangeDescription}.`;
+  }
+
+  const points = buildFollowerHistoryPoints(rows, "raw");
+  const startPoint = points[0];
+  const endPoint = points[points.length - 1];
+
+  if (!startPoint || !endPoint) {
+    return null;
+  }
+
+  const delta = endPoint.audienceCount - startPoint.audienceCount;
+  const direction =
+    delta > 0
+      ? `up ${delta.toLocaleString("en-US")}`
+      : delta < 0
+        ? `down ${Math.abs(delta).toLocaleString("en-US")}`
+        : "no change";
+
+  return [
+    `${label} ${audienceKind} history for ${rangeDescription}.`,
+    `Latest count ${endPoint.audienceCountRaw}.`,
+    `${direction} from ${startPoint.audienceCountRaw} on ${formatObservedAt(startPoint.observedAt)} to ${endPoint.audienceCountRaw} on ${formatObservedAt(endPoint.observedAt)}.`,
+  ].join(" ");
 };
 
 export const buildFollowerHistoryAvailabilityMap = (

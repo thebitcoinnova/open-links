@@ -5,6 +5,7 @@ import type {
   FollowerHistoryRange,
   FollowerHistoryRow,
 } from "../../lib/analytics/follower-history";
+import { describeFollowerHistoryRange } from "../../lib/analytics/follower-history";
 import AppDialog from "../dialog/AppDialog";
 import FollowerHistoryChart from "./FollowerHistoryChart";
 
@@ -62,6 +63,7 @@ export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
               <For each={RANGE_OPTIONS}>
                 {(option) => (
                   <button
+                    aria-pressed={props.range === option.value}
                     type="button"
                     class="analytics-chip"
                     data-active={props.range === option.value ? "true" : "false"}
@@ -77,6 +79,7 @@ export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
               <For each={MODE_OPTIONS}>
                 {(option) => (
                   <button
+                    aria-pressed={props.mode === option.value}
                     type="button"
                     class="analytics-chip"
                     data-active={props.mode === option.value ? "true" : "false"}
@@ -92,8 +95,10 @@ export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
           <FollowerHistoryChart
             audienceKind={entry().audienceKind ?? "followers"}
             mode={props.mode}
+            rangeDescription={describeFollowerHistoryRange(props.range)}
             range={props.range}
             rows={props.rows}
+            summaryLabel={entry().label}
             themeFingerprint={props.themeFingerprint}
           />
         </>

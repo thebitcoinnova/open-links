@@ -34,6 +34,7 @@ import {
   type FollowerHistoryRange,
   type FollowerHistoryRow,
   buildFollowerHistoryAvailabilityMap,
+  describeFollowerHistoryRange,
   parseFollowerHistoryCsv,
   parseFollowerHistoryIndex,
 } from "../lib/analytics/follower-history";
@@ -198,14 +199,6 @@ const fetchFollowerHistoryRows = async (csvPath: string): Promise<FollowerHistor
   }
 
   return parseFollowerHistoryCsv(await response.text());
-};
-
-const describeAnalyticsRange = (range: FollowerHistoryRange): string => {
-  if (range === "all") {
-    return "all available history";
-  }
-
-  return range.replace("d", " days");
 };
 
 export default function RouteIndex() {
@@ -436,12 +429,15 @@ export default function RouteIndex() {
         <div class="analytics-page-header">
           <div>
             <h2>Follower Analytics</h2>
-            <p>Showing {describeAnalyticsRange(analyticsRange())} of public follower history.</p>
+            <p>
+              Showing {describeFollowerHistoryRange(analyticsRange())} of public follower history.
+            </p>
           </div>
           <div class="analytics-control-group" aria-label="Analytics time range">
             <For each={RANGE_OPTIONS}>
               {(option) => (
                 <button
+                  aria-pressed={analyticsRange() === option.value}
                   type="button"
                   class="analytics-chip"
                   data-active={analyticsRange() === option.value ? "true" : "false"}
@@ -488,8 +484,10 @@ export default function RouteIndex() {
                   <FollowerHistoryChart
                     audienceKind={entry.audienceKind}
                     mode="raw"
+                    rangeDescription={describeFollowerHistoryRange(analyticsRange())}
                     range={analyticsRange()}
                     rows={allHistoryRows()?.get(entry.linkId) ?? []}
+                    summaryLabel={entry.label}
                     themeFingerprint={themeFingerprint()}
                   />
                 </section>

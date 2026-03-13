@@ -9,6 +9,7 @@ import {
   type FollowerHistoryMode,
   type FollowerHistoryRange,
   type FollowerHistoryRow,
+  buildFollowerHistoryAccessibleSummary,
   buildFollowerHistoryPoints,
   filterFollowerHistoryRows,
 } from "../../lib/analytics/follower-history";
@@ -21,6 +22,8 @@ export interface FollowerHistoryChartProps {
   mode: FollowerHistoryMode;
   range: FollowerHistoryRange;
   rows: FollowerHistoryRow[];
+  summaryLabel?: string;
+  rangeDescription?: string;
   themeFingerprint: string;
 }
 
@@ -51,6 +54,18 @@ export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {
 
   const filteredRows = createMemo(() => filterFollowerHistoryRows(props.rows, props.range));
   const points = createMemo(() => buildFollowerHistoryPoints(filteredRows(), props.mode));
+  const accessibleSummary = createMemo(() => {
+    if (!props.summaryLabel || !props.rangeDescription) {
+      return null;
+    }
+
+    return buildFollowerHistoryAccessibleSummary({
+      audienceKind: props.audienceKind,
+      label: props.summaryLabel,
+      rangeDescription: props.rangeDescription,
+      rows: filteredRows(),
+    });
+  });
 
   const option = createMemo<EChartsCoreOption>(() => {
     const accent = readCssVariable("--accent", "#2c4f7c");
@@ -181,8 +196,9 @@ export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {
 
   return (
     <div class="follower-history-chart">
+      {accessibleSummary() ? <p class="sr-only">{accessibleSummary()}</p> : null}
       <div
-        aria-hidden={filteredRows().length === 0 ? "true" : undefined}
+        aria-hidden="true"
         hidden={filteredRows().length === 0}
         ref={chartElement}
         style={{ height: `${props.height ?? 280}px`, width: "100%" }}
