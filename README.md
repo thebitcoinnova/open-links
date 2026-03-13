@@ -236,8 +236,10 @@ High-signal deployment checks:
 ### Core commands
 
 - `bun run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
-- `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement.
-- `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement.
+- `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement; routine runs leave `data/cache/rich-public-cache.json` unchanged and only update the local runtime overlay when needed.
+- `bun run enrich:rich:write-cache` - run non-strict rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
+- `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement; routine runs leave `data/cache/rich-public-cache.json` unchanged and only update the local runtime overlay when needed.
+- `bun run enrich:rich:strict:write-cache` - run policy-enforced rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
 - `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal profile audience metrics into the committed stable cache at `data/cache/rich-public-cache.json` and the local runtime overlay at `data/cache/rich-public-cache.runtime.json` (non-auth, operator-invoked).
 - `bun run followers:history:sync` - append the current follower/subscriber snapshots into the public CSV history files under `public/history/followers/` and refresh `public/history/followers/index.json`.
 - `bun run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
@@ -249,12 +251,12 @@ High-signal deployment checks:
 - `bun run linkedin:debug:validate` - LinkedIn authenticated metadata debug validator.
 - `bun run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
 - `bun run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
-- `bun run dev` - start local dev server (predev runs strict enrichment and fails on blocking enrichment policy issues).
+- `bun run dev` - start local dev server (predev runs strict enrichment in read-only public-cache mode and fails on blocking enrichment policy issues).
 - `bun run validate:data` - schema + policy checks (standard mode).
 - `bun run validate:data:strict` - fails on warnings and errors.
 - `bun run validate:data:json` - machine-readable validation output.
-- `bun run build` - avatar sync + strict enrichment + content-image sync + validation + production build.
-- `bun run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build.
+- `bun run build` - avatar sync + strict enrichment + content-image sync + validation + production build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand.
+- `bun run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand.
 - `bun run preview` - serve built output.
 - `bun run typecheck` - TypeScript checks.
 
@@ -265,6 +267,7 @@ High-signal deployment checks:
   - `public/history/followers/*.csv`
   - `public/history/followers/index.json`
 - Local parity:
+  - `bun run enrich:rich:strict:write-cache`
   - `bun run public:rich:sync`
   - `bun run followers:history:sync`
   - `bun run build`

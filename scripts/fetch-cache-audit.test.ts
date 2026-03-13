@@ -7,7 +7,12 @@ import test from "node:test";
 const ROOT = process.cwd();
 const SOURCE_ROOTS = ["scripts", "packages", "src"] as const;
 
-type FetchClassification = "cache-backed" | "cache-helper" | "diagnostic" | "runtime";
+type FetchClassification =
+  | "cache-backed"
+  | "cache-helper"
+  | "diagnostic"
+  | "runtime"
+  | "automation";
 
 interface FetchContract {
   file: string;
@@ -52,6 +57,11 @@ const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
     note: "One-off LinkedIn validation performs live diagnostic fetches and writes debug artifacts only.",
   },
   {
+    file: "scripts/github-actions/comment-pr.mjs",
+    classification: "automation",
+    note: "GitHub Actions posts PR comments at CI runtime and does not participate in the committed content cache pipeline.",
+  },
+  {
     file: "packages/studio-web/src/lib/api.ts",
     classification: "runtime",
     note: "Studio web client API requests are runtime traffic, not committed content-generation fetches.",
@@ -71,6 +81,11 @@ const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
     classification: "runtime",
     note: "GitHub OAuth token exchange is a runtime external API exchange and is intentionally uncached.",
   },
+  {
+    file: "src/routes/index.tsx",
+    classification: "runtime",
+    note: "The public-site route fetches follower-history assets at runtime in the browser, outside the committed content cache pipeline.",
+  },
 ];
 
 const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
@@ -78,7 +93,9 @@ const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
     file: "scripts/enrich-rich-links.ts",
     requiredSnippets: [
       "DEFAULT_PUBLIC_CACHE_PATH,",
+      "--write-public-cache",
       "writePublicCacheRegistry(config.publicCachePath, publicCacheRegistry);",
+      "writePublicCacheRuntimeRegistry(config.publicCachePath, publicCacheRegistry);",
     ],
   },
   {
@@ -134,6 +151,10 @@ const listSourceFiles = (relativeDir: string): string[] => {
     const relativeEntry = path.relative(ROOT, absoluteEntry).replaceAll(path.sep, "/");
 
     if (entry.isDirectory()) {
+      if (entry.name === "dist") {
+        continue;
+      }
+
       files.push(...listSourceFiles(relativeEntry));
       continue;
     }
@@ -219,18 +240,27 @@ test("direct fetch classifications keep runtime and diagnostics out of the commi
   const diagnosticFiles = DIRECT_FETCH_CONTRACTS.filter(
     (contract) => contract.classification === "diagnostic",
   ).map((contract) => contract.file);
+  const automationFiles = DIRECT_FETCH_CONTRACTS.filter(
+    (contract) => contract.classification === "automation",
+  ).map((contract) => contract.file);
   const cacheBackedFiles = DIRECT_FETCH_CONTRACTS.filter(
     (contract) => contract.classification === "cache-backed",
   ).map((contract) => contract.file);
 
   // Assert
   assert.ok(
-    runtimeFiles.every((file) => file.startsWith("packages/studio-")),
-    "Runtime fetch exemptions must stay confined to Studio runtime codepaths.",
+    runtimeFiles.every(
+      (file) => file.startsWith("packages/studio-") || file.startsWith("src/routes/"),
+    ),
+    "Runtime fetch exemptions must stay confined to Studio or public-route runtime codepaths.",
   );
   assert.ok(
     diagnosticFiles.every((file) => file.startsWith("scripts/oneoff/")),
     "Diagnostic fetch exemptions must stay confined to one-off scripts.",
+  );
+  assert.ok(
+    automationFiles.every((file) => file.startsWith("scripts/github-actions/")),
+    "Automation fetch exemptions must stay confined to GitHub Actions scripts.",
   );
   assert.ok(
     cacheBackedFiles.every((file) => file.startsWith("scripts/")),

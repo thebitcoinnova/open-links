@@ -442,7 +442,7 @@ Site-level default enrichment behavior is defined in `site.ui.richCards.enrichme
 - `retries`: retry count after the first attempt.
 - `metadataPath`: generated metadata output path.
 - `reportPath`: generated enrichment report path.
-- `publicCachePath`: committed stable public metadata cache manifest path (default `data/cache/rich-public-cache.json`).
+- `publicCachePath`: committed stable public metadata cache manifest path (default `data/cache/rich-public-cache.json`), refreshed only by explicit write-cache flows.
 - `authenticatedCachePath`: authenticated cache manifest path (default `data/cache/rich-authenticated-cache.json`).
 - `authenticatedCacheWarnAgeDays`: stale-cache warning threshold in days (default `30`, warning-only).
 - `failureMode`: `immediate` (default) or `aggregate`.
@@ -474,7 +474,7 @@ Canonical authenticated extractor + cache registries:
 
 When an enrichment-enabled rich link URL matches a `status=blocked` registry entry, enrichment fails early with reason `known_blocker` unless `links[].enrichment.allowKnownBlocker=true` is set for that link.
 
-When direct/public enrichment succeeds, OpenLinks writes normalized fetch-derived metadata into the committed public cache manifest. Volatile revalidation state (`etag`, `lastModified`, `cacheControl`, `expiresAt`, `checkedAt`) is stored separately in the local runtime overlay. Later enrich runs reuse fresh cache entries from that overlay or revalidate stale entries with conditional requests (`reason=public_cache`) instead of live-fetching every page on every run.
+During routine `bun run enrich:rich` / `bun run enrich:rich:strict` runs, successful direct/public enrichment uses fetched metadata for the current generated output but only persists volatile revalidation state (`etag`, `lastModified`, `cacheControl`, `expiresAt`, `checkedAt`) into the local runtime overlay. The committed stable manifest at `data/cache/rich-public-cache.json` is refreshed only by explicit write flows such as `bun run enrich:rich:strict:write-cache` or other dedicated cache-sync commands like `bun run public:rich:sync`. If fetched metadata drifts while stable writes are disabled, OpenLinks clears runtime freshness for that cache key so stale committed metadata is never treated as fresh on later runs.
 
 If a direct/public fetch fails but a committed public cache entry already exists, enrichment reuses that stale cached metadata as a warning-level fallback. No raw public HTML snapshots are committed, and header-only refreshes no longer rewrite tracked cache timestamps.
 
@@ -482,7 +482,7 @@ Built-in public augmentation currently covers Medium (RSS/feed), Substack (canon
 
 When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 
-`bun run dev` and `bun run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations.  
+`bun run dev` and `bun run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations. Those routine pre-steps update only the local runtime overlay unless you intentionally run an explicit `*:write-cache` command.  
 Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 
 #### Public follower-history artifacts

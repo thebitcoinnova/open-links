@@ -5,6 +5,7 @@ import process from "node:process";
 import test from "node:test";
 import { mergeMetadataWithManualSocialProfileOverrides } from "../../src/lib/content/social-profile-fields";
 import {
+  applyPublicCachePersistence,
   buildPublicCacheEntry,
   computePublicCacheExpiresAt,
   hasCacheablePublicMetadata,
@@ -15,7 +16,9 @@ import {
   toEnrichmentMetadataFromPublicCache,
   toPublicCacheMetadata,
   writePublicCacheRegistry,
+  writePublicCacheRuntimeRegistry,
 } from "./public-cache";
+import type { PublicCacheRegistry } from "./public-cache";
 
 const ROOT = process.cwd();
 
@@ -114,6 +117,75 @@ test("round-trips stable and runtime public cache manifests through disk with no
   assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-07T12:05:00.000Z");
 });
 
+test("writes runtime-only public cache updates without rewriting the stable manifest", (t) => {
+  // Arrange
+  const cachePath = "tmp/tests/runtime-only-rich-public-cache.json";
+  const runtimePath = "tmp/tests/runtime-only-rich-public-cache.runtime.json";
+  const absoluteCachePath = path.join(ROOT, cachePath);
+  const absoluteRuntimePath = path.join(ROOT, runtimePath);
+  t.after(() => {
+    if (fs.existsSync(absoluteCachePath)) {
+      fs.rmSync(absoluteCachePath, { force: true });
+    }
+    if (fs.existsSync(absoluteRuntimePath)) {
+      fs.rmSync(absoluteRuntimePath, { force: true });
+    }
+  });
+
+  writePublicCacheRegistry(
+    cachePath,
+    {
+      version: 1,
+      updatedAt: "2026-03-07T12:00:00.000Z",
+      entries: {
+        github: {
+          linkId: "github",
+          sourceUrl: "https://github.com/pRizz",
+          capturedAt: "2026-03-07T12:00:00.000Z",
+          updatedAt: "2026-03-07T12:05:00.000Z",
+          metadata: {
+            title: "Peter Ryszkiewicz",
+            description: "Open source and experiments.",
+            image: "https://avatars.githubusercontent.com/u/1?v=4",
+          },
+          etag: '"old"',
+          cacheControl: "max-age=300",
+          checkedAt: "2026-03-07T12:05:00.000Z",
+        },
+      },
+    },
+    { runtimePath },
+  );
+  const stableBefore = fs.readFileSync(absoluteCachePath, "utf8");
+  const registry = loadPublicCacheRegistry({ cachePath, runtimePath });
+  const githubEntry = registry.entries.github;
+  assert.ok(githubEntry);
+  registry.updatedAt = "2026-03-08T09:00:00.000Z";
+  registry.entries.github = {
+    ...githubEntry,
+    etag: '"new"',
+    lastModified: "Sat, 08 Mar 2026 09:00:00 GMT",
+    cacheControl: "max-age=900",
+    expiresAt: "2026-03-08T09:15:00.000Z",
+    checkedAt: "2026-03-08T09:00:00.000Z",
+  };
+
+  // Act
+  writePublicCacheRuntimeRegistry(cachePath, registry, { runtimePath });
+  const stableAfter = fs.readFileSync(absoluteCachePath, "utf8");
+  const runtimeOnDisk = JSON.parse(fs.readFileSync(absoluteRuntimePath, "utf8")) as {
+    entries: Record<string, Record<string, unknown>>;
+  };
+
+  // Assert
+  assert.equal(stableAfter, stableBefore);
+  assert.equal(runtimeOnDisk.entries.github.etag, '"new"');
+  assert.equal(runtimeOnDisk.entries.github.lastModified, "Sat, 08 Mar 2026 09:00:00 GMT");
+  assert.equal(runtimeOnDisk.entries.github.cacheControl, "max-age=900");
+  assert.equal(runtimeOnDisk.entries.github.expiresAt, "2026-03-08T09:15:00.000Z");
+  assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-08T09:00:00.000Z");
+});
+
 test("loads a legacy single-file public cache and migrates volatile fields into runtime state", (t) => {
   // Arrange
   const cachePath = "tmp/tests/legacy-rich-public-cache.json";
@@ -177,6 +249,229 @@ test("loads a legacy single-file public cache and migrates volatile fields into 
   assert.equal("etag" in stableOnDisk.entries.github, false);
   assert.equal(runtimeOnDisk.entries.github.expiresAt, "2026-03-08T15:05:00.000Z");
   assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-08T15:00:00.000Z");
+});
+
+test("clears runtime freshness when stable cache updates are suppressed", () => {
+  // Arrange
+  const registry: PublicCacheRegistry = {
+    version: 1 as const,
+    updatedAt: "2026-03-08T09:00:00.000Z",
+    entries: {
+      github: {
+        linkId: "github",
+        sourceUrl: "https://github.com/pRizz",
+        capturedAt: "2026-03-07T12:00:00.000Z",
+        updatedAt: "2026-03-07T12:05:00.000Z",
+        metadata: {
+          title: "Peter Ryszkiewicz",
+          description: "Open source and experiments.",
+          image: "https://avatars.githubusercontent.com/u/1?v=4",
+        },
+        etag: '"old"',
+        cacheControl: "max-age=300",
+        expiresAt: "2026-03-08T09:05:00.000Z",
+        checkedAt: "2026-03-08T09:00:00.000Z",
+      },
+    },
+  };
+  const nextEntry = buildPublicCacheEntry({
+    previous: registry.entries.github,
+    linkId: "github",
+    sourceUrl: "https://github.com/pRizz",
+    metadata: {
+      title: "Peter Ryszkiewicz",
+      description: "Open source, experiments, and projects.",
+      image: "https://avatars.githubusercontent.com/u/1?v=4",
+    },
+    updatedAt: "2026-03-09T10:00:00.000Z",
+    etag: '"new"',
+    cacheControl: "max-age=600",
+    expiresAt: "2026-03-09T10:10:00.000Z",
+    checkedAt: "2026-03-09T10:00:00.000Z",
+  });
+
+  // Act
+  const result = applyPublicCachePersistence({
+    registry,
+    cacheKey: "github",
+    nextEntry,
+    allowStableWrite: false,
+    updatedAt: "2026-03-09T10:00:00.000Z",
+  });
+
+  // Assert
+  assert.equal(result.action, "runtime_cleared");
+  assert.equal(result.changed, true);
+  assert.equal(result.stableWriteSkipped, true);
+  assert.equal(result.skippedStableOperation, "upsert");
+  assert.equal(registry.entries.github.metadata.description, "Open source and experiments.");
+  assert.equal(registry.entries.github.etag, undefined);
+  assert.equal(registry.entries.github.cacheControl, undefined);
+  assert.equal(registry.entries.github.expiresAt, undefined);
+  assert.equal(registry.entries.github.checkedAt, undefined);
+  assert.equal(registry.entries.github.updatedAt, "2026-03-07T12:05:00.000Z");
+});
+
+test("updates only runtime fields when revalidation succeeds without stable metadata drift", () => {
+  // Arrange
+  const registry: PublicCacheRegistry = {
+    version: 1 as const,
+    updatedAt: "2026-03-08T09:00:00.000Z",
+    entries: {
+      github: {
+        linkId: "github",
+        sourceUrl: "https://github.com/pRizz",
+        capturedAt: "2026-03-07T12:00:00.000Z",
+        updatedAt: "2026-03-07T12:05:00.000Z",
+        metadata: {
+          title: "Peter Ryszkiewicz",
+          description: "Open source and experiments.",
+          image: "https://avatars.githubusercontent.com/u/1?v=4",
+        },
+        etag: '"old"',
+        cacheControl: "max-age=300",
+        expiresAt: "2026-03-08T09:05:00.000Z",
+        checkedAt: "2026-03-08T09:00:00.000Z",
+      },
+    },
+  };
+  const nextEntry = buildPublicCacheEntry({
+    previous: registry.entries.github,
+    linkId: "github",
+    sourceUrl: "https://github.com/pRizz",
+    metadata: registry.entries.github.metadata,
+    updatedAt: "2026-03-09T10:00:00.000Z",
+    etag: '"new"',
+    lastModified: "Sun, 09 Mar 2026 10:00:00 GMT",
+    cacheControl: "max-age=900",
+    expiresAt: "2026-03-09T10:15:00.000Z",
+    checkedAt: "2026-03-09T10:00:00.000Z",
+  });
+
+  // Act
+  const result = applyPublicCachePersistence({
+    registry,
+    cacheKey: "github",
+    nextEntry,
+    allowStableWrite: false,
+    updatedAt: "2026-03-09T10:00:00.000Z",
+  });
+
+  // Assert
+  assert.equal(result.action, "runtime_updated");
+  assert.equal(result.changed, true);
+  assert.equal(result.stableWriteSkipped, false);
+  assert.equal(registry.entries.github.metadata.description, "Open source and experiments.");
+  assert.equal(registry.entries.github.updatedAt, "2026-03-07T12:05:00.000Z");
+  assert.equal(registry.entries.github.etag, '"new"');
+  assert.equal(registry.entries.github.lastModified, "Sun, 09 Mar 2026 10:00:00 GMT");
+  assert.equal(registry.entries.github.cacheControl, "max-age=900");
+  assert.equal(registry.entries.github.expiresAt, "2026-03-09T10:15:00.000Z");
+  assert.equal(registry.entries.github.checkedAt, "2026-03-09T10:00:00.000Z");
+});
+
+test("applies stable public cache updates when explicit writes are enabled", () => {
+  // Arrange
+  const registry: PublicCacheRegistry = {
+    version: 1 as const,
+    updatedAt: "2026-03-08T09:00:00.000Z",
+    entries: {
+      github: {
+        linkId: "github",
+        sourceUrl: "https://github.com/pRizz",
+        capturedAt: "2026-03-07T12:00:00.000Z",
+        updatedAt: "2026-03-07T12:05:00.000Z",
+        metadata: {
+          title: "Peter Ryszkiewicz",
+          description: "Open source and experiments.",
+          image: "https://avatars.githubusercontent.com/u/1?v=4",
+        },
+        etag: '"old"',
+        cacheControl: "max-age=300",
+        expiresAt: "2026-03-08T09:05:00.000Z",
+        checkedAt: "2026-03-08T09:00:00.000Z",
+      },
+    },
+  };
+  const nextEntry = buildPublicCacheEntry({
+    previous: registry.entries.github,
+    linkId: "github",
+    sourceUrl: "https://github.com/pRizz",
+    metadata: {
+      title: "Peter Ryszkiewicz",
+      description: "Open source, experiments, and projects.",
+      image: "https://avatars.githubusercontent.com/u/1?v=4",
+    },
+    updatedAt: "2026-03-09T10:00:00.000Z",
+    etag: '"new"',
+    cacheControl: "max-age=600",
+    expiresAt: "2026-03-09T10:10:00.000Z",
+    checkedAt: "2026-03-09T10:00:00.000Z",
+  });
+
+  // Act
+  const result = applyPublicCachePersistence({
+    registry,
+    cacheKey: "github",
+    nextEntry,
+    allowStableWrite: true,
+    updatedAt: "2026-03-09T10:00:00.000Z",
+  });
+
+  // Assert
+  assert.equal(result.action, "stable_updated");
+  assert.equal(result.changed, true);
+  assert.equal(result.stableWriteSkipped, false);
+  assert.equal(
+    registry.entries.github.metadata.description,
+    "Open source, experiments, and projects.",
+  );
+  assert.equal(registry.entries.github.updatedAt, "2026-03-09T10:00:00.000Z");
+  assert.equal(registry.entries.github.etag, '"new"');
+  assert.equal(registry.entries.github.expiresAt, "2026-03-09T10:10:00.000Z");
+});
+
+test("clears runtime freshness when non-cacheable results do not persist stable deletions", () => {
+  // Arrange
+  const registry: PublicCacheRegistry = {
+    version: 1 as const,
+    updatedAt: "2026-03-08T09:00:00.000Z",
+    entries: {
+      github: {
+        linkId: "github",
+        sourceUrl: "https://github.com/pRizz",
+        capturedAt: "2026-03-07T12:00:00.000Z",
+        updatedAt: "2026-03-07T12:05:00.000Z",
+        metadata: {
+          title: "Peter Ryszkiewicz",
+          description: "Open source and experiments.",
+          image: "https://avatars.githubusercontent.com/u/1?v=4",
+        },
+        etag: '"old"',
+        cacheControl: "max-age=300",
+        expiresAt: "2026-03-08T09:05:00.000Z",
+        checkedAt: "2026-03-08T09:00:00.000Z",
+      },
+    },
+  };
+
+  // Act
+  const result = applyPublicCachePersistence({
+    registry,
+    cacheKey: "github",
+    allowStableWrite: false,
+    updatedAt: "2026-03-09T10:00:00.000Z",
+  });
+
+  // Assert
+  assert.equal(result.action, "runtime_cleared");
+  assert.equal(result.changed, true);
+  assert.equal(result.stableWriteSkipped, true);
+  assert.equal(result.skippedStableOperation, "delete");
+  assert.equal(registry.entries.github.metadata.title, "Peter Ryszkiewicz");
+  assert.equal(registry.entries.github.etag, undefined);
+  assert.equal(registry.entries.github.expiresAt, undefined);
+  assert.equal(registry.entries.github.checkedAt, undefined);
 });
 
 test("computes freshness from cache-control and classifies cached metadata completeness", () => {

@@ -40,6 +40,9 @@ jobs:
       - name: Install agent-browser binaries
         run: npx --yes agent-browser install
 
+      - name: Refresh committed public metadata cache
+        run: bun run enrich:rich:strict:write-cache
+
       - name: Refresh public audience cache
         run: bun run public:rich:sync
 

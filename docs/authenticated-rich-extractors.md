@@ -115,7 +115,7 @@ Behavior notes:
 - `--only-missing` skips valid cache entries.
 - `--only-missing --force` refreshes selected links even when cache is valid.
 
-For Medium, X, Instagram, and YouTube, use `bun run enrich:rich:strict` instead. Those platforms now write material metadata through the committed public cache and keep volatile revalidation state in the local public-cache runtime overlay rather than the authenticated cache.
+For Medium, X, Instagram, and YouTube, use `bun run enrich:rich:strict` for routine enrichment instead. Those platforms now use the public-cache pipeline: routine enrich runs keep `data/cache/rich-public-cache.json` unchanged and only update the local public-cache runtime overlay, while `bun run enrich:rich:strict:write-cache` is the explicit command for persisting refreshed committed public metadata.
 
 If you are validating the end-user social-card surface rather than extractor internals, pair this guide with:
 
@@ -164,6 +164,9 @@ Commit both manifest and assets after successful sync.
 - `bun run enrich:rich` and `bun run enrich:rich:strict`:
   - use cache for authenticated links (`reason=authenticated_cache`)
   - fail on missing/invalid cache (`reason=authenticated_cache_missing`)
+- `bun run enrich:rich:write-cache` and `bun run enrich:rich:strict:write-cache`:
+  - do the same authenticated-cache work as the matching routine commands
+  - additionally persist refreshed direct/public metadata into `data/cache/rich-public-cache.json`
 - `bun run validate:data` and `bun run validate:data:strict`:
   - verify extractor id exists and domain policy matches
   - verify cache entry exists and required fields are present

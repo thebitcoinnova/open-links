@@ -32,7 +32,7 @@ import { parseMetadata } from "./enrichment/parse-metadata";
 import { resolvePublicAugmentationTarget } from "./enrichment/public-augmentation";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
-  arePublicCacheEntriesEqual,
+  applyPublicCachePersistence,
   buildPublicCacheEntry,
   computePublicCacheExpiresAt,
   hasCacheablePublicMetadata,
@@ -43,6 +43,7 @@ import {
   toEnrichmentMetadataFromPublicCache,
   toPublicCacheMetadata,
   writePublicCacheRegistry,
+  writePublicCacheRuntimeRegistry,
 } from "./enrichment/public-cache";
 import { writeEnrichmentReport } from "./enrichment/report";
 import {
@@ -61,6 +62,7 @@ import type {
 
 interface CliArgs {
   strict: boolean;
+  writePublicCache: boolean;
   linksPath: string;
   sitePath: string;
   outputPath?: string;
@@ -117,6 +119,7 @@ interface ResolvedConfig {
   outputPath: string;
   reportPath: string;
   publicCachePath: string;
+  writePublicCache: boolean;
   authenticatedCachePath: string;
   authenticatedCacheWarnAgeDays: number;
   failureMode: EnrichmentFailureMode;
@@ -130,6 +133,7 @@ const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
 const DEFAULT_FAILURE_MODE: EnrichmentFailureMode = "immediate";
 const DEFAULT_FAIL_ON: EnrichmentFailureReason[] = ["fetch_failed", "metadata_missing"];
 const DEFAULT_AUTH_CACHE_WARN_AGE_DAYS = 30;
+const PUBLIC_CACHE_WRITE_COMMAND = "bun run enrich:rich:strict:write-cache";
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -153,6 +157,7 @@ const parseArgs = (): CliArgs => {
 
   return {
     strict: args.includes("--strict"),
+    writePublicCache: args.includes("--write-public-cache"),
     linksPath: argValue("--links") ?? "data/links.json",
     sitePath: argValue("--site") ?? "data/site.json",
     outputPath: argValue("--out"),
@@ -199,6 +204,7 @@ const resolveConfig = (site: SitePayload, args: CliArgs): ResolvedConfig => {
     reportPath:
       args.reportPath ?? defaults?.reportPath ?? "data/generated/rich-enrichment-report.json",
     publicCachePath: defaults?.publicCachePath ?? DEFAULT_PUBLIC_CACHE_PATH,
+    writePublicCache: args.writePublicCache,
     authenticatedCachePath: defaults?.authenticatedCachePath ?? DEFAULT_AUTH_CACHE_PATH,
     authenticatedCacheWarnAgeDays: Math.max(
       1,
@@ -417,7 +423,7 @@ const remediationFor = (
   }
 
   if (reason === "public_cache") {
-    return "No action required. The public cache refreshes automatically during `npm run enrich:rich` and `npm run enrich:rich:strict`.";
+    return `No action required. Stable public-cache refreshes are explicit; run \`${PUBLIC_CACHE_WRITE_COMMAND}\` when you want to persist fetched public metadata changes.`;
   }
 
   if (reason === "authenticated_cache_missing") {
@@ -471,8 +477,26 @@ const publicCacheMessageFor = (
 
 const publicCacheRemediationFor = (linkId: string, staleCache: boolean): string =>
   staleCache
-    ? `Transient fetch failure. Re-run \`npm run enrich:rich:strict\` later to refresh the public cache for '${linkId}'.`
+    ? `Transient fetch failure. Re-run \`bun run enrich:rich:strict\` later for fresh generated output for '${linkId}', then use \`${PUBLIC_CACHE_WRITE_COMMAND}\` if you want to persist the recovered public cache entry.`
     : remediationFor("fetched", "public_cache");
+
+const publicCacheWriteSkippedNoticeFor = (
+  operation: "upsert" | "delete",
+): {
+  message: string;
+  remediation: string;
+} =>
+  operation === "delete"
+    ? {
+        message:
+          "Stable public-cache persistence was skipped for this run, so the tracked cache entry was left unchanged and any runtime freshness for it was cleared.",
+        remediation: `Run \`${PUBLIC_CACHE_WRITE_COMMAND}\` to persist removal of the tracked public cache entry.`,
+      }
+    : {
+        message:
+          "Stable public-cache persistence was skipped for this run, so generated output uses the freshly fetched metadata while the tracked cache manifest stays unchanged.",
+        remediation: `Run \`${PUBLIC_CACHE_WRITE_COMMAND}\` to persist the updated public cache entry.`,
+      };
 
 const mergeCachedPublicMetadata = (
   link: LinkInput & { type: "rich"; url: string },
@@ -616,6 +640,7 @@ const run = async () => {
     cachePath: config.publicCachePath,
   });
   let publicCacheDirty = false;
+  const publicCacheWriteSkippedLinks = new Set<string>();
   const generatedAt = new Date().toISOString();
   const enforceStrictBlocking = args.strict && !config.bypassActive;
   const enforceKnownBlockers = !config.bypassActive;
@@ -1146,9 +1171,15 @@ const run = async () => {
         checkedAt: generatedAt,
       });
 
-      if (!arePublicCacheEntriesEqual(existingPublicEntry, refreshedEntry)) {
-        publicCacheRegistry.entries[publicCacheKey] = refreshedEntry;
-        publicCacheRegistry.updatedAt = generatedAt;
+      const publicCachePersistence = applyPublicCachePersistence({
+        registry: publicCacheRegistry,
+        cacheKey: publicCacheKey,
+        nextEntry: refreshedEntry,
+        allowStableWrite: config.writePublicCache,
+        updatedAt: generatedAt,
+      });
+
+      if (publicCachePersistence.changed) {
         publicCacheDirty = true;
       }
 
@@ -1475,30 +1506,37 @@ const run = async () => {
       previous: existingPublicEntry?.metadata,
       next: toPublicCacheMetadata(enrichedMetadata),
     });
+    const publicCachePersistence = hasCacheablePublicMetadata(cacheMetadata)
+      ? applyPublicCachePersistence({
+          registry: publicCacheRegistry,
+          cacheKey: publicCacheKey,
+          nextEntry: buildPublicCacheEntry({
+            previous: existingPublicEntry,
+            linkId: link.id,
+            sourceUrl: publicSourceUrl,
+            metadata: cacheMetadata,
+            updatedAt: generatedAt,
+            etag: fetched.etag,
+            lastModified: fetched.lastModified,
+            cacheControl: fetched.cacheControl,
+            expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
+            checkedAt: generatedAt,
+          }),
+          allowStableWrite: config.writePublicCache,
+          updatedAt: generatedAt,
+        })
+      : applyPublicCachePersistence({
+          registry: publicCacheRegistry,
+          cacheKey: publicCacheKey,
+          allowStableWrite: config.writePublicCache,
+          updatedAt: generatedAt,
+        });
 
-    if (hasCacheablePublicMetadata(cacheMetadata)) {
-      const nextPublicEntry = buildPublicCacheEntry({
-        previous: existingPublicEntry,
-        linkId: link.id,
-        sourceUrl: publicSourceUrl,
-        metadata: cacheMetadata,
-        updatedAt: generatedAt,
-        etag: fetched.etag,
-        lastModified: fetched.lastModified,
-        cacheControl: fetched.cacheControl,
-        expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
-        checkedAt: generatedAt,
-      });
-
-      if (!arePublicCacheEntriesEqual(existingPublicEntry, nextPublicEntry)) {
-        publicCacheRegistry.entries[publicCacheKey] = nextPublicEntry;
-        publicCacheRegistry.updatedAt = generatedAt;
-        publicCacheDirty = true;
-      }
-    } else if (publicCacheRegistry.entries[publicCacheKey]) {
-      delete publicCacheRegistry.entries[publicCacheKey];
-      publicCacheRegistry.updatedAt = generatedAt;
+    if (publicCachePersistence.changed) {
       publicCacheDirty = true;
+    }
+    if (publicCachePersistence.stableWriteSkipped) {
+      publicCacheWriteSkippedLinks.add(link.id);
     }
 
     const reason: EnrichmentReason =
@@ -1516,6 +1554,16 @@ const run = async () => {
       hasManualMetadataFallback(link.metadata);
     const blocking = isBlockingReason(reason, config.failOn) && !manualFallbackUsed;
     const enrichedMetadataFromCache = toEnrichmentMetadataFromPublicCache(cacheMetadata);
+    let message = makeEntryMessage(status, reason, manualFallbackUsed);
+    let remediation = remediationFor(status, reason, manualFallbackUsed);
+
+    if (publicCachePersistence.stableWriteSkipped) {
+      const skippedNotice = publicCacheWriteSkippedNoticeFor(
+        publicCachePersistence.skippedStableOperation ?? "upsert",
+      );
+      message = `${message} ${skippedNotice.message}`;
+      remediation = skippedNotice.remediation;
+    }
 
     const metadata = mergeLinkMetadata(
       link.metadata,
@@ -1551,8 +1599,8 @@ const run = async () => {
       attempts: fetched.attempts,
       durationMs: fetched.durationMs,
       statusCode: fetched.statusCode,
-      message: makeEntryMessage(status, reason, manualFallbackUsed),
-      remediation: remediationFor(status, reason, manualFallbackUsed),
+      message,
+      remediation,
       metadata,
       blocking,
       manualFallbackUsed: manualFallbackUsed || undefined,
@@ -1574,7 +1622,11 @@ const run = async () => {
   };
 
   if (publicCacheDirty) {
-    writePublicCacheRegistry(config.publicCachePath, publicCacheRegistry);
+    if (config.writePublicCache) {
+      writePublicCacheRegistry(config.publicCachePath, publicCacheRegistry);
+    } else {
+      writePublicCacheRuntimeRegistry(config.publicCachePath, publicCacheRegistry);
+    }
   }
 
   ensureDirectory(config.outputPath);
@@ -1619,6 +1671,11 @@ const run = async () => {
   }
   console.log(`Bypass active: ${config.bypassActive ? "yes" : "no"} (${ENRICHMENT_BYPASS_ENV})`);
   console.log(`Public cache: ${config.publicCachePath}`);
+  console.log(
+    `Public cache persistence: ${
+      config.writePublicCache ? "stable manifest + runtime overlay" : "runtime overlay only"
+    }`,
+  );
   console.log(`Generated metadata: ${config.outputPath}`);
   console.log(`Enrichment report: ${config.reportPath}`);
   if (abortedEarly) {
@@ -1630,6 +1687,14 @@ const run = async () => {
       `- ${entry.linkId}: ${entry.status} (${entry.reason})${entry.blocking ? " [blocking]" : ""}${
         entry.manualFallbackUsed ? " [manual-fallback]" : ""
       }${entry.staleCache ? " [stale-cache]" : ""}${entry.statusCode ? ` [HTTP ${entry.statusCode}]` : ""}`,
+    );
+  }
+
+  if (publicCacheWriteSkippedLinks.size > 0) {
+    console.warn(
+      `Warning: stable public-cache updates were skipped for ${publicCacheWriteSkippedLinks.size} link(s): ${Array.from(
+        publicCacheWriteSkippedLinks,
+      ).join(", ")}. Run \`${PUBLIC_CACHE_WRITE_COMMAND}\` to persist them.`,
     );
   }
 

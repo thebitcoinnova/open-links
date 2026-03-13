@@ -2,15 +2,15 @@
 
 ## Current
 
-- [x] Add a reusable `copyLink(...)` helper, `IconCopy`, and shared `"copy"` card-action support so every existing Share surface can append a dedicated copy action.
-- [x] Update the profile header action cluster and shared action styles so Share and Copy render as adjacent icon buttons without breaking analytics ordering or right alignment.
-- [x] Verify with focused share/profile/card tests, `bun run typecheck`, and a final diff review.
+- [x] Add an explicit `--write-public-cache` path plus runtime-only public-cache persistence helpers so routine `enrich:rich*` runs stop rewriting `data/cache/rich-public-cache.json`.
+- [x] Refactor rich-enrichment persistence, nightly workflow wiring, and operator messaging/docs so stable public-cache writes happen only through explicit refresh commands.
+- [x] Verify with focused public-cache/audit tests, `bun run typecheck`, `bun run validate:data`, and a temp-cache diff run covering read-only vs write-cache behavior.
 
 ### Completion Review
 
-- Result: Every existing Share surface on the public site now has a dedicated Copy icon button immediately to its right. The shared card action model supports a new `"copy"` action kind, link cards render `analytics -> share -> copy` or `share -> copy` as appropriate, and the profile header now uses a right-aligned Share/Copy action cluster that reuses the same toast-based feedback path.
-- Verification: `bunx @biomejs/biome check src/lib/icons/custom-icons.tsx src/lib/share/share-link.ts src/lib/share/share-link.test.ts src/components/cards/NonPaymentLinkCardShell.tsx src/components/cards/RichLinkCard.tsx src/components/cards/SimpleLinkCard.tsx src/components/cards/non-payment-card-accessibility.test.tsx src/components/profile/ProfileHeader.tsx src/components/profile/ProfileHeader.test.tsx src/routes/index.tsx src/styles/base.css src/styles/responsive.css .codex/tasks/todo.md --files-ignore-unknown=true` passed. `bun test src/lib/share/share-link.test.ts src/lib/share/copy-to-clipboard.test.ts src/components/profile/ProfileHeader.test.tsx src/components/cards/non-payment-card-accessibility.test.tsx` passed. `bun run typecheck` still fails only on pre-existing repo issues in `src/components/analytics/FollowerHistoryChart.tsx`, `src/components/dialog/AppDialog.tsx`, and `src/routes/index.tsx` involving unresolved `echarts`, `@kobalte/core/dialog`, and `solid-sonner` typings plus an existing implicit-`any` parameter in `AppDialog`.
-- Residual risk: I did not run a live browser smoke check, so the new profile/card action spacing is covered by focused tests and CSS review rather than an interactive viewport pass. Full repo typecheck remains blocked until the existing dependency/type-resolution issues are fixed.
+- Result: Routine `bun run enrich:rich` / `bun run enrich:rich:strict` runs now keep `data/cache/rich-public-cache.json` unchanged by default and only update the gitignored runtime overlay. Explicit stable refreshes now flow through `bun run enrich:rich:write-cache`, `bun run enrich:rich:strict:write-cache`, and the nightly follower-history workflow, while suppressed stable updates clear runtime freshness so stale committed metadata is never treated as fresh.
+- Verification: `bunx @biomejs/biome check scripts/enrichment/public-cache.ts scripts/enrich-rich-links.ts scripts/enrichment/public-cache.test.ts scripts/fetch-cache-audit.test.ts --write --files-ignore-unknown=true` passed. `bun test scripts/enrichment/public-cache.test.ts scripts/fetch-cache-audit.test.ts` passed. `bun run typecheck` passed. `bun run validate:data` passed. A temp-cache verification seeded from `HEAD:data/cache/rich-public-cache.json` showed `bun scripts/enrich-rich-links.ts --strict` preserved the stable-cache hash exactly, while `bun scripts/enrich-rich-links.ts --strict --write-public-cache` updated the temp manifest for `github` follower drift (`90 -> 91`), proving the explicit write path still persists material changes.
+- Residual risk: The temp-cache diff check covered only the `github` link rather than every public-enrichment target, and I did not execute the full nightly workflow end-to-end in GitHub Actions. The current repo still has an unrelated local modification in `data/cache/rich-public-cache.json`, which I left untouched.
 
 ## Recently Completed
 

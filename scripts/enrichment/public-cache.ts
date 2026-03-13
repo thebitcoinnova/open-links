@@ -69,6 +69,20 @@ export interface PublicCacheRegistry {
 }
 
 export type PublicCacheMergeTargetId = string | null;
+export type PublicCacheSkippedStableOperation = "upsert" | "delete";
+export type PublicCachePersistenceAction =
+  | "noop"
+  | "runtime_updated"
+  | "runtime_cleared"
+  | "stable_updated"
+  | "stable_deleted";
+
+export interface PublicCachePersistenceResult {
+  action: PublicCachePersistenceAction;
+  changed: boolean;
+  stableWriteSkipped: boolean;
+  skippedStableOperation?: PublicCacheSkippedStableOperation;
+}
 
 export interface ResolvedPublicCacheEntry {
   cacheKey: string;
@@ -635,6 +649,25 @@ const writeJsonFile = (relativePath: string, payload: unknown): void => {
   fs.writeFileSync(absolute, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 };
 
+const writeRuntimeRegistryFile = (
+  runtimePath: string,
+  runtime: PublicCacheRuntimeRegistry,
+): void => {
+  const absoluteRuntimePath = absolutePath(runtimePath);
+
+  if (Object.keys(runtime.entries).length === 0) {
+    if (fs.existsSync(absoluteRuntimePath)) {
+      fs.rmSync(absoluteRuntimePath, { force: true });
+    }
+    return;
+  }
+
+  writeJsonFile(runtimePath, runtime);
+};
+
+const toStableOnlyEntry = (entry: PublicCacheEntry): PublicCacheEntry =>
+  normalizeStableEntry(normalizeEntry(entry));
+
 export const writePublicCacheRegistry = (
   cachePath: string,
   registry: PublicCacheRegistry,
@@ -646,16 +679,20 @@ export const writePublicCacheRegistry = (
   const { stable, runtime } = splitRegistry(registry);
 
   writeJsonFile(cachePath, stable);
+  writeRuntimeRegistryFile(runtimePath, runtime);
+};
 
-  const absoluteRuntimePath = absolutePath(runtimePath);
-  if (Object.keys(runtime.entries).length === 0) {
-    if (fs.existsSync(absoluteRuntimePath)) {
-      fs.rmSync(absoluteRuntimePath, { force: true });
-    }
-    return;
-  }
+export const writePublicCacheRuntimeRegistry = (
+  cachePath: string,
+  registry: PublicCacheRegistry,
+  options?: {
+    runtimePath?: string;
+  },
+): void => {
+  const runtimePath = options?.runtimePath ?? deriveRuntimePath(cachePath);
+  const { runtime } = splitRegistry(registry);
 
-  writeJsonFile(runtimePath, runtime);
+  writeRuntimeRegistryFile(runtimePath, runtime);
 };
 
 const parseMaxAgeSeconds = (cacheControl: string | undefined): number | undefined => {
@@ -820,6 +857,115 @@ export const arePublicCacheEntriesEqual = (
   }
 
   return JSON.stringify(normalizeEntry(left)) === JSON.stringify(normalizeEntry(right));
+};
+
+export const arePublicCacheStableEntriesEqual = (
+  left: PublicCacheEntry | undefined,
+  right: PublicCacheEntry | undefined,
+): boolean => {
+  if (!left || !right) {
+    return left === right;
+  }
+
+  return JSON.stringify(normalizeStableEntry(left)) === JSON.stringify(normalizeStableEntry(right));
+};
+
+export const applyPublicCachePersistence = (input: {
+  registry: PublicCacheRegistry;
+  cacheKey: string;
+  nextEntry?: PublicCacheEntry;
+  allowStableWrite: boolean;
+  updatedAt: string;
+}): PublicCachePersistenceResult => {
+  const existingEntry = input.registry.entries[input.cacheKey];
+
+  if (input.nextEntry) {
+    const nextEntry = normalizeEntry(input.nextEntry);
+    const stableChanged = !arePublicCacheStableEntriesEqual(existingEntry, nextEntry);
+
+    if (!stableChanged || input.allowStableWrite) {
+      if (arePublicCacheEntriesEqual(existingEntry, nextEntry)) {
+        return {
+          action: "noop",
+          changed: false,
+          stableWriteSkipped: false,
+        };
+      }
+
+      input.registry.entries[input.cacheKey] = nextEntry;
+      input.registry.updatedAt = input.updatedAt;
+      return {
+        action: stableChanged ? "stable_updated" : "runtime_updated",
+        changed: true,
+        stableWriteSkipped: false,
+      };
+    }
+
+    if (!existingEntry) {
+      return {
+        action: "noop",
+        changed: false,
+        stableWriteSkipped: true,
+        skippedStableOperation: "upsert",
+      };
+    }
+
+    const stableEntry = toStableOnlyEntry(existingEntry);
+    if (arePublicCacheEntriesEqual(existingEntry, stableEntry)) {
+      return {
+        action: "noop",
+        changed: false,
+        stableWriteSkipped: true,
+        skippedStableOperation: "upsert",
+      };
+    }
+
+    input.registry.entries[input.cacheKey] = stableEntry;
+    input.registry.updatedAt = input.updatedAt;
+    return {
+      action: "runtime_cleared",
+      changed: true,
+      stableWriteSkipped: true,
+      skippedStableOperation: "upsert",
+    };
+  }
+
+  if (!existingEntry) {
+    return {
+      action: "noop",
+      changed: false,
+      stableWriteSkipped: false,
+    };
+  }
+
+  if (input.allowStableWrite) {
+    delete input.registry.entries[input.cacheKey];
+    input.registry.updatedAt = input.updatedAt;
+    return {
+      action: "stable_deleted",
+      changed: true,
+      stableWriteSkipped: false,
+    };
+  }
+
+  const stableEntry = toStableOnlyEntry(existingEntry);
+  if (arePublicCacheEntriesEqual(existingEntry, stableEntry)) {
+    return {
+      action: "noop",
+      changed: false,
+      stableWriteSkipped: true,
+      skippedStableOperation: "delete",
+    };
+  }
+
+  input.registry.entries[input.cacheKey] = stableEntry;
+  input.registry.updatedAt = input.updatedAt;
+  return {
+    action: "runtime_cleared",
+    changed: true,
+    stableWriteSkipped: true,
+    skippedStableOperation: "delete",
+  };
 };
 
 export const buildPublicCacheEntry = (input: {
