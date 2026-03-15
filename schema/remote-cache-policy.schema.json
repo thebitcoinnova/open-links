@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-links.dev/schema/remote-cache-policy.schema.json",
+  "title": "OpenLinks Remote Cache Revalidation Policy",
+  "type": "object",
+  "required": ["version", "updatedAt", "rules"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "pipelines",
+          "domains",
+          "matchSubdomains",
+          "checkMode",
+          "summary",
+          "docs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pipelines": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "content_images",
+                "profile_avatar",
+                "public_rich_metadata",
+                "authenticated_asset_images"
+              ]
+            }
+          },
+          "domains": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "matchSubdomains": {
+            "type": "boolean"
+          },
+          "checkMode": {
+            "type": "string",
+            "enum": ["head_then_get", "conditional_get", "always_get"]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "docs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

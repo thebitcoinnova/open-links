@@ -26,14 +26,6 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "etag": {
-            "type": "string",
-            "minLength": 1
-          },
-          "lastModified": {
-            "type": "string",
-            "minLength": 1
-          },
           "cacheControl": {
             "type": "string",
             "minLength": 1
@@ -45,6 +37,10 @@
           "checkedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "checkStatus": {
+            "type": "string",
+            "enum": ["cache_fresh", "head_unchanged", "get_not_modified", "fetched", "error"]
           }
         },
         "additionalProperties": false

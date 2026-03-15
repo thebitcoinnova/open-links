@@ -152,7 +152,7 @@ bun run public:rich:sync -- --only-link primal
 bun run dev
 ```
 
-`bun run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into committed local cache assets and blocking enrichment issues fail early. The strict enrichment step is read-only for `data/cache/rich-public-cache.json`; it only updates the local runtime overlay unless you explicitly run `bun run enrich:rich:strict:write-cache`. `images:sync` writes stable image-cache outputs to `data/cache/content-images.json` and `public/cache/content-images/`, while volatile revalidation headers live in `data/cache/content-images.runtime.json` (gitignored).
+`bun run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into committed local cache assets and blocking enrichment issues fail early. The strict enrichment step is read-only for `data/cache/rich-public-cache.json`; it only updates the local runtime overlay unless you explicitly run `bun run enrich:rich:strict:write-cache`. `avatar:sync` writes stable avatar-cache outputs to `data/cache/profile-avatar.json` and `public/cache/profile-avatar/`, while volatile avatar revalidation state lives in `data/cache/profile-avatar.runtime.json` (gitignored). `images:sync` writes stable image-cache outputs to `data/cache/content-images.json` and `public/cache/content-images/`, while volatile revalidation headers live in `data/cache/content-images.runtime.json` (gitignored).
 
 ### Build production output
 
@@ -161,7 +161,7 @@ bun run build
 bun run preview
 ```
 
-`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo.
+`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo. Cache-backed fetches across avatar/image/public/authenticated pipelines are governed by `data/policy/remote-cache-policy.json`; add new domains there whenever a change introduces a new remote host.
 
 ## First Deployment to GitHub Pages
 

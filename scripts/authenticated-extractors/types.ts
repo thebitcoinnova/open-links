@@ -1,5 +1,7 @@
 import type { SocialProfileMetadataFields } from "../../src/lib/content/social-profile-fields";
 import type { EnrichmentMetadata } from "../enrichment/types";
+import type { RemoteCacheStatsCollector } from "../shared/remote-cache-fetch";
+import type { RemoteCachePolicyRegistry } from "../shared/remote-cache-policy";
 
 export type AuthenticatedExtractorStatus = "active" | "experimental" | "disabled";
 export type AuthenticatedExtractorMethod = "manual_browser_session";
@@ -35,6 +37,8 @@ export interface AuthenticatedCacheImageAsset {
   contentType: string;
   bytes: number;
   sha256: string;
+  etag?: string;
+  lastModified?: string;
 }
 
 export interface AuthenticatedCacheMetadata extends SocialProfileMetadataFields {
@@ -138,6 +142,8 @@ export interface AuthenticatedExtractorExtractContext {
   force: boolean;
   publicAssetDirAbsolute: string;
   publicAssetDirRelative: string;
+  remoteCachePolicyRegistry: RemoteCachePolicyRegistry;
+  remoteCacheStats: RemoteCacheStatsCollector;
 }
 
 export interface AuthenticatedExtractorExtractResult {

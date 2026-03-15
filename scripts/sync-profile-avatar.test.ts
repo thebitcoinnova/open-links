@@ -6,28 +6,23 @@ test("preserves avatar updatedAt and persisted status on no-op revalidation", ()
   // Arrange
   const previous: ProfileAvatarManifest = {
     sourceUrl: "https://example.com/avatar.jpg",
-    resolvedPath: "generated/profile-avatar.jpg",
-    status: "fetched",
+    resolvedPath: "cache/profile-avatar/profile-avatar.jpg",
     etag: '"old"',
-    cacheControl: "max-age=60",
-    expiresAt: "2026-03-08T10:01:00.000Z",
+    lastModified: "Sat, 07 Mar 2026 10:00:00 GMT",
+    contentType: "image/jpeg",
+    bytes: 4321,
     updatedAt: "2026-03-08T10:00:00.000Z",
   };
 
   // Act
   const stabilized = stabilizeProfileAvatarManifest(previous, {
     ...previous,
-    status: "not_modified",
-    etag: '"new"',
-    cacheControl: "max-age=300",
-    expiresAt: "2026-03-08T12:05:00.000Z",
     updatedAt: "2026-03-08T12:00:00.000Z",
   });
 
   // Assert
   assert.equal(stabilized.updatedAt, "2026-03-08T10:00:00.000Z");
-  assert.equal(stabilized.status, "fetched");
-  assert.equal(stabilized.etag, '"new"');
-  assert.equal(stabilized.cacheControl, "max-age=300");
-  assert.equal(stabilized.expiresAt, "2026-03-08T12:05:00.000Z");
+  assert.equal(stabilized.etag, '"old"');
+  assert.equal(stabilized.lastModified, "Sat, 07 Mar 2026 10:00:00 GMT");
+  assert.equal(stabilized.bytes, 4321);
 });

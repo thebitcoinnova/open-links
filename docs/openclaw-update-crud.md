@@ -162,11 +162,14 @@ Execute in this exact order:
    - `data/site.json`
 8. Refresh caches, validate, and build:
    - `bun run enrich:rich:strict`
+   - ensure any newly introduced remote fetch domains are covered by `data/policy/remote-cache-policy.json`
    - `bun run images:sync`
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
    - include committed cache outputs in the same change batch when they change:
+     - `data/cache/profile-avatar.json`
+     - `public/cache/profile-avatar/*`
      - `data/cache/content-images.json`
      - `public/cache/content-images/*`
      - `data/cache/rich-authenticated-cache.json`

@@ -5,6 +5,7 @@ import type { AnySchema } from "ajv";
 import addFormats from "ajv-formats";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import { SOCIAL_PROFILE_METADATA_FIELDS } from "../../src/lib/content/social-profile-fields";
+import type { RemoteCacheCheckStatus } from "../shared/remote-cache-fetch";
 import type { EnrichmentMetadata, EnrichmentMissingField, EnrichmentRunEntry } from "./types";
 
 const ROOT = process.cwd();
@@ -39,14 +40,15 @@ export interface PublicCacheStableEntry {
   capturedAt: string;
   updatedAt: string;
   metadata: PublicCacheMetadata;
+  etag?: string;
+  lastModified?: string;
 }
 
 export interface PublicCacheRuntimeEntry {
-  etag?: string;
-  lastModified?: string;
   cacheControl?: string;
   expiresAt?: string;
   checkedAt?: string;
+  checkStatus?: RemoteCacheCheckStatus;
 }
 
 export interface PublicCacheEntry extends PublicCacheStableEntry, PublicCacheRuntimeEntry {}
@@ -264,17 +266,15 @@ const normalizeStableEntry = (entry: PublicCacheStableEntry): PublicCacheStableE
   capturedAt: entry.capturedAt.trim(),
   updatedAt: entry.updatedAt.trim(),
   metadata: normalizeMetadata(entry.metadata),
+  ...(trimToUndefined(entry.etag) ? { etag: trimToUndefined(entry.etag) } : {}),
+  ...(trimToUndefined(entry.lastModified)
+    ? { lastModified: trimToUndefined(entry.lastModified) }
+    : {}),
 });
 
 const normalizeRuntimeEntry = (entry: PublicCacheRuntimeEntry): PublicCacheRuntimeEntry => {
   const normalized: PublicCacheRuntimeEntry = {};
 
-  if (trimToUndefined(entry.etag)) {
-    normalized.etag = trimToUndefined(entry.etag);
-  }
-  if (trimToUndefined(entry.lastModified)) {
-    normalized.lastModified = trimToUndefined(entry.lastModified);
-  }
   if (trimToUndefined(entry.cacheControl)) {
     normalized.cacheControl = trimToUndefined(entry.cacheControl);
   }
@@ -283,6 +283,9 @@ const normalizeRuntimeEntry = (entry: PublicCacheRuntimeEntry): PublicCacheRunti
   }
   if (trimToUndefined(entry.checkedAt)) {
     normalized.checkedAt = trimToUndefined(entry.checkedAt);
+  }
+  if (trimToUndefined(entry.checkStatus)) {
+    normalized.checkStatus = trimToUndefined(entry.checkStatus) as RemoteCacheCheckStatus;
   }
 
   return normalized;
@@ -299,11 +302,10 @@ const hasRuntimeFields = (entry: PublicCacheRuntimeEntry | undefined): boolean =
   }
 
   return (
-    trimToUndefined(entry.etag) !== undefined ||
-    trimToUndefined(entry.lastModified) !== undefined ||
     trimToUndefined(entry.cacheControl) !== undefined ||
     trimToUndefined(entry.expiresAt) !== undefined ||
-    trimToUndefined(entry.checkedAt) !== undefined
+    trimToUndefined(entry.checkedAt) !== undefined ||
+    trimToUndefined(entry.checkStatus) !== undefined
   );
 };
 
@@ -518,11 +520,11 @@ const parseStableRegistryFile = (
       capturedAt: typeof rawEntry.capturedAt === "string" ? rawEntry.capturedAt : "",
       updatedAt: typeof rawEntry.updatedAt === "string" ? rawEntry.updatedAt : "",
       metadata: extractMetadataFromRaw(rawEntry.metadata),
+      etag: typeof rawEntry.etag === "string" ? rawEntry.etag : undefined,
+      lastModified: typeof rawEntry.lastModified === "string" ? rawEntry.lastModified : undefined,
     };
 
     const runtimeEntry = normalizeRuntimeEntry({
-      etag: typeof rawEntry.etag === "string" ? rawEntry.etag : undefined,
-      lastModified: typeof rawEntry.lastModified === "string" ? rawEntry.lastModified : undefined,
       cacheControl: typeof rawEntry.cacheControl === "string" ? rawEntry.cacheControl : undefined,
       expiresAt: typeof rawEntry.expiresAt === "string" ? rawEntry.expiresAt : undefined,
       checkedAt:
@@ -530,6 +532,10 @@ const parseStableRegistryFile = (
           ? rawEntry.checkedAt
           : (legacyUpdatedAt ??
             (typeof rawEntry.updatedAt === "string" ? rawEntry.updatedAt : undefined)),
+      checkStatus:
+        typeof rawEntry.checkStatus === "string"
+          ? (rawEntry.checkStatus as RemoteCacheCheckStatus)
+          : undefined,
     });
 
     if (hasRuntimeFields(runtimeEntry)) {
@@ -979,6 +985,7 @@ export const buildPublicCacheEntry = (input: {
   cacheControl?: string;
   expiresAt?: string;
   checkedAt?: string;
+  checkStatus?: RemoteCacheCheckStatus;
 }): PublicCacheEntry => {
   const previous = input.previous ? normalizeEntry(input.previous) : undefined;
   const nextMetadata = normalizeMetadata(input.metadata);
@@ -996,22 +1003,32 @@ export const buildPublicCacheEntry = (input: {
     metadata: nextMetadata,
   };
 
-  if (trimToUndefined(input.etag)) {
-    entry.etag = trimToUndefined(input.etag);
+  const etag = trimToUndefined(input.etag) ?? trimToUndefined(previous?.etag);
+  if (etag) {
+    entry.etag = etag;
   }
-  if (trimToUndefined(input.lastModified)) {
-    entry.lastModified = trimToUndefined(input.lastModified);
+  const lastModified =
+    trimToUndefined(input.lastModified) ?? trimToUndefined(previous?.lastModified);
+  if (lastModified) {
+    entry.lastModified = lastModified;
   }
-  if (trimToUndefined(input.cacheControl)) {
-    entry.cacheControl = trimToUndefined(input.cacheControl);
+  const cacheControl =
+    trimToUndefined(input.cacheControl) ?? trimToUndefined(previous?.cacheControl);
+  if (cacheControl) {
+    entry.cacheControl = cacheControl;
   }
-  if (trimToUndefined(input.expiresAt)) {
-    entry.expiresAt = trimToUndefined(input.expiresAt);
+  const expiresAt = trimToUndefined(input.expiresAt) ?? trimToUndefined(previous?.expiresAt);
+  if (expiresAt) {
+    entry.expiresAt = expiresAt;
   }
 
   const checkedAt = trimToUndefined(input.checkedAt) ?? trimToUndefined(previous?.checkedAt);
   if (checkedAt) {
     entry.checkedAt = checkedAt;
+  }
+  const checkStatus = trimToUndefined(input.checkStatus) ?? trimToUndefined(previous?.checkStatus);
+  if (checkStatus) {
+    entry.checkStatus = checkStatus as RemoteCacheCheckStatus;
   }
 
   return entry;

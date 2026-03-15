@@ -12,10 +12,8 @@ test("preserves content-image updatedAt and persisted status on no-op cache refr
   const previous: GeneratedContentImageEntry = {
     sourceUrl: "https://example.com/image.jpg",
     resolvedPath: "cache/content-images/example.jpg",
-    status: "fetched",
     etag: '"old"',
-    cacheControl: "max-age=60",
-    expiresAt: "2026-03-08T10:01:00.000Z",
+    lastModified: "Sat, 07 Mar 2026 10:00:00 GMT",
     contentType: "image/jpeg",
     bytes: 1234,
     updatedAt: "2026-03-08T10:00:00.000Z",
@@ -24,19 +22,13 @@ test("preserves content-image updatedAt and persisted status on no-op cache refr
   // Act
   const stabilized = stabilizeContentImageEntry(previous, {
     ...previous,
-    status: "cache_fresh",
-    etag: '"new"',
-    cacheControl: "max-age=300",
-    expiresAt: "2026-03-08T12:05:00.000Z",
     updatedAt: "2026-03-08T12:00:00.000Z",
   });
 
   // Assert
   assert.equal(stabilized.updatedAt, "2026-03-08T10:00:00.000Z");
-  assert.equal(stabilized.status, "fetched");
-  assert.equal(stabilized.etag, '"new"');
-  assert.equal(stabilized.cacheControl, "max-age=300");
-  assert.equal(stabilized.expiresAt, "2026-03-08T12:05:00.000Z");
+  assert.equal(stabilized.etag, '"old"');
+  assert.equal(stabilized.lastModified, "Sat, 07 Mar 2026 10:00:00 GMT");
 });
 
 test("preserves content-image manifest generatedAt when stabilized entries are unchanged", () => {
@@ -44,7 +36,6 @@ test("preserves content-image manifest generatedAt when stabilized entries are u
   const previousEntry: GeneratedContentImageEntry = {
     sourceUrl: "https://example.com/image.jpg",
     resolvedPath: "cache/content-images/example.jpg",
-    status: "fetched",
     contentType: "image/jpeg",
     bytes: 1234,
     updatedAt: "2026-03-08T10:00:00.000Z",

@@ -1,12 +1,28 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import path from "node:path";
 
 const summaryPath = ".ci-diagnostics/nightly-follower-history-summary.json";
 const historySummary = fs.existsSync(summaryPath)
   ? JSON.parse(fs.readFileSync(summaryPath, "utf8"))
   : null;
+const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
+
+const readCacheRevalidationSummaries = () => {
+  if (!fs.existsSync(cacheRevalidationDir)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(cacheRevalidationDir)
+    .filter((entry) => entry.endsWith(".json"))
+    .map((entry) => {
+      const absolute = path.join(cacheRevalidationDir, entry);
+      return JSON.parse(fs.readFileSync(absolute, "utf8"));
+    });
+};
 
 lines.push("## Nightly Follower History");
 lines.push(`- Event: \`${process.env.GITHUB_EVENT_NAME ?? "unknown"}\``);
@@ -61,5 +77,54 @@ lines.push("- `bun run build`");
 lines.push(
   "- Direct deploy stays in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",
 );
+
+const cacheSummaries = readCacheRevalidationSummaries();
+if (cacheSummaries.length > 0) {
+  const aggregatedScripts = cacheSummaries
+    .map(
+      (summary) =>
+        `- \`${summary.scriptId}\`: checks=\`${summary.totals.totalChecks}\`, bytesFetched=\`${summary.totals.bytesFetched}\`, bytesSkipped=\`${summary.totals.bytesSkipped}\``,
+    )
+    .join("\n");
+
+  const byPipelineHost = new Map();
+  for (const summary of cacheSummaries) {
+    for (const entry of summary.entries ?? []) {
+      const key = `${entry.pipeline}|${entry.host}`;
+      const existing = byPipelineHost.get(key) ?? {
+        pipeline: entry.pipeline,
+        host: entry.host,
+        bytesFetched: 0,
+        bytesSkipped: 0,
+        checks: 0,
+      };
+      existing.bytesFetched += entry.bytesFetched ?? 0;
+      existing.bytesSkipped += entry.bytesSkipped ?? 0;
+      existing.checks += entry.totalChecks ?? 0;
+      byPipelineHost.set(key, existing);
+    }
+  }
+
+  const rows = [...byPipelineHost.values()]
+    .sort((left, right) => {
+      if (left.pipeline !== right.pipeline) {
+        return left.pipeline.localeCompare(right.pipeline);
+      }
+      return left.host.localeCompare(right.host);
+    })
+    .map(
+      (entry) =>
+        `| \`${entry.pipeline}\` | \`${entry.host}\` | \`${entry.checks}\` | \`${entry.bytesFetched}\` | \`${entry.bytesSkipped}\` |`,
+    );
+
+  lines.push("");
+  lines.push("## Remote Cache Revalidation");
+  lines.push(`- Summary files: \`${cacheSummaries.length}\``);
+  lines.push(aggregatedScripts);
+  lines.push("");
+  lines.push("| Pipeline | Host | Checks | Bytes fetched | Bytes skipped |");
+  lines.push("| --- | --- | --- | --- | --- |");
+  lines.push(...rows);
+}
 
 process.stdout.write(`${lines.join("\n")}\n`);

@@ -27,29 +27,9 @@ interface PersistenceContract {
 
 const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
   {
-    file: "scripts/enrichment/fetch-metadata.ts",
+    file: "scripts/shared/remote-cache-fetch.ts",
     classification: "cache-helper",
-    note: "Shared HTTP metadata fetch helper used only by cache-writing enrichment entrypoints.",
-  },
-  {
-    file: "scripts/sync-profile-avatar.ts",
-    classification: "cache-backed",
-    note: "Avatar fetches persist through data/generated/profile-avatar.json and public/generated/*.",
-  },
-  {
-    file: "scripts/sync-content-images.ts",
-    classification: "cache-backed",
-    note: "Rich-card image fetches persist through data/cache/content-images.json, a gitignored runtime overlay, and public/cache/content-images/*.",
-  },
-  {
-    file: "scripts/authenticated-extractors/plugins/linkedin-auth-browser.ts",
-    classification: "cache-backed",
-    note: "Authenticated extractor image downloads are persisted by sync-authenticated-rich-cache.ts into committed auth cache/assets.",
-  },
-  {
-    file: "scripts/authenticated-extractors/plugins/facebook-auth-browser.ts",
-    classification: "cache-backed",
-    note: "Authenticated extractor image downloads are persisted by sync-authenticated-rich-cache.ts into committed auth cache/assets.",
+    note: "Shared HTTP revalidation helper used by every cache-backed fetch path and governed by the committed remote-cache policy registry.",
   },
   {
     file: "scripts/oneoff/linkedin-metadata-validate.ts",
@@ -93,6 +73,8 @@ const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
     file: "scripts/enrich-rich-links.ts",
     requiredSnippets: [
       "DEFAULT_PUBLIC_CACHE_PATH,",
+      "loadRemoteCachePolicyRegistry();",
+      'new RemoteCacheStatsCollector("enrich-rich-links")',
       "--write-public-cache",
       "writePublicCacheRegistry(config.publicCachePath, publicCacheRegistry);",
       "writePublicCacheRuntimeRegistry(config.publicCachePath, publicCacheRegistry);",
@@ -102,6 +84,8 @@ const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
     file: "scripts/public-rich-sync.ts",
     requiredSnippets: [
       "PUBLIC_RICH_SYNC_OUTPUT_DIRECTORY",
+      "loadRemoteCachePolicyRegistry();",
+      'new RemoteCacheStatsCollector("public-rich-sync")',
       "writePublicCacheRegistry(publicCachePath, registry)",
       "dependencies.writePublicCache(args.publicCachePath, registry);",
     ],
@@ -110,6 +94,8 @@ const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
     file: "scripts/sync-authenticated-rich-cache.ts",
     requiredSnippets: [
       'const DEFAULT_PUBLIC_ASSET_DIR_RELATIVE = "cache/rich-authenticated";',
+      "loadRemoteCachePolicyRegistry();",
+      'new RemoteCacheStatsCollector("sync-authenticated-rich-cache")',
       "cache.entries[candidate.cacheKey] = {",
       "writeJson(args.cachePath, cache);",
     ],
@@ -117,8 +103,11 @@ const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
   {
     file: "scripts/sync-profile-avatar.ts",
     requiredSnippets: [
-      'const DEFAULT_MANIFEST_PATH = "data/generated/profile-avatar.json";',
-      "writeManifest(options.manifestPath, stabilizedManifest);",
+      'const DEFAULT_MANIFEST_PATH = "data/cache/profile-avatar.json";',
+      'const DEFAULT_RUNTIME_MANIFEST_PATH = "data/cache/profile-avatar.runtime.json";',
+      'const DEFAULT_OUTPUT_DIR = "public/cache/profile-avatar";',
+      "loadRemoteCachePolicyRegistry();",
+      'new RemoteCacheStatsCollector("sync-profile-avatar")',
     ],
   },
   {
@@ -127,6 +116,8 @@ const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
       'const DEFAULT_MANIFEST_PATH = "data/cache/content-images.json";',
       'const DEFAULT_RUNTIME_MANIFEST_PATH = "data/cache/content-images.runtime.json";',
       'const DEFAULT_OUTPUT_DIR = "public/cache/content-images";',
+      "loadRemoteCachePolicyRegistry();",
+      'new RemoteCacheStatsCollector("sync-content-images")',
       "writeManifest(args.manifestPath, manifest);",
       "writeManifest(args.runtimeManifestPath, runtimeManifest);",
     ],
@@ -232,6 +223,25 @@ test("cache-backed fetch flows and explicit exemptions declare their persistence
         `${contract.file} is missing required audit snippet: ${snippet}`,
       );
     }
+  }
+});
+
+test("cache-backed flows declare remote cache policy wiring in code", () => {
+  const policyAwareFiles = [
+    "scripts/enrich-rich-links.ts",
+    "scripts/public-rich-sync.ts",
+    "scripts/sync-authenticated-rich-cache.ts",
+    "scripts/sync-profile-avatar.ts",
+    "scripts/sync-content-images.ts",
+  ];
+
+  for (const file of policyAwareFiles) {
+    const contents = readRelativeFile(file);
+    assert.match(
+      contents,
+      /loadRemoteCachePolicyRegistry|remoteCachePolicyRegistry/u,
+      `${file} is missing remote cache policy wiring.`,
+    );
   }
 });
 

@@ -1,6 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { RemoteCachePolicyRegistry } from "../shared/remote-cache-policy";
 import { fetchMetadata } from "./fetch-metadata";
+
+const TEST_POLICY_REGISTRY: RemoteCachePolicyRegistry = {
+  version: 1,
+  updatedAt: "2026-03-15T00:00:00.000Z",
+  rules: [
+    {
+      id: "test-public",
+      pipelines: ["public_rich_metadata"],
+      domains: ["example.com"],
+      matchSubdomains: true,
+      checkMode: "conditional_get",
+      summary: "Test policy coverage for example.com.",
+      docs: ["scripts/enrichment/fetch-metadata.test.ts"],
+    },
+  ],
+};
 
 test("passes conditional request headers and surfaces 304 revalidation details", async (t) => {
   // Arrange
@@ -27,9 +44,11 @@ test("passes conditional request headers and surfaces 304 revalidation details",
   const result = await fetchMetadata("https://example.com/profile", {
     timeoutMs: 1_000,
     retries: 0,
-    headers: {
-      "if-none-match": '"abc123"',
-      "if-modified-since": "Sat, 07 Mar 2026 12:00:00 GMT",
+    policyRegistry: TEST_POLICY_REGISTRY,
+    cache: {
+      etag: '"abc123"',
+      lastModified: "Sat, 07 Mar 2026 12:00:00 GMT",
+      hasValue: true,
     },
   });
 
@@ -67,6 +86,7 @@ test("returns response freshness headers on successful fetches", async (t) => {
   const result = await fetchMetadata("https://example.com/profile", {
     timeoutMs: 1_000,
     retries: 0,
+    policyRegistry: TEST_POLICY_REGISTRY,
     acceptHeader: "application/json",
   });
 

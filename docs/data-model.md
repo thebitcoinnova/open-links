@@ -56,13 +56,14 @@ Schema: `schema/profile.schema.json`
 ### Avatar materialization behavior
 
 - `profile.avatar` remains the source-of-truth URL in `data/profile.json`.
-- During `bun run dev` and `bun run build`, avatar sync fetches and stores a local copy at `public/generated/profile-avatar.<ext>`.
-- Avatar sync writes `data/generated/profile-avatar.json` with fetch/cache metadata.
-- Runtime rendering uses the local resolved path from the generated manifest, not the raw remote URL.
+- During `bun run dev` and `bun run build`, avatar sync fetches and stores a local copy at `public/cache/profile-avatar/profile-avatar.<ext>`.
+- Avatar sync writes the committed stable manifest `data/cache/profile-avatar.json` plus the gitignored runtime overlay `data/cache/profile-avatar.runtime.json`.
+- Runtime rendering uses the local resolved path from the committed avatar manifest, not the raw remote URL.
 - On fetch failure:
   - cached local avatar is reused when available, or
   - fallback file `public/profile-avatar-fallback.svg` is used.
 - Force refresh is available via `bun run avatar:sync -- --force` or `OPENLINKS_AVATAR_FORCE=1`.
+- All cache-backed remote fetches are governed by `data/policy/remote-cache-policy.json`; adding a new remote host without policy coverage is a validation error.
 
 ### Common optional fields
 

@@ -35,7 +35,10 @@ import {
   loadRichEnrichmentBlockersRegistry,
   resolveKnownBlockerMatch,
 } from "./enrichment/blockers-registry";
-import { hasPublicAugmentationTarget } from "./enrichment/public-augmentation";
+import {
+  hasPublicAugmentationTarget,
+  resolvePublicAugmentationTarget,
+} from "./enrichment/public-augmentation";
 import { readEnrichmentReport } from "./enrichment/report";
 import type {
   EnrichmentFailureReason,
@@ -43,6 +46,12 @@ import type {
   EnrichmentRunReport,
   EnrichmentRunSummary,
 } from "./enrichment/types";
+import {
+  DEFAULT_REMOTE_CACHE_POLICY_PATH,
+  loadRemoteCachePolicyRegistry,
+  resolveRemoteCachePolicyRule,
+} from "./shared/remote-cache-policy";
+import { collectCandidates } from "./sync-content-images";
 import {
   type ValidationResult,
   formatHumanOutput,
@@ -81,10 +90,15 @@ const HOOK_RICH_ARTIFACT_TRIGGER_EXACT_PATHS = new Set([
   "data/generated/rich-metadata.json",
   "data/cache/content-images.json",
   "data/cache/content-images.runtime.json",
+  "data/cache/profile-avatar.json",
+  "data/cache/profile-avatar.runtime.json",
+  "data/policy/remote-cache-policy.json",
   "data/generated/rich-enrichment-report.json",
   "schema/links.schema.json",
+  "schema/remote-cache-policy.schema.json",
   "schema/site.schema.json",
   "scripts/enrich-rich-links.ts",
+  "scripts/sync-profile-avatar.ts",
   "scripts/sync-content-images.ts",
   "scripts/validate-data.ts",
 ]);
@@ -493,6 +507,197 @@ const resolveGeneratedContentImagesByUrl = (
   }
 
   return byUrl;
+};
+
+const remoteCachePolicyCoverageIssues = (input: {
+  profileSource: string;
+  profileData: Record<string, unknown>;
+  linksSource: string;
+  linksData: Record<string, unknown>;
+  siteData: Record<string, unknown>;
+  generatedMetadataByLink: Record<string, Record<string, unknown>>;
+}): ValidationIssue[] => {
+  const issues: ValidationIssue[] = [];
+  let registry: ReturnType<typeof loadRemoteCachePolicyRegistry>;
+
+  try {
+    registry = loadRemoteCachePolicyRegistry();
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return [
+      {
+        level: "error",
+        source: DEFAULT_REMOTE_CACHE_POLICY_PATH,
+        path: "$",
+        message: `Failed to load remote cache policy registry. ${message}`,
+        remediation:
+          "Restore data/policy/remote-cache-policy.json, ensure it validates against schema/remote-cache-policy.schema.json, then rerun validation.",
+      },
+    ];
+  }
+
+  const seenCoverageKeys = new Set<string>();
+  const requireCoverage = (
+    pipeline: Parameters<typeof resolveRemoteCachePolicyRule>[0]["pipeline"],
+    url: string | undefined,
+    source: string,
+    fieldPath: string,
+  ) => {
+    if (!url) {
+      return;
+    }
+
+    const canonicalUrl = toCanonicalHttpUrl(url);
+    if (!canonicalUrl) {
+      return;
+    }
+
+    const coverageKey = `${pipeline}:${canonicalUrl}`;
+    if (seenCoverageKeys.has(coverageKey)) {
+      return;
+    }
+    seenCoverageKeys.add(coverageKey);
+
+    const match = resolveRemoteCachePolicyRule({
+      registry,
+      pipeline,
+      url: canonicalUrl,
+    });
+    if (match) {
+      return;
+    }
+
+    issues.push({
+      level: "error",
+      source,
+      path: fieldPath,
+      message: `Remote cache policy coverage is missing for pipeline '${pipeline}' and URL '${canonicalUrl}'.`,
+      remediation: `Add a matching rule to ${DEFAULT_REMOTE_CACHE_POLICY_PATH} for host '${
+        new URL(canonicalUrl).hostname
+      }', then rerun validation/build.`,
+    });
+  };
+
+  const avatarUrl = toStringOrUndefined(input.profileData.avatar);
+  requireCoverage("profile_avatar", avatarUrl, input.profileSource, "$.avatar");
+
+  const contentImageCandidates = collectCandidates(
+    input.linksData as Parameters<typeof collectCandidates>[0],
+    {
+      links: Object.fromEntries(
+        Object.entries(input.generatedMetadataByLink).map(([linkId, metadata]) => [
+          linkId,
+          { metadata },
+        ]),
+      ),
+    },
+    input.siteData as Parameters<typeof collectCandidates>[2],
+  );
+  for (const candidate of contentImageCandidates) {
+    requireCoverage("content_images", candidate, input.linksSource, "$.links");
+  }
+
+  const enabledByDefault = resolveEnabledByDefault(input.siteData);
+  const links = Array.isArray(input.linksData.links) ? input.linksData.links : [];
+  links.forEach((rawLink, index) => {
+    if (!isRecord(rawLink) || rawLink.type !== "rich") {
+      return;
+    }
+
+    const url = toStringOrUndefined(rawLink.url);
+    if (!url) {
+      return;
+    }
+
+    const enrichment = isRecord(rawLink.enrichment) ? rawLink.enrichment : undefined;
+    const enabled =
+      typeof enrichment?.enabled === "boolean" ? enrichment.enabled : enabledByDefault;
+    if (!enabled) {
+      return;
+    }
+
+    const supportedProfile = resolveSupportedSocialProfile({
+      url,
+      icon: toStringOrUndefined(rawLink.icon),
+      metadataHandle: toStringOrUndefined(
+        isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
+      ),
+    });
+    const authenticatedExtractor = toStringOrUndefined(enrichment?.authenticatedExtractor);
+    if (authenticatedExtractor) {
+      if (supportedProfile?.platform === "linkedin") {
+        requireCoverage("public_rich_metadata", url, input.linksSource, `$.links[${index}].url`);
+      }
+      return;
+    }
+
+    const publicSourceUrl =
+      resolvePublicAugmentationTarget({
+        url,
+        icon: toStringOrUndefined(rawLink.icon),
+        metadataHandle: toStringOrUndefined(
+          isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
+        ),
+      })?.sourceUrl ?? url;
+
+    requireCoverage(
+      "public_rich_metadata",
+      publicSourceUrl,
+      input.linksSource,
+      `$.links[${index}].url`,
+    );
+  });
+
+  const { cachePath } = resolveAuthenticatedCacheConfig(input.siteData);
+  try {
+    const cacheRegistry = loadAuthenticatedCacheRegistry({ cachePath });
+
+    for (const [cacheKey, entry] of Object.entries(cacheRegistry.entries)) {
+      requireCoverage(
+        "authenticated_asset_images",
+        entry.assets.image.sourceUrl,
+        cachePath,
+        `$.entries.${cacheKey}.assets.image.sourceUrl`,
+      );
+
+      if (entry.assets.profileImage) {
+        requireCoverage(
+          "authenticated_asset_images",
+          entry.assets.profileImage.sourceUrl,
+          cachePath,
+          `$.entries.${cacheKey}.assets.profileImage.sourceUrl`,
+        );
+      }
+      if (entry.assets.ogImage) {
+        requireCoverage(
+          "authenticated_asset_images",
+          entry.assets.ogImage.sourceUrl,
+          cachePath,
+          `$.entries.${cacheKey}.assets.ogImage.sourceUrl`,
+        );
+      }
+      if (entry.assets.twitterImage) {
+        requireCoverage(
+          "authenticated_asset_images",
+          entry.assets.twitterImage.sourceUrl,
+          cachePath,
+          `$.entries.${cacheKey}.assets.twitterImage.sourceUrl`,
+        );
+      }
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push({
+      level: "error",
+      source: cachePath,
+      path: "$",
+      message: `Failed to load authenticated cache while checking remote cache policy coverage. ${message}`,
+      remediation:
+        "Restore/fix data/cache/rich-authenticated-cache.json, ensure it validates against schema/rich-authenticated-cache.schema.json, then rerun validation.",
+    });
+  }
+
+  return issues;
 };
 
 const resolveHistoryRepoPath = (
@@ -1249,6 +1454,12 @@ export const run = () => {
   const enrichmentReport = readEnrichmentReport(enrichmentReportPath);
   const bypassActive =
     process.env[ENRICHMENT_BYPASS_ENV] === "1" || enrichmentReport?.bypassActive === true;
+  const enrichmentMetadataPath = resolveEnrichmentMetadataPath(siteData);
+  const generatedMetadataForCoverageRead =
+    tryReadJsonFile<GeneratedRichMetadataPayload>(enrichmentMetadataPath);
+  const generatedMetadataByLinkForCoverage = generatedMetadataForCoverageRead.value
+    ? resolveGeneratedMetadataByLink(generatedMetadataForCoverageRead.value)
+    : {};
 
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
@@ -1287,6 +1498,17 @@ export const run = () => {
         links: args.linksPath,
         site: args.sitePath,
       },
+    }),
+  );
+
+  issues.push(
+    ...remoteCachePolicyCoverageIssues({
+      profileSource: args.profilePath,
+      profileData,
+      linksSource: args.linksPath,
+      linksData,
+      siteData,
+      generatedMetadataByLink: generatedMetadataByLinkForCoverage,
     }),
   );
 
@@ -1347,8 +1569,8 @@ export const run = () => {
   });
 
   if (hasRichCandidates && hookRichArtifactDecision.shouldRun) {
-    const metadataPath = resolveEnrichmentMetadataPath(siteData);
-    const metadataRead = tryReadJsonFile<GeneratedRichMetadataPayload>(metadataPath);
+    const metadataPath = enrichmentMetadataPath;
+    const metadataRead = generatedMetadataForCoverageRead;
     const contentImagesRead = readContentImagesManifest();
     const generatedMetadataByLink = metadataRead.value
       ? resolveGeneratedMetadataByLink(metadataRead.value)

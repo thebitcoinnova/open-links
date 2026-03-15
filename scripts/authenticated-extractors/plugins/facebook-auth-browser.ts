@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { stdin, stdout } from "node:process";
 import { loadEmbeddedCode } from "../../shared/embedded-code-loader";
+import { fetchWithRemoteCachePolicy } from "../../shared/remote-cache-fetch";
 import { summarizeAuthFlowResult, waitForAuthenticatedSession } from "../auth-flow-runtime";
 import {
   type BrowserSessionConfig,
@@ -698,6 +699,8 @@ const downloadImageAsset = async (
   contentType: string;
   bytes: number;
   sha256: string;
+  etag?: string;
+  lastModified?: string;
 }> => {
   const cookiesPayload = runAgentBrowserJson(["cookies", "get"], config, {
     allowFailure: true,
@@ -713,26 +716,35 @@ const downloadImageAsset = async (
     headers.cookie = cookieHeader;
   }
 
-  const response = await fetch(sourceUrl, {
-    method: "GET",
-    redirect: "follow",
+  const response = await fetchWithRemoteCachePolicy({
+    url: sourceUrl,
+    pipeline: "authenticated_asset_images",
+    policyRegistry: context.remoteCachePolicyRegistry,
+    timeoutMs: 10_000,
     headers,
+    userAgent: USER_AGENT,
+    bodyType: "buffer",
+    force: true,
+    cacheValueAvailable: false,
+    statsCollector: context.remoteCacheStats,
   });
 
-  if (!response.ok) {
+  if (response.kind !== "fetched") {
     throw new Error(
-      `Facebook extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`,
+      `Facebook extractor image fetch failed: ${
+        response.kind === "error" ? response.error : `unexpected result ${response.kind}`
+      } for ${sourceUrl}`,
     );
   }
 
-  const bytes = Buffer.from(await response.arrayBuffer());
+  const bytes = response.body as Buffer;
   if (bytes.byteLength === 0) {
     throw new Error("Facebook extractor image fetch returned empty body.");
   }
 
   const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
   const extension =
-    extensionFromContentType(response.headers.get("content-type")) ??
+    extensionFromContentType(response.headers.contentType ?? null) ??
     extensionFromUrl(sourceUrl) ??
     "jpg";
   const fileName = `${sha256}.${extension}`;
@@ -744,8 +756,7 @@ const downloadImageAsset = async (
     context.publicAssetDirRelative.replaceAll("\\", "/"),
     fileName,
   );
-  const contentType =
-    response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream";
+  const contentType = response.headers.contentType ?? "application/octet-stream";
 
   return {
     path: relativePath,
@@ -753,6 +764,8 @@ const downloadImageAsset = async (
     contentType,
     bytes: bytes.byteLength,
     sha256,
+    etag: response.headers.etag,
+    lastModified: response.headers.lastModified,
   };
 };
 
@@ -892,6 +905,8 @@ const extract = async (
           contentType: imageAsset.contentType,
           bytes: imageAsset.bytes,
           sha256: imageAsset.sha256,
+          etag: imageAsset.etag,
+          lastModified: imageAsset.lastModified,
         },
         profileImage: {
           path: imageAsset.path,
@@ -899,6 +914,8 @@ const extract = async (
           contentType: imageAsset.contentType,
           bytes: imageAsset.bytes,
           sha256: imageAsset.sha256,
+          etag: imageAsset.etag,
+          lastModified: imageAsset.lastModified,
         },
         ogImage: ogImageAsset
           ? {
@@ -907,6 +924,8 @@ const extract = async (
               contentType: ogImageAsset.contentType,
               bytes: ogImageAsset.bytes,
               sha256: ogImageAsset.sha256,
+              etag: ogImageAsset.etag,
+              lastModified: ogImageAsset.lastModified,
             }
           : undefined,
       },

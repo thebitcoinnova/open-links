@@ -14,6 +14,7 @@ import {
   waitForLinkedinAuthenticatedSession,
 } from "../../oneoff/linkedin-debug-common";
 import { loadEmbeddedCode } from "../../shared/embedded-code-loader";
+import { fetchWithRemoteCachePolicy } from "../../shared/remote-cache-fetch";
 import type {
   AuthenticatedExtractorEnsureSessionResult,
   AuthenticatedExtractorExtractContext,
@@ -233,7 +234,14 @@ const downloadImageAsset = async (
   config: SessionConfig,
   sourceUrl: string,
   context: AuthenticatedExtractorExtractContext,
-): Promise<{ path: string; bytes: number; contentType: string; sha256: string }> => {
+): Promise<{
+  path: string;
+  bytes: number;
+  contentType: string;
+  sha256: string;
+  etag?: string;
+  lastModified?: string;
+}> => {
   const cookiesPayload = runAgentBrowserJson(["cookies", "get"], config, {
     allowFailure: true,
   }).response?.data;
@@ -250,26 +258,36 @@ const downloadImageAsset = async (
     headers.cookie = cookieHeader;
   }
 
-  const response = await fetch(sourceUrl, {
-    method: "GET",
-    redirect: "follow",
+  const response = await fetchWithRemoteCachePolicy({
+    url: sourceUrl,
+    pipeline: "authenticated_asset_images",
+    policyRegistry: context.remoteCachePolicyRegistry,
+    timeoutMs: 10_000,
     headers,
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    bodyType: "buffer",
+    force: true,
+    cacheValueAvailable: false,
+    statsCollector: context.remoteCacheStats,
   });
 
-  if (!response.ok) {
+  if (response.kind !== "fetched") {
     throw new Error(
-      `LinkedIn extractor image fetch failed: HTTP ${response.status} for ${sourceUrl}`,
+      `LinkedIn extractor image fetch failed: ${
+        response.kind === "error" ? response.error : `unexpected result ${response.kind}`
+      } for ${sourceUrl}`,
     );
   }
 
-  const bytes = Buffer.from(await response.arrayBuffer());
+  const bytes = response.body as Buffer;
   if (bytes.byteLength === 0) {
     throw new Error("LinkedIn extractor image fetch returned empty body.");
   }
 
   const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
   const extension =
-    extensionFromContentType(response.headers.get("content-type")) ??
+    extensionFromContentType(response.headers.contentType ?? null) ??
     extensionFromUrl(sourceUrl) ??
     "jpg";
   const fileName = `${sha256}.${extension}`;
@@ -285,9 +303,10 @@ const downloadImageAsset = async (
   return {
     path: relativePath,
     bytes: bytes.byteLength,
-    contentType:
-      response.headers.get("content-type")?.split(";")[0]?.trim() ?? "application/octet-stream",
+    contentType: response.headers.contentType ?? "application/octet-stream",
     sha256,
+    etag: response.headers.etag,
+    lastModified: response.headers.lastModified,
   };
 };
 
@@ -389,6 +408,8 @@ const extract = async (
         contentType: imageAsset.contentType,
         bytes: imageAsset.bytes,
         sha256: imageAsset.sha256,
+        etag: imageAsset.etag,
+        lastModified: imageAsset.lastModified,
       },
       profileImage: {
         path: imageAsset.path,
@@ -396,6 +417,8 @@ const extract = async (
         contentType: imageAsset.contentType,
         bytes: imageAsset.bytes,
         sha256: imageAsset.sha256,
+        etag: imageAsset.etag,
+        lastModified: imageAsset.lastModified,
       },
     },
     diagnostics: {

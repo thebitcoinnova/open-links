@@ -1,83 +1,86 @@
 {
-  "generatedAt": "2026-03-15T14:47:49.095Z",
+  "generatedAt": "2026-03-15T18:25:58.169Z",
   "byUrl": {
     "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg": {
       "sourceUrl": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
       "resolvedPath": "cache/content-images/433895ee9e31178b956d5a5ff8c19006fa6227ec7569373f15d66df759a116d5.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:47.633Z",
+      "updatedAt": "2026-03-15T18:25:57.720Z",
+      "etag": "\"62d2408ed012791402f79ad6f569287b\"",
+      "lastModified": "Sat, 28 Jun 2025 00:14:37 GMT",
       "contentType": "image/jpeg",
       "bytes": 8941
     },
     "https://r2.primal.net/cache/e/83/b2/e83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg": {
       "sourceUrl": "https://r2.primal.net/cache/e/83/b2/e83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
       "resolvedPath": "cache/content-images/433895ee9e31178b956d5a5ff8c19006fa6227ec7569373f15d66df759a116d5.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:47.680Z",
+      "updatedAt": "2026-03-15T18:25:57.721Z",
+      "etag": "\"62d2408ed012791402f79ad6f569287b\"",
+      "lastModified": "Sat, 28 Jun 2025 00:14:37 GMT",
       "contentType": "image/jpeg",
       "bytes": 8941
     },
     "https://avatars.githubusercontent.com/u/3519085?v=4?s=400": {
       "sourceUrl": "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
       "resolvedPath": "cache/content-images/724a81547e2cbd9ccd4e49b20a380c92dbff16a4420496477d8f6b9035e1a6fc.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:47.784Z",
+      "updatedAt": "2026-03-15T18:25:57.721Z",
+      "etag": "\"c91040d415fd5543e17772fe4164bd4a7b9759ec8b41246386722b26757e8204\"",
+      "lastModified": "Wed, 13 Sep 2017 20:49:34 GMT",
       "contentType": "image/jpeg",
       "bytes": 27006
     },
     "https://unavatar.io/x/pryszkie": {
       "sourceUrl": "https://unavatar.io/x/pryszkie",
       "resolvedPath": "cache/content-images/9e6ec297e6edc4d9f6a44efb9b00f5e6808772d37b043347e3d7c5fdf77358b0.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:47.974Z",
+      "updatedAt": "2026-03-15T18:25:57.837Z",
+      "etag": "\"8e-/SskZdZgl719u7y4/l3WyiJx8WE\"",
       "contentType": "image/jpeg",
       "bytes": 24018
     },
     "https://scontent-ord5-3.xx.fbcdn.net/v/t39.30808-1/643894562_122103916773268128_8808752703618343559_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=107&ccb=1-7&_nc_sid=f907e8&_nc_ohc=loMHlyUSihUQ7kNvwEm9TfM&_nc_oc=Adn_L2k7TaOiRKCU65IsZcDColJR147_JDjDtLAu7BeFgTqd_3_ntE5oclTDS6Y0WCw&_nc_zt=24&_nc_ht=scontent-ord5-3.xx&_nc_gid=2UrEZISz6Y915Sw2y_Kbhw&_nc_ss=8&oh=00_AfxuxRMPjlmAwf2iCW3AYCvMShgZ5YsyrHMy81JEjkfiSg&oe=69BC7C54": {
       "sourceUrl": "https://scontent-ord5-3.xx.fbcdn.net/v/t39.30808-1/643894562_122103916773268128_8808752703618343559_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=107&ccb=1-7&_nc_sid=f907e8&_nc_ohc=loMHlyUSihUQ7kNvwEm9TfM&_nc_oc=Adn_L2k7TaOiRKCU65IsZcDColJR147_JDjDtLAu7BeFgTqd_3_ntE5oclTDS6Y0WCw&_nc_zt=24&_nc_ht=scontent-ord5-3.xx&_nc_gid=2UrEZISz6Y915Sw2y_Kbhw&_nc_ss=8&oh=00_AfxuxRMPjlmAwf2iCW3AYCvMShgZ5YsyrHMy81JEjkfiSg&oe=69BC7C54",
       "resolvedPath": "cache/content-images/df3c7436c612b0b11c7823104e2b933666cb75301c7889eb53ed6f0079b64ce9.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:48.078Z",
+      "updatedAt": "2026-03-15T18:25:57.837Z",
+      "lastModified": "Fri, 27 Feb 2026 03:05:58 GMT",
       "contentType": "image/jpeg",
       "bytes": 2841
     },
-    "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=2gU0Sad3-EEQ7kNvwGFZ0N5&_nc_oc=AdlVkE2qNNdUzxczc9UTdNEVQ9TMPytuCXSliK8XarlSMTTrHFPUEc2jR3ebDfnv8QQ&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_AfwvgKQ_WLpGBLH78y1p_jJi0zfIuxEIko6ALlxftxKqDw&oe=69BC996E": {
-      "sourceUrl": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=2gU0Sad3-EEQ7kNvwGFZ0N5&_nc_oc=AdlVkE2qNNdUzxczc9UTdNEVQ9TMPytuCXSliK8XarlSMTTrHFPUEc2jR3ebDfnv8QQ&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_AfwvgKQ_WLpGBLH78y1p_jJi0zfIuxEIko6ALlxftxKqDw&oe=69BC996E",
+    "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=2gU0Sad3-EEQ7kNvwGFZ0N5&_nc_oc=AdlVkE2qNNdUzxczc9UTdNEVQ9TMPytuCXSliK8XarlSMTTrHFPUEc2jR3ebDfnv8QQ&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_Afw0mIL-x_U0Fi_jYDQvbHwrwKLRuih0n89TMLt18KMIjQ&oe=69BCD1AE": {
+      "sourceUrl": "https://scontent-ord5-1.cdninstagram.com/v/t51.2885-19/38626387_284513532337975_4116432635150991360_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=111&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45NTkuQzMifQ%3D%3D&_nc_ohc=2gU0Sad3-EEQ7kNvwGFZ0N5&_nc_oc=AdlVkE2qNNdUzxczc9UTdNEVQ9TMPytuCXSliK8XarlSMTTrHFPUEc2jR3ebDfnv8QQ&_nc_zt=24&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_ss=8&oh=00_Afw0mIL-x_U0Fi_jYDQvbHwrwKLRuih0n89TMLt18KMIjQ&oe=69BCD1AE",
       "resolvedPath": "cache/content-images/35a71a4916c222981fa4d860b4a76cf5b5784a8db873f582ff1e60ba7d4ee0e6.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:48.176Z",
+      "updatedAt": "2026-03-15T18:25:57.837Z",
+      "lastModified": "Fri, 17 Aug 2018 09:36:08 GMT",
       "contentType": "image/jpeg",
       "bytes": 3825
     },
     "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj": {
       "sourceUrl": "https://yt3.googleusercontent.com/I94Dzwhg2Hm5nSo1Kmdf2C0DHKqSMOmPyW4WKPZKsPrdTozJ4VGFYT8a_RWx4qaeUrvLTUGXxg=s900-c-k-c0x00ffffff-no-rj",
       "resolvedPath": "cache/content-images/6b9108d57c85504129a4db624a858e965986b899a07b540b484797162d6159f6.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:48.437Z",
+      "updatedAt": "2026-03-15T18:25:57.999Z",
+      "etag": "\"v1\"",
       "contentType": "image/jpeg",
       "bytes": 159152
     },
     "https://cdn-images-1.medium.com/fit/c/150/150/0*_SAmj5J9y1Pv5Ri0.": {
       "sourceUrl": "https://cdn-images-1.medium.com/fit/c/150/150/0*_SAmj5J9y1Pv5Ri0.",
       "resolvedPath": "cache/content-images/a4a1b204da65e0b1a284dd5d5afc8520156ddf4b58df1ae2035bd580c58aedec.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:48.752Z",
+      "updatedAt": "2026-03-15T18:25:57.999Z",
+      "etag": "\"VV29DSST5xK8nWZ-9ulg1r4_7gQobYlwpGvdV79ODgc/RIjFkMzgwZWRiZGNmYzJjNTVmZWNmZTUzNWFlMDgyOWM5Ig\"",
       "contentType": "image/jpeg",
       "bytes": 7058
     },
     "https://substackcdn.com/image/fetch/$s_!DDCm!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fapi%2Fv1%2Fprofile%2Fassets%2F10297976%2Flight%3FaspectRatio%3Dlink%26version%3D1": {
       "sourceUrl": "https://substackcdn.com/image/fetch/$s_!DDCm!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fapi%2Fv1%2Fprofile%2Fassets%2F10297976%2Flight%3FaspectRatio%3Dlink%26version%3D1",
       "resolvedPath": "cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:49.032Z",
+      "updatedAt": "2026-03-15T18:25:57.999Z",
+      "etag": "\"sJCYNzr1VoOy12g1f3P0LGdJ8QsGGWeHJEKnwyOD62Q/RVy8iMWM1OGYtZ0hFRG1jMGpSL1BpUndKZnIrajF3am5UMlJzIg\"",
       "contentType": "image/jpeg",
       "bytes": 133967
     },
     "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg": {
       "sourceUrl": "https://substackcdn.com/image/fetch/$s_!FIuC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F45fa5d36-9a9d-489d-9d0b-63ed77ec6f3a_1365x1365.jpeg",
       "resolvedPath": "cache/content-images/507a2bdb6baf0c2930e28c0f5a30f7c7b7f88ccbe6aef3975d7aa26a7ccb9e57.jpg",
-      "status": "fetched",
-      "updatedAt": "2026-03-15T14:47:49.095Z",
+      "updatedAt": "2026-03-15T18:25:58.168Z",
+      "etag": "\"yj0WO6sFU4GCciYUBWjzvvfqrBh869doeOC2Pp5EI1Y/RImU0ZDA0OTQ3ZWNhM2UzODJkYzgyMjYyZTkxMDI1ODU0Ig\"",
       "contentType": "image/jpeg",
       "bytes": 136060
     }

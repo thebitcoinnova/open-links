@@ -21,7 +21,7 @@ const writeChangedPathsFile = (relativePath: string, entries: string[]): string 
 test("hook mode skips generated rich-artifact checks for unrelated staged script paths", (t) => {
   // Arrange
   const changedPathsFile = writeChangedPathsFile("tmp/tests/hook-skip-paths.txt", [
-    "scripts/sync-profile-avatar.ts",
+    "scripts/quality/perf.ts",
   ]);
   t.after(() => {
     fs.rmSync(path.join(ROOT, changedPathsFile), { force: true });
@@ -100,18 +100,24 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   const exactMatch = "data/cache/content-images.json";
   const prefixMatch = "public/cache/content-images/example.jpg";
   const legacyPath = "data/generated/content-images.json";
-  const nonMatch = "scripts/sync-profile-avatar.ts";
+  const avatarTrigger = "scripts/sync-profile-avatar.ts";
+  const policyTrigger = "data/policy/remote-cache-policy.json";
+  const nonMatch = "scripts/quality/perf.ts";
 
   // Act
   const exactTriggered = pathTouchesHookRichArtifactInputs(exactMatch);
   const prefixTriggered = pathTouchesHookRichArtifactInputs(prefixMatch);
   const legacyTriggered = pathTouchesHookRichArtifactInputs(legacyPath);
+  const avatarTriggered = pathTouchesHookRichArtifactInputs(avatarTrigger);
+  const policyTriggered = pathTouchesHookRichArtifactInputs(policyTrigger);
   const unrelatedTriggered = pathTouchesHookRichArtifactInputs(nonMatch);
 
   // Assert
   assert.equal(exactTriggered, true);
   assert.equal(prefixTriggered, true);
   assert.equal(legacyTriggered, false);
+  assert.equal(avatarTriggered, true);
+  assert.equal(policyTriggered, true);
   assert.equal(unrelatedTriggered, false);
 });
 

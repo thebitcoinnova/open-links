@@ -89,6 +89,8 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
           sourceUrl: entry.assets.image.sourceUrl.trim(),
           contentType: entry.assets.image.contentType.trim(),
           sha256: entry.assets.image.sha256.trim().toLowerCase(),
+          etag: entry.assets.image.etag?.trim(),
+          lastModified: entry.assets.image.lastModified?.trim(),
         },
         profileImage: entry.assets.profileImage
           ? {
@@ -97,6 +99,8 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
               sourceUrl: entry.assets.profileImage.sourceUrl.trim(),
               contentType: entry.assets.profileImage.contentType.trim(),
               sha256: entry.assets.profileImage.sha256.trim().toLowerCase(),
+              etag: entry.assets.profileImage.etag?.trim(),
+              lastModified: entry.assets.profileImage.lastModified?.trim(),
             }
           : undefined,
         ogImage: entry.assets.ogImage
@@ -106,6 +110,8 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
               sourceUrl: entry.assets.ogImage.sourceUrl.trim(),
               contentType: entry.assets.ogImage.contentType.trim(),
               sha256: entry.assets.ogImage.sha256.trim().toLowerCase(),
+              etag: entry.assets.ogImage.etag?.trim(),
+              lastModified: entry.assets.ogImage.lastModified?.trim(),
             }
           : undefined,
         twitterImage: entry.assets.twitterImage
@@ -115,6 +121,8 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
               sourceUrl: entry.assets.twitterImage.sourceUrl.trim(),
               contentType: entry.assets.twitterImage.contentType.trim(),
               sha256: entry.assets.twitterImage.sha256.trim().toLowerCase(),
+              etag: entry.assets.twitterImage.etag?.trim(),
+              lastModified: entry.assets.twitterImage.lastModified?.trim(),
             }
           : undefined,
       },

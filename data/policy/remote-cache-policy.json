@@ -1,0 +1,66 @@
+{
+  "$schema": "../../schema/remote-cache-policy.schema.json",
+  "version": 1,
+  "updatedAt": "2026-03-15T00:00:00.000Z",
+  "rules": [
+    {
+      "id": "content-image-head-eligible",
+      "pipelines": ["content_images", "profile_avatar"],
+      "domains": [
+        "cdninstagram.com",
+        "fbcdn.net",
+        "githubusercontent.com",
+        "googleusercontent.com",
+        "primal.net",
+        "substackcdn.com",
+        "unavatar.io"
+      ],
+      "matchSubdomains": true,
+      "checkMode": "head_then_get",
+      "summary": "Current CDN-backed image hosts that expose usable HEAD validators should revalidate with HEAD before falling back to GET.",
+      "docs": ["docs/data-model.md", "docs/openclaw-update-crud.md", "docs/quickstart.md"]
+    },
+    {
+      "id": "content-image-medium-conditional-get",
+      "pipelines": ["content_images", "profile_avatar"],
+      "domains": ["medium.com"],
+      "matchSubdomains": true,
+      "checkMode": "conditional_get",
+      "summary": "Medium image hosts should skip HEAD and use conditional GET because HEAD is not reliably supported.",
+      "docs": ["docs/data-model.md", "docs/openclaw-update-crud.md", "docs/quickstart.md"]
+    },
+    {
+      "id": "public-rich-metadata-conditional-get",
+      "pipelines": ["public_rich_metadata"],
+      "domains": [
+        "github.com",
+        "instagram.com",
+        "linkedin.com",
+        "medium.com",
+        "peter.ryszkiewicz.us",
+        "primal.net",
+        "substack.com",
+        "twitter.com",
+        "x.com",
+        "youtube.com"
+      ],
+      "matchSubdomains": true,
+      "checkMode": "conditional_get",
+      "summary": "Public HTML metadata fetches should use conditional GET and never rely on implicit per-domain heuristics.",
+      "docs": ["docs/data-model.md", "docs/openclaw-update-crud.md", "docs/quickstart.md"]
+    },
+    {
+      "id": "authenticated-asset-always-get",
+      "pipelines": ["authenticated_asset_images"],
+      "domains": ["fbcdn.net", "licdn.com"],
+      "matchSubdomains": true,
+      "checkMode": "always_get",
+      "summary": "Authenticated asset downloads route through the shared policy resolver now, but remain unconditional GETs until a later measured tightening pass.",
+      "docs": [
+        "docs/authenticated-rich-extractors.md",
+        "docs/create-new-rich-content-extractor.md",
+        "docs/openclaw-update-crud.md"
+      ]
+    }
+  ]
+}

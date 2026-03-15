@@ -92,6 +92,9 @@ npm run build
      - `data/policy/rich-authenticated-extractors.json`
      - `data/cache/rich-authenticated-cache.json`
      - `public/cache/rich-authenticated/*`
+   - Add any newly introduced public fetch hosts to `data/policy/remote-cache-policy.json`:
+     - `public_rich_metadata` for HTML/source fetches,
+     - `content_images` for remote preview/avatar image hosts localized by `bun run images:sync`.
    - Validate:
 
 ```bash
@@ -119,6 +122,7 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
    - Implement `extract` with metadata quality checks and local asset download.
    - When available, capture image roles distinctly: `image`, `profileImage`, `ogImage`, `twitterImage`.
    - When multiple roles share the same source, reuse the same committed local asset path, but still emit per-role metadata fields and `assets.*` entries.
+   - Add any authenticated asset host domains used by the extractor to `data/policy/remote-cache-policy.json` under `authenticated_asset_images`.
 
 8. For both `public_augmented` and `authenticated_required`, update handle coverage when applicable.
    - If the domain family exposes user/profile handles, update `src/lib/identity/handle-resolver.ts`.

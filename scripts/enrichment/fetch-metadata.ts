@@ -1,4 +1,14 @@
-import { performance } from "node:perf_hooks";
+import {
+  type RemoteCacheCheckStatus,
+  type RemoteCacheHeadFallbackReason,
+  type RemoteCacheStatsCollector,
+  fetchWithRemoteCachePolicy,
+} from "../shared/remote-cache-fetch";
+import {
+  type RemoteCacheCheckMode,
+  type RemoteCachePolicyRegistry,
+  loadRemoteCachePolicyRegistry,
+} from "../shared/remote-cache-policy";
 
 export interface FetchMetadataOptions {
   timeoutMs: number;
@@ -6,6 +16,17 @@ export interface FetchMetadataOptions {
   retryDelayMs?: number;
   headers?: Record<string, string>;
   acceptHeader?: string;
+  policyRegistry?: RemoteCachePolicyRegistry;
+  statsCollector?: RemoteCacheStatsCollector;
+  force?: boolean;
+  cache?: {
+    etag?: string;
+    lastModified?: string;
+    cacheControl?: string;
+    expiresAt?: string;
+    bytes?: number;
+    hasValue?: boolean;
+  };
 }
 
 export interface FetchMetadataResult {
@@ -20,163 +41,100 @@ export interface FetchMetadataResult {
   lastModified?: string;
   cacheControl?: string;
   responseDate?: string;
+  contentType?: string;
+  contentLength?: number;
+  checkStatus?: RemoteCacheCheckStatus;
+  checkMode?: RemoteCacheCheckMode;
+  attemptedHead?: boolean;
+  headFallbackReason?: RemoteCacheHeadFallbackReason;
+  bytesFetched?: number;
+  bytesSkipped?: number;
 }
 
-interface FetchOnceResult {
-  ok: boolean;
-  notModified?: boolean;
-  html?: string;
-  statusCode?: number;
-  error?: string;
-  etag?: string;
-  lastModified?: string;
-  cacheControl?: string;
-  responseDate?: string;
-}
-
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-const fetchOnce = async (
-  url: string,
-  timeoutMs: number,
-  headers: Record<string, string>,
-): Promise<FetchOnceResult> => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      redirect: "follow",
-      signal: controller.signal,
-      headers: {
-        "user-agent": "open-links-enricher/0.1",
-        accept: "text/html,application/xhtml+xml",
-        ...headers,
-      },
-    });
-
-    const responseHeaders = {
-      etag: response.headers.get("etag") ?? undefined,
-      lastModified: response.headers.get("last-modified") ?? undefined,
-      cacheControl: response.headers.get("cache-control") ?? undefined,
-      responseDate: response.headers.get("date") ?? undefined,
-    };
-
-    if (response.status === 304) {
-      return {
-        ok: false,
-        notModified: true,
-        statusCode: response.status,
-        ...responseHeaders,
-      };
-    }
-
-    const html = await response.text();
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        statusCode: response.status,
-        error: `Received HTTP ${response.status}`,
-        ...responseHeaders,
-      };
-    }
-
-    return {
-      ok: true,
-      statusCode: response.status,
-      html,
-      ...responseHeaders,
-    };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown fetch error";
-    return {
-      ok: false,
-      error: message,
-    };
-  } finally {
-    clearTimeout(timeout);
-  }
-};
+const DEFAULT_POLICY_REGISTRY = loadRemoteCachePolicyRegistry();
 
 export const fetchMetadata = async (
   url: string,
   options: FetchMetadataOptions,
 ): Promise<FetchMetadataResult> => {
-  const timeoutMs = Math.max(500, Math.floor(options.timeoutMs));
-  const retries = Math.max(0, Math.floor(options.retries));
-  const retryDelayMs = Math.max(0, Math.floor(options.retryDelayMs ?? 250));
-  const attemptsAllowed = retries + 1;
-  const startedAt = performance.now();
-  const requestHeaders = options.headers ?? {};
-  const acceptHeader = options.acceptHeader;
+  const result = await fetchWithRemoteCachePolicy({
+    url,
+    pipeline: "public_rich_metadata",
+    policyRegistry: options.policyRegistry ?? DEFAULT_POLICY_REGISTRY,
+    timeoutMs: options.timeoutMs,
+    retries: options.retries,
+    retryDelayMs: options.retryDelayMs,
+    headers: options.headers,
+    acceptHeader: options.acceptHeader,
+    userAgent: "open-links-enricher/0.1",
+    bodyType: "text",
+    previous: options.cache,
+    cacheValueAvailable: options.cache?.hasValue,
+    force: options.force,
+    statsCollector: options.statsCollector,
+  });
 
-  let lastError = "Metadata fetch failed";
-  let lastStatusCode: number | undefined;
-  let lastHeaders:
-    | Pick<FetchMetadataResult, "etag" | "lastModified" | "cacheControl" | "responseDate">
-    | undefined;
-
-  for (let attempt = 1; attempt <= attemptsAllowed; attempt += 1) {
-    const result = await fetchOnce(url, timeoutMs, {
-      ...requestHeaders,
-      ...(acceptHeader ? { accept: acceptHeader } : {}),
-    });
-
-    if (result.ok && result.html) {
-      return {
-        ok: true,
-        html: result.html,
-        attempts: attempt,
-        durationMs: performance.now() - startedAt,
-        statusCode: result.statusCode,
-        etag: result.etag,
-        lastModified: result.lastModified,
-        cacheControl: result.cacheControl,
-        responseDate: result.responseDate,
-      };
-    }
-
-    lastHeaders = {
-      etag: result.etag,
-      lastModified: result.lastModified,
-      cacheControl: result.cacheControl,
-      responseDate: result.responseDate,
+  if (result.kind === "fetched") {
+    return {
+      ok: true,
+      html: typeof result.body === "string" ? result.body : result.body.toString("utf8"),
+      attempts: options.retries + 1,
+      durationMs: result.durationMs,
+      statusCode: result.statusCode,
+      etag: result.headers.etag,
+      lastModified: result.headers.lastModified,
+      cacheControl: result.headers.cacheControl,
+      responseDate: result.headers.responseDate,
+      contentType: result.headers.contentType,
+      contentLength: result.headers.contentLength,
+      checkStatus: result.checkStatus,
+      checkMode: result.checkMode,
+      attemptedHead: result.attemptedHead,
+      headFallbackReason: result.headFallbackReason,
+      bytesFetched: result.bytesFetched,
+      bytesSkipped: result.bytesSkipped,
     };
+  }
 
-    if (result.notModified) {
-      return {
-        ok: false,
-        notModified: true,
-        attempts: attempt,
-        durationMs: performance.now() - startedAt,
-        statusCode: result.statusCode,
-        ...lastHeaders,
-      };
-    }
-
-    if (result.error) {
-      lastError = result.error;
-    }
-    if (typeof result.statusCode === "number") {
-      lastStatusCode = result.statusCode;
-    }
-
-    if (attempt < attemptsAllowed && retryDelayMs > 0) {
-      await delay(retryDelayMs);
-    }
+  if (result.kind === "not_modified" || result.kind === "cache_fresh") {
+    return {
+      ok: false,
+      notModified: true,
+      attempts: options.retries + 1,
+      durationMs: result.durationMs,
+      statusCode: result.statusCode,
+      etag: result.headers.etag,
+      lastModified: result.headers.lastModified,
+      cacheControl: result.headers.cacheControl,
+      responseDate: result.headers.responseDate,
+      contentType: result.headers.contentType,
+      contentLength: result.headers.contentLength,
+      checkStatus: result.checkStatus,
+      checkMode: result.checkMode,
+      attemptedHead: result.attemptedHead,
+      headFallbackReason: result.headFallbackReason,
+      bytesFetched: result.bytesFetched,
+      bytesSkipped: result.bytesSkipped,
+    };
   }
 
   return {
     ok: false,
-    attempts: attemptsAllowed,
-    durationMs: performance.now() - startedAt,
-    statusCode: lastStatusCode,
-    error: lastError,
-    ...lastHeaders,
+    attempts: options.retries + 1,
+    durationMs: result.durationMs,
+    statusCode: result.statusCode,
+    error: result.error,
+    etag: result.headers.etag,
+    lastModified: result.headers.lastModified,
+    cacheControl: result.headers.cacheControl,
+    responseDate: result.headers.responseDate,
+    contentType: result.headers.contentType,
+    contentLength: result.headers.contentLength,
+    checkStatus: result.checkStatus,
+    checkMode: result.checkMode,
+    attemptedHead: result.attemptedHead,
+    headFallbackReason: result.headFallbackReason,
+    bytesFetched: result.bytesFetched,
+    bytesSkipped: result.bytesSkipped,
   };
 };

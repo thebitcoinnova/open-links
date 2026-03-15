@@ -141,6 +141,14 @@
                   "sha256": {
                     "type": "string",
                     "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "etag": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "lastModified": {
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "additionalProperties": false
@@ -168,6 +176,14 @@
                   "sha256": {
                     "type": "string",
                     "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "etag": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "lastModified": {
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "additionalProperties": false
@@ -195,6 +211,14 @@
                   "sha256": {
                     "type": "string",
                     "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "etag": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "lastModified": {
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "additionalProperties": false
@@ -222,6 +246,14 @@
                   "sha256": {
                     "type": "string",
                     "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "etag": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "lastModified": {
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "additionalProperties": false

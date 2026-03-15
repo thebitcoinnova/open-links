@@ -235,7 +235,7 @@ High-signal deployment checks:
 
 ### Core commands
 
-- `bun run avatar:sync` - fetch profile avatar into `public/generated/` and write `data/generated/profile-avatar.json`.
+- `bun run avatar:sync` - fetch profile avatar into `public/cache/profile-avatar/`, write the committed manifest `data/cache/profile-avatar.json`, and refresh the gitignored runtime overlay `data/cache/profile-avatar.runtime.json`.
 - `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement; routine runs leave `data/cache/rich-public-cache.json` unchanged and only update the local runtime overlay when needed.
 - `bun run enrich:rich:write-cache` - run non-strict rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
 - `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement; routine runs leave `data/cache/rich-public-cache.json` unchanged and only update the local runtime overlay when needed.
@@ -251,6 +251,7 @@ High-signal deployment checks:
 - `bun run linkedin:debug:validate` - LinkedIn authenticated metadata debug validator.
 - `bun run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
 - `bun run images:sync` - fetch rich-card/SEO remote images into the committed cache at `public/cache/content-images/`, write the stable manifest `data/cache/content-images.json`, and refresh the gitignored runtime overlay `data/cache/content-images.runtime.json`.
+- Cache-backed fetches are governed by the committed per-domain registry `data/policy/remote-cache-policy.json`. New remote hosts must be added there in the same change batch as link/extractor updates.
 - `bun run dev` - start local dev server (predev runs strict enrichment in read-only public-cache mode and fails on blocking enrichment policy issues).
 - `bun run validate:data` - schema + policy checks (standard mode).
 - `bun run validate:data:strict` - fails on warnings and errors.

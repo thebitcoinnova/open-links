@@ -298,26 +298,20 @@ interface GeneratedRichMetadataPayload {
 interface GeneratedProfileAvatarPayload {
   sourceUrl?: string;
   resolvedPath?: string;
-  status?: "fetched" | "not_modified" | "cache_fresh" | "cache_on_error" | "fallback_on_error";
   etag?: string;
   lastModified?: string;
-  cacheControl?: string;
-  expiresAt?: string;
   updatedAt?: string;
-  warning?: string;
+  contentType?: string;
+  bytes?: number;
 }
 
 interface GeneratedContentImageEntry {
   sourceUrl?: string;
   resolvedPath?: string;
-  status?: "fetched" | "not_modified" | "cache_fresh" | "cache_on_error" | "fallback_on_error";
   etag?: string;
   lastModified?: string;
-  cacheControl?: string;
-  expiresAt?: string;
   contentType?: string;
   bytes?: number;
-  warning?: string;
   updatedAt?: string;
 }
 
@@ -332,7 +326,7 @@ const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetada
 );
 
 const generatedProfileAvatarModules = import.meta.glob<{ default: GeneratedProfileAvatarPayload }>(
-  "../../../data/generated/profile-avatar.json",
+  "../../../data/cache/profile-avatar.json",
   { eager: true },
 );
 

@@ -110,9 +110,9 @@ test("round-trips stable and runtime public cache manifests through disk with no
   assert.equal(registry.entries.github?.checkedAt, "2026-03-07T12:05:00.000Z");
   assert.equal("updatedAt" in stableOnDisk, false);
   assert.deepEqual(Object.keys(stableOnDisk.entries), ["github"]);
-  assert.equal("etag" in stableOnDisk.entries.github, false);
+  assert.equal(stableOnDisk.entries.github.etag, '"abc"');
   assert.equal("cacheControl" in stableOnDisk.entries.github, false);
-  assert.equal(runtimeOnDisk.entries.github.etag, '"abc"');
+  assert.equal("etag" in runtimeOnDisk.entries.github, false);
   assert.equal(runtimeOnDisk.entries.github.cacheControl, "max-age=300");
   assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-07T12:05:00.000Z");
 });
@@ -163,11 +163,10 @@ test("writes runtime-only public cache updates without rewriting the stable mani
   registry.updatedAt = "2026-03-08T09:00:00.000Z";
   registry.entries.github = {
     ...githubEntry,
-    etag: '"new"',
-    lastModified: "Sat, 08 Mar 2026 09:00:00 GMT",
     cacheControl: "max-age=900",
     expiresAt: "2026-03-08T09:15:00.000Z",
     checkedAt: "2026-03-08T09:00:00.000Z",
+    checkStatus: "get_not_modified",
   };
 
   // Act
@@ -179,11 +178,12 @@ test("writes runtime-only public cache updates without rewriting the stable mani
 
   // Assert
   assert.equal(stableAfter, stableBefore);
-  assert.equal(runtimeOnDisk.entries.github.etag, '"new"');
-  assert.equal(runtimeOnDisk.entries.github.lastModified, "Sat, 08 Mar 2026 09:00:00 GMT");
+  assert.equal("etag" in runtimeOnDisk.entries.github, false);
+  assert.equal("lastModified" in runtimeOnDisk.entries.github, false);
   assert.equal(runtimeOnDisk.entries.github.cacheControl, "max-age=900");
   assert.equal(runtimeOnDisk.entries.github.expiresAt, "2026-03-08T09:15:00.000Z");
   assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-08T09:00:00.000Z");
+  assert.equal(runtimeOnDisk.entries.github.checkStatus, "get_not_modified");
 });
 
 test("loads a legacy single-file public cache and migrates volatile fields into runtime state", (t) => {
@@ -246,7 +246,7 @@ test("loads a legacy single-file public cache and migrates volatile fields into 
   assert.equal(registry.entries.github?.expiresAt, "2026-03-08T15:05:00.000Z");
   assert.equal(registry.entries.github?.checkedAt, "2026-03-08T15:00:00.000Z");
   assert.equal("updatedAt" in stableOnDisk, false);
-  assert.equal("etag" in stableOnDisk.entries.github, false);
+  assert.equal(stableOnDisk.entries.github.etag, '"legacy"');
   assert.equal(runtimeOnDisk.entries.github.expiresAt, "2026-03-08T15:05:00.000Z");
   assert.equal(runtimeOnDisk.entries.github.checkedAt, "2026-03-08T15:00:00.000Z");
 });
@@ -305,7 +305,7 @@ test("clears runtime freshness when stable cache updates are suppressed", () => 
   assert.equal(result.stableWriteSkipped, true);
   assert.equal(result.skippedStableOperation, "upsert");
   assert.equal(registry.entries.github.metadata.description, "Open source and experiments.");
-  assert.equal(registry.entries.github.etag, undefined);
+  assert.equal(registry.entries.github.etag, '"old"');
   assert.equal(registry.entries.github.cacheControl, undefined);
   assert.equal(registry.entries.github.expiresAt, undefined);
   assert.equal(registry.entries.github.checkedAt, undefined);
@@ -341,11 +341,10 @@ test("updates only runtime fields when revalidation succeeds without stable meta
     sourceUrl: "https://github.com/pRizz",
     metadata: registry.entries.github.metadata,
     updatedAt: "2026-03-09T10:00:00.000Z",
-    etag: '"new"',
-    lastModified: "Sun, 09 Mar 2026 10:00:00 GMT",
     cacheControl: "max-age=900",
     expiresAt: "2026-03-09T10:15:00.000Z",
     checkedAt: "2026-03-09T10:00:00.000Z",
+    checkStatus: "get_not_modified",
   });
 
   // Act
@@ -363,11 +362,12 @@ test("updates only runtime fields when revalidation succeeds without stable meta
   assert.equal(result.stableWriteSkipped, false);
   assert.equal(registry.entries.github.metadata.description, "Open source and experiments.");
   assert.equal(registry.entries.github.updatedAt, "2026-03-07T12:05:00.000Z");
-  assert.equal(registry.entries.github.etag, '"new"');
-  assert.equal(registry.entries.github.lastModified, "Sun, 09 Mar 2026 10:00:00 GMT");
+  assert.equal(registry.entries.github.etag, '"old"');
+  assert.equal(registry.entries.github.lastModified, undefined);
   assert.equal(registry.entries.github.cacheControl, "max-age=900");
   assert.equal(registry.entries.github.expiresAt, "2026-03-09T10:15:00.000Z");
   assert.equal(registry.entries.github.checkedAt, "2026-03-09T10:00:00.000Z");
+  assert.equal(registry.entries.github.checkStatus, "get_not_modified");
 });
 
 test("applies stable public cache updates when explicit writes are enabled", () => {
@@ -469,7 +469,7 @@ test("clears runtime freshness when non-cacheable results do not persist stable 
   assert.equal(result.stableWriteSkipped, true);
   assert.equal(result.skippedStableOperation, "delete");
   assert.equal(registry.entries.github.metadata.title, "Peter Ryszkiewicz");
-  assert.equal(registry.entries.github.etag, undefined);
+  assert.equal(registry.entries.github.etag, '"old"');
   assert.equal(registry.entries.github.expiresAt, undefined);
   assert.equal(registry.entries.github.checkedAt, undefined);
 });

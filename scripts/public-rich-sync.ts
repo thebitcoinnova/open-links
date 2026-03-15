@@ -35,6 +35,12 @@ import {
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
 import { parseXPublicProfileMetrics } from "./enrichment/x-public-browser";
 import { loadEmbeddedCode } from "./shared/embedded-code-loader";
+import {
+  RemoteCacheStatsCollector,
+  createRemoteCacheStatsOutputPath,
+  writeRemoteCacheRunSummary,
+} from "./shared/remote-cache-fetch";
+import { loadRemoteCachePolicyRegistry } from "./shared/remote-cache-policy";
 
 const ROOT = process.cwd();
 const DEFAULT_BROWSER_WAIT_MS = 8_000;
@@ -101,6 +107,8 @@ interface BootstrapBaseEntryInput {
   target: SyncablePublicTarget;
   existingEntry?: PublicCacheEntry;
   generatedAt: string;
+  remoteCachePolicyRegistry: ReturnType<typeof loadRemoteCachePolicyRegistry>;
+  remoteCacheStats: RemoteCacheStatsCollector;
 }
 
 export interface PublicBrowserAudienceCaptureResult {
@@ -390,6 +398,17 @@ export const bootstrapPublicBaseEntry = async (
     retries: DEFAULT_FETCH_RETRIES,
     acceptHeader: input.target.acceptHeader,
     headers: input.target.headers,
+    policyRegistry: input.remoteCachePolicyRegistry,
+    statsCollector: input.remoteCacheStats,
+    cache: input.existingEntry
+      ? {
+          etag: input.existingEntry.etag,
+          lastModified: input.existingEntry.lastModified,
+          cacheControl: input.existingEntry.cacheControl,
+          expiresAt: input.existingEntry.expiresAt,
+          hasValue: true,
+        }
+      : undefined,
   });
 
   if (!fetched.ok || !fetched.html) {
@@ -428,6 +447,7 @@ export const bootstrapPublicBaseEntry = async (
     cacheControl: fetched.cacheControl,
     expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
     checkedAt: input.generatedAt,
+    checkStatus: fetched.checkStatus,
   };
 };
 
@@ -598,6 +618,8 @@ export const runPublicRichSyncWithDependencies = async (
   args: CliArgs,
   dependencies: PublicRichSyncDependencies,
 ): Promise<PublicRichSyncResult> => {
+  const remoteCachePolicyRegistry = loadRemoteCachePolicyRegistry();
+  const remoteCacheStats = new RemoteCacheStatsCollector("public-rich-sync");
   const linksPayload = dependencies.readLinks(args.linksPath);
   const registry = dependencies.loadPublicCache(args.publicCachePath);
   const entries: PublicRichSyncRunEntry[] = [];
@@ -661,6 +683,8 @@ export const runPublicRichSyncWithDependencies = async (
         target: candidate.target,
         existingEntry: workingEntry,
         generatedAt,
+        remoteCachePolicyRegistry,
+        remoteCacheStats,
       });
       registry.entries[candidate.link.id] = workingEntry;
       registry.updatedAt = generatedAt;
@@ -756,6 +780,10 @@ export const runPublicRichSyncWithDependencies = async (
   if (dirty) {
     dependencies.writePublicCache(args.publicCachePath, registry);
   }
+
+  const remoteCacheStatsPath = createRemoteCacheStatsOutputPath("public-rich-sync");
+  writeRemoteCacheRunSummary(remoteCacheStatsPath, remoteCacheStats);
+  dependencies.log(`[public:rich:sync] remote cache stats -> ${remoteCacheStatsPath}`);
 
   return {
     dirty,

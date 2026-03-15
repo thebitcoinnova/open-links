@@ -150,11 +150,13 @@ data/generated/*.json
 data/generated/*.md
 !data/generated/.gitkeep
 data/cache/content-images.runtime.json
+data/cache/profile-avatar.runtime.json
 data/cache/rich-public-cache.runtime.json
 public/generated/*
 !public/generated/.gitkeep
 
 # Local browser automation artifacts
 .playwright-cli/
+output/cache-revalidation/
 output/playwright/
 output/playwright/auth-rich-sync/

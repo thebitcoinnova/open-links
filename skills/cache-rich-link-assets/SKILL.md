@@ -50,6 +50,7 @@ bun run build
 5. Review committed cache outputs.
    - Stable image manifest: `data/cache/content-images.json`
    - Stable image assets: `public/cache/content-images/*`
+   - Remote cache policy: `data/policy/remote-cache-policy.json`
    - Authenticated metadata/assets when applicable:
      - `data/cache/rich-authenticated-cache.json`
      - `public/cache/rich-authenticated/*`
@@ -57,6 +58,7 @@ bun run build
 ## Acceptance checks
 
 - The link renders with a local cached image path at runtime.
+- Any new remote fetch host introduced by the change is covered in `data/policy/remote-cache-policy.json` for the relevant pipeline.
 - `bun run validate:data` passes.
 - `bun run build` passes.
 - New or changed cache artifacts are included in the same change batch as the link edit.
@@ -64,4 +66,5 @@ bun run build
 ## Notes
 
 - `data/cache/content-images.runtime.json` is gitignored runtime revalidation state; do not commit it.
+- `data/cache/profile-avatar.runtime.json` and `output/cache-revalidation/*` are also runtime-only and should not be committed.
 - Manual metadata stays in `data/links.json`; public/authenticated metadata caches stay in their existing committed cache files.

@@ -59,6 +59,12 @@ import type {
   ExpectedSocialProfileField,
   GeneratedRichMetadata,
 } from "./enrichment/types";
+import {
+  RemoteCacheStatsCollector,
+  createRemoteCacheStatsOutputPath,
+  writeRemoteCacheRunSummary,
+} from "./shared/remote-cache-fetch";
+import { loadRemoteCachePolicyRegistry } from "./shared/remote-cache-policy";
 
 interface CliArgs {
   strict: boolean;
@@ -284,6 +290,8 @@ const maybeReconcileAuthenticatedProfileDescriptions = async (input: {
   supportedProfile: ReturnType<typeof resolveSupportedSocialProfile>;
   metadata: EnrichmentMetadata;
   config: ResolvedConfig;
+  remoteCachePolicyRegistry: ReturnType<typeof loadRemoteCachePolicyRegistry>;
+  remoteCacheStats: RemoteCacheStatsCollector;
 }): Promise<EnrichmentMetadata> => {
   if (input.supportedProfile?.platform !== "linkedin") {
     return input.metadata;
@@ -299,6 +307,8 @@ const maybeReconcileAuthenticatedProfileDescriptions = async (input: {
   const fetched = await fetchMetadata(input.link.url, {
     timeoutMs: input.config.timeoutMs,
     retries: input.config.retries,
+    policyRegistry: input.remoteCachePolicyRegistry,
+    statsCollector: input.remoteCacheStats,
   });
 
   if (!fetched.ok || !fetched.html) {
@@ -636,6 +646,8 @@ const run = async () => {
   const blockersRegistry = loadRichEnrichmentBlockersRegistry({
     registryPath: DEFAULT_BLOCKERS_REGISTRY_PATH,
   });
+  const remoteCachePolicyRegistry = loadRemoteCachePolicyRegistry();
+  const remoteCacheStats = new RemoteCacheStatsCollector("enrich-rich-links");
   const publicCacheRegistry = loadPublicCacheRegistry({
     cachePath: config.publicCachePath,
   });
@@ -961,6 +973,8 @@ const run = async () => {
         supportedProfile,
         metadata: cacheValidation.metadata,
         config,
+        remoteCachePolicyRegistry,
+        remoteCacheStats,
       });
       const metadata = mergeLinkMetadata(
         link.metadata,
@@ -1135,21 +1149,22 @@ const run = async () => {
       continue;
     }
 
-    const requestHeaders: Record<string, string> = {
-      ...(publicAugmentationTarget?.headers ?? {}),
-    };
-    if (cachedPublicEntry?.entry.etag) {
-      requestHeaders["if-none-match"] = cachedPublicEntry.entry.etag;
-    }
-    if (cachedPublicEntry?.entry.lastModified) {
-      requestHeaders["if-modified-since"] = cachedPublicEntry.entry.lastModified;
-    }
-
     const fetched = await fetchMetadata(publicSourceUrl, {
       timeoutMs: config.timeoutMs,
       retries: config.retries,
-      headers: requestHeaders,
+      headers: publicAugmentationTarget?.headers,
       acceptHeader: publicAugmentationTarget?.acceptHeader,
+      policyRegistry: remoteCachePolicyRegistry,
+      statsCollector: remoteCacheStats,
+      cache: cachedPublicEntry
+        ? {
+            etag: cachedPublicEntry.entry.etag,
+            lastModified: cachedPublicEntry.entry.lastModified,
+            cacheControl: cachedPublicEntry.entry.cacheControl,
+            expiresAt: cachedPublicEntry.entry.expiresAt,
+            hasValue: true,
+          }
+        : undefined,
     });
 
     if (fetched.notModified && cachedPublicEntry) {
@@ -1169,6 +1184,7 @@ const run = async () => {
         cacheControl,
         expiresAt,
         checkedAt: generatedAt,
+        checkStatus: fetched.checkStatus,
       });
 
       const publicCachePersistence = applyPublicCachePersistence({
@@ -1521,6 +1537,7 @@ const run = async () => {
             cacheControl: fetched.cacheControl,
             expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
             checkedAt: generatedAt,
+            checkStatus: fetched.checkStatus,
           }),
           allowStableWrite: config.writePublicCache,
           updatedAt: generatedAt,
@@ -1678,6 +1695,9 @@ const run = async () => {
   );
   console.log(`Generated metadata: ${config.outputPath}`);
   console.log(`Enrichment report: ${config.reportPath}`);
+  const remoteCacheStatsPath = createRemoteCacheStatsOutputPath("enrich-rich-links");
+  writeRemoteCacheRunSummary(remoteCacheStatsPath, remoteCacheStats);
+  console.log(`Remote cache stats: ${remoteCacheStatsPath}`);
   if (abortedEarly) {
     console.log("Run status: aborted early due to blocking failure and failureMode=immediate.");
   }

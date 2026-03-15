@@ -18,6 +18,12 @@ import {
   validateRegisteredExtractorsAgainstPolicy,
 } from "./authenticated-extractors/registry";
 import type { AuthFlowSessionReport } from "./authenticated-extractors/types";
+import {
+  RemoteCacheStatsCollector,
+  createRemoteCacheStatsOutputPath,
+  writeRemoteCacheRunSummary,
+} from "./shared/remote-cache-fetch";
+import { loadRemoteCachePolicyRegistry } from "./shared/remote-cache-policy";
 
 interface LinkInput {
   id: string;
@@ -135,6 +141,8 @@ const run = async () => {
   const policy = loadAuthenticatedExtractorsPolicy({
     policyPath: args.policyPath,
   });
+  const remoteCachePolicyRegistry = loadRemoteCachePolicyRegistry();
+  const remoteCacheStats = new RemoteCacheStatsCollector("sync-authenticated-rich-cache");
   const cache = loadAuthenticatedCacheRegistry({
     cachePath: args.cachePath,
   });
@@ -371,6 +379,8 @@ const run = async () => {
           force: args.force,
           publicAssetDirAbsolute,
           publicAssetDirRelative: DEFAULT_PUBLIC_ASSET_DIR_RELATIVE,
+          remoteCachePolicyRegistry,
+          remoteCacheStats,
         });
 
         cache.entries[candidate.cacheKey] = {
@@ -415,6 +425,9 @@ const run = async () => {
     writeJson(args.cachePath, cache);
   }
 
+  const remoteCacheStatsPath = createRemoteCacheStatsOutputPath("sync-authenticated-rich-cache");
+  writeRemoteCacheRunSummary(remoteCacheStatsPath, remoteCacheStats);
+
   const artifactPayload = {
     startedAt,
     completedAt: nowIso(),
@@ -458,6 +471,7 @@ const run = async () => {
   console.log(`Cache file: ${args.cachePath}`);
   console.log(`Asset directory: public/${DEFAULT_PUBLIC_ASSET_DIR_RELATIVE}`);
   console.log(`Artifact: ${path.relative(ROOT, artifactPath)}`);
+  console.log(`Remote cache stats: ${remoteCacheStatsPath}`);
 
   if (touchedCacheKeys.length > 0) {
     console.log(`Updated cache keys: ${touchedCacheKeys.join(", ")}`);

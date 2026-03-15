@@ -2,26 +2,35 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import {
+  type RemoteCacheCheckStatus,
+  type RemoteCachePreviousState,
+  RemoteCacheStatsCollector,
+  computeRemoteCacheExpiresAt,
+  createRemoteCacheStatsOutputPath,
+  fetchWithRemoteCachePolicy,
+  writeRemoteCacheRunSummary,
+} from "./shared/remote-cache-fetch";
+import { loadRemoteCachePolicyRegistry } from "./shared/remote-cache-policy";
 
 export type ContentImageSyncStatus =
-  | "fetched"
-  | "not_modified"
-  | "cache_fresh"
+  | RemoteCacheCheckStatus
   | "cache_on_error"
   | "fallback_on_error";
 
 export interface GeneratedContentImageEntry {
   sourceUrl: string;
   resolvedPath?: string;
-  status: ContentImageSyncStatus;
+  updatedAt?: string;
   etag?: string;
   lastModified?: string;
-  cacheControl?: string;
-  expiresAt?: string;
   contentType?: string;
   bytes?: number;
+  checkStatus?: ContentImageSyncStatus;
+  cacheControl?: string;
+  expiresAt?: string;
+  checkedAt?: string;
   warning?: string;
-  updatedAt: string;
 }
 
 export interface GeneratedContentImagesManifest {
@@ -241,63 +250,12 @@ const normalizePublicPath = (relativePath: string): string => {
 const resolveManifestAssetAbsolutePath = (resolvedPath: string): string =>
   path.join(ROOT, "public", normalizePublicPath(resolvedPath));
 
-const parseMaxAgeSeconds = (cacheControl: string | undefined): number | undefined => {
-  if (!cacheControl) {
-    return undefined;
-  }
-
-  for (const directive of cacheControl.split(",")) {
-    const normalized = directive.trim().toLowerCase();
-    if (!normalized.startsWith("max-age=")) {
-      continue;
-    }
-
-    const value = normalized.slice("max-age=".length).replaceAll('"', "");
-    const seconds = Number.parseInt(value, 10);
-    if (Number.isFinite(seconds) && seconds >= 0) {
-      return seconds;
-    }
-  }
-
-  return undefined;
-};
-
-const toIso = (value: number): string => new Date(value).toISOString();
-
-const computeExpiresAt = (
-  cacheControl: string | undefined,
-  dateHeader: string | undefined,
-): string | undefined => {
-  const maxAgeSeconds = parseMaxAgeSeconds(cacheControl);
-  if (maxAgeSeconds === undefined) {
-    return undefined;
-  }
-
-  const headerDate = dateHeader ? Date.parse(dateHeader) : Number.NaN;
-  const baseMs = Number.isFinite(headerDate) ? headerDate : Date.now();
-  return toIso(baseMs + maxAgeSeconds * 1000);
-};
-
-const isFresh = (expiresAt: string | undefined): boolean => {
-  if (!expiresAt) {
-    return false;
-  }
-
-  const expiresAtMs = Date.parse(expiresAt);
-  if (!Number.isFinite(expiresAtMs)) {
-    return false;
-  }
-
-  return expiresAtMs > Date.now();
-};
-
-const extensionFromContentType = (contentType: string | null): string | undefined => {
+const extensionFromContentType = (contentType: string | undefined): string | undefined => {
   if (!contentType) {
     return undefined;
   }
 
-  const normalized = contentType.split(";")[0]?.trim().toLowerCase() ?? "";
-  return CONTENT_TYPE_EXTENSION_MAP.get(normalized);
+  return CONTENT_TYPE_EXTENSION_MAP.get(contentType.split(";")[0]?.trim().toLowerCase() ?? "");
 };
 
 const extensionFromUrl = (sourceUrl: string): string | undefined => {
@@ -330,7 +288,7 @@ const extensionFromResolvedPath = (resolvedPath: string | undefined): string | u
 };
 
 const resolveExtension = (
-  contentType: string | null,
+  contentType: string | undefined,
   sourceUrl: string,
   previousResolvedPath: string | undefined,
 ): string =>
@@ -350,77 +308,81 @@ const resolvedPathFromOutputDir = (outputDir: string, fileName: string): string 
   return [relativeToPublic, fileName].filter(Boolean).join("/");
 };
 
-const writeManifest = (manifestPath: string, manifest: GeneratedContentImagesManifest) => {
-  const absolute = absolutePath(manifestPath);
-  ensureDirectoryForFile(absolute);
-  fs.writeFileSync(absolute, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+const normalizeEntry = (entry: GeneratedContentImageEntry): GeneratedContentImageEntry => {
+  const normalized: GeneratedContentImageEntry = {
+    sourceUrl: entry.sourceUrl,
+  };
+
+  if (trimToUndefined(entry.resolvedPath)) {
+    normalized.resolvedPath = trimToUndefined(entry.resolvedPath);
+  }
+  if (trimToUndefined(entry.updatedAt)) {
+    normalized.updatedAt = trimToUndefined(entry.updatedAt);
+  }
+  if (trimToUndefined(entry.etag)) {
+    normalized.etag = trimToUndefined(entry.etag);
+  }
+  if (trimToUndefined(entry.lastModified)) {
+    normalized.lastModified = trimToUndefined(entry.lastModified);
+  }
+  if (trimToUndefined(entry.contentType)) {
+    normalized.contentType = trimToUndefined(entry.contentType);
+  }
+  if (typeof entry.bytes === "number" && Number.isFinite(entry.bytes) && entry.bytes >= 0) {
+    normalized.bytes = entry.bytes;
+  }
+  if (trimToUndefined(entry.checkStatus)) {
+    normalized.checkStatus = trimToUndefined(entry.checkStatus) as ContentImageSyncStatus;
+  }
+  if (trimToUndefined(entry.cacheControl)) {
+    normalized.cacheControl = trimToUndefined(entry.cacheControl);
+  }
+  if (trimToUndefined(entry.expiresAt)) {
+    normalized.expiresAt = trimToUndefined(entry.expiresAt);
+  }
+  if (trimToUndefined(entry.checkedAt)) {
+    normalized.checkedAt = trimToUndefined(entry.checkedAt);
+  }
+  if (trimToUndefined(entry.warning)) {
+    normalized.warning = trimToUndefined(entry.warning);
+  }
+
+  return normalized;
 };
 
 const readPreviousManifest = (manifestPath: string): GeneratedContentImagesManifest | null => {
   const parsed = maybeReadJson<unknown>(manifestPath);
-  if (!parsed || !isRecord(parsed)) {
-    return null;
-  }
-
-  if (!isRecord(parsed.byUrl)) {
+  if (!parsed || !isRecord(parsed) || !isRecord(parsed.byUrl)) {
     return null;
   }
 
   const byUrl: Record<string, GeneratedContentImageEntry> = {};
 
   for (const [url, rawEntry] of Object.entries(parsed.byUrl)) {
-    if (!isRecord(rawEntry)) {
+    if (!isRecord(rawEntry) || typeof rawEntry.sourceUrl !== "string") {
       continue;
     }
 
-    if (
-      typeof rawEntry.sourceUrl !== "string" ||
-      typeof rawEntry.status !== "string" ||
-      typeof rawEntry.updatedAt !== "string"
-    ) {
-      continue;
-    }
-
-    const entry: GeneratedContentImageEntry = {
+    byUrl[url] = normalizeEntry({
       sourceUrl: rawEntry.sourceUrl,
-      status: (
-        ["fetched", "not_modified", "cache_fresh", "cache_on_error", "fallback_on_error"] as const
-      ).includes(rawEntry.status as ContentImageSyncStatus)
-        ? (rawEntry.status as ContentImageSyncStatus)
-        : "fallback_on_error",
-      updatedAt: rawEntry.updatedAt,
-    };
-
-    if (typeof rawEntry.resolvedPath === "string" && rawEntry.resolvedPath.trim().length > 0) {
-      entry.resolvedPath = rawEntry.resolvedPath;
-    }
-    if (typeof rawEntry.etag === "string" && rawEntry.etag.trim().length > 0) {
-      entry.etag = rawEntry.etag;
-    }
-    if (typeof rawEntry.lastModified === "string" && rawEntry.lastModified.trim().length > 0) {
-      entry.lastModified = rawEntry.lastModified;
-    }
-    if (typeof rawEntry.cacheControl === "string" && rawEntry.cacheControl.trim().length > 0) {
-      entry.cacheControl = rawEntry.cacheControl;
-    }
-    if (typeof rawEntry.expiresAt === "string" && rawEntry.expiresAt.trim().length > 0) {
-      entry.expiresAt = rawEntry.expiresAt;
-    }
-    if (typeof rawEntry.contentType === "string" && rawEntry.contentType.trim().length > 0) {
-      entry.contentType = rawEntry.contentType;
-    }
-    if (
-      typeof rawEntry.bytes === "number" &&
-      Number.isFinite(rawEntry.bytes) &&
-      rawEntry.bytes >= 0
-    ) {
-      entry.bytes = rawEntry.bytes;
-    }
-    if (typeof rawEntry.warning === "string" && rawEntry.warning.trim().length > 0) {
-      entry.warning = rawEntry.warning;
-    }
-
-    byUrl[url] = entry;
+      resolvedPath: typeof rawEntry.resolvedPath === "string" ? rawEntry.resolvedPath : undefined,
+      updatedAt: typeof rawEntry.updatedAt === "string" ? rawEntry.updatedAt : undefined,
+      etag: typeof rawEntry.etag === "string" ? rawEntry.etag : undefined,
+      lastModified: typeof rawEntry.lastModified === "string" ? rawEntry.lastModified : undefined,
+      contentType: typeof rawEntry.contentType === "string" ? rawEntry.contentType : undefined,
+      bytes:
+        typeof rawEntry.bytes === "number" && Number.isFinite(rawEntry.bytes)
+          ? rawEntry.bytes
+          : undefined,
+      checkStatus:
+        typeof rawEntry.checkStatus === "string"
+          ? (rawEntry.checkStatus as ContentImageSyncStatus)
+          : undefined,
+      cacheControl: typeof rawEntry.cacheControl === "string" ? rawEntry.cacheControl : undefined,
+      expiresAt: typeof rawEntry.expiresAt === "string" ? rawEntry.expiresAt : undefined,
+      checkedAt: typeof rawEntry.checkedAt === "string" ? rawEntry.checkedAt : undefined,
+      warning: typeof rawEntry.warning === "string" ? rawEntry.warning : undefined,
+    });
   }
 
   return {
@@ -432,89 +394,36 @@ const readPreviousManifest = (manifestPath: string): GeneratedContentImagesManif
   };
 };
 
-const buildEntry = (
-  base: {
-    sourceUrl: string;
-    status: ContentImageSyncStatus;
-    resolvedPath?: string;
-  },
-  detail: {
-    etag?: string;
-    lastModified?: string;
-    cacheControl?: string;
-    expiresAt?: string;
-    contentType?: string;
-    bytes?: number;
-    warning?: string;
-  },
-): GeneratedContentImageEntry => {
-  const entry: GeneratedContentImageEntry = {
-    sourceUrl: base.sourceUrl,
-    status: base.status,
-    updatedAt: new Date().toISOString(),
-  };
-
-  if (base.resolvedPath) {
-    entry.resolvedPath = normalizePublicPath(base.resolvedPath);
-  }
-  if (detail.etag) {
-    entry.etag = detail.etag;
-  }
-  if (detail.lastModified) {
-    entry.lastModified = detail.lastModified;
-  }
-  if (detail.cacheControl) {
-    entry.cacheControl = detail.cacheControl;
-  }
-  if (detail.expiresAt) {
-    entry.expiresAt = detail.expiresAt;
-  }
-  if (detail.contentType) {
-    entry.contentType = detail.contentType;
-  }
-  if (typeof detail.bytes === "number" && Number.isFinite(detail.bytes)) {
-    entry.bytes = detail.bytes;
-  }
-  if (detail.warning) {
-    entry.warning = detail.warning;
-  }
-
-  return entry;
+const writeManifest = (manifestPath: string, manifest: GeneratedContentImagesManifest) => {
+  const absolute = absolutePath(manifestPath);
+  ensureDirectoryForFile(absolute);
+  fs.writeFileSync(absolute, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 };
 
-const normalizeEntry = (entry: GeneratedContentImageEntry): GeneratedContentImageEntry => {
-  const normalized: GeneratedContentImageEntry = {
-    sourceUrl: entry.sourceUrl,
-    status: entry.status,
-    updatedAt: entry.updatedAt,
-  };
+const hasSameStablePayload = (
+  left: GeneratedContentImageEntry,
+  right: GeneratedContentImageEntry,
+): boolean =>
+  left.sourceUrl === right.sourceUrl &&
+  left.resolvedPath === right.resolvedPath &&
+  left.etag === right.etag &&
+  left.lastModified === right.lastModified &&
+  left.contentType === right.contentType &&
+  left.bytes === right.bytes;
 
-  if (trimToUndefined(entry.resolvedPath)) {
-    normalized.resolvedPath = trimToUndefined(entry.resolvedPath);
-  }
-  if (trimToUndefined(entry.etag)) {
-    normalized.etag = trimToUndefined(entry.etag);
-  }
-  if (trimToUndefined(entry.lastModified)) {
-    normalized.lastModified = trimToUndefined(entry.lastModified);
-  }
-  if (trimToUndefined(entry.cacheControl)) {
-    normalized.cacheControl = trimToUndefined(entry.cacheControl);
-  }
-  if (trimToUndefined(entry.expiresAt)) {
-    normalized.expiresAt = trimToUndefined(entry.expiresAt);
-  }
-  if (trimToUndefined(entry.contentType)) {
-    normalized.contentType = trimToUndefined(entry.contentType);
-  }
-  if (typeof entry.bytes === "number" && Number.isFinite(entry.bytes)) {
-    normalized.bytes = entry.bytes;
-  }
-  if (trimToUndefined(entry.warning)) {
-    normalized.warning = trimToUndefined(entry.warning);
+export const stabilizeContentImageEntry = (
+  previousEntry: GeneratedContentImageEntry | undefined,
+  nextEntry: GeneratedContentImageEntry,
+): GeneratedContentImageEntry => {
+  const normalizedNext = normalizeEntry(nextEntry);
+  if (!previousEntry || !hasSameStablePayload(previousEntry, normalizedNext)) {
+    return normalizedNext;
   }
 
-  return normalized;
+  return normalizeEntry({
+    ...normalizedNext,
+    updatedAt: previousEntry.updatedAt,
+  });
 };
 
 const areEntriesEqual = (
@@ -526,35 +435,6 @@ const areEntriesEqual = (
   }
 
   return JSON.stringify(normalizeEntry(left)) === JSON.stringify(normalizeEntry(right));
-};
-
-const hasSamePayload = (
-  left: GeneratedContentImageEntry,
-  right: GeneratedContentImageEntry,
-): boolean =>
-  left.sourceUrl === right.sourceUrl &&
-  left.resolvedPath === right.resolvedPath &&
-  left.contentType === right.contentType &&
-  left.bytes === right.bytes;
-
-export const stabilizeContentImageEntry = (
-  previousEntry: GeneratedContentImageEntry | undefined,
-  nextEntry: GeneratedContentImageEntry,
-): GeneratedContentImageEntry => {
-  if (!previousEntry || !hasSamePayload(previousEntry, nextEntry)) {
-    return nextEntry;
-  }
-
-  const stabilized: GeneratedContentImageEntry = {
-    ...nextEntry,
-    updatedAt: previousEntry.updatedAt,
-  };
-
-  if (nextEntry.status === "cache_fresh" || nextEntry.status === "not_modified") {
-    stabilized.status = previousEntry.status;
-  }
-
-  return stabilized;
 };
 
 const areEntryMapsEqual = (
@@ -590,92 +470,46 @@ const mergePreviousEntries = (
     return undefined;
   }
 
-  if (!stableEntry) {
-    return runtimeEntry;
-  }
-
-  if (!runtimeEntry) {
-    return stableEntry;
-  }
-
-  return {
-    ...stableEntry,
-    ...runtimeEntry,
-    sourceUrl: runtimeEntry.sourceUrl,
-    status: runtimeEntry.status,
-    updatedAt: runtimeEntry.updatedAt,
-    resolvedPath: stableEntry.resolvedPath ?? runtimeEntry.resolvedPath,
-  };
+  return normalizeEntry({
+    ...(stableEntry ?? {}),
+    ...(runtimeEntry ?? {}),
+    sourceUrl: runtimeEntry?.sourceUrl ?? stableEntry?.sourceUrl ?? "",
+  });
 };
 
 const toStableEntry = (
   entry: GeneratedContentImageEntry | undefined,
 ): GeneratedContentImageEntry | undefined => {
-  if (!entry?.resolvedPath) {
+  if (!entry?.resolvedPath || !entry.updatedAt) {
     return undefined;
   }
 
-  const stableEntry: GeneratedContentImageEntry = {
+  return normalizeEntry({
     sourceUrl: entry.sourceUrl,
     resolvedPath: entry.resolvedPath,
-    status: entry.status,
     updatedAt: entry.updatedAt,
-  };
-
-  if (entry.contentType) {
-    stableEntry.contentType = entry.contentType;
-  }
-  if (typeof entry.bytes === "number" && Number.isFinite(entry.bytes)) {
-    stableEntry.bytes = entry.bytes;
-  }
-  if (entry.warning) {
-    stableEntry.warning = entry.warning;
-  }
-
-  return stableEntry;
+    etag: entry.etag,
+    lastModified: entry.lastModified,
+    contentType: entry.contentType,
+    bytes: entry.bytes,
+  });
 };
 
-const buildRuntimeManifest = (input: {
-  generatedAt: string;
-  byUrl: Record<string, GeneratedContentImageEntry>;
-}): GeneratedContentImagesManifest => ({
-  generatedAt: input.generatedAt,
-  byUrl: input.byUrl,
-});
+const toRuntimeEntry = (
+  entry: GeneratedContentImageEntry | undefined,
+): GeneratedContentImageEntry | undefined => {
+  if (!entry?.checkStatus || !entry.checkedAt) {
+    return undefined;
+  }
 
-const logWarning = (message: string) => {
-  console.warn(`WARNING [images:sync] ${message}`);
-};
-
-const createRunSummary = () => ({
-  fetched: 0,
-  notModified: 0,
-  cacheFresh: 0,
-  cacheOnError: 0,
-  fallbackOnError: 0,
-});
-
-const recordRunStatus = (
-  summary: ReturnType<typeof createRunSummary>,
-  status: ContentImageSyncStatus,
-) => {
-  if (status === "fetched") {
-    summary.fetched += 1;
-    return;
-  }
-  if (status === "not_modified") {
-    summary.notModified += 1;
-    return;
-  }
-  if (status === "cache_fresh") {
-    summary.cacheFresh += 1;
-    return;
-  }
-  if (status === "cache_on_error") {
-    summary.cacheOnError += 1;
-    return;
-  }
-  summary.fallbackOnError += 1;
+  return normalizeEntry({
+    sourceUrl: entry.sourceUrl,
+    checkStatus: entry.checkStatus,
+    checkedAt: entry.checkedAt,
+    cacheControl: entry.cacheControl,
+    expiresAt: entry.expiresAt,
+    warning: entry.warning,
+  });
 };
 
 export const collectCandidates = (
@@ -768,6 +602,77 @@ const garbageCollectOutput = (outputDir: string, keepPaths: Set<string>) => {
   }
 };
 
+const logWarning = (message: string) => {
+  console.warn(`WARNING [images:sync] ${message}`);
+};
+
+const createRunSummary = () => ({
+  fetched: 0,
+  notModified: 0,
+  cacheFresh: 0,
+  cacheOnError: 0,
+  fallbackOnError: 0,
+});
+
+const recordRunStatus = (
+  summary: ReturnType<typeof createRunSummary>,
+  status: ContentImageSyncStatus,
+) => {
+  if (status === "fetched") {
+    summary.fetched += 1;
+    return;
+  }
+  if (status === "get_not_modified" || status === "head_unchanged") {
+    summary.notModified += 1;
+    return;
+  }
+  if (status === "cache_fresh") {
+    summary.cacheFresh += 1;
+    return;
+  }
+  if (status === "cache_on_error") {
+    summary.cacheOnError += 1;
+    return;
+  }
+  summary.fallbackOnError += 1;
+};
+
+const buildRuntimeEntry = (input: {
+  sourceUrl: string;
+  checkStatus: ContentImageSyncStatus;
+  checkedAt: string;
+  cacheControl?: string;
+  expiresAt?: string;
+  warning?: string;
+}): GeneratedContentImageEntry =>
+  normalizeEntry({
+    sourceUrl: input.sourceUrl,
+    checkStatus: input.checkStatus,
+    checkedAt: input.checkedAt,
+    cacheControl: input.cacheControl,
+    expiresAt: input.expiresAt,
+    warning: input.warning,
+  });
+
+const buildStableEntry = (input: {
+  sourceUrl: string;
+  resolvedPath: string;
+  updatedAt: string;
+  etag?: string;
+  lastModified?: string;
+  contentType?: string;
+  bytes?: number;
+}): GeneratedContentImageEntry =>
+  normalizeEntry({
+    sourceUrl: input.sourceUrl,
+    resolvedPath: input.resolvedPath,
+    updatedAt: input.updatedAt,
+    etag: input.etag,
+    lastModified: input.lastModified,
+    contentType: input.contentType,
+    bytes: input.bytes,
+  });
+
 const run = async () => {
   const args = parseArgs();
   const linksPayload = readJson<LinksPayload>(args.linksPath);
@@ -775,6 +680,8 @@ const run = async () => {
   const generatedRichMetadata = maybeReadJson<RichMetadataPayload>(args.richMetadataPath);
   const previousManifest = readPreviousManifest(args.manifestPath);
   const previousRuntimeManifest = readPreviousManifest(args.runtimeManifestPath);
+  const remoteCachePolicyRegistry = loadRemoteCachePolicyRegistry();
+  const remoteCacheStats = new RemoteCacheStatsCollector("sync-content-images");
 
   const candidates = collectCandidates(linksPayload, generatedRichMetadata, sitePayload);
   const nextByUrl: Record<string, GeneratedContentImageEntry> = {};
@@ -793,177 +700,66 @@ const run = async () => {
     const previousStableEntry = previousManifest?.byUrl[candidateKey];
     const previousRuntimeEntry = previousRuntimeManifest?.byUrl[candidateKey];
     const previousEntry = mergePreviousEntries(previousStableEntry, previousRuntimeEntry);
-    const cachedPath = previousEntry?.resolvedPath;
     const cachedAssetExists =
-      typeof cachedPath === "string" &&
-      cachedPath.length > 0 &&
-      fs.existsSync(resolveManifestAssetAbsolutePath(cachedPath));
-
-    const persistEntries = (
-      runtimeEntry: GeneratedContentImageEntry,
-      maybeStableSource: GeneratedContentImageEntry | undefined = runtimeEntry,
-    ) => {
-      const stableEntry = toStableEntry(maybeStableSource);
-      if (stableEntry) {
-        nextByUrl[candidateKey] = stabilizeContentImageEntry(previousStableEntry, stableEntry);
-      }
-      nextRuntimeByUrl[candidateKey] = runtimeEntry;
-    };
+      !!previousStableEntry?.resolvedPath &&
+      fs.existsSync(resolveManifestAssetAbsolutePath(previousStableEntry.resolvedPath));
 
     if (!httpUrl) {
       const warning = `Unsupported non-http image URL '${candidate}'. Runtime will use local fallback behavior.`;
       logWarning(warning);
-      nextRuntimeByUrl[candidateKey] = buildEntry(
-        {
-          sourceUrl: candidate,
-          status: "fallback_on_error",
-        },
-        {
-          warning,
-        },
-      );
+      nextRuntimeByUrl[candidateKey] = buildRuntimeEntry({
+        sourceUrl: candidate,
+        checkStatus: "fallback_on_error",
+        checkedAt: new Date().toISOString(),
+        warning,
+      });
       recordRunStatus(summary, "fallback_on_error");
       continue;
     }
 
-    if (!args.force && previousEntry && cachedAssetExists && isFresh(previousEntry.expiresAt)) {
-      const runtimeEntry = buildEntry(
-        {
-          sourceUrl: httpUrl,
-          resolvedPath: previousEntry.resolvedPath,
-          status: "cache_fresh",
-        },
-        {
+    const previousState: RemoteCachePreviousState | undefined = previousEntry
+      ? {
           etag: previousEntry.etag,
           lastModified: previousEntry.lastModified,
           cacheControl: previousEntry.cacheControl,
           expiresAt: previousEntry.expiresAt,
-          contentType: previousEntry.contentType,
           bytes: previousEntry.bytes,
-        },
-      );
-      persistEntries(runtimeEntry, previousStableEntry ?? previousEntry);
-      recordRunStatus(summary, "cache_fresh");
-      console.log(`OpenLinks content image sync: cache is fresh for '${httpUrl}'.`);
-      continue;
-    }
-
-    const headers: Record<string, string> = {
-      "user-agent": "open-links-content-image-sync/0.1",
-      accept: "image/*,*/*;q=0.8",
-    };
-
-    if (!args.force && previousEntry) {
-      if (previousEntry.etag) {
-        headers["if-none-match"] = previousEntry.etag;
-      }
-      if (previousEntry.lastModified) {
-        headers["if-modified-since"] = previousEntry.lastModified;
-      }
-    }
-
-    const fallbackFromError = (reason: string) => {
-      if (previousEntry && cachedAssetExists && previousEntry.resolvedPath) {
-        const warning = `Image fetch failed (${reason}) for '${httpUrl}'. Reusing cached '${normalizePublicPath(
-          previousEntry.resolvedPath,
-        )}'.`;
-        logWarning(warning);
-        const runtimeEntry = buildEntry(
-          {
-            sourceUrl: httpUrl,
-            resolvedPath: previousEntry.resolvedPath,
-            status: "cache_on_error",
-          },
-          {
-            etag: previousEntry.etag,
-            lastModified: previousEntry.lastModified,
-            cacheControl: previousEntry.cacheControl,
-            expiresAt: previousEntry.expiresAt,
-            contentType: previousEntry.contentType,
-            bytes: previousEntry.bytes,
-            warning,
-          },
-        );
-        persistEntries(runtimeEntry, previousStableEntry ?? previousEntry);
-        recordRunStatus(summary, "cache_on_error");
-        return;
-      }
-
-      const warning = `Image fetch failed (${reason}) for '${httpUrl}'. Runtime will use local fallback behavior.`;
-      logWarning(warning);
-      nextRuntimeByUrl[candidateKey] = buildEntry(
-        {
-          sourceUrl: httpUrl,
-          status: "fallback_on_error",
-        },
-        {
-          warning,
-        },
-      );
-      recordRunStatus(summary, "fallback_on_error");
-    };
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(httpUrl, {
-        method: "GET",
-        redirect: "follow",
-        headers,
-        signal: controller.signal,
-      });
-
-      if (response.status === 304) {
-        if (!previousEntry || !cachedAssetExists || !previousEntry.resolvedPath) {
-          fallbackFromError("received HTTP 304 but no cached asset exists");
-          continue;
         }
+      : undefined;
 
-        const cacheControl = response.headers.get("cache-control") ?? previousEntry.cacheControl;
-        const expiresAt =
-          computeExpiresAt(cacheControl ?? undefined, response.headers.get("date") ?? undefined) ??
-          previousEntry.expiresAt;
-        const etag = response.headers.get("etag") ?? previousEntry.etag;
-        const lastModified = response.headers.get("last-modified") ?? previousEntry.lastModified;
+    const result = await fetchWithRemoteCachePolicy({
+      url: httpUrl,
+      pipeline: "content_images",
+      policyRegistry: remoteCachePolicyRegistry,
+      timeoutMs: FETCH_TIMEOUT_MS,
+      headers: {
+        accept: "image/*,*/*;q=0.8",
+      },
+      userAgent: "open-links-content-image-sync/0.1",
+      bodyType: "buffer",
+      previous: previousState,
+      cacheValueAvailable: cachedAssetExists,
+      force: args.force,
+      statsCollector: remoteCacheStats,
+    });
 
-        const runtimeEntry = buildEntry(
-          {
-            sourceUrl: httpUrl,
-            resolvedPath: previousEntry.resolvedPath,
-            status: "not_modified",
-          },
-          {
-            etag: etag ?? undefined,
-            lastModified: lastModified ?? undefined,
-            cacheControl: cacheControl ?? undefined,
-            expiresAt,
-            contentType: previousEntry.contentType,
-            bytes: previousEntry.bytes,
-          },
-        );
-        persistEntries(runtimeEntry, previousStableEntry ?? previousEntry);
-        recordRunStatus(summary, "not_modified");
-        console.log(`OpenLinks content image sync: not modified '${httpUrl}'.`);
-        continue;
+    const writeStableAndRuntime = (input: {
+      stable?: GeneratedContentImageEntry;
+      runtime: GeneratedContentImageEntry;
+    }) => {
+      if (input.stable) {
+        nextByUrl[candidateKey] = stabilizeContentImageEntry(previousStableEntry, input.stable);
       }
+      nextRuntimeByUrl[candidateKey] = input.runtime;
+    };
 
-      if (!response.ok) {
-        fallbackFromError(`received HTTP ${response.status}`);
-        continue;
-      }
-
-      const buffer = Buffer.from(await response.arrayBuffer());
-      if (buffer.byteLength === 0) {
-        fallbackFromError("response body was empty");
-        continue;
-      }
-
+    if (result.kind === "fetched") {
+      const buffer = result.body as Buffer;
       const hash = toContentHash(buffer);
       const extension = resolveExtension(
-        response.headers.get("content-type"),
+        result.headers.contentType,
         httpUrl,
-        previousEntry?.resolvedPath,
+        previousStableEntry?.resolvedPath,
       );
       const fileName = `${hash}.${extension}`;
       const absoluteOutputFile = path.join(absolutePath(args.outputDir), fileName);
@@ -971,100 +767,148 @@ const run = async () => {
 
       fs.writeFileSync(absoluteOutputFile, buffer);
 
-      const contentType = response.headers.get("content-type") ?? undefined;
-      const cacheControl = response.headers.get("cache-control") ?? undefined;
-      const expiresAt = computeExpiresAt(cacheControl, response.headers.get("date") ?? undefined);
-      const etag = response.headers.get("etag") ?? undefined;
-      const lastModified = response.headers.get("last-modified") ?? undefined;
-      const warnings: string[] = [];
-
-      if (contentType && !contentType.toLowerCase().startsWith("image/")) {
-        warnings.push(`Fetched '${httpUrl}' with non-image content-type '${contentType}'.`);
-      }
-
-      if (buffer.byteLength > args.maxBytesWarn) {
-        warnings.push(
-          `Fetched '${httpUrl}' exceeds warn threshold (${buffer.byteLength} bytes > ${args.maxBytesWarn}).`,
-        );
-      }
-
-      for (const warning of warnings) {
+      const warning =
+        result.bytesFetched > args.maxBytesWarn
+          ? `Image '${httpUrl}' is ${result.bytesFetched} bytes, exceeding max-bytes-warn=${args.maxBytesWarn}.`
+          : undefined;
+      if (warning) {
         logWarning(warning);
       }
 
-      const runtimeEntry = buildEntry(
-        {
+      writeStableAndRuntime({
+        stable: buildStableEntry({
           sourceUrl: httpUrl,
           resolvedPath,
-          status: "fetched",
-        },
-        {
-          etag,
-          lastModified,
-          cacheControl,
-          expiresAt,
-          contentType,
-          bytes: buffer.byteLength,
-          warning: warnings.length > 0 ? warnings.join(" ") : undefined,
-        },
-      );
-      persistEntries(runtimeEntry);
+          updatedAt: result.checkedAt,
+          etag: result.headers.etag,
+          lastModified: result.headers.lastModified,
+          contentType: result.headers.contentType,
+          bytes: result.bytesFetched,
+        }),
+        runtime: buildRuntimeEntry({
+          sourceUrl: httpUrl,
+          checkStatus: "fetched",
+          checkedAt: result.checkedAt,
+          cacheControl: result.headers.cacheControl,
+          expiresAt: computeRemoteCacheExpiresAt(
+            result.headers.cacheControl,
+            result.headers.responseDate,
+          ),
+          warning,
+        }),
+      });
       recordRunStatus(summary, "fetched");
-
       console.log(
         `OpenLinks content image sync: fetched '${httpUrl}' -> '${normalizePublicPath(resolvedPath)}'.`,
       );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      fallbackFromError(message);
-    } finally {
-      clearTimeout(timeout);
+      continue;
     }
+
+    if (
+      (result.kind === "not_modified" || result.kind === "cache_fresh") &&
+      previousStableEntry?.resolvedPath &&
+      cachedAssetExists
+    ) {
+      writeStableAndRuntime({
+        stable: buildStableEntry({
+          sourceUrl: httpUrl,
+          resolvedPath: previousStableEntry.resolvedPath,
+          updatedAt: result.checkedAt,
+          etag: result.headers.etag ?? previousEntry?.etag,
+          lastModified: result.headers.lastModified ?? previousEntry?.lastModified,
+          contentType: previousStableEntry.contentType,
+          bytes: previousStableEntry.bytes,
+        }),
+        runtime: buildRuntimeEntry({
+          sourceUrl: httpUrl,
+          checkStatus: result.checkStatus,
+          checkedAt: result.checkedAt,
+          cacheControl: result.headers.cacheControl ?? previousRuntimeEntry?.cacheControl,
+          expiresAt:
+            computeRemoteCacheExpiresAt(result.headers.cacheControl, result.headers.responseDate) ??
+            previousRuntimeEntry?.expiresAt,
+        }),
+      });
+      recordRunStatus(summary, result.checkStatus);
+      if (result.kind === "cache_fresh") {
+        console.log(`OpenLinks content image sync: cache is fresh for '${httpUrl}'.`);
+      } else {
+        console.log(`OpenLinks content image sync: not modified '${httpUrl}'.`);
+      }
+      continue;
+    }
+
+    if (previousStableEntry?.resolvedPath && cachedAssetExists) {
+      const warning = `Image fetch failed (${
+        result.kind === "error" ? result.error : result.kind
+      }) for '${httpUrl}'. Reusing cached '${normalizePublicPath(previousStableEntry.resolvedPath)}'.`;
+      logWarning(warning);
+      writeStableAndRuntime({
+        stable: previousStableEntry,
+        runtime: buildRuntimeEntry({
+          sourceUrl: httpUrl,
+          checkStatus: "cache_on_error",
+          checkedAt: new Date().toISOString(),
+          cacheControl: previousRuntimeEntry?.cacheControl,
+          expiresAt: previousRuntimeEntry?.expiresAt,
+          warning,
+        }),
+      });
+      recordRunStatus(summary, "cache_on_error");
+      continue;
+    }
+
+    const warning = `Image fetch failed (${
+      result.kind === "error" ? result.error : result.kind
+    }) for '${httpUrl}'. Runtime will use local fallback behavior.`;
+    logWarning(warning);
+    nextRuntimeByUrl[candidateKey] = buildRuntimeEntry({
+      sourceUrl: httpUrl,
+      checkStatus: "fallback_on_error",
+      checkedAt: new Date().toISOString(),
+      warning,
+    });
+    recordRunStatus(summary, "fallback_on_error");
   }
 
-  const generatedAt = new Date().toISOString();
   const manifest = buildStableContentImagesManifest({
     previousManifest,
     byUrl: nextByUrl,
-    generatedAt,
+    generatedAt: new Date().toISOString(),
   });
-  const runtimeManifest = buildRuntimeManifest({
-    generatedAt,
+  const runtimeManifest: GeneratedContentImagesManifest = {
+    generatedAt: new Date().toISOString(),
     byUrl: nextRuntimeByUrl,
-  });
+  };
 
   const keepPaths = listReferencedResolvedPaths(manifest);
   garbageCollectOutput(args.outputDir, keepPaths);
 
-  if (!previousManifest || JSON.stringify(previousManifest) !== JSON.stringify(manifest)) {
+  if (!previousManifest || !areEntryMapsEqual(previousManifest.byUrl, manifest.byUrl)) {
     writeManifest(args.manifestPath, manifest);
   }
+
   if (
     !previousRuntimeManifest ||
-    JSON.stringify(previousRuntimeManifest) !== JSON.stringify(runtimeManifest)
+    previousRuntimeManifest.generatedAt !== runtimeManifest.generatedAt ||
+    !areEntryMapsEqual(previousRuntimeManifest.byUrl, runtimeManifest.byUrl)
   ) {
     writeManifest(args.runtimeManifestPath, runtimeManifest);
   }
 
-  const summaryOutput = {
-    totalCandidates: candidates.length,
-    trackedUrls: Object.keys(manifest.byUrl).length,
-    fetched: summary.fetched,
-    notModified: summary.notModified,
-    cacheFresh: summary.cacheFresh,
-    cacheOnError: summary.cacheOnError,
-    fallbackOnError: summary.fallbackOnError,
-  };
+  const remoteCacheStatsPath = createRemoteCacheStatsOutputPath("sync-content-images");
+  writeRemoteCacheRunSummary(remoteCacheStatsPath, remoteCacheStats);
 
   console.log("OpenLinks content image sync summary");
-  console.log(`Candidates: ${summaryOutput.totalCandidates}`);
-  console.log(`Tracked URL entries: ${summaryOutput.trackedUrls}`);
+  console.log(`Candidates: ${candidates.length}`);
+  console.log(`Tracked URL entries: ${Object.keys(manifest.byUrl).length}`);
   console.log(
-    `Statuses: fetched=${summaryOutput.fetched}, not_modified=${summaryOutput.notModified}, cache_fresh=${summaryOutput.cacheFresh}, cache_on_error=${summaryOutput.cacheOnError}, fallback_on_error=${summaryOutput.fallbackOnError}`,
+    `Statuses: fetched=${summary.fetched}, not_modified=${summary.notModified}, cache_fresh=${summary.cacheFresh}, cache_on_error=${summary.cacheOnError}, fallback_on_error=${summary.fallbackOnError}`,
   );
   console.log(`Manifest: ${args.manifestPath}`);
   console.log(`Runtime manifest: ${args.runtimeManifestPath}`);
-  console.log(`Output directory: ${args.outputDir}`);
+  console.log(`Output dir: ${args.outputDir}`);
+  console.log(`Remote cache stats: ${remoteCacheStatsPath}`);
   if (args.force) {
     console.log("OpenLinks content image sync: force refresh was enabled.");
   }
