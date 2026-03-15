@@ -149,6 +149,7 @@ vite.config.ts.timestamp-*
 data/generated/*.json
 data/generated/*.md
 !data/generated/.gitkeep
+data/cache/content-images.runtime.json
 data/cache/rich-public-cache.runtime.json
 public/generated/*
 !public/generated/.gitkeep

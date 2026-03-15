@@ -44,8 +44,8 @@ const distinctPreviewProfileLink = {
     description: "Software Engineer",
     sourceLabel: "peter.ryszkiewicz.us",
     handle: "peterryszkiewicz",
-    image: "/generated/images/substack-preview.jpg",
-    profileImage: "/generated/images/substack-avatar.jpg",
+    image: "/cache/content-images/substack-preview.jpg",
+    profileImage: "/cache/content-images/substack-avatar.jpg",
   },
 } as const satisfies OpenLink;
 
@@ -285,15 +285,27 @@ test("dataset audit defaults current rich links to fetched descriptions across c
   // Assert
   assert.deepEqual(
     richLinks.map((link) => link.id),
-    ["primal", "github", "x", "linkedin", "facebook", "instagram", "youtube", "medium", "substack"],
+    [
+      "primal",
+      "github",
+      "x",
+      "linkedin",
+      "bright-builds-facebook",
+      "facebook",
+      "instagram",
+      "youtube",
+      "medium",
+      "substack",
+    ],
   );
 
   for (const link of richLinks) {
-    assert.ok(link.metadata?.description, `expected fetched description for ${link.id}`);
+    assert.ok(link.metadata, `expected metadata for ${link.id}`);
     const sharedDescription = resolveLinkCardDescription(datasetSite, link);
     const richDescription = buildRichCardViewModel(datasetSite, link).description;
     const expectedDescription = link.metadata.profileDescription ?? link.metadata.description;
 
+    assert.ok(expectedDescription, `expected rich description for ${link.id}`);
     assert.equal(sharedDescription, expectedDescription);
     assert.equal(richDescription, expectedDescription);
   }
@@ -305,9 +317,9 @@ test("description image rows default to auto for rich profile cards with distinc
 
   // Assert
   assert.equal(richViewModel.leadKind, "avatar");
-  assert.equal(richViewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(richViewModel.leadImageUrl, "/cache/content-images/substack-avatar.jpg");
   assert.equal(richViewModel.showDescriptionImageRow, true);
-  assert.equal(richViewModel.descriptionImageUrl, "/generated/images/substack-preview.jpg");
+  assert.equal(richViewModel.descriptionImageUrl, "/cache/content-images/substack-preview.jpg");
 });
 
 test("site policy can disable description image rows globally", () => {
@@ -363,8 +375,8 @@ test("host-level description image row overrides win without changing the global
       description: "An agentic engineer and builder.",
       sourceLabel: "github.com",
       handle: "prizz",
-      image: "/generated/images/github-preview.jpg",
-      profileImage: "/generated/images/github-avatar.jpg",
+      image: "/cache/content-images/github-preview.jpg",
+      profileImage: "/cache/content-images/github-avatar.jpg",
     },
   } as const satisfies OpenLink;
 
@@ -378,5 +390,5 @@ test("host-level description image row overrides win without changing the global
   // Assert
   assert.equal(hostOverrideViewModel.showDescriptionImageRow, false);
   assert.equal(unaffectedViewModel.showDescriptionImageRow, true);
-  assert.equal(unaffectedViewModel.descriptionImageUrl, "/generated/images/github-preview.jpg");
+  assert.equal(unaffectedViewModel.descriptionImageUrl, "/cache/content-images/github-preview.jpg");
 });

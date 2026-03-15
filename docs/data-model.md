@@ -326,11 +326,13 @@ Payment rails can include explicit app links via `payment.rails[].appLinks` for 
 
 - Remote rich-image URLs are source data, but runtime does not render raw remote URLs.
 - During `bun run dev` and `bun run build`, `images:sync` fetches remote rich-link and SEO image candidates and writes:
-  - baked files in `public/generated/images/<content-hash>.<ext>`
-  - manifest `data/generated/content-images.json`
+  - committed baked files in `public/cache/content-images/<content-hash>.<ext>`
+  - committed stable manifest `data/cache/content-images.json`
+  - gitignored runtime overlay `data/cache/content-images.runtime.json`
 - Runtime rich-card `metadata.image` values resolve to baked local paths when available.
 - Runtime also localizes `metadata.ogImage`, `metadata.twitterImage`, and `metadata.profileImage` when baked local assets are available.
 - If a link would render as a rich card without a materialized preview image, `bun run validate:data` (and therefore `bun run build`/`bun run dev`) now fails with remediation guidance.
+- Header-only revalidation data is kept in the runtime overlay so routine `images:sync` runs do not rewrite tracked cache files unless the cached asset payload actually changes.
 - Force refresh is available via `bun run images:sync -- --force` or `OPENLINKS_IMAGES_FORCE=1`.
 
 #### Manual metadata (`links[].metadata`)
@@ -471,6 +473,12 @@ Canonical authenticated extractor + cache registries:
 - `schema/rich-authenticated-cache.schema.json`
 - `public/cache/rich-authenticated/` (committed local assets)
 - `output/playwright/auth-rich-sync/` (diagnostics, gitignored)
+
+Canonical committed image cache registry:
+
+- `data/cache/content-images.json`
+- `public/cache/content-images/` (committed local assets)
+- `data/cache/content-images.runtime.json` (gitignored runtime revalidation state)
 
 When an enrichment-enabled rich link URL matches a `status=blocked` registry entry, enrichment fails early with reason `known_blocker` unless `links[].enrichment.allowKnownBlocker=true` is set for that link.
 

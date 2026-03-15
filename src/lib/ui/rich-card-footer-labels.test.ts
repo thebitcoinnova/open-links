@@ -36,8 +36,8 @@ const instagramLink = {
     description: "Photos and stories",
     sourceLabel: "instagram.com",
     handle: "peterryszkiewicz",
-    image: "/generated/images/avatar.jpg",
-    profileImage: "/generated/images/avatar.jpg",
+    image: "/cache/content-images/avatar.jpg",
+    profileImage: "/cache/content-images/avatar.jpg",
   },
 } as const satisfies OpenLink;
 
@@ -53,8 +53,8 @@ const substackRichLink = {
     description: "Software Engineer",
     sourceLabel: "peter.ryszkiewicz.us",
     handle: "peterryszkiewicz",
-    image: "/generated/images/substack-avatar.jpg",
-    profileImage: "/generated/images/substack-avatar.jpg",
+    image: "/cache/content-images/substack-avatar.jpg",
+    profileImage: "/cache/content-images/substack-avatar.jpg",
   },
 } as const satisfies OpenLink;
 

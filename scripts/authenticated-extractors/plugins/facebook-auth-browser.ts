@@ -21,7 +21,7 @@ import type {
 } from "../types";
 
 const EXTRACTOR_ID = "facebook-auth-browser";
-const EXTRACTOR_VERSION = "2026-02-28.3";
+const EXTRACTOR_VERSION = "2026-03-15.1";
 const SELECTOR_PROFILE = "facebook-profile-auth-v5";
 const DEFAULT_FACEBOOK_AGENT_BROWSER_SESSION = "openlinks-facebook-auth";
 const FACEBOOK_INSPECT_AUTH_FLOW_SNIPPET = loadEmbeddedCode(
@@ -628,7 +628,7 @@ const executeFacebookAction = async (
   };
 };
 
-const resolveProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
+export const resolveFacebookProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
   let parsed: URL;
   try {
     parsed = new URL(sourceUrl);
@@ -649,6 +649,25 @@ const resolveProfileTarget = (sourceUrl: string): ResolvedProfileTarget => {
     .filter((segment) => segment.length > 0);
 
   let identifier = "";
+  if (segments[0] === "people") {
+    identifier = safeTrim(segments[1]) ?? "";
+    const profileId = safeTrim(segments[2]) ?? "";
+    if (!identifier) {
+      throw new Error(`Unable to resolve Facebook people-page identifier from '${sourceUrl}'.`);
+    }
+    if (!/^[A-Za-z0-9._-]{1,100}$/.test(identifier)) {
+      throw new Error(`Resolved Facebook profile identifier '${identifier}' is not valid.`);
+    }
+    if (!/^\d{5,30}$/.test(profileId)) {
+      throw new Error(`Resolved Facebook people-page id '${profileId}' is not valid.`);
+    }
+
+    return {
+      identifier,
+      canonicalUrl: `https://www.facebook.com/people/${identifier}/${profileId}/`,
+    };
+  }
+
   if (segments[0] === "profile.php") {
     identifier = safeTrim(parsed.searchParams.get("id")) ?? "";
   } else {
@@ -769,7 +788,7 @@ const verifySession = async (
 const ensureSession = async (
   context: AuthenticatedExtractorSessionContext,
 ): Promise<AuthenticatedExtractorEnsureSessionResult> => {
-  const target = resolveProfileTarget(context.targetUrl);
+  const target = resolveFacebookProfileTarget(context.targetUrl);
   const config = resolveAgentConfig();
 
   const initialCheck = await verifySession(config, target.canonicalUrl);
@@ -820,7 +839,7 @@ const extract = async (
   context: AuthenticatedExtractorExtractContext,
 ): Promise<AuthenticatedExtractorExtractResult> => {
   const config = resolveAgentConfig();
-  const target = resolveProfileTarget(context.sourceUrl);
+  const target = resolveFacebookProfileTarget(context.sourceUrl);
 
   const preCheck = await verifySession(config, target.canonicalUrl);
   if (!preCheck.verified) {

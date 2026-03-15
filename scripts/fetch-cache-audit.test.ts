@@ -39,7 +39,7 @@ const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
   {
     file: "scripts/sync-content-images.ts",
     classification: "cache-backed",
-    note: "Rich-card image fetches persist through data/generated/content-images.json and public/generated/images/*.",
+    note: "Rich-card image fetches persist through data/cache/content-images.json, a gitignored runtime overlay, and public/cache/content-images/*.",
   },
   {
     file: "scripts/authenticated-extractors/plugins/linkedin-auth-browser.ts",
@@ -124,8 +124,11 @@ const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
   {
     file: "scripts/sync-content-images.ts",
     requiredSnippets: [
-      'const DEFAULT_MANIFEST_PATH = "data/generated/content-images.json";',
+      'const DEFAULT_MANIFEST_PATH = "data/cache/content-images.json";',
+      'const DEFAULT_RUNTIME_MANIFEST_PATH = "data/cache/content-images.runtime.json";',
+      'const DEFAULT_OUTPUT_DIR = "public/cache/content-images";',
       "writeManifest(args.manifestPath, manifest);",
+      "writeManifest(args.runtimeManifestPath, runtimeManifest);",
     ],
   },
   {

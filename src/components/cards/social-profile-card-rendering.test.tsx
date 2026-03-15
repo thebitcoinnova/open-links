@@ -43,8 +43,8 @@ const instagramProfileLink = {
       "86 Followers, 169 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
     sourceLabel: "instagram.com",
     handle: "peterryszkiewicz",
-    profileImage: "/generated/images/avatar.jpg",
-    image: "/generated/images/avatar.jpg",
+    profileImage: "/cache/content-images/avatar.jpg",
+    image: "/cache/content-images/avatar.jpg",
     followersCount: 86,
     followersCountRaw: "86 Followers",
     followingCount: 169,
@@ -65,7 +65,7 @@ const githubRichLink = {
       "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
     sourceLabel: "github.com",
     handle: "prizz",
-    image: "/generated/images/github-avatar.jpg",
+    image: "/cache/content-images/github-avatar.jpg",
     followersCount: 90,
     followersCountRaw: "90 followers",
     followingCount: 87,
@@ -87,8 +87,8 @@ const xRichLink = {
       "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
     sourceLabel: "x.com",
     handle: "pryszkie",
-    image: "/generated/images/x-avatar.jpg",
-    profileImage: "/generated/images/x-avatar.jpg",
+    image: "/cache/content-images/x-avatar.jpg",
+    profileImage: "/cache/content-images/x-avatar.jpg",
     followersCount: 1350,
     followersCountRaw: "1,350 Followers",
     followingCount: 648,
@@ -108,8 +108,8 @@ const primalRichLink = {
     description: "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
     sourceLabel: "primal.net",
     handle: "peterryszkiewicz",
-    image: "/generated/images/primal-avatar.jpg",
-    profileImage: "/generated/images/primal-avatar.jpg",
+    image: "/cache/content-images/primal-avatar.jpg",
+    profileImage: "/cache/content-images/primal-avatar.jpg",
     followersCount: 15,
     followersCountRaw: "15 followers",
     followingCount: 90,
@@ -147,8 +147,8 @@ const mediumRichLink = {
     description: "Stories by Peter Ryszkiewicz on Medium",
     sourceLabel: "medium.com",
     handle: "peterryszkiewicz",
-    image: "/generated/images/medium-avatar.jpg",
-    profileImage: "/generated/images/medium-avatar.jpg",
+    image: "/cache/content-images/medium-avatar.jpg",
+    profileImage: "/cache/content-images/medium-avatar.jpg",
     followersCount: 3300,
     followersCountRaw: "3.3K followers",
   },
@@ -166,8 +166,8 @@ const substackRichLink = {
     description: "Software Engineer",
     sourceLabel: "peter.ryszkiewicz.us",
     handle: "peterryszkiewicz",
-    image: "/generated/images/substack-preview.jpg",
-    profileImage: "/generated/images/substack-avatar.jpg",
+    image: "/cache/content-images/substack-preview.jpg",
+    profileImage: "/cache/content-images/substack-avatar.jpg",
   },
 } as const satisfies OpenLink;
 
@@ -181,7 +181,7 @@ const articleRichLink = {
   metadata: {
     title: "Engineering Notes",
     description: "Shipping notes and technical writeups",
-    image: "/generated/images/article-preview.jpg",
+    image: "/cache/content-images/article-preview.jpg",
     sourceLabel: "notes.openlinks.dev",
   },
 } as const satisfies OpenLink;
@@ -232,7 +232,7 @@ test("rich profile cards resolve avatar leads, header metrics, and footer source
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/avatar.jpg");
   assert.equal(viewModel.title, "Peter Justice For The Victims Ryszkiewicz");
   assert.equal(
     viewModel.description,
@@ -261,7 +261,7 @@ test("shared presentation data stays ready for simple-card profile rendering", (
   // Assert
   assert.equal(socialProfile.usesProfileLayout, true);
   assert.equal(socialProfile.displayName, "Peter Justice For The Victims Ryszkiewicz");
-  assert.equal(socialProfile.profileImageUrl, "/generated/images/avatar.jpg");
+  assert.equal(socialProfile.profileImageUrl, "/cache/content-images/avatar.jpg");
   assert.deepEqual(
     socialProfile.metrics.map((metric) => metric.displayText),
     ["86 Followers", "169 Following"],
@@ -280,7 +280,7 @@ test("github rich cards keep avatar identity and audience metrics in the shared 
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/github-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/github-avatar.jpg");
   assert.equal(viewModel.title, "pRizz");
   assert.equal(
     viewModel.description,
@@ -304,7 +304,7 @@ test("x rich cards surface best-effort public audience metrics without changing 
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/x-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/x-avatar.jpg");
   assert.equal(viewModel.title, "@pryszkie on X");
   assert.equal(
     viewModel.description,
@@ -328,7 +328,7 @@ test("primal rich cards surface public audience metrics in the shared profile he
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/primal-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/primal-avatar.jpg");
   assert.equal(viewModel.title, "Peter No Taxation Without Representation Ryszkiewicz");
   assert.equal(
     viewModel.description,
@@ -370,7 +370,7 @@ test("medium rich cards treat the feed avatar as the profile lead and clean the 
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/medium-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/medium-avatar.jpg");
   assert.equal(viewModel.title, "Peter Ryszkiewicz");
   assert.equal(viewModel.description, "Stories by Peter Ryszkiewicz on Medium");
   assert.deepEqual(viewModel.headerMetaItems, [
@@ -391,9 +391,9 @@ test("substack custom-domain rich cards use the explicit handle and avatar-first
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/substack-avatar.jpg");
   assert.equal(viewModel.showDescriptionImageRow, true);
-  assert.equal(viewModel.descriptionImageUrl, "/generated/images/substack-preview.jpg");
+  assert.equal(viewModel.descriptionImageUrl, "/cache/content-images/substack-preview.jpg");
   assert.equal(viewModel.title, "Peter Ryszkiewicz");
   assert.equal(viewModel.description, "Software Engineer");
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "handle", text: "@peterryszkiewicz" }]);
@@ -420,7 +420,7 @@ test("description-image-row policy can suppress the extra media row without reve
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/substack-avatar.jpg");
   assert.equal(viewModel.showDescriptionImageRow, false);
   assert.equal(viewModel.descriptionImageUrl, undefined);
 });
@@ -443,7 +443,7 @@ test("image treatment off keeps avatar leads for rich profile cards while suppre
   // Assert
   assert.equal(viewModel.imageTreatment, "off");
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/substack-avatar.jpg");
   assert.equal(viewModel.showDescriptionImageRow, false);
   assert.equal(viewModel.descriptionImageUrl, undefined);
 });
@@ -469,8 +469,8 @@ test("site-specific description-image-row overrides only affect the targeted ric
     id: "github-preview",
     metadata: {
       ...githubRichLink.metadata,
-      image: "/generated/images/github-preview.jpg",
-      profileImage: "/generated/images/github-avatar.jpg",
+      image: "/cache/content-images/github-preview.jpg",
+      profileImage: "/cache/content-images/github-avatar.jpg",
     },
   } as const satisfies OpenLink;
 
@@ -482,7 +482,7 @@ test("site-specific description-image-row overrides only affect the targeted ric
   assert.equal(substackViewModel.showDescriptionImageRow, false);
   assert.equal(githubViewModel.leadKind, "avatar");
   assert.equal(githubViewModel.showDescriptionImageRow, true);
-  assert.equal(githubViewModel.descriptionImageUrl, "/generated/images/github-preview.jpg");
+  assert.equal(githubViewModel.descriptionImageUrl, "/cache/content-images/github-preview.jpg");
 });
 
 test("non-profile rich cards keep preview leads with compact header and footer source rows", () => {
@@ -491,7 +491,7 @@ test("non-profile rich cards keep preview leads with compact header and footer s
 
   // Assert
   assert.equal(viewModel.leadKind, "preview");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/article-preview.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/article-preview.jpg");
   assert.equal(viewModel.title, "Engineering Notes");
   assert.equal(viewModel.description, "Shipping notes and technical writeups");
   assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "notes.openlinks.dev" }]);
@@ -523,7 +523,7 @@ test("simple profile cards reuse avatar leads and footer source rows in the shar
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/avatar.jpg");
   assert.equal(viewModel.title, "Peter Justice For The Victims Ryszkiewicz");
   assert.deepEqual(
     viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
@@ -540,7 +540,7 @@ test("simple profile cards do not render description-image rows even when previe
 
   // Assert
   assert.equal(viewModel.leadKind, "avatar");
-  assert.equal(viewModel.leadImageUrl, "/generated/images/substack-avatar.jpg");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/substack-avatar.jpg");
   assert.equal(viewModel.showDescriptionImageRow, false);
   assert.equal(viewModel.descriptionImageUrl, undefined);
   assert.equal(viewModel.footerSourceLabel, "Substack · peter.ryszkiewicz.us");

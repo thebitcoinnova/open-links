@@ -135,8 +135,8 @@ const richGithubLink = {
       "An agentic engineer, making things in the AI space, Bitcoin space, and many others.",
     sourceLabel: "github.com",
     handle: "prizz",
-    image: "/generated/images/github-avatar.jpg",
-    profileImage: "/generated/images/github-avatar.jpg",
+    image: "/cache/content-images/github-avatar.jpg",
+    profileImage: "/cache/content-images/github-avatar.jpg",
     followersCount: 90,
     followersCountRaw: "90 followers",
     followingCount: 87,
@@ -156,8 +156,8 @@ const richSubstackLink = {
     description: "Software Engineer",
     sourceLabel: "peter.ryszkiewicz.us",
     handle: "peterryszkiewicz",
-    image: "/generated/images/substack-preview.jpg",
-    profileImage: "/generated/images/substack-avatar.jpg",
+    image: "/cache/content-images/substack-preview.jpg",
+    profileImage: "/cache/content-images/substack-avatar.jpg",
   },
 } as const satisfies OpenLink;
 
@@ -191,7 +191,7 @@ const articleRichLink = {
   metadata: {
     title: "Engineering Notes",
     description: "Shipping notes and technical writeups",
-    image: "/generated/images/article-preview.jpg",
+    image: "/cache/content-images/article-preview.jpg",
     sourceLabel: "notes.openlinks.dev",
   },
 } as const satisfies OpenLink;

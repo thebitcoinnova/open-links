@@ -64,7 +64,7 @@ For full walkthrough and troubleshooting, see [Quickstart](https://raw.githubuse
 
 ### Recommended CRUD Paths
 
-- Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), or [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md).
+- Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), and [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed.
 - Preferred for browser-based CRUD: use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when the self-serve onboarding/editor already covers your workflow.
 - Manual fallback: edit `data/*.json` directly only when you intentionally want the lower-level path or need to work outside the currently supported AI/Studio flows.
 
@@ -250,13 +250,13 @@ High-signal deployment checks:
 - `bun run linkedin:debug:login` - LinkedIn debug login watcher (autonomous auth-state polling; multi-factor authentication optional).
 - `bun run linkedin:debug:validate` - LinkedIn authenticated metadata debug validator.
 - `bun run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
-- `bun run images:sync` - fetch rich-card/SEO remote images into `public/generated/images/` and write `data/generated/content-images.json`.
+- `bun run images:sync` - fetch rich-card/SEO remote images into the committed cache at `public/cache/content-images/`, write the stable manifest `data/cache/content-images.json`, and refresh the gitignored runtime overlay `data/cache/content-images.runtime.json`.
 - `bun run dev` - start local dev server (predev runs strict enrichment in read-only public-cache mode and fails on blocking enrichment policy issues).
 - `bun run validate:data` - schema + policy checks (standard mode).
 - `bun run validate:data:strict` - fails on warnings and errors.
 - `bun run validate:data:json` - machine-readable validation output.
-- `bun run build` - avatar sync + strict enrichment + content-image sync + validation + production build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand.
-- `bun run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand.
+- `bun run build` - avatar sync + strict enrichment + content-image sync + validation + production build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand; `images:sync` refreshes committed content-image cache artifacts when image bytes change.
+- `bun run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand; `images:sync` refreshes committed content-image cache artifacts when image bytes change.
 - `bun run preview` - serve built output.
 - `bun run typecheck` - TypeScript checks.
 
@@ -359,6 +359,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - If `authenticated_cache_missing` is reported, run `bun run setup:rich-auth` (or `bun run auth:rich:sync -- --only-link <link-id>`) and commit cache manifest/assets.
 - To reset stale/bad authenticated cache data, clear entries first with `bun run auth:rich:clear -- --only-link <link-id>` (or `--all`), then recapture with `bun run setup:rich-auth`.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
+- If a manual or enriched rich-link image changed, run `bun run images:sync` and commit `data/cache/content-images.json` plus `public/cache/content-images/*` when they update.
 - Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build`.
 - Force-refresh avatar cache when needed: `bun run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
 - Force-refresh rich/SEO image cache when needed: `bun run images:sync -- --force` (or set `OPENLINKS_IMAGES_FORCE=1`).

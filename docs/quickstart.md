@@ -77,7 +77,7 @@ Hook behavior:
   - `bun run ci:required:hook:build`
   - `bun run ci:required:hook:quality`
   - `bun run ci:required:studio-integration`
-- Does **not** run tracked-output generators like `avatar:sync`, `enrich:rich*`, or `images:sync` during commit-time parity.
+- Does **not** run tracked-output generators like `avatar:sync`, `enrich:rich*`, or `images:sync` during commit-time parity, even though `images:sync` now refreshes committed cache artifacts under `data/cache/content-images.json` and `public/cache/content-images/`.
 - Full repo-wide rich-artifact validation still happens in normal `bun run validate:data`, `bun run build`, and CI.
 - Writes hook-only quality artifacts under `.cache/openlinks-precommit/` (gitignored).
 
@@ -152,7 +152,7 @@ bun run public:rich:sync -- --only-link primal
 bun run dev
 ```
 
-`bun run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into local assets and blocking enrichment issues fail early. The strict enrichment step is read-only for `data/cache/rich-public-cache.json`; it only updates the local runtime overlay unless you explicitly run `bun run enrich:rich:strict:write-cache`.
+`bun run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into committed local cache assets and blocking enrichment issues fail early. The strict enrichment step is read-only for `data/cache/rich-public-cache.json`; it only updates the local runtime overlay unless you explicitly run `bun run enrich:rich:strict:write-cache`. `images:sync` writes stable image-cache outputs to `data/cache/content-images.json` and `public/cache/content-images/`, while volatile revalidation headers live in `data/cache/content-images.runtime.json` (gitignored).
 
 ### Build production output
 
@@ -161,7 +161,7 @@ bun run build
 bun run preview
 ```
 
-`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`.
+`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo.
 
 ## First Deployment to GitHub Pages
 
@@ -304,7 +304,7 @@ bun run auth:rich:clear -- --all
 
 Then commit cache manifest/assets and rerun build.
 6. If a known blocked domain must be tested intentionally, set per-link override: `links[].enrichment.allowKnownBlocker=true`.
-7. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata.
+7. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata. After adding or changing remote image URLs, run `bun run images:sync` and commit `data/cache/content-images.json` plus `public/cache/content-images/*` when they change.
 8. Temporary emergency local bypass:
 
 ```bash
@@ -365,6 +365,8 @@ If rich/SEO image sources changed but cache is still valid, force refresh with:
 ```bash
 bun run images:sync -- --force
 ```
+
+Commit `data/cache/content-images.json` and any changed `public/cache/content-images/*` assets if the refreshed bytes differ.
 
 If authenticated rich metadata should be refreshed even with valid cache, run:
 

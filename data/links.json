@@ -74,6 +74,28 @@
       "custom": {}
     },
     {
+      "id": "bright-builds-facebook",
+      "label": "Bright Builds LLC",
+      "url": "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/",
+      "type": "rich",
+      "icon": "facebook",
+      "description": "Chicago software engineering, open-source work, and business updates.",
+      "group": "work",
+      "order": 6,
+      "enabled": true,
+      "metadata": {
+        "title": "Bright Builds LLC",
+        "profileDescription": "Chicago software engineering, open-source work, and business updates from Bright Builds LLC.",
+        "image": "https://scontent-ord5-3.xx.fbcdn.net/v/t39.30808-1/643894562_122103916773268128_8808752703618343559_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=107&ccb=1-7&_nc_sid=f907e8&_nc_ohc=loMHlyUSihUQ7kNvwEm9TfM&_nc_oc=Adn_L2k7TaOiRKCU65IsZcDColJR147_JDjDtLAu7BeFgTqd_3_ntE5oclTDS6Y0WCw&_nc_zt=24&_nc_ht=scontent-ord5-3.xx&_nc_gid=2UrEZISz6Y915Sw2y_Kbhw&_nc_ss=8&oh=00_AfxuxRMPjlmAwf2iCW3AYCvMShgZ5YsyrHMy81JEjkfiSg&oe=69BC7C54",
+        "sourceLabel": "facebook.com"
+      },
+      "enrichment": {
+        "enabled": false,
+        "authenticatedExtractor": "facebook-auth-browser"
+      },
+      "custom": {}
+    },
+    {
       "id": "facebook",
       "label": "Facebook",
       "url": "https://www.facebook.com/peter.ryszkiewicz",
@@ -81,7 +103,7 @@
       "icon": "facebook",
       "description": "Personal Facebook profile",
       "group": "social",
-      "order": 6,
+      "order": 7,
       "enabled": true,
       "enrichment": {
         "enabled": true,
@@ -97,7 +119,7 @@
       "icon": "instagram",
       "description": "Photos and stories",
       "group": "social",
-      "order": 7,
+      "order": 8,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -112,7 +134,7 @@
       "icon": "youtube",
       "description": "Videos and channel updates",
       "group": "social",
-      "order": 8,
+      "order": 9,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -127,7 +149,7 @@
       "icon": "medium",
       "description": "Articles and blog posts",
       "group": "content",
-      "order": 9,
+      "order": 10,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -142,7 +164,7 @@
       "icon": "substack",
       "description": "Newsletter and long-form writing",
       "group": "favorites",
-      "order": 10,
+      "order": 11,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -182,6 +204,7 @@
     "x",
     "linkedin",
     "openlinks-home",
+    "bright-builds-facebook",
     "facebook",
     "instagram",
     "youtube",

@@ -336,8 +336,8 @@ const generatedProfileAvatarModules = import.meta.glob<{ default: GeneratedProfi
   { eager: true },
 );
 
-const generatedContentImageModules = import.meta.glob<{ default: GeneratedContentImagesPayload }>(
-  "../../../data/generated/content-images.json",
+const cachedContentImageModules = import.meta.glob<{ default: GeneratedContentImagesPayload }>(
+  "../../../data/cache/content-images.json",
   { eager: true },
 );
 
@@ -427,14 +427,13 @@ const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
 };
 
 const resolveGeneratedContentImages = (): Record<string, GeneratedContentImageEntry> => {
-  const module = Object.values(generatedContentImageModules)[0];
-  const payload = module?.default;
-
-  if (!payload || !isRecord(payload.byUrl)) {
-    return {};
-  }
-
   const mapped: Record<string, GeneratedContentImageEntry> = {};
+
+  const module = Object.values(cachedContentImageModules)[0];
+  const payload = module?.default;
+  if (!payload || !isRecord(payload.byUrl)) {
+    return mapped;
+  }
 
   for (const [url, value] of Object.entries(payload.byUrl)) {
     if (!isRecord(value)) {

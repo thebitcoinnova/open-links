@@ -80,6 +80,7 @@ interface CliArgs {
   sitePath: string;
   richMetadataPath: string;
   manifestPath: string;
+  runtimeManifestPath: string;
   outputDir: string;
   maxBytesWarn: number;
 }
@@ -89,8 +90,9 @@ const ROOT = process.cwd();
 const DEFAULT_LINKS_PATH = "data/links.json";
 const DEFAULT_SITE_PATH = "data/site.json";
 const DEFAULT_RICH_METADATA_PATH = "data/generated/rich-metadata.json";
-const DEFAULT_MANIFEST_PATH = "data/generated/content-images.json";
-const DEFAULT_OUTPUT_DIR = "public/generated/images";
+const DEFAULT_MANIFEST_PATH = "data/cache/content-images.json";
+const DEFAULT_RUNTIME_MANIFEST_PATH = "data/cache/content-images.runtime.json";
+const DEFAULT_OUTPUT_DIR = "public/cache/content-images";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_IMAGE_BYTES_WARN = 5_000_000;
@@ -207,6 +209,7 @@ const parseArgs = (): CliArgs => {
     sitePath: getFlagValue("--site", DEFAULT_SITE_PATH),
     richMetadataPath: getFlagValue("--rich-metadata", DEFAULT_RICH_METADATA_PATH),
     manifestPath: getFlagValue("--manifest", DEFAULT_MANIFEST_PATH),
+    runtimeManifestPath: getFlagValue("--runtime-manifest", DEFAULT_RUNTIME_MANIFEST_PATH),
     outputDir: getFlagValue("--output-dir", DEFAULT_OUTPUT_DIR),
     maxBytesWarn: Math.max(
       1024,
@@ -579,6 +582,67 @@ export const buildStableContentImagesManifest = (input: {
   byUrl: input.byUrl,
 });
 
+const mergePreviousEntries = (
+  stableEntry: GeneratedContentImageEntry | undefined,
+  runtimeEntry: GeneratedContentImageEntry | undefined,
+): GeneratedContentImageEntry | undefined => {
+  if (!stableEntry && !runtimeEntry) {
+    return undefined;
+  }
+
+  if (!stableEntry) {
+    return runtimeEntry;
+  }
+
+  if (!runtimeEntry) {
+    return stableEntry;
+  }
+
+  return {
+    ...stableEntry,
+    ...runtimeEntry,
+    sourceUrl: runtimeEntry.sourceUrl,
+    status: runtimeEntry.status,
+    updatedAt: runtimeEntry.updatedAt,
+    resolvedPath: stableEntry.resolvedPath ?? runtimeEntry.resolvedPath,
+  };
+};
+
+const toStableEntry = (
+  entry: GeneratedContentImageEntry | undefined,
+): GeneratedContentImageEntry | undefined => {
+  if (!entry?.resolvedPath) {
+    return undefined;
+  }
+
+  const stableEntry: GeneratedContentImageEntry = {
+    sourceUrl: entry.sourceUrl,
+    resolvedPath: entry.resolvedPath,
+    status: entry.status,
+    updatedAt: entry.updatedAt,
+  };
+
+  if (entry.contentType) {
+    stableEntry.contentType = entry.contentType;
+  }
+  if (typeof entry.bytes === "number" && Number.isFinite(entry.bytes)) {
+    stableEntry.bytes = entry.bytes;
+  }
+  if (entry.warning) {
+    stableEntry.warning = entry.warning;
+  }
+
+  return stableEntry;
+};
+
+const buildRuntimeManifest = (input: {
+  generatedAt: string;
+  byUrl: Record<string, GeneratedContentImageEntry>;
+}): GeneratedContentImagesManifest => ({
+  generatedAt: input.generatedAt,
+  byUrl: input.byUrl,
+});
+
 const logWarning = (message: string) => {
   console.warn(`WARNING [images:sync] ${message}`);
 };
@@ -710,9 +774,11 @@ const run = async () => {
   const sitePayload = readJson<SitePayload>(args.sitePath);
   const generatedRichMetadata = maybeReadJson<RichMetadataPayload>(args.richMetadataPath);
   const previousManifest = readPreviousManifest(args.manifestPath);
+  const previousRuntimeManifest = readPreviousManifest(args.runtimeManifestPath);
 
   const candidates = collectCandidates(linksPayload, generatedRichMetadata, sitePayload);
   const nextByUrl: Record<string, GeneratedContentImageEntry> = {};
+  const nextRuntimeByUrl: Record<string, GeneratedContentImageEntry> = {};
   const summary = createRunSummary();
 
   fs.mkdirSync(absolutePath(args.outputDir), { recursive: true });
@@ -724,51 +790,59 @@ const run = async () => {
 
     const httpUrl = toCanonicalHttpUrl(candidate);
     const candidateKey = httpUrl ?? candidate;
-    const previousEntry = previousManifest?.byUrl[candidateKey];
+    const previousStableEntry = previousManifest?.byUrl[candidateKey];
+    const previousRuntimeEntry = previousRuntimeManifest?.byUrl[candidateKey];
+    const previousEntry = mergePreviousEntries(previousStableEntry, previousRuntimeEntry);
     const cachedPath = previousEntry?.resolvedPath;
     const cachedAssetExists =
       typeof cachedPath === "string" &&
       cachedPath.length > 0 &&
       fs.existsSync(resolveManifestAssetAbsolutePath(cachedPath));
 
+    const persistEntries = (
+      runtimeEntry: GeneratedContentImageEntry,
+      maybeStableSource: GeneratedContentImageEntry | undefined = runtimeEntry,
+    ) => {
+      const stableEntry = toStableEntry(maybeStableSource);
+      if (stableEntry) {
+        nextByUrl[candidateKey] = stabilizeContentImageEntry(previousStableEntry, stableEntry);
+      }
+      nextRuntimeByUrl[candidateKey] = runtimeEntry;
+    };
+
     if (!httpUrl) {
       const warning = `Unsupported non-http image URL '${candidate}'. Runtime will use local fallback behavior.`;
       logWarning(warning);
-      nextByUrl[candidateKey] = stabilizeContentImageEntry(
-        previousEntry,
-        buildEntry(
-          {
-            sourceUrl: candidate,
-            status: "fallback_on_error",
-          },
-          {
-            warning,
-          },
-        ),
+      nextRuntimeByUrl[candidateKey] = buildEntry(
+        {
+          sourceUrl: candidate,
+          status: "fallback_on_error",
+        },
+        {
+          warning,
+        },
       );
       recordRunStatus(summary, "fallback_on_error");
       continue;
     }
 
     if (!args.force && previousEntry && cachedAssetExists && isFresh(previousEntry.expiresAt)) {
-      nextByUrl[candidateKey] = stabilizeContentImageEntry(
-        previousEntry,
-        buildEntry(
-          {
-            sourceUrl: httpUrl,
-            resolvedPath: previousEntry.resolvedPath,
-            status: "cache_fresh",
-          },
-          {
-            etag: previousEntry.etag,
-            lastModified: previousEntry.lastModified,
-            cacheControl: previousEntry.cacheControl,
-            expiresAt: previousEntry.expiresAt,
-            contentType: previousEntry.contentType,
-            bytes: previousEntry.bytes,
-          },
-        ),
+      const runtimeEntry = buildEntry(
+        {
+          sourceUrl: httpUrl,
+          resolvedPath: previousEntry.resolvedPath,
+          status: "cache_fresh",
+        },
+        {
+          etag: previousEntry.etag,
+          lastModified: previousEntry.lastModified,
+          cacheControl: previousEntry.cacheControl,
+          expiresAt: previousEntry.expiresAt,
+          contentType: previousEntry.contentType,
+          bytes: previousEntry.bytes,
+        },
       );
+      persistEntries(runtimeEntry, previousStableEntry ?? previousEntry);
       recordRunStatus(summary, "cache_fresh");
       console.log(`OpenLinks content image sync: cache is fresh for '${httpUrl}'.`);
       continue;
@@ -794,42 +868,37 @@ const run = async () => {
           previousEntry.resolvedPath,
         )}'.`;
         logWarning(warning);
-        nextByUrl[candidateKey] = stabilizeContentImageEntry(
-          previousEntry,
-          buildEntry(
-            {
-              sourceUrl: httpUrl,
-              resolvedPath: previousEntry.resolvedPath,
-              status: "cache_on_error",
-            },
-            {
-              etag: previousEntry.etag,
-              lastModified: previousEntry.lastModified,
-              cacheControl: previousEntry.cacheControl,
-              expiresAt: previousEntry.expiresAt,
-              contentType: previousEntry.contentType,
-              bytes: previousEntry.bytes,
-              warning,
-            },
-          ),
+        const runtimeEntry = buildEntry(
+          {
+            sourceUrl: httpUrl,
+            resolvedPath: previousEntry.resolvedPath,
+            status: "cache_on_error",
+          },
+          {
+            etag: previousEntry.etag,
+            lastModified: previousEntry.lastModified,
+            cacheControl: previousEntry.cacheControl,
+            expiresAt: previousEntry.expiresAt,
+            contentType: previousEntry.contentType,
+            bytes: previousEntry.bytes,
+            warning,
+          },
         );
+        persistEntries(runtimeEntry, previousStableEntry ?? previousEntry);
         recordRunStatus(summary, "cache_on_error");
         return;
       }
 
       const warning = `Image fetch failed (${reason}) for '${httpUrl}'. Runtime will use local fallback behavior.`;
       logWarning(warning);
-      nextByUrl[candidateKey] = stabilizeContentImageEntry(
-        previousEntry,
-        buildEntry(
-          {
-            sourceUrl: httpUrl,
-            status: "fallback_on_error",
-          },
-          {
-            warning,
-          },
-        ),
+      nextRuntimeByUrl[candidateKey] = buildEntry(
+        {
+          sourceUrl: httpUrl,
+          status: "fallback_on_error",
+        },
+        {
+          warning,
+        },
       );
       recordRunStatus(summary, "fallback_on_error");
     };
@@ -858,24 +927,22 @@ const run = async () => {
         const etag = response.headers.get("etag") ?? previousEntry.etag;
         const lastModified = response.headers.get("last-modified") ?? previousEntry.lastModified;
 
-        nextByUrl[candidateKey] = stabilizeContentImageEntry(
-          previousEntry,
-          buildEntry(
-            {
-              sourceUrl: httpUrl,
-              resolvedPath: previousEntry.resolvedPath,
-              status: "not_modified",
-            },
-            {
-              etag: etag ?? undefined,
-              lastModified: lastModified ?? undefined,
-              cacheControl: cacheControl ?? undefined,
-              expiresAt,
-              contentType: previousEntry.contentType,
-              bytes: previousEntry.bytes,
-            },
-          ),
+        const runtimeEntry = buildEntry(
+          {
+            sourceUrl: httpUrl,
+            resolvedPath: previousEntry.resolvedPath,
+            status: "not_modified",
+          },
+          {
+            etag: etag ?? undefined,
+            lastModified: lastModified ?? undefined,
+            cacheControl: cacheControl ?? undefined,
+            expiresAt,
+            contentType: previousEntry.contentType,
+            bytes: previousEntry.bytes,
+          },
         );
+        persistEntries(runtimeEntry, previousStableEntry ?? previousEntry);
         recordRunStatus(summary, "not_modified");
         console.log(`OpenLinks content image sync: not modified '${httpUrl}'.`);
         continue;
@@ -925,25 +992,23 @@ const run = async () => {
         logWarning(warning);
       }
 
-      nextByUrl[candidateKey] = stabilizeContentImageEntry(
-        previousEntry,
-        buildEntry(
-          {
-            sourceUrl: httpUrl,
-            resolvedPath,
-            status: "fetched",
-          },
-          {
-            etag,
-            lastModified,
-            cacheControl,
-            expiresAt,
-            contentType,
-            bytes: buffer.byteLength,
-            warning: warnings.length > 0 ? warnings.join(" ") : undefined,
-          },
-        ),
+      const runtimeEntry = buildEntry(
+        {
+          sourceUrl: httpUrl,
+          resolvedPath,
+          status: "fetched",
+        },
+        {
+          etag,
+          lastModified,
+          cacheControl,
+          expiresAt,
+          contentType,
+          bytes: buffer.byteLength,
+          warning: warnings.length > 0 ? warnings.join(" ") : undefined,
+        },
       );
+      persistEntries(runtimeEntry);
       recordRunStatus(summary, "fetched");
 
       console.log(
@@ -957,10 +1022,15 @@ const run = async () => {
     }
   }
 
+  const generatedAt = new Date().toISOString();
   const manifest = buildStableContentImagesManifest({
     previousManifest,
     byUrl: nextByUrl,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
+  });
+  const runtimeManifest = buildRuntimeManifest({
+    generatedAt,
+    byUrl: nextRuntimeByUrl,
   });
 
   const keepPaths = listReferencedResolvedPaths(manifest);
@@ -968,6 +1038,12 @@ const run = async () => {
 
   if (!previousManifest || JSON.stringify(previousManifest) !== JSON.stringify(manifest)) {
     writeManifest(args.manifestPath, manifest);
+  }
+  if (
+    !previousRuntimeManifest ||
+    JSON.stringify(previousRuntimeManifest) !== JSON.stringify(runtimeManifest)
+  ) {
+    writeManifest(args.runtimeManifestPath, runtimeManifest);
   }
 
   const summaryOutput = {
@@ -987,6 +1063,7 @@ const run = async () => {
     `Statuses: fetched=${summaryOutput.fetched}, not_modified=${summaryOutput.notModified}, cache_fresh=${summaryOutput.cacheFresh}, cache_on_error=${summaryOutput.cacheOnError}, fallback_on_error=${summaryOutput.fallbackOnError}`,
   );
   console.log(`Manifest: ${args.manifestPath}`);
+  console.log(`Runtime manifest: ${args.runtimeManifestPath}`);
   console.log(`Output directory: ${args.outputDir}`);
   if (args.force) {
     console.log("OpenLinks content image sync: force refresh was enabled.");

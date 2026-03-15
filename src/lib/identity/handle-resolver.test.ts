@@ -22,6 +22,11 @@ test("resolves supported URL handles", () => {
       handle: "peter.ryszkiewicz",
     },
     {
+      url: "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/",
+      extractorId: "facebook",
+      handle: "bright-builds-llc",
+    },
+    {
       url: "https://www.instagram.com/peterryszkiewicz/",
       extractorId: "instagram",
       handle: "peterryszkiewicz",
@@ -63,6 +68,11 @@ test("marks reserved or non-profile paths as supported but unresolved", () => {
     { url: "https://x.com/home", extractorId: "x", reason: "not_profile_url" },
     { url: "https://linkedin.com/feed/", extractorId: "linkedin", reason: "not_profile_url" },
     { url: "https://facebook.com/groups", extractorId: "facebook", reason: "not_profile_url" },
+    {
+      url: "https://facebook.com/people/Bright-Builds-LLC/photos",
+      extractorId: "facebook",
+      reason: "not_profile_url",
+    },
     { url: "https://instagram.com/explore", extractorId: "instagram", reason: "not_profile_url" },
     { url: "https://primal.net/home", extractorId: "primal", reason: "not_profile_url" },
     {

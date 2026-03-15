@@ -13,8 +13,8 @@ test("resolves handle, localized images, and ordered metrics for a social profil
     metadata: {
       title:
         "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz) • Instagram photos and videos",
-      image: "/generated/images/preview.jpg",
-      profileImage: "/generated/images/avatar.jpg",
+      image: "/cache/content-images/preview.jpg",
+      profileImage: "/cache/content-images/avatar.jpg",
       followersCount: 86,
       followersCountRaw: "86 Followers",
       followingCountRaw: "169 Following",
@@ -31,8 +31,8 @@ test("resolves handle, localized images, and ordered metrics for a social profil
   assert.equal(resolved.handleDisplay, "@peterryszkiewicz");
   assert.equal(resolved.usesProfileLayout, true);
   assert.equal(resolved.hasDistinctPreviewImage, true);
-  assert.equal(resolved.previewImageUrl, "/generated/images/preview.jpg");
-  assert.equal(resolved.profileImageUrl, "/generated/images/avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/preview.jpg");
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/avatar.jpg");
   assert.deepEqual(resolved.metrics, [
     {
       kind: "followers",
@@ -65,8 +65,8 @@ test("formats parsed metrics compactly while preserving raw-label casing when av
     icon: "youtube",
     metadata: {
       title: "Peter NoTaxationWithoutRepresentation Ryszkiewicz - YouTube",
-      image: "/generated/images/channel-banner.jpg",
-      profileImage: "/generated/images/channel-avatar.jpg",
+      image: "/cache/content-images/channel-banner.jpg",
+      profileImage: "/cache/content-images/channel-avatar.jpg",
       subscribersCount: 1200,
       subscribersCountRaw: "1.2K subscribers",
     },
@@ -128,7 +128,7 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
       title: "@pryszkie on X",
       profileDescription:
         "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
-      image: "/generated/images/x-avatar.jpg",
+      image: "/cache/content-images/x-avatar.jpg",
       sourceLabel: "x.com",
     },
   } as const;
@@ -145,8 +145,8 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
   );
   assert.equal(resolved.usesProfileLayout, true);
   assert.equal(resolved.hasDistinctPreviewImage, false);
-  assert.equal(resolved.profileImageUrl, "/generated/images/x-avatar.jpg");
-  assert.equal(resolved.previewImageUrl, "/generated/images/x-avatar.jpg");
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/x-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/x-avatar.jpg");
   assert.deepEqual(resolved.metrics, []);
 });
 
@@ -160,7 +160,7 @@ test("formats X audience metrics from cached public-profile counts", () => {
     icon: "x",
     metadata: {
       title: "@pryszkie on X",
-      image: "/generated/images/x-avatar.jpg",
+      image: "/cache/content-images/x-avatar.jpg",
       followersCount: 1350,
       followersCountRaw: "1,350 Followers",
       followingCount: 643,
@@ -206,7 +206,7 @@ test("formats Primal audience metrics from cached public-profile counts", () => 
     icon: "primal",
     metadata: {
       title: "Peter No Taxation Without Representation Ryszkiewicz",
-      image: "/generated/images/primal-avatar.jpg",
+      image: "/cache/content-images/primal-avatar.jpg",
       followersCount: 15,
       followersCountRaw: "15 followers",
       followingCount: 90,
@@ -252,7 +252,7 @@ test("medium profile metadata cleans the feed title into a display name and trea
     icon: "medium",
     metadata: {
       title: "Stories by Peter Ryszkiewicz on Medium",
-      image: "/generated/images/medium-avatar.jpg",
+      image: "/cache/content-images/medium-avatar.jpg",
       handle: "peterryszkiewicz",
       sourceLabel: "medium.com",
       followersCount: 3300,
@@ -270,8 +270,8 @@ test("medium profile metadata cleans the feed title into a display name and trea
   assert.equal(resolved.handleDisplay, "@peterryszkiewicz");
   assert.equal(resolved.usesProfileLayout, true);
   assert.equal(resolved.hasDistinctPreviewImage, false);
-  assert.equal(resolved.profileImageUrl, "/generated/images/medium-avatar.jpg");
-  assert.equal(resolved.previewImageUrl, "/generated/images/medium-avatar.jpg");
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/medium-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/medium-avatar.jpg");
   assert.deepEqual(resolved.metrics, [
     {
       kind: "followers",
@@ -295,8 +295,8 @@ test("substack custom-domain metadata uses the explicit handle and strips the si
     icon: "substack",
     metadata: {
       title: "Peter Ryszkiewicz | Substack",
-      image: "/generated/images/substack-preview.jpg",
-      profileImage: "/generated/images/substack-avatar.jpg",
+      image: "/cache/content-images/substack-preview.jpg",
+      profileImage: "/cache/content-images/substack-avatar.jpg",
       handle: "peterryszkiewicz",
       subscribersCount: 10,
       subscribersCountRaw: "10 subscribers",
@@ -314,8 +314,8 @@ test("substack custom-domain metadata uses the explicit handle and strips the si
   assert.equal(resolved.handleDisplay, "@peterryszkiewicz");
   assert.equal(resolved.usesProfileLayout, true);
   assert.equal(resolved.hasDistinctPreviewImage, true);
-  assert.equal(resolved.profileImageUrl, "/generated/images/substack-avatar.jpg");
-  assert.equal(resolved.previewImageUrl, "/generated/images/substack-preview.jpg");
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/substack-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/substack-preview.jpg");
   assert.deepEqual(resolved.metrics, [
     {
       kind: "subscribers",
@@ -367,6 +367,42 @@ test("linkedin profile metadata reuses authenticated preview media and trims the
   assert.deepEqual(resolved.metrics, []);
 });
 
+test("facebook people-page metadata uses the supported profile layout for manual rich cards", () => {
+  // Arrange
+  const link = {
+    id: "bright-builds-facebook",
+    label: "Bright Builds LLC",
+    url: "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/",
+    type: "rich",
+    icon: "facebook",
+    metadata: {
+      title: "Bright Builds LLC",
+      profileDescription:
+        "Chicago software engineering, open-source work, and business updates from Bright Builds LLC.",
+      image: "/cache/content-images/bright-builds-facebook.jpg",
+      sourceLabel: "facebook.com",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "facebook");
+  assert.equal(resolved.displayName, "Bright Builds LLC");
+  assert.equal(
+    resolved.profileDescription,
+    "Chicago software engineering, open-source work, and business updates from Bright Builds LLC.",
+  );
+  assert.equal(resolved.handle, "bright-builds-llc");
+  assert.equal(resolved.handleDisplay, "@bright-builds-llc");
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/bright-builds-facebook.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/bright-builds-facebook.jpg");
+  assert.deepEqual(resolved.metrics, []);
+});
+
 test("keeps GitHub metrics in profile order while treating the avatar image as identity chrome", () => {
   // Arrange
   const link = {
@@ -377,7 +413,7 @@ test("keeps GitHub metrics in profile order while treating the avatar image as i
     icon: "github",
     metadata: {
       title: "pRizz - Overview",
-      image: "/generated/images/github-avatar.jpg",
+      image: "/cache/content-images/github-avatar.jpg",
       followersCount: 90,
       followersCountRaw: "90 followers",
       followingCount: 87,
@@ -393,7 +429,7 @@ test("keeps GitHub metrics in profile order while treating the avatar image as i
   assert.equal(resolved.displayName, "pRizz");
   assert.equal(resolved.usesProfileLayout, true);
   assert.equal(resolved.hasDistinctPreviewImage, false);
-  assert.equal(resolved.profileImageUrl, "/generated/images/github-avatar.jpg");
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/github-avatar.jpg");
   assert.deepEqual(
     resolved.metrics.map((metric) => metric.displayText),
     ["90 followers", "87 following"],

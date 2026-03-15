@@ -160,10 +160,17 @@ Execute in this exact order:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-8. Validate and build:
+8. Refresh caches, validate, and build:
+   - `bun run enrich:rich:strict`
+   - `bun run images:sync`
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
+   - include committed cache outputs in the same change batch when they change:
+     - `data/cache/content-images.json`
+     - `public/cache/content-images/*`
+     - `data/cache/rich-authenticated-cache.json`
+     - `public/cache/rich-authenticated/*`
 9. Commit and push directly to `main`.
 10. Verify CI + Deploy Pages success for pushed SHA.
 11. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).

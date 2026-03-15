@@ -2,6 +2,26 @@
 
 ## Current
 
+- [x] Remove the legacy `data/generated/content-images.json` compatibility path from runtime loading and validation so committed cache artifacts are the only supported content-image manifest.
+- [x] Update diagnostics and test fixtures to use `cache/content-images` terminology instead of the old `generated/images` path.
+- [x] Re-run focused cache checks plus build/quality verification to confirm the clean-break image-cache flow.
+
+### Completion Review
+
+- Result: The content-image pipeline now has a single supported storage model. Runtime loading reads only `data/cache/content-images.json`, validation no longer accepts `data/generated/content-images.json`, perf diagnostics now inspect `dist/cache/content-images`, and the repo test fixtures no longer present `generated/images` as a current path convention.
+- Verification: `bun test scripts/sync-content-images.test.ts scripts/validate-data.test.ts src/lib/ui/social-profile-metadata.test.ts src/lib/ui/rich-card-footer-labels.test.ts src/lib/ui/rich-card-description-sourcing.test.ts src/components/cards/social-profile-card-rendering.test.tsx src/components/cards/non-payment-card-accessibility.test.tsx scripts/enrichment/supported-social-profile-metadata.test.ts` passed. `bun run typecheck` passed. `bun run images:sync` passed. `bun run validate:data` passed. `bun run build` passed. `bun run quality:check` passed with the existing warning-level SEO/performance items.
+- Residual risk: The pipeline no longer tolerates stale legacy manifests, so anyone with old local-only `data/generated/content-images.json` state must refresh through `bun run images:sync`. That is the intended break, but it raises the cost of partially updated local worktrees until the new cache files are present.
+
+- [x] Move rich-link image localization from the gitignored `data/generated` / `public/generated` cache into a committed stable cache with a gitignored runtime overlay.
+- [x] Update validation/runtime loading plus maintainer workflows/docs so future link updates commit cached image assets by default.
+- [x] Verify with focused image-cache tests, rich-link validation/build checks, and a diff review that the Bright Builds Facebook card now persists a local cached image in-repo.
+
+### Completion Review
+
+- Result: `images:sync` now writes stable committed cache artifacts to `data/cache/content-images.json` and `public/cache/content-images/*`, while volatile revalidation headers/status live in the new gitignored `data/cache/content-images.runtime.json` overlay. Runtime loading and validation now prefer the committed cache path, the Bright Builds Facebook page remains a manual rich card, and the repo-native CRUD/docs flow now tells maintainers and agents to refresh and commit cached image assets in the same change batch as link edits.
+- Verification: `bunx @biomejs/biome check scripts/sync-content-images.ts scripts/validate-data.ts src/lib/content/load-content.ts scripts/fetch-cache-audit.test.ts scripts/validate-data.test.ts README.md docs/quickstart.md docs/data-model.md docs/openclaw-update-crud.md docs/ai-guided-customization.md skills/cache-rich-link-assets/SKILL.md .codex/tasks/todo.md .gitignore --write --files-ignore-unknown=true` passed. `bun test scripts/sync-content-images.test.ts scripts/validate-data.test.ts scripts/fetch-cache-audit.test.ts src/lib/identity/handle-resolver.test.ts src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts scripts/authenticated-extractors/plugins/facebook-auth-browser.test.ts` passed. `bun run typecheck` passed. `bun run images:sync` created the committed stable cache. `bun run validate:data` passed. `bun run build` passed. `bun run quality:check` passed with the existing warning-level SEO/performance items.
+- Residual risk: Manual rich links that point at expiring signed remote image URLs still depend on those URLs being refreshable by `images:sync` when bytes eventually drift. The committed cache now protects runtime rendering and git history, but the source URL itself can still expire and may need future recapture or authenticated extraction if the platform stops serving the image publicly.
+
 - [x] Add an explicit `--write-public-cache` path plus runtime-only public-cache persistence helpers so routine `enrich:rich*` runs stop rewriting `data/cache/rich-public-cache.json`.
 - [x] Refactor rich-enrichment persistence, nightly workflow wiring, and operator messaging/docs so stable public-cache writes happen only through explicit refresh commands.
 - [x] Verify with focused public-cache/audit tests, `bun run typecheck`, `bun run validate:data`, and a temp-cache diff run covering read-only vs write-cache behavior.

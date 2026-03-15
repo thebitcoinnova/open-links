@@ -37,6 +37,10 @@ If your goal is adding a brand-new authenticated rich extractor, use:
 - `docs/create-new-rich-content-extractor.md`
 - `skills/create-new-rich-content-extractor/SKILL.md`
 
+If your goal is adding or updating rich links while keeping image assets committed in git, also use:
+
+- `skills/cache-rich-link-assets/SKILL.md`
+
 ## OpenClaw Bootstrap Contract (Automation-First)
 
 If you are running OpenClaw bootstrap flow in this repository, use `docs/openclaw-bootstrap.md` and apply these rules:
@@ -155,12 +159,22 @@ Agent should:
    - fully manual,
    - enrichment-assisted,
    - enrichment-disabled.
+5. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
+
+```bash
+bun run images:sync
+```
 
 Validation checkpoint:
 
 ```bash
 bun run validate:data
 ```
+
+If the rich-link image cache changed, include:
+
+- `data/cache/content-images.json`
+- `public/cache/content-images/*`
 
 Opt-out:
 

@@ -97,18 +97,21 @@ test("hook mode falls back to full validation when no changed-paths file is prov
 
 test("rich-artifact trigger matcher covers exact and prefix-based hook paths", () => {
   // Arrange
-  const exactMatch = "schema/site.schema.json";
-  const prefixMatch = "scripts/enrichment/public-cache.ts";
+  const exactMatch = "data/cache/content-images.json";
+  const prefixMatch = "public/cache/content-images/example.jpg";
+  const legacyPath = "data/generated/content-images.json";
   const nonMatch = "scripts/sync-profile-avatar.ts";
 
   // Act
   const exactTriggered = pathTouchesHookRichArtifactInputs(exactMatch);
   const prefixTriggered = pathTouchesHookRichArtifactInputs(prefixMatch);
+  const legacyTriggered = pathTouchesHookRichArtifactInputs(legacyPath);
   const unrelatedTriggered = pathTouchesHookRichArtifactInputs(nonMatch);
 
   // Assert
   assert.equal(exactTriggered, true);
   assert.equal(prefixTriggered, true);
+  assert.equal(legacyTriggered, false);
   assert.equal(unrelatedTriggered, false);
 });
 

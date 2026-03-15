@@ -74,6 +74,8 @@ test("supported social profile detection supports the expanded platform set but 
   const substackCustomDomainUrl = "https://peter.ryszkiewicz.us/";
   const xProfileUrl = "https://x.com/pryszkie";
   const facebookProfileUrl = "https://www.facebook.com/peter.ryszkiewicz";
+  const facebookPeopleProfileUrl =
+    "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/";
   const linkedinFeedUrl = "https://www.linkedin.com/feed/";
   const youtubeVideoUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
@@ -91,6 +93,7 @@ test("supported social profile detection supports the expanded platform set but 
   });
   const xProfile = resolveSupportedSocialProfile({ url: xProfileUrl });
   const facebookProfile = resolveSupportedSocialProfile({ url: facebookProfileUrl });
+  const facebookPeopleProfile = resolveSupportedSocialProfile({ url: facebookPeopleProfileUrl });
   const unsupportedLinkedinPage = resolveSupportedSocialProfile({ url: linkedinFeedUrl });
   const unsupportedProfile = resolveSupportedSocialProfile({ url: youtubeVideoUrl });
 
@@ -138,6 +141,11 @@ test("supported social profile detection supports the expanded platform set but 
   assert.deepEqual(facebookProfile, {
     platform: "facebook",
     handle: "peter.ryszkiewicz",
+    expectedFields: ["profileImage"],
+  });
+  assert.deepEqual(facebookPeopleProfile, {
+    platform: "facebook",
+    handle: "bright-builds-llc",
     expectedFields: ["profileImage"],
   });
   assert.equal(unsupportedLinkedinPage, null);

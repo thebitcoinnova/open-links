@@ -360,6 +360,24 @@ const resolveFacebook = (url: URL, segments: string[]): HandleResolution => {
     return supportedWithoutHandle("facebook", "missing_handle_segment");
   }
 
+  if (first === "people") {
+    const slug = normalizeHandle(segments[1]);
+    if (!slug) {
+      return supportedWithoutHandle("facebook", "missing_handle_segment");
+    }
+
+    if (!/^[a-z0-9.-]{3,100}$/.test(slug)) {
+      return supportedWithoutHandle("facebook", "invalid_handle");
+    }
+
+    const maybeProfileId = toLowerTrimmed(segments[2] ?? "");
+    if (!maybeProfileId || !/^\d{5,30}$/.test(maybeProfileId)) {
+      return supportedWithoutHandle("facebook", "not_profile_url");
+    }
+
+    return resolved("facebook", slug);
+  }
+
   if (first === "profile.php") {
     const id = normalizeHandle(url.searchParams.get("id"));
     if (!id) {

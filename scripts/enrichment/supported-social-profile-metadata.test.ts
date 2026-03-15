@@ -35,7 +35,7 @@ test("augments supported profile metadata by backfilling profile image for avata
   // Arrange
   const metadata = {
     title: "pryszkie on X",
-    image: "/generated/images/x-avatar.jpg",
+    image: "/cache/content-images/x-avatar.jpg",
   };
 
   // Act
@@ -50,8 +50,8 @@ test("augments supported profile metadata by backfilling profile image for avata
   });
 
   // Assert
-  assert.equal(augmented.image, "/generated/images/x-avatar.jpg");
-  assert.equal(augmented.profileImage, "/generated/images/x-avatar.jpg");
+  assert.equal(augmented.image, "/cache/content-images/x-avatar.jpg");
+  assert.equal(augmented.profileImage, "/cache/content-images/x-avatar.jpg");
 });
 
 test("reconciles LinkedIn public and authenticated descriptions into separate fields", () => {

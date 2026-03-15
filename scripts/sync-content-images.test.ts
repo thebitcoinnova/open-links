@@ -11,7 +11,7 @@ test("preserves content-image updatedAt and persisted status on no-op cache refr
   // Arrange
   const previous: GeneratedContentImageEntry = {
     sourceUrl: "https://example.com/image.jpg",
-    resolvedPath: "generated/images/example.jpg",
+    resolvedPath: "cache/content-images/example.jpg",
     status: "fetched",
     etag: '"old"',
     cacheControl: "max-age=60",
@@ -43,7 +43,7 @@ test("preserves content-image manifest generatedAt when stabilized entries are u
   // Arrange
   const previousEntry: GeneratedContentImageEntry = {
     sourceUrl: "https://example.com/image.jpg",
-    resolvedPath: "generated/images/example.jpg",
+    resolvedPath: "cache/content-images/example.jpg",
     status: "fetched",
     contentType: "image/jpeg",
     bytes: 1234,

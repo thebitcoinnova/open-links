@@ -68,7 +68,7 @@ const ROOT = process.cwd();
 const ENRICHMENT_BYPASS_ENV = "OPENLINKS_RICH_ENRICHMENT_BYPASS";
 const DEFAULT_AUTH_CACHE_WARN_AGE_DAYS = 30;
 const DEFAULT_ENRICHMENT_METADATA_PATH = "data/generated/rich-metadata.json";
-const DEFAULT_CONTENT_IMAGES_MANIFEST_PATH = "data/generated/content-images.json";
+const DEFAULT_CONTENT_IMAGES_MANIFEST_PATH = "data/cache/content-images.json";
 const DEFAULT_FOLLOWER_HISTORY_REPO_ROOT = "public/history/followers";
 const DEFAULT_FOLLOWER_HISTORY_INDEX_PATH = `public/${FOLLOWER_HISTORY_INDEX_PUBLIC_PATH}`;
 export const DEFAULT_HOOK_CHANGED_PATHS_PATH = ".cache/openlinks-precommit/staged-files.txt";
@@ -79,7 +79,8 @@ const HOOK_RICH_ARTIFACT_TRIGGER_EXACT_PATHS = new Set([
   "data/links.json",
   "data/site.json",
   "data/generated/rich-metadata.json",
-  "data/generated/content-images.json",
+  "data/cache/content-images.json",
+  "data/cache/content-images.runtime.json",
   "data/generated/rich-enrichment-report.json",
   "schema/links.schema.json",
   "schema/site.schema.json",
@@ -90,6 +91,7 @@ const HOOK_RICH_ARTIFACT_TRIGGER_EXACT_PATHS = new Set([
 
 const HOOK_RICH_ARTIFACT_TRIGGER_PREFIXES = [
   "data/cache/",
+  "public/cache/content-images/",
   "public/cache/rich-authenticated/",
   "scripts/enrichment/",
   "scripts/validation/",
@@ -258,6 +260,28 @@ const tryReadJsonFile = <T>(relativePath: string): { value: T | null; errorMessa
     const message = error instanceof Error ? error.message : String(error);
     return { value: null, errorMessage: message };
   }
+};
+
+const readContentImagesManifest = (): {
+  path: string;
+  value: GeneratedContentImagesPayload | null;
+  errorMessage?: string;
+} => {
+  const manifest = tryReadJsonFile<GeneratedContentImagesPayload>(
+    DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+  );
+  if (manifest.value) {
+    return {
+      path: DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+      value: manifest.value,
+    };
+  }
+
+  return {
+    path: DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+    value: null,
+    errorMessage: manifest.errorMessage,
+  };
 };
 
 const readTextFile = (relativePath: string): { value: string | null; errorMessage?: string } => {
@@ -760,7 +784,7 @@ const richCardPreviewImageIssues = (
     const linkPath = `$.links[${index}]`;
     const imagePath = `${linkPath}.metadata.image`;
 
-    const remediationBase = `Add a preview image at ${imagePath} (for example a local 'generated/images/<hash>.jpg' asset or a remote URL that resolves into ${contentImagesPath}).`;
+    const remediationBase = `Add a preview image at ${imagePath} (for example a local 'cache/content-images/<hash>.jpg' asset or a remote URL that resolves into ${contentImagesPath}).`;
     const enrichmentRemediation = enrichmentEnabled
       ? `If this rich link should use enrichment, rerun npm run enrich:rich:strict && npm run images:sync and verify ${metadataPath} has metadata.image for '${linkId}'.`
       : "This link has enrichment disabled; either add manual metadata.image, switch the link type to 'simple', or re-enable enrichment and rerun npm run enrich:rich:strict && npm run images:sync.";
@@ -1325,9 +1349,7 @@ export const run = () => {
   if (hasRichCandidates && hookRichArtifactDecision.shouldRun) {
     const metadataPath = resolveEnrichmentMetadataPath(siteData);
     const metadataRead = tryReadJsonFile<GeneratedRichMetadataPayload>(metadataPath);
-    const contentImagesRead = tryReadJsonFile<GeneratedContentImagesPayload>(
-      DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
-    );
+    const contentImagesRead = readContentImagesManifest();
     const generatedMetadataByLink = metadataRead.value
       ? resolveGeneratedMetadataByLink(metadataRead.value)
       : {};
@@ -1351,11 +1373,11 @@ export const run = () => {
     if (needsPreviewValidation && !contentImagesRead.value) {
       issues.push({
         level: "error",
-        source: DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+        source: contentImagesRead.path,
         path: "$",
         message:
           "Generated content-image manifest is required to validate rich-card preview images, but it could not be loaded.",
-        remediation: `Run npm run images:sync to regenerate ${DEFAULT_CONTENT_IMAGES_MANIFEST_PATH}. ${`Then rerun npm run validate:data. ${contentImagesRead.errorMessage ?? ""}`.trim()}`,
+        remediation: `Run npm run images:sync to regenerate ${contentImagesRead.path}. ${`Then rerun npm run validate:data. ${contentImagesRead.errorMessage ?? ""}`.trim()}`,
       });
     }
 
@@ -1368,7 +1390,7 @@ export const run = () => {
           generatedMetadataByLink,
           resolveGeneratedContentImagesByUrl(contentImagesRead.value),
           metadataPath,
-          DEFAULT_CONTENT_IMAGES_MANIFEST_PATH,
+          contentImagesRead.path,
         ),
       );
 

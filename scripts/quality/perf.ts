@@ -59,7 +59,7 @@ const normalizeThreshold = (
 const collectBundleMetrics = (rootDir: string) => {
   const distDir = path.join(rootDir, "dist");
   const assetsDir = path.join(distDir, "assets");
-  const generatedImagesDir = path.join(distDir, "generated", "images");
+  const cachedContentImagesDir = path.join(distDir, "cache", "content-images");
   const indexPath = path.join(distDir, "index.html");
 
   if (!fs.existsSync(indexPath)) {
@@ -92,15 +92,15 @@ const collectBundleMetrics = (rootDir: string) => {
     }
   }
 
-  if (fs.existsSync(generatedImagesDir)) {
-    const generatedFiles = fs
-      .readdirSync(generatedImagesDir)
-      .map((name) => path.join(generatedImagesDir, name));
-    for (const generatedFilePath of generatedFiles) {
-      if (!fs.statSync(generatedFilePath).isFile()) {
+  if (fs.existsSync(cachedContentImagesDir)) {
+    const cachedImageFiles = fs
+      .readdirSync(cachedContentImagesDir)
+      .map((name) => path.join(cachedContentImagesDir, name));
+    for (const cachedImagePath of cachedImageFiles) {
+      if (!fs.statSync(cachedImagePath).isFile()) {
         continue;
       }
-      bakedImageBytes += fs.statSync(generatedFilePath).size;
+      bakedImageBytes += fs.statSync(cachedImagePath).size;
     }
   }
 
@@ -274,7 +274,7 @@ export const runPerformanceChecks = ({
       metric: "bakedImageBytes",
       actual: metrics.bakedImageBytes,
       expected: BAKED_IMAGE_WARN_BYTES,
-      message: `Baked image bytes in dist/generated/images exceeded warning threshold (${metrics.bakedImageBytes} > ${BAKED_IMAGE_WARN_BYTES}).`,
+      message: `Baked image bytes in dist/cache/content-images exceeded warning threshold (${metrics.bakedImageBytes} > ${BAKED_IMAGE_WARN_BYTES}).`,
       remediation:
         "Optimize remote image sources or reduce baked image count/size. This warning is non-blocking and does not escalate in strict mode.",
     });
