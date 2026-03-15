@@ -365,6 +365,14 @@ const isBlockingEntry = (entry: EnrichmentRunEntry, failOn: EnrichmentFailureRea
   return isFailureReason(entry.reason) && failOn.includes(entry.reason);
 };
 
+const isNonStrictBlockingStalePublicCacheEntry = (entry: EnrichmentRunEntry): boolean =>
+  entry.reason === "public_cache" &&
+  entry.staleCache === true &&
+  entry.status === "fetched" &&
+  entry.manualFallbackUsed !== true &&
+  (!entry.missingFields || entry.missingFields.length === 0) &&
+  (!entry.missingProfileFields || entry.missingProfileFields.length === 0);
+
 const resolveEnabledByDefault = (site: Record<string, unknown>): boolean => {
   const ui = isRecord(site.ui) ? site.ui : undefined;
   const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
@@ -1357,7 +1365,7 @@ const knownBlockerConfigIssues = (
   return { issues, suppressedKnownBlockerLinkIds };
 };
 
-const enrichmentIssues = (
+export const enrichmentIssues = (
   reportPath: string,
   report: EnrichmentRunReport | null,
   strict: boolean,
@@ -1425,6 +1433,7 @@ const enrichmentIssues = (
       entry.missingProfileFields && entry.missingProfileFields.length > 0
         ? ` Expected social profile fields missing: ${entry.missingProfileFields.join(", ")}.`
         : "";
+    const nonStrictBlocking = isNonStrictBlockingStalePublicCacheEntry(entry);
 
     issues.push({
       level,
@@ -1434,6 +1443,7 @@ const enrichmentIssues = (
         `Rich enrichment ${diagnosticClass} for link '${entry.linkId}' (${entry.reason}). ${entry.message}` +
         `${missingFields}${missingProfileFields} Policy: failureMode=${failureMode}, failOn=${failOn.join(", ")}.`,
       remediation: entry.remediation,
+      strictBlocking: nonStrictBlocking ? false : undefined,
     });
   });
 

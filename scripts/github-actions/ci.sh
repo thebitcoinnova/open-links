@@ -129,8 +129,15 @@ run_strict() {
   mkdir -p .ci-diagnostics/strict
 
   local failures=()
-  run_check "strict" "build_strict" bun run build:strict || failures+=("build:strict")
-  run_check "strict" "quality_strict" bun run quality:strict || failures+=("quality:strict")
+  if ! run_check "strict" "build_strict" bun run build:strict; then
+    failures+=("build:strict")
+    write_summary <<EOF
+### Strict Lane Follow-up
+- \`build:strict\` failed, so \`quality:strict\` was skipped because build artifacts were not produced.
+EOF
+  else
+    run_check "strict" "quality_strict" bun run quality:strict || failures+=("quality:strict")
+  fi
 
   if ((${#failures[@]} > 0)); then
     write_output "failures" "${failures[*]}"

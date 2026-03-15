@@ -2,6 +2,18 @@
 
 ## Current
 
+### In Progress
+
+- [x] Make strict validation treat complete stale `public_cache` reuse as non-strict-blocking while keeping real enrichment failures strict-failing.
+- [x] Fix strict CI follow-up handling so warning-summary/artifact steps run after `run_strict` fails and `quality:strict` is skipped when `build:strict` aborts.
+- [x] Add focused validation/CI tests and rerun the targeted strict-lane verification commands.
+
+### Completion Review
+
+- Result: `validate:data:strict` now treats complete stale committed `public_cache` reuse as warning-only, exports the enrichment-classification helper for direct unit coverage, and leaves real enrichment failures strict-failing. The strict CI wrapper now skips `quality:strict` after `build:strict` fails, and the workflow follow-up steps use explicit failure guards so warning summaries, raw-log replay, and artifact upload can actually run on strict-lane failures.
+- Verification: `bun test scripts/validate-data.test.ts scripts/github-actions/ci.test.ts` passed. `bun run validate:data:strict` passed. `bun run build:strict` passed. `bash scripts/github-actions/ci.sh run-strict` reached `quality:strict` only after a successful `build:strict`, then failed solely on the existing mobile performance strictness (`totalBytes` and `jsBytes`). `bun run typecheck` passed. `bunx @biomejs/biome check .codex/tasks/todo.md .github/workflows/ci.yml docs/data-model.md docs/deployment.md scripts/github-actions/ci.sh scripts/github-actions/ci.test.ts scripts/validate-data.test.ts scripts/validate-data.ts --files-ignore-unknown=true` passed for the checkable files. `git diff --check` passed.
+- Residual risk: I did not rerun GitHub Actions itself from this workspace, so the fixed strict follow-up workflow conditions are verified by static review plus the local wrapper test rather than a fresh remote run. The strict lane still legitimately fails on the current mobile performance warning thresholds once build succeeds.
+
 - [x] Add a committed `data/policy/remote-cache-policy.json` registry and `schema/remote-cache-policy.schema.json`, then centralize cache-check policy resolution for all cache-backed fetch pipelines.
 - [x] Refactor content-image sync, profile-avatar sync, public rich-metadata fetches, and authenticated asset downloads onto one shared domain-scoped revalidation helper with a clean-break policy coverage requirement.
 - [x] Migrate avatar cache persistence to committed `data/cache` / `public/cache` paths, extend validator persistence for clean-clone revalidation, and update validation/audits/docs/skills/tests to match the new model.

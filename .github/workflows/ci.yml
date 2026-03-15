@@ -128,18 +128,18 @@ jobs:
         run: bash scripts/github-actions/ci.sh run-strict
 
       - name: Report strict warning signal
-        if: steps.run_strict.outcome == 'failure'
+        if: failure() && steps.run_strict.conclusion == 'failure'
         env:
           FAILED_COMMANDS: ${{ steps.run_strict.outputs.failures }}
         run: bash scripts/github-actions/ci.sh strict-warning-summary
 
       - name: Replay strict raw logs
-        if: steps.run_strict.outcome == 'failure'
+        if: failure() && steps.run_strict.conclusion == 'failure'
         shell: bash
         run: bash scripts/github-actions/ci.sh replay-logs strict
 
       - name: Upload strict diagnostics artifact
-        if: steps.run_strict.outcome == 'failure'
+        if: failure() && steps.run_strict.conclusion == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: ci-diagnostics-strict
@@ -148,7 +148,7 @@ jobs:
           retention-days: 7
 
       - name: Comment on PR for strict warning signal
-        if: steps.run_strict.outcome == 'failure' && github.event_name == 'pull_request'
+        if: failure() && steps.run_strict.conclusion == 'failure' && github.event_name == 'pull_request'
         env:
           COMMENT_KIND: strict
           FAILED_COMMANDS: ${{ steps.run_strict.outputs.failures }}

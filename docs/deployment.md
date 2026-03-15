@@ -187,7 +187,7 @@ Also inspect workflow step summaries for remediation suggestions.
 |--------|--------------|-----|
 | CI fails on `validate:data` | schema/policy mismatch in `data/*.json` | run `bun run validate:data`, fix path-specific errors, commit |
 | CI fails on `build` | enrichment/validation/build issue | run `bun run build` locally, fix first failing command |
-| CI strict lane reports warnings | strict mode escalates warnings | run `bun run ci:strict`, resolve warning-level issues |
+| CI strict lane reports warnings | strict mode found a warning-level signal that still matters operationally | run `bun run ci:strict`, inspect the strict summary/artifact, and resolve the underlying issue; complete stale `public_cache` stale-cache reuse stays warning-only |
 | Deploy workflow does not trigger | CI did not succeed on `main` | ensure successful CI run on `main`, then re-push or re-run |
 | Deploy fails: invalid `base_path` | missing leading/trailing slash | use `/value/` format in manual dispatch |
 | Deployed page loads without CSS/JS | base path mismatch | test `PAGES_BASE_MODE`/`BASE_PATH`, rebuild and redeploy |

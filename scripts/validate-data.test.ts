@@ -3,7 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import test from "node:test";
+import type { EnrichmentRunReport } from "./enrichment/types";
 import {
+  enrichmentIssues,
   followerHistoryArtifactIssues,
   pathTouchesHookRichArtifactInputs,
   resolveHookRichArtifactCheckDecision,
@@ -228,4 +230,126 @@ test("follower-history validation reports index drift against the latest CSV row
 
   assert.equal(issues.length, 1);
   assert.match(issues[0]?.message ?? "", /does not match the latest row/u);
+});
+
+const createEnrichmentReport = (
+  overrides: Partial<EnrichmentRunReport["entries"][number]>,
+): EnrichmentRunReport => ({
+  generatedAt: "2026-03-15T18:42:42.897Z",
+  strict: true,
+  summary: {
+    total: 1,
+    fetched: 1,
+    partial: 0,
+    failed: 0,
+    skipped: 0,
+  },
+  failureMode: "immediate",
+  failOn: ["fetch_failed", "metadata_missing"],
+  entries: [
+    {
+      linkId: "instagram",
+      url: "https://www.instagram.com/peterryszkiewicz/",
+      status: "fetched",
+      reason: "public_cache",
+      attempts: 2,
+      durationMs: 200,
+      message: "Public metadata fetch failed; using stale committed public cache metadata.",
+      remediation: "Re-run `bun run enrich:rich:strict` later.",
+      staleCache: true,
+      ...overrides,
+    },
+  ],
+});
+
+test("stale public cache reuse is non-strict-blocking when cached metadata is complete", () => {
+  // Arrange
+  const report = createEnrichmentReport({});
+
+  // Act
+  const issues = enrichmentIssues(
+    "data/generated/rich-enrichment-report.json",
+    report,
+    true,
+    false,
+    new Set(),
+    new Set(),
+  );
+
+  // Assert
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "warning");
+  assert.equal(issues[0]?.strictBlocking, false);
+});
+
+test("stale public cache reuse stays strict-blocking when manual fallback is still required", () => {
+  // Arrange
+  const report = createEnrichmentReport({
+    manualFallbackUsed: true,
+    message:
+      "Public metadata fetch failed; using stale committed public cache metadata while manual fallback covers missing preview fields.",
+  });
+
+  // Act
+  const issues = enrichmentIssues(
+    "data/generated/rich-enrichment-report.json",
+    report,
+    true,
+    false,
+    new Set(),
+    new Set(),
+  );
+
+  // Assert
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "warning");
+  assert.equal(issues[0]?.strictBlocking, undefined);
+});
+
+test("stale public cache reuse stays strict-blocking when cached metadata is incomplete", () => {
+  // Arrange
+  const report = createEnrichmentReport({
+    missingFields: ["image"],
+    missingProfileFields: ["profileImage"],
+  });
+
+  // Act
+  const issues = enrichmentIssues(
+    "data/generated/rich-enrichment-report.json",
+    report,
+    true,
+    false,
+    new Set(),
+    new Set(),
+  );
+
+  // Assert
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "warning");
+  assert.equal(issues[0]?.strictBlocking, undefined);
+});
+
+test("blocking enrichment failures remain strict-failing in strict mode", () => {
+  // Arrange
+  const report = createEnrichmentReport({
+    status: "failed",
+    reason: "fetch_failed",
+    message: "Received HTTP 500.",
+    staleCache: undefined,
+  });
+
+  // Act
+  const issues = enrichmentIssues(
+    "data/generated/rich-enrichment-report.json",
+    report,
+    true,
+    false,
+    new Set(),
+    new Set(),
+  );
+
+  // Assert
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "error");
+  assert.equal(issues[0]?.strictBlocking, undefined);
 });
