@@ -1,3 +1,8 @@
+import {
+  type SiteSeoContentImageField,
+  getSiteSeoContentImageSlotId,
+} from "../content/content-image-slots";
+
 export interface SeoMetadata {
   title: string;
   description: string;
@@ -43,13 +48,21 @@ interface SeoResolutionTrace {
 
 export interface ResolveSeoMetadataOptions {
   fallbackOrigin?: string;
-  resolveImagePath?: (candidate: string) => string | undefined;
+  resolveImagePath?: (
+    candidate: string,
+    context: {
+      sourceField?: SiteSeoContentImageField;
+      slotId?: string;
+    },
+  ) => string | undefined;
 }
 
 export interface ResolvedSeoMetadata {
   metadata: SeoMetadata;
   trace: SeoResolutionTrace;
 }
+
+type SeoConfig = NonNullable<NonNullable<SeoSiteInput["quality"]>["seo"]>;
 
 const DEFAULT_PLACEHOLDER_ORIGIN = "https://placeholder.example/";
 const DEFAULT_SOCIAL_IMAGE = "/openlinks-social-fallback.svg";
@@ -218,6 +231,86 @@ const resolveCanonical = (
   };
 };
 
+const resolveImageCandidate = (
+  seo: SeoConfig | undefined,
+): {
+  candidate: string;
+  traceSource: string;
+  context: {
+    sourceField?: SiteSeoContentImageField;
+    slotId?: string;
+  };
+} => {
+  const profileOverrides = seo?.overrides?.profile ?? {};
+  const defaults = seo?.defaults ?? {};
+
+  const profileTwitterImage = firstString(profileOverrides.twitterImage);
+  if (profileTwitterImage) {
+    return {
+      candidate: profileTwitterImage,
+      traceSource: "seo.overrides.profile.image",
+      context: {
+        sourceField: "overrides.profile.twitterImage",
+        slotId: getSiteSeoContentImageSlotId("overrides.profile.twitterImage"),
+      },
+    };
+  }
+
+  const profileOgImage = firstString(profileOverrides.ogImage);
+  if (profileOgImage) {
+    return {
+      candidate: profileOgImage,
+      traceSource: "seo.overrides.profile.image",
+      context: {
+        sourceField: "overrides.profile.ogImage",
+        slotId: getSiteSeoContentImageSlotId("overrides.profile.ogImage"),
+      },
+    };
+  }
+
+  const defaultTwitterImage = firstString(defaults.twitterImage);
+  if (defaultTwitterImage) {
+    return {
+      candidate: defaultTwitterImage,
+      traceSource: "seo.defaults.image",
+      context: {
+        sourceField: "defaults.twitterImage",
+        slotId: getSiteSeoContentImageSlotId("defaults.twitterImage"),
+      },
+    };
+  }
+
+  const defaultOgImage = firstString(defaults.ogImage);
+  if (defaultOgImage) {
+    return {
+      candidate: defaultOgImage,
+      traceSource: "seo.defaults.image",
+      context: {
+        sourceField: "defaults.ogImage",
+        slotId: getSiteSeoContentImageSlotId("defaults.ogImage"),
+      },
+    };
+  }
+
+  const socialImageFallback = firstString(seo?.socialImageFallback);
+  if (socialImageFallback) {
+    return {
+      candidate: socialImageFallback,
+      traceSource: "seo.socialImageFallback",
+      context: {
+        sourceField: "socialImageFallback",
+        slotId: getSiteSeoContentImageSlotId("socialImageFallback"),
+      },
+    };
+  }
+
+  return {
+    candidate: DEFAULT_SOCIAL_IMAGE,
+    traceSource: "default.socialImage",
+    context: {},
+  };
+};
+
 export const resolveSeoMetadata = (
   site: SeoSiteInput,
   profile: SeoProfileInput,
@@ -250,17 +343,12 @@ export const resolveSeoMetadata = (
     baseOrigin,
   );
 
-  const imageCandidate =
-    firstString(
-      profileOverrides.twitterImage,
-      profileOverrides.ogImage,
-      defaults.twitterImage,
-      defaults.ogImage,
-      seo?.socialImageFallback,
-      DEFAULT_SOCIAL_IMAGE,
-    ) ?? DEFAULT_SOCIAL_IMAGE;
+  const imageCandidate = resolveImageCandidate(seo);
   const resolvedImagePath =
-    firstString(options.resolveImagePath?.(imageCandidate), imageCandidate) ?? imageCandidate;
+    firstString(
+      options.resolveImagePath?.(imageCandidate.candidate, imageCandidate.context),
+      imageCandidate.candidate,
+    ) ?? imageCandidate.candidate;
 
   const ogTitle = firstString(profileOverrides.ogTitle, defaults.ogTitle, title) ?? title;
   const ogDescription =
@@ -309,11 +397,7 @@ export const resolveSeoMetadata = (
             ? "profile.bio fallback"
             : "site.description fallback",
       canonicalSource: canonicalResolution.source,
-      imageSource: firstString(profileOverrides.twitterImage, profileOverrides.ogImage)
-        ? "seo.overrides.profile.image"
-        : firstString(defaults.twitterImage, defaults.ogImage)
-          ? "seo.defaults.image"
-          : "seo.socialImageFallback",
+      imageSource: imageCandidate.traceSource,
     },
   };
 };

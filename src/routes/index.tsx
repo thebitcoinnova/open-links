@@ -156,8 +156,11 @@ const applySeoMetadata = () => {
       : content.site;
   const { metadata } = resolveSeoMetadata(seoSite, content.profile, {
     fallbackOrigin: window.location.origin,
-    resolveImagePath: (candidate) => {
-      const resolved = resolveGeneratedContentImageUrl(candidate);
+    resolveImagePath: (candidate, context) => {
+      const resolved = resolveGeneratedContentImageUrl({
+        candidate,
+        slotId: context.slotId,
+      });
       if (!resolved) {
         return undefined;
       }

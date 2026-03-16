@@ -10,6 +10,11 @@ import {
   parseFollowerHistoryCsv,
   parseFollowerHistoryIndex,
 } from "../src/lib/analytics/follower-history";
+import {
+  collectContentImageSlots,
+  getLinkContentImageSlotId,
+  resolveEffectiveLinkContentImageMetadata,
+} from "../src/lib/content/content-image-slots";
 import type { OpenLink, SiteData } from "../src/lib/content/load-content";
 import {
   mergeMetadataWithManualSocialProfileOverrides,
@@ -51,7 +56,6 @@ import {
   loadRemoteCachePolicyRegistry,
   resolveRemoteCachePolicyRule,
 } from "./shared/remote-cache-policy";
-import { collectCandidates } from "./sync-content-images";
 import {
   type ValidationResult,
   formatHumanOutput,
@@ -122,7 +126,7 @@ interface GeneratedRichMetadataPayload {
 }
 
 interface GeneratedContentImagesPayload {
-  byUrl?: Record<string, { resolvedPath?: string }>;
+  bySlot?: Record<string, { resolvedPath?: string }>;
 }
 
 const absolutePath = (value: string): string =>
@@ -497,24 +501,24 @@ const resolveGeneratedMetadataByLink = (
   return byLink;
 };
 
-const resolveGeneratedContentImagesByUrl = (
+const resolveGeneratedContentImagesBySlot = (
   payload: GeneratedContentImagesPayload,
 ): Record<string, { resolvedPath?: string }> => {
-  if (!isRecord(payload) || !isRecord(payload.byUrl)) {
+  if (!isRecord(payload) || !isRecord(payload.bySlot)) {
     return {};
   }
 
-  const byUrl: Record<string, { resolvedPath?: string }> = {};
+  const bySlot: Record<string, { resolvedPath?: string }> = {};
 
-  for (const [url, value] of Object.entries(payload.byUrl)) {
+  for (const [slotId, value] of Object.entries(payload.bySlot)) {
     if (isRecord(value)) {
-      byUrl[url] = {
+      bySlot[slotId] = {
         resolvedPath: typeof value.resolvedPath === "string" ? value.resolvedPath : undefined,
       };
     }
   }
 
-  return byUrl;
+  return bySlot;
 };
 
 const remoteCachePolicyCoverageIssues = (input: {
@@ -589,9 +593,9 @@ const remoteCachePolicyCoverageIssues = (input: {
   const avatarUrl = toStringOrUndefined(input.profileData.avatar);
   requireCoverage("profile_avatar", avatarUrl, input.profileSource, "$.avatar");
 
-  const contentImageCandidates = collectCandidates(
-    input.linksData as Parameters<typeof collectCandidates>[0],
-    {
+  const contentImageSlots = collectContentImageSlots({
+    linksPayload: input.linksData as { links?: unknown[] },
+    generatedRichMetadata: {
       links: Object.fromEntries(
         Object.entries(input.generatedMetadataByLink).map(([linkId, metadata]) => [
           linkId,
@@ -599,10 +603,10 @@ const remoteCachePolicyCoverageIssues = (input: {
         ]),
       ),
     },
-    input.siteData as Parameters<typeof collectCandidates>[2],
-  );
-  for (const candidate of contentImageCandidates) {
-    requireCoverage("content_images", candidate, input.linksSource, "$.links");
+    sitePayload: input.siteData as SiteData,
+  });
+  for (const slot of contentImageSlots) {
+    requireCoverage("content_images", slot.sourceUrl, input.linksSource, "$.links");
   }
 
   const enabledByDefault = resolveEnabledByDefault(input.siteData);
@@ -906,9 +910,10 @@ export const followerHistoryArtifactIssues = (input?: {
   return issues;
 };
 
-const resolvePreviewImageAvailability = (
+export const resolvePreviewImageAvailability = (
   imageCandidate: string | undefined,
-  generatedContentImagesByUrl: Record<string, { resolvedPath?: string }>,
+  slotId: string,
+  generatedContentImagesBySlot: Record<string, { resolvedPath?: string }>,
   contentImagesPath: string,
 ): { hasImage: boolean; detail: string } => {
   if (!imageCandidate) {
@@ -938,7 +943,7 @@ const resolvePreviewImageAvailability = (
     };
   }
 
-  const entry = generatedContentImagesByUrl[canonical] ?? generatedContentImagesByUrl[trimmed];
+  const entry = generatedContentImagesBySlot[slotId];
   if (entry && typeof entry.resolvedPath === "string" && entry.resolvedPath.trim().length > 0) {
     return { hasImage: true, detail: "" };
   }
@@ -954,7 +959,7 @@ const richCardPreviewImageIssues = (
   linksData: Record<string, unknown>,
   siteData: Record<string, unknown>,
   generatedMetadataByLink: Record<string, Record<string, unknown>>,
-  generatedContentImagesByUrl: Record<string, { resolvedPath?: string }>,
+  generatedContentImagesBySlot: Record<string, { resolvedPath?: string }>,
   metadataPath: string,
   contentImagesPath: string,
 ): ValidationIssue[] => {
@@ -972,17 +977,19 @@ const richCardPreviewImageIssues = (
     }
 
     const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
-    const metadata = isRecord(rawLink.metadata) ? rawLink.metadata : {};
-    const generatedMetadata = generatedMetadataByLink[linkId] ?? {};
-    const mergedMetadata =
-      mergeMetadataWithManualSocialProfileOverrides(metadata, generatedMetadata) ?? {};
+    const generatedMetadata = generatedMetadataByLink[linkId];
+    const effectiveMetadata = resolveEffectiveLinkContentImageMetadata({
+      link: rawLink as unknown as OpenLink,
+      generatedMetadata,
+    });
     if (!richLinkNeedsPreviewValidation(siteData, rawLink, generatedMetadata)) {
       return;
     }
-    const previewImage = toStringOrUndefined(mergedMetadata.image);
+    const previewImage = toStringOrUndefined(effectiveMetadata.image);
     const imageAvailability = resolvePreviewImageAvailability(
       previewImage,
-      generatedContentImagesByUrl,
+      getLinkContentImageSlotId(linkId, "image"),
+      generatedContentImagesBySlot,
       contentImagesPath,
     );
 
@@ -1620,7 +1627,7 @@ export const run = () => {
           linksData,
           siteData,
           generatedMetadataByLink,
-          resolveGeneratedContentImagesByUrl(contentImagesRead.value),
+          resolveGeneratedContentImagesBySlot(contentImagesRead.value),
           metadataPath,
           contentImagesRead.path,
         ),

@@ -4,6 +4,10 @@
 
 ### In Progress
 
+- [x] Replace raw URL-keyed `data/cache/content-images.json` entries with stable slot keys covering link image fields and site SEO image fields.
+- [x] Move volatile content-image fetch provenance into the runtime manifest only, and switch runtime/validation/SEO resolution onto slot-based lookups.
+- [x] Add focused slot-resolution tests, regenerate the committed content-image manifest, and rerun validation/build verification.
+
 - [x] Add an AWS canonical deployment target for `openlinks.us` while keeping GitHub Pages as a noindex mirror and fork-safe default.
 - [x] Build the deploy script stack (`deploy:build`, setup/bootstrap/publish/verify) with check-mode idempotency, artifact manifests, and summary logs.
 - [x] Rewire CI and production deploy workflows to hand off AWS/Pages artifacts, gate AWS behind explicit opt-in config, and document the new contract.
@@ -13,6 +17,10 @@
 - [x] Add focused validation/CI tests and rerun the targeted strict-lane verification commands.
 
 ### Completion Review
+
+- Result: The tracked content-image cache now uses deterministic `bySlot` entries instead of volatile `byUrl` keys, with slot ids like `link:<id>:image` and `site:seo:defaults:ogImage`. Volatile fetch metadata now lives only in `data/cache/content-images.runtime.json`, the sync pipeline computes effective image slots from the same merge/normalization logic the app uses, runtime link image localization resolves by slot, SEO image resolution now receives slot context, and preview-image validation now checks slot materialization rather than raw remote URL presence.
+- Verification: `bun test scripts/sync-content-images.test.ts scripts/validate-data.test.ts src/lib/content/load-content.test.ts src/lib/seo/resolve-seo-metadata.test.ts` passed. `bun run typecheck` passed. `bun run biome:check` passed. `bun run validate:data` passed. `bun run build` passed after rerunning the full prebuild path (`avatar:sync`, `enrich:rich:strict`, `images:sync`, `validate:data`). `git diff --check` passed.
+- Residual risk: The first migration run rewrote `data/cache/content-images.json` from `byUrl` to `bySlot`, so the committed diff is intentionally large once. Future churn from rotating signed social CDN URLs should now stay in the untracked runtime manifest, but the slot collector still emits separate stable entries when multiple effective fields intentionally point at the same remote image.
 
 - Result: OpenLinks now has a first-class AWS deployment path for `openlinks.us` plus a GitHub Pages mirror path, both built from target-aware artifacts under `.artifacts/deploy/`. The repo now includes deploy config helpers, deploy manifests and integrity assertions, AWS bootstrap/publish/setup scripts, GitHub Pages deployment helpers, production workflow rewiring, nightly direct deploy parity for bot-authored pushes, and docs/OpenClaw contract updates that treat AWS as canonical and Pages as the mirror.
 - Verification: `bun run test:deploy` passed. `bun run typecheck` passed. `bun run biome:check` passed after ignoring generated deploy artifacts/logs in Biome config. `bun run deploy:build` passed and wrote summaries under `.codex/logs/deploy/`. `bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages` passed and reported a changed mirror artifact. `bun run deploy:setup` passed in check mode. `git diff --check` passed.

@@ -3,6 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import {
+  type ContentImageSiteInput,
+  type GeneratedRichMetadataInput,
+  collectContentImageSlots,
+} from "../src/lib/content/content-image-slots";
+import {
   type RemoteCacheCheckStatus,
   type RemoteCachePreviousState,
   RemoteCacheStatsCollector,
@@ -18,14 +23,17 @@ export type ContentImageSyncStatus =
   | "cache_on_error"
   | "fallback_on_error";
 
-export interface GeneratedContentImageEntry {
-  sourceUrl: string;
+export interface StableGeneratedContentImageEntry {
   resolvedPath?: string;
   updatedAt?: string;
-  etag?: string;
-  lastModified?: string;
   contentType?: string;
   bytes?: number;
+}
+
+export interface RuntimeGeneratedContentImageEntry {
+  sourceUrl: string;
+  etag?: string;
+  lastModified?: string;
   checkStatus?: ContentImageSyncStatus;
   cacheControl?: string;
   expiresAt?: string;
@@ -33,54 +41,13 @@ export interface GeneratedContentImageEntry {
   warning?: string;
 }
 
-export interface GeneratedContentImagesManifest {
+export interface GeneratedContentImagesManifest<TEntry> {
   generatedAt: string;
-  byUrl: Record<string, GeneratedContentImageEntry>;
-}
-
-interface RichMetadataPayload {
-  links?: Record<
-    string,
-    {
-      metadata?: {
-        image?: unknown;
-        profileImage?: unknown;
-        ogImage?: unknown;
-        twitterImage?: unknown;
-      };
-    }
-  >;
+  bySlot: Record<string, TEntry>;
 }
 
 interface LinksPayload {
-  links?: Array<{
-    id?: unknown;
-    type?: unknown;
-    metadata?: {
-      image?: unknown;
-      profileImage?: unknown;
-      ogImage?: unknown;
-      twitterImage?: unknown;
-    };
-  }>;
-}
-
-interface SitePayload {
-  quality?: {
-    seo?: {
-      socialImageFallback?: unknown;
-      defaults?: {
-        ogImage?: unknown;
-        twitterImage?: unknown;
-      };
-      overrides?: {
-        profile?: {
-          ogImage?: unknown;
-          twitterImage?: unknown;
-        };
-      };
-    };
-  };
+  links?: unknown[];
 }
 
 interface CliArgs {
@@ -142,6 +109,7 @@ const isTruthy = (value: string | undefined): boolean => {
   if (!value) {
     return false;
   }
+
   const normalized = value.trim().toLowerCase();
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 };
@@ -191,6 +159,7 @@ const parseNumber = (value: string | undefined): number | undefined => {
   if (!value) {
     return undefined;
   }
+
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : undefined;
 };
@@ -308,10 +277,10 @@ const resolvedPathFromOutputDir = (outputDir: string, fileName: string): string 
   return [relativeToPublic, fileName].filter(Boolean).join("/");
 };
 
-const normalizeEntry = (entry: GeneratedContentImageEntry): GeneratedContentImageEntry => {
-  const normalized: GeneratedContentImageEntry = {
-    sourceUrl: entry.sourceUrl,
-  };
+const normalizeStableEntry = (
+  entry: StableGeneratedContentImageEntry,
+): StableGeneratedContentImageEntry => {
+  const normalized: StableGeneratedContentImageEntry = {};
 
   if (trimToUndefined(entry.resolvedPath)) {
     normalized.resolvedPath = trimToUndefined(entry.resolvedPath);
@@ -319,17 +288,28 @@ const normalizeEntry = (entry: GeneratedContentImageEntry): GeneratedContentImag
   if (trimToUndefined(entry.updatedAt)) {
     normalized.updatedAt = trimToUndefined(entry.updatedAt);
   }
-  if (trimToUndefined(entry.etag)) {
-    normalized.etag = trimToUndefined(entry.etag);
-  }
-  if (trimToUndefined(entry.lastModified)) {
-    normalized.lastModified = trimToUndefined(entry.lastModified);
-  }
   if (trimToUndefined(entry.contentType)) {
     normalized.contentType = trimToUndefined(entry.contentType);
   }
   if (typeof entry.bytes === "number" && Number.isFinite(entry.bytes) && entry.bytes >= 0) {
     normalized.bytes = entry.bytes;
+  }
+
+  return normalized;
+};
+
+const normalizeRuntimeEntry = (
+  entry: RuntimeGeneratedContentImageEntry,
+): RuntimeGeneratedContentImageEntry => {
+  const normalized: RuntimeGeneratedContentImageEntry = {
+    sourceUrl: entry.sourceUrl,
+  };
+
+  if (trimToUndefined(entry.etag)) {
+    normalized.etag = trimToUndefined(entry.etag);
+  }
+  if (trimToUndefined(entry.lastModified)) {
+    normalized.lastModified = trimToUndefined(entry.lastModified);
   }
   if (trimToUndefined(entry.checkStatus)) {
     normalized.checkStatus = trimToUndefined(entry.checkStatus) as ContentImageSyncStatus;
@@ -350,30 +330,60 @@ const normalizeEntry = (entry: GeneratedContentImageEntry): GeneratedContentImag
   return normalized;
 };
 
-const readPreviousManifest = (manifestPath: string): GeneratedContentImagesManifest | null => {
+const readPreviousStableManifest = (
+  manifestPath: string,
+): GeneratedContentImagesManifest<StableGeneratedContentImageEntry> | null => {
   const parsed = maybeReadJson<unknown>(manifestPath);
-  if (!parsed || !isRecord(parsed) || !isRecord(parsed.byUrl)) {
+  if (!parsed || !isRecord(parsed) || !isRecord(parsed.bySlot)) {
     return null;
   }
 
-  const byUrl: Record<string, GeneratedContentImageEntry> = {};
+  const bySlot: Record<string, StableGeneratedContentImageEntry> = {};
 
-  for (const [url, rawEntry] of Object.entries(parsed.byUrl)) {
-    if (!isRecord(rawEntry) || typeof rawEntry.sourceUrl !== "string") {
+  for (const [slotId, rawEntry] of Object.entries(parsed.bySlot)) {
+    if (!isRecord(rawEntry)) {
       continue;
     }
 
-    byUrl[url] = normalizeEntry({
-      sourceUrl: rawEntry.sourceUrl,
+    bySlot[slotId] = normalizeStableEntry({
       resolvedPath: typeof rawEntry.resolvedPath === "string" ? rawEntry.resolvedPath : undefined,
       updatedAt: typeof rawEntry.updatedAt === "string" ? rawEntry.updatedAt : undefined,
-      etag: typeof rawEntry.etag === "string" ? rawEntry.etag : undefined,
-      lastModified: typeof rawEntry.lastModified === "string" ? rawEntry.lastModified : undefined,
       contentType: typeof rawEntry.contentType === "string" ? rawEntry.contentType : undefined,
       bytes:
         typeof rawEntry.bytes === "number" && Number.isFinite(rawEntry.bytes)
           ? rawEntry.bytes
           : undefined,
+    });
+  }
+
+  return {
+    generatedAt:
+      typeof parsed.generatedAt === "string" && parsed.generatedAt.trim().length > 0
+        ? parsed.generatedAt
+        : new Date(0).toISOString(),
+    bySlot,
+  };
+};
+
+const readPreviousRuntimeManifest = (
+  manifestPath: string,
+): GeneratedContentImagesManifest<RuntimeGeneratedContentImageEntry> | null => {
+  const parsed = maybeReadJson<unknown>(manifestPath);
+  if (!parsed || !isRecord(parsed) || !isRecord(parsed.bySlot)) {
+    return null;
+  }
+
+  const bySlot: Record<string, RuntimeGeneratedContentImageEntry> = {};
+
+  for (const [slotId, rawEntry] of Object.entries(parsed.bySlot)) {
+    if (!isRecord(rawEntry) || typeof rawEntry.sourceUrl !== "string") {
+      continue;
+    }
+
+    bySlot[slotId] = normalizeRuntimeEntry({
+      sourceUrl: rawEntry.sourceUrl,
+      etag: typeof rawEntry.etag === "string" ? rawEntry.etag : undefined,
+      lastModified: typeof rawEntry.lastModified === "string" ? rawEntry.lastModified : undefined,
       checkStatus:
         typeof rawEntry.checkStatus === "string"
           ? (rawEntry.checkStatus as ContentImageSyncStatus)
@@ -390,56 +400,58 @@ const readPreviousManifest = (manifestPath: string): GeneratedContentImagesManif
       typeof parsed.generatedAt === "string" && parsed.generatedAt.trim().length > 0
         ? parsed.generatedAt
         : new Date(0).toISOString(),
-    byUrl,
+    bySlot,
   };
 };
 
-const writeManifest = (manifestPath: string, manifest: GeneratedContentImagesManifest) => {
+const writeManifest = <TEntry>(
+  manifestPath: string,
+  manifest: GeneratedContentImagesManifest<TEntry>,
+) => {
   const absolute = absolutePath(manifestPath);
   ensureDirectoryForFile(absolute);
   fs.writeFileSync(absolute, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 };
 
 const hasSameStablePayload = (
-  left: GeneratedContentImageEntry,
-  right: GeneratedContentImageEntry,
+  left: StableGeneratedContentImageEntry,
+  right: StableGeneratedContentImageEntry,
 ): boolean =>
-  left.sourceUrl === right.sourceUrl &&
   left.resolvedPath === right.resolvedPath &&
-  left.etag === right.etag &&
-  left.lastModified === right.lastModified &&
   left.contentType === right.contentType &&
   left.bytes === right.bytes;
 
 export const stabilizeContentImageEntry = (
-  previousEntry: GeneratedContentImageEntry | undefined,
-  nextEntry: GeneratedContentImageEntry,
-): GeneratedContentImageEntry => {
-  const normalizedNext = normalizeEntry(nextEntry);
+  previousEntry: StableGeneratedContentImageEntry | undefined,
+  nextEntry: StableGeneratedContentImageEntry,
+): StableGeneratedContentImageEntry => {
+  const normalizedNext = normalizeStableEntry(nextEntry);
   if (!previousEntry || !hasSameStablePayload(previousEntry, normalizedNext)) {
     return normalizedNext;
   }
 
-  return normalizeEntry({
+  return normalizeStableEntry({
     ...normalizedNext,
     updatedAt: previousEntry.updatedAt,
   });
 };
 
-const areEntriesEqual = (
-  left: GeneratedContentImageEntry | undefined,
-  right: GeneratedContentImageEntry | undefined,
+const areEntriesEqual = <TEntry>(
+  left: TEntry | undefined,
+  right: TEntry | undefined,
+  normalize: (entry: TEntry) => TEntry,
 ): boolean => {
   if (!left || !right) {
     return left === right;
   }
 
-  return JSON.stringify(normalizeEntry(left)) === JSON.stringify(normalizeEntry(right));
+  return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
 };
 
-const areEntryMapsEqual = (
-  left: Record<string, GeneratedContentImageEntry>,
-  right: Record<string, GeneratedContentImageEntry>,
+const areEntryMapsEqual = <TEntry>(
+  left: Record<string, TEntry>,
+  right: Record<string, TEntry>,
+  normalize: (entry: TEntry) => TEntry,
 ): boolean => {
   const leftKeys = Object.keys(left).sort();
   const rightKeys = Object.keys(right).sort();
@@ -447,132 +459,45 @@ const areEntryMapsEqual = (
     return false;
   }
 
-  return leftKeys.every((key) => areEntriesEqual(left[key], right[key]));
+  return leftKeys.every((key) => areEntriesEqual(left[key], right[key], normalize));
 };
 
 export const buildStableContentImagesManifest = (input: {
-  previousManifest: GeneratedContentImagesManifest | null;
-  byUrl: Record<string, GeneratedContentImageEntry>;
+  previousManifest: GeneratedContentImagesManifest<StableGeneratedContentImageEntry> | null;
+  bySlot: Record<string, StableGeneratedContentImageEntry>;
   generatedAt: string;
-}): GeneratedContentImagesManifest => ({
+}): GeneratedContentImagesManifest<StableGeneratedContentImageEntry> => ({
   generatedAt:
-    input.previousManifest && areEntryMapsEqual(input.previousManifest.byUrl, input.byUrl)
+    input.previousManifest &&
+    areEntryMapsEqual(input.previousManifest.bySlot, input.bySlot, normalizeStableEntry)
       ? input.previousManifest.generatedAt
       : input.generatedAt,
-  byUrl: input.byUrl,
+  bySlot: input.bySlot,
 });
 
-const mergePreviousEntries = (
-  stableEntry: GeneratedContentImageEntry | undefined,
-  runtimeEntry: GeneratedContentImageEntry | undefined,
-): GeneratedContentImageEntry | undefined => {
+const createPreviousState = (
+  stableEntry: StableGeneratedContentImageEntry | undefined,
+  runtimeEntry: RuntimeGeneratedContentImageEntry | undefined,
+): RemoteCachePreviousState | undefined => {
   if (!stableEntry && !runtimeEntry) {
     return undefined;
   }
 
-  return normalizeEntry({
-    ...(stableEntry ?? {}),
-    ...(runtimeEntry ?? {}),
-    sourceUrl: runtimeEntry?.sourceUrl ?? stableEntry?.sourceUrl ?? "",
-  });
+  return {
+    etag: runtimeEntry?.etag,
+    lastModified: runtimeEntry?.lastModified,
+    cacheControl: runtimeEntry?.cacheControl,
+    expiresAt: runtimeEntry?.expiresAt,
+    bytes: stableEntry?.bytes,
+  };
 };
 
-const toStableEntry = (
-  entry: GeneratedContentImageEntry | undefined,
-): GeneratedContentImageEntry | undefined => {
-  if (!entry?.resolvedPath || !entry.updatedAt) {
-    return undefined;
-  }
-
-  return normalizeEntry({
-    sourceUrl: entry.sourceUrl,
-    resolvedPath: entry.resolvedPath,
-    updatedAt: entry.updatedAt,
-    etag: entry.etag,
-    lastModified: entry.lastModified,
-    contentType: entry.contentType,
-    bytes: entry.bytes,
-  });
-};
-
-const toRuntimeEntry = (
-  entry: GeneratedContentImageEntry | undefined,
-): GeneratedContentImageEntry | undefined => {
-  if (!entry?.checkStatus || !entry.checkedAt) {
-    return undefined;
-  }
-
-  return normalizeEntry({
-    sourceUrl: entry.sourceUrl,
-    checkStatus: entry.checkStatus,
-    checkedAt: entry.checkedAt,
-    cacheControl: entry.cacheControl,
-    expiresAt: entry.expiresAt,
-    warning: entry.warning,
-  });
-};
-
-export const collectCandidates = (
-  linksPayload: LinksPayload,
-  generatedRichMetadata: RichMetadataPayload | null,
-  sitePayload: SitePayload,
-): string[] => {
-  const candidates = new Set<string>();
-  const links = Array.isArray(linksPayload.links) ? linksPayload.links : [];
-  const generatedLinks = isRecord(generatedRichMetadata?.links) ? generatedRichMetadata.links : {};
-
-  for (const link of links) {
-    if (!isRecord(link)) {
-      continue;
-    }
-
-    const linkId = typeof link.id === "string" ? link.id : undefined;
-    const generatedMetadata =
-      linkId && isRecord(generatedLinks[linkId]) && isRecord(generatedLinks[linkId].metadata)
-        ? generatedLinks[linkId].metadata
-        : undefined;
-    const manualMetadata = isRecord(link.metadata) ? link.metadata : undefined;
-
-    const candidateValues = [
-      generatedMetadata?.image,
-      generatedMetadata?.profileImage,
-      generatedMetadata?.ogImage,
-      generatedMetadata?.twitterImage,
-      manualMetadata?.image,
-      manualMetadata?.profileImage,
-      manualMetadata?.ogImage,
-      manualMetadata?.twitterImage,
-    ];
-
-    for (const candidateValue of candidateValues) {
-      if (typeof candidateValue === "string" && candidateValue.trim().length > 0) {
-        candidates.add(candidateValue.trim());
-      }
-    }
-  }
-
-  const seo = sitePayload.quality?.seo;
-  const seoValues: unknown[] = [
-    seo?.socialImageFallback,
-    seo?.defaults?.ogImage,
-    seo?.defaults?.twitterImage,
-    seo?.overrides?.profile?.ogImage,
-    seo?.overrides?.profile?.twitterImage,
-  ];
-
-  for (const value of seoValues) {
-    if (typeof value === "string" && value.trim().length > 0) {
-      candidates.add(value.trim());
-    }
-  }
-
-  return [...candidates];
-};
-
-const listReferencedResolvedPaths = (manifest: GeneratedContentImagesManifest): Set<string> => {
+const listReferencedResolvedPaths = (
+  manifest: GeneratedContentImagesManifest<StableGeneratedContentImageEntry>,
+): Set<string> => {
   const paths = new Set<string>();
 
-  for (const entry of Object.values(manifest.byUrl)) {
+  for (const entry of Object.values(manifest.bySlot)) {
     if (typeof entry.resolvedPath === "string" && entry.resolvedPath.trim().length > 0) {
       paths.add(normalizePublicPath(entry.resolvedPath));
     }
@@ -639,14 +564,18 @@ const recordRunStatus = (
 
 const buildRuntimeEntry = (input: {
   sourceUrl: string;
+  etag?: string;
+  lastModified?: string;
   checkStatus: ContentImageSyncStatus;
   checkedAt: string;
   cacheControl?: string;
   expiresAt?: string;
   warning?: string;
-}): GeneratedContentImageEntry =>
-  normalizeEntry({
+}): RuntimeGeneratedContentImageEntry =>
+  normalizeRuntimeEntry({
     sourceUrl: input.sourceUrl,
+    etag: input.etag,
+    lastModified: input.lastModified,
     checkStatus: input.checkStatus,
     checkedAt: input.checkedAt,
     cacheControl: input.cacheControl,
@@ -655,20 +584,14 @@ const buildRuntimeEntry = (input: {
   });
 
 const buildStableEntry = (input: {
-  sourceUrl: string;
   resolvedPath: string;
   updatedAt: string;
-  etag?: string;
-  lastModified?: string;
   contentType?: string;
   bytes?: number;
-}): GeneratedContentImageEntry =>
-  normalizeEntry({
-    sourceUrl: input.sourceUrl,
+}): StableGeneratedContentImageEntry =>
+  normalizeStableEntry({
     resolvedPath: input.resolvedPath,
     updatedAt: input.updatedAt,
-    etag: input.etag,
-    lastModified: input.lastModified,
     contentType: input.contentType,
     bytes: input.bytes,
   });
@@ -676,30 +599,33 @@ const buildStableEntry = (input: {
 const run = async () => {
   const args = parseArgs();
   const linksPayload = readJson<LinksPayload>(args.linksPath);
-  const sitePayload = readJson<SitePayload>(args.sitePath);
-  const generatedRichMetadata = maybeReadJson<RichMetadataPayload>(args.richMetadataPath);
-  const previousManifest = readPreviousManifest(args.manifestPath);
-  const previousRuntimeManifest = readPreviousManifest(args.runtimeManifestPath);
+  const sitePayload = readJson<ContentImageSiteInput>(args.sitePath);
+  const generatedRichMetadata = maybeReadJson<GeneratedRichMetadataInput>(args.richMetadataPath);
+  const previousManifest = readPreviousStableManifest(args.manifestPath);
+  const previousRuntimeManifest = readPreviousRuntimeManifest(args.runtimeManifestPath);
   const remoteCachePolicyRegistry = loadRemoteCachePolicyRegistry();
   const remoteCacheStats = new RemoteCacheStatsCollector("sync-content-images");
 
-  const candidates = collectCandidates(linksPayload, generatedRichMetadata, sitePayload);
-  const nextByUrl: Record<string, GeneratedContentImageEntry> = {};
-  const nextRuntimeByUrl: Record<string, GeneratedContentImageEntry> = {};
+  const slots = collectContentImageSlots({
+    linksPayload,
+    generatedRichMetadata,
+    sitePayload,
+  });
+  const nextBySlot: Record<string, StableGeneratedContentImageEntry> = {};
+  const nextRuntimeBySlot: Record<string, RuntimeGeneratedContentImageEntry> = {};
   const summary = createRunSummary();
 
   fs.mkdirSync(absolutePath(args.outputDir), { recursive: true });
 
-  for (const candidate of candidates) {
+  for (const slot of slots) {
+    const candidate = slot.sourceUrl;
     if (!hasUrlScheme(candidate)) {
       continue;
     }
 
     const httpUrl = toCanonicalHttpUrl(candidate);
-    const candidateKey = httpUrl ?? candidate;
-    const previousStableEntry = previousManifest?.byUrl[candidateKey];
-    const previousRuntimeEntry = previousRuntimeManifest?.byUrl[candidateKey];
-    const previousEntry = mergePreviousEntries(previousStableEntry, previousRuntimeEntry);
+    const previousStableEntry = previousManifest?.bySlot[slot.slotId];
+    const previousRuntimeEntry = previousRuntimeManifest?.bySlot[slot.slotId];
     const cachedAssetExists =
       !!previousStableEntry?.resolvedPath &&
       fs.existsSync(resolveManifestAssetAbsolutePath(previousStableEntry.resolvedPath));
@@ -707,7 +633,7 @@ const run = async () => {
     if (!httpUrl) {
       const warning = `Unsupported non-http image URL '${candidate}'. Runtime will use local fallback behavior.`;
       logWarning(warning);
-      nextRuntimeByUrl[candidateKey] = buildRuntimeEntry({
+      nextRuntimeBySlot[slot.slotId] = buildRuntimeEntry({
         sourceUrl: candidate,
         checkStatus: "fallback_on_error",
         checkedAt: new Date().toISOString(),
@@ -716,16 +642,6 @@ const run = async () => {
       recordRunStatus(summary, "fallback_on_error");
       continue;
     }
-
-    const previousState: RemoteCachePreviousState | undefined = previousEntry
-      ? {
-          etag: previousEntry.etag,
-          lastModified: previousEntry.lastModified,
-          cacheControl: previousEntry.cacheControl,
-          expiresAt: previousEntry.expiresAt,
-          bytes: previousEntry.bytes,
-        }
-      : undefined;
 
     const result = await fetchWithRemoteCachePolicy({
       url: httpUrl,
@@ -737,20 +653,20 @@ const run = async () => {
       },
       userAgent: "open-links-content-image-sync/0.1",
       bodyType: "buffer",
-      previous: previousState,
+      previous: createPreviousState(previousStableEntry, previousRuntimeEntry),
       cacheValueAvailable: cachedAssetExists,
       force: args.force,
       statsCollector: remoteCacheStats,
     });
 
     const writeStableAndRuntime = (input: {
-      stable?: GeneratedContentImageEntry;
-      runtime: GeneratedContentImageEntry;
+      stable?: StableGeneratedContentImageEntry;
+      runtime: RuntimeGeneratedContentImageEntry;
     }) => {
       if (input.stable) {
-        nextByUrl[candidateKey] = stabilizeContentImageEntry(previousStableEntry, input.stable);
+        nextBySlot[slot.slotId] = stabilizeContentImageEntry(previousStableEntry, input.stable);
       }
-      nextRuntimeByUrl[candidateKey] = input.runtime;
+      nextRuntimeBySlot[slot.slotId] = input.runtime;
     };
 
     if (result.kind === "fetched") {
@@ -777,16 +693,15 @@ const run = async () => {
 
       writeStableAndRuntime({
         stable: buildStableEntry({
-          sourceUrl: httpUrl,
           resolvedPath,
           updatedAt: result.checkedAt,
-          etag: result.headers.etag,
-          lastModified: result.headers.lastModified,
           contentType: result.headers.contentType,
           bytes: result.bytesFetched,
         }),
         runtime: buildRuntimeEntry({
           sourceUrl: httpUrl,
+          etag: result.headers.etag,
+          lastModified: result.headers.lastModified,
           checkStatus: "fetched",
           checkedAt: result.checkedAt,
           cacheControl: result.headers.cacheControl,
@@ -811,16 +726,15 @@ const run = async () => {
     ) {
       writeStableAndRuntime({
         stable: buildStableEntry({
-          sourceUrl: httpUrl,
           resolvedPath: previousStableEntry.resolvedPath,
           updatedAt: result.checkedAt,
-          etag: result.headers.etag ?? previousEntry?.etag,
-          lastModified: result.headers.lastModified ?? previousEntry?.lastModified,
           contentType: previousStableEntry.contentType,
           bytes: previousStableEntry.bytes,
         }),
         runtime: buildRuntimeEntry({
           sourceUrl: httpUrl,
+          etag: result.headers.etag ?? previousRuntimeEntry?.etag,
+          lastModified: result.headers.lastModified ?? previousRuntimeEntry?.lastModified,
           checkStatus: result.checkStatus,
           checkedAt: result.checkedAt,
           cacheControl: result.headers.cacheControl ?? previousRuntimeEntry?.cacheControl,
@@ -847,6 +761,8 @@ const run = async () => {
         stable: previousStableEntry,
         runtime: buildRuntimeEntry({
           sourceUrl: httpUrl,
+          etag: previousRuntimeEntry?.etag,
+          lastModified: previousRuntimeEntry?.lastModified,
           checkStatus: "cache_on_error",
           checkedAt: new Date().toISOString(),
           cacheControl: previousRuntimeEntry?.cacheControl,
@@ -862,7 +778,7 @@ const run = async () => {
       result.kind === "error" ? result.error : result.kind
     }) for '${httpUrl}'. Runtime will use local fallback behavior.`;
     logWarning(warning);
-    nextRuntimeByUrl[candidateKey] = buildRuntimeEntry({
+    nextRuntimeBySlot[slot.slotId] = buildRuntimeEntry({
       sourceUrl: httpUrl,
       checkStatus: "fallback_on_error",
       checkedAt: new Date().toISOString(),
@@ -873,25 +789,32 @@ const run = async () => {
 
   const manifest = buildStableContentImagesManifest({
     previousManifest,
-    byUrl: nextByUrl,
+    bySlot: nextBySlot,
     generatedAt: new Date().toISOString(),
   });
-  const runtimeManifest: GeneratedContentImagesManifest = {
+  const runtimeManifest: GeneratedContentImagesManifest<RuntimeGeneratedContentImageEntry> = {
     generatedAt: new Date().toISOString(),
-    byUrl: nextRuntimeByUrl,
+    bySlot: nextRuntimeBySlot,
   };
 
   const keepPaths = listReferencedResolvedPaths(manifest);
   garbageCollectOutput(args.outputDir, keepPaths);
 
-  if (!previousManifest || !areEntryMapsEqual(previousManifest.byUrl, manifest.byUrl)) {
+  if (
+    !previousManifest ||
+    !areEntryMapsEqual(previousManifest.bySlot, manifest.bySlot, normalizeStableEntry)
+  ) {
     writeManifest(args.manifestPath, manifest);
   }
 
   if (
     !previousRuntimeManifest ||
     previousRuntimeManifest.generatedAt !== runtimeManifest.generatedAt ||
-    !areEntryMapsEqual(previousRuntimeManifest.byUrl, runtimeManifest.byUrl)
+    !areEntryMapsEqual(
+      previousRuntimeManifest.bySlot,
+      runtimeManifest.bySlot,
+      normalizeRuntimeEntry,
+    )
   ) {
     writeManifest(args.runtimeManifestPath, runtimeManifest);
   }
@@ -900,8 +823,8 @@ const run = async () => {
   writeRemoteCacheRunSummary(remoteCacheStatsPath, remoteCacheStats);
 
   console.log("OpenLinks content image sync summary");
-  console.log(`Candidates: ${candidates.length}`);
-  console.log(`Tracked URL entries: ${Object.keys(manifest.byUrl).length}`);
+  console.log(`Candidates: ${slots.length}`);
+  console.log(`Tracked slot entries: ${Object.keys(manifest.bySlot).length}`);
   console.log(
     `Statuses: fetched=${summary.fetched}, not_modified=${summary.notModified}, cache_fresh=${summary.cacheFresh}, cache_on_error=${summary.cacheOnError}, fallback_on_error=${summary.fallbackOnError}`,
   );

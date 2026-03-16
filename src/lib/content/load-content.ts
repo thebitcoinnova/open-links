@@ -8,6 +8,11 @@ import {
   isPaymentCapableLink,
 } from "../payments/types";
 import {
+  CONTENT_IMAGE_FIELDS,
+  getLinkContentImageSlotId,
+  resolveContentImageResolvedPathForSlot,
+} from "./content-image-slots";
+import {
   type SocialProfileMetadataFields,
   mergeMetadataWithManualSocialProfileOverrides,
 } from "./social-profile-fields";
@@ -306,18 +311,12 @@ interface GeneratedProfileAvatarPayload {
 }
 
 interface GeneratedContentImageEntry {
-  sourceUrl?: string;
   resolvedPath?: string;
-  etag?: string;
-  lastModified?: string;
-  contentType?: string;
-  bytes?: number;
-  updatedAt?: string;
 }
 
 interface GeneratedContentImagesPayload {
   generatedAt?: string;
-  byUrl?: Record<string, GeneratedContentImageEntry>;
+  bySlot?: Record<string, GeneratedContentImageEntry>;
 }
 
 const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetadataPayload }>(
@@ -425,72 +424,47 @@ const resolveGeneratedContentImages = (): Record<string, GeneratedContentImageEn
 
   const module = Object.values(cachedContentImageModules)[0];
   const payload = module?.default;
-  if (!payload || !isRecord(payload.byUrl)) {
+  if (!payload || !isRecord(payload.bySlot)) {
     return mapped;
   }
 
-  for (const [url, value] of Object.entries(payload.byUrl)) {
+  for (const [slotId, value] of Object.entries(payload.bySlot)) {
     if (!isRecord(value)) {
       continue;
     }
-    mapped[url] = value as GeneratedContentImageEntry;
+    mapped[slotId] = value as GeneratedContentImageEntry;
   }
 
   return mapped;
 };
 
-const hasUrlScheme = (value: string): boolean => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value);
-
-const toCanonicalHttpUrl = (value: string): string | null => {
-  try {
-    const parsed = new URL(value);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return parsed.toString();
-    }
-    return null;
-  } catch {
-    return null;
-  }
-};
-
-const resolveImageFromGeneratedMap = (
-  candidate: string,
-  generatedByUrl: Record<string, GeneratedContentImageEntry>,
-): string | undefined => {
-  const canonical = toCanonicalHttpUrl(candidate);
-  if (!canonical) {
+export const resolveGeneratedContentImageUrlForSlot = (input: {
+  candidate: string | undefined;
+  slotId?: string;
+  generatedBySlot: Record<string, GeneratedContentImageEntry>;
+}): string | undefined => {
+  const resolvedPath = resolveContentImageResolvedPathForSlot({
+    candidate: input.candidate,
+    slotId: input.slotId,
+    generatedBySlot: input.generatedBySlot,
+  });
+  if (!resolvedPath) {
     return undefined;
   }
 
-  const entry = generatedByUrl[canonical] ?? generatedByUrl[candidate];
-  if (!entry || typeof entry.resolvedPath !== "string" || entry.resolvedPath.trim().length === 0) {
-    return undefined;
-  }
-
-  return toLocalAssetUrl(entry.resolvedPath);
+  return toLocalAssetUrl(resolvedPath);
 };
 
-const resolveGeneratedAssetUrl = (
-  candidate: string | undefined,
-  generatedByUrl: Record<string, GeneratedContentImageEntry>,
-): string | undefined => {
-  if (typeof candidate !== "string" || candidate.trim().length === 0) {
-    return undefined;
-  }
-
-  const trimmed = candidate.trim();
-  if (!hasUrlScheme(trimmed)) {
-    return toLocalAssetUrl(trimmed);
-  }
-
-  return resolveImageFromGeneratedMap(trimmed, generatedByUrl);
-};
-
-export const resolveGeneratedContentImageUrl = (
-  candidate: string | undefined,
-): string | undefined => {
-  const generatedByUrl = resolveGeneratedContentImages();
-  return resolveGeneratedAssetUrl(candidate, generatedByUrl);
+export const resolveGeneratedContentImageUrl = (input: {
+  candidate: string | undefined;
+  slotId?: string;
+}): string | undefined => {
+  const generatedBySlot = resolveGeneratedContentImages();
+  return resolveGeneratedContentImageUrlForSlot({
+    candidate: input.candidate,
+    slotId: input.slotId,
+    generatedBySlot,
+  });
 };
 
 const resolveProfileAvatarPath = (): string => {
@@ -511,7 +485,7 @@ const resolveProfileAvatarPath = (): string => {
 
 const localizeRichMetadataImages = (
   links: OpenLink[],
-  generatedByUrl: Record<string, GeneratedContentImageEntry>,
+  generatedBySlot: Record<string, GeneratedContentImageEntry>,
 ): OpenLink[] =>
   links.map((link) => {
     if (!link.metadata) {
@@ -521,13 +495,17 @@ const localizeRichMetadataImages = (
     const metadataRecord = { ...link.metadata } as Record<string, unknown>;
     let mutated = false;
 
-    for (const field of ["image", "profileImage", "ogImage", "twitterImage"] as const) {
+    for (const field of CONTENT_IMAGE_FIELDS) {
       const candidate = metadataRecord[field];
       if (typeof candidate !== "string" || candidate.trim().length === 0) {
         continue;
       }
 
-      const resolvedAsset = resolveGeneratedAssetUrl(candidate, generatedByUrl);
+      const resolvedAsset = resolveGeneratedContentImageUrlForSlot({
+        candidate,
+        slotId: getLinkContentImageSlotId(link.id, field),
+        generatedBySlot,
+      });
       if (!resolvedAsset) {
         delete metadataRecord[field];
         mutated = true;

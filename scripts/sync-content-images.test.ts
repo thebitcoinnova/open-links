@@ -1,19 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  type GeneratedContentImageEntry,
+  collectContentImageSlots,
+  getLinkContentImageSlotId,
+  getSiteSeoContentImageSlotId,
+} from "../src/lib/content/content-image-slots";
+import {
+  type StableGeneratedContentImageEntry,
   buildStableContentImagesManifest,
-  collectCandidates,
   stabilizeContentImageEntry,
 } from "./sync-content-images";
 
-test("preserves content-image updatedAt and persisted status on no-op cache refreshes", () => {
+test("preserves content-image updatedAt on no-op slot refreshes", () => {
   // Arrange
-  const previous: GeneratedContentImageEntry = {
-    sourceUrl: "https://example.com/image.jpg",
+  const previous: StableGeneratedContentImageEntry = {
     resolvedPath: "cache/content-images/example.jpg",
-    etag: '"old"',
-    lastModified: "Sat, 07 Mar 2026 10:00:00 GMT",
     contentType: "image/jpeg",
     bytes: 1234,
     updatedAt: "2026-03-08T10:00:00.000Z",
@@ -27,14 +28,32 @@ test("preserves content-image updatedAt and persisted status on no-op cache refr
 
   // Assert
   assert.equal(stabilized.updatedAt, "2026-03-08T10:00:00.000Z");
-  assert.equal(stabilized.etag, '"old"');
-  assert.equal(stabilized.lastModified, "Sat, 07 Mar 2026 10:00:00 GMT");
 });
 
-test("preserves content-image manifest generatedAt when stabilized entries are unchanged", () => {
+test("updates content-image updatedAt when the resolved asset changes", () => {
   // Arrange
-  const previousEntry: GeneratedContentImageEntry = {
-    sourceUrl: "https://example.com/image.jpg",
+  const previous: StableGeneratedContentImageEntry = {
+    resolvedPath: "cache/content-images/original.jpg",
+    contentType: "image/jpeg",
+    bytes: 1234,
+    updatedAt: "2026-03-08T10:00:00.000Z",
+  };
+
+  // Act
+  const stabilized = stabilizeContentImageEntry(previous, {
+    resolvedPath: "cache/content-images/changed.jpg",
+    contentType: "image/jpeg",
+    bytes: 1234,
+    updatedAt: "2026-03-08T12:00:00.000Z",
+  });
+
+  // Assert
+  assert.equal(stabilized.updatedAt, "2026-03-08T12:00:00.000Z");
+});
+
+test("preserves content-image manifest generatedAt when stabilized slots are unchanged", () => {
+  // Arrange
+  const previousEntry: StableGeneratedContentImageEntry = {
     resolvedPath: "cache/content-images/example.jpg",
     contentType: "image/jpeg",
     bytes: 1234,
@@ -45,12 +64,12 @@ test("preserves content-image manifest generatedAt when stabilized entries are u
   const manifest = buildStableContentImagesManifest({
     previousManifest: {
       generatedAt: "2026-03-08T11:00:00.000Z",
-      byUrl: {
-        "https://example.com/image.jpg": previousEntry,
+      bySlot: {
+        [getLinkContentImageSlotId("example", "image")]: previousEntry,
       },
     },
-    byUrl: {
-      "https://example.com/image.jpg": previousEntry,
+    bySlot: {
+      [getLinkContentImageSlotId("example", "image")]: previousEntry,
     },
     generatedAt: "2026-03-08T12:00:00.000Z",
   });
@@ -59,25 +78,25 @@ test("preserves content-image manifest generatedAt when stabilized entries are u
   assert.equal(manifest.generatedAt, "2026-03-08T11:00:00.000Z");
 });
 
-test("collects all distinct image roles from manual and generated metadata", () => {
+test("collects effective link and site image slots using current metadata precedence", () => {
   // Arrange
   const linksPayload = {
     links: [
       {
-        id: "substack",
+        id: "instagram",
         type: "rich",
+        url: "https://www.instagram.com/example/",
         metadata: {
           image: "https://example.com/manual-preview.jpg",
           profileImage: "https://example.com/manual-avatar.jpg",
           ogImage: "https://example.com/manual-og.jpg",
-          twitterImage: "https://example.com/manual-twitter.jpg",
         },
       },
     ],
   };
   const generatedMetadata = {
     links: {
-      substack: {
+      instagram: {
         metadata: {
           image: "https://example.com/generated-preview.jpg",
           profileImage: "https://example.com/generated-avatar.jpg",
@@ -90,6 +109,7 @@ test("collects all distinct image roles from manual and generated metadata", () 
   const sitePayload = {
     quality: {
       seo: {
+        socialImageFallback: "https://example.com/site-fallback.jpg",
         defaults: {
           ogImage: "https://example.com/site-og.jpg",
           twitterImage: "https://example.com/site-twitter.jpg",
@@ -99,19 +119,76 @@ test("collects all distinct image roles from manual and generated metadata", () 
   };
 
   // Act
-  const candidates = collectCandidates(linksPayload, generatedMetadata, sitePayload);
+  const slots = collectContentImageSlots({
+    linksPayload,
+    generatedRichMetadata: generatedMetadata,
+    sitePayload,
+  });
 
   // Assert
-  assert.deepEqual(candidates, [
-    "https://example.com/generated-preview.jpg",
-    "https://example.com/generated-avatar.jpg",
-    "https://example.com/generated-og.jpg",
-    "https://example.com/generated-twitter.jpg",
-    "https://example.com/manual-preview.jpg",
-    "https://example.com/manual-avatar.jpg",
-    "https://example.com/manual-og.jpg",
-    "https://example.com/manual-twitter.jpg",
-    "https://example.com/site-og.jpg",
-    "https://example.com/site-twitter.jpg",
+  assert.deepEqual(slots, [
+    {
+      slotId: getLinkContentImageSlotId("instagram", "image"),
+      sourceUrl: "https://example.com/generated-preview.jpg",
+    },
+    {
+      slotId: getLinkContentImageSlotId("instagram", "profileImage"),
+      sourceUrl: "https://example.com/manual-avatar.jpg",
+    },
+    {
+      slotId: getLinkContentImageSlotId("instagram", "ogImage"),
+      sourceUrl: "https://example.com/generated-og.jpg",
+    },
+    {
+      slotId: getLinkContentImageSlotId("instagram", "twitterImage"),
+      sourceUrl: "https://example.com/generated-twitter.jpg",
+    },
+    {
+      slotId: getSiteSeoContentImageSlotId("socialImageFallback"),
+      sourceUrl: "https://example.com/site-fallback.jpg",
+    },
+    {
+      slotId: getSiteSeoContentImageSlotId("defaults.ogImage"),
+      sourceUrl: "https://example.com/site-og.jpg",
+    },
+    {
+      slotId: getSiteSeoContentImageSlotId("defaults.twitterImage"),
+      sourceUrl: "https://example.com/site-twitter.jpg",
+    },
+  ]);
+});
+
+test("backfills supported social profileImage slots from image when needed", () => {
+  // Arrange
+  const linksPayload = {
+    links: [
+      {
+        id: "x",
+        type: "rich",
+        url: "https://x.com/example",
+        metadata: {
+          image: "https://example.com/x-avatar.jpg",
+        },
+      },
+    ],
+  };
+
+  // Act
+  const slots = collectContentImageSlots({
+    linksPayload,
+    generatedRichMetadata: null,
+    sitePayload: {},
+  });
+
+  // Assert
+  assert.deepEqual(slots, [
+    {
+      slotId: getLinkContentImageSlotId("x", "image"),
+      sourceUrl: "https://example.com/x-avatar.jpg",
+    },
+    {
+      slotId: getLinkContentImageSlotId("x", "profileImage"),
+      sourceUrl: "https://example.com/x-avatar.jpg",
+    },
   ]);
 });

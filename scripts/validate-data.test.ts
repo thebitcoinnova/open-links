@@ -9,6 +9,7 @@ import {
   followerHistoryArtifactIssues,
   pathTouchesHookRichArtifactInputs,
   resolveHookRichArtifactCheckDecision,
+  resolvePreviewImageAvailability,
 } from "./validate-data";
 
 const ROOT = process.cwd();
@@ -121,6 +122,43 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   assert.equal(avatarTriggered, true);
   assert.equal(policyTriggered, true);
   assert.equal(unrelatedTriggered, false);
+});
+
+test("preview-image availability accepts localized remote slots", () => {
+  // Arrange
+  const imageCandidate = "https://example.com/preview.jpg";
+
+  // Act
+  const availability = resolvePreviewImageAvailability(
+    imageCandidate,
+    "link:example:image",
+    {
+      "link:example:image": {
+        resolvedPath: "cache/content-images/example.jpg",
+      },
+    },
+    "data/cache/content-images.json",
+  );
+
+  // Assert
+  assert.deepEqual(availability, { hasImage: true, detail: "" });
+});
+
+test("preview-image availability rejects remote images missing a localized slot entry", () => {
+  // Arrange
+  const imageCandidate = "https://example.com/preview.jpg";
+
+  // Act
+  const availability = resolvePreviewImageAvailability(
+    imageCandidate,
+    "link:example:image",
+    {},
+    "data/cache/content-images.json",
+  );
+
+  // Assert
+  assert.equal(availability.hasImage, false);
+  assert.match(availability.detail, /not materialized/u);
 });
 
 test("follower-history validation accepts matching index and CSV artifacts", (t) => {
