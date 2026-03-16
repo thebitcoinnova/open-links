@@ -64,11 +64,12 @@ Execute in this exact order.
    - `bun run quality:check`
 10. Commit and push directly to `main`.
 11. Verify GitHub Pages source is set to **GitHub Actions**.
-12. Poll CI and Deploy Pages workflow status for the pushed SHA.
-13. On success, collect deployment URLs.
-14. Post structured URL summary in chat using the schema in this file.
-15. Update the README deploy URL marker block only if normalized URL/status values changed.
-16. Commit/push README update if and only if step 15 changed file content.
+12. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
+13. Poll CI and Deploy Production workflow status for the pushed SHA.
+14. On success, collect deployment URLs.
+15. Post structured URL summary in chat using the schema in this file.
+16. Update the README deploy URL marker block only if normalized URL/status values changed.
+17. Commit/push README update if and only if step 16 changed file content.
 
 ## Automation and Identity Confirmation Rule
 
@@ -145,21 +146,24 @@ Never let step 4 override steps 1-3.
 
 ## Deployment Verification Contract
 
-### Target in scope now
+### Targets in scope now
 
+- `aws`
 - `github-pages`
 
 ### Workflow evidence sources
 
 - CI workflow: `.github/workflows/ci.yml`
 - Deploy workflow: `.github/workflows/deploy-pages.yml`
-- Deployment URL source: `steps.deployment.outputs.page_url` in Deploy Pages workflow environment output.
+- AWS deployment evidence: `Deploy AWS Canonical Site` job summary and `deploy:aws:publish` step summary.
+- Pages deployment URL source: `steps.deployment.outputs.page_url` in `Deploy GitHub Pages Mirror`.
 
 ### Required success checks for pushed SHA
 
 1. CI `required-checks` succeeded on the relevant commit lineage.
-2. Deploy Pages workflow ran for `main` and concluded `success`.
-3. Deployment produced a non-empty page URL.
+2. Deploy Production workflow ran for `main` and concluded `success`.
+3. AWS canonical deployment succeeded when AWS deploy is enabled.
+4. GitHub Pages mirror deployment succeeded or was skipped because the live manifest already matched.
 
 ### Bounded auto-retry policy
 
@@ -181,21 +185,23 @@ Use this stable schema for chat output and README marker-block updates.
 
 | Field | Description |
 |------|-------------|
-| `target` | Deployment target id (for example `github-pages`) |
+| `target` | Deployment target id (for example `aws`, `github-pages`) |
 | `status` | `success`, `warning`, or `failed` |
 | `primary_url` | Main user-facing URL |
 | `additional_urls` | Comma-separated auxiliary URLs or `none` |
 | `evidence` | Workflow/job/source pointer used to verify |
 
-### Current required row
+### Current required rows
 
-Always include one row for `github-pages`.
+For the upstream repo, include both `aws` and `github-pages`.
+For forks without AWS opt-in, include `github-pages` only.
 
 Example format:
 
 | target | status | primary_url | additional_urls | evidence |
 |--------|--------|-------------|-----------------|----------|
-| github-pages | success | https://<owner>.github.io/<repo>/ | none | deploy-pages.yml -> Deploy Pages -> `steps.deployment.outputs.page_url` |
+| aws | success | https://openlinks.us/ | none | deploy-pages.yml -> Deploy AWS Canonical Site |
+| github-pages | success | https://<owner>.github.io/<repo>/ | canonical=https://openlinks.us/ | deploy-pages.yml -> Deploy GitHub Pages Mirror -> `steps.deployment.outputs.page_url` |
 
 ### Future target compatibility
 

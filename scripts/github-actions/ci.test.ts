@@ -63,3 +63,56 @@ exit 0
   assert.match(combinedOutput, /quality:strict.*skipped/u);
   assert.match(combinedOutput, /failures=build:strict/u);
 });
+
+test("run-required executes deploy tests between typecheck and build", (t) => {
+  // Arrange
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "open-links-ci-test-"));
+  const fakeBinDir = path.join(tempDir, "bin");
+  const invocationLogPath = path.join(tempDir, "bun-invocations.log");
+  const fakeBunPath = path.join(fakeBinDir, "bun");
+  fs.mkdirSync(fakeBinDir, { recursive: true });
+  fs.writeFileSync(
+    fakeBunPath,
+    `#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> ${JSON.stringify(invocationLogPath)}
+exit 0
+`,
+    "utf8",
+  );
+  fs.chmodSync(fakeBunPath, 0o755);
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  // Act
+  const result = spawnSync(
+    "bash",
+    [path.join(ROOT, "scripts/github-actions/ci.sh"), "run-required"],
+    {
+      cwd: tempDir,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${fakeBinDir}:${process.env.PATH ?? ""}`,
+        STUDIO_DOCKER_CHANGED: "false",
+      },
+    },
+  );
+  const invocations = fs
+    .readFileSync(invocationLogPath, "utf8")
+    .trim()
+    .split("\n")
+    .filter((line) => line.length > 0);
+
+  // Assert
+  assert.equal(result.status, 0);
+  assert.deepEqual(invocations, [
+    "run ci:required:typecheck",
+    "run ci:required:deploy",
+    "run ci:required:build",
+    "run ci:required:quality",
+    "run ci:required:studio-integration",
+  ]);
+  assert.match(result.stdout, /failures=none/u);
+});

@@ -72,7 +72,7 @@
     "summaryPath": "data/generated/quality-report.md",
     "blockingDomains": ["seo", "accessibility", "performance"],
     "seo": {
-      "canonicalBaseUrl": "https://prizz.github.io/open-links/",
+      "canonicalBaseUrl": "https://openlinks.us/",
       "socialImageFallback": "/openlinks-social-fallback.svg",
       "defaults": {
         "title": "OpenLinks",

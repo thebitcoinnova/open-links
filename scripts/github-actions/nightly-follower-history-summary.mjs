@@ -63,8 +63,18 @@ if (historySummary) {
   lines.push("- History sync summary artifact was not produced.");
 }
 
-if (process.env.DEPLOYMENT_URL) {
-  lines.push(`- Pages deployment: ${process.env.DEPLOYMENT_URL}`);
+if (process.env.AWS_DEPLOY_ENABLED === "true") {
+  lines.push(
+    `- AWS canonical deployment: ${process.env.AWS_DEPLOYMENT_URL || "https://openlinks.us/"}`,
+  );
+} else {
+  lines.push("- AWS canonical deployment: skipped");
+}
+
+if (process.env.PAGES_DEPLOYMENT_CHANGED === "true" && process.env.PAGES_DEPLOYMENT_URL) {
+  lines.push(`- Pages deployment: ${process.env.PAGES_DEPLOYMENT_URL}`);
+} else if (process.env.PUSH_RESULT === "pushed") {
+  lines.push("- Pages deployment: skipped (mirror already up to date)");
 } else {
   lines.push("- Pages deployment: skipped");
 }
@@ -73,9 +83,9 @@ lines.push("");
 lines.push("### Local Parity");
 lines.push("- `bun run public:rich:sync`");
 lines.push("- `bun run followers:history:sync`");
-lines.push("- `bun run build`");
+lines.push("- `bun run deploy:build`");
 lines.push(
-  "- Direct deploy stays in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",
+  "- Direct AWS and Pages deploys stay in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",
 );
 
 const cacheSummaries = readCacheRevalidationSummaries();

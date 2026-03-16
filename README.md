@@ -2,7 +2,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/pRizz/open-links)](https://github.com/pRizz/open-links)
 [![CI](https://github.com/pRizz/open-links/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pRizz/open-links/actions/workflows/ci.yml)
-[![Deploy Pages](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml/badge.svg?branch=main)](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml)
+[![Deploy Production](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml/badge.svg?branch=main)](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml)
 [![License](https://img.shields.io/github/license/pRizz/open-links?s)](https://github.com/pRizz/open-links/blob/main/LICENSE)
 [![Node.js 22](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)](https://github.com/pRizz/open-links/blob/main/.github/workflows/ci.yml)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -40,7 +40,7 @@ This project is developer-first, but that does not mean raw JSON should be your 
 - Payments and tips links with multi-rail support, styled QR codes, and fullscreen scan mode.
 - Build-time profile-avatar materialization with local fallback behavior.
 - Build-time rich/SEO image materialization with local-only runtime behavior.
-- GitHub Actions CI + GitHub Pages deploy pipeline already wired.
+- GitHub Actions CI + AWS canonical deploy + GitHub Pages mirror pipeline already wired.
 - Theme and layout controls designed for forking and customization.
 - Data-driven typography overrides via `data/site.json` (`ui.typography`).
 
@@ -167,7 +167,8 @@ OpenClaw should update only the rows between the exact marker lines below:
 OPENCLAW_DEPLOY_URLS_START
 | target | status | primary_url | additional_urls | evidence |
 |--------|--------|-------------|-----------------|----------|
-| github-pages | active | https://prizz.github.io/open-links/ | none | Deploy Pages succeeded for b6340cc |
+| aws | active | https://openlinks.us/ | none | Deploy Production -> Deploy AWS Canonical Site |
+| github-pages | active | https://prizz.github.io/open-links/ | canonical=https://openlinks.us/ | Deploy Production -> Deploy GitHub Pages Mirror |
 OPENCLAW_DEPLOY_URLS_END
 
 ## AI-Guided Path (Optional)
@@ -182,14 +183,15 @@ Recommended flow:
 4. Use [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md) and [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md) as the contract/reference layer.
 5. Use [Social Card Verification Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/social-card-verification.md) after changing profile-card metadata, follower history, analytics, or share behavior.
 
-## First GitHub Pages Deploy (Quick Path)
+## First Production Deploy (Quick Path)
 
 1. Push to `main`.
 2. In GitHub repository settings, set Pages source to **GitHub Actions**.
-3. Wait for:
+3. For the upstream `openlinks.us` deploy, run `bun run deploy:setup` first, then rerun with `--apply` once the check-mode summary is clean.
+4. Wait for:
    - `.github/workflows/ci.yml` to succeed.
-   - `.github/workflows/deploy-pages.yml` to deploy.
-4. Open the published Pages URL from the deployment job.
+   - `.github/workflows/deploy-pages.yml` (`Deploy Production`) to deploy.
+5. Open `https://openlinks.us/` and the Pages mirror URL from the deployment job summary.
 
 Local parity commands:
 
@@ -227,9 +229,10 @@ Studio workspace tooling is Bun-first:
 High-signal deployment checks:
 
 1. `required-checks` job in `.github/workflows/ci.yml` is green.
-2. `deploy` job in `.github/workflows/deploy-pages.yml` is green.
-3. Deploy summary includes a published URL.
-4. If deploy fails, review workflow summary remediation and diagnostics artifacts.
+2. `Deploy AWS Canonical Site` job in `.github/workflows/deploy-pages.yml` is green when AWS deploy is enabled.
+3. `Deploy GitHub Pages Mirror` job in `.github/workflows/deploy-pages.yml` is green or intentionally skipped as a no-op.
+4. `Verify Production Deployment` is green when AWS deploy is enabled.
+5. If deploy fails, review workflow summaries and diagnostics artifacts.
 
 ## Validation and Build Commands
 

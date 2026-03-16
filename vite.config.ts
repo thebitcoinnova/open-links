@@ -3,6 +3,12 @@ import solidPlugin from "vite-plugin-solid";
 import profileData from "./data/profile.json";
 import siteData from "./data/site.json";
 import {
+  deploymentConfig,
+  getDeployTargetConfig,
+  getRobotsMetaContent,
+  parseDeployTarget,
+} from "./src/lib/deployment-config";
+import {
   resolveBaseAwareAssetPath,
   resolveBasePathFromUrl,
   resolveSeoMetadata,
@@ -10,6 +16,7 @@ import {
 
 const repositoryName =
   process.env.REPO_NAME_OVERRIDE?.trim() || process.env.GITHUB_REPOSITORY?.split("/")[1] || "";
+const deployTargetRaw = process.env.OPENLINKS_DEPLOY_TARGET?.trim();
 const baseModeRaw = process.env.PAGES_BASE_MODE?.trim().toLowerCase();
 const explicitBasePath = process.env.BASE_PATH?.trim();
 
@@ -21,6 +28,10 @@ const normalizeBasePath = (value: string): string => {
 const projectBasePath = repositoryName ? `/${repositoryName}/` : "/";
 
 const resolveBasePath = (): string => {
+  if (deployTargetRaw) {
+    return getDeployTargetConfig(parseDeployTarget(deployTargetRaw)).basePath;
+  }
+
   if (explicitBasePath) {
     return normalizeBasePath(explicitBasePath);
   }
@@ -36,6 +47,7 @@ const resolveBasePath = (): string => {
 };
 
 const base = resolveBasePath();
+const deployTarget = deployTargetRaw ? parseDeployTarget(deployTargetRaw) : null;
 const buildTimestamp = process.env.OPENLINKS_BUILD_TIMESTAMP ?? new Date().toISOString();
 
 const escapeHtml = (value: string): string =>
@@ -46,18 +58,33 @@ const escapeHtml = (value: string): string =>
     .replaceAll('"', "&quot;");
 
 const buildSeoTokenMap = (): Record<string, string> => {
-  const { metadata } = resolveSeoMetadata(siteData, profileData, {
+  const canonicalBaseUrl = deployTarget
+    ? `${deploymentConfig.primaryCanonicalOrigin}/`
+    : (siteData.quality?.seo?.canonicalBaseUrl ?? base);
+  const seoSite =
+    deployTarget === null
+      ? siteData
+      : {
+          ...siteData,
+          quality: {
+            ...siteData.quality,
+            seo: {
+              ...siteData.quality?.seo,
+              canonicalBaseUrl,
+            },
+          },
+        };
+  const { metadata } = resolveSeoMetadata(seoSite, profileData, {
+    fallbackOrigin: canonicalBaseUrl,
     resolveImagePath: (candidate) =>
-      resolveBaseAwareAssetPath(
-        candidate,
-        resolveBasePathFromUrl(siteData.quality?.seo?.canonicalBaseUrl ?? base),
-      ),
+      resolveBaseAwareAssetPath(candidate, resolveBasePathFromUrl(canonicalBaseUrl)),
   });
 
   return {
     __OPENLINKS_SEO_TITLE__: metadata.title,
     __OPENLINKS_SEO_DESCRIPTION__: metadata.description,
     __OPENLINKS_SEO_CANONICAL__: metadata.canonical,
+    __OPENLINKS_SEO_ROBOTS__: deployTarget ? getRobotsMetaContent(deployTarget) : "index, follow",
     __OPENLINKS_SEO_OG_TITLE__: metadata.ogTitle,
     __OPENLINKS_SEO_OG_DESCRIPTION__: metadata.ogDescription,
     __OPENLINKS_SEO_OG_TYPE__: metadata.ogType,
@@ -95,6 +122,11 @@ export default defineConfig({
   },
   define: {
     __OPENLINKS_BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp),
+    __OPENLINKS_CANONICAL_ORIGIN__: JSON.stringify(
+      deployTarget
+        ? deploymentConfig.primaryCanonicalOrigin
+        : (siteData.quality?.seo?.canonicalBaseUrl ?? ""),
+    ),
   },
   base,
 });

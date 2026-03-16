@@ -18,10 +18,6 @@ jobs:
   sync-and-deploy:
     name: Sync Follower History and Deploy
     runs-on: ubuntu-latest
-    env:
-      PAGES_BASE_MODE: project
-      BASE_PATH: ""
-      REPO_NAME_OVERRIDE: ""
 
     steps:
       - name: Checkout repository
@@ -49,8 +45,8 @@ jobs:
       - name: Append follower history snapshots
         run: bash scripts/github-actions/nightly-follower-history.sh append-history
 
-      - name: Build site
-        run: bun run build
+      - name: Build deploy artifacts
+        run: bun run deploy:build
 
       - name: Upload cache revalidation diagnostics
         if: always()
@@ -65,24 +61,88 @@ jobs:
         shell: bash
         run: bash scripts/github-actions/nightly-follower-history.sh commit-and-push
 
-      - name: Configure Pages
+      - name: Resolve AWS deploy opt-in
         if: steps.publish.outputs.push_result == 'pushed'
-        uses: actions/configure-pages@v5
+        id: aws_opt_in
+        shell: bash
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          OPENLINKS_ENABLE_AWS_DEPLOY: ${{ vars.OPENLINKS_ENABLE_AWS_DEPLOY }}
+        run: |
+          if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" && -n "${AWS_DEPLOY_ROLE_ARN:-}" ]]; then
+            echo "enabled=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >>"$GITHUB_OUTPUT"
+          fi
 
-      - name: Upload Pages artifact
-        if: steps.publish.outputs.push_result == 'pushed'
-        uses: actions/upload-pages-artifact@v4
+      - name: Configure AWS credentials
+        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          path: dist
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
 
-      - name: Deploy Pages
+      - name: Bootstrap AWS infrastructure
+        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        run: bun run deploy:aws:bootstrap --apply
+
+      - name: Publish AWS artifact
+        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        run: bun run deploy:aws:publish --artifact=.artifacts/deploy/aws --apply
+
+      - name: Plan Pages deployment
         if: steps.publish.outputs.push_result == 'pushed'
+        id: pages_plan
+        run: bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages
+
+      - name: Archive Pages artifact
+        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
+        run: bash scripts/ci/archive-pages-artifact.sh .artifacts/deploy/github-pages "$RUNNER_TEMP/pages-artifact.tar"
+
+      - name: Upload Pages deployment artifact
+        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
+        id: upload_pages_artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/pages-artifact.tar
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Create Pages deployment
+        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
         id: deployment
-        uses: actions/deploy-pages@v4
+        env:
+          ARTIFACT_ID: ${{ steps.upload_pages_artifact.outputs.artifact-id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bun run scripts/ci/create-pages-deployment.ts
+
+      - name: Wait for Pages deployment
+        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
+        env:
+          DEPLOYMENT_ID: ${{ steps.deployment.outputs.deployment_id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bun run scripts/ci/wait-for-pages-deployment.ts
+
+      - name: Verify canonical AWS site and Pages mirror
+        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        run: bun run deploy:verify
+
+      - name: Upload deploy diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-deploy-diagnostics
+          path: .codex/logs/deploy
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Publish summary
         if: always()
         env:
-          DEPLOYMENT_URL: ${{ steps.deployment.outputs.page_url }}
+          AWS_DEPLOY_ENABLED: ${{ steps.aws_opt_in.outputs.enabled || 'false' }}
+          AWS_DEPLOYMENT_URL: https://openlinks.us/
+          PAGES_DEPLOYMENT_CHANGED: ${{ steps.pages_plan.outputs.pages_changed || 'false' }}
+          PAGES_DEPLOYMENT_URL: ${{ steps.deployment.outputs.page_url }}
           PUSH_RESULT: ${{ steps.publish.outputs.push_result }}
         run: node scripts/github-actions/nightly-follower-history-summary.mjs >> "$GITHUB_STEP_SUMMARY"

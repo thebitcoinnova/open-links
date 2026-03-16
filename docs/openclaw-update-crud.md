@@ -175,7 +175,7 @@ Execute in this exact order:
      - `data/cache/rich-authenticated-cache.json`
      - `public/cache/rich-authenticated/*`
 9. Commit and push directly to `main`.
-10. Verify CI + Deploy Pages success for pushed SHA.
+10. Verify CI + Deploy Production success for pushed SHA.
 11. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
 12. Update README deployment URL marker block only when normalized URL/status values changed.
 13. Commit and push README URL update only if step 12 changed file content.

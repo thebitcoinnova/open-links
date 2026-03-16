@@ -4,6 +4,8 @@
     "ignore": [
       "**/node_modules/**",
       "**/dist/**",
+      ".artifacts/**",
+      ".codex/logs/**",
       "**/.cache/**",
       "data/generated/**",
       "public/generated/**",

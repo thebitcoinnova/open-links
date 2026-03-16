@@ -4,11 +4,19 @@
 
 ### In Progress
 
+- [x] Add an AWS canonical deployment target for `openlinks.us` while keeping GitHub Pages as a noindex mirror and fork-safe default.
+- [x] Build the deploy script stack (`deploy:build`, setup/bootstrap/publish/verify) with check-mode idempotency, artifact manifests, and summary logs.
+- [x] Rewire CI and production deploy workflows to hand off AWS/Pages artifacts, gate AWS behind explicit opt-in config, and document the new contract.
+
 - [x] Make strict validation treat complete stale `public_cache` reuse as non-strict-blocking while keeping real enrichment failures strict-failing.
 - [x] Fix strict CI follow-up handling so warning-summary/artifact steps run after `run_strict` fails and `quality:strict` is skipped when `build:strict` aborts.
 - [x] Add focused validation/CI tests and rerun the targeted strict-lane verification commands.
 
 ### Completion Review
+
+- Result: OpenLinks now has a first-class AWS deployment path for `openlinks.us` plus a GitHub Pages mirror path, both built from target-aware artifacts under `.artifacts/deploy/`. The repo now includes deploy config helpers, deploy manifests and integrity assertions, AWS bootstrap/publish/setup scripts, GitHub Pages deployment helpers, production workflow rewiring, nightly direct deploy parity for bot-authored pushes, and docs/OpenClaw contract updates that treat AWS as canonical and Pages as the mirror.
+- Verification: `bun run test:deploy` passed. `bun run typecheck` passed. `bun run biome:check` passed after ignoring generated deploy artifacts/logs in Biome config. `bun run deploy:build` passed and wrote summaries under `.codex/logs/deploy/`. `bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages` passed and reported a changed mirror artifact. `bun run deploy:setup` passed in check mode. `git diff --check` passed.
+- Residual risk: `bun run deploy:aws:bootstrap` and `bun run deploy:aws:publish --artifact=.artifacts/deploy/aws` now fail fast in check mode because the live CloudFormation stack is currently `REVIEW_IN_PROGRESS`; I tightened check-mode waits to 15 seconds so these commands emit explicit stack-readiness summaries instead of hanging for 30 minutes. I did not run remote GitHub Actions end-to-end from this workspace, so workflow behavior is verified by local script execution, artifact generation, and static workflow review rather than a fresh upstream run.
 
 - Result: `validate:data:strict` now treats complete stale committed `public_cache` reuse as warning-only, exports the enrichment-classification helper for direct unit coverage, and leaves real enrichment failures strict-failing. The strict CI wrapper now skips `quality:strict` after `build:strict` fails, and the workflow follow-up steps use explicit failure guards so warning summaries, raw-log replay, and artifact upload can actually run on strict-lane failures.
 - Verification: `bun test scripts/validate-data.test.ts scripts/github-actions/ci.test.ts` passed. `bun run validate:data:strict` passed. `bun run build:strict` passed. `bash scripts/github-actions/ci.sh run-strict` reached `quality:strict` only after a successful `build:strict`, then failed solely on the existing mobile performance strictness (`totalBytes` and `jsBytes`). `bun run typecheck` passed. `bunx @biomejs/biome check .codex/tasks/todo.md .github/workflows/ci.yml docs/data-model.md docs/deployment.md scripts/github-actions/ci.sh scripts/github-actions/ci.test.ts scripts/validate-data.test.ts scripts/validate-data.ts --files-ignore-unknown=true` passed for the checkable files. `git diff --check` passed.

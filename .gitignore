@@ -66,6 +66,7 @@ web_modules/
 
 # Output of 'npm pack'
 *.tgz
+.artifacts/
 
 # Yarn Integrity file
 .yarn-integrity
@@ -160,3 +161,4 @@ public/generated/*
 output/cache-revalidation/
 output/playwright/
 output/playwright/auth-rich-sync/
+.codex/logs/

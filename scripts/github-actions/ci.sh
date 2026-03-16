@@ -41,6 +41,7 @@ required_summary() {
   - \`bun run ci:required:docker\` (conditional)
 - Lane commands:
   - \`bun run ci:required:typecheck\`
+  - \`bun run ci:required:deploy\`
   - \`bun run ci:required:build\`
   - \`bun run ci:required:quality\`
   - \`bun run ci:required:studio-integration\`
@@ -55,6 +56,7 @@ run_required() {
 
   local failures=()
   run_check "required" "typecheck" bun run ci:required:typecheck || failures+=("typecheck")
+  run_check "required" "deploy_tests" bun run ci:required:deploy || failures+=("deploy")
   run_check "required" "build" bun run ci:required:build || failures+=("build")
   run_check "required" "quality_check" bun run ci:required:quality || failures+=("quality:check")
   run_check "required" "studio_integration" bun run ci:required:studio-integration || failures+=("studio:test:integration")
@@ -109,9 +111,11 @@ replay_logs() {
 deploy_handoff_summary() {
   write_summary <<EOF
 ### Deploy Handoff Artifact
-- Artifact name: \`openlinks-dist\`
+- Artifact names:
+  - \`deploy-aws-site\`
+  - \`deploy-pages-site\`
 - Producer workflow: \`CI\`
-- Intended consumer: \`Deploy Pages\` workflow
+- Intended consumer: \`Deploy Production\` workflow
 EOF
 }
 

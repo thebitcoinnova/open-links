@@ -163,7 +163,7 @@ bun run preview
 
 `bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo. Cache-backed fetches across avatar/image/public/authenticated pipelines are governed by `data/policy/remote-cache-policy.json`; add new domains there whenever a change introduces a new remote host.
 
-## First Deployment to GitHub Pages
+## First Production Deploy
 
 ### 1) Push to `main`
 
@@ -180,24 +180,32 @@ In your repository settings:
 1. Go to **Pages**.
 2. Set **Build and deployment source** to **GitHub Actions**.
 
-### 3) Verify workflows
+### 3) Prepare AWS production deploy for `openlinks.us`
+
+Run the deploy setup flow in check mode first:
+
+```bash
+bun run deploy:setup
+```
+
+When the summaries show the expected GitHub/AWS plan, rerun the mutating steps with `--apply`.
+
+### 4) Verify workflows
 
 Check workflow runs:
 
 - `.github/workflows/ci.yml` (required checks and strict signals)
-- `.github/workflows/deploy-pages.yml` (deploy job)
+- `.github/workflows/deploy-pages.yml` (`Deploy Production`)
 
-When deployment succeeds, open the URL from the deploy job summary.
+When deployment succeeds, open `https://openlinks.us/` and the Pages mirror URL from the workflow summary.
 
 ## Optional Manual Deploy Dispatch
 
-`deploy-pages.yml` supports manual dispatch inputs:
+`Deploy Production` still supports manual dispatch, but it is now config-driven:
 
-- `base_mode`: `project`, `root`, or `auto`
-- `base_path`: explicit override (must start and end with `/`)
-- `repo_name_override`: optional project-name override
-
-Use manual dispatch if you need to test base path behavior before changing defaults.
+- dispatch it on `main`,
+- the workflow builds fresh deploy artifacts when it cannot reuse CI outputs,
+- AWS runs only when the opt-in variable and secret are present.
 
 ## Local Diagnostics Flow
 
@@ -311,34 +319,32 @@ Then commit cache manifest/assets and rerun build.
 OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build
 ```
 
-### Problem: Build passes locally but Pages path is wrong
+### Problem: `deploy:verify` blocks on DNS readiness
 
 Symptoms:
 
-- App loads partially on project-page URL.
-- CSS/JS assets 404.
+- Verification reports that `openlinks.us` does not resolve publicly yet.
 
 Fix:
 
-1. Check `PAGES_BASE_MODE` assumptions (`project` is default).
-2. Rebuild with alternate mode locally:
+1. Confirm the Route 53 hosted zone exists and the CloudFormation stack has created alias records.
+2. Wait for propagation.
+3. Rerun:
 
 ```bash
-PAGES_BASE_MODE=root bun run build
+bun run deploy:verify
 ```
-
-3. If needed, set explicit `BASE_PATH` during manual deploy dispatch.
 
 ### Problem: Deploy workflow fails to find artifact
 
 Symptoms:
 
-- Deploy workflow reports no `dist` artifact.
+- Deploy workflow reports a missing deploy artifact.
 
 Fix:
 
-1. Verify CI succeeded on `main` and uploaded `openlinks-dist`.
-2. Re-run deploy workflow manually; it can rebuild as fallback.
+1. Verify CI succeeded on `main` and uploaded `deploy-aws-site` plus `deploy-pages-site`.
+2. Re-run `Deploy Production` manually on `main`; it can rebuild artifacts as fallback.
 
 ## Day-2 Update Loop
 

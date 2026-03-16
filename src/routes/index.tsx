@@ -137,7 +137,24 @@ const ensureCanonical = (href: string) => {
 };
 
 const applySeoMetadata = () => {
-  const { metadata } = resolveSeoMetadata(content.site, content.profile, {
+  const canonicalBaseUrl =
+    __OPENLINKS_CANONICAL_ORIGIN__.trim().length > 0
+      ? __OPENLINKS_CANONICAL_ORIGIN__
+      : content.site.quality?.seo?.canonicalBaseUrl;
+  const seoSite =
+    canonicalBaseUrl && canonicalBaseUrl !== content.site.quality?.seo?.canonicalBaseUrl
+      ? {
+          ...content.site,
+          quality: {
+            ...content.site.quality,
+            seo: {
+              ...content.site.quality?.seo,
+              canonicalBaseUrl,
+            },
+          },
+        }
+      : content.site;
+  const { metadata } = resolveSeoMetadata(seoSite, content.profile, {
     fallbackOrigin: window.location.origin,
     resolveImagePath: (candidate) => {
       const resolved = resolveGeneratedContentImageUrl(candidate);
@@ -145,10 +162,7 @@ const applySeoMetadata = () => {
         return undefined;
       }
 
-      return resolveBaseAwareAssetPath(
-        resolved,
-        resolveBasePathFromUrl(content.site.quality?.seo?.canonicalBaseUrl),
-      );
+      return resolveBaseAwareAssetPath(resolved, resolveBasePathFromUrl(canonicalBaseUrl));
     },
   });
 

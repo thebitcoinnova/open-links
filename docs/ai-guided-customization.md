@@ -54,7 +54,7 @@ If you are running OpenClaw bootstrap flow in this repository, use `docs/opencla
 5. If identity confidence is low, ask one identity confirmation question before writing identity fields.
 6. Skip low-confidence social inferences and report them under `Not Applied`.
 7. Do not infer or add payment links or crypto addresses unless explicitly requested by the user.
-8. Verify CI + Deploy Pages for the pushed SHA and collect deployment URLs.
+8. Verify CI + Deploy Production for the pushed SHA and collect deployment URLs (`aws` plus `github-pages` when AWS is enabled).
 9. Report deployment URLs as a structured table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
 10. Update the `README.md` `OPENCLAW_DEPLOY_URLS` marker block only when normalized URL/status values changed.
 
@@ -69,7 +69,7 @@ Before running the wizard with an AI agent, prepare:
 - your profile details,
 - your desired links (simple and rich),
 - theme/mode preferences,
-- deployment target (default: GitHub Pages).
+- deployment target (default upstream target: AWS canonical site plus GitHub Pages mirror).
 
 ## Recommended Agent Prompt
 

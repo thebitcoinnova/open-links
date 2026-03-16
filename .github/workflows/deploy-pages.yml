@@ -1,4 +1,4 @@
-name: Deploy Pages
+name: Deploy Production
 
 on:
   workflow_run:
@@ -7,24 +7,6 @@ on:
     types:
       - completed
   workflow_dispatch:
-    inputs:
-      base_mode:
-        description: "Base path mode (project | root | auto)"
-        required: false
-        default: project
-        type: choice
-        options:
-          - project
-          - root
-          - auto
-      base_path:
-        description: "Optional explicit BASE_PATH override (must start and end with /)"
-        required: false
-        type: string
-      repo_name_override:
-        description: "Optional repository name override for project mode"
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -32,20 +14,183 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
+  group: production-${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Deploy to GitHub Pages
+  prepare:
+    name: Resolve Deploy Context
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        github.ref == 'refs/heads/main'
+      ) ||
       (
         github.event_name == 'workflow_run' &&
         github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.head_branch == 'main'
       )
+    outputs:
+      artifact_source: ${{ steps.context.outputs.artifact_source }}
+      aws_enabled: ${{ steps.aws.outputs.enabled }}
+      checkout_ref: ${{ steps.context.outputs.checkout_ref }}
+      ci_run_id: ${{ steps.context.outputs.ci_run_id }}
+
+    steps:
+      - name: Resolve source ref and artifact source
+        id: context
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_run" ]]; then
+            {
+              echo "checkout_ref=${{ github.event.workflow_run.head_sha }}"
+              echo "ci_run_id=${{ github.event.workflow_run.id }}"
+              echo "artifact_source=ci"
+            } >>"$GITHUB_OUTPUT"
+          else
+            {
+              echo "checkout_ref=${GITHUB_SHA}"
+              echo "ci_run_id="
+              echo "artifact_source=manual-build"
+            } >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve AWS deploy opt-in
+        id: aws
+        shell: bash
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          OPENLINKS_ENABLE_AWS_DEPLOY: ${{ vars.OPENLINKS_ENABLE_AWS_DEPLOY }}
+        run: |
+          if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" && -n "${AWS_DEPLOY_ROLE_ARN:-}" ]]; then
+            echo "enabled=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish deploy context summary
+        shell: bash
+        run: |
+          {
+            echo "## Deploy Context"
+            echo "- Ref: \`${{ steps.context.outputs.checkout_ref }}\`"
+            echo "- Artifact source: \`${{ steps.context.outputs.artifact_source }}\`"
+            echo "- AWS enabled: \`${{ steps.aws.outputs.enabled }}\`"
+          } >>"$GITHUB_STEP_SUMMARY"
+
+  build_artifacts:
+    name: Build Deploy Artifacts
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+    if: needs.prepare.outputs.artifact_source == 'manual-build'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build deploy artifacts
+        run: bun run deploy:build
+
+      - name: Upload AWS deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-aws-site
+          path: .artifacts/deploy/aws
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload Pages deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-pages-site
+          path: .artifacts/deploy/github-pages
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  aws:
+    name: Deploy AWS Canonical Site
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build_artifacts
+    if: needs.prepare.outputs.aws_enabled == 'true'
+    environment:
+      name: production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download AWS artifact from CI
+        if: needs.prepare.outputs.artifact_source == 'ci'
+        uses: actions/download-artifact@v5
+        with:
+          github-token: ${{ github.token }}
+          name: deploy-aws-site
+          path: .artifacts/deploy/aws
+          run-id: ${{ needs.prepare.outputs.ci_run_id }}
+
+      - name: Download AWS artifact from manual build
+        if: needs.prepare.outputs.artifact_source == 'manual-build'
+        uses: actions/download-artifact@v5
+        with:
+          name: deploy-aws-site
+          path: .artifacts/deploy/aws
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+
+      - name: Bootstrap AWS infrastructure
+        run: bun run deploy:aws:bootstrap --apply
+
+      - name: Publish AWS artifact
+        run: bun run deploy:aws:publish --artifact=.artifacts/deploy/aws --apply
+
+      - name: Upload AWS deploy diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-production-aws-diagnostics
+          path: .codex/logs/deploy
+          if-no-files-found: ignore
+          retention-days: 7
+
+  pages:
+    name: Deploy GitHub Pages Mirror
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build_artifacts
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -54,84 +199,115 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-
-      - name: Validate deployment configuration
-        shell: bash
-        env:
-          DISPATCH_BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
-          DISPATCH_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
-        run: bash scripts/github-actions/deploy-pages.sh validate-config
-
-      - name: Attempt CI artifact reuse
-        id: download_ci_artifact
-        if: github.event_name == 'workflow_run'
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: openlinks-dist
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-          path: dist
-
-      - name: Resolve deploy artifact strategy
-        id: artifact_strategy
-        shell: bash
-        run: bash scripts/github-actions/deploy-pages.sh resolve-artifact-strategy
-
-      - name: Capture deploy diagnostics context
-        shell: bash
-        env:
-          ARTIFACT_STRATEGY_REASON: ${{ steps.artifact_strategy.outputs.reason }}
-          DISPATCH_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
-          DISPATCH_BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
-          DISPATCH_REPO_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_name_override || '' }}
-          HEAD_BRANCH: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}
-        run: bash scripts/github-actions/deploy-pages.sh capture-context
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Setup Bun
-        if: steps.artifact_strategy.outputs.reuse != 'true'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.9
 
       - name: Install dependencies
-        if: steps.artifact_strategy.outputs.reuse != 'true'
         run: bun install --frozen-lockfile
 
-      - name: Build site
-        if: steps.artifact_strategy.outputs.reuse != 'true'
-        env:
-          PAGES_BASE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.base_mode || 'project' }}
-          BASE_PATH: ${{ github.event_name == 'workflow_dispatch' && inputs.base_path || '' }}
-          REPO_NAME_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_name_override || '' }}
-        run: bun run build
-
-      - name: Verify deployable artifact
-        shell: bash
-        run: bash scripts/github-actions/deploy-pages.sh verify-artifact
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+      - name: Download Pages artifact from CI
+        if: needs.prepare.outputs.artifact_source == 'ci'
+        uses: actions/download-artifact@v5
         with:
-          path: dist
+          github-token: ${{ github.token }}
+          name: deploy-pages-site
+          path: .artifacts/deploy/github-pages
+          run-id: ${{ needs.prepare.outputs.ci_run_id }}
 
-      - name: Deploy Pages
+      - name: Download Pages artifact from manual build
+        if: needs.prepare.outputs.artifact_source == 'manual-build'
+        uses: actions/download-artifact@v5
+        with:
+          name: deploy-pages-site
+          path: .artifacts/deploy/github-pages
+
+      - name: Plan Pages deployment
+        id: pages_plan
+        run: bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages
+
+      - name: Archive Pages artifact
+        if: steps.pages_plan.outputs.pages_changed == 'true'
+        run: bash scripts/ci/archive-pages-artifact.sh .artifacts/deploy/github-pages "$RUNNER_TEMP/pages-artifact.tar"
+
+      - name: Upload Pages deployment artifact
+        if: steps.pages_plan.outputs.pages_changed == 'true'
+        id: upload_pages_artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/pages-artifact.tar
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Create Pages deployment
+        if: steps.pages_plan.outputs.pages_changed == 'true'
         id: deployment
-        uses: actions/deploy-pages@v4
+        env:
+          ARTIFACT_ID: ${{ steps.upload_pages_artifact.outputs.artifact-id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bun run scripts/ci/create-pages-deployment.ts
 
-      - name: Upload deploy diagnostics on failure
+      - name: Wait for Pages deployment
+        if: steps.pages_plan.outputs.pages_changed == 'true'
+        env:
+          DEPLOYMENT_ID: ${{ steps.deployment.outputs.deployment_id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bun run scripts/ci/wait-for-pages-deployment.ts
+
+      - name: Record Pages no-op summary
+        if: steps.pages_plan.outputs.pages_changed != 'true'
+        shell: bash
+        run: |
+          {
+            echo "## GitHub Pages Mirror"
+            echo "- Result: \`skipped\`"
+            echo "- Reason: live deploy manifest already matches the built Pages artifact."
+          } >>"$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Pages deploy diagnostics on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: deploy-pages-diagnostics
-          path: .deploy-diagnostics
-          if-no-files-found: error
+          name: deploy-production-pages-diagnostics
+          path: .codex/logs/deploy
+          if-no-files-found: ignore
           retention-days: 7
 
-      - name: Deployment remediation summary
+  verify:
+    name: Verify Production Deployment
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - aws
+      - pages
+    if: needs.prepare.outputs.aws_enabled == 'true' && needs.aws.result == 'success' && needs.pages.result == 'success'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify canonical AWS site and Pages mirror
+        run: bun run deploy:verify
+
+      - name: Upload verification diagnostics on failure
         if: failure()
-        run: bash scripts/github-actions/deploy-pages.sh failure-summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-production-verify-diagnostics
+          path: .codex/logs/deploy
+          if-no-files-found: ignore
+          retention-days: 7
