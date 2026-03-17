@@ -4,6 +4,10 @@
 
 ### In Progress
 
+- [ ] Fix the GitHub Actions deploy workflow gating so CI-triggered production deploys can run when `build_artifacts` is intentionally skipped.
+- [ ] Push the workflow fix, confirm the next `main` CI run triggers `Deploy Production`, and verify the AWS + Pages jobs execute instead of skipping.
+- [ ] Finish with live verification that the CI-driven deploy updated `openlinks.us` and the GitHub Pages mirror from the pushed artifact.
+
 - [x] Run the full AWS + GitHub production deployment flow from this workspace, starting with local artifact generation and check-mode setup/bootstrap/publish verification.
 - [x] Fix any deployment-script, infrastructure, or repository-setting failures surfaced by the live run and rerun the failing step until it succeeds.
 - [x] Finish with end-to-end verification of `https://openlinks.us/` and the GitHub Pages mirror, then record the resulting state and residual risks.

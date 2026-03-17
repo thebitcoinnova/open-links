@@ -126,7 +126,14 @@ jobs:
     needs:
       - prepare
       - build_artifacts
-    if: needs.prepare.outputs.aws_enabled == 'true'
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      needs.prepare.outputs.aws_enabled == 'true' &&
+      (
+        needs.prepare.outputs.artifact_source == 'ci' ||
+        needs.build_artifacts.result == 'success'
+      )
     environment:
       name: production
     permissions:
@@ -190,6 +197,13 @@ jobs:
     needs:
       - prepare
       - build_artifacts
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      (
+        needs.prepare.outputs.artifact_source == 'ci' ||
+        needs.build_artifacts.result == 'success'
+      )
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
