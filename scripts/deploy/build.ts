@@ -5,6 +5,8 @@ import {
   getDeployTargetConfig,
   parseDeployTarget,
 } from "../../src/lib/deployment-config";
+import { runPublicBuildCleanup } from "../clean-public-build-artifacts";
+import { resolveStableBuildTimestamp } from "../lib/build-timestamp";
 import { runCommand } from "../lib/command";
 import { copyArtifact, finalizeArtifact, readDeployManifest } from "../lib/deploy-artifact";
 import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
@@ -23,7 +25,9 @@ const run = await createDeployRun({
   mode: "check",
   target: requestedTarget ?? "all",
 });
-const buildTimestamp = new Date().toISOString();
+const buildTimestamp = resolveStableBuildTimestamp({
+  explicitValue: process.env.OPENLINKS_BUILD_TIMESTAMP,
+});
 const builtArtifacts: Array<{
   artifactHash: string;
   destinationDir: string;
@@ -35,6 +39,19 @@ await run.addBreadcrumb({
   detail: "Preparing to build target-specific deployment artifacts.",
   status: "info",
   step: "initialize",
+});
+
+const removedPublicArtifacts = runPublicBuildCleanup();
+await run.addBreadcrumb({
+  data: {
+    removedPaths: removedPublicArtifacts,
+  },
+  detail:
+    removedPublicArtifacts.length > 0
+      ? `Removed ${removedPublicArtifacts.length} legacy or OS-generated public artifacts before the deploy build.`
+      : "No legacy or OS-generated public artifacts needed cleanup before the deploy build.",
+  status: "passed",
+  step: "public cleanup",
 });
 
 runCommand("bun", ["run", "avatar:sync"]);

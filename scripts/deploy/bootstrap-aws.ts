@@ -1,19 +1,24 @@
 import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   assessAwsDomainReadiness,
+  assessOrphanedReviewStack,
   buildSiteBucketName,
   createStackChangeSet,
   deleteChangeSet,
+  deleteStack,
   ensureAwsCliAvailable,
   executeChangeSet,
   formatChangeSetRiskMessage,
   formatDomainReadinessMessage,
   loadAwsCallerIdentity,
   loadRecentStackFailureEvents,
+  loadStackChangeSetSummaries,
+  loadStackResourceSummaries,
   loadStackState,
   resolveHostedZones,
   validateAwsTemplate,
   waitForChangeSet,
+  waitForStackDeletion,
   waitForStackReadiness,
 } from "../lib/aws-deploy";
 import {
@@ -172,8 +177,129 @@ if (!domainReadiness.ready) {
 let mutableStackState = initialStackState;
 let hostedZones: ReturnType<typeof resolveHostedZones> | undefined;
 let changeSetPlan: ReturnType<typeof waitForChangeSet> | undefined;
+let orphanedReviewStackAssessment: ReturnType<typeof assessOrphanedReviewStack> | undefined;
+let orphanedReviewStackChangeSets: ReturnType<typeof loadStackChangeSetSummaries> | undefined;
+let orphanedReviewStackResources: ReturnType<typeof loadStackResourceSummaries> | undefined;
 
 try {
+  if (mutableStackState.exists && mutableStackState.stackStatus === "REVIEW_IN_PROGRESS") {
+    orphanedReviewStackChangeSets = await recordTimedAction(
+      run,
+      {
+        data: (changeSets: ReturnType<typeof loadStackChangeSetSummaries>) => ({
+          count: changeSets.length,
+          names: changeSets.map((changeSet) => changeSet.changeSetName),
+        }),
+        detail: "Loaded CloudFormation change sets for the REVIEW_IN_PROGRESS stack shell.",
+        status: "passed",
+        step: "review shell change sets",
+      },
+      () => loadStackChangeSetSummaries(),
+    );
+    orphanedReviewStackResources = await recordTimedAction(
+      run,
+      {
+        data: (resources: ReturnType<typeof loadStackResourceSummaries>) => ({
+          count: resources.length,
+          resources,
+        }),
+        detail: "Loaded CloudFormation stack resources for the REVIEW_IN_PROGRESS stack shell.",
+        status: "passed",
+        step: "review shell resources",
+      },
+      () => loadStackResourceSummaries(),
+    );
+    orphanedReviewStackAssessment = assessOrphanedReviewStack(
+      mutableStackState,
+      orphanedReviewStackChangeSets,
+      orphanedReviewStackResources,
+    );
+
+    await run.addBreadcrumb({
+      data: orphanedReviewStackAssessment,
+      detail: orphanedReviewStackAssessment.detail,
+      status: orphanedReviewStackAssessment.canAutoDelete ? "planned" : "info",
+      step: "review shell assessment",
+    });
+
+    if (orphanedReviewStackAssessment.canAutoDelete) {
+      plannedChanges = {
+        recovery: {
+          action: "delete-orphaned-review-stack",
+          stackName: deploymentConfig.awsStackName,
+        },
+      };
+
+      if (mode === "check") {
+        skippedReasons.push(
+          "Check mode detected an orphaned REVIEW_IN_PROGRESS stack shell. Rerun with --apply to delete the shell and continue bootstrap safely.",
+        );
+        verificationResults.push({
+          detail: orphanedReviewStackAssessment.detail,
+          name: "orphaned review stack",
+          status: "skipped",
+        });
+
+        const { runDirectory } = await writeDeploySummary(
+          {
+            appliedChanges,
+            artifactDir: undefined,
+            artifactHash: undefined,
+            command: commandName,
+            discoveredRemoteState: {
+              currentStackState: initialStackState,
+              domainReadiness,
+              identity,
+              orphanedReviewStackAssessment,
+              orphanedReviewStackChangeSets,
+              orphanedReviewStackResources,
+              templateValidation,
+            },
+            mode,
+            plannedChanges,
+            resultingUrls,
+            skippedReasons,
+            target: "aws",
+            verificationResults,
+          },
+          { runDirectory: run.runDirectory },
+        );
+
+        console.log(
+          `AWS bootstrap ${mode} requires stack-shell recovery. Summary: ${runDirectory}`,
+        );
+        process.exit(0);
+      }
+
+      await recordTimedAction(
+        run,
+        {
+          data: (completion: Awaited<ReturnType<typeof waitForStackDeletion>>) => ({
+            finalStackStatus: completion.finalStackState.stackStatus ?? null,
+            waitedMs: completion.waitedMs,
+          }),
+          detail: `Deleted orphaned CloudFormation stack shell ${deploymentConfig.awsStackName}.`,
+          status: "passed",
+          step: "review shell recovery",
+        },
+        () => {
+          deleteStack();
+          return waitForStackDeletion({ maxWaitMs });
+        },
+      );
+      appliedChanges.push(
+        `Deleted orphaned CloudFormation stack shell ${deploymentConfig.awsStackName}.`,
+      );
+      verificationResults.push({
+        detail:
+          "Deleted the orphaned REVIEW_IN_PROGRESS stack shell so bootstrap can recreate the stack cleanly.",
+        name: "orphaned review stack",
+        status: "passed",
+      });
+      mutableStackState = loadStackState();
+    }
+  }
+
   const stackReadiness = await recordTimedAction(
     run,
     {
@@ -187,7 +313,7 @@ try {
       status: "passed",
       step: "stack readiness",
     },
-    () => waitForStackReadiness({ initialState: initialStackState, maxWaitMs }),
+    () => waitForStackReadiness({ initialState: mutableStackState, maxWaitMs }),
   );
   mutableStackState = stackReadiness.stackState;
 
@@ -202,6 +328,54 @@ try {
     () => resolveHostedZones(),
   );
   hostedZones = resolvedHostedZones;
+
+  if (!mutableStackState.exists && mode === "check") {
+    plannedChanges = {
+      action: "create-stack",
+      bucketName,
+      hostedZones: resolvedHostedZones,
+      stackName: deploymentConfig.awsStackName,
+    };
+    skippedReasons.push(
+      "Check mode did not create a CloudFormation CREATE change set for a missing stack. Use --apply to provision the stack.",
+    );
+    verificationResults.push({
+      detail:
+        "Stack does not exist yet. Check mode skipped CREATE change-set planning to avoid leaving an empty REVIEW_IN_PROGRESS shell behind.",
+      name: "stack creation plan",
+      status: "skipped",
+    });
+
+    const { runDirectory } = await writeDeploySummary(
+      {
+        appliedChanges,
+        artifactDir: undefined,
+        artifactHash: undefined,
+        command: commandName,
+        discoveredRemoteState: {
+          currentStackState: initialStackState,
+          domainReadiness,
+          hostedZones,
+          identity,
+          mutableStackState,
+          orphanedReviewStackAssessment,
+          orphanedReviewStackChangeSets,
+          orphanedReviewStackResources,
+          templateValidation,
+        },
+        mode,
+        plannedChanges,
+        resultingUrls,
+        skippedReasons,
+        target: "aws",
+        verificationResults,
+      },
+      { runDirectory: run.runDirectory },
+    );
+
+    console.log(`AWS bootstrap ${mode} complete. Summary: ${runDirectory}`);
+    process.exit(0);
+  }
 
   const changeSet = await recordTimedAction(
     run,
@@ -345,6 +519,9 @@ try {
         hostedZones,
         identity,
         mutableStackState,
+        orphanedReviewStackAssessment,
+        orphanedReviewStackChangeSets,
+        orphanedReviewStackResources,
         templateValidation,
       },
       mode,
@@ -386,6 +563,9 @@ try {
         hostedZones,
         identity,
         mutableStackState,
+        orphanedReviewStackAssessment,
+        orphanedReviewStackChangeSets,
+        orphanedReviewStackResources,
         templateValidation,
       },
       mode,

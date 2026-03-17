@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   type ResolvedHostedZones,
+  assessOrphanedReviewStack,
   assessStackReadiness,
   buildAwsStackParameters,
   classifyChangeSetPlanRisks,
@@ -111,6 +112,46 @@ test("waitForStackReadiness waits through in-progress states until the stack is 
   assert.equal(assessment.state, "ready");
   assert.equal(assessment.stackStatus, "UPDATE_COMPLETE");
   assert.equal(loadCount, 2);
+});
+
+test("assessOrphanedReviewStack marks an empty REVIEW_IN_PROGRESS shell as recoverable", () => {
+  // Arrange
+  const stackState = {
+    exists: true,
+    outputs: {},
+    stackStatus: "REVIEW_IN_PROGRESS",
+  };
+
+  // Act
+  const assessment = assessOrphanedReviewStack(stackState, [], [], "open-links-site");
+
+  // Assert
+  assert.equal(assessment.canAutoDelete, true);
+  assert.match(assessment.detail, /orphaned CloudFormation shell/u);
+});
+
+test("assessOrphanedReviewStack blocks auto-delete when the review stack still has resources", () => {
+  // Arrange
+  const stackState = {
+    exists: true,
+    outputs: {},
+    stackStatus: "REVIEW_IN_PROGRESS",
+  };
+  const resources = [
+    {
+      logicalResourceId: "SiteBucket",
+      resourceStatus: "CREATE_COMPLETE",
+      resourceType: "AWS::S3::Bucket",
+    },
+  ];
+
+  // Act
+  const assessment = assessOrphanedReviewStack(stackState, [], resources, "open-links-site");
+
+  // Assert
+  assert.equal(assessment.canAutoDelete, false);
+  assert.match(assessment.detail, /does not qualify for automatic cleanup/u);
+  assert.match(assessment.detail, /SiteBucket/u);
 });
 
 test("classifyChangeSetPlanRisks blocks replacement of route53 records", () => {

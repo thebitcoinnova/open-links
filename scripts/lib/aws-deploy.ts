@@ -59,6 +59,22 @@ interface ChangeSetResponse {
   StatusReason?: string;
 }
 
+interface ListChangeSetsResponse {
+  Summaries?: Array<{
+    ChangeSetName?: string;
+    ExecutionStatus?: string;
+    Status?: string;
+  }>;
+}
+
+interface ListStackResourcesResponse {
+  StackResourceSummaries?: Array<{
+    LogicalResourceId?: string;
+    ResourceStatus?: string;
+    ResourceType?: string;
+  }>;
+}
+
 export type StackReadinessState = "blocked" | "ready" | "waiting";
 
 export interface AwsStackState {
@@ -148,6 +164,27 @@ export interface ChangeSetPlan {
   rawStatus: string;
   rawStatusReason: string;
   riskSummary: ChangeSetRiskSummary;
+}
+
+export interface StackChangeSetSummary {
+  changeSetName: string;
+  executionStatus?: string;
+  status?: string;
+}
+
+export interface StackResourceSummary {
+  logicalResourceId: string;
+  resourceStatus?: string;
+  resourceType: string;
+}
+
+export interface OrphanedReviewStackAssessment {
+  canAutoDelete: boolean;
+  changeSetNames: string[];
+  detail: string;
+  resourceSummaries: StackResourceSummary[];
+  stackName: string;
+  stackStatus?: string;
 }
 
 export class DomainReadinessError extends Error {
@@ -406,6 +443,143 @@ export function loadRecentStackFailureEvents(
       timestamp: event.Timestamp ?? new Date(0).toISOString(),
     }))
     .slice(0, maxItems);
+}
+
+export function loadStackChangeSetSummaries(
+  stackName: string = deploymentConfig.awsStackName,
+): StackChangeSetSummary[] {
+  const result = runCommand(
+    "aws",
+    [
+      "cloudformation",
+      "list-change-sets",
+      "--region",
+      deploymentConfig.awsRegion,
+      "--stack-name",
+      stackName,
+      "--output",
+      "json",
+    ],
+    { allowFailure: true },
+  );
+
+  if (result.status !== 0) {
+    if (isMissingStackResponse(result.stdout, result.stderr)) {
+      return [];
+    }
+
+    throw new Error(
+      result.stderr || result.stdout || `Failed to load change sets for ${stackName}.`,
+    );
+  }
+
+  const response = JSON.parse(result.stdout) as ListChangeSetsResponse;
+  return (response.Summaries ?? []).flatMap((summary) => {
+    if (!summary.ChangeSetName) {
+      return [];
+    }
+
+    return [
+      {
+        changeSetName: summary.ChangeSetName,
+        executionStatus: summary.ExecutionStatus,
+        status: summary.Status,
+      } satisfies StackChangeSetSummary,
+    ];
+  });
+}
+
+export function loadStackResourceSummaries(
+  stackName: string = deploymentConfig.awsStackName,
+): StackResourceSummary[] {
+  const result = runCommand(
+    "aws",
+    [
+      "cloudformation",
+      "list-stack-resources",
+      "--region",
+      deploymentConfig.awsRegion,
+      "--stack-name",
+      stackName,
+      "--output",
+      "json",
+    ],
+    { allowFailure: true },
+  );
+
+  if (result.status !== 0) {
+    if (isMissingStackResponse(result.stdout, result.stderr)) {
+      return [];
+    }
+
+    throw new Error(
+      result.stderr || result.stdout || `Failed to load stack resources for ${stackName}.`,
+    );
+  }
+
+  const response = JSON.parse(result.stdout) as ListStackResourcesResponse;
+  return (response.StackResourceSummaries ?? []).flatMap((resource) => {
+    if (!resource.LogicalResourceId || !resource.ResourceType) {
+      return [];
+    }
+
+    return [
+      {
+        logicalResourceId: resource.LogicalResourceId,
+        resourceStatus: resource.ResourceStatus,
+        resourceType: resource.ResourceType,
+      } satisfies StackResourceSummary,
+    ];
+  });
+}
+
+export function assessOrphanedReviewStack(
+  stackState: AwsStackState,
+  changeSets: StackChangeSetSummary[] = [],
+  resources: StackResourceSummary[] = [],
+  stackName: string = deploymentConfig.awsStackName,
+) {
+  if (!stackState.exists || stackState.stackStatus !== "REVIEW_IN_PROGRESS") {
+    return {
+      canAutoDelete: false,
+      changeSetNames: changeSets.map((changeSet) => changeSet.changeSetName),
+      detail: `Stack ${stackName} is not an orphaned REVIEW_IN_PROGRESS shell.`,
+      resourceSummaries: resources,
+      stackName,
+      stackStatus: stackState.stackStatus,
+    } satisfies OrphanedReviewStackAssessment;
+  }
+
+  if (changeSets.length === 0 && resources.length === 0) {
+    return {
+      canAutoDelete: true,
+      changeSetNames: [],
+      detail: `Stack ${stackName} is stuck in REVIEW_IN_PROGRESS with no active change sets and no stack resources. This is an orphaned CloudFormation shell that can be safely deleted before retrying bootstrap.`,
+      resourceSummaries: [],
+      stackName,
+      stackStatus: stackState.stackStatus,
+    } satisfies OrphanedReviewStackAssessment;
+  }
+
+  const changeSetDetail =
+    changeSets.length > 0
+      ? `Active change sets: ${changeSets.map((changeSet) => changeSet.changeSetName).join(", ")}.`
+      : "No active change sets were found.";
+  const resourceDetail =
+    resources.length > 0
+      ? `Tracked stack resources: ${resources
+          .map((resource) => `${resource.logicalResourceId} (${resource.resourceType})`)
+          .join(", ")}.`
+      : "No tracked stack resources were found.";
+
+  return {
+    canAutoDelete: false,
+    changeSetNames: changeSets.map((changeSet) => changeSet.changeSetName),
+    detail: `Stack ${stackName} is in REVIEW_IN_PROGRESS but does not qualify for automatic cleanup. ${changeSetDetail} ${resourceDetail}`,
+    resourceSummaries: resources,
+    stackName,
+    stackStatus: stackState.stackStatus,
+  } satisfies OrphanedReviewStackAssessment;
 }
 
 export function assessStackReadiness(
@@ -678,6 +852,89 @@ export function deleteChangeSet(changeSetName: string) {
     ],
     { allowFailure: true },
   );
+}
+
+export function deleteStack(stackName: string = deploymentConfig.awsStackName) {
+  runCommand("aws", [
+    "cloudformation",
+    "delete-stack",
+    "--region",
+    deploymentConfig.awsRegion,
+    "--stack-name",
+    stackName,
+  ]);
+}
+
+export function waitForStackDeletion(options: WaitForStackOperationOptions = {}) {
+  const stackName = options.stackName ?? deploymentConfig.awsStackName;
+  const loadCurrentState = options.loadCurrentState ?? (() => loadStackState(stackName));
+  const loadFailureEvents =
+    options.loadFailureEvents ?? (() => loadRecentStackFailureEvents(stackName));
+  const maxWaitMs = options.maxWaitMs ?? 30 * 60 * 1000;
+  const pollIntervalMs = options.pollIntervalMs ?? 10_000;
+  const sleepFn = options.sleepFn ?? sleep;
+  const startedAt = Date.now();
+
+  while (true) {
+    const stackState = loadCurrentState();
+    const waitedMs = Date.now() - startedAt;
+
+    if (!stackState.exists) {
+      return {
+        finalStackState: stackState,
+        recentFailureEvents: [],
+        waitedMs,
+      } satisfies StackOperationCompletion;
+    }
+
+    const stackStatus = stackState.stackStatus ?? "UNKNOWN";
+
+    if (stackStatus === "DELETE_FAILED") {
+      const recentFailureEvents = loadFailureEvents();
+      throw new StackOperationError(
+        stackState,
+        recentFailureEvents,
+        [
+          `Stack ${stackName} failed to delete and is currently ${stackStatus}.`,
+          ...(recentFailureEvents.length > 0
+            ? ["Recent failed stack events:", ...formatFailureEventLines(recentFailureEvents)]
+            : []),
+        ].join("\n"),
+      );
+    }
+
+    if (stackStatus === "DELETE_IN_PROGRESS" || isWaitingStackStatus(stackStatus)) {
+      if (waitedMs >= maxWaitMs) {
+        const recentFailureEvents = loadFailureEvents();
+        throw new StackOperationError(
+          stackState,
+          recentFailureEvents,
+          [
+            `Timed out after ${formatDuration(maxWaitMs)} waiting for stack ${stackName} to delete.`,
+            `Current stack status: ${stackStatus}.`,
+            ...(recentFailureEvents.length > 0
+              ? ["Recent failed stack events:", ...formatFailureEventLines(recentFailureEvents)]
+              : []),
+          ].join("\n"),
+        );
+      }
+
+      sleepFn(pollIntervalMs);
+      continue;
+    }
+
+    const recentFailureEvents = loadFailureEvents();
+    throw new StackOperationError(
+      stackState,
+      recentFailureEvents,
+      [
+        `Stack ${stackName} is still present in status ${stackStatus} after a delete request.`,
+        ...(recentFailureEvents.length > 0
+          ? ["Recent failed stack events:", ...formatFailureEventLines(recentFailureEvents)]
+          : []),
+      ].join("\n"),
+    );
+  }
 }
 
 function waitForStackOperation(

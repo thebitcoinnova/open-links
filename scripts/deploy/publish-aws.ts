@@ -1,9 +1,14 @@
 import path from "node:path";
 import {
+  assessOrphanedReviewStack,
+  deleteStack,
   ensureAwsCliAvailable,
   loadAwsCallerIdentity,
   loadRecentStackFailureEvents,
+  loadStackChangeSetSummaries,
+  loadStackResourceSummaries,
   loadStackState,
+  waitForStackDeletion,
   waitForStackReadiness,
 } from "../lib/aws-deploy";
 import { runCommand } from "../lib/command";
@@ -101,8 +106,125 @@ const initialStackState = await recordTimedAction(
 
 let mutableStackState = initialStackState;
 let maybeRemoteManifest: DeployManifest | null = null;
+let orphanedReviewStackAssessment: ReturnType<typeof assessOrphanedReviewStack> | undefined;
+let orphanedReviewStackChangeSets: ReturnType<typeof loadStackChangeSetSummaries> | undefined;
+let orphanedReviewStackResources: ReturnType<typeof loadStackResourceSummaries> | undefined;
 
 try {
+  if (mutableStackState.exists && mutableStackState.stackStatus === "REVIEW_IN_PROGRESS") {
+    orphanedReviewStackChangeSets = await recordTimedAction(
+      run,
+      {
+        data: (changeSets: ReturnType<typeof loadStackChangeSetSummaries>) => ({
+          count: changeSets.length,
+          names: changeSets.map((changeSet) => changeSet.changeSetName),
+        }),
+        detail: "Loaded CloudFormation change sets for the REVIEW_IN_PROGRESS stack shell.",
+        status: "passed",
+        step: "review shell change sets",
+      },
+      () => loadStackChangeSetSummaries(),
+    );
+    orphanedReviewStackResources = await recordTimedAction(
+      run,
+      {
+        data: (resources: ReturnType<typeof loadStackResourceSummaries>) => ({
+          count: resources.length,
+          resources,
+        }),
+        detail: "Loaded CloudFormation stack resources for the REVIEW_IN_PROGRESS stack shell.",
+        status: "passed",
+        step: "review shell resources",
+      },
+      () => loadStackResourceSummaries(),
+    );
+    orphanedReviewStackAssessment = assessOrphanedReviewStack(
+      mutableStackState,
+      orphanedReviewStackChangeSets,
+      orphanedReviewStackResources,
+    );
+
+    await run.addBreadcrumb({
+      data: orphanedReviewStackAssessment,
+      detail: orphanedReviewStackAssessment.detail,
+      status: orphanedReviewStackAssessment.canAutoDelete ? "planned" : "info",
+      step: "review shell assessment",
+    });
+
+    if (orphanedReviewStackAssessment.canAutoDelete) {
+      plannedChanges = {
+        recovery: {
+          action: "delete-orphaned-review-stack",
+          stackName: mutableStackState.stackName,
+        },
+      };
+
+      if (mode === "check") {
+        skippedReasons.push(
+          "Check mode detected an orphaned REVIEW_IN_PROGRESS stack shell. Run deploy:aws:bootstrap --apply to recover the stack before publishing content.",
+        );
+        verificationResults.push({
+          detail: orphanedReviewStackAssessment.detail,
+          name: "orphaned review stack",
+          status: "skipped",
+        });
+
+        const { runDirectory } = await writeDeploySummary(
+          {
+            appliedChanges,
+            artifactDir,
+            artifactHash: localManifest.artifactHash,
+            command: commandName,
+            discoveredRemoteState: {
+              identity,
+              orphanedReviewStackAssessment,
+              orphanedReviewStackChangeSets,
+              orphanedReviewStackResources,
+              stackState: mutableStackState,
+            },
+            mode,
+            plannedChanges,
+            resultingUrls: [localManifest.publicOrigin],
+            skippedReasons,
+            target: "aws",
+            verificationResults,
+          },
+          { runDirectory: run.runDirectory },
+        );
+
+        console.log(`AWS publish ${mode} requires stack-shell recovery. Summary: ${runDirectory}`);
+        process.exit(0);
+      }
+
+      await recordTimedAction(
+        run,
+        {
+          data: (completion: Awaited<ReturnType<typeof waitForStackDeletion>>) => ({
+            finalStackStatus: completion.finalStackState.stackStatus ?? null,
+            waitedMs: completion.waitedMs,
+          }),
+          detail: `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? "open-links-site"}.`,
+          status: "passed",
+          step: "review shell recovery",
+        },
+        () => {
+          deleteStack();
+          return waitForStackDeletion({ maxWaitMs });
+        },
+      );
+      appliedChanges.push(
+        `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? "open-links-site"}.`,
+      );
+      verificationResults.push({
+        detail:
+          "Deleted the orphaned REVIEW_IN_PROGRESS stack shell. Run bootstrap before attempting another AWS content publish.",
+        name: "orphaned review stack",
+        status: "passed",
+      });
+      mutableStackState = loadStackState();
+    }
+  }
+
   const stackReadiness = await recordTimedAction(
     run,
     {
@@ -116,7 +238,7 @@ try {
       status: "passed",
       step: "stack readiness",
     },
-    () => waitForStackReadiness({ initialState: initialStackState, maxWaitMs }),
+    () => waitForStackReadiness({ initialState: mutableStackState, maxWaitMs }),
   );
   mutableStackState = stackReadiness.stackState;
 
@@ -242,6 +364,9 @@ try {
       discoveredRemoteState: {
         identity,
         maybeRemoteManifest,
+        orphanedReviewStackAssessment,
+        orphanedReviewStackChangeSets,
+        orphanedReviewStackResources,
         stackState: mutableStackState,
       },
       mode,
@@ -275,6 +400,9 @@ try {
         failureContext,
         identity,
         maybeRemoteManifest,
+        orphanedReviewStackAssessment,
+        orphanedReviewStackChangeSets,
+        orphanedReviewStackResources,
         stackState: mutableStackState,
       },
       mode,

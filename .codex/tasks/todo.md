@@ -4,6 +4,16 @@
 
 ### In Progress
 
+- [x] Run the full AWS + GitHub production deployment flow from this workspace, starting with local artifact generation and check-mode setup/bootstrap/publish verification.
+- [x] Fix any deployment-script, infrastructure, or repository-setting failures surfaced by the live run and rerun the failing step until it succeeds.
+- [x] Finish with end-to-end verification of `https://openlinks.us/` and the GitHub Pages mirror, then record the resulting state and residual risks.
+
+### Completion Review
+
+- Result: Ran the deployment flow end to end from this workspace. `deploy:setup --apply`, `deploy:aws:bootstrap --apply`, `deploy:aws:publish --apply`, a downstream `deploy-pages.yml` run, and `deploy:verify` all succeeded earlier in the session, which brought `https://openlinks.us/` live on AWS and kept the GitHub Pages mirror valid. Follow-up fixes then addressed the remaining repo-side deployment issues: orphan `REVIEW_IN_PROGRESS` stack-shell recovery in the AWS scripts, deterministic deploy build timestamps, stabilization of `data/generated/rich-metadata.json` so repeated `deploy:build` runs stop churning on `generatedAt`/`enrichedAt`, and a public-build cleanup step that removes stray `.DS_Store` files plus legacy `public/generated/*` cache remnants before builds.
+- Verification: `bun run test:deploy` passed. `bun test scripts/clean-public-build-artifacts.test.ts scripts/enrichment/generated-metadata.test.ts scripts/lib/build-timestamp.test.ts` passed. `bun run typecheck` passed. `bun run build` passed. `bun run deploy:build` passed. Two consecutive `bun run deploy:build:pages` runs produced the same artifact hash (`c82b64c5af22344df7d68bcc4719de69440c9a0994642e735d9f84d3df4dcff3`). `bun run deploy:setup` passed in check mode. `bun run deploy:aws:bootstrap` passed in check mode. `bun run deploy:aws:publish --artifact=.artifacts/deploy/aws` passed in check mode. `bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages` passed in check mode and now reports only real live-vs-local bundle drift, not local junk files. `bun run deploy:verify` passed. Targeted `bunx @biomejs/biome check ... --files-ignore-unknown=true` passed. `git diff --check` passed.
+- Residual risk: The currently live AWS and GitHub Pages manifests still reflect the previously deployed artifact, so both check-mode publish plans show real updates waiting to be applied from the local fixed build. The GitHub Actions-side AWS job gating fix also exists only in the local workflow file until these changes are pushed. A final remote no-op/green run therefore still requires committing and pushing this batch, or explicitly applying the current local artifacts again.
+
 - [x] Replace raw URL-keyed `data/cache/content-images.json` entries with stable slot keys covering link image fields and site SEO image fields.
 - [x] Move volatile content-image fetch provenance into the runtime manifest only, and switch runtime/validation/SEO resolution onto slot-based lookups.
 - [x] Add focused slot-resolution tests, regenerate the committed content-image manifest, and rerun validation/build verification.

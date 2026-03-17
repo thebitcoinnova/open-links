@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import profileData from "./data/profile.json";
 import siteData from "./data/site.json";
+import { resolveStableBuildTimestamp } from "./scripts/lib/build-timestamp";
 import {
   deploymentConfig,
   getDeployTargetConfig,
@@ -48,7 +49,9 @@ const resolveBasePath = (): string => {
 
 const base = resolveBasePath();
 const deployTarget = deployTargetRaw ? parseDeployTarget(deployTargetRaw) : null;
-const buildTimestamp = process.env.OPENLINKS_BUILD_TIMESTAMP ?? new Date().toISOString();
+const buildTimestamp = resolveStableBuildTimestamp({
+  explicitValue: process.env.OPENLINKS_BUILD_TIMESTAMP,
+});
 
 const escapeHtml = (value: string): string =>
   value

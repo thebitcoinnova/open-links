@@ -60,10 +60,9 @@ jobs:
         id: aws
         shell: bash
         env:
-          AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           OPENLINKS_ENABLE_AWS_DEPLOY: ${{ vars.OPENLINKS_ENABLE_AWS_DEPLOY }}
         run: |
-          if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" && -n "${AWS_DEPLOY_ROLE_ARN:-}" ]]; then
+          if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" ]]; then
             echo "enabled=true" >>"$GITHUB_OUTPUT"
           else
             echo "enabled=false" >>"$GITHUB_OUTPUT"

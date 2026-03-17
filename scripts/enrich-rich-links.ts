@@ -28,6 +28,11 @@ import {
   resolveKnownBlockerMatch,
 } from "./enrichment/blockers-registry";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
+import {
+  areGeneratedRichMetadataEqual,
+  buildStableGeneratedRichMetadata,
+  readGeneratedRichMetadata,
+} from "./enrichment/generated-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
 import { resolvePublicAugmentationTarget } from "./enrichment/public-augmentation";
 import {
@@ -651,6 +656,7 @@ const run = async () => {
   const publicCacheRegistry = loadPublicCacheRegistry({
     cachePath: config.publicCachePath,
   });
+  const previousGeneratedMetadata = readGeneratedRichMetadata(config.outputPath);
   let publicCacheDirty = false;
   const publicCacheWriteSkippedLinks = new Set<string>();
   const generatedAt = new Date().toISOString();
@@ -1633,10 +1639,11 @@ const run = async () => {
     }
   }
 
-  const generated: GeneratedRichMetadata = {
-    generatedAt,
+  const generated = buildStableGeneratedRichMetadata({
+    previousManifest: previousGeneratedMetadata,
     links: generatedLinks,
-  };
+    generatedAt,
+  });
 
   if (publicCacheDirty) {
     if (config.writePublicCache) {
@@ -1647,11 +1654,13 @@ const run = async () => {
   }
 
   ensureDirectory(config.outputPath);
-  fs.writeFileSync(
-    absolutePath(config.outputPath),
-    `${JSON.stringify(generated, null, 2)}\n`,
-    "utf8",
-  );
+  if (!areGeneratedRichMetadataEqual(previousGeneratedMetadata, generated)) {
+    fs.writeFileSync(
+      absolutePath(config.outputPath),
+      `${JSON.stringify(generated, null, 2)}\n`,
+      "utf8",
+    );
+  }
 
   const report = writeEnrichmentReport({
     reportPath: config.reportPath,
