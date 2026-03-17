@@ -297,7 +297,12 @@ jobs:
       - prepare
       - aws
       - pages
-    if: needs.prepare.outputs.aws_enabled == 'true' && needs.aws.result == 'success' && needs.pages.result == 'success'
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      needs.prepare.outputs.aws_enabled == 'true' &&
+      needs.aws.result == 'success' &&
+      needs.pages.result == 'success'
 
     steps:
       - name: Checkout repository
