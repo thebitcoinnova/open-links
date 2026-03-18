@@ -86,6 +86,16 @@
 
 ## Recently Completed
 
+- [x] Add Club Orange as a public-direct rich profile link with known-site/icon/handle support instead of a new authenticated extractor.
+- [x] Add the required remote-cache policy coverage plus committed localized image-cache artifacts for the Club Orange profile avatar.
+- [x] Verify the Club Orange path with focused tests, lint/typecheck, rich-enrichment validation, and a production build.
+
+### Completion Review
+
+- Result: Club Orange now uses the repo’s `public_direct` path rather than an authenticated extractor. The change batch added a new `cluborange` rich link for `https://app.cluborange.org/pryszkie`, wired Club Orange into known-site branding/icon resolution, taught handle/social-profile detection to recognize `app.cluborange.org/<handle>` URLs, added remote-cache policy coverage for both the profile host and the S3 avatar host, updated the extractor workflow docs to classify Club Orange as `public_direct`, and committed the localized Club Orange avatar image slot in the stable content-image cache.
+- Verification: `bun test src/lib/identity/handle-resolver.test.ts src/lib/content/social-profile-fields.test.ts src/lib/ui/social-profile-metadata.test.ts src/lib/ui/rich-card-footer-labels.test.ts` passed. `bun run biome:check` passed after `bun install`. `bun run typecheck` passed after `bun install`. `bun run enrich:rich:strict` passed and reported `cluborange: fetched (metadata_complete) [HTTP 200]`. `bun run validate:data` passed. `bun run build` passed and localized the Club Orange avatar into `public/cache/content-images/cc3b5c595c6218df99ba85990fd8ff94edbd13d58ecadbe073716a06febaf9d7.jpg`.
+- Residual risk: Club Orange’s public profile page currently exposes title, bio, and avatar fields but not stable public audience metrics, so this support is intentionally avatar/title/bio-first unless the platform later adds a public follower-count source.
+
 - [x] Add `@kobalte/core` and build one shared dialog wrapper for the public-site modal surfaces.
 - [x] Migrate the payment QR fullscreen and follower-history analytics modals onto the shared wrapper without changing their controlled open-state seams.
 - [x] Verify Phase 14 with focused dialog/payment/share regressions, `bun run biome:check`, `bun run typecheck`, `bun run build`, and a built-preview analytics modal browser check.

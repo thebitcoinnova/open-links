@@ -91,6 +91,11 @@ bun run enrich:rich:strict
 bun run build
 ```
 
+Current `public_direct` reference example:
+
+- Club Orange profile URLs such as `https://app.cluborange.org/<handle>` already expose public `title`, `description`, `og:image`, and `twitter:image` in the server-rendered HTML, so the correct path is direct/public support rather than blocker or authenticated-extractor work.
+- Current limitation: those public pages do not expose stable audience-count fields, so the supported surface is avatar/title/bio-first profile rendering unless Club Orange later adds a public metric source.
+
 ## Step 4: `public_augmented` Implementation Branch
 
 When the chosen branch is `public_augmented`:

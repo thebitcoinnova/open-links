@@ -15,6 +15,7 @@ This artifact records the current branch classification for every rich metadata 
 
 Current public-profile reference examples outside the authenticated framework:
 
+- Club Orange: direct public HTML metadata at `app.cluborange.org/<handle>` exposes title, bio, and avatar without authentication
 - GitHub: public HTML augmentation for avatar + follower/following counts
 - Primal: generic public enrichment with profile-image normalization
 - Substack: canonical public profile fetch with original custom-domain source-label preservation

@@ -104,6 +104,13 @@ export const KNOWN_SITES = [
     brandColor: "#6364FF",
   },
   {
+    id: "cluborange",
+    label: "Club Orange",
+    aliases: ["cluborange", "club-orange", "club orange", "orangepillapp", "orange-pill-app"],
+    domains: ["cluborange.org"],
+    brandColor: "#E86B10",
+  },
+  {
     id: "primal",
     label: "Primal",
     aliases: ["primal", "primalnet"],

@@ -150,6 +150,39 @@ test("reuses preview images as profile avatars for newly supported avatar-first 
   assert.deepEqual(resolved.metrics, []);
 });
 
+test("treats Club Orange public profile metadata as an avatar-first social profile", () => {
+  // Arrange
+  const link = {
+    id: "cluborange",
+    label: "Club Orange",
+    url: "https://app.cluborange.org/pryszkie",
+    type: "rich",
+    icon: "cluborange",
+    metadata: {
+      title: "Peter Ryszkiewicz",
+      description:
+        "Building apps/websites/products in the Bitcoin space https://prizz.github.io/open-links/ https://win3bitco.in/",
+      image: "/cache/content-images/cluborange-avatar.jpg",
+      sourceLabel: "app.cluborange.org",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "cluborange");
+  assert.equal(resolved.displayName, "Peter Ryszkiewicz");
+  assert.equal(resolved.handle, "pryszkie");
+  assert.equal(resolved.handleDisplay, "@pryszkie");
+  assert.equal(resolved.profileDescription, undefined);
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/cluborange-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/cluborange-avatar.jpg");
+  assert.deepEqual(resolved.metrics, []);
+});
+
 test("formats X audience metrics from cached public-profile counts", () => {
   // Arrange
   const link = {

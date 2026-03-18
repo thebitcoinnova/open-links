@@ -112,6 +112,21 @@
       "custom": {}
     },
     {
+      "id": "cluborange",
+      "label": "Club Orange",
+      "url": "https://app.cluborange.org/pryszkie",
+      "type": "rich",
+      "icon": "cluborange",
+      "description": "Club Orange profile and Bitcoin-space projects",
+      "group": "social",
+      "order": 8,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
+    },
+    {
       "id": "instagram",
       "label": "Instagram",
       "url": "https://www.instagram.com/peterryszkiewicz/",
@@ -119,7 +134,7 @@
       "icon": "instagram",
       "description": "Photos and stories",
       "group": "social",
-      "order": 8,
+      "order": 9,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -134,7 +149,7 @@
       "icon": "youtube",
       "description": "Videos and channel updates",
       "group": "social",
-      "order": 9,
+      "order": 10,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -149,7 +164,7 @@
       "icon": "medium",
       "description": "Articles and blog posts",
       "group": "content",
-      "order": 10,
+      "order": 11,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -164,7 +179,7 @@
       "icon": "substack",
       "description": "Newsletter and long-form writing",
       "group": "favorites",
-      "order": 11,
+      "order": 12,
       "enabled": true,
       "enrichment": {
         "enabled": true
@@ -206,6 +221,7 @@
     "openlinks-home",
     "bright-builds-facebook",
     "facebook",
+    "cluborange",
     "instagram",
     "youtube",
     "medium"

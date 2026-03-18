@@ -64,6 +64,23 @@ const substackSimpleLink = {
   type: "simple",
 } as const satisfies OpenLink;
 
+const clubOrangeLink = {
+  id: "cluborange",
+  label: "Club Orange",
+  url: "https://app.cluborange.org/pryszkie",
+  type: "rich",
+  icon: "cluborange",
+  description: "Club Orange profile and Bitcoin-space projects",
+  metadata: {
+    title: "Peter Ryszkiewicz",
+    description: "Building apps/websites/products in the Bitcoin space",
+    sourceLabel: "app.cluborange.org",
+    handle: "pryszkie",
+    image: "/cache/content-images/cluborange-avatar.jpg",
+    profileImage: "/cache/content-images/cluborange-avatar.jpg",
+  },
+} as const satisfies OpenLink;
+
 test("keeps canonical known-site footer labels unchanged", () => {
   // Arrange
   const sourcePresentation = resolveLinkSourcePresentation(site, instagramLink);
@@ -91,6 +108,23 @@ test("formats known-platform custom domains as platform plus domain in the foote
   assert.equal(sourcePresentation.sourceLabel, "peter.ryszkiewicz.us");
   assert.equal(footerSourceLabel, "Substack · peter.ryszkiewicz.us");
   assert.equal(richViewModel.footerSourceLabel, "Substack · peter.ryszkiewicz.us");
+});
+
+test("keeps canonical known-platform subdomain labels unchanged in the footer", () => {
+  // Arrange
+  const sourcePresentation = resolveLinkSourcePresentation(site, clubOrangeLink);
+
+  // Act
+  const footerSourceLabel = resolveFooterSourceLabel(
+    clubOrangeLink,
+    sourcePresentation.sourceLabel,
+  );
+  const richViewModel = buildRichCardViewModel(site, clubOrangeLink);
+
+  // Assert
+  assert.equal(sourcePresentation.sourceLabel, "app.cluborange.org");
+  assert.equal(footerSourceLabel, "app.cluborange.org");
+  assert.equal(richViewModel.footerSourceLabel, "app.cluborange.org");
 });
 
 test("leaves non-host manual source labels unchanged", () => {

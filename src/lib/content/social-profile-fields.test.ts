@@ -69,6 +69,7 @@ test("supported social profile detection supports the expanded platform set but 
   const githubProfileUrl = "https://github.com/pRizz";
   const linkedinProfileUrl = "https://www.linkedin.com/in/peter-ryszkiewicz/";
   const mediumProfileUrl = "https://medium.com/@peterryszkiewicz";
+  const clubOrangeProfileUrl = "https://app.cluborange.org/pryszkie";
   const primalProfileUrl = "https://primal.net/peterryszkiewicz";
   const substackProfileUrl = "https://peterryszkiewicz.substack.com/";
   const substackCustomDomainUrl = "https://peter.ryszkiewicz.us/";
@@ -84,6 +85,7 @@ test("supported social profile detection supports the expanded platform set but 
   const githubProfile = resolveSupportedSocialProfile({ url: githubProfileUrl });
   const linkedinProfile = resolveSupportedSocialProfile({ url: linkedinProfileUrl });
   const mediumProfile = resolveSupportedSocialProfile({ url: mediumProfileUrl });
+  const clubOrangeProfile = resolveSupportedSocialProfile({ url: clubOrangeProfileUrl });
   const primalProfile = resolveSupportedSocialProfile({ url: primalProfileUrl });
   const substackProfile = resolveSupportedSocialProfile({ url: substackProfileUrl });
   const substackCustomDomainProfile = resolveSupportedSocialProfile({
@@ -116,6 +118,11 @@ test("supported social profile detection supports the expanded platform set but 
   assert.deepEqual(mediumProfile, {
     platform: "medium",
     handle: "peterryszkiewicz",
+    expectedFields: ["profileImage"],
+  });
+  assert.deepEqual(clubOrangeProfile, {
+    platform: "cluborange",
+    handle: "pryszkie",
     expectedFields: ["profileImage"],
   });
   assert.deepEqual(primalProfile, {
@@ -235,22 +242,41 @@ test("avatar-only supported platforms accept normalized preview images without a
     url: "https://x.com/pryszkie",
   });
   assert.ok(xProfile);
+  const clubOrangeProfile = resolveSupportedSocialProfile({
+    url: "https://app.cluborange.org/pryszkie",
+  });
+  assert.ok(clubOrangeProfile);
 
   // Act
-  const normalized = normalizeSupportedSocialProfileMetadata(
+  const normalizedX = normalizeSupportedSocialProfileMetadata(
     {
       image: "cache/rich-authenticated/example-avatar.jpg",
     },
     xProfile,
   );
-  const missingFields = resolveMissingSupportedSocialProfileFields(normalized, xProfile);
+  const normalizedClubOrange = normalizeSupportedSocialProfileMetadata(
+    {
+      image: "https://orange-pill-app-dev.s3.amazonaws.com/avatars/example.jpg",
+    },
+    clubOrangeProfile,
+  );
+  const missingXFields = resolveMissingSupportedSocialProfileFields(normalizedX, xProfile);
+  const missingClubOrangeFields = resolveMissingSupportedSocialProfileFields(
+    normalizedClubOrange,
+    clubOrangeProfile,
+  );
 
   // Assert
-  assert.deepEqual(normalized, {
+  assert.deepEqual(normalizedX, {
     image: "cache/rich-authenticated/example-avatar.jpg",
     profileImage: "cache/rich-authenticated/example-avatar.jpg",
   });
-  assert.deepEqual(missingFields, []);
+  assert.deepEqual(normalizedClubOrange, {
+    image: "https://orange-pill-app-dev.s3.amazonaws.com/avatars/example.jpg",
+    profileImage: "https://orange-pill-app-dev.s3.amazonaws.com/avatars/example.jpg",
+  });
+  assert.deepEqual(missingXFields, []);
+  assert.deepEqual(missingClubOrangeFields, []);
 });
 
 test("medium profile normalization backfills the feed image as the profile avatar", () => {

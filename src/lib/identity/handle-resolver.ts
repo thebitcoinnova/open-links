@@ -1,6 +1,7 @@
 import { normalizeKnownSiteAlias } from "../icons/known-sites-data";
 
 export type HandleExtractorId =
+  | "cluborange"
   | "github"
   | "x"
   | "linkedin"
@@ -48,6 +49,7 @@ const X_HOSTS = new Set(["x.com", "twitter.com", "mobile.twitter.com"]);
 const LINKEDIN_HOSTS = new Set(["linkedin.com", "lnkd.in"]);
 const FACEBOOK_HOSTS = new Set(["facebook.com", "m.facebook.com", "fb.com"]);
 const INSTAGRAM_HOSTS = new Set(["instagram.com"]);
+const CLUB_ORANGE_DOMAIN = "cluborange.org";
 const PRIMAL_HOSTS = new Set(["primal.net"]);
 const MEDIUM_HOSTS = new Set(["medium.com"]);
 const SUBSTACK_HOSTS = new Set(["substack.com"]);
@@ -173,6 +175,26 @@ const PRIMAL_RESERVED = new Set([
   "search",
   "settings",
   "signup",
+  "wallet",
+]);
+
+const CLUB_ORANGE_RESERVED = new Set([
+  "about",
+  "admin",
+  "app",
+  "community",
+  "download",
+  "events",
+  "groups",
+  "home",
+  "login",
+  "messages",
+  "notifications",
+  "privacy",
+  "settings",
+  "signup",
+  "terms",
+  "user",
   "wallet",
 ]);
 
@@ -415,6 +437,24 @@ const resolveInstagram = (segments: string[]): HandleResolution => {
   return resolved("instagram", candidate);
 };
 
+const resolveClubOrange = (segments: string[]): HandleResolution => {
+  const candidate = toLowerTrimmed((segments[0] ?? "").replace(/^@+/, ""));
+  if (!candidate) {
+    return supportedWithoutHandle("cluborange", "missing_handle_segment");
+  }
+
+  if (segments.length > 1 || CLUB_ORANGE_RESERVED.has(candidate)) {
+    return supportedWithoutHandle("cluborange", "not_profile_url");
+  }
+
+  const normalizedCandidate = normalizeHandle(candidate);
+  if (!normalizedCandidate || !/^[a-z0-9._-]{1,100}$/.test(normalizedCandidate)) {
+    return supportedWithoutHandle("cluborange", "invalid_handle");
+  }
+
+  return resolved("cluborange", normalizedCandidate);
+};
+
 const resolvePrimal = (segments: string[]): HandleResolution => {
   const candidate = toLowerTrimmed((segments[0] ?? "").replace(/^@+/, ""));
   if (!candidate) {
@@ -580,6 +620,10 @@ export const resolveHandleFromUrl = (input: ResolveHandleFromUrlInput): HandleRe
 
   if (INSTAGRAM_HOSTS.has(host)) {
     return resolveInstagram(segments);
+  }
+
+  if (host === CLUB_ORANGE_DOMAIN || isSubdomainOf(host, CLUB_ORANGE_DOMAIN)) {
+    return resolveClubOrange(segments);
   }
 
   if (PRIMAL_HOSTS.has(host)) {

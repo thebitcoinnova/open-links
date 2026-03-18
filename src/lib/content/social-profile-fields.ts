@@ -1,6 +1,7 @@
 import { normalizeHandle, resolveHandleFromUrl } from "../identity/handle-resolver";
 
 export type SupportedSocialProfilePlatform =
+  | "cluborange"
   | "facebook"
   | "github"
   | "instagram"
@@ -44,6 +45,7 @@ export interface SocialProfileMetadataLike extends SocialProfileMetadataFields {
 }
 
 const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
+  cluborange: ["profileImage"],
   facebook: ["profileImage"],
   github: ["profileImage", "followersCount", "followingCount"],
   instagram: ["profileImage", "followersCount", "followingCount"],
@@ -56,6 +58,7 @@ const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
 } as const satisfies Record<SupportedSocialProfilePlatform, readonly ExpectedSocialProfileField[]>;
 
 const PROFILE_IMAGE_BACKFILL_PLATFORMS = new Set<SupportedSocialProfilePlatform>([
+  "cluborange",
   "facebook",
   "github",
   "instagram",

@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/remote-cache-policy.schema.json",
   "version": 1,
-  "updatedAt": "2026-03-15T00:00:00.000Z",
+  "updatedAt": "2026-03-18T08:30:00.000Z",
   "rules": [
     {
       "id": "content-image-head-eligible",
@@ -11,6 +11,7 @@
         "fbcdn.net",
         "githubusercontent.com",
         "googleusercontent.com",
+        "orange-pill-app-dev.s3.amazonaws.com",
         "primal.net",
         "substackcdn.com",
         "unavatar.io"
@@ -33,6 +34,7 @@
       "id": "public-rich-metadata-conditional-get",
       "pipelines": ["public_rich_metadata"],
       "domains": [
+        "cluborange.org",
         "github.com",
         "instagram.com",
         "linkedin.com",

@@ -51,7 +51,12 @@ See `docs/rich-extractor-public-first-audit.md` for the branch audit that locked
 Current support split at a glance:
 
 - `authenticated_required`: LinkedIn, Facebook
+- `public_direct`: Club Orange
 - `public_augmented` / public-first: GitHub, Instagram, Medium, Primal, Substack, X, YouTube
+
+Current public-direct example outside the authenticated framework:
+
+- Club Orange: direct public HTML metadata at `app.cluborange.org/<handle>` with avatar-first normalization
 
 Follower-history snapshots do not read a separate extractor-specific store. They consume the same normalized metadata that runtime uses for profile cards, so either public augmentation or authenticated cache can supply the audience fields that later flow into `public/history/followers/index.json` and the per-platform CSVs.
 

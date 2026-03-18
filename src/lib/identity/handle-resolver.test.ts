@@ -9,6 +9,7 @@ import {
 
 test("resolves supported URL handles", () => {
   const cases = [
+    { url: "https://app.cluborange.org/pryszkie", extractorId: "cluborange", handle: "pryszkie" },
     { url: "https://github.com/pRizz", extractorId: "github", handle: "prizz" },
     { url: "https://x.com/pryszkie", extractorId: "x", handle: "pryszkie" },
     {
@@ -64,6 +65,11 @@ test("resolves supported URL handles", () => {
 
 test("marks reserved or non-profile paths as supported but unresolved", () => {
   const cases = [
+    {
+      url: "https://public.cluborange.org/user/66f980c41eac7211678dff16",
+      extractorId: "cluborange",
+      reason: "not_profile_url",
+    },
     { url: "https://github.com/login", extractorId: "github", reason: "not_profile_url" },
     { url: "https://x.com/home", extractorId: "x", reason: "not_profile_url" },
     { url: "https://linkedin.com/feed/", extractorId: "linkedin", reason: "not_profile_url" },

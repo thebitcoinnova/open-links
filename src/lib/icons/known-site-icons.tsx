@@ -54,6 +54,7 @@ import {
 } from "simple-icons";
 import type { Component } from "solid-js";
 import {
+  IconClubOrange,
   IconLinkedin,
   IconPrimal,
   IconSkype,
@@ -79,6 +80,7 @@ const knownSiteIcons: Record<KnownSiteId, KnownSiteIconComponent> = {
   threads: createSimpleIcon(siThreads),
   bluesky: createSimpleIcon(siBluesky),
   mastodon: createSimpleIcon(siMastodon),
+  cluborange: IconClubOrange,
   primal: IconPrimal,
   twitch: createSimpleIcon(siTwitch),
   snapchat: createSimpleIcon(siSnapchat),
