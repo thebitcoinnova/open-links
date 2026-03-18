@@ -118,7 +118,7 @@
       "type": "rich",
       "icon": "cluborange",
       "description": "Club Orange profile and Bitcoin-space projects",
-      "group": "social",
+      "group": "favorites",
       "order": 8,
       "enabled": true,
       "enrichment": {
@@ -213,6 +213,7 @@
     }
   ],
   "order": [
+    "cluborange",
     "primal",
     "github",
     "substack",
@@ -221,7 +222,6 @@
     "openlinks-home",
     "bright-builds-facebook",
     "facebook",
-    "cluborange",
     "instagram",
     "youtube",
     "medium"
