@@ -160,6 +160,30 @@ export const IconCopy: Component<IconProps> = (props: IconProps) => (
   </svg>
 );
 
+/** Generic QR code icon (24x24 stroke-based). */
+export const IconQrCode: Component<IconProps> = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    {...props}
+  >
+    <title>QR code</title>
+    <path d="M4 4h6v6H4z" />
+    <path d="M14 4h6v6h-6z" />
+    <path d="M4 14h6v6H4z" />
+    <path d="M14 14h2" />
+    <path d="M18 14h2v2" />
+    <path d="M14 18h2v2h-2z" />
+    <path d="M18 18h2" />
+    <path d="M20 20v0" />
+  </svg>
+);
+
 /** Generic analytics icon (24x24 stroke-based). */
 export const IconAnalytics: Component<IconProps> = (props: IconProps) => (
   <svg

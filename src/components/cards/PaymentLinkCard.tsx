@@ -1,6 +1,7 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
+import { IconQrCode } from "../../lib/icons/custom-icons";
 import { resolvePaymentRailLogoUrl } from "../../lib/payments/rail-logos";
 import {
   type ResolvedPaymentRailAction,
@@ -24,6 +25,7 @@ import StyledPaymentQr from "../payments/StyledPaymentQr";
 export interface PaymentLinkCardProps {
   link: OpenLink;
   site: SiteData;
+  onPrimaryQrOpen?: (payload: string) => void;
   target?: "_blank" | "_self";
   rel?: string;
   interaction?: "minimal";
@@ -215,6 +217,15 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     });
   };
 
+  const handleOpenPrimaryQr = () => {
+    const href = primaryHref();
+    if (!href) {
+      return;
+    }
+
+    props.onPrimaryQrOpen?.(href);
+  };
+
   createEffect(() => {
     rails();
     effectiveQrDisplay();
@@ -277,19 +288,33 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
           </div>
         </div>
 
-        <Show when={primaryHref()}>
-          {(href) => (
-            <a
-              class="payment-card-primary-action"
-              href={href()}
-              target={primaryTarget()}
-              rel={primaryRel()}
-              aria-label={`Open ${props.link.label}`}
+        <div class="payment-card-header-actions">
+          <Show when={primaryHref() && props.onPrimaryQrOpen}>
+            <button
+              type="button"
+              class="payment-card-qr-button"
+              aria-label={`Show ${props.link.label} QR code`}
+              title={`Show ${props.link.label} QR code`}
+              onClick={handleOpenPrimaryQr}
             >
-              Open
-            </a>
-          )}
-        </Show>
+              <IconQrCode class="card-action-button-icon" aria-hidden="true" />
+            </button>
+          </Show>
+
+          <Show when={primaryHref()}>
+            {(href) => (
+              <a
+                class="payment-card-primary-action"
+                href={href()}
+                target={primaryTarget()}
+                rel={primaryRel()}
+                aria-label={`Open ${props.link.label}`}
+              >
+                Open
+              </a>
+            )}
+          </Show>
+        </div>
       </div>
 
       <ul class="payment-rails-list">

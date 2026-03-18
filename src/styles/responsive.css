@@ -32,6 +32,7 @@
   }
 
   body .profile-analytics-button,
+  body .profile-qr-button,
   body .profile-share-button,
   body .profile-copy-button {
     width: calc(var(--page-target-size) + 0.15rem);
@@ -72,6 +73,19 @@
     width: 100%;
   }
 
+  body .payment-card-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  body .payment-card-qr-button {
+    width: calc(var(--page-target-size) + 0.15rem);
+    height: calc(var(--page-target-size) + 0.15rem);
+    min-width: calc(var(--page-target-size) + 0.15rem);
+    min-height: calc(var(--page-target-size) + 0.15rem);
+  }
+
   body .payment-rail-actions {
     width: 100%;
     justify-content: flex-start;
@@ -92,15 +106,15 @@
     width: 100%;
   }
 
-  body .payment-qr-fullscreen-dialog {
+  body .qr-code-dialog {
     width: calc(100vw - var(--space-4));
   }
 
-  body .payment-qr-fullscreen-positioner {
+  body .qr-code-dialog-positioner {
     --app-dialog-padding: var(--space-2);
   }
 
-  body .payment-qr-fullscreen-canvas {
+  body .qr-code-dialog-canvas {
     width: min(360px, calc(100vw - var(--space-6)));
     height: min(360px, calc(100vw - var(--space-6)));
   }
