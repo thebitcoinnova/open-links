@@ -60,7 +60,6 @@ a:focus-visible {
 }
 
 .utility-menu-button:focus-visible,
-.payment-card-qr-button:focus-visible,
 .payment-rail-button:focus-visible,
 .qr-code-dialog-close-button:focus-visible,
 .site-footer-cta:focus-visible {
@@ -228,12 +227,10 @@ a:focus-visible {
 .profile-title-row {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-2);
   min-width: 0;
 }
 
 .profile-copy h1 {
-  flex: 1 1 auto;
   min-width: 0;
   margin: 0;
   font-family: var(--font-display);
@@ -253,77 +250,81 @@ a:focus-visible {
   line-height: var(--line-height-body);
 }
 
-.profile-actions {
+.bottom-action-bar {
   display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
-.profile-sharing-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-left: auto;
-}
-
-.profile-analytics-button,
-.profile-qr-button,
-.profile-share-button,
-.profile-copy-button {
+.bottom-action-bar-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  align-self: center;
-  flex: 0 0 auto;
-  border: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--accent) 28%, var(--surface-pill) 72%);
+  gap: 0.45rem;
+  min-width: 0;
+  min-height: calc(var(--page-target-size) - 0.15rem);
+  padding: 0.55rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 76%, transparent 24%);
+  background: color-mix(in srgb, var(--surface-pill) 84%, var(--accent) 16%);
   color: var(--text-primary);
-  border-radius: 50%;
-  width: calc(var(--page-target-size) + 0.35rem);
-  height: calc(var(--page-target-size) + 0.35rem);
-  min-width: calc(var(--page-target-size) + 0.35rem);
-  min-height: calc(var(--page-target-size) + 0.35rem);
-  padding: 0;
+  border-radius: var(--radius-sm);
   font: inherit;
-  line-height: 0;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 14%, transparent);
+  font-size: var(--page-type-caption);
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 10%, transparent);
   cursor: pointer;
   transition: border-color var(--motion-fast), transform var(--motion-fast), box-shadow
     var(--motion-fast), background-color var(--motion-fast);
 }
 
-.profile-analytics-button:hover,
-.profile-qr-button:hover,
-.profile-share-button:hover,
-.profile-copy-button:hover {
+.bottom-action-bar-action:hover {
   border-color: var(--border-strong);
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
-.profile-analytics-button:active,
-.profile-qr-button:active,
-.profile-share-button:active,
-.profile-copy-button:active {
+.bottom-action-bar-action:active {
   transform: translateY(0);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.profile-analytics-button:focus-visible,
-.profile-qr-button:focus-visible,
-.profile-share-button:focus-visible,
-.profile-copy-button:focus-visible {
+.bottom-action-bar-action:focus-visible {
   box-shadow: var(--shadow-focus);
   border-color: var(--accent-strong);
 }
 
-.profile-analytics-button[data-active="true"] {
-  background: color-mix(in srgb, var(--accent) 42%, var(--surface-pill) 58%);
+.bottom-action-bar-action[data-active="true"] {
+  background: color-mix(in srgb, var(--accent) 34%, var(--surface-pill) 66%);
 }
 
-.profile-action-button-icon {
-  width: 1.35rem;
-  height: 1.35rem;
+.bottom-action-bar-action-icon {
+  width: 1.05rem;
+  height: 1.05rem;
   flex: 0 0 auto;
+}
+
+.bottom-action-bar-action-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottom-action-bar-legend {
+  padding: 0;
+}
+
+.profile-action-bar,
+.card-action-row,
+.payment-card-action-bar {
+  padding-top: var(--space-2);
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
 }
 
 .action-toast {
@@ -653,56 +654,13 @@ a:focus-visible {
 }
 
 .non-payment-card-frame {
-  position: relative;
+  display: grid;
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .card-action-row {
-  --card-action-gap: 0.45rem;
-
-  position: absolute;
-  top: calc(var(--space-3) * var(--density-scale) + 0.05rem);
-  right: calc(var(--space-3) * var(--density-scale));
-  display: inline-flex;
-  align-items: center;
-  gap: var(--card-action-gap);
-  z-index: 1;
-}
-
-.card-action-button {
-  --card-action-size: calc(var(--page-target-size) - 0.2rem);
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--card-action-size);
-  height: var(--card-action-size);
-  padding: 0;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent 28%);
-  background: color-mix(in srgb, var(--surface-pill) 86%, var(--accent) 14%);
-  color: var(--text-primary);
-  border-radius: 999px;
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 14%, transparent);
-  cursor: pointer;
-  transition: border-color var(--motion-fast), transform var(--motion-fast), box-shadow
-    var(--motion-fast), background-color var(--motion-fast);
-}
-
-.card-action-button:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 14px 24px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.card-action-button:focus-visible {
-  box-shadow: var(--shadow-focus);
-  border-color: var(--accent-strong);
-}
-
-.card-action-button-icon {
-  width: 1.05rem;
-  height: 1.05rem;
-  flex: 0 0 auto;
+  margin-top: calc(var(--space-1) * -0.2);
 }
 
 .simple-link-card,
@@ -864,14 +822,6 @@ a:focus-visible {
   min-width: 0;
 }
 
-.non-payment-card-summary[data-has-actions="true"] .non-payment-card-title-row {
-  padding-right: calc(
-    (var(--card-action-size) * var(--card-action-count, 0)) +
-    (var(--card-action-gap) * var(--card-action-count, 0)) +
-    0.5rem
-  );
-}
-
 .non-payment-card-title {
   font-family: var(--font-display);
   font-size: var(--type-card-title);
@@ -980,14 +930,7 @@ a:focus-visible {
 .payment-card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
-}
-
-.payment-card-header-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
 }
 
 .payment-card-heading {
@@ -1015,70 +958,6 @@ a:focus-visible {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.payment-card-primary-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(var(--page-target-size) - 10px);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--surface-pill) 82%, var(--accent) 18%);
-  color: var(--text-primary);
-  padding: 0.35rem 0.75rem;
-  font-size: var(--page-type-caption);
-  text-decoration: none;
-  transition: border-color var(--motion-fast), transform var(--motion-fast);
-}
-
-.payment-card-qr-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(var(--page-target-size) + 0.1rem);
-  height: calc(var(--page-target-size) + 0.1rem);
-  min-width: calc(var(--page-target-size) + 0.1rem);
-  min-height: calc(var(--page-target-size) + 0.1rem);
-  padding: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 28%, var(--surface-pill) 72%);
-  color: var(--text-primary);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 14%, transparent);
-  cursor: pointer;
-  transition: border-color var(--motion-fast), transform var(--motion-fast), box-shadow
-    var(--motion-fast), background-color var(--motion-fast);
-}
-
-.payment-card-qr-button:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.payment-card-qr-button:active {
-  transform: translateY(0);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 16%, transparent);
-}
-
-.payment-card-qr-button:focus-visible {
-  box-shadow: var(--shadow-focus);
-  border-color: var(--accent-strong);
-}
-
-.payment-card-primary-action:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
-}
-
-.payment-card-primary-action:active {
-  transform: translateY(0);
-}
-
-.payment-card-primary-action:focus-visible {
-  box-shadow: var(--shadow-focus);
-  border-color: var(--accent-strong);
 }
 
 .payment-rails-list {

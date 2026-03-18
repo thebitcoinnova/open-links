@@ -1,13 +1,13 @@
 import { For, Show, createMemo } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
-import { IconAnalytics, IconCopy, IconQrCode, IconShare } from "../../lib/icons/custom-icons";
 import type { ShareLinkResult } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
 import type {
   NonPaymentCardMetaItem,
   NonPaymentCardViewModel,
 } from "../../lib/ui/rich-card-policy";
+import BottomActionBar, { type BottomActionBarItem } from "../actions/BottomActionBar";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 
 export interface CardActionButtonProps {
@@ -46,7 +46,6 @@ const metaItemClassName = (item: NonPaymentCardMetaItem): string => {
 
 export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => {
   const cardActions = createMemo(() => props.resolveCardActions?.() ?? []);
-  const actionCount = () => cardActions().length;
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const interaction = () => props.interaction ?? "minimal";
@@ -79,27 +78,38 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
     showActionToast((await action.onClick()) as ShareLinkResult | undefined);
   };
 
-  const resolveActionIcon = (kind: CardActionButtonProps["kind"]) => {
+  const resolveActionLabel = (kind: CardActionButtonProps["kind"]): string => {
     if (kind === "analytics") {
-      return <IconAnalytics class="card-action-button-icon" aria-hidden="true" />;
-    }
-
-    if (kind === "copy") {
-      return <IconCopy class="card-action-button-icon" aria-hidden="true" />;
+      return "Stats";
     }
 
     if (kind === "qr") {
-      return <IconQrCode class="card-action-button-icon" aria-hidden="true" />;
+      return "QR";
     }
 
-    return <IconShare class="card-action-button-icon" aria-hidden="true" />;
+    if (kind === "copy") {
+      return "Copy";
+    }
+
+    return "Share";
   };
+
+  const actionItems = createMemo<BottomActionBarItem[]>(() =>
+    cardActions().map((action) => ({
+      ariaLabel: action.ariaLabel,
+      kind: action.kind,
+      label: resolveActionLabel(action.kind),
+      onClick: async () => {
+        await handleCardAction(action);
+      },
+      title: action.title,
+    })),
+  );
 
   return (
     <div
       class="non-payment-card-frame"
-      data-has-actions={actionCount() > 0 ? "true" : "false"}
-      style={{ "--card-action-count": String(actionCount()) } as Record<string, string>}
+      data-has-actions={actionItems().length > 0 ? "true" : "false"}
     >
       <a
         class={props.rootClassName}
@@ -121,7 +131,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
         data-has-footer={showFooter() ? "true" : "false"}
         data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
-        data-has-actions={actionCount() > 0 ? "true" : "false"}
+        data-has-actions={actionItems().length > 0 ? "true" : "false"}
       >
         <span class="non-payment-card-shell">
           <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
@@ -157,7 +167,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
 
           <span
             class="non-payment-card-summary"
-            data-has-actions={actionCount() > 0 ? "true" : "false"}
+            data-has-actions={actionItems().length > 0 ? "true" : "false"}
           >
             <span class="non-payment-card-title-row">
               <strong class="non-payment-card-title" id={titleId()}>
@@ -212,23 +222,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         </span>
       </a>
 
-      <Show when={actionCount() > 0}>
-        <span class="card-action-row" aria-label="Card actions">
-          <For each={cardActions()}>
-            {(action) => (
-              <button
-                type="button"
-                class={`card-action-button card-action-button-${action.kind}`}
-                aria-label={action.ariaLabel}
-                title={action.title ?? action.ariaLabel}
-                onClick={() => handleCardAction(action)}
-              >
-                {resolveActionIcon(action.kind)}
-              </button>
-            )}
-          </For>
-        </span>
-      </Show>
+      <BottomActionBar class="card-action-row" items={actionItems()} label="Card actions" />
     </div>
   );
 };

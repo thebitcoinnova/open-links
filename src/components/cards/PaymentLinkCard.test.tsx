@@ -75,6 +75,15 @@ const collectElements = (node: RenderedNode): RenderedElement[] => {
   return [node, ...collectElements(node.props.children as RenderedNode)];
 };
 
+const firstElementWithClass = (
+  node: RenderedNode,
+  className: string,
+): RenderedElement | undefined =>
+  collectElements(node).find((element) => {
+    const classValue = element.props.class;
+    return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
+  });
+
 const site = {
   title: "OpenLinks",
   description: "Profile links",
@@ -144,9 +153,15 @@ test("payment cards expose a primary QR opener when a primary href exists", () =
     (element) =>
       element.type === "button" && element.props["aria-label"] === "Show Tip Jar QR code",
   );
+  const actionBar = firstElementWithClass(tree, "payment-card-action-bar");
+  const openLinks = collectElements(tree).filter(
+    (element) => element.type === "a" && element.props["aria-label"] === "Open Tip Jar",
+  );
 
   // Assert
+  assert.ok(actionBar);
   assert.equal(qrButtons.length, 1);
+  assert.equal(openLinks.length, 1);
 });
 
 test("payment cards still expose the fullscreen QR button when QR fullscreen is enabled", () => {

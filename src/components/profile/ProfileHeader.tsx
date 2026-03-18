@@ -1,8 +1,8 @@
 import { For, Show } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
-import { IconAnalytics, IconCopy, IconQrCode, IconShare } from "../../lib/icons/custom-icons";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
+import BottomActionBar, { type BottomActionBarItem } from "../actions/BottomActionBar";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
@@ -50,6 +50,54 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     props.onProfileQrOpen?.(resolveDocumentShareUrl());
   };
 
+  const actionItems = (): BottomActionBarItem[] => {
+    const items: BottomActionBarItem[] = [];
+
+    if (analyticsAvailable() && props.onAnalyticsToggle) {
+      items.push({
+        active: analyticsActive(),
+        ariaLabel: analyticsActive() ? "Back to links" : "View follower analytics",
+        kind: "analytics",
+        label: analyticsActive() ? "Back" : "Stats",
+        onClick: () => props.onAnalyticsToggle?.(),
+        title: analyticsActive() ? "Back to links" : "View follower analytics",
+      });
+    }
+
+    if (props.onProfileQrOpen) {
+      items.push({
+        ariaLabel: "Show profile QR code",
+        kind: "qr",
+        label: "QR",
+        onClick: handleOpenProfileQr,
+        title: "Show profile QR code",
+      });
+    }
+
+    items.push(
+      {
+        ariaLabel: "Share profile",
+        kind: "share",
+        label: "Share",
+        onClick: async () => {
+          await handleShareProfile();
+        },
+        title: "Share profile",
+      },
+      {
+        ariaLabel: "Copy profile link",
+        kind: "copy",
+        label: "Copy",
+        onClick: async () => {
+          await handleCopyProfileLink();
+        },
+        title: "Copy profile link",
+      },
+    );
+
+    return items;
+  };
+
   return (
     <section class="profile-header" aria-label="Profile">
       <Show when={props.profile.avatar && richness() !== "minimal"}>
@@ -57,53 +105,8 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
       </Show>
 
       <div class="profile-copy">
-        <div class="profile-actions" aria-label="Profile sharing actions">
-          <div class="profile-title-row">
-            <h1>{props.profile.name}</h1>
-            <Show when={analyticsAvailable() && props.onAnalyticsToggle}>
-              <button
-                type="button"
-                class="profile-analytics-button"
-                data-active={analyticsActive() ? "true" : "false"}
-                aria-label={analyticsActive() ? "Back to links" : "View follower analytics"}
-                title={analyticsActive() ? "Back to links" : "View follower analytics"}
-                onClick={() => props.onAnalyticsToggle?.()}
-              >
-                <IconAnalytics class="profile-action-button-icon" aria-hidden="true" />
-              </button>
-            </Show>
-            <span class="profile-sharing-actions">
-              <Show when={props.onProfileQrOpen}>
-                <button
-                  type="button"
-                  class="profile-qr-button"
-                  aria-label="Show profile QR code"
-                  title="Show profile QR code"
-                  onClick={handleOpenProfileQr}
-                >
-                  <IconQrCode class="profile-action-button-icon" aria-hidden="true" />
-                </button>
-              </Show>
-              <button
-                type="button"
-                class="profile-share-button"
-                aria-label="Share profile"
-                title="Share profile"
-                onClick={() => handleShareProfile()}
-              >
-                <IconShare class="profile-action-button-icon" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                class="profile-copy-button"
-                aria-label="Copy profile link"
-                title="Copy profile link"
-                onClick={() => handleCopyProfileLink()}
-              >
-                <IconCopy class="profile-action-button-icon" aria-hidden="true" />
-              </button>
-            </span>
-          </div>
+        <div class="profile-title-row">
+          <h1>{props.profile.name}</h1>
         </div>
 
         <Show when={props.profile.headline}>
@@ -139,6 +142,12 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
             </For>
           </ul>
         </Show>
+
+        <BottomActionBar
+          class="profile-action-bar"
+          items={actionItems()}
+          label="Profile sharing actions"
+        />
       </div>
     </section>
   );
