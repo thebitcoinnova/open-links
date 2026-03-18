@@ -372,7 +372,7 @@ a:focus-visible {
 }
 
 .section-heading {
-  margin: calc(var(--space-2) * var(--density-scale)) 0 calc(var(--space-3) * var(--density-scale));
+  margin: calc(var(--space-3) * var(--density-scale)) 0 calc(var(--space-3) * var(--density-scale));
   font-size: var(--page-type-caption);
   letter-spacing: var(--tracking-section-heading);
   text-transform: var(--transform-section-heading);
