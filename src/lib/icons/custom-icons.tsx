@@ -204,3 +204,22 @@ export const IconAnalytics: Component<IconProps> = (props: IconProps) => (
     <path d="M18 16V4" />
   </svg>
 );
+
+/** Generic open/external-link icon (24x24 stroke-based). */
+export const IconOpen: Component<IconProps> = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    {...props}
+  >
+    <title>Open</title>
+    <path d="M14 5h5v5" />
+    <path d="M10 14L19 5" />
+    <path d="M19 14v4a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1h4" />
+  </svg>
+);

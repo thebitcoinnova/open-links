@@ -1,7 +1,6 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
-import { IconQrCode } from "../../lib/icons/custom-icons";
 import { resolvePaymentRailLogoUrl } from "../../lib/payments/rail-logos";
 import {
   type ResolvedPaymentRailAction,
@@ -18,6 +17,7 @@ import type {
 } from "../../lib/payments/types";
 import { copyToClipboard } from "../../lib/share/copy-to-clipboard";
 import { showActionToast } from "../../lib/ui/action-toast";
+import BottomActionBar, { type BottomActionBarItem } from "../actions/BottomActionBar";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 import PaymentQrFullscreen from "../payments/PaymentQrFullscreen";
 import StyledPaymentQr from "../payments/StyledPaymentQr";
@@ -263,6 +263,34 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
 
   const headerIconAlias = () => props.link.icon ?? primaryAction()?.iconAlias ?? "wallet";
   const headerIconUrl = () => primaryHref() ?? primaryAction()?.href ?? "https://openlinks.dev";
+  const actionItems = createMemo<BottomActionBarItem[]>(() => {
+    const items: BottomActionBarItem[] = [];
+    const href = primaryHref();
+
+    if (href && props.onPrimaryQrOpen) {
+      items.push({
+        ariaLabel: `Show ${props.link.label} QR code`,
+        kind: "qr",
+        label: "QR",
+        onClick: handleOpenPrimaryQr,
+        title: `Show ${props.link.label} QR code`,
+      });
+    }
+
+    if (href) {
+      items.push({
+        ariaLabel: `Open ${props.link.label}`,
+        href,
+        kind: "open",
+        label: "Open",
+        rel: primaryRel(),
+        target: primaryTarget(),
+        title: `Open ${props.link.label}`,
+      });
+    }
+
+    return items;
+  });
 
   return (
     <article
@@ -286,34 +314,6 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
             <strong id={titleId()}>{props.link.label}</strong>
             <span id={descriptionId()}>{description()}</span>
           </div>
-        </div>
-
-        <div class="payment-card-header-actions">
-          <Show when={primaryHref() && props.onPrimaryQrOpen}>
-            <button
-              type="button"
-              class="payment-card-qr-button"
-              aria-label={`Show ${props.link.label} QR code`}
-              title={`Show ${props.link.label} QR code`}
-              onClick={handleOpenPrimaryQr}
-            >
-              <IconQrCode class="card-action-button-icon" aria-hidden="true" />
-            </button>
-          </Show>
-
-          <Show when={primaryHref()}>
-            {(href) => (
-              <a
-                class="payment-card-primary-action"
-                href={href()}
-                target={primaryTarget()}
-                rel={primaryRel()}
-                aria-label={`Open ${props.link.label}`}
-              >
-                Open
-              </a>
-            )}
-          </Show>
         </div>
       </div>
 
@@ -422,6 +422,12 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
           }}
         </For>
       </ul>
+
+      <BottomActionBar
+        class="payment-card-action-bar"
+        items={actionItems()}
+        label={`${props.link.label} actions`}
+      />
 
       <Show when={activeFullscreenRail()}>
         {(entry) => (

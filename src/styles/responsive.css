@@ -23,22 +23,22 @@
     --profile-avatar-base: 72px;
   }
 
-  body .profile-actions {
-    gap: var(--space-1);
-  }
-
   body .profile-title-row {
-    gap: var(--space-1);
+    align-items: flex-start;
   }
 
-  body .profile-analytics-button,
-  body .profile-qr-button,
-  body .profile-share-button,
-  body .profile-copy-button {
-    width: calc(var(--page-target-size) + 0.15rem);
-    height: calc(var(--page-target-size) + 0.15rem);
-    min-width: calc(var(--page-target-size) + 0.15rem);
-    min-height: calc(var(--page-target-size) + 0.15rem);
+  body .bottom-action-bar {
+    gap: 0.45rem;
+  }
+
+  body .bottom-action-bar-action {
+    min-height: calc(var(--page-target-size) - 0.25rem);
+    padding-inline: 0;
+    gap: 0;
+  }
+
+  body .bottom-action-bar-action-label {
+    display: none;
   }
 
   body .utility-actions {
@@ -60,6 +60,10 @@
     padding-block: calc(var(--space-3) * var(--density-scale) + 0.1rem);
   }
 
+  body .card-action-row {
+    margin-top: 0;
+  }
+
   body .non-payment-card-shell {
     column-gap: var(--space-2);
   }
@@ -67,23 +71,6 @@
   body .payment-card-header,
   body .payment-rail-top-row {
     flex-wrap: wrap;
-  }
-
-  body .payment-card-primary-action {
-    width: 100%;
-  }
-
-  body .payment-card-header-actions {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
-  body .payment-card-qr-button {
-    width: calc(var(--page-target-size) + 0.15rem);
-    height: calc(var(--page-target-size) + 0.15rem);
-    min-width: calc(var(--page-target-size) + 0.15rem);
-    min-height: calc(var(--page-target-size) + 0.15rem);
   }
 
   body .payment-rail-actions {

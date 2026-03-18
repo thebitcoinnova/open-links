@@ -336,7 +336,8 @@ test("history-aware cards expose analytics then share as sibling actions without
   const buttons = collectElements(tree).filter((element) => {
     const classValue = element.props.class;
     return (
-      typeof classValue === "string" && classValue.split(/\s+/u).includes("card-action-button")
+      typeof classValue === "string" &&
+      classValue.split(/\s+/u).includes("bottom-action-bar-action")
     );
   });
 
@@ -391,7 +392,8 @@ test("cards without history still render share and copy sibling actions", () => 
   const buttons = collectElements(tree).filter((element) => {
     const classValue = element.props.class;
     return (
-      typeof classValue === "string" && classValue.split(/\s+/u).includes("card-action-button")
+      typeof classValue === "string" &&
+      classValue.split(/\s+/u).includes("bottom-action-bar-action")
     );
   });
 

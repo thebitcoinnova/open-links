@@ -60,6 +60,15 @@ const collectElements = (node: RenderedNode): RenderedElement[] => {
 const firstElementOfType = (node: RenderedNode, type: string): RenderedElement | undefined =>
   collectElements(node).find((element) => element.type === type);
 
+const firstElementWithClass = (
+  node: RenderedNode,
+  className: string,
+): RenderedElement | undefined =>
+  collectElements(node).find((element) => {
+    const classValue = element.props.class;
+    return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
+  });
+
 test("profile header renders analytics and share buttons in order when analytics is available", () => {
   // Arrange
   const tree = ProfileHeader({
@@ -147,4 +156,29 @@ test("profile header no longer renders an inline share status output", () => {
 
   // Assert
   assert.equal(firstElementOfType(tree, "output"), undefined);
+});
+
+test("profile header keeps the title row free of action buttons", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    analyticsAvailable: true,
+    onAnalyticsToggle: () => undefined,
+    onProfileQrOpen: () => undefined,
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+  }) as RenderedNode;
+
+  // Act
+  const titleRow = firstElementWithClass(tree, "profile-title-row");
+  const titleRowButtons = collectElements(titleRow?.props.children as RenderedNode).filter(
+    (element) => element.type === "button",
+  );
+
+  // Assert
+  assert.ok(titleRow);
+  assert.equal(titleRowButtons.length, 0);
 });
