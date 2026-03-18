@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
-import { IconAnalytics, IconCopy, IconShare } from "../../lib/icons/custom-icons";
+import { IconAnalytics, IconCopy, IconQrCode, IconShare } from "../../lib/icons/custom-icons";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
 
@@ -9,6 +9,7 @@ export interface ProfileHeaderProps {
   analyticsActive?: boolean;
   analyticsAvailable?: boolean;
   onAnalyticsToggle?: () => void;
+  onProfileQrOpen?: (payload: string) => void;
   richness?: "minimal" | "standard" | "rich";
 }
 
@@ -45,6 +46,10 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     );
   };
 
+  const handleOpenProfileQr = () => {
+    props.onProfileQrOpen?.(resolveDocumentShareUrl());
+  };
+
   return (
     <section class="profile-header" aria-label="Profile">
       <Show when={props.profile.avatar && richness() !== "minimal"}>
@@ -68,6 +73,17 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
               </button>
             </Show>
             <span class="profile-sharing-actions">
+              <Show when={props.onProfileQrOpen}>
+                <button
+                  type="button"
+                  class="profile-qr-button"
+                  aria-label="Show profile QR code"
+                  title="Show profile QR code"
+                  onClick={handleOpenProfileQr}
+                >
+                  <IconQrCode class="profile-action-button-icon" aria-hidden="true" />
+                </button>
+              </Show>
               <button
                 type="button"
                 class="profile-share-button"

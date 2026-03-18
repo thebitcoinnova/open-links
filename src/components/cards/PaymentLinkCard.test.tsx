@@ -110,6 +110,7 @@ const paymentLink = {
 } as const satisfies OpenLink;
 
 test("payment rail copy buttons keep stable copy labels", () => {
+  // Arrange
   const tree = PaymentLinkCard({
     link: paymentLink,
     site,
@@ -117,16 +118,39 @@ test("payment rail copy buttons keep stable copy labels", () => {
     themeFingerprint: "test",
   }) as RenderedNode;
 
+  // Act
   const copyButtons = collectElements(tree).filter(
     (element) =>
       element.type === "button" && element.props["aria-label"] === "Copy Bitcoin payment value",
   );
 
+  // Assert
   assert.equal(copyButtons.length, 1);
   assert.equal(copyButtons[0]?.props.children, "Copy");
 });
 
+test("payment cards expose a primary QR opener when a primary href exists", () => {
+  // Arrange
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site,
+    onPrimaryQrOpen: () => undefined,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const qrButtons = collectElements(tree).filter(
+    (element) =>
+      element.type === "button" && element.props["aria-label"] === "Show Tip Jar QR code",
+  );
+
+  // Assert
+  assert.equal(qrButtons.length, 1);
+});
+
 test("payment cards still expose the fullscreen QR button when QR fullscreen is enabled", () => {
+  // Arrange
   const tree = PaymentLinkCard({
     link: paymentLink,
     site,
@@ -134,14 +158,17 @@ test("payment cards still expose the fullscreen QR button when QR fullscreen is 
     themeFingerprint: "test",
   }) as RenderedNode;
 
+  // Act
   const fullscreenButtons = collectElements(tree).filter(
     (element) => element.type === "button" && element.props.children === "Open Full Screen",
   );
 
+  // Assert
   assert.equal(fullscreenButtons.length, 1);
 });
 
 test("payment rail copy actions emit a toast when clipboard copy succeeds", async () => {
+  // Arrange
   const calls: Array<{ message: string; variant: "default" | "error" }> = [];
 
   registerActionToastClient({
@@ -166,6 +193,7 @@ test("payment rail copy actions emit a toast when clipboard copy succeeds", asyn
     themeFingerprint: "test",
   }) as RenderedNode;
 
+  // Act
   const copyButton = collectElements(tree).find(
     (element) =>
       element.type === "button" && element.props["aria-label"] === "Copy Bitcoin payment value",
@@ -175,6 +203,7 @@ test("payment rail copy actions emit a toast when clipboard copy succeeds", asyn
 
   await (copyButton.props.onClick as () => Promise<void>)();
 
+  // Assert
   assert.deepEqual(calls, [{ message: "Bitcoin copied", variant: "default" }]);
 
   clearActionToastClient();

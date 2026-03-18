@@ -308,6 +308,11 @@ test("history-aware cards expose analytics then share as sibling actions without
         onClick: () => undefined,
       },
       {
+        ariaLabel: "Show GitHub QR code",
+        kind: "qr",
+        onClick: () => undefined,
+      },
+      {
         ariaLabel: "Share GitHub",
         kind: "share",
         onClick: () => Promise.resolve({ message: "Link copied", status: "copied" as const }),
@@ -338,10 +343,11 @@ test("history-aware cards expose analytics then share as sibling actions without
   assert.ok(anchor);
   assert.equal(anchor.props["aria-label"], "Open pRizz in a new tab");
   assert.ok(actionRow);
-  assert.equal(buttons.length, 3);
+  assert.equal(buttons.length, 4);
   assert.equal(buttons[0]?.props["aria-label"], "View GitHub follower history");
-  assert.equal(buttons[1]?.props["aria-label"], "Share GitHub");
-  assert.equal(buttons[2]?.props["aria-label"], "Copy GitHub link");
+  assert.equal(buttons[1]?.props["aria-label"], "Show GitHub QR code");
+  assert.equal(buttons[2]?.props["aria-label"], "Share GitHub");
+  assert.equal(buttons[3]?.props["aria-label"], "Copy GitHub link");
   assert.equal(
     firstElementWithClass(tree, "non-payment-card-summary")?.props["data-has-analytics"],
     undefined,
@@ -354,8 +360,14 @@ test("history-aware cards expose analytics then share as sibling actions without
 });
 
 test("cards without history still render share and copy sibling actions", () => {
+  // Arrange
   const tree = SimpleLinkCard({
     resolveCardActions: () => [
+      {
+        ariaLabel: "Show OpenLinks QR code",
+        kind: "qr",
+        onClick: () => undefined,
+      },
       {
         ariaLabel: "Share OpenLinks",
         kind: "share",
@@ -374,6 +386,7 @@ test("cards without history still render share and copy sibling actions", () => 
     themeFingerprint: "test",
   }) as RenderedNode;
 
+  // Act
   const actionRow = firstElementWithClass(tree, "card-action-row");
   const buttons = collectElements(tree).filter((element) => {
     const classValue = element.props.class;
@@ -382,10 +395,12 @@ test("cards without history still render share and copy sibling actions", () => 
     );
   });
 
+  // Assert
   assert.ok(actionRow);
-  assert.equal(buttons.length, 2);
-  assert.equal(buttons[0]?.props["aria-label"], "Share OpenLinks");
-  assert.equal(buttons[1]?.props["aria-label"], "Copy OpenLinks link");
+  assert.equal(buttons.length, 3);
+  assert.equal(buttons[0]?.props["aria-label"], "Show OpenLinks QR code");
+  assert.equal(buttons[1]?.props["aria-label"], "Share OpenLinks");
+  assert.equal(buttons[2]?.props["aria-label"], "Copy OpenLinks link");
 });
 
 test("card action surfaces no longer render inline action status outputs", () => {

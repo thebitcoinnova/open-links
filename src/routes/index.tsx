@@ -22,6 +22,7 @@ import SiteFooter from "../components/layout/SiteFooter";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
+import QrCodeDialog from "../components/qr/QrCodeDialog";
 import ThemeToggle from "../components/theme/ThemeToggle";
 import {
   readAnalyticsPageState,
@@ -102,6 +103,13 @@ const RANGE_OPTIONS: Array<{ label: string; value: FollowerHistoryRange }> = [
   { label: "All", value: "all" },
 ];
 type PageViewKey = "analytics" | "links";
+interface QrDialogTarget {
+  ariaLabel: string;
+  payload: string;
+  qrAriaLabel: string;
+  title: string;
+}
+
 const FollowerHistoryChart = lazy(() => import("../components/analytics/FollowerHistoryChart"));
 const FollowerHistoryModal = lazy(() => import("../components/analytics/FollowerHistoryModal"));
 
@@ -225,6 +233,7 @@ export default function RouteIndex() {
   const [modalRange, setModalRange] = createSignal<FollowerHistoryRange>("30d");
   const [modalMode, setModalMode] = createSignal<FollowerHistoryMode>("raw");
   const [selectedHistoryLinkId, setSelectedHistoryLinkId] = createSignal<string | null>(null);
+  const [selectedQrTarget, setSelectedQrTarget] = createSignal<QrDialogTarget | null>(null);
 
   const canToggle = createMemo(() => canToggleMode(modePolicy));
   const themeFingerprint = () => `${themeSelection.active}:${mode()}`;
@@ -278,13 +287,39 @@ export default function RouteIndex() {
     setSelectedHistoryLinkId(null);
   };
 
+  const openQrDialog = (target: QrDialogTarget) => {
+    setSelectedQrTarget(target);
+  };
+
+  const openLinkQrDialog = (title: string, payload: string) => {
+    openQrDialog({
+      ariaLabel: `${title} QR code`,
+      payload,
+      qrAriaLabel: `${title} link QR code`,
+      title,
+    });
+  };
+
+  const closeQrDialog = () => {
+    setSelectedQrTarget(null);
+  };
+
   const renderCard = (link: (typeof content.links)[number]) => {
     const target = targetForLink(link.url);
     const resolveCardActions = () => {
       const historyEntry = historyAvailability().get(link.id);
-      const shareUrl = link.url;
+      const shareUrl = link.url?.trim();
       const shareActions = shareUrl
         ? [
+            {
+              ariaLabel: `Show ${link.label} QR code`,
+              kind: "qr" as const,
+              onClick: () => {
+                openLinkQrDialog(link.label, shareUrl);
+                return undefined;
+              },
+              title: `Show ${link.label} QR code`,
+            },
             {
               ariaLabel: `Share ${link.label}`,
               kind: "share" as const,
@@ -336,6 +371,7 @@ export default function RouteIndex() {
         <PaymentLinkCard
           link={link}
           site={content.site}
+          onPrimaryQrOpen={(payload) => openLinkQrDialog(link.label, payload)}
           target={target}
           interaction="minimal"
           brandIconOptions={brandIconOptions}
@@ -412,6 +448,7 @@ export default function RouteIndex() {
       analyticsAvailable={analyticsAvailable()}
       analyticsActive={analyticsActive}
       onAnalyticsToggle={analyticsAvailable() ? toggleAnalyticsPage : undefined}
+      onProfileQrOpen={(payload) => openLinkQrDialog(content.profile.name, payload)}
     />
   );
 
@@ -587,6 +624,19 @@ export default function RouteIndex() {
           themeFingerprint={themeFingerprint()}
         />
       </Suspense>
+
+      <Show when={selectedQrTarget()}>
+        {(target) => (
+          <QrCodeDialog
+            open={true}
+            title={target().title}
+            payload={target().payload}
+            ariaLabel={target().ariaLabel}
+            qrAriaLabel={target().qrAriaLabel}
+            onClose={closeQrDialog}
+          />
+        )}
+      </Show>
     </main>
   );
 }

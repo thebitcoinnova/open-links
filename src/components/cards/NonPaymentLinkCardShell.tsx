@@ -1,7 +1,7 @@
 import { For, Show, createMemo } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
-import { IconAnalytics, IconCopy, IconShare } from "../../lib/icons/custom-icons";
+import { IconAnalytics, IconCopy, IconQrCode, IconShare } from "../../lib/icons/custom-icons";
 import type { ShareLinkResult } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
 import type {
@@ -12,7 +12,7 @@ import LinkSiteIcon from "../icons/LinkSiteIcon";
 
 export interface CardActionButtonProps {
   ariaLabel: string;
-  kind: "analytics" | "copy" | "share";
+  kind: "analytics" | "copy" | "qr" | "share";
   onClick: () => undefined | Promise<ShareLinkResult | undefined>;
   title?: string;
 }
@@ -46,6 +46,7 @@ const metaItemClassName = (item: NonPaymentCardMetaItem): string => {
 
 export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => {
   const cardActions = createMemo(() => props.resolveCardActions?.() ?? []);
+  const actionCount = () => cardActions().length;
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const interaction = () => props.interaction ?? "minimal";
@@ -87,13 +88,18 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       return <IconCopy class="card-action-button-icon" aria-hidden="true" />;
     }
 
+    if (kind === "qr") {
+      return <IconQrCode class="card-action-button-icon" aria-hidden="true" />;
+    }
+
     return <IconShare class="card-action-button-icon" aria-hidden="true" />;
   };
 
   return (
     <div
       class="non-payment-card-frame"
-      data-has-actions={cardActions().length > 0 ? "true" : "false"}
+      data-has-actions={actionCount() > 0 ? "true" : "false"}
+      style={{ "--card-action-count": String(actionCount()) } as Record<string, string>}
     >
       <a
         class={props.rootClassName}
@@ -115,7 +121,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
         data-has-footer={showFooter() ? "true" : "false"}
         data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
-        data-has-actions={cardActions().length > 0 ? "true" : "false"}
+        data-has-actions={actionCount() > 0 ? "true" : "false"}
       >
         <span class="non-payment-card-shell">
           <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
@@ -151,7 +157,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
 
           <span
             class="non-payment-card-summary"
-            data-has-actions={cardActions().length > 0 ? "true" : "false"}
+            data-has-actions={actionCount() > 0 ? "true" : "false"}
           >
             <span class="non-payment-card-title-row">
               <strong class="non-payment-card-title" id={titleId()}>
@@ -206,7 +212,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         </span>
       </a>
 
-      <Show when={cardActions().length > 0}>
+      <Show when={actionCount() > 0}>
         <span class="card-action-row" aria-label="Card actions">
           <For each={cardActions()}>
             {(action) => (
