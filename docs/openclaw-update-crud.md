@@ -36,6 +36,8 @@ OpenClaw must start every Update/CRUD session by asking for:
 3. `seed_identities`: optional plain-text seed list (handles, profile URLs, usernames, emails).
 4. `customization_path`: `targeted-crud` or `customization-audit`.
 
+`seed_identities` may include a Linktree URL. When present, OpenClaw should use `bun run bootstrap:linktree -- --url <linktree-url>` to prefill profile/avatar/link candidates before asking the user to enumerate links manually.
+
 If `customization_path=customization-audit`, OpenClaw must also ask for:
 
 1. `audit_scope`: `full` or `focused`.
@@ -56,6 +58,8 @@ Conditional defaults when `customization_path=customization-audit`:
 - `focus_areas`: default to none.
 
 If no seeds are provided and research is enabled, proceed with authoritative-chain identity discovery.
+
+If a Linktree URL is included in `seed_identities`, treat it as the preferred bootstrap seed for link gathering in both `guided` and `autopilot` modes.
 
 ## Customization Audit Path (Optional)
 

@@ -54,22 +54,23 @@ Execute in this exact order.
 5. Clone user fork and enter repository root.
 6. Install dependencies (`bun install` or `bun install --frozen-lockfile`).
 7. Resolve user identity using the precedence rules in this document.
-8. Personalize data files:
+8. If the user explicitly provided a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted profile/avatar/social/content links as bootstrap candidates before asking for manual link entry.
+9. Personalize data files:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-9. Validate and build:
+10. Validate and build:
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
-10. Commit and push directly to `main`.
-11. Verify GitHub Pages source is set to **GitHub Actions**.
-12. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
-13. Poll CI and Deploy Production workflow status for the pushed SHA.
-14. On success, collect deployment URLs.
-15. Post structured URL summary in chat using the schema in this file.
-16. Update the README deploy URL marker block only if normalized URL/status values changed.
-17. Commit/push README update if and only if step 16 changed file content.
+11. Commit and push directly to `main`.
+12. Verify GitHub Pages source is set to **GitHub Actions**.
+13. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
+14. Poll CI and Deploy Production workflow status for the pushed SHA.
+15. On success, collect deployment URLs.
+16. Post structured URL summary in chat using the schema in this file.
+17. Update the README deploy URL marker block only if normalized URL/status values changed.
+18. Commit/push README update if and only if step 17 changed file content.
 
 ## Automation and Identity Confirmation Rule
 
@@ -94,6 +95,8 @@ Use only this authoritative chain:
 4. Verified personal website links reachable from items 1-3.
 
 Do not use broad web search as a primary discovery method.
+
+If the user explicitly provides a Linktree URL, treat that URL as an allowed bootstrap seed. You may run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted output as candidate profile/link data, but still apply it conservatively and do not invent extra links beyond the extractor output plus the authoritative chain above.
 
 ### Excluded by default (explicit opt-in required)
 

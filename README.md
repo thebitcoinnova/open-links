@@ -64,7 +64,7 @@ For full walkthrough and troubleshooting, see [Quickstart](https://raw.githubuse
 
 ### Recommended CRUD Paths
 
-- Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), and [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed.
+- Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md), and [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed.
 - Preferred for browser-based CRUD: use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when the self-serve onboarding/editor already covers your workflow.
 - Manual fallback: edit `data/*.json` directly only when you intentionally want the lower-level path or need to work outside the currently supported AI/Studio flows.
 
@@ -102,6 +102,12 @@ cd open-links
 bun install
 ```
 
+If you have a Linktree and want a bootstrap seed for profile/avatar/social/content links before editing `data/*.json`, run:
+
+```bash
+bun run bootstrap:linktree -- --url https://linktr.ee/<handle>
+```
+
 If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
 
 ```bash
@@ -136,6 +142,10 @@ Manual fallback:
 - `data/profile.json` - identity and profile details.
 - `data/links.json` - simple/rich/payment links, groups, ordering.
 - `data/site.json` - theme, UI, quality, and deployment-related config.
+
+Linktree-assisted bootstrap:
+
+- use `bun run bootstrap:linktree -- --url https://linktr.ee/<handle>` to generate reviewable profile/link candidates before editing `data/profile.json` and `data/links.json`
 
 Starter presets:
 
@@ -205,6 +215,7 @@ Then use:
 - [Deployment Operations Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment.md) for full troubleshooting and diagnostics flow.
 - [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md) for deployment URL reporting and README marker-block updates.
 - [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md) for existing repo update sessions and interaction-mode behavior.
+- [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md) for Linktree-first bootstrap of profile/link candidates.
 - [Adapter Contract Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/adapter-contract.md) for future non-GitHub host planning.
 
 ## OpenLinks Studio (Experimental Control Plane)

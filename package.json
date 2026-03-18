@@ -44,6 +44,7 @@
     "deploy:aws:publish": "bun run scripts/deploy/publish-aws.ts",
     "deploy:pages:plan": "bun run scripts/deploy/plan-pages.ts",
     "deploy:verify": "bun run scripts/deploy/verify.ts",
+    "bootstrap:linktree": "bun scripts/bootstrap-linktree.ts",
     "biome:check": "bunx @biomejs/biome check . --files-ignore-unknown=true",
     "biome:fix": "bunx @biomejs/biome check . --write --files-ignore-unknown=true",
     "biome:staged:fix": "bunx @biomejs/biome check --staged --write --files-ignore-unknown=true --no-errors-on-unmatched",

@@ -67,7 +67,7 @@ For day-2 update sessions with selectable interaction levels, use `docs/openclaw
 Before running the wizard with an AI agent, prepare:
 
 - your profile details,
-- your desired links (simple and rich),
+- your desired links (simple and rich) or a Linktree URL,
 - theme/mode preferences,
 - deployment target (default upstream target: AWS canonical site plus GitHub Pages mirror).
 
@@ -148,18 +148,20 @@ Target file:
 
 Agent should:
 
-1. Gather links and classify each as `simple` or `rich`.
-2. Capture grouping preference:
+1. Ask whether the user wants to provide a Linktree URL or enumerate links manually.
+2. If the user has a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` first and review the extracted profile/social/content link candidates with them before editing `data/links.json`.
+3. Gather remaining links and classify each as `simple` or `rich`.
+4. Capture grouping preference:
    - grouped sections, or
    - flat list.
-3. Capture order preference:
+5. Capture order preference:
    - explicit `order` array, or
    - per-link numeric `order`.
-4. For rich links, ask whether metadata is:
+6. For rich links, ask whether metadata is:
    - fully manual,
    - enrichment-assisted,
    - enrichment-disabled.
-5. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
+7. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
 
 ```bash
 bun run images:sync

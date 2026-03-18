@@ -109,6 +109,12 @@ Optional public rich-browser diagnostics:
 
 ## Configure Your First Site
 
+If you already have a Linktree, you can bootstrap reviewable profile/link candidates before editing `data/*.json`:
+
+```bash
+bun run bootstrap:linktree -- --url https://linktr.ee/<handle>
+```
+
 Edit the three primary content files:
 
 - `data/profile.json`
@@ -123,7 +129,7 @@ If you want a starter preset, copy from:
 Recommended first pass:
 
 1. Set your `profile.name`, `profile.headline`, `profile.bio`.
-2. Replace starter links in `data/links.json`.
+2. Replace starter links in `data/links.json`, or start from the Linktree extractor output if you used it.
 3. Set `site.title` and `site.description`.
 4. Pick an initial theme in `site.theme.active` (default recommendation: `sleek`).
 5. Set rich-card image fit in `site.ui.richCards.imageFit`:
