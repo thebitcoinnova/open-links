@@ -42,6 +42,26 @@ const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
     note: "GitHub Actions posts PR comments at CI runtime and does not participate in the committed content cache pipeline.",
   },
   {
+    file: "scripts/ci/create-pages-deployment.ts",
+    classification: "automation",
+    note: "Pages deployment creation talks to the GitHub API during CI orchestration and stays outside the committed content cache pipeline.",
+  },
+  {
+    file: "scripts/ci/wait-for-pages-deployment.ts",
+    classification: "automation",
+    note: "Pages deployment polling talks to the GitHub API during CI orchestration and stays outside the committed content cache pipeline.",
+  },
+  {
+    file: "scripts/deploy/plan-pages.ts",
+    classification: "automation",
+    note: "Deploy planning fetches the live manifest for release automation and does not participate in the committed content cache pipeline.",
+  },
+  {
+    file: "scripts/deploy/verify.ts",
+    classification: "automation",
+    note: "Deploy verification fetches live deployment targets as release automation and does not participate in the committed content cache pipeline.",
+  },
+  {
     file: "packages/studio-web/src/lib/api.ts",
     classification: "runtime",
     note: "Studio web client API requests are runtime traffic, not committed content-generation fetches.",
@@ -272,8 +292,13 @@ test("direct fetch classifications keep runtime and diagnostics out of the commi
     "Diagnostic fetch exemptions must stay confined to one-off scripts.",
   );
   assert.ok(
-    automationFiles.every((file) => file.startsWith("scripts/github-actions/")),
-    "Automation fetch exemptions must stay confined to GitHub Actions scripts.",
+    automationFiles.every(
+      (file) =>
+        file.startsWith("scripts/github-actions/") ||
+        file.startsWith("scripts/ci/") ||
+        file.startsWith("scripts/deploy/"),
+    ),
+    "Automation fetch exemptions must stay confined to CI, deploy, or GitHub Actions scripts.",
   );
   assert.ok(
     cacheBackedFiles.every((file) => file.startsWith("scripts/")),
