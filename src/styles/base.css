@@ -384,7 +384,11 @@ a:focus-visible {
   background: color-mix(in srgb, var(--surface-pill) 40%, var(--accent) 60%);
 }
 
-.profile-action-bar,
+.profile-action-bar {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
+}
+
 .card-action-row,
 .payment-card-action-bar {
   padding-top: var(--space-2);
