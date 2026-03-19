@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router";
 import type { JSX } from "solid-js";
+import StudioShellNavigation from "./StudioShellNavigation";
 
 interface PageShellProps {
   class?: string;
@@ -23,14 +24,7 @@ export default function PageShell(props: PageShellProps) {
           <img src={STUDIO_LOGO_PATH} alt="" aria-hidden="true" class="openlinks-studio-logo" />
           <span>OpenLinks Studio</span>
         </A>
-        <nav class="flex items-center gap-2 text-sm">
-          <A href="/onboarding" class="rounded-lg px-3 py-2 text-slate-200 hover:bg-white/10">
-            Onboarding
-          </A>
-          <A href="/roadmap" class="rounded-lg px-3 py-2 text-slate-200 hover:bg-white/10">
-            Roadmap
-          </A>
-        </nav>
+        <StudioShellNavigation />
       </header>
       <main class={`mx-auto w-full max-w-6xl px-4 pb-20 md:px-8 ${props.class ?? ""}`}>
         {props.children}

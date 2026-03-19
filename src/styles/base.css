@@ -174,9 +174,6 @@ a:focus-visible {
 }
 
 .utility-menu-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--space-2));
   z-index: 40;
   min-width: min(21rem, 92vw);
   display: grid;
@@ -186,6 +183,15 @@ a:focus-visible {
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--surface-panel) 94%, var(--surface-bg) 6%);
   box-shadow: var(--shadow-soft);
+  transform-origin: var(--kb-popover-content-transform-origin);
+}
+
+.utility-menu-panel[data-expanded] {
+  animation: utility-menu-panel-enter var(--motion-mid) both;
+}
+
+.utility-menu-panel[data-closed] {
+  animation: utility-menu-panel-exit var(--motion-mid) both;
 }
 
 .utility-menu-panel .theme-toggle {
@@ -196,6 +202,30 @@ a:focus-visible {
 .utility-menu-panel .utility-pill {
   text-align: left;
   white-space: nowrap;
+}
+
+@keyframes utility-menu-panel-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes utility-menu-panel-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
 }
 
 .profile-header {

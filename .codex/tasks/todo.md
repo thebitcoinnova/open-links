@@ -4,6 +4,16 @@
 
 ### In Progress
 
+- [x] Implement the Kobalte menu/sidebar refactor across the public utility controls menu and the Studio shell/editor.
+- [x] Add focused regression tests for the new menu helpers, Studio nav model, and editor tab contract.
+- [x] Verify the change with repo-required lint, typecheck, Studio tests, and a full build.
+
+### Completion Review
+
+- Result: Replaced the public utility controls popup with a Kobalte `Popover`, extracted its pure open/focus helpers for test coverage, added a Studio shell navigation component with shared desktop/mobile route definitions and a mobile Kobalte `Dialog` drawer, and moved the Studio editor rail/panel chrome into a Kobalte `Tabs`-backed `EditorWorkspace` wrapper. The Studio roadmap trackers were updated in both the doc checklist and the in-app checklist data, and `@kobalte/core` is now declared in `packages/studio-web/package.json`.
+- Verification: `bun install` passed. `bun run biome:check` passed. `bun run studio:lint` passed. `bun run typecheck` passed. `bun run studio:typecheck` passed. `bun test src/components/layout/UtilityControlsMenu.test.tsx` passed. `bun run studio:web:test` passed. `bun run build` passed, including `enrich:rich:strict`, `images:sync`, and `validate:data`. `bun run studio:web:build` passed. `git diff --check` passed.
+- Residual risk: The new root-app menu test stays at the helper-contract level because Bun’s default server-side test environment cannot directly execute the client-only Kobalte popover module. The behavior is still covered by typecheck/build integration plus the extracted focus/open helpers, but a future browser-capable UI test harness would allow end-to-end interaction coverage.
+
 - [ ] Fix the GitHub Actions deploy workflow gating so CI-triggered production deploys can run when `build_artifacts` is intentionally skipped.
 - [ ] Push the workflow fix, confirm the next `main` CI run triggers `Deploy Production`, and verify the AWS + Pages jobs execute instead of skipping.
 - [ ] Finish with live verification that the CI-driven deploy updated `openlinks.us` and the GitHub Pages mirror from the pushed artifact.

@@ -1,5 +1,11 @@
-import { type JSX, Show, createSignal, createUniqueId, onCleanup, onMount } from "solid-js";
+import * as Popover from "@kobalte/core/popover";
+import { type JSX, createSignal, createUniqueId } from "solid-js";
 import { IconMenu } from "../../lib/icons/custom-icons";
+import {
+  createUtilityControlsMenuCloseAutoFocusHandler,
+  resolveUtilityControlsMenuOpenChange,
+  resolveUtilityControlsMenuTriggerAriaLabel,
+} from "./UtilityControlsMenu.helpers";
 
 export interface UtilityControlsMenuProps {
   label?: string;
@@ -11,95 +17,40 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
   const [isOpen, setIsOpen] = createSignal(false);
   const panelId = `utility-controls-panel-${createUniqueId()}`;
   const triggerLabel = () => props.label ?? "controls menu";
-  const triggerAriaLabel = () => `${isOpen() ? "Close" : "Open"} ${triggerLabel()}`;
-  let containerRef: HTMLDivElement | undefined;
-  let triggerRef: HTMLButtonElement | undefined;
-
-  const closeMenu = () => {
-    setIsOpen(false);
-  };
-
-  const handleToggle = () => {
-    setIsOpen((open) => !open);
-  };
-
-  const handleDocumentPointerDown = (event: PointerEvent) => {
-    if (!isOpen()) {
-      return;
-    }
-
-    const target = event.target;
-    if (!(target instanceof Node)) {
-      return;
-    }
-
-    if (containerRef?.contains(target)) {
-      return;
-    }
-
-    closeMenu();
-  };
-
-  const handleFocusOut = (event: FocusEvent) => {
-    if (!isOpen()) {
-      return;
-    }
-
-    const currentTarget = event.currentTarget as HTMLDivElement | null;
-    const nextTarget = event.relatedTarget as Node | null;
-
-    if (currentTarget && nextTarget && currentTarget.contains(nextTarget)) {
-      return;
-    }
-
-    closeMenu();
-  };
-
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (!isOpen() || event.key !== "Escape") {
-      return;
-    }
-
-    event.preventDefault();
-    closeMenu();
-    triggerRef?.focus();
-  };
-
-  onMount(() => {
-    document.addEventListener("pointerdown", handleDocumentPointerDown);
-  });
-
-  onCleanup(() => {
-    document.removeEventListener("pointerdown", handleDocumentPointerDown);
-  });
+  const triggerAriaLabel = () =>
+    resolveUtilityControlsMenuTriggerAriaLabel(isOpen(), triggerLabel());
+  let maybeTriggerRef: HTMLButtonElement | undefined;
+  const handleCloseAutoFocus = createUtilityControlsMenuCloseAutoFocusHandler(
+    () => maybeTriggerRef,
+  );
 
   return (
-    <div
-      class="utility-menu"
-      ref={containerRef}
-      onFocusOut={handleFocusOut}
-      onKeyDown={handleKeyDown}
-    >
-      <button
-        ref={triggerRef}
-        type="button"
-        class="utility-menu-button"
-        aria-label={triggerAriaLabel()}
-        aria-expanded={isOpen() ? "true" : "false"}
-        aria-controls={panelId}
-        onClick={handleToggle}
+    <div class="utility-menu">
+      <Popover.Root
+        gutter={8}
+        open={isOpen()}
+        onOpenChange={(nextIsOpen) => resolveUtilityControlsMenuOpenChange(nextIsOpen, setIsOpen)}
+        placement="bottom-end"
       >
-        <IconMenu aria-hidden="true" />
-      </button>
-      <Show when={isOpen()}>
-        <div
-          id={panelId}
-          class="utility-menu-panel"
-          aria-label={props.panelLabel ?? "Theme and mode controls"}
+        <Popover.Trigger
+          ref={maybeTriggerRef}
+          type="button"
+          class="utility-menu-button"
+          aria-label={triggerAriaLabel()}
         >
-          {props.children}
-        </div>
-      </Show>
+          <IconMenu aria-hidden="true" />
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            id={panelId}
+            class="utility-menu-panel"
+            aria-label={props.panelLabel ?? "Theme and mode controls"}
+            onCloseAutoFocus={handleCloseAutoFocus}
+          >
+            {props.children}
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
     </div>
   );
 };

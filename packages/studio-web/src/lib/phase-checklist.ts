@@ -65,6 +65,12 @@ export const phaseChecklist: PhaseChecklist[] = [
     tasks: [
       { id: "p4-1", label: "Guided forms for core files", status: "done", priority: "P0" },
       { id: "p4-2", label: "Advanced JSON editor", status: "done", priority: "P0" },
+      {
+        id: "p4-5",
+        label: "Kobalte-backed editor navigation and mobile shell drawer refactor",
+        status: "done",
+        priority: "P1",
+      },
       { id: "p4-3", label: "Expanded site.ui coverage", status: "in_progress", priority: "P1" },
       {
         id: "p4-4",

@@ -14,6 +14,7 @@
     "format:check": "biome format --write=false src index.html vite.config.ts tailwind.config.ts"
   },
   "dependencies": {
+    "@kobalte/core": "0.13.11",
     "@openlinks/studio-shared": "file:../studio-shared",
     "@solidjs/router": "^0.15.3",
     "class-variance-authority": "^0.7.1",

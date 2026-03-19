@@ -59,6 +59,7 @@
       "name": "@openlinks/studio-web",
       "version": "0.1.0",
       "dependencies": {
+        "@kobalte/core": "0.13.11",
         "@openlinks/studio-shared": "file:../studio-shared",
         "@solidjs/router": "^0.15.3",
         "class-variance-authority": "^0.7.1",
