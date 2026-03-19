@@ -1,0 +1,14 @@
+{
+  "baseImage": "ghcr.io/cursor-images/node-20:latest",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "persistedDirectories": [
+    "/workspace/.cache",
+    "/workspace/node_modules",
+    "/home/ubuntu/.bun/install/cache"
+  ],
+  "env": {
+    "BUN_INSTALL": "/home/ubuntu/.bun",
+    "PATH": "/home/ubuntu/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  }
+}
