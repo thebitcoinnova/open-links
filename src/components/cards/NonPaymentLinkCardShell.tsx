@@ -49,6 +49,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const interaction = () => props.interaction ?? "minimal";
+  const hasProfileLayout = () => props.viewModel.socialProfile.usesProfileLayout;
   const titleId = () => `${props.cardVariant}-link-title-${safeId(props.link.id)}`;
   const descriptionId = () => `${props.cardVariant}-link-description-${safeId(props.link.id)}`;
   const metaId = () => `${props.cardVariant}-link-meta-${safeId(props.link.id)}`;
@@ -105,11 +106,14 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       title: action.title,
     })),
   );
+  const hasActions = () => actionItems().length > 0;
 
   return (
     <div
       class="non-payment-card-frame"
-      data-has-actions={actionItems().length > 0 ? "true" : "false"}
+      data-card-variant={props.cardVariant}
+      data-has-actions={hasActions() ? "true" : "false"}
+      data-has-profile-layout={hasProfileLayout() ? "true" : "false"}
     >
       <a
         class={props.rootClassName}
@@ -127,11 +131,11 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-has-avatar={props.viewModel.socialProfile.profileImageUrl ? "true" : "false"}
         data-has-preview-image={props.viewModel.leadKind === "preview" ? "true" : "false"}
         data-has-metrics={props.viewModel.socialProfile.metrics.length > 0 ? "true" : "false"}
-        data-has-profile-layout={props.viewModel.socialProfile.usesProfileLayout ? "true" : "false"}
+        data-has-profile-layout={hasProfileLayout() ? "true" : "false"}
         data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
         data-has-footer={showFooter() ? "true" : "false"}
         data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
-        data-has-actions={actionItems().length > 0 ? "true" : "false"}
+        data-has-actions={hasActions() ? "true" : "false"}
       >
         <span class="non-payment-card-shell">
           <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
@@ -165,10 +169,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
             </Show>
           </span>
 
-          <span
-            class="non-payment-card-summary"
-            data-has-actions={actionItems().length > 0 ? "true" : "false"}
-          >
+          <span class="non-payment-card-summary" data-has-actions={hasActions() ? "true" : "false"}>
             <span class="non-payment-card-title-row">
               <strong class="non-payment-card-title" id={titleId()}>
                 {props.viewModel.title}
