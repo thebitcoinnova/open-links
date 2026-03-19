@@ -334,8 +334,8 @@ a:focus-visible {
 }
 
 .bottom-action-bar-action-icon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.24rem;
+  height: 1.24rem;
   flex: 0 0 auto;
 }
 
@@ -1212,10 +1212,16 @@ a:focus-visible {
 .qr-code-dialog-canvas {
   width: min(420px, calc(100vw - var(--space-7)));
   height: min(420px, calc(100vw - var(--space-7)));
+  display: grid;
+  place-items: center;
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   background: #fff;
+}
+
+.qr-code-dialog-canvas svg {
+  margin: auto;
 }
 
 .card-icon {
