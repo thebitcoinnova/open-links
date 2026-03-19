@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ManualSmokeCheckResult, QualityDomainResult, QualityIssue } from "./types";
+import { analyzeUtilityMenuImplementation } from "./utility-menu";
 
 interface RunManualSmokeInput {
   rootDir: string;
@@ -23,6 +24,7 @@ export const runManualSmokeChecks = ({
   const nonPaymentCardShell = readText(rootDir, "src/components/cards/NonPaymentLinkCardShell.tsx");
   const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
   const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
+  const utilityMenuAnalysis = analyzeUtilityMenuImplementation(utilityMenu);
   const sharedNonPaymentCardHasActionLabel =
     nonPaymentCardShell.includes("<a") &&
     nonPaymentCardShell.includes("aria-label") &&
@@ -84,18 +86,18 @@ export const runManualSmokeChecks = ({
         "Utility controls collapse into a disclosure menu that remains keyboard reachable.",
       status:
         routeIndex.includes("<UtilityControlsMenu") &&
-        utilityMenu.includes("aria-expanded") &&
-        utilityMenu.includes("aria-controls")
+        utilityMenuAnalysis.hasDisclosureLinkage &&
+        utilityMenuAnalysis.hasAcceptedCloseBehavior
           ? "pass"
           : "warn",
       details:
         routeIndex.includes("<UtilityControlsMenu") &&
-        utilityMenu.includes("aria-expanded") &&
-        utilityMenu.includes("aria-controls")
-          ? "Utility controls menu integration and disclosure semantics detected."
-          : "Utility controls menu integration/disclosure semantics appear incomplete.",
+        utilityMenuAnalysis.hasDisclosureLinkage &&
+        utilityMenuAnalysis.hasAcceptedCloseBehavior
+          ? `Utility controls menu integration, disclosure semantics, and ${utilityMenuAnalysis.implementation} close behavior detected.`
+          : "Utility controls menu integration, disclosure semantics, or accepted close behavior appear incomplete.",
       remediation:
-        "Render utility controls inside UtilityControlsMenu with aria-expanded and aria-controls linkage.",
+        "Render utility controls inside UtilityControlsMenu with aria-expanded/aria-controls linkage plus either legacy manual close handling or the Kobalte popover contract.",
     },
   ];
 

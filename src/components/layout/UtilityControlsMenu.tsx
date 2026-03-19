@@ -36,6 +36,8 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
           ref={maybeTriggerRef}
           type="button"
           class="utility-menu-button"
+          aria-controls={panelId}
+          aria-expanded={isOpen()}
           aria-label={triggerAriaLabel()}
         >
           <IconMenu aria-hidden="true" />

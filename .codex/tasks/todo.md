@@ -4,6 +4,16 @@
 
 ### In Progress
 
+- [x] Fix the stale utility-menu quality heuristics so the Kobalte popover path satisfies required CI checks.
+- [x] Add shared utility-menu analyzer coverage for legacy manual behavior, Kobalte behavior, and incomplete implementations.
+- [x] Verify the CI-fix batch with `bun test scripts/quality/utility-menu.test.ts`, `bun run ci:required:quality`, and `bun run ci:required`.
+
+### Completion Review
+
+- Result: Added a shared `scripts/quality/utility-menu.ts` analyzer so both the accessibility and manual-smoke quality gates accept either the legacy manual-close menu contract or the current Kobalte `Popover` contract. `UtilityControlsMenu` now keeps explicit `aria-expanded` and `aria-controls` on the trigger, and the quality scripts no longer require stale literal `onFocusOut`/`pointerdown`/`Escape` strings when Kobalte manages close behavior.
+- Verification: `bun test scripts/quality/utility-menu.test.ts` passed. `bun run biome:check` passed. `bun run ci:required:quality` passed with existing non-blocking SEO/performance warnings only. `bun run ci:required` passed end to end, including `typecheck`, deploy tests, `build`, `quality`, and Studio integration. `git diff --check` passed.
+- Residual risk: The new analyzer is intentionally string-based because the surrounding quality framework already works that way, so future larger structural rewrites of `UtilityControlsMenu` may still require updating the accepted-contract heuristics. The new regression test against the live source should catch that drift earlier.
+
 - [x] Implement the Kobalte menu/sidebar refactor across the public utility controls menu and the Studio shell/editor.
 - [x] Add focused regression tests for the new menu helpers, Studio nav model, and editor tab contract.
 - [x] Verify the change with repo-required lint, typecheck, Studio tests, and a full build.

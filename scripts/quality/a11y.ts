@@ -4,6 +4,7 @@ import { resolveBrandIconOptions } from "../../src/lib/icons/brand-icon-options"
 import { resolveIconPalette } from "../../src/lib/icons/icon-contrast";
 import { KNOWN_SITES } from "../../src/lib/icons/known-sites-data";
 import type { QualityDomainResult, QualityIssue, QualitySiteInput } from "./types";
+import { analyzeUtilityMenuImplementation } from "./utility-menu";
 
 interface RunA11yChecksInput {
   rootDir: string;
@@ -137,6 +138,7 @@ export const runA11yChecks = ({
   const nonPaymentCardShell = readText(rootDir, "src/components/cards/NonPaymentLinkCardShell.tsx");
   const utilityBar = readText(rootDir, "src/components/layout/TopUtilityBar.tsx");
   const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
+  const utilityMenuAnalysis = analyzeUtilityMenuImplementation(utilityMenu);
   const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
   const styles = readText(rootDir, "src/styles/base.css");
   const tokens = readText(rootDir, "src/styles/tokens.css");
@@ -203,7 +205,7 @@ export const runA11yChecks = ({
     });
   }
 
-  if (!utilityMenu.includes("aria-expanded") || !utilityMenu.includes("aria-controls")) {
+  if (!utilityMenuAnalysis.hasDisclosureLinkage) {
     issues.push({
       domain: "accessibility",
       level: "error",
@@ -215,11 +217,7 @@ export const runA11yChecks = ({
     });
   }
 
-  if (
-    !utilityMenu.includes("onFocusOut") ||
-    !utilityMenu.includes("pointerdown") ||
-    !utilityMenu.includes("Escape")
-  ) {
+  if (!utilityMenuAnalysis.hasAcceptedCloseBehavior) {
     issues.push({
       domain: "accessibility",
       level: "warning",
@@ -227,7 +225,7 @@ export const runA11yChecks = ({
       scope: "src/components/layout/UtilityControlsMenu.tsx",
       message: "Utility controls menu is missing one or more expected close interactions.",
       remediation:
-        "Support close-on-Escape, outside pointer interactions, and focus leaving the menu surface.",
+        "Support close-on-Escape, outside pointer interactions, and focus leaving the menu surface directly or through the Kobalte popover contract.",
     });
   }
 
