@@ -332,6 +332,7 @@ test("history-aware cards expose analytics then share as sibling actions without
 
   // Assert
   const anchor = firstElementOfType(tree, "a");
+  const frame = firstElementWithClass(tree, "non-payment-card-frame");
   const actionRow = firstElementWithClass(tree, "card-action-row");
   const buttons = collectElements(tree).filter((element) => {
     const classValue = element.props.class;
@@ -342,6 +343,7 @@ test("history-aware cards expose analytics then share as sibling actions without
   });
 
   assert.ok(anchor);
+  assert.ok(frame);
   assert.equal(anchor.props["aria-label"], "Open pRizz in a new tab");
   assert.ok(actionRow);
   assert.equal(buttons.length, 4);
@@ -349,6 +351,9 @@ test("history-aware cards expose analytics then share as sibling actions without
   assert.equal(buttons[1]?.props["aria-label"], "Show GitHub QR code");
   assert.equal(buttons[2]?.props["aria-label"], "Share GitHub");
   assert.equal(buttons[3]?.props["aria-label"], "Copy GitHub link");
+  assert.equal(frame.props["data-card-variant"], "rich");
+  assert.equal(frame.props["data-has-actions"], "true");
+  assert.equal(frame.props["data-has-profile-layout"], "true");
   assert.equal(
     firstElementWithClass(tree, "non-payment-card-summary")?.props["data-has-analytics"],
     undefined,
@@ -388,6 +393,7 @@ test("cards without history still render share and copy sibling actions", () => 
   }) as RenderedNode;
 
   // Act
+  const frame = firstElementWithClass(tree, "non-payment-card-frame");
   const actionRow = firstElementWithClass(tree, "card-action-row");
   const buttons = collectElements(tree).filter((element) => {
     const classValue = element.props.class;
@@ -398,11 +404,24 @@ test("cards without history still render share and copy sibling actions", () => 
   });
 
   // Assert
+  assert.ok(frame);
   assert.ok(actionRow);
   assert.equal(buttons.length, 3);
   assert.equal(buttons[0]?.props["aria-label"], "Show OpenLinks QR code");
   assert.equal(buttons[1]?.props["aria-label"], "Share OpenLinks");
   assert.equal(buttons[2]?.props["aria-label"], "Copy OpenLinks link");
+  assert.equal(frame.props["data-card-variant"], "simple");
+  assert.equal(frame.props["data-has-actions"], "true");
+  assert.equal(frame.props["data-has-profile-layout"], "false");
+
+  const frameChildren = (
+    Array.isArray(frame.props.children) ? frame.props.children : [frame.props.children]
+  ) as RenderedNode[];
+  const directChildren = frameChildren.filter(isRenderedElement);
+
+  assert.equal(directChildren.length, 2);
+  assert.equal(directChildren[0]?.type, "a");
+  assert.equal(directChildren[1]?.type, "fieldset");
 });
 
 test("card action surfaces no longer render inline action status outputs", () => {

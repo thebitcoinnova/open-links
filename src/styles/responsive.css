@@ -56,7 +56,7 @@
     max-width: calc(100vw - var(--space-5));
   }
 
-  body .simple-link-card {
+  body .non-payment-card-frame[data-card-variant="simple"] {
     padding-block: calc(var(--space-3) * var(--density-scale) + 0.1rem);
   }
 

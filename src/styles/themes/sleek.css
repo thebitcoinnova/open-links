@@ -88,16 +88,14 @@
   backdrop-filter: none;
 }
 
-:root[data-theme^="sleek"] .simple-link-card,
-:root[data-theme^="sleek"] .rich-link-card {
+:root[data-theme^="sleek"] .non-payment-card-frame {
   border-color: color-mix(in srgb, var(--border-subtle) 45%, transparent 55%);
   background: color-mix(in srgb, var(--surface-card) 82%, var(--surface-panel) 18%);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset, 0 10px 24px
     color-mix(in srgb, var(--surface-bg) 62%, black 38%);
 }
 
-:root[data-theme^="sleek"] .simple-link-card:hover,
-:root[data-theme^="sleek"] .rich-link-card:hover,
+:root[data-theme^="sleek"] .non-payment-card-frame:hover,
 :root[data-theme^="sleek"] .theme-toggle:hover {
   transform: none;
   border-color: color-mix(in srgb, var(--border-strong) 60%, transparent 40%);
@@ -112,8 +110,8 @@
   box-shadow: none;
 }
 
-:root[data-theme^="sleek"] .simple-link-card:active,
-:root[data-theme^="sleek"] .rich-link-card:active,
+:root[data-theme^="sleek"] .non-payment-card-frame:has(> .simple-link-card:active),
+:root[data-theme^="sleek"] .non-payment-card-frame:has(> .rich-link-card:active),
 :root[data-theme^="sleek"] .theme-toggle:active {
   transform: none;
   background: color-mix(in srgb, var(--surface-card) 86%, var(--accent) 14%);
@@ -124,8 +122,7 @@
   background: transparent;
 }
 
-:root[data-theme^="sleek"] .simple-link-card:focus-visible,
-:root[data-theme^="sleek"] .rich-link-card:focus-visible,
+:root[data-theme^="sleek"] .non-payment-card-frame:focus-within,
 :root[data-theme^="sleek"] .theme-toggle:focus-visible {
   border-color: var(--accent-strong);
   box-shadow: var(--shadow-focus), 0 12px 26px color-mix(in srgb, var(--surface-bg) 58%, black 42%);

@@ -320,6 +320,40 @@ a:focus-visible {
   padding: 0;
 }
 
+.card-action-row .bottom-action-bar-action,
+.payment-card-action-bar .bottom-action-bar-action {
+  border: none;
+  background: color-mix(in srgb, var(--surface-pill) 40%, transparent 60%);
+  box-shadow: none;
+  color: color-mix(in srgb, var(--text-primary) 88%, var(--accent) 12%);
+}
+
+.card-action-row .bottom-action-bar-action:hover,
+.payment-card-action-bar .bottom-action-bar-action:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--surface-pill) 52%, var(--accent) 48%);
+  transform: none;
+  box-shadow: none;
+}
+
+.card-action-row .bottom-action-bar-action:active,
+.payment-card-action-bar .bottom-action-bar-action:active {
+  background: color-mix(in srgb, var(--surface-pill) 34%, var(--accent) 66%);
+  transform: none;
+  box-shadow: none;
+}
+
+.card-action-row .bottom-action-bar-action:focus-visible,
+.payment-card-action-bar .bottom-action-bar-action:focus-visible {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--surface-pill) 46%, var(--accent) 54%);
+}
+
+.card-action-row .bottom-action-bar-action[data-active="true"],
+.payment-card-action-bar .bottom-action-bar-action[data-active="true"] {
+  background: color-mix(in srgb, var(--surface-pill) 40%, var(--accent) 60%);
+}
+
 .profile-action-bar,
 .card-action-row,
 .payment-card-action-bar {
@@ -655,12 +689,46 @@ a:focus-visible {
 
 .non-payment-card-frame {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-width: 0;
+  min-height: var(--page-target-size);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
+  padding: calc(var(--space-3) * var(--density-scale));
+  background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
+  transition: border-color var(--motion-fast), transform var(--motion-fast), background-color
+    var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .card-action-row {
-  margin-top: calc(var(--space-1) * -0.2);
+  margin-top: 0;
+}
+
+.non-payment-card-frame:hover {
+  border-color: color-mix(in srgb, var(--border-strong) 65%, transparent 35%);
+  transform: translateY(-1px);
+}
+
+.non-payment-card-frame[data-card-variant="simple"][data-has-profile-layout="true"] {
+  background: color-mix(in srgb, var(--surface-card) 90%, var(--accent) 10%);
+}
+
+.non-payment-card-frame:has(> .simple-link-card:active),
+.non-payment-card-frame:has(> .rich-link-card:active) {
+  transform: translateY(0);
+}
+
+.non-payment-card-frame:has(> .simple-link-card:active) {
+  background: color-mix(in srgb, var(--surface-card) 78%, var(--accent) 22%);
+}
+
+.non-payment-card-frame:has(> .rich-link-card:active) {
+  background: color-mix(in srgb, var(--surface-card) 80%, var(--accent) 20%);
+}
+
+.non-payment-card-frame:focus-within {
+  box-shadow: var(--shadow-focus);
+  border-color: var(--accent-strong);
 }
 
 .simple-link-card,
@@ -668,40 +736,10 @@ a:focus-visible {
   --non-payment-card-lead-size: var(--non-payment-card-icon-mobile);
 
   display: block;
+  min-width: 0;
   min-height: var(--page-target-size);
-  border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
-  padding: calc(var(--space-3) * var(--density-scale));
-  background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
+  color: inherit;
   text-decoration: none;
-  transition: border-color var(--motion-fast), transform var(--motion-fast), background-color
-    var(--motion-fast), box-shadow var(--motion-fast);
-}
-
-.simple-link-card:hover,
-.rich-link-card:hover {
-  border-color: color-mix(in srgb, var(--border-strong) 65%, transparent 35%);
-  transform: translateY(-1px);
-}
-
-.simple-link-card[data-has-profile-layout="true"] {
-  background: color-mix(in srgb, var(--surface-card) 90%, var(--accent) 10%);
-}
-
-.simple-link-card:active {
-  transform: translateY(0);
-  background: color-mix(in srgb, var(--surface-card) 78%, var(--accent) 22%);
-}
-
-.rich-link-card:active {
-  transform: translateY(0);
-  background: color-mix(in srgb, var(--surface-card) 80%, var(--accent) 20%);
-}
-
-.simple-link-card:focus-visible,
-.rich-link-card:focus-visible {
-  box-shadow: var(--shadow-focus);
-  border-color: var(--accent-strong);
 }
 
 .rich-card-media {
@@ -1017,9 +1055,9 @@ a:focus-visible {
 }
 
 .payment-rail-button {
-  border: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--surface-pill) 80%, var(--surface-card) 20%);
-  color: var(--text-primary);
+  border: none;
+  background: color-mix(in srgb, var(--surface-pill) 40%, transparent 60%);
+  color: color-mix(in srgb, var(--text-primary) 88%, var(--accent) 12%);
   border-radius: var(--radius-sm);
   padding: 0.25rem 0.65rem;
   min-height: calc(var(--page-target-size) - 14px);
@@ -1029,21 +1067,23 @@ a:focus-visible {
   line-height: inherit;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color var(--motion-fast), transform var(--motion-fast);
+  transition: background-color var(--motion-fast), color var(--motion-fast), box-shadow
+    var(--motion-fast), transform var(--motion-fast);
 }
 
 .payment-rail-button:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--surface-pill) 52%, var(--accent) 48%);
+  transform: none;
 }
 
 .payment-rail-button:active {
-  transform: translateY(0);
+  background: color-mix(in srgb, var(--surface-pill) 34%, var(--accent) 66%);
+  transform: none;
 }
 
 .payment-rail-button:focus-visible {
   box-shadow: var(--shadow-focus);
-  border-color: var(--accent-strong);
+  background: color-mix(in srgb, var(--surface-pill) 46%, var(--accent) 54%);
 }
 
 .payment-rail-qr-tools {
