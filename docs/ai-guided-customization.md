@@ -41,6 +41,10 @@ If your goal is adding or updating rich links while keeping image assets committ
 
 - `skills/cache-rich-link-assets/SKILL.md`
 
+If your goal is helping other websites, apps, repos, docs, or service profiles discover your deployed OpenLinks fork, also use:
+
+- `skills/openlinks-fork-identity-presence/SKILL.md`
+
 ## OpenClaw Bootstrap Contract (Automation-First)
 
 If you are running OpenClaw bootstrap flow in this repository, use `docs/openclaw-bootstrap.md` and apply these rules:

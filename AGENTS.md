@@ -171,6 +171,19 @@ When implementing or modifying OpenLinks Studio (`packages/studio-*`), agents mu
    - [`packages/studio-web/src/lib/phase-checklist.ts`](packages/studio-web/src/lib/phase-checklist.ts)
 3. If Studio status changes materially, include checklist updates in the same change batch.
 
+## Repo Skill Documentation (Required for `skills/`)
+
+When adding, removing, renaming, or materially repurposing a repo-local skill under `skills/`:
+
+1. Update [`README.md`](README.md) in the same change batch.
+2. Keep the `Repo Skills` section accurate:
+   - add new skills,
+   - remove deleted skills,
+   - rename entries when skill paths or names change,
+   - refresh descriptions when the skill's purpose changes materially.
+3. Keep the README docs/discovery references accurate for shipped skills.
+4. Do not leave `skills/` changes undocumented in the README.
+
 ## TODO Cleanup (Required for Task Tracking)
 
 When updating the active task tracker file (`tasks/todo.md` or `.codex/tasks/todo.md`):
