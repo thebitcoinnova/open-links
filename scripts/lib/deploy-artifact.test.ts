@@ -17,6 +17,7 @@ test("classifyArtifactPath marks hashed build assets immutable", () => {
   assert.equal(classifyArtifactPath("assets/app-abcdef12.js"), "immutable");
   assert.equal(classifyArtifactPath("about/index.html"), "html");
   assert.equal(classifyArtifactPath("robots.txt"), "metadata");
+  assert.equal(classifyArtifactPath("badges/openlinks.svg"), "asset");
 });
 
 test("diffDeployManifests identifies uploads and deletes", () => {

@@ -228,11 +228,21 @@ export interface SiteFooterConfig {
   showLastUpdated?: boolean;
 }
 
+export interface SiteBadgeConfig {
+  enabled?: boolean;
+  message?: string;
+}
+
+export interface SiteSharingConfig {
+  badge?: SiteBadgeConfig;
+}
+
 export interface SiteData {
   title: string;
   description: string;
   baseUrl?: string;
   quality?: SiteQualityConfig;
+  sharing?: SiteSharingConfig;
   theme: {
     active: string;
     available: string[];

@@ -501,6 +501,25 @@
       },
       "additionalProperties": true
     },
+    "sharing": {
+      "type": "object",
+      "properties": {
+        "badge": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "custom": {
       "type": "object",
       "additionalProperties": true

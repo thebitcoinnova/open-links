@@ -58,6 +58,7 @@ runCommand("bun", ["run", "avatar:sync"]);
 runCommand("bun", ["run", "enrich:rich:strict"]);
 runCommand("bun", ["run", "images:sync"]);
 runCommand("bun", ["run", "validate:data"]);
+runCommand("bun", ["run", "badge:site"]);
 await run.addBreadcrumb({
   detail: "Ran the shared pre-build sync and validation steps for deployment artifacts.",
   status: "passed",

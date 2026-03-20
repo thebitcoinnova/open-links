@@ -135,6 +135,7 @@ Recommended first pass:
 5. Set rich-card image fit in `site.ui.richCards.imageFit`:
    - `contain` (default, preserves full preview image content)
    - `cover` (fills media tile, may clip wide images)
+6. Optional: customize the generated site badge copy in `site.sharing.badge.message` or disable badge publishing with `site.sharing.badge.enabled=false`.
 
 ## Run Locally
 
@@ -204,6 +205,17 @@ Check workflow runs:
 - `.github/workflows/deploy-pages.yml` (`Deploy Production`)
 
 When deployment succeeds, open `https://openlinks.us/` and the Pages mirror URL from the workflow summary.
+
+OpenLinks also publishes a canonical SVG badge for your deployed site:
+
+- custom domain: `https://<your-domain>/badges/openlinks.svg`
+- GitHub Pages fork: `https://<owner>.github.io/<repo>/badges/openlinks.svg`
+
+Recommended Markdown embed:
+
+```md
+[![My OpenLinks](https://<deployed-origin>/badges/openlinks.svg)](https://<deployed-origin>/)
+```
 
 ## Optional Manual Deploy Dispatch
 

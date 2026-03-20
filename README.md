@@ -31,6 +31,43 @@ This project is developer-first, but that does not mean raw JSON should be your 
 - Runtime browser icon set (Studio): `packages/studio-web/public/`
 - Regenerate runtime brand assets: `bun run branding:assets`
 
+## Site Badge
+
+OpenLinks generates one canonical site badge asset during `dev` and `build` at:
+
+- `<deployed-origin>/badges/openlinks.svg`
+
+Default behavior:
+
+- label is fixed to `OpenLinks`
+- message defaults to `profile.name`
+- optional override lives at `site.sharing.badge.message`
+- set `site.sharing.badge.enabled` to `false` to stop publishing the badge
+
+Example override in `data/site.json`:
+
+```json
+{
+  "sharing": {
+    "badge": {
+      "message": "My OpenLinks"
+    }
+  }
+}
+```
+
+Recommended Markdown embed once your site is deployed:
+
+```md
+[![My OpenLinks](https://<your-domain>/badges/openlinks.svg)](https://<your-domain>/)
+```
+
+GitHub Pages fork example:
+
+```md
+[![My OpenLinks](https://<owner>.github.io/<repo>/badges/openlinks.svg)](https://<owner>.github.io/<repo>/)
+```
+
 ## Why OpenLinks
 
 - Static SolidJS site with minimal runtime complexity.
