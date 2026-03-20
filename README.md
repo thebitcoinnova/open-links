@@ -3,6 +3,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/pRizz/open-links)](https://github.com/pRizz/open-links)
 [![CI](https://github.com/pRizz/open-links/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pRizz/open-links/actions/workflows/ci.yml)
 [![Deploy Production](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml/badge.svg?branch=main)](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml)
+[![OpenLinks Site](https://openlinks.us/badges/openlinks.svg)](https://openlinks.us/)
 [![License](https://img.shields.io/github/license/pRizz/open-links?s)](https://github.com/pRizz/open-links/blob/main/LICENSE)
 [![Node.js 22](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)](https://github.com/pRizz/open-links/blob/main/.github/workflows/ci.yml)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
