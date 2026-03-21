@@ -147,6 +147,10 @@ Coverage:
 - `footer.description`
 - `footer.ctaLabel`
 - `footer.ctaUrl`
+- `footer.prompt.enabled`
+- `footer.prompt.title`
+- `footer.prompt.explanation`
+- `footer.prompt.text`
 - `footer.showLastUpdated`
 
 ## 8) `site.ui.typography` (`site-ui-typography`)

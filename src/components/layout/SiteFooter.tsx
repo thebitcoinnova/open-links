@@ -1,4 +1,6 @@
 import { Show, createMemo } from "solid-js";
+import { copyToClipboard } from "../../lib/share/copy-to-clipboard";
+import { showActionToast } from "../../lib/ui/action-toast";
 import type { ResolvedFooterPreferences } from "../../lib/ui/footer-preferences";
 
 export interface SiteFooterProps {
@@ -22,6 +24,7 @@ const toAssetUrl = (assetPath: string): string => {
 
 export const SiteFooter = (props: SiteFooterProps) => {
   const ctaUrl = () => props.preferences.ctaUrl.trim();
+  const prompt = () => props.preferences.prompt;
   const logoSrc = () => {
     const maybePath = props.logoPath?.trim();
     if (!maybePath) {
@@ -50,6 +53,16 @@ export const SiteFooter = (props: SiteFooterProps) => {
     return localFormatter.format(parsed);
   });
 
+  const showPrompt = createMemo(() => prompt().enabled && prompt().text.trim().length > 0);
+
+  const handleCopyPrompt = async () => {
+    const copied = await copyToClipboard(prompt().text);
+    showActionToast({
+      message: copied ? "Bootstrap prompt copied" : "Could not copy bootstrap prompt",
+      status: copied ? "copied" : "failed",
+    });
+  };
+
   return (
     <footer class="site-footer" aria-label="Site footer">
       <Show when={logoSrc()}>
@@ -67,10 +80,33 @@ export const SiteFooter = (props: SiteFooterProps) => {
 
       <p class="site-footer-description">{props.preferences.description}</p>
 
-      <Show when={ctaUrl().length > 0}>
-        <a class="site-footer-cta" href={ctaUrl()} target="_blank" rel="noopener noreferrer">
-          {props.preferences.ctaLabel}
-        </a>
+      <Show when={showPrompt()}>
+        <section class="site-footer-prompt" aria-labelledby="site-footer-prompt-title">
+          <div class="site-footer-prompt-header">
+            <h2 class="site-footer-prompt-title" id="site-footer-prompt-title">
+              {prompt().title}
+            </h2>
+            <p class="site-footer-prompt-explanation">{prompt().explanation}</p>
+          </div>
+          <pre class="site-footer-prompt-text">
+            <code>{prompt().text}</code>
+          </pre>
+        </section>
+      </Show>
+
+      <Show when={ctaUrl().length > 0 || showPrompt()}>
+        <div class="site-footer-actions">
+          <Show when={ctaUrl().length > 0}>
+            <a class="site-footer-cta" href={ctaUrl()} target="_blank" rel="noopener noreferrer">
+              {props.preferences.ctaLabel}
+            </a>
+          </Show>
+          <Show when={showPrompt()}>
+            <button class="site-footer-copy" type="button" onClick={() => void handleCopyPrompt()}>
+              Copy prompt
+            </button>
+          </Show>
+        </div>
       </Show>
 
       <Show when={props.preferences.showLastUpdated && buildDate()}>

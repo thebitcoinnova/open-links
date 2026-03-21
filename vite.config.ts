@@ -10,6 +10,10 @@ import {
   parseDeployTarget,
 } from "./src/lib/deployment-config";
 import {
+  DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF,
+  DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG,
+} from "./src/lib/openclaw-prompts";
+import {
   resolveBaseAwareAssetPath,
   resolveBasePathFromUrl,
   resolveSeoMetadata,
@@ -17,6 +21,10 @@ import {
 
 const repositoryName =
   process.env.REPO_NAME_OVERRIDE?.trim() || process.env.GITHUB_REPOSITORY?.split("/")[1] || "";
+const repositorySlug =
+  process.env.GITHUB_REPOSITORY?.trim() || DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG;
+const repositoryDocsRef =
+  process.env.OPENLINKS_REPOSITORY_DOCS_REF?.trim() || DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF;
 const deployTargetRaw = process.env.OPENLINKS_DEPLOY_TARGET?.trim();
 const baseModeRaw = process.env.PAGES_BASE_MODE?.trim().toLowerCase();
 const explicitBasePath = process.env.BASE_PATH?.trim();
@@ -130,6 +138,8 @@ export default defineConfig({
         ? deploymentConfig.primaryCanonicalOrigin
         : (siteData.quality?.seo?.canonicalBaseUrl ?? ""),
     ),
+    __OPENLINKS_REPOSITORY_SLUG__: JSON.stringify(repositorySlug),
+    __OPENLINKS_REPOSITORY_DOCS_REF__: JSON.stringify(repositoryDocsRef),
   },
   base,
 });

@@ -9,8 +9,12 @@
     "footer": {
       "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.",
       "ctaLabel": "Create Your OpenLinks",
-      "ctaUrl": "https://github.com/pRizz/open-links",
-      "showLastUpdated": true
+      "showLastUpdated": true,
+      "prompt": {
+        "enabled": true,
+        "title": "Create your own OpenLinks site",
+        "explanation": "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository."
+      }
     }
   },
   "baseUrl": "/",

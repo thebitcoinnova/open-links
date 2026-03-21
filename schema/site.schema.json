@@ -121,6 +121,30 @@
         },
         "showLastUpdated": {
           "type": "boolean"
+        },
+        "prompt": {
+          "$ref": "#/$defs/siteFooterPromptConfig"
+        }
+      },
+      "additionalProperties": true
+    },
+    "siteFooterPromptConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": true

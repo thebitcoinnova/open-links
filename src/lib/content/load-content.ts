@@ -221,11 +221,19 @@ export interface TypographyConfig {
   themes?: Record<string, TypographyOverrides>;
 }
 
+export interface SiteFooterPromptConfig {
+  enabled?: boolean;
+  title?: string;
+  explanation?: string;
+  text?: string;
+}
+
 export interface SiteFooterConfig {
   description?: string;
   ctaLabel?: string;
   ctaUrl?: string;
   showLastUpdated?: boolean;
+  prompt?: SiteFooterPromptConfig;
 }
 
 export interface SiteBadgeConfig {
