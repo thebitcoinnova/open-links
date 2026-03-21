@@ -1,3 +1,10 @@
+import {
+  DEFAULT_GITHUB_REPOSITORY_NAME,
+  DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
+  normalizeGitHubRepositorySlug,
+  resolveGitHubRepositorySlug,
+} from "./github-repository";
+
 export type DeployTarget = "aws" | "github-pages";
 
 export interface DeployTargetConfig {
@@ -8,22 +15,30 @@ export interface DeployTargetConfig {
   shouldIndex: boolean;
 }
 
-const DEFAULT_GITHUB_OWNER = "prizz";
-const DEFAULT_GITHUB_REPOSITORY = "open-links";
-const DEFAULT_UPSTREAM_REPOSITORY_SLUG = `${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPOSITORY}`;
+const DEFAULT_GITHUB_OWNER =
+  DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG.split("/")[0]?.toLowerCase() ?? "prizz";
+const DEFAULT_GITHUB_REPOSITORY = DEFAULT_GITHUB_REPOSITORY_NAME;
 const PRIMARY_CANONICAL_DOMAIN = "openlinks.us";
 
+const githubRepositorySlug = normalizeGitHubRepositorySlug(process.env.GITHUB_REPOSITORY);
+
 const githubPagesOwner =
-  process.env.GITHUB_REPOSITORY_OWNER?.trim() || process.env.GITHUB_REPOSITORY?.split("/")[0] || "";
+  process.env.GITHUB_REPOSITORY_OWNER?.trim() || githubRepositorySlug?.split("/")[0] || "";
 const githubPagesRepository =
   process.env.REPO_NAME_OVERRIDE?.trim() ||
-  process.env.GITHUB_REPOSITORY?.split("/")[1] ||
+  githubRepositorySlug?.split("/")[1] ||
   DEFAULT_GITHUB_REPOSITORY;
 const githubPagesOrigin = `https://${githubPagesOwner || DEFAULT_GITHUB_OWNER}.github.io`;
 const githubPagesBasePath = normalizeBasePath(githubPagesRepository);
-const defaultRepositorySlug = `${githubPagesOwner || DEFAULT_GITHUB_OWNER}/${githubPagesRepository}`;
+const defaultRepositorySlug = resolveGitHubRepositorySlug(
+  `${githubPagesOwner || DEFAULT_GITHUB_OWNER}/${githubPagesRepository}`,
+  `${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPOSITORY}`,
+);
 const githubPagesUrl = buildGitHubPagesUrl(defaultRepositorySlug);
-const repositorySlug = process.env.GITHUB_REPOSITORY?.trim() || defaultRepositorySlug;
+const repositorySlug = resolveGitHubRepositorySlug(
+  process.env.GITHUB_REPOSITORY,
+  defaultRepositorySlug,
+);
 const primaryCanonicalOrigin = resolvePrimaryCanonicalOrigin(repositorySlug);
 const githubPagesIsMirror =
   normalizeOrigin(githubPagesUrl) !== normalizeOrigin(primaryCanonicalOrigin);
@@ -96,7 +111,7 @@ export function parseDeployTarget(input?: string): DeployTarget {
 }
 
 export function isUpstreamRepository(input: string) {
-  return input.trim().toLowerCase() === DEFAULT_UPSTREAM_REPOSITORY_SLUG.toLowerCase();
+  return input.trim().toLowerCase() === DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG.toLowerCase();
 }
 
 export function buildGitHubPagesUrl(maybeRepositorySlug = defaultRepositorySlug) {

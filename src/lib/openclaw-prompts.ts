@@ -1,3 +1,10 @@
+import {
+  DEFAULT_GITHUB_REPOSITORY_REF,
+  DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
+  resolveGitHubRepositoryRef,
+  resolveGitHubRepositorySlug,
+} from "./github-repository";
+
 export interface OpenClawPromptRepositoryOptions {
   repositorySlug?: string;
   repositoryRef?: string;
@@ -9,19 +16,20 @@ export interface OpenClawPromptDocUrls {
   updateCrudUrl: string;
 }
 
-export const DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG = "pRizz/open-links";
-export const DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF = "main";
+export const DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG = DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG;
+export const DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF = DEFAULT_GITHUB_REPOSITORY_REF;
 
-const trimToUndefined = (value: string | undefined): string | undefined => {
-  const trimmed = value?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : undefined;
-};
+export const OPENCLAW_PROMPT_DOC_PATHS = {
+  bootstrap: "docs/openclaw-bootstrap.md",
+  customizationCatalog: "docs/customization-catalog.md",
+  updateCrud: "docs/openclaw-update-crud.md",
+} as const;
 
 export const resolveOpenClawPromptRepositorySlug = (maybeRepositorySlug?: string): string =>
-  trimToUndefined(maybeRepositorySlug) ?? DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG;
+  resolveGitHubRepositorySlug(maybeRepositorySlug, DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG);
 
 export const resolveOpenClawPromptRepositoryRef = (maybeRepositoryRef?: string): string =>
-  trimToUndefined(maybeRepositoryRef) ?? DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF;
+  resolveGitHubRepositoryRef(maybeRepositoryRef, DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF);
 
 export const buildGitHubRepositoryUrl = (maybeRepositorySlug?: string): string =>
   `https://github.com/${resolveOpenClawPromptRepositorySlug(maybeRepositorySlug)}`;
@@ -37,9 +45,12 @@ export const buildRawGitHubFileUrl = (
 export const resolveOpenClawPromptDocUrls = (
   options: OpenClawPromptRepositoryOptions = {},
 ): OpenClawPromptDocUrls => ({
-  bootstrapUrl: buildRawGitHubFileUrl("docs/openclaw-bootstrap.md", options),
-  customizationCatalogUrl: buildRawGitHubFileUrl("docs/customization-catalog.md", options),
-  updateCrudUrl: buildRawGitHubFileUrl("docs/openclaw-update-crud.md", options),
+  bootstrapUrl: buildRawGitHubFileUrl(OPENCLAW_PROMPT_DOC_PATHS.bootstrap, options),
+  customizationCatalogUrl: buildRawGitHubFileUrl(
+    OPENCLAW_PROMPT_DOC_PATHS.customizationCatalog,
+    options,
+  ),
+  updateCrudUrl: buildRawGitHubFileUrl(OPENCLAW_PROMPT_DOC_PATHS.updateCrud, options),
 });
 
 export const buildOpenClawBootstrapPrompt = (
