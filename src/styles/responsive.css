@@ -129,11 +129,22 @@
   }
 
   body .site-footer {
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
 
-  body .site-footer-cta {
-    width: fit-content;
+  body .site-footer-prompt {
+    padding: var(--space-2);
+  }
+
+  body .site-footer-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body .site-footer-cta,
+  body .site-footer-copy {
+    width: 100%;
   }
 }
 

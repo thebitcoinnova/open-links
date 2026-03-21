@@ -10,7 +10,13 @@
       "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.",
       "ctaLabel": "Create Your OpenLinks",
       "ctaUrl": "https://github.com/pRizz/open-links",
-      "showLastUpdated": true
+      "showLastUpdated": true,
+      "prompt": {
+        "enabled": true,
+        "title": "Create your own OpenLinks site",
+        "explanation": "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository.",
+        "text": "Follow docs/openclaw-bootstrap.md exactly for this repository. Execute Required Execution Policy, End-to-End OpenClaw Sequence, Automation and Identity Confirmation Rule, Social Discovery and Inference Contract, Deployment Verification Contract, Structured URL Reporting Schema, README Deploy URL Marker-Block Contract, and Final Output Contract exactly as written. If an existing setup is detected, ask the single route-confirmation and switch to docs/openclaw-update-crud.md when selected."
+      }
     }
   },
   "baseUrl": "/",
