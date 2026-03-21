@@ -31,6 +31,8 @@
     "prebuild": "bun run public:clean && bun run avatar:sync && bun run enrich:rich:strict && bun run images:sync && bun run validate:data && bun run badge:site",
     "badge:site": "bun scripts/generate-site-badge.ts",
     "branding:assets": "bun scripts/generate-openlinks-brand-assets.ts",
+    "openclaw:prompts:sync": "bun scripts/sync-openclaw-prompts.ts",
+    "openclaw:prompts:check": "bun scripts/sync-openclaw-prompts.ts --check",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test:deploy": "bun test src/lib/deployment-config.test.ts scripts/lib/build-timestamp.test.ts scripts/lib/deploy-artifact.test.ts scripts/lib/aws-deploy.test.ts scripts/lib/deploy-setup.test.ts scripts/enrichment/generated-metadata.test.ts scripts/clean-public-build-artifacts.test.ts",

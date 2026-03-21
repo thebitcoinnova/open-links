@@ -19,6 +19,10 @@ test("parseGitHubRepositorySlug supports ssh, https, and bare owner/repo formats
     parseGitHubRepositorySlug("https://github.com/pRizz/open-links.git"),
     "pRizz/open-links",
   );
+  assert.equal(
+    parseGitHubRepositorySlug("https://x-access-token:token@github.com/pRizz/open-links.git"),
+    "pRizz/open-links",
+  );
   assert.equal(parseGitHubRepositorySlug("pRizz/open-links"), "pRizz/open-links");
 });
 
