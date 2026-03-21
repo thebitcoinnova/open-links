@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { SiteData } from "../content/load-content";
+import { buildGitHubRepositoryUrl, buildOpenClawBootstrapPrompt } from "../openclaw-prompts";
 import { resolveFooterPreferences } from "./footer-preferences";
 
 const createSite = (maybeFooter?: NonNullable<SiteData["ui"]>["footer"]): SiteData => ({
@@ -27,7 +28,7 @@ test("resolveFooterPreferences returns the expanded footer defaults", () => {
     "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.",
   );
   assert.equal(preferences.ctaLabel, "Create Your OpenLinks");
-  assert.equal(preferences.ctaUrl, "https://github.com/pRizz/open-links");
+  assert.equal(preferences.ctaUrl, buildGitHubRepositoryUrl());
   assert.equal(preferences.showLastUpdated, true);
   assert.equal(preferences.prompt.enabled, true);
   assert.equal(preferences.prompt.title, "Create your own OpenLinks site");
@@ -35,8 +36,7 @@ test("resolveFooterPreferences returns the expanded footer defaults", () => {
     preferences.prompt.explanation,
     "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository.",
   );
-  assert.match(preferences.prompt.text, /^Follow docs\/openclaw-bootstrap\.md exactly/);
-  assert.match(preferences.prompt.text, /switch to docs\/openclaw-update-crud\.md/);
+  assert.equal(preferences.prompt.text, buildOpenClawBootstrapPrompt());
 });
 
 test("resolveFooterPreferences trims custom prompt fields and respects explicit prompt toggles", () => {

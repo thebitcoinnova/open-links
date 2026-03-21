@@ -648,11 +648,11 @@ Main presentation controls include:
 - `payments.qr.fullscreenDefault`: `enabled`, `disabled`
 - `footer.description`: optional descriptive footer text
 - `footer.ctaLabel`: optional CTA button label
-- `footer.ctaUrl`: optional CTA target URL
+- `footer.ctaUrl`: optional CTA target URL (defaults to the current GitHub repository URL)
 - `footer.prompt.enabled`: toggle the bootstrap prompt card in the footer
 - `footer.prompt.title`: optional prompt section title
 - `footer.prompt.explanation`: optional short explanation above the prompt text
-- `footer.prompt.text`: optional copyable bootstrap prompt text
+- `footer.prompt.text`: optional copyable bootstrap prompt text (defaults to absolute GitHub doc URLs for this repository)
 - `footer.showLastUpdated`: toggle subtle build-time UTC timestamp display
 
 Rich-card policy settings live under `ui.richCards`.
@@ -760,11 +760,11 @@ Footer content and CTA are configurable from `data/site.json`.
 
 - `description`: descriptive body copy shown in the footer.
 - `ctaLabel`: button text for the footer CTA.
-- `ctaUrl`: CTA destination URL (when omitted, runtime uses repo default).
+- `ctaUrl`: CTA destination URL (when omitted, runtime uses the current GitHub repository URL).
 - `prompt.enabled`: controls whether the footer renders the copyable bootstrap prompt card.
 - `prompt.title`: heading shown above the bootstrap prompt.
 - `prompt.explanation`: short helper copy explaining how to use the prompt.
-- `prompt.text`: copyable prompt body shown in the footer code block.
+- `prompt.text`: copyable prompt body shown in the footer code block (when omitted, runtime uses repo-aware absolute GitHub doc URLs).
 - `showLastUpdated`: controls rendering of a subtle build-time UTC "Last updated" line.
 
 Example:
@@ -775,12 +775,10 @@ Example:
     "footer": {
       "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.",
       "ctaLabel": "Create Your OpenLinks",
-      "ctaUrl": "https://github.com/pRizz/open-links",
       "prompt": {
         "enabled": true,
         "title": "Create your own OpenLinks site",
-        "explanation": "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository.",
-        "text": "Follow docs/openclaw-bootstrap.md exactly for this repository. Execute Required Execution Policy, End-to-End OpenClaw Sequence, Automation and Identity Confirmation Rule, Social Discovery and Inference Contract, Deployment Verification Contract, Structured URL Reporting Schema, README Deploy URL Marker-Block Contract, and Final Output Contract exactly as written. If an existing setup is detected, ask the single route-confirmation and switch to docs/openclaw-update-crud.md when selected."
+        "explanation": "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository."
       },
       "showLastUpdated": true
     }
