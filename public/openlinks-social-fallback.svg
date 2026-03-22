@@ -7,10 +7,6 @@
       <stop offset="58%" stop-color="#0c1420" />
       <stop offset="100%" stop-color="#152636" />
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="56%">
-      <stop offset="0%" stop-color="#50e3c2" stop-opacity="0.44" />
-      <stop offset="100%" stop-color="#50e3c2" stop-opacity="0" />
-    </radialGradient>
     <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#50e3c2" />
       <stop offset="100%" stop-color="#7cf2d8" stop-opacity="0.28" />
@@ -18,9 +14,6 @@
   </defs>
   <rect width="1200" height="630" rx="36" fill="url(#bg)" />
   <path d="M0 0 H1200 V180 C1085 144 965 126 842 126 C739 126 633 138 523 162 C357 198 170 226 0 184 Z" fill="#f5f7fb" fill-opacity="0.02" />
-  <circle cx="930" cy="312" r="246" fill="url(#glow)" />
-  <circle cx="930" cy="312" r="206" fill="none" stroke="#7cf2d8" stroke-opacity="0.18" stroke-width="2" />
-  <circle cx="930" cy="312" r="160" fill="none" stroke="#f5f7fb" stroke-opacity="0.12" stroke-width="1.5" />
   <rect x="96" y="98" width="248" height="34" rx="17" fill="#f5f7fb" fill-opacity="0.07" stroke="#f5f7fb" stroke-opacity="0.09" />
   <text x="120.98" y="120.42" font-family="'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif" font-size="16" font-weight="700" fill="#d7e2f7" letter-spacing="0.18em">OPEN SOURCE LINKS</text>
 <text x="96" y="248" font-family="'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif" font-size="94" font-weight="700" fill="#f5f7fb">OpenLinks</text>
@@ -28,7 +21,7 @@
 <text x="96" y="400" font-family="'Manrope', 'IBM Plex Sans', 'Segoe UI', sans-serif" font-size="28" font-weight="600" fill="#c0cadf">Personal, free, open source, version-controlled</text>
 <text x="96" y="434" font-family="'Manrope', 'IBM Plex Sans', 'Segoe UI', sans-serif" font-size="28" font-weight="600" fill="#c0cadf">links website.</text>
   <rect x="96" y="500" width="372" height="2" rx="1" fill="url(#accentLine)" />
-  <g transform="translate(759 141) scale(3.42)">
+  <g transform="translate(736 118) scale(3.88)">
     <circle cx="50" cy="50" r="38" fill="none" stroke="#f5f7fb" stroke-width="8.5" />
 <path d="M38.5961 27.1921 V72.8079 H61.4039" fill="none" stroke="#f5f7fb" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
   </g>
