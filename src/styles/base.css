@@ -173,6 +173,12 @@ a:focus-visible {
   font-size: var(--page-type-caption);
 }
 
+.utility-pill-status {
+  border-color: color-mix(in srgb, var(--accent-strong) 44%, var(--border-subtle) 56%);
+  background: color-mix(in srgb, var(--surface-pill) 78%, var(--accent) 22%);
+  color: color-mix(in srgb, var(--text-primary) 92%, var(--accent) 8%);
+}
+
 .utility-menu-panel {
   z-index: 40;
   min-width: min(21rem, 92vw);
@@ -602,6 +608,13 @@ a:focus-visible {
   margin: 0;
   color: var(--text-muted);
   font-size: var(--page-type-caption);
+}
+
+.analytics-status-note {
+  padding: calc(var(--space-3) * var(--density-scale));
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 64%, transparent 36%);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-panel) 88%, var(--surface-bg) 12%);
 }
 
 @keyframes app-dialog-overlay-enter {

@@ -53,7 +53,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   const actionItems = (): BottomActionBarItem[] => {
     const items: BottomActionBarItem[] = [];
 
-    if (analyticsAvailable() && props.onAnalyticsToggle) {
+    if ((analyticsAvailable() || analyticsActive()) && props.onAnalyticsToggle) {
       items.push({
         active: analyticsActive(),
         ariaLabel: analyticsActive() ? "Back to links" : "View follower analytics",

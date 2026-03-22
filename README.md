@@ -78,6 +78,7 @@ GitHub Pages fork example:
 - Payments and tips links with multi-rail support, styled QR codes, and fullscreen scan mode.
 - Build-time profile-avatar materialization with local fallback behavior.
 - Build-time rich/SEO image materialization with local-only runtime behavior.
+- Offline-friendly public app shell with cached same-origin assets and graceful analytics fallback after first online visit.
 - GitHub Actions CI + AWS canonical deploy + GitHub Pages mirror pipeline already wired.
 - Theme and layout controls designed for forking and customization.
 - Data-driven typography overrides via `data/site.json` (`ui.typography`).

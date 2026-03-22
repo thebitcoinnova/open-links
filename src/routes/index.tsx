@@ -41,6 +41,16 @@ import {
 } from "../lib/analytics/follower-history";
 import { loadContent, resolveGeneratedContentImageUrl } from "../lib/content/load-content";
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
+import {
+  type ConnectivityStatus,
+  type OfflineResourceFailureReason,
+  type OfflineResourceState,
+  buildAvailableOfflineResource,
+  buildUnavailableOfflineResource,
+  readConnectivityStatus,
+  resolveAnalyticsOverviewMessage,
+  resolveFollowerHistoryEmptyStateMessage,
+} from "../lib/offline/offline-status";
 import { isPaymentCapableLink } from "../lib/payments/types";
 import {
   resolveBaseAwareAssetPath,
@@ -204,29 +214,42 @@ const targetForLink = (url?: string): "_blank" | "_self" => {
   return url.startsWith("http://") || url.startsWith("https://") ? "_blank" : "_self";
 };
 
-const fetchFollowerHistoryIndex = async (): Promise<FollowerHistoryIndex | null> => {
+const isMissingHistoryResponse = (status: number): boolean => status === 404;
+
+const fetchFollowerHistoryIndex = async (): Promise<OfflineResourceState<FollowerHistoryIndex>> => {
   try {
     const response = await fetch(historyAssetUrl(FOLLOWER_HISTORY_INDEX_PUBLIC_PATH));
     if (!response.ok) {
-      return null;
+      return buildUnavailableOfflineResource(
+        isMissingHistoryResponse(response.status) ? "missing" : "network",
+      );
     }
 
-    return parseFollowerHistoryIndex(await response.json());
+    return buildAvailableOfflineResource(parseFollowerHistoryIndex(await response.json()));
   } catch {
-    return null;
+    return buildUnavailableOfflineResource("network");
   }
 };
 
-const fetchFollowerHistoryRows = async (csvPath: string): Promise<FollowerHistoryRow[]> => {
-  const response = await fetch(historyAssetUrl(csvPath));
-  if (!response.ok) {
-    throw new Error(`Unable to load follower history from ${csvPath}.`);
-  }
+const fetchFollowerHistoryRows = async (
+  csvPath: string,
+): Promise<OfflineResourceState<FollowerHistoryRow[]>> => {
+  try {
+    const response = await fetch(historyAssetUrl(csvPath));
+    if (!response.ok) {
+      return buildUnavailableOfflineResource(
+        isMissingHistoryResponse(response.status) ? "missing" : "network",
+      );
+    }
 
-  return parseFollowerHistoryCsv(await response.text());
+    return buildAvailableOfflineResource(parseFollowerHistoryCsv(await response.text()));
+  } catch {
+    return buildUnavailableOfflineResource("network");
+  }
 };
 
 export default function RouteIndex() {
+  const [connectivity, setConnectivity] = createSignal<ConnectivityStatus>("online");
   const [mode, setMode] = createSignal<UiMode>("dark");
   const [analyticsPageOpen, setAnalyticsPageOpen] = createSignal(readAnalyticsPageState());
   const [analyticsRange, setAnalyticsRange] = createSignal<FollowerHistoryRange>("30d");
@@ -237,8 +260,17 @@ export default function RouteIndex() {
 
   const canToggle = createMemo(() => canToggleMode(modePolicy));
   const themeFingerprint = () => `${themeSelection.active}:${mode()}`;
+  const isOffline = createMemo(() => connectivity() === "offline");
 
-  const [historyIndex] = createResource(fetchFollowerHistoryIndex);
+  const [historyIndexState] = createResource(fetchFollowerHistoryIndex);
+  const historyIndex = createMemo(() => {
+    const state = historyIndexState();
+    return state?.status === "available" ? state.value : null;
+  });
+  const historyIndexUnavailableReason = createMemo<OfflineResourceFailureReason | undefined>(() => {
+    const state = historyIndexState();
+    return state?.status === "unavailable" ? state.reason : undefined;
+  });
 
   const historyAvailability = createMemo(() => buildFollowerHistoryAvailabilityMap(historyIndex()));
   const analyticsEntries = createMemo(() => historyIndex()?.entries ?? []);
@@ -248,26 +280,74 @@ export default function RouteIndex() {
     return selectedLinkId ? historyAvailability().get(selectedLinkId) : undefined;
   });
 
-  const [allHistoryRows] = createResource(
-    () => (analyticsPageOpen() ? (historyIndex()?.updatedAt ?? null) : null),
-    async () => {
-      const entries = analyticsEntries();
+  const [allHistoryRowStates] = createResource(
+    () => (analyticsPageOpen() ? (historyIndex()?.entries ?? null) : null),
+    async (entries) => {
+      if (!entries) {
+        return new Map<string, OfflineResourceState<FollowerHistoryRow[]>>();
+      }
+
       const resolved = await Promise.all(
         entries.map(
           async (entry) => [entry.linkId, await fetchFollowerHistoryRows(entry.csvPath)] as const,
         ),
       );
-      return new Map<string, FollowerHistoryRow[]>(resolved);
+      return new Map<string, OfflineResourceState<FollowerHistoryRow[]>>(resolved);
     },
   );
+  const allHistoryRows = createMemo(() => {
+    const rows = new Map<string, FollowerHistoryRow[]>();
 
-  const [selectedHistoryRows] = createResource(
+    for (const [linkId, state] of allHistoryRowStates() ?? []) {
+      if (state.status === "available") {
+        rows.set(linkId, state.value);
+      }
+    }
+
+    return rows;
+  });
+
+  const [selectedHistoryRowState] = createResource(
     () => selectedHistoryEntry()?.csvPath ?? null,
-    async (csvPath) => (csvPath ? fetchFollowerHistoryRows(csvPath) : []),
+    async (csvPath) =>
+      csvPath
+        ? fetchFollowerHistoryRows(csvPath)
+        : buildAvailableOfflineResource<FollowerHistoryRow[]>([]),
+  );
+  const selectedHistoryRows = createMemo(() => {
+    const state = selectedHistoryRowState();
+    return state?.status === "available" ? state.value : [];
+  });
+  const analyticsOverviewMessage = createMemo(() =>
+    resolveAnalyticsOverviewMessage({
+      connectivity: connectivity(),
+      entryCount: analyticsEntries().length,
+      status: historyIndexState.loading ? "loading" : (historyIndexState()?.status ?? "available"),
+      unavailableReason: historyIndexUnavailableReason(),
+    }),
+  );
+  const resolveChartEmptyStateMessage = (
+    state: OfflineResourceState<FollowerHistoryRow[]> | undefined,
+  ): string => {
+    if (!state) {
+      return "Loading follower history…";
+    }
+
+    return resolveFollowerHistoryEmptyStateMessage({
+      connectivity: connectivity(),
+      status: state.status === "unavailable" ? "unavailable" : "available",
+      unavailableReason: state.status === "unavailable" ? state.reason : undefined,
+    });
+  };
+  const selectedHistoryEmptyStateMessage = createMemo(() =>
+    resolveChartEmptyStateMessage(selectedHistoryRowState()),
   );
 
   const syncAnalyticsStateFromLocation = () => {
     setAnalyticsPageOpen(readAnalyticsPageState());
+  };
+  const syncConnectivityState = () => {
+    setConnectivity(readConnectivityStatus());
   };
 
   const toggleAnalyticsPage = () => {
@@ -408,14 +488,19 @@ export default function RouteIndex() {
   };
 
   onMount(() => {
+    syncConnectivityState();
     setMode(resolveInitialMode(modePolicy));
     applySeoMetadata();
     syncAnalyticsStateFromLocation();
+    window.addEventListener("online", syncConnectivityState);
+    window.addEventListener("offline", syncConnectivityState);
     window.addEventListener("popstate", syncAnalyticsStateFromLocation);
   });
 
   onCleanup(() => {
     if (typeof window !== "undefined") {
+      window.removeEventListener("online", syncConnectivityState);
+      window.removeEventListener("offline", syncConnectivityState);
       window.removeEventListener("popstate", syncAnalyticsStateFromLocation);
     }
   });
@@ -447,7 +532,7 @@ export default function RouteIndex() {
       richness={composition.profileRichness}
       analyticsAvailable={analyticsAvailable()}
       analyticsActive={analyticsActive}
-      onAnalyticsToggle={analyticsAvailable() ? toggleAnalyticsPage : undefined}
+      onAnalyticsToggle={analyticsAvailable() || analyticsActive ? toggleAnalyticsPage : undefined}
       onProfileQrOpen={(payload) => openLinkQrDialog(content.profile.name, payload)}
     />
   );
@@ -504,16 +589,12 @@ export default function RouteIndex() {
           </div>
         </div>
 
-        <Show when={historyIndex.loading}>
-          <p class="analytics-empty-state">Loading follower history…</p>
-        </Show>
-        <Show when={historyIndex.error}>
-          <p class="analytics-empty-state">Follower history could not be loaded.</p>
-        </Show>
-        <Show
-          when={!historyIndex.loading && !historyIndex.error && analyticsEntries().length === 0}
-        >
-          <p class="analytics-empty-state">No public follower history is published yet.</p>
+        <Show when={analyticsOverviewMessage()}>
+          {(message) => (
+            <p class="analytics-empty-state analytics-status-note" aria-live="polite">
+              {message()}
+            </p>
+          )}
         </Show>
 
         <div class="analytics-grid">
@@ -537,10 +618,13 @@ export default function RouteIndex() {
 
                   <FollowerHistoryChart
                     audienceKind={entry.audienceKind}
+                    emptyStateMessage={resolveChartEmptyStateMessage(
+                      allHistoryRowStates()?.get(entry.linkId),
+                    )}
                     mode="raw"
                     rangeDescription={describeFollowerHistoryRange(analyticsRange())}
                     range={analyticsRange()}
-                    rows={allHistoryRows()?.get(entry.linkId) ?? []}
+                    rows={allHistoryRows().get(entry.linkId) ?? []}
                     summaryLabel={entry.label}
                     themeFingerprint={themeFingerprint()}
                   />
@@ -567,6 +651,11 @@ export default function RouteIndex() {
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
       >
+        <Show when={isOffline()}>
+          <span class="utility-pill utility-pill-status" aria-live="polite">
+            Offline
+          </span>
+        </Show>
         <UtilityControlsMenu panelLabel="Theme and mode controls">
           <Show
             when={canToggle()}
@@ -620,7 +709,8 @@ export default function RouteIndex() {
           onRangeChange={setModalRange}
           open={Boolean(selectedHistoryLinkId())}
           range={modalRange()}
-          rows={selectedHistoryRows() ?? []}
+          rows={selectedHistoryRows()}
+          emptyStateMessage={selectedHistoryEmptyStateMessage()}
           themeFingerprint={themeFingerprint()}
         />
       </Suspense>

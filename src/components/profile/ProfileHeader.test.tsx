@@ -118,6 +118,31 @@ test("profile header flips the analytics button label when the analytics view is
   assert.equal(buttons[3]?.props["aria-label"], "Copy profile link");
 });
 
+test("profile header keeps the back action while analytics is active even if history is unavailable", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    analyticsActive: true,
+    analyticsAvailable: false,
+    onAnalyticsToggle: () => undefined,
+    onProfileQrOpen: () => undefined,
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+  }) as RenderedNode;
+
+  // Act
+  const buttons = collectElements(tree).filter((element) => element.type === "button");
+
+  // Assert
+  assert.equal(buttons[0]?.props["aria-label"], "Back to links");
+  assert.equal(buttons[1]?.props["aria-label"], "Show profile QR code");
+  assert.equal(buttons[2]?.props["aria-label"], "Share profile");
+  assert.equal(buttons[3]?.props["aria-label"], "Copy profile link");
+});
+
 test("profile header still renders QR, share, and copy when analytics is unavailable", () => {
   // Arrange
   const tree = ProfileHeader({

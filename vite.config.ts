@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
 import solidPlugin from "vite-plugin-solid";
 import profileData from "./data/profile.json";
 import siteData from "./data/site.json";
@@ -66,6 +67,17 @@ const deployTarget = deployTargetRaw ? parseDeployTarget(deployTargetRaw) : null
 const buildTimestamp = resolveStableBuildTimestamp({
   explicitValue: process.env.OPENLINKS_BUILD_TIMESTAMP,
 });
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+const normalizedBaseForRegex = base.endsWith("/") ? base.slice(0, -1) : base;
+const historyPathPrefix = `${
+  normalizedBaseForRegex.length > 0 ? normalizedBaseForRegex : ""
+}/history/followers/`;
+const localAssetPathPattern = new RegExp(
+  `^${escapeRegExp(normalizedBaseForRegex.length > 0 ? normalizedBaseForRegex : "")}/(?:cache/|branding/|favicon(?:-[^/]+)?\\.(?:png|svg)|favicon\\.ico|android-chrome-[^/]+\\.png|apple-touch-icon\\.png|site\\.webmanifest|openlinks-social-fallback\\.svg|profile-avatar-fallback\\.svg|payment-logos/)`,
+);
+const historyPathPattern = new RegExp(`^${escapeRegExp(historyPathPrefix)}.+\\.(?:csv|json)$`);
 
 const escapeHtml = (value: string): string =>
   value
@@ -133,6 +145,51 @@ export default defineConfig({
       },
     },
     solidPlugin(),
+    VitePWA({
+      injectRegister: false,
+      manifest: false,
+      registerType: "autoUpdate",
+      strategies: "generateSW",
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        globPatterns: ["**/*.{css,html,ico,js,json,png,svg,webmanifest,jpg,jpeg,webp}"],
+        globIgnores: ["history/followers/**/*"],
+        navigateFallback: `${base}index.html`,
+        navigateFallbackDenylist: [/^\/api\//u],
+        runtimeCaching: [
+          {
+            urlPattern: historyPathPattern,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "openlinks-follower-history",
+              cacheableResponse: {
+                statuses: [200],
+              },
+              expiration: {
+                maxEntries: 32,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+          {
+            urlPattern: localAssetPathPattern,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "openlinks-local-assets",
+              cacheableResponse: {
+                statuses: [200],
+              },
+              expiration: {
+                maxEntries: 256,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+        ],
+        skipWaiting: true,
+      },
+    }),
   ],
   build: {
     target: "esnext",

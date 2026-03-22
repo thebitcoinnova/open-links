@@ -10,6 +10,7 @@ import AppDialog from "../dialog/AppDialog";
 import FollowerHistoryChart from "./FollowerHistoryChart";
 
 export interface FollowerHistoryModalProps {
+  emptyStateMessage?: string;
   entry?: FollowerHistoryIndexEntry;
   mode: FollowerHistoryMode;
   onClose: () => void;
@@ -94,6 +95,7 @@ export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
 
           <FollowerHistoryChart
             audienceKind={entry().audienceKind ?? "followers"}
+            emptyStateMessage={props.emptyStateMessage}
             mode={props.mode}
             rangeDescription={describeFollowerHistoryRange(props.range)}
             range={props.range}

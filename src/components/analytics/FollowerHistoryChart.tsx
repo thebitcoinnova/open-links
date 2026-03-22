@@ -18,6 +18,7 @@ echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer]);
 
 export interface FollowerHistoryChartProps {
   audienceKind: FollowerHistoryAudienceKind;
+  emptyStateMessage?: string;
   height?: number;
   mode: FollowerHistoryMode;
   range: FollowerHistoryRange;
@@ -204,7 +205,9 @@ export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {
         style={{ height: `${props.height ?? 280}px`, width: "100%" }}
       />
       {filteredRows().length === 0 ? (
-        <p class="analytics-empty-state">No history in this range yet.</p>
+        <p class="analytics-empty-state">
+          {props.emptyStateMessage ?? "No history in this range yet."}
+        </p>
       ) : null}
     </div>
   );
