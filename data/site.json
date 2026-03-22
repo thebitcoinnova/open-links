@@ -77,7 +77,7 @@
     "blockingDomains": ["seo", "accessibility", "performance"],
     "seo": {
       "canonicalBaseUrl": "https://openlinks.us/",
-      "socialImageFallback": "/openlinks-social-fallback.svg",
+      "socialImageFallback": "/generated/seo/social-preview.png",
       "defaults": {
         "title": "OpenLinks",
         "description": "Personal, free, open source, version-controlled social links website.",

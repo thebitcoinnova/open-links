@@ -16,7 +16,7 @@ test("keeps the GitHub Pages project path when site.baseUrl is root", () => {
     quality: {
       seo: {
         canonicalBaseUrl: "https://prizz.github.io/open-links/",
-        socialImageFallback: "/openlinks-social-fallback.svg",
+        socialImageFallback: "/generated/seo/social-preview.png",
         defaults: {
           title: "OpenLinks",
           description: "Personal, free, open source, version-controlled social links website.",
@@ -39,19 +39,19 @@ test("keeps the GitHub Pages project path when site.baseUrl is root", () => {
   assert.equal(resolved.metadata.ogUrl, "https://prizz.github.io/open-links/");
   assert.equal(
     resolved.metadata.ogImage,
-    "https://prizz.github.io/open-links/openlinks-social-fallback.svg",
+    "https://prizz.github.io/open-links/generated/seo/social-preview.png",
   );
 });
 
 test("prefixes local asset paths with the deployment base only once", () => {
   // Arrange
-  const candidate = "/open-links/openlinks-social-fallback.svg";
+  const candidate = "/open-links/generated/seo/social-preview.png";
 
   // Act
   const resolved = resolveBaseAwareAssetPath(candidate, "/open-links/");
 
   // Assert
-  assert.equal(resolved, "/open-links/openlinks-social-fallback.svg");
+  assert.equal(resolved, "/open-links/generated/seo/social-preview.png");
 });
 
 test("detects placeholder example hosts", () => {
@@ -103,4 +103,29 @@ test("passes site SEO slot context to image resolution", () => {
   assert.equal(receivedCandidate, "https://example.com/default-og.jpg");
   assert.equal(receivedSourceField, "defaults.ogImage");
   assert.equal(receivedSlotId, getSiteSeoContentImageSlotId("defaults.ogImage"));
+});
+
+test("falls back to the built-in PNG social image when no SEO image is configured", () => {
+  // Arrange
+  const site = {
+    title: "OpenLinks",
+    description: "Personal, free, open source, version-controlled social links website.",
+  };
+  const profile = {
+    name: "Peter Ryszkiewicz",
+    bio: "A curious software engineer.",
+  };
+
+  // Act
+  const resolved = resolveSeoMetadata(site, profile, {
+    fallbackOrigin: "https://openlinks.us/",
+    resolveImagePath: (candidate) => resolveBaseAwareAssetPath(candidate, "/"),
+  });
+
+  // Assert
+  assert.equal(resolved.metadata.ogImage, "https://openlinks.us/openlinks-social-fallback.png");
+  assert.equal(
+    resolved.metadata.twitterImage,
+    "https://openlinks.us/openlinks-social-fallback.png",
+  );
 });

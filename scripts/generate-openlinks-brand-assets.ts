@@ -2,6 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import pngToIco from "png-to-ico";
+import {
+  DEFAULT_CANONICAL_OPENLINKS_LOGO_PATH,
+  readCanonicalOpenLinksMarkSpec,
+} from "./lib/openlinks-logo";
+import { buildSocialPreviewSvg, renderSocialPreviewPng } from "./lib/social-preview";
 
 interface BrandAssetTarget {
   id: "main" | "studio";
@@ -15,8 +20,10 @@ interface GenerateBrandAssetsOptions {
 }
 
 const ROOT = process.cwd();
-const CANONICAL_LOGO_PATH = path.join(ROOT, "public/branding/openlinks-logo/openlinks-logo.svg");
+const CANONICAL_LOGO_PATH = path.join(ROOT, DEFAULT_CANONICAL_OPENLINKS_LOGO_PATH);
 const CANONICAL_BRANDING_RELATIVE_PATH = "branding/openlinks-logo/openlinks-logo.svg";
+export const DEFAULT_OPENLINKS_SOCIAL_FALLBACK_SVG_PATH = "public/openlinks-social-fallback.svg";
+export const DEFAULT_OPENLINKS_SOCIAL_FALLBACK_PNG_PATH = "public/openlinks-social-fallback.png";
 
 const TARGETS: BrandAssetTarget[] = [
   {
@@ -46,6 +53,8 @@ const RASTER_SIZES = [
 ];
 
 const toRelative = (targetPath: string): string => path.relative(ROOT, targetPath);
+const absolutePath = (rootDir: string, value: string): string =>
+  path.isAbsolute(value) ? value : path.join(rootDir, value);
 
 const writeIfChanged = (filePath: string, content: Buffer | string): boolean => {
   const nextBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content, "utf8");
@@ -57,36 +66,6 @@ const writeIfChanged = (filePath: string, content: Buffer | string): boolean => 
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, nextBuffer);
   return true;
-};
-
-const extractCanonicalMarkSpec = (
-  canonicalSvg: string,
-): {
-  pathData: string;
-  circleRadius: number;
-  stroke: { circle: number; l: number };
-} => {
-  const circleMatch = canonicalSvg.match(
-    /<circle[^>]*\sr="([^"]+)"[^>]*\sstroke-width="([^"]+)"[^>]*\/?>/i,
-  );
-  if (!circleMatch?.[1] || !circleMatch[2]) {
-    throw new Error(`Unable to locate canonical ring spec in ${toRelative(CANONICAL_LOGO_PATH)}.`);
-  }
-
-  const pathMatch = canonicalSvg.match(/<path[^>]*\sd="([^"]+)"[^>]*\/?>/i);
-  const pathStrokeMatch = canonicalSvg.match(/<path[^>]*\sstroke-width="([^"]+)"[^>]*\/?>/i);
-  if (!pathMatch?.[1] || !pathStrokeMatch?.[1]) {
-    throw new Error(`Unable to locate canonical L path in ${toRelative(CANONICAL_LOGO_PATH)}.`);
-  }
-
-  return {
-    pathData: pathMatch[1],
-    circleRadius: Number(circleMatch[1]),
-    stroke: {
-      circle: Number(circleMatch[2]),
-      l: Number(pathStrokeMatch[1]),
-    },
-  };
 };
 
 const buildBadgeSvg = (input: {
@@ -194,6 +173,59 @@ const generateForTarget = async (input: {
   }
 };
 
+export interface GenerateOpenLinksSocialFallbackAssetsOptions {
+  canonicalLogoPath?: string;
+  quiet?: boolean;
+  rootDir?: string;
+  svgOutputPath?: string;
+  pngOutputPath?: string;
+}
+
+export interface GenerateOpenLinksSocialFallbackAssetsResult {
+  svgOutputPath: string;
+  svgStatus: "unchanged" | "written";
+  pngOutputPath: string;
+  pngStatus: "unchanged" | "written";
+}
+
+export const generateOpenLinksSocialFallbackAssets = (
+  options: GenerateOpenLinksSocialFallbackAssetsOptions = {},
+): GenerateOpenLinksSocialFallbackAssetsResult => {
+  const rootDir = options.rootDir ?? ROOT;
+  const svgOutputPath = absolutePath(
+    rootDir,
+    options.svgOutputPath ?? DEFAULT_OPENLINKS_SOCIAL_FALLBACK_SVG_PATH,
+  );
+  const pngOutputPath = absolutePath(
+    rootDir,
+    options.pngOutputPath ?? DEFAULT_OPENLINKS_SOCIAL_FALLBACK_PNG_PATH,
+  );
+  const markSpec = readCanonicalOpenLinksMarkSpec(
+    rootDir,
+    options.canonicalLogoPath ?? DEFAULT_CANONICAL_OPENLINKS_LOGO_PATH,
+  );
+  const svg = buildSocialPreviewSvg({
+    title: "OpenLinks",
+    description: "Personal, free, open source, version-controlled links website.",
+    markSpec,
+  });
+  const png = renderSocialPreviewPng(svg);
+  const svgStatus = writeIfChanged(svgOutputPath, svg) ? "written" : "unchanged";
+  const pngStatus = writeIfChanged(pngOutputPath, png) ? "written" : "unchanged";
+
+  if (!(options.quiet ?? false)) {
+    console.log(`OpenLinks social fallback SVG: ${svgStatus} (${toRelative(svgOutputPath)})`);
+    console.log(`OpenLinks social fallback PNG: ${pngStatus} (${toRelative(pngOutputPath)})`);
+  }
+
+  return {
+    svgOutputPath,
+    svgStatus,
+    pngOutputPath,
+    pngStatus,
+  };
+};
+
 export const generateOpenLinksBrandAssets = async (
   options?: GenerateBrandAssetsOptions,
 ): Promise<void> => {
@@ -205,7 +237,7 @@ export const generateOpenLinksBrandAssets = async (
   }
 
   const canonicalSvg = fs.readFileSync(CANONICAL_LOGO_PATH, "utf8");
-  const canonicalMarkSpec = extractCanonicalMarkSpec(canonicalSvg);
+  const canonicalMarkSpec = readCanonicalOpenLinksMarkSpec(ROOT);
   const badgeSvg = buildBadgeSvg(canonicalMarkSpec);
 
   for (const target of TARGETS) {
@@ -216,6 +248,8 @@ export const generateOpenLinksBrandAssets = async (
       quiet,
     });
   }
+
+  generateOpenLinksSocialFallbackAssets({ quiet, rootDir: ROOT });
 };
 
 if (import.meta.main) {

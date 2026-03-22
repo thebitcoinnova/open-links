@@ -717,8 +717,9 @@ Current runtime behavior: unified non-payment cards always use the shared lead-l
 #### `quality.seo` image materialization behavior
 
 - SEO image candidates (`socialImageFallback`, defaults, profile overrides) are included in `images:sync`.
+- Starter config uses a generated local site preview at `/generated/seo/social-preview.png`, produced by `bun run social:preview:generate`.
 - Runtime SEO tags (`og:image`, `twitter:image`) use baked local assets when available.
-- Runtime never falls back to remote SEO image URLs; unresolved remote candidates fall back to `/openlinks-social-fallback.svg`.
+- Runtime never falls back to remote SEO image URLs; unresolved remote candidates fall back to `/openlinks-social-fallback.png`.
 
 #### `ui.brandIcons`
 

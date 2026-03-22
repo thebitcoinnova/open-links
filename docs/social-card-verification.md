@@ -7,6 +7,7 @@ Use this guide after changing any of the profile-oriented card surfaces:
 - rich-card description-image-row policy
 - follower-history artifacts or analytics UI
 - profile/card share behavior
+- SEO/social preview image generation or fallback asset behavior
 
 For the canonical field contract, use `docs/data-model.md`. For data-driven knob inventory, use `docs/customization-catalog.md`.
 
@@ -21,10 +22,12 @@ If this guide surfaces a docs or behavior issue, prefer fixing it through the re
 - [ ] Desktop: cards without follower-history data still show share without a broken analytics control.
 - [ ] Desktop: the profile header still shows share, and when analytics is available it stays immediately to the left of share.
 - [ ] Mobile: the same action rows and profile/fallback layouts remain readable without overlap or action drift.
+- [ ] SEO/social: `og:image` and `twitter:image` resolve to the expected local PNG preview path and the rendered image reflects the latest title/copy refresh.
 - [ ] Analytics page: `30D` is the default range, and switching to `90D`, `180D`, and `All` updates the charts cleanly.
 - [ ] Analytics modal: card-launched platform charts still respond to range changes and raw/growth toggles.
 - [ ] Public artifacts: `history/followers/index.json` loads, and at least one listed CSV path is publicly reachable and append-only.
 - [ ] Docs drift: any updated examples, commands, platform-support claims, and verification notes still match runtime behavior.
+- [ ] Cache refresh: after deploy, refresh the live URL in LinkedIn Post Inspector and confirm the new preview image is shown for new shares.
 
 ## Automated Coverage Map
 
@@ -128,6 +131,16 @@ Before closing a change, compare runtime behavior against:
 
 Treat stale examples, incorrect platform-support claims, or missing verification notes as real regressions.
 
+### 8. SEO/social preview verification
+
+When the change touches the site preview image or fallback SEO asset, confirm:
+
+- `bun run social:preview:generate` writes `public/generated/seo/social-preview.svg` and `public/generated/seo/social-preview.png`
+- `data/site.json` points `quality.seo.socialImageFallback` at `/generated/seo/social-preview.png`
+- the built `og:image` and `twitter:image` tags resolve to the expected local PNG path rather than an unresolved remote URL
+- the hardcoded last-resort fallback remains `/openlinks-social-fallback.png`
+- after deployment, [LinkedIn Post Inspector](https://www.linkedin.com/help/linkedin/answer/a6233775) shows the refreshed preview for the canonical URL
+
 ## Suggested Command Set
 
 After social-card changes, the normal focused command set is:
@@ -139,7 +152,11 @@ bun test src/components/cards/social-profile-card-rendering.test.tsx \
   src/components/profile/ProfileHeader.test.tsx \
   src/lib/share/share-link.test.ts \
   src/lib/analytics/follower-history.test.ts \
-  scripts/follower-history/append-history.test.ts
+  scripts/follower-history/append-history.test.ts \
+  scripts/generate-openlinks-brand-assets.test.ts \
+  scripts/generate-site-social-preview.test.ts \
+  src/lib/seo/resolve-seo-metadata.test.ts
+bun run social:preview:generate
 bun run typecheck
 bun run biome:check
 bun run validate:data

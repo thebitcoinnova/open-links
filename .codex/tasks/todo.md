@@ -4,6 +4,26 @@
 
 ### In Progress
 
+- [x] Bundle deterministic generator fonts for the social preview so Resvg stops falling back to machine-dependent fonts.
+- [x] Replace heuristic pill sizing and `dominant-baseline` centering with font-backed Resvg bbox measurement for the eyebrow and footer badges.
+- [x] Verify the stabilized pill layout with focused generator tests, asset regeneration, `bun run typecheck`, `bun run biome:check`, and `git diff --check`.
+
+### Completion Review
+
+- Result: The social-preview renderer now pins Resvg to vendored `Space Grotesk` and `Manrope` font files, measures the eyebrow and footer labels from their actual rendered bounding boxes, and positions the pill text by offsetting against the measured glyph bounds instead of relying on heuristic widths or `dominant-baseline`. The regenerated PNG now shows even pill padding and stable label centering in both the generic fallback and the site-level preview.
+- Verification: `bun test scripts/generate-openlinks-brand-assets.test.ts scripts/generate-site-social-preview.test.ts` passed. `bun run branding:assets` passed. `bun run social:preview:generate` passed. `bun run typecheck` passed. `bun run biome:check` passed. `git diff --check` passed. A visual check of `public/generated/seo/social-preview.png` confirmed that the eyebrow and footer pills are aligned in the rasterized output.
+- Residual risk: The pill geometry is now deterministic for the current font files and Resvg version, so future font-file swaps or Resvg metric changes will require updating the corresponding exact-geometry test expectations.
+
+- [x] Modernize the OpenLinks social preview into a premium PNG-first brand card with a generated site-level default preview.
+- [x] Wire the new site social preview generator into build/deploy flows and update SEO defaults/docs/tests to match.
+- [x] Verify the social preview refresh with targeted tests, repo-required checks, and a diff review.
+
+### Completion Review
+
+- Result: Replaced the old static fallback art with a premium charcoal/teal OpenLinks card, added a new `social:preview:generate` pipeline that writes `public/generated/seo/social-preview.svg` and `.png`, switched starter SEO config to use the generated PNG by default, and kept the hardcoded last-resort fallback on a generic `public/openlinks-social-fallback.png`. The build/deploy flows now generate the site preview automatically, hook-mode validation treats the new generator paths as rich-artifact inputs, and the docs/test coverage now describe and protect the PNG-first SEO contract.
+- Verification: `bun install` passed. `bun test scripts/generate-openlinks-brand-assets.test.ts scripts/generate-site-social-preview.test.ts src/lib/seo/resolve-seo-metadata.test.ts scripts/validate-data.test.ts scripts/clean-public-build-artifacts.test.ts` passed. `bun run typecheck` passed. `bun run branding:assets` passed and regenerated `public/openlinks-social-fallback.svg` plus the new `public/openlinks-social-fallback.png`. `bun run social:preview:generate` passed. `bun run biome:check` passed. `bun run validate:data` passed. `bun run build` passed end to end, including `enrich:rich:strict`, `images:sync`, `social:preview:generate`, and `badge:site`. `git diff --check` passed.
+- Residual risk: The generated site preview lives under ignored `public/generated/seo/`, so the asset is intentionally recreated by build/dev flows rather than committed. I did not perform the post-deploy LinkedIn Post Inspector cache refresh in this local change batch, so live cache invalidation still needs to happen after deployment.
+
 - [x] Fix the stale utility-menu quality heuristics so the Kobalte popover path satisfies required CI checks.
 - [x] Add shared utility-menu analyzer coverage for legacy manual behavior, Kobalte behavior, and incomplete implementations.
 - [x] Verify the CI-fix batch with `bun test scripts/quality/utility-menu.test.ts`, `bun run ci:required:quality`, and `bun run ci:required`.

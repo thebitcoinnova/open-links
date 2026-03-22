@@ -65,7 +65,7 @@ export interface ResolvedSeoMetadata {
 type SeoConfig = NonNullable<NonNullable<SeoSiteInput["quality"]>["seo"]>;
 
 const DEFAULT_PLACEHOLDER_ORIGIN = "https://placeholder.example/";
-const DEFAULT_SOCIAL_IMAGE = "/openlinks-social-fallback.svg";
+const DEFAULT_SOCIAL_IMAGE = "/openlinks-social-fallback.png";
 const URL_SCHEME_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
 
 const firstString = (...values: Array<string | undefined>): string | undefined => {

@@ -292,6 +292,11 @@ High-signal examples within `site.quality`:
 - `performance.profiles.mobile`
 - `performance.profiles.desktop`
 
+Notes:
+
+- The starter config points `seo.socialImageFallback` at `/generated/seo/social-preview.png`, which is created by `bun run social:preview:generate`.
+- Forks that want a fully custom social card can still point `seo.socialImageFallback`, `seo.defaults.ogImage`, or `seo.defaults.twitterImage` at their own local asset paths.
+
 ## 12) Extension guardrails (`extensions-guardrails`)
 
 Preferred extension namespace:

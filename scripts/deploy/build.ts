@@ -57,6 +57,7 @@ await run.addBreadcrumb({
 runCommand("bun", ["run", "avatar:sync"]);
 runCommand("bun", ["run", "enrich:rich:strict"]);
 runCommand("bun", ["run", "images:sync"]);
+runCommand("bun", ["run", "social:preview:generate"]);
 runCommand("bun", ["run", "validate:data"]);
 runCommand("bun", ["run", "badge:site"]);
 await run.addBreadcrumb({

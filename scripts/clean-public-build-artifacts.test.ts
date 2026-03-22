@@ -13,12 +13,14 @@ test("removes OS junk and legacy generated assets while preserving current cache
   fs.mkdirSync(path.join(publicDir, "branding/openlinks-logo/v3"), { recursive: true });
   fs.mkdirSync(path.join(publicDir, "cache/content-images"), { recursive: true });
   fs.mkdirSync(path.join(publicDir, "generated/images"), { recursive: true });
+  fs.mkdirSync(path.join(publicDir, "generated/seo"), { recursive: true });
 
   fs.writeFileSync(path.join(publicDir, "branding/openlinks-logo/v3/.DS_Store"), "junk");
   fs.writeFileSync(path.join(publicDir, "cache/.DS_Store"), "junk");
   fs.writeFileSync(path.join(publicDir, "generated/.gitkeep"), "");
   fs.writeFileSync(path.join(publicDir, "generated/images/example.jpg"), "legacy");
   fs.writeFileSync(path.join(publicDir, "generated/profile-avatar.jpg"), "legacy");
+  fs.writeFileSync(path.join(publicDir, "generated/seo/social-preview.png"), "current");
   fs.writeFileSync(path.join(publicDir, "cache/content-images/example.jpg"), "current");
 
   try {
@@ -38,6 +40,7 @@ test("removes OS junk and legacy generated assets while preserving current cache
     assert.equal(fs.existsSync(path.join(publicDir, "generated/.gitkeep")), true);
     assert.equal(fs.existsSync(path.join(publicDir, "generated/images")), false);
     assert.equal(fs.existsSync(path.join(publicDir, "generated/profile-avatar.jpg")), false);
+    assert.equal(fs.existsSync(path.join(publicDir, "generated/seo/social-preview.png")), true);
     assert.equal(fs.existsSync(path.join(publicDir, "cache/content-images/example.jpg")), true);
   } finally {
     fs.rmSync(workspace, { force: true, recursive: true });

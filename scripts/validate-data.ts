@@ -102,14 +102,21 @@ const HOOK_RICH_ARTIFACT_TRIGGER_EXACT_PATHS = new Set([
   "schema/remote-cache-policy.schema.json",
   "schema/site.schema.json",
   "scripts/enrich-rich-links.ts",
+  "scripts/generate-openlinks-brand-assets.ts",
+  "scripts/generate-site-social-preview.ts",
+  "scripts/lib/openlinks-logo.ts",
+  "scripts/lib/social-preview.ts",
   "scripts/sync-profile-avatar.ts",
   "scripts/sync-content-images.ts",
   "scripts/validate-data.ts",
+  "public/openlinks-social-fallback.png",
+  "public/openlinks-social-fallback.svg",
 ]);
 
 const HOOK_RICH_ARTIFACT_TRIGGER_PREFIXES = [
   "data/cache/",
   "public/cache/content-images/",
+  "public/generated/seo/",
   "public/cache/rich-authenticated/",
   "scripts/enrichment/",
   "scripts/validation/",

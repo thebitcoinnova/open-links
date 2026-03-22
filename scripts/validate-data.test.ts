@@ -102,24 +102,30 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   // Arrange
   const exactMatch = "data/cache/content-images.json";
   const prefixMatch = "public/cache/content-images/example.jpg";
+  const generatedSeoMatch = "public/generated/seo/social-preview.png";
   const legacyPath = "data/generated/content-images.json";
   const avatarTrigger = "scripts/sync-profile-avatar.ts";
+  const socialPreviewTrigger = "scripts/generate-site-social-preview.ts";
   const policyTrigger = "data/policy/remote-cache-policy.json";
   const nonMatch = "scripts/quality/perf.ts";
 
   // Act
   const exactTriggered = pathTouchesHookRichArtifactInputs(exactMatch);
   const prefixTriggered = pathTouchesHookRichArtifactInputs(prefixMatch);
+  const generatedSeoTriggered = pathTouchesHookRichArtifactInputs(generatedSeoMatch);
   const legacyTriggered = pathTouchesHookRichArtifactInputs(legacyPath);
   const avatarTriggered = pathTouchesHookRichArtifactInputs(avatarTrigger);
+  const socialPreviewTriggered = pathTouchesHookRichArtifactInputs(socialPreviewTrigger);
   const policyTriggered = pathTouchesHookRichArtifactInputs(policyTrigger);
   const unrelatedTriggered = pathTouchesHookRichArtifactInputs(nonMatch);
 
   // Assert
   assert.equal(exactTriggered, true);
   assert.equal(prefixTriggered, true);
+  assert.equal(generatedSeoTriggered, true);
   assert.equal(legacyTriggered, false);
   assert.equal(avatarTriggered, true);
+  assert.equal(socialPreviewTriggered, true);
   assert.equal(policyTriggered, true);
   assert.equal(unrelatedTriggered, false);
 });
