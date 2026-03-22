@@ -1,3 +1,9 @@
+export { parseGitHubRepositorySlug } from "../../src/lib/github-repository";
+
+import {
+  parseGitHubRepositorySlug,
+  resolveGitHubRepositorySlug as resolveGitHubRepositorySlugOrFallback,
+} from "../../src/lib/github-repository";
 import { runCommand } from "./command";
 
 type CommandRunner = typeof runCommand;
@@ -7,26 +13,6 @@ interface ResolveGitHubRepositorySlugOptions {
   runCommandImpl?: CommandRunner;
 }
 
-export function parseGitHubRepositorySlug(input: string) {
-  const normalizedInput = input.trim();
-
-  if (/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/.test(normalizedInput)) {
-    return normalizedInput.replace(/\.git$/, "");
-  }
-
-  const sshMatch = normalizedInput.match(/^git@github\.com:(.+?)\/(.+?)(?:\.git)?$/i);
-  if (sshMatch) {
-    return `${sshMatch[1]}/${sshMatch[2]}`;
-  }
-
-  const httpsMatch = normalizedInput.match(/^https:\/\/github\.com\/(.+?)\/(.+?)(?:\.git)?$/i);
-  if (httpsMatch) {
-    return `${httpsMatch[1]}/${httpsMatch[2]}`;
-  }
-
-  throw new Error(`Could not parse a GitHub repository slug from: ${input}`);
-}
-
 export function resolveGitHubRepositorySlug(
   maybeRepository: string | undefined,
   options: ResolveGitHubRepositorySlugOptions = {},
@@ -34,12 +20,14 @@ export function resolveGitHubRepositorySlug(
   const env = options.env ?? process.env;
   const runCommandImpl = options.runCommandImpl ?? runCommand;
 
-  if (maybeRepository) {
-    return parseGitHubRepositorySlug(maybeRepository);
+  const maybeResolvedRepository = resolveGitHubRepositorySlugOrFallback(maybeRepository, "");
+  if (maybeResolvedRepository) {
+    return maybeResolvedRepository;
   }
 
-  if (env.GITHUB_REPOSITORY) {
-    return parseGitHubRepositorySlug(env.GITHUB_REPOSITORY);
+  const maybeResolvedFromEnv = resolveGitHubRepositorySlugOrFallback(env.GITHUB_REPOSITORY, "");
+  if (maybeResolvedFromEnv) {
+    return maybeResolvedFromEnv;
   }
 
   const remoteUrl = runCommandImpl("git", ["remote", "get-url", "origin"]).stdout.trim();

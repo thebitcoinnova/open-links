@@ -217,9 +217,11 @@ Use these for skipped discovery/apply outcomes:
 
 Use this single-message prompt with OpenClaw:
 
+<!-- OPENCLAW_UPDATE_PROMPT:start -->
 ```text
 Follow https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md exactly for this repository. Execute Required Startup Handshake (including conditional customization-audit selectors), Defaults, Customization Audit Path (Optional), Repository Resolution, Dirty Local Repository Handling, Interaction Modes, Identity and Discovery Policy, Update/CRUD Execution Sequence, Final Output Contract, and Required reason codes exactly as written. When customization_path=customization-audit, use https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md as the checklist source.
 ```
+<!-- OPENCLAW_UPDATE_PROMPT:end -->
 
 ## Related Docs
 

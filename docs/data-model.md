@@ -652,8 +652,10 @@ Main presentation controls include:
 - `footer.prompt.enabled`: toggle the bootstrap prompt card in the footer
 - `footer.prompt.title`: optional prompt section title
 - `footer.prompt.explanation`: optional short explanation above the prompt text
-- `footer.prompt.text`: optional copyable bootstrap prompt text (defaults to absolute GitHub doc URLs for this repository)
+- `footer.prompt.text`: optional copyable bootstrap prompt text (defaults to the canonical generated bootstrap prompt with absolute GitHub doc URLs for this repository)
 - `footer.showLastUpdated`: toggle subtle build-time UTC timestamp display
+
+Maintainers should keep the markdown OpenClaw prompt snippets synchronized with `bun run openclaw:prompts:sync` and verify drift with `bun run openclaw:prompts:check`.
 
 Rich-card policy settings live under `ui.richCards`.
 

@@ -12,6 +12,13 @@ test("buildGitHubRepositoryUrl falls back to the upstream repository", () => {
   assert.equal(buildGitHubRepositoryUrl(), "https://github.com/pRizz/open-links");
 });
 
+test("buildGitHubRepositoryUrl normalizes supported GitHub repository inputs", () => {
+  assert.equal(
+    buildGitHubRepositoryUrl("  https://github.com/example/openlinks-fork.git  "),
+    "https://github.com/example/openlinks-fork",
+  );
+});
+
 test("buildRawGitHubFileUrl uses the provided repository slug and ref", () => {
   assert.equal(
     buildRawGitHubFileUrl("docs/openclaw-bootstrap.md", {
@@ -19,6 +26,16 @@ test("buildRawGitHubFileUrl uses the provided repository slug and ref", () => {
       repositorySlug: "example/openlinks-fork",
     }),
     "https://raw.githubusercontent.com/example/openlinks-fork/release/docs-prompts/docs/openclaw-bootstrap.md",
+  );
+});
+
+test("buildRawGitHubFileUrl falls back to safe defaults when repository inputs are malformed", () => {
+  assert.equal(
+    buildRawGitHubFileUrl("/docs/openclaw-bootstrap.md", {
+      repositoryRef: "release docs-prompts",
+      repositorySlug: "https://example.com/not-github/openlinks-fork",
+    }),
+    "https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md",
   );
 });
 
@@ -39,6 +56,23 @@ test("resolveOpenClawPromptDocUrls returns raw GitHub doc URLs", () => {
   );
 });
 
+test("resolveOpenClawPromptDocUrls trims and normalizes repository inputs", () => {
+  assert.deepEqual(
+    resolveOpenClawPromptDocUrls({
+      repositoryRef: "  release/docs-prompts  ",
+      repositorySlug: "  git@github.com:example/openlinks-fork.git  ",
+    }),
+    {
+      bootstrapUrl:
+        "https://raw.githubusercontent.com/example/openlinks-fork/release/docs-prompts/docs/openclaw-bootstrap.md",
+      customizationCatalogUrl:
+        "https://raw.githubusercontent.com/example/openlinks-fork/release/docs-prompts/docs/customization-catalog.md",
+      updateCrudUrl:
+        "https://raw.githubusercontent.com/example/openlinks-fork/release/docs-prompts/docs/openclaw-update-crud.md",
+    },
+  );
+});
+
 test("buildOpenClawBootstrapPrompt points at absolute doc URLs", () => {
   const prompt = buildOpenClawBootstrapPrompt({
     repositoryRef: "main",
@@ -52,6 +86,18 @@ test("buildOpenClawBootstrapPrompt points at absolute doc URLs", () => {
   assert.match(
     prompt,
     /switch to https:\/\/raw\.githubusercontent\.com\/example\/openlinks-fork\/main\/docs\/openclaw-update-crud\.md when selected\.$/,
+  );
+});
+
+test("buildOpenClawBootstrapPrompt falls back to safe defaults when repository inputs are malformed", () => {
+  const prompt = buildOpenClawBootstrapPrompt({
+    repositoryRef: "release docs-prompts",
+    repositorySlug: "https://example.com/not-github/openlinks-fork",
+  });
+
+  assert.match(
+    prompt,
+    /^Follow https:\/\/raw\.githubusercontent\.com\/pRizz\/open-links\/main\/docs\/openclaw-bootstrap\.md exactly/,
   );
 });
 

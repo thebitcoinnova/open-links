@@ -10,9 +10,12 @@ import {
   parseDeployTarget,
 } from "./src/lib/deployment-config";
 import {
-  DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF,
-  DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG,
-} from "./src/lib/openclaw-prompts";
+  DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
+  normalizeGitHubRepositorySlug,
+  resolveGitHubRepositoryRef,
+  resolveGitHubRepositorySlug,
+  trimToUndefined,
+} from "./src/lib/github-repository";
 import {
   resolveBaseAwareAssetPath,
   resolveBasePathFromUrl,
@@ -20,11 +23,14 @@ import {
 } from "./src/lib/seo/resolve-seo-metadata";
 
 const repositoryName =
-  process.env.REPO_NAME_OVERRIDE?.trim() || process.env.GITHUB_REPOSITORY?.split("/")[1] || "";
-const repositorySlug =
-  process.env.GITHUB_REPOSITORY?.trim() || DEFAULT_OPENCLAW_PROMPT_REPOSITORY_SLUG;
-const repositoryDocsRef =
-  process.env.OPENLINKS_REPOSITORY_DOCS_REF?.trim() || DEFAULT_OPENCLAW_PROMPT_REPOSITORY_REF;
+  trimToUndefined(process.env.REPO_NAME_OVERRIDE) ||
+  normalizeGitHubRepositorySlug(process.env.GITHUB_REPOSITORY)?.split("/")[1] ||
+  "";
+const repositorySlug = resolveGitHubRepositorySlug(
+  process.env.GITHUB_REPOSITORY,
+  DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
+);
+const repositoryDocsRef = resolveGitHubRepositoryRef(process.env.OPENLINKS_REPOSITORY_DOCS_REF);
 const deployTargetRaw = process.env.OPENLINKS_DEPLOY_TARGET?.trim();
 const baseModeRaw = process.env.PAGES_BASE_MODE?.trim().toLowerCase();
 const explicitBasePath = process.env.BASE_PATH?.trim();

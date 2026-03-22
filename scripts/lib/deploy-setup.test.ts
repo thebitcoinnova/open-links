@@ -19,7 +19,27 @@ test("parseGitHubRepositorySlug supports ssh, https, and bare owner/repo formats
     parseGitHubRepositorySlug("https://github.com/pRizz/open-links.git"),
     "pRizz/open-links",
   );
+  assert.equal(
+    parseGitHubRepositorySlug("https://x-access-token:token@github.com/pRizz/open-links.git"),
+    "pRizz/open-links",
+  );
   assert.equal(parseGitHubRepositorySlug("pRizz/open-links"), "pRizz/open-links");
+});
+
+test("parseGitHubRepositorySlug trims valid input and rejects non-GitHub formats", () => {
+  // Arrange / Act / Assert
+  assert.equal(
+    parseGitHubRepositorySlug("  https://github.com/pRizz/open-links.git  "),
+    "pRizz/open-links",
+  );
+  assert.throws(
+    () => parseGitHubRepositorySlug("https://example.com/pRizz/open-links.git"),
+    /Could not parse a GitHub repository slug/u,
+  );
+  assert.throws(
+    () => parseGitHubRepositorySlug("https://github.com/pRizz/open-links/tree/main"),
+    /Could not parse a GitHub repository slug/u,
+  );
 });
 
 test("buildGithubOidcTrustPolicy scopes the role to the production environment subject", () => {
