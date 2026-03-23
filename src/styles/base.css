@@ -1378,7 +1378,7 @@ a:focus-visible {
   width: min(100%, 44rem);
   display: grid;
   gap: var(--space-2);
-  padding: calc(var(--space-2) * var(--density-scale));
+  padding: calc(var(--space-3) * var(--density-scale)) calc(var(--space-4) * var(--density-scale));
   border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent 45%);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
