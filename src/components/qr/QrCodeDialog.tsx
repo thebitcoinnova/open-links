@@ -62,18 +62,20 @@ export const QrCodeDialog = (props: QrCodeDialogProps) => {
         </button>
       </div>
 
-      <StyledQrCode
-        payload={props.payload}
-        size={qrSize()}
-        style={props.style}
-        foregroundColor={props.foregroundColor}
-        backgroundColor={props.backgroundColor}
-        logoUrl={props.logoUrl}
-        logoSize={props.logoSize}
-        themeFingerprint={props.themeFingerprint}
-        class="qr-code-dialog-canvas"
-        ariaLabel={props.qrAriaLabel ?? resolveQrCodeDialogAriaLabel(props.title)}
-      />
+      <div class="qr-code-dialog-body">
+        <StyledQrCode
+          payload={props.payload}
+          size={qrSize()}
+          style={props.style}
+          foregroundColor={props.foregroundColor}
+          backgroundColor={props.backgroundColor}
+          logoUrl={props.logoUrl}
+          logoSize={props.logoSize}
+          themeFingerprint={props.themeFingerprint}
+          class="qr-code-dialog-canvas"
+          ariaLabel={props.qrAriaLabel ?? resolveQrCodeDialogAriaLabel(props.title)}
+        />
+      </div>
     </AppDialog>
   );
 };
