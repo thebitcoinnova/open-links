@@ -4,7 +4,11 @@ import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import { resolveBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { clearActionToastClient, registerActionToastClient } from "../../lib/ui/action-toast";
 import StyledPaymentQr from "../payments/StyledPaymentQr";
-import { PaymentLinkCard } from "./PaymentLinkCard";
+import {
+  PaymentLinkCard,
+  resolvePaymentQrPanelStages,
+  settlePaymentQrPanelStage,
+} from "./PaymentLinkCard";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
 
@@ -447,4 +451,53 @@ test("payment cards pass themeFingerprint to inline QR renderers", () => {
   assert.equal(qr.props.themeFingerprint, "sleek:dark");
 
   setReactRuntime(reactRuntime);
+});
+
+test("payment QR panel stages keep visible panels entered and hidden panels exiting", () => {
+  // Arrange
+  const currentStages = {
+    bitcoin: "entered",
+    cashapp: "entered",
+  } as const;
+  const visibleRailIds = new Set(["bitcoin"]);
+
+  // Act
+  const nextStages = resolvePaymentQrPanelStages(currentStages, visibleRailIds, [
+    "bitcoin",
+    "cashapp",
+  ]);
+
+  // Assert
+  assert.deepEqual(nextStages, {
+    bitcoin: "entered",
+    cashapp: "exiting",
+  });
+});
+
+test("settling an entering payment QR panel marks it entered", () => {
+  // Arrange
+  const currentStages = {
+    bitcoin: "entering",
+  } as const;
+
+  // Act
+  const nextStages = settlePaymentQrPanelStage(currentStages, "bitcoin");
+
+  // Assert
+  assert.deepEqual(nextStages, {
+    bitcoin: "entered",
+  });
+});
+
+test("settling an exiting payment QR panel removes it", () => {
+  // Arrange
+  const currentStages = {
+    bitcoin: "exiting",
+  } as const;
+
+  // Act
+  const nextStages = settlePaymentQrPanelStage(currentStages, "bitcoin");
+
+  // Assert
+  assert.deepEqual(nextStages, {});
 });
