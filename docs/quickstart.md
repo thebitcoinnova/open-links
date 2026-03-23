@@ -58,6 +58,35 @@ cd open-links
 bun install
 ```
 
+## Cursor Remote Environment
+
+If you are opening this repository in a Cursor-managed remote workspace, the repo bootstrap is already checked in:
+
+- `.cursor/environment.json` selects the base image and persisted cache directories.
+- `.cursor/install.sh` installs the Bun version pinned in `package.json` and runs `bun install`.
+- `.cursor/start.sh` restores Bun on `PATH` for each shell session.
+
+Bun is the primary runtime in the managed workspace. The Node.js 22 prerequisite above remains the optional local compatibility runtime for tooling outside the managed environment.
+
+Recommended first commands after the workspace opens:
+
+```bash
+bun run validate:data
+bun run typecheck
+bun run dev
+```
+
+If you need Studio in a remote shell without Docker, use the manual service path instead of Compose:
+
+```bash
+cp .env.studio.example .env.studio
+bun run studio:db:migrate
+bun run studio:api:dev
+bun run studio:web:dev
+```
+
+Start `bun run studio:worker:dev` in a separate shell when you need the scheduled sync worker locally.
+
 ## Optional: Enable Pre-Commit Hooks
 
 OpenLinks ships Husky-based pre-commit hooks for fast local checks.
