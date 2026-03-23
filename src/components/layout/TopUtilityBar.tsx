@@ -41,7 +41,7 @@ export const TopUtilityBar = (props: TopUtilityBarProps) => {
               />
             )}
           </Show>
-          <span>{props.title}</span>
+          <span class="utility-brand-text">{props.title}</span>
         </span>
       </h2>
       <div

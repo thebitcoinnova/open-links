@@ -130,10 +130,13 @@ a:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .utility-title {
   margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
   font-family: var(--font-display);
   letter-spacing: var(--tracking-utility-title);
   text-transform: var(--transform-utility-title);
@@ -145,6 +148,8 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .utility-logo {
@@ -154,10 +159,19 @@ a:focus-visible {
   filter: var(--brand-logo-filter);
 }
 
+.utility-brand-text {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
 .utility-actions {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
 .utility-menu {
@@ -258,6 +272,7 @@ a:focus-visible {
 .profile-copy {
   display: grid;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .profile-title-row {
@@ -268,22 +283,33 @@ a:focus-visible {
 
 .profile-copy h1 {
   min-width: 0;
+  max-width: 100%;
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--page-type-title);
   line-height: var(--line-height-title);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .profile-headline {
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
   color: color-mix(in srgb, var(--text-primary) 78%, var(--accent) 22%);
   font-size: var(--page-type-headline);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .profile-bio {
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
   color: var(--text-muted);
   line-height: var(--line-height-body);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .bottom-action-bar {
@@ -437,18 +463,32 @@ a:focus-visible {
   list-style: none;
   display: grid;
   gap: 0.2rem;
+  min-width: 0;
 }
 
-.profile-contact-list li {
-  display: flex;
-  justify-content: space-between;
+.profile-contact-item {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
   gap: var(--space-2);
+  min-width: 0;
   color: var(--text-muted);
   font-size: var(--page-type-caption);
 }
 
-.profile-contact-list span:first-child {
+.profile-contact-key {
   text-transform: var(--transform-contact-label);
+}
+
+.profile-contact-key,
+.profile-contact-value {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.profile-contact-value {
+  hyphens: auto;
 }
 
 .section-heading {
@@ -911,13 +951,17 @@ a:focus-visible {
   align-items: flex-start;
   gap: var(--space-2);
   min-width: 0;
+  max-width: 100%;
 }
 
 .non-payment-card-title {
+  min-width: 0;
+  max-width: 100%;
   font-family: var(--font-display);
   font-size: var(--type-card-title);
   line-height: var(--line-height-card-title);
   font-weight: var(--weight-card-title);
+  overflow-wrap: anywhere;
 }
 
 .non-payment-card-header-meta {
@@ -925,17 +969,29 @@ a:focus-visible {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.25rem 0.7rem;
+  min-width: 0;
+  max-width: 100%;
   color: color-mix(in srgb, var(--text-primary) 76%, var(--text-muted) 24%);
   font-size: var(--page-type-caption);
   line-height: var(--line-height-card-description);
 }
 
+.non-payment-card-meta-item {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .non-payment-card-description {
   grid-area: description;
+  min-width: 0;
+  max-width: 100%;
   color: color-mix(in srgb, var(--text-primary) 74%, var(--text-muted) 26%);
   font-size: var(--page-type-caption);
   line-height: var(--line-height-card-description);
   white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .non-payment-card-description-email {
@@ -961,6 +1017,8 @@ a:focus-visible {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .non-payment-card-footer-icon {
@@ -987,10 +1045,13 @@ a:focus-visible {
 }
 
 .non-payment-card-source-label {
+  min-width: 0;
+  max-width: 100%;
   color: color-mix(in srgb, var(--text-muted) 86%, var(--accent) 14%);
   font-size: var(--page-type-caption);
   letter-spacing: var(--tracking-card-source);
   white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .card-source-inline {
@@ -1381,12 +1442,15 @@ a:focus-visible {
   color: color-mix(in srgb, var(--text-muted) 88%, var(--text-primary) 12%);
   line-height: 1.5;
   white-space: pre-line;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .site-footer-prompt {
   width: min(100%, 44rem);
   display: grid;
   gap: var(--space-2);
+  min-width: 0;
   padding: calc(var(--space-3) * var(--density-scale)) calc(var(--space-4) * var(--density-scale));
   border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent 45%);
   border-radius: var(--radius-lg);
@@ -1397,17 +1461,25 @@ a:focus-visible {
 .site-footer-prompt-header {
   display: grid;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .site-footer-prompt-title {
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
   font-size: 1rem;
+  overflow-wrap: anywhere;
 }
 
 .site-footer-prompt-explanation {
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
   color: color-mix(in srgb, var(--text-muted) 88%, var(--text-primary) 12%);
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .site-footer-prompt-copy-row {
@@ -1513,8 +1585,12 @@ a:focus-visible {
 
 .site-footer-meta {
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
   color: color-mix(in srgb, var(--text-muted) 92%, var(--text-primary) 8%);
   font-size: var(--page-type-caption);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .site-footer-meta time {

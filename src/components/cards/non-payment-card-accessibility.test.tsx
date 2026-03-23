@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import { resolveBrandIconOptions } from "../../lib/icons/brand-icon-options";
-import { buildRichCardViewModel } from "../../lib/ui/rich-card-policy";
+import { buildRichCardViewModel, buildSimpleCardViewModel } from "../../lib/ui/rich-card-policy";
 import { RichLinkCard } from "./RichLinkCard";
 import { SimpleLinkCard } from "./SimpleLinkCard";
 
@@ -217,6 +217,55 @@ const articleRichLink = {
     image: "/cache/content-images/article-preview.jpg",
     sourceLabel: "notes.openlinks.dev",
   },
+} as const satisfies OpenLink;
+
+const longSimpleLink = {
+  id: "openlinks-long",
+  label: "OpenLinks With A Remarkably Long Label Built To Stress Narrow Mobile Card Width",
+  url: "https://openlinks.us",
+  type: "simple",
+  icon: "globe",
+  description:
+    "A description with exceedinglylongsegmentsandaverylongcustomdomainreference.example.openlinks.dev that should remain inside the card.",
+  metadata: {
+    title: "OpenLinks With A Remarkably Long Label Built To Stress Narrow Mobile Card Width",
+    description:
+      "A description with exceedinglylongsegmentsandaverylongcustomdomainreference.example.openlinks.dev that should remain inside the card.",
+    sourceLabel:
+      "very-long-custom-domain-for-openlinks-mobile-overflow-checks.example.openlinks.dev",
+  },
+} as const satisfies OpenLink;
+
+const longHandleRichLink = {
+  ...richGithubLink,
+  id: "github-long-handle",
+  metadata: {
+    ...richGithubLink.metadata,
+    description:
+      "An agentic engineer with a deliberatelylongprofiledescriptionthatneedstowrapcleanlyinsideitscardcontainer.",
+    handle: "averyveryverylonghandlewithoutnaturalbreakpointsforwrappingchecks",
+    sourceLabel:
+      "custom-github-mirror-subdomain-used-for-mobile-overflow-regression-checks.example.dev",
+    title: "averyveryverylonghandlewithoutnaturalbreakpointsforwrappingchecks - Overview",
+  },
+  url: "https://github.com/averyveryverylonghandlewithoutnaturalbreakpointsforwrappingchecks",
+} as const satisfies OpenLink;
+
+const longArticleRichLink = {
+  ...articleRichLink,
+  id: "article-long",
+  description:
+    "Shipping notes with an intentionallylongslugsegmentthatneedstobreakinsidearichcardwithoutwideningthelayout.",
+  label: "Engineering Notes With A Long Rich Card Title For Mobile Layout Safety",
+  metadata: {
+    ...articleRichLink.metadata,
+    description:
+      "Shipping notes with an intentionallylongslugsegmentthatneedstobreakinsidearichcardwithoutwideningthelayout.",
+    sourceLabel:
+      "notes-with-a-very-long-subdomain-for-mobile-overflow-regression-checks.openlinks.dev",
+    title: "Engineering Notes With A Long Rich Card Title For Mobile Layout Safety",
+  },
+  url: "https://notes-with-a-very-long-subdomain-for-mobile-overflow-regression-checks.openlinks.dev/launch-notes",
 } as const satisfies OpenLink;
 
 const brandIconOptions = resolveBrandIconOptions(site as SiteData);
@@ -499,4 +548,79 @@ test("card action surfaces no longer render inline action status outputs", () =>
   const outputElement = firstElementOfType(tree, "output");
 
   assert.equal(outputElement, undefined);
+});
+
+test("simple cards preserve long title, description, and footer source copy in shared text surfaces", () => {
+  // Arrange
+  const viewModel = buildSimpleCardViewModel(site, longSimpleLink);
+  const tree = SimpleLinkCard({
+    link: longSimpleLink,
+    site,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const title = firstElementWithClass(tree, "non-payment-card-title");
+  const description = firstElementWithClass(tree, "non-payment-card-description");
+  const footerSourceLabel = firstElementWithClass(tree, "non-payment-card-source-label");
+
+  // Assert
+  assert.ok(title);
+  assert.equal(title.props.children, viewModel.title);
+  assert.ok(description);
+  assert.equal(description.props.children, viewModel.description);
+  assert.ok(footerSourceLabel);
+  assert.equal(footerSourceLabel.props.children, viewModel.footerSourceLabel);
+});
+
+test("rich profile cards preserve long handles inside shared header meta items", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, longHandleRichLink);
+  const tree = RichLinkCard({
+    link: longHandleRichLink,
+    viewModel,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const handle = firstElementWithClass(tree, "card-handle");
+  const description = firstElementWithClass(tree, "non-payment-card-description");
+  const footerSourceLabel = firstElementWithClass(tree, "non-payment-card-source-label");
+
+  // Assert
+  assert.ok(handle);
+  assert.equal(handle.props.children, viewModel.headerMetaItems[0]?.text);
+  assert.ok(description);
+  assert.equal(description.props.children, viewModel.description);
+  assert.ok(footerSourceLabel);
+  assert.equal(footerSourceLabel.props.children, viewModel.footerSourceLabel);
+});
+
+test("rich fallback cards preserve long source labels in both header and footer text surfaces", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, longArticleRichLink);
+  const tree = RichLinkCard({
+    link: longArticleRichLink,
+    viewModel,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const title = firstElementWithClass(tree, "non-payment-card-title");
+  const headerSource = firstElementWithClass(tree, "card-source-inline");
+  const footerSourceLabel = firstElementWithClass(tree, "non-payment-card-source-label");
+  const description = firstElementWithClass(tree, "non-payment-card-description");
+
+  // Assert
+  assert.ok(title);
+  assert.equal(title.props.children, viewModel.title);
+  assert.ok(headerSource);
+  assert.equal(headerSource.props.children, viewModel.headerMetaItems[0]?.text);
+  assert.ok(footerSourceLabel);
+  assert.equal(footerSourceLabel.props.children, viewModel.footerSourceLabel);
+  assert.ok(description);
+  assert.equal(description.props.children, viewModel.description);
 });

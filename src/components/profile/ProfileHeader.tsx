@@ -134,9 +134,9 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
           <ul class="profile-contact-list">
             <For each={contacts()}>
               {([key, value]) => (
-                <li>
-                  <span>{key}</span>
-                  <span>{value}</span>
+                <li class="profile-contact-item">
+                  <span class="profile-contact-key">{key}</span>
+                  <span class="profile-contact-value">{value}</span>
                 </li>
               )}
             </For>

@@ -207,3 +207,47 @@ test("profile header keeps the title row free of action buttons", () => {
   assert.ok(titleRow);
   assert.equal(titleRowButtons.length, 0);
 });
+
+test("profile header keeps long profile copy and contact values in wrap-safe elements", () => {
+  // Arrange
+  const longName = "Peter Ryszkiewicz With A Long Display Name That Needs To Wrap On Mobile";
+  const longHeadline =
+    "Building unusually long-form open source experiments for constrained mobile layouts";
+  const longBio =
+    "A bio with extraordinarilylongtokensandphrasesthatshouldstillwrapcleanlyinsideitscontainer without forcing the page wider than the viewport.";
+  const longContactValue =
+    "peter.ryszkiewicz+extremely-long-alias-for-mobile-overflow-checks@example.openlinks.dev";
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: longBio,
+      contact: {
+        Email: longContactValue,
+      },
+      headline: longHeadline,
+      name: longName,
+    },
+    richness: "rich",
+  }) as RenderedNode;
+
+  // Act
+  const title = firstElementOfType(tree, "h1");
+  const headline = firstElementWithClass(tree, "profile-headline");
+  const bio = firstElementWithClass(tree, "profile-bio");
+  const contactItem = firstElementWithClass(tree, "profile-contact-item");
+  const contactKey = firstElementWithClass(tree, "profile-contact-key");
+  const contactValue = firstElementWithClass(tree, "profile-contact-value");
+
+  // Assert
+  assert.ok(title);
+  assert.equal(title.props.children, longName);
+  assert.ok(headline);
+  assert.equal(headline.props.children, longHeadline);
+  assert.ok(bio);
+  assert.equal(bio.props.children, longBio);
+  assert.ok(contactItem);
+  assert.ok(contactKey);
+  assert.equal(contactKey.props.children, "Email");
+  assert.ok(contactValue);
+  assert.equal(contactValue.props.children, longContactValue);
+});
