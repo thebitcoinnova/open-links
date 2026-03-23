@@ -102,6 +102,34 @@ GitHub Pages fork example:
 
 For full walkthrough and troubleshooting, see [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md).
 
+### Cursor Remote Environment
+
+This repo is already configured for Cursor-managed remote workspaces via [`.cursor/environment.json`](.cursor/environment.json).
+
+Remote bootstrap behavior:
+
+- uses a Node 20 base image because Bun is the primary runtime in the managed workspace
+- runs `bash .cursor/install.sh` during install to pin Bun from `package.json` and run `bun install`
+- runs `bash .cursor/start.sh` when the remote shell starts
+- persists `/workspace/.cache`, `/workspace/node_modules`, and Bun's install cache across sessions
+
+Recommended first commands in a remote shell:
+
+```bash
+bun run validate:data
+bun run typecheck
+bun run dev
+```
+
+If you are working on Studio in a remote shell without Docker, skip `docker compose -f docker-compose.studio.yml up --build` and use the manual path from [`docs/studio-self-serve.md`](docs/studio-self-serve.md):
+
+```bash
+cp .env.studio.example .env.studio
+bun run studio:db:migrate
+bun run studio:api:dev
+bun run studio:web:dev
+```
+
 ### Recommended CRUD Paths
 
 - Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md), [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed, and [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md) when you want other websites, repos, docs, or services to point back to your deployed OpenLinks fork.

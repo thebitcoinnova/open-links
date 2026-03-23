@@ -52,6 +52,8 @@ bun install
 docker compose -f docker-compose.studio.yml up --build
 ```
 
+If your remote shell does not provide Docker, skip Compose and use the manual path in the next step.
+
 4. Or run services manually:
 
 ```bash
