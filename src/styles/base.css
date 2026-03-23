@@ -1083,6 +1083,7 @@ a:focus-visible {
   pointer-events: none;
   overflow: hidden;
   border-radius: calc(var(--radius-md) - 1px);
+  --payment-effect-wash-opacity: 0.8;
 }
 
 .payment-card-effects-wash {
@@ -1104,7 +1105,7 @@ a:focus-visible {
       color-mix(in srgb, var(--accent) 6%, transparent) 48%,
       transparent 72%
     );
-  opacity: 0.8;
+  opacity: var(--payment-effect-wash-opacity);
 }
 
 .payment-card-effects[data-tone="lightning"] .payment-card-effects-wash {

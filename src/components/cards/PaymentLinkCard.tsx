@@ -369,6 +369,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
       data-has-effects={resolvedCardEffects() ? "true" : "false"}
       data-layout={hasSingleRail() ? "single" : "multi"}
       data-rail-count={railActions().length}
+      data-bombasticity={resolvedCardEffects()?.bombasticity?.toFixed(2) ?? "0.00"}
     >
       <Show when={resolvedCardEffects()}>
         {(effects) => (
@@ -376,6 +377,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
             effects={effects().effects}
             glitterPalette={effects().glitterPalette}
             tone={effects().tone}
+            bombasticity={effects().bombasticity}
           />
         )}
       </Show>
