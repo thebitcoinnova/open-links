@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/remote-cache-policy.schema.json",
   "version": 1,
-  "updatedAt": "2026-03-18T08:30:00.000Z",
+  "updatedAt": "2026-03-23T03:24:23.000Z",
   "rules": [
     {
       "id": "content-image-head-eligible",
@@ -9,6 +9,7 @@
       "domains": [
         "1a-1791.com",
         "amazon.com",
+        "bitcoinblacksheep.com",
         "cdninstagram.com",
         "chewfugum.com",
         "fbcdn.net",

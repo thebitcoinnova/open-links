@@ -40,11 +40,8 @@ import {
   loadRichEnrichmentBlockersRegistry,
   resolveKnownBlockerMatch,
 } from "./enrichment/blockers-registry";
-import {
-  hasPublicAugmentationTarget,
-  resolvePublicAugmentationTarget,
-} from "./enrichment/public-augmentation";
 import { readEnrichmentReport } from "./enrichment/report";
+import { resolvePublicEnrichmentStrategy } from "./enrichment/strategy-registry";
 import type {
   EnrichmentFailureReason,
   EnrichmentRunEntry,
@@ -650,18 +647,17 @@ const remoteCachePolicyCoverageIssues = (input: {
       return;
     }
 
-    const publicSourceUrl =
-      resolvePublicAugmentationTarget({
-        url,
-        icon: toStringOrUndefined(rawLink.icon),
-        metadataHandle: toStringOrUndefined(
-          isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
-        ),
-      })?.sourceUrl ?? url;
+    const publicStrategy = resolvePublicEnrichmentStrategy({
+      url,
+      icon: toStringOrUndefined(rawLink.icon),
+      metadataHandle: toStringOrUndefined(
+        isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
+      ),
+    });
 
     requireCoverage(
       "public_rich_metadata",
-      publicSourceUrl,
+      publicStrategy.source.sourceUrl,
       input.linksSource,
       `$.links[${index}].url`,
     );
@@ -1337,7 +1333,11 @@ const knownBlockerConfigIssues = (
       return;
     }
 
-    if (hasPublicAugmentationTarget({ url, icon: toStringOrUndefined(rawLink.icon) })) {
+    const publicStrategy = resolvePublicEnrichmentStrategy({
+      url,
+      icon: toStringOrUndefined(rawLink.icon),
+    });
+    if (publicStrategy.branch === "public_augmented") {
       return;
     }
 

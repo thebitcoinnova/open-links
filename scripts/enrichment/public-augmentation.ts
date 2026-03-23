@@ -1,8 +1,25 @@
 import { resolveSupportedSocialProfile } from "../../src/lib/content/social-profile-fields";
 import { normalizeHandle, resolveHandleFromUrl } from "../../src/lib/identity/handle-resolver";
+import {
+  decodeEntities,
+  detectPlaceholderSignals,
+  extractJsonLdBlocks,
+  hasSchemaType,
+  isRecord,
+  parseJson,
+  resolveCompleteness,
+  safeTrim,
+  toAbsoluteUrl,
+  toSourceLabel,
+} from "./document-primitives";
 import { parseMetadata } from "./parse-metadata";
 import { parseAudienceCount } from "./social-profile-counts";
-import type { EnrichmentMetadata, EnrichmentMissingField } from "./types";
+import type {
+  EnrichmentStrategy,
+  NormalizedEnrichmentResult,
+  ResolveEnrichmentStrategyInput,
+  ResolvedPublicEnrichmentStrategy,
+} from "./strategy-types";
 
 export const PUBLIC_BROWSER_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -11,25 +28,25 @@ const INSTAGRAM_DESCRIPTION_PATTERN =
 const YOUTUBE_THUMBNAIL_URL_PATTERN =
   /itemprop="thumbnailUrl" href="([^"]+)"|"channelMetadataRenderer":\{.*?"avatar":\{"thumbnails":\[\{"url":"([^"]+)"/s;
 
-interface PublicAugmentationOutcome {
-  metadata: EnrichmentMetadata;
-  completeness: "full" | "partial" | "none";
-  missing: EnrichmentMissingField[];
-}
+type PublicAugmentationOutcome = NormalizedEnrichmentResult;
+
+export type PublicAugmentationStrategyId =
+  | "primal-public-profile"
+  | "medium-public-feed"
+  | "substack-public-profile"
+  | "x-public-oembed"
+  | "instagram-public-profile"
+  | "youtube-public-profile";
 
 export interface PublicAugmentationTarget {
-  id:
-    | "primal-public-profile"
-    | "medium-public-feed"
-    | "substack-public-profile"
-    | "x-public-oembed"
-    | "instagram-public-profile"
-    | "youtube-public-profile";
+  id: PublicAugmentationStrategyId;
   sourceUrl: string;
   acceptHeader?: string;
   headers?: Record<string, string>;
   parse: (body: string) => PublicAugmentationOutcome;
 }
+
+export type PublicAugmentationStrategy = EnrichmentStrategy<ResolvedPublicEnrichmentStrategy>;
 
 export interface InstagramProfileMetadata {
   followersCount?: number;
@@ -80,93 +97,18 @@ interface ResolvePublicAugmentationTargetInput {
   metadataHandle?: unknown;
 }
 
-const SUBSTACK_JSON_LD_PATTERN =
-  /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
 const SUBSTACK_PRELOADS_PATTERN = /window\._preloads\s*=\s*JSON\.parse\(("(?:(?:\\.)|[^"\\])*")\)/s;
-
-const safeTrim = (value: unknown): string | undefined => {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-};
-
-const decodeHtmlEntities = (value: string): string =>
-  value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .trim();
 
 const firstMatch = (text: string, patterns: RegExp[]): string | undefined => {
   for (const pattern of patterns) {
     const match = text.match(pattern);
     const value = safeTrim(match?.[1]);
     if (value) {
-      return decodeHtmlEntities(value);
+      return decodeEntities(value).trim();
     }
   }
 
   return undefined;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const parseJson = <T>(value: string | undefined): T | undefined => {
-  if (!value) {
-    return undefined;
-  }
-
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return undefined;
-  }
-};
-
-const toAbsoluteUrl = (value: string | undefined, baseUrl: string): string | undefined => {
-  if (!value) {
-    return undefined;
-  }
-
-  try {
-    return new URL(value, baseUrl).toString();
-  } catch {
-    return undefined;
-  }
-};
-
-const toSourceLabel = (url: string): string | undefined => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return undefined;
-  }
-};
-
-const resolveCompleteness = (metadata: EnrichmentMetadata): PublicAugmentationOutcome => {
-  const missing: EnrichmentMissingField[] = [];
-
-  if (!safeTrim(metadata.title)) {
-    missing.push("title");
-  }
-  if (!safeTrim(metadata.description)) {
-    missing.push("description");
-  }
-  if (!safeTrim(metadata.image)) {
-    missing.push("image");
-  }
-
-  return {
-    metadata,
-    completeness: missing.length === 0 ? "full" : missing.length === 3 ? "none" : "partial",
-    missing,
-  };
 };
 
 const findJsonLdPerson = (value: unknown): SubstackJsonLdPerson | undefined => {
@@ -183,10 +125,7 @@ const findJsonLdPerson = (value: unknown): SubstackJsonLdPerson | undefined => {
       continue;
     }
 
-    const type = current["@type"];
-    const isPerson =
-      type === "Person" || (Array.isArray(type) && type.some((entry) => entry === "Person"));
-    if (isPerson) {
+    if (hasSchemaType(current["@type"], "Person")) {
       return {
         name: safeTrim(current.name),
         description: safeTrim(current.description),
@@ -203,9 +142,8 @@ const findJsonLdPerson = (value: unknown): SubstackJsonLdPerson | undefined => {
 };
 
 const extractSubstackJsonLdPerson = (html: string): SubstackJsonLdPerson | undefined => {
-  for (const match of html.matchAll(SUBSTACK_JSON_LD_PATTERN)) {
-    const parsed = parseJson<unknown>(safeTrim(match[1]));
-    const person = findJsonLdPerson(parsed);
+  for (const block of extractJsonLdBlocks(html)) {
+    const person = findJsonLdPerson(block);
     if (person) {
       return person;
     }
@@ -326,16 +264,14 @@ const resolveSubstackCanonicalHandle = (
 
 const detectMediumPlaceholderSignals = (xml: string): string[] => {
   const combined = xml.toLowerCase();
-  const checks: Array<{ label: string; pattern: RegExp }> = [
+  return detectPlaceholderSignals(combined, [
     { label: "cloudflare_challenge", pattern: /just a moment/i },
     { label: "js_cookie_challenge", pattern: /enable javascript and cookies to continue/i },
     { label: "cloudflare_attention", pattern: /attention required.*cloudflare/i },
     { label: "security_check", pattern: /checking if the site connection is secure/i },
     { label: "access_denied", pattern: /access denied/i },
     { label: "medium_signin_page", pattern: /medium\.com\/m\/signin|sign in to medium/i },
-  ];
-
-  return checks.filter((check) => check.pattern.test(combined)).map((check) => check.label);
+  ]);
 };
 
 const detectXPlaceholderSignals = (input: {
@@ -346,16 +282,14 @@ const detectXPlaceholderSignals = (input: {
   const combined = [input.title ?? "", input.providerName ?? "", input.html ?? ""]
     .join("\n")
     .toLowerCase();
-  const checks: Array<{ label: string; pattern: RegExp }> = [
+  return detectPlaceholderSignals(combined, [
     { label: "oembed_unavailable", pattern: /not found|no status found|invalid url/i },
     { label: "sign_in_prompt", pattern: /sign in|log in/i },
     {
       label: "challenge_page",
       pattern: /just a moment|checking if the site connection is secure/i,
     },
-  ];
-
-  return checks.filter((check) => check.pattern.test(combined)).map((check) => check.label);
+  ]);
 };
 
 const detectInstagramPlaceholderSignals = (input: {
@@ -367,7 +301,7 @@ const detectInstagramPlaceholderSignals = (input: {
   const combined = [input.currentUrl, input.title ?? "", input.description ?? "", input.html]
     .join("\n")
     .toLowerCase();
-  const checks: Array<{ label: string; pattern: RegExp }> = [
+  return detectPlaceholderSignals(combined, [
     {
       label: "login_wall",
       pattern: /log in to instagram|login • instagram|sign up for instagram/i,
@@ -380,9 +314,7 @@ const detectInstagramPlaceholderSignals = (input: {
       label: "not_found",
       pattern: /sorry, this page isn't available|user not found/i,
     },
-  ];
-
-  return checks.filter((check) => check.pattern.test(combined)).map((check) => check.label);
+  ]);
 };
 
 const detectYoutubePlaceholderSignals = (input: {
@@ -394,7 +326,7 @@ const detectYoutubePlaceholderSignals = (input: {
   const combined = [input.currentUrl, input.title ?? "", input.description ?? "", input.html]
     .join("\n")
     .toLowerCase();
-  const checks: Array<{ label: string; pattern: RegExp }> = [
+  return detectPlaceholderSignals(combined, [
     {
       label: "consent_interstitial",
       pattern: /before you continue to youtube|consent\.youtube\.com/i,
@@ -411,9 +343,7 @@ const detectYoutubePlaceholderSignals = (input: {
       label: "unavailable_page",
       pattern: /this video is unavailable|this channel does not exist|account has been terminated/i,
     },
-  ];
-
-  return checks.filter((check) => check.pattern.test(combined)).map((check) => check.label);
+  ]);
 };
 
 const resolveMediumFeedUrl = (sourceUrl: string): string => {
@@ -540,7 +470,7 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
 
   const match = html.match(/Tweets by ([^<]+)/i);
   const extracted = safeTrim(match?.[1]);
-  return extracted ? decodeHtmlEntities(extracted).replace(/^@/, "") : fallbackHandle;
+  return extracted ? decodeEntities(extracted).trim().replace(/^@/, "") : fallbackHandle;
 };
 
 const buildGenericXDescription = (displayHandle: string): string =>
@@ -820,88 +750,200 @@ const parseYoutubePublicProfile = (sourceUrl: string, html: string): PublicAugme
   });
 };
 
-export const resolvePublicAugmentationTarget = (
-  input: ResolvePublicAugmentationTargetInput,
-): PublicAugmentationTarget | null => {
-  const supportedProfile = resolveSupportedSocialProfile(input);
-  if (supportedProfile?.platform === "instagram") {
-    const sourceUrl = resolveInstagramTargetUrl(input.url);
-    return {
-      id: "instagram-public-profile",
-      sourceUrl,
-      parse: (body) => parseInstagramPublicProfile(sourceUrl, body),
-    };
-  }
+const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
+  {
+    id: "instagram-public-profile",
+    branch: "public_augmented",
+    sourceKind: "html",
+    matches: (input) => resolveSupportedSocialProfile(input)?.platform === "instagram",
+    resolve: (input) => {
+      if (resolveSupportedSocialProfile(input)?.platform !== "instagram") {
+        return null;
+      }
 
-  if (supportedProfile?.platform === "youtube") {
-    const sourceUrl = resolveYoutubeTargetUrl(input.url);
-    return {
-      id: "youtube-public-profile",
-      sourceUrl,
-      parse: (body) => parseYoutubePublicProfile(sourceUrl, body),
-    };
-  }
+      const sourceUrl = resolveInstagramTargetUrl(input.url);
+      return {
+        id: "instagram-public-profile",
+        branch: "public_augmented",
+        sourceKind: "html",
+        source: { sourceUrl },
+        normalize: (body) => parseInstagramPublicProfile(sourceUrl, body),
+      };
+    },
+  },
+  {
+    id: "youtube-public-profile",
+    branch: "public_augmented",
+    sourceKind: "html",
+    matches: (input) => resolveSupportedSocialProfile(input)?.platform === "youtube",
+    resolve: (input) => {
+      if (resolveSupportedSocialProfile(input)?.platform !== "youtube") {
+        return null;
+      }
 
-  if (supportedProfile?.platform === "primal") {
-    return {
-      id: "primal-public-profile",
-      sourceUrl: input.url,
-      parse: (body) => parsePrimalPublicProfile(input.url, body),
-    };
-  }
+      const sourceUrl = resolveYoutubeTargetUrl(input.url);
+      return {
+        id: "youtube-public-profile",
+        branch: "public_augmented",
+        sourceKind: "html",
+        source: { sourceUrl },
+        normalize: (body) => parseYoutubePublicProfile(sourceUrl, body),
+      };
+    },
+  },
+  {
+    id: "primal-public-profile",
+    branch: "public_augmented",
+    sourceKind: "html",
+    matches: (input) => resolveSupportedSocialProfile(input)?.platform === "primal",
+    resolve: (input) =>
+      resolveSupportedSocialProfile(input)?.platform === "primal"
+        ? {
+            id: "primal-public-profile",
+            branch: "public_augmented",
+            sourceKind: "html",
+            source: { sourceUrl: input.url },
+            normalize: (body) => parsePrimalPublicProfile(input.url, body),
+          }
+        : null,
+  },
+  {
+    id: "substack-public-profile",
+    branch: "public_augmented",
+    sourceKind: "html",
+    matches: (input) => isLikelySubstackProfileUrl(input),
+    resolve: (input) => {
+      if (!isLikelySubstackProfileUrl(input)) {
+        return null;
+      }
 
-  if (isLikelySubstackProfileUrl(input)) {
-    const sourceUrl =
-      supportedProfile?.platform === "substack"
-        ? buildSubstackCanonicalProfileUrl(supportedProfile.handle)
-        : input.url;
-    return {
-      id: "substack-public-profile",
-      sourceUrl,
-      headers: {
-        "accept-language": "en-US,en;q=0.9",
-        "user-agent": PUBLIC_BROWSER_USER_AGENT,
-      },
-      parse: (body) =>
-        parseSubstackPublicProfile(
-          {
-            originalUrl: input.url,
-            fetchUrl: sourceUrl,
+      const supportedProfile = resolveSupportedSocialProfile(input);
+      const sourceUrl =
+        supportedProfile?.platform === "substack"
+          ? buildSubstackCanonicalProfileUrl(supportedProfile.handle)
+          : input.url;
+
+      return {
+        id: "substack-public-profile",
+        branch: "public_augmented",
+        sourceKind: "html",
+        source: {
+          sourceUrl,
+          headers: {
+            "accept-language": "en-US,en;q=0.9",
+            "user-agent": PUBLIC_BROWSER_USER_AGENT,
           },
-          body,
-        ),
-    };
-  }
+        },
+        normalize: (body) =>
+          parseSubstackPublicProfile(
+            {
+              originalUrl: input.url,
+              fetchUrl: sourceUrl,
+            },
+            body,
+          ),
+      };
+    },
+  },
+  {
+    id: "x-public-oembed",
+    branch: "public_augmented",
+    sourceKind: "oembed",
+    matches: (input) => {
+      const handleResolution = resolveHandleFromUrl(input);
+      return handleResolution.reason === "resolved" && handleResolution.extractorId === "x";
+    },
+    resolve: (input) => {
+      const handleResolution = resolveHandleFromUrl(input);
+      if (handleResolution.reason !== "resolved" || handleResolution.extractorId !== "x") {
+        return null;
+      }
 
-  const handleResolution = resolveHandleFromUrl(input);
-  if (handleResolution.reason === "resolved" && handleResolution.extractorId === "x") {
-    return {
-      id: "x-public-oembed",
-      sourceUrl: buildXOEmbedUrl(input.url),
-      acceptHeader: "application/json",
-      headers: {
-        "accept-language": "en-US,en;q=0.9",
-        "user-agent": PUBLIC_BROWSER_USER_AGENT,
-      },
-      parse: (body) => parseXOEmbed(input.url, body),
-    };
-  }
+      return {
+        id: "x-public-oembed",
+        branch: "public_augmented",
+        sourceKind: "oembed",
+        source: {
+          sourceUrl: buildXOEmbedUrl(input.url),
+          acceptHeader: "application/json",
+          headers: {
+            "accept-language": "en-US,en;q=0.9",
+            "user-agent": PUBLIC_BROWSER_USER_AGENT,
+          },
+        },
+        normalize: (body) => parseXOEmbed(input.url, body),
+      };
+    },
+  },
+  {
+    id: "medium-public-feed",
+    branch: "public_augmented",
+    sourceKind: "xml",
+    matches: (input) => {
+      const handleResolution = resolveHandleFromUrl(input);
+      return handleResolution.reason === "resolved" && handleResolution.extractorId === "medium";
+    },
+    resolve: (input) => {
+      const handleResolution = resolveHandleFromUrl(input);
+      if (handleResolution.reason !== "resolved" || handleResolution.extractorId !== "medium") {
+        return null;
+      }
 
-  if (handleResolution.reason === "resolved" && handleResolution.extractorId === "medium") {
-    return {
-      id: "medium-public-feed",
-      sourceUrl: resolveMediumFeedUrl(input.url),
-      acceptHeader: "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5",
-      headers: {
-        "accept-language": "en-US,en;q=0.9",
-        "user-agent": PUBLIC_BROWSER_USER_AGENT,
-      },
-      parse: (body) => parseMediumFeed(input.url, body),
-    };
+      return {
+        id: "medium-public-feed",
+        branch: "public_augmented",
+        sourceKind: "xml",
+        source: {
+          sourceUrl: resolveMediumFeedUrl(input.url),
+          acceptHeader: "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5",
+          headers: {
+            "accept-language": "en-US,en;q=0.9",
+            "user-agent": PUBLIC_BROWSER_USER_AGENT,
+          },
+        },
+        normalize: (body) => parseMediumFeed(input.url, body),
+      };
+    },
+  },
+];
+
+const toPublicAugmentationTarget = (
+  strategy: ResolvedPublicEnrichmentStrategy,
+): PublicAugmentationTarget => ({
+  id: strategy.id as PublicAugmentationStrategyId,
+  sourceUrl: strategy.source.sourceUrl,
+  acceptHeader: strategy.source.acceptHeader,
+  headers: strategy.source.headers,
+  parse: strategy.normalize,
+});
+
+export const listPublicAugmentationStrategies = (): PublicAugmentationStrategy[] => [
+  ...PUBLIC_AUGMENTATION_STRATEGIES,
+];
+
+export const resolvePublicAugmentedStrategy = (
+  input: ResolveEnrichmentStrategyInput,
+): ResolvedPublicEnrichmentStrategy | null => {
+  for (const strategy of PUBLIC_AUGMENTATION_STRATEGIES) {
+    if (!strategy.matches(input)) {
+      continue;
+    }
+
+    const resolved = strategy.resolve(input);
+    if (resolved) {
+      return resolved;
+    }
   }
 
   return null;
 };
 
+export const resolvePublicAugmentationTarget = (
+  input: ResolvePublicAugmentationTargetInput,
+): PublicAugmentationTarget | null => {
+  const resolved = resolvePublicAugmentedStrategy(input);
+  return resolved ? toPublicAugmentationTarget(resolved) : null;
+};
+
 export const hasPublicAugmentationTarget = (input: { url: string; icon?: string }): boolean =>
-  resolvePublicAugmentationTarget(input) !== null;
+  resolvePublicAugmentedStrategy(input) !== null;

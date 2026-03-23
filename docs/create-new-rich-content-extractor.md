@@ -112,6 +112,7 @@ When the chosen branch is `public_augmented`:
    - explicit `bun run enrich:rich:write-cache` / `bun run enrich:rich:strict:write-cache` runs are the supported path for persisting stable public-cache metadata updates
    - no raw HTML snapshots
    - current in-repo examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata)
+   - public homepage example: `https://bitcoinblacksheep.com/` exposes `title` and `description` in public OG metadata and a stable logo image in public Yoast/JSON-LD schema, so the correct fix is a public parser fallback rather than an authenticated extractor
    - preserve `ogImage` and `twitterImage` separately when the source exposes them, even if `image` intentionally chooses only one render candidate
 5. A `public_augmented` implementation may use a separate operator-invoked public browser refresh when a public page exposes extra metadata that direct HTTP fetch cannot reliably reach. That browser step may update the committed public cache for material metadata changes and the local runtime overlay for volatile revalidation state, but it must stay explicit and must not run during normal `build` / `dev` enrichment.
 6. Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
@@ -150,7 +151,7 @@ Run:
 bun run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --summary "<summary>"
 ```
 
-This scaffolds plugin + registry + policy entry (`experimental`).
+This scaffolds plugin + strategy-registry wiring + policy entry (`experimental`).
 
 Scaffold template source is a typed file at:
 

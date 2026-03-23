@@ -304,7 +304,7 @@ bun run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
 The command creates:
 
 - plugin template in `scripts/authenticated-extractors/plugins/`
-- registry wiring in `scripts/authenticated-extractors/registry.ts`
+- strategy registry wiring in `scripts/enrichment/authenticated-strategies.ts` (with the legacy adapter in `scripts/authenticated-extractors/registry.ts` staying as a compatibility wrapper)
 - policy entry in `data/policy/rich-authenticated-extractors.json` (`status=experimental`)
 
 Then complete implementation using:

@@ -34,7 +34,6 @@ import {
   readGeneratedRichMetadata,
 } from "./enrichment/generated-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
-import { resolvePublicAugmentationTarget } from "./enrichment/public-augmentation";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
   applyPublicCachePersistence,
@@ -51,6 +50,7 @@ import {
   writePublicCacheRuntimeRegistry,
 } from "./enrichment/public-cache";
 import { writeEnrichmentReport } from "./enrichment/report";
+import { resolvePublicEnrichmentStrategy } from "./enrichment/strategy-registry";
 import {
   augmentSupportedSocialProfileMetadata,
   reconcileSupportedProfileDescriptionMetadata,
@@ -1036,14 +1036,15 @@ const run = async () => {
       continue;
     }
 
-    const publicAugmentationTarget = resolvePublicAugmentationTarget({
+    const publicStrategy = resolvePublicEnrichmentStrategy({
       url: link.url,
       icon: link.icon,
       metadataHandle: handleForMetadata,
     });
+    const allowKnownBlockerByPublicStrategy = publicStrategy.branch === "public_augmented";
     const knownBlockerMatch = resolveKnownBlockerMatch(link.url, blockersRegistry, "direct_fetch");
     const allowKnownBlocker = link.enrichment?.allowKnownBlocker === true;
-    if (knownBlockerMatch && !allowKnownBlocker && !publicAugmentationTarget) {
+    if (knownBlockerMatch && !allowKnownBlocker && !allowKnownBlockerByPublicStrategy) {
       const reason: EnrichmentReason = "known_blocker";
       const metadata = mergeLinkMetadata(
         link.metadata,
@@ -1098,7 +1099,7 @@ const run = async () => {
     }
 
     const publicCacheKey = link.id;
-    const publicSourceUrl = publicAugmentationTarget?.sourceUrl ?? link.url;
+    const publicSourceUrl = publicStrategy.source.sourceUrl;
     const existingPublicEntry = publicCacheRegistry.entries[publicCacheKey];
     const cachedPublicEntry = resolvePublicCacheEntry(
       publicCacheRegistry,
@@ -1158,8 +1159,8 @@ const run = async () => {
     const fetched = await fetchMetadata(publicSourceUrl, {
       timeoutMs: config.timeoutMs,
       retries: config.retries,
-      headers: publicAugmentationTarget?.headers,
-      acceptHeader: publicAugmentationTarget?.acceptHeader,
+      headers: publicStrategy.source.headers,
+      acceptHeader: publicStrategy.source.acceptHeader,
       policyRegistry: remoteCachePolicyRegistry,
       statsCollector: remoteCacheStats,
       cache: cachedPublicEntry
@@ -1315,7 +1316,7 @@ const run = async () => {
       }
 
       const reason: EnrichmentReason =
-        knownBlockerMatch && !allowKnownBlocker && publicAugmentationTarget
+        knownBlockerMatch && !allowKnownBlocker && allowKnownBlockerByPublicStrategy
           ? "known_blocker"
           : "fetch_failed";
       const metadata = mergeLinkMetadata(
@@ -1384,20 +1385,11 @@ const run = async () => {
       | undefined;
     let parseFailureMessage: string | undefined;
 
-    if (!publicAugmentationTarget) {
-      const genericParsed = parseMetadata(fetched.html, link.url);
-      parsed = {
-        metadata: genericParsed.metadata,
-        completeness: genericParsed.completeness,
-        missing: genericParsed.missing,
-      };
-    } else {
-      try {
-        parsed = publicAugmentationTarget.parse(fetched.html);
-      } catch (error: unknown) {
-        parsed = undefined;
-        parseFailureMessage = error instanceof Error ? error.message : String(error);
-      }
+    try {
+      parsed = publicStrategy.normalize(fetched.html);
+    } catch (error: unknown) {
+      parsed = undefined;
+      parseFailureMessage = error instanceof Error ? error.message : String(error);
     }
 
     if (!parsed) {
@@ -1458,7 +1450,7 @@ const run = async () => {
       }
 
       const reason: EnrichmentReason =
-        knownBlockerMatch && !allowKnownBlocker && publicAugmentationTarget
+        knownBlockerMatch && !allowKnownBlocker && allowKnownBlockerByPublicStrategy
           ? "known_blocker"
           : "fetch_failed";
       const metadata = mergeLinkMetadata(
@@ -1524,7 +1516,7 @@ const run = async () => {
       supportedProfile,
     });
     const cacheMetadata = mergePublicCacheMetadataForTarget({
-      targetId: publicAugmentationTarget?.id ?? null,
+      targetId: publicStrategy.branch === "public_augmented" ? publicStrategy.id : null,
       previous: existingPublicEntry?.metadata,
       next: toPublicCacheMetadata(enrichedMetadata),
     });

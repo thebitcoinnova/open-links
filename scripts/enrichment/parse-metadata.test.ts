@@ -104,6 +104,42 @@ test("preserves distinct og and twitter image provenance while defaulting image 
   assert.equal(parsed.metadata.image, "https://example.com/og-image.jpg");
 });
 
+test("falls back to public json-ld logo metadata when og and twitter images are missing", () => {
+  // Arrange
+  const html = documentWithMeta(
+    [
+      '<meta property="og:title" content="Home - Bitcoin Black Sheep" />',
+      '<meta property="og:description" content="Public metadata is present, but og:image is missing." />',
+      `<script type="application/ld+json">${JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            name: "Bitcoin Black Sheep",
+            logo: {
+              "@type": "ImageObject",
+              url: "/wp-content/uploads/2025/11/logo.png",
+            },
+          },
+        ],
+      })}</script>`,
+    ].join(""),
+  );
+
+  // Act
+  const parsed = parseMetadata(html, "https://bitcoinblacksheep.com/");
+
+  // Assert
+  assert.equal(parsed.metadata.ogImage, undefined);
+  assert.equal(parsed.metadata.twitterImage, undefined);
+  assert.equal(
+    parsed.metadata.image,
+    "https://bitcoinblacksheep.com/wp-content/uploads/2025/11/logo.png",
+  );
+  assert.equal(parsed.completeness, "full");
+  assert.deepEqual(parsed.missing, []);
+});
+
 test("keeps completeness classification unchanged", () => {
   // Arrange
   const fullHtml = documentWithMeta(

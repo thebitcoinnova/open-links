@@ -11,7 +11,7 @@ interface CliArgs {
 }
 
 const ROOT = process.cwd();
-const REGISTRY_PATH = "scripts/authenticated-extractors/registry.ts";
+const REGISTRY_PATH = "scripts/enrichment/authenticated-strategies.ts";
 const PLUGIN_DIR = "scripts/authenticated-extractors/plugins";
 const PLUGIN_TEMPLATE_PATH =
   "scripts/authenticated-extractors/plugins/authenticated-extractor-plugin.template.ts";
@@ -151,20 +151,19 @@ const scaffoldPlugin = (args: CliArgs): { pluginPath: string; exportName: string
 
 const updateRegistry = (args: CliArgs, exportName: string): void => {
   const importLine = `import { ${exportName} } from "./plugins/${args.id}";`;
-  const mapLine = `  [${exportName}.id]: ${exportName},`;
 
   let registry = readText(REGISTRY_PATH);
   registry = appendLineBetweenMarkers(
     registry,
-    "// AUTH_EXTRACTOR_IMPORTS_START",
-    "// AUTH_EXTRACTOR_IMPORTS_END",
+    "// AUTH_STRATEGY_IMPORTS_START",
+    "// AUTH_STRATEGY_IMPORTS_END",
     importLine,
   );
   registry = appendLineBetweenMarkers(
     registry,
-    "// AUTH_EXTRACTOR_MAP_START",
-    "// AUTH_EXTRACTOR_MAP_END",
-    mapLine,
+    "// AUTH_STRATEGY_MAP_START",
+    "// AUTH_STRATEGY_MAP_END",
+    `  [${exportName}.id]: createAuthenticatedBrowserStrategy(${exportName}),`,
   );
 
   writeText(REGISTRY_PATH, registry);
