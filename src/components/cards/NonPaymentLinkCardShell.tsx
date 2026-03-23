@@ -71,9 +71,17 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
     return ids.join(" ");
   };
   const ariaLabel = () =>
-    target() === "_blank"
-      ? `Open ${props.viewModel.title} in a new tab`
-      : `Open ${props.viewModel.title}`;
+    props.viewModel.contactKind === "email"
+      ? props.viewModel.contactValue
+        ? `Send email to ${props.viewModel.contactValue}`
+        : "Send email"
+      : target() === "_blank"
+        ? `Open ${props.viewModel.title} in a new tab`
+        : `Open ${props.viewModel.title}`;
+  const descriptionClassName = () =>
+    props.viewModel.contactKind === "email"
+      ? "non-payment-card-description non-payment-card-description-email"
+      : "non-payment-card-description";
 
   const handleCardAction = async (action: CardActionButtonProps) => {
     showActionToast((await action.onClick()) as ShareLinkResult | undefined);
@@ -114,6 +122,9 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       data-card-variant={props.cardVariant}
       data-has-actions={hasActions() ? "true" : "false"}
       data-has-profile-layout={hasProfileLayout() ? "true" : "false"}
+      data-link-kind={props.viewModel.linkKind}
+      data-link-scheme={props.viewModel.linkScheme}
+      data-contact-kind={props.viewModel.contactKind}
     >
       <a
         class={props.rootClassName}
@@ -136,6 +147,9 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-has-footer={showFooter() ? "true" : "false"}
         data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
         data-has-actions={hasActions() ? "true" : "false"}
+        data-link-kind={props.viewModel.linkKind}
+        data-link-scheme={props.viewModel.linkScheme}
+        data-contact-kind={props.viewModel.contactKind}
       >
         <span class="non-payment-card-shell">
           <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
@@ -184,7 +198,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
             </Show>
           </span>
 
-          <span class="non-payment-card-description" id={descriptionId()}>
+          <span class={descriptionClassName()} id={descriptionId()}>
             {props.viewModel.description}
           </span>
 

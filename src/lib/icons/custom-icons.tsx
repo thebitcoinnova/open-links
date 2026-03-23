@@ -104,6 +104,20 @@ export const IconWallet: Component<IconProps> = (props: IconProps) => (
   </svg>
 );
 
+/** Generic mail icon (filled, 24x24). */
+export const IconMail: Component<IconProps> = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="none"
+    {...props}
+  >
+    <title>Mail</title>
+    <path d="M3.75 5.25A2.25 2.25 0 001.5 7.5v9a2.25 2.25 0 002.25 2.25h16.5A2.25 2.25 0 0022.5 16.5v-9a2.25 2.25 0 00-2.25-2.25H3.75zm.529 1.5h15.442L12 11.742 4.279 6.75zm16.63 1.147l-8.502 5.485a.75.75 0 01-.814 0L3.091 7.897A.747.747 0 003 8.25v8.25c0 .414.336.75.75.75h16.5a.75.75 0 00.75-.75V8.25a.747.747 0 00-.091-.353z" />
+  </svg>
+);
+
 /** Three-line hamburger menu icon (24x24 stroke-based). */
 export const IconMenu: Component<IconProps> = (props: IconProps) => (
   <svg

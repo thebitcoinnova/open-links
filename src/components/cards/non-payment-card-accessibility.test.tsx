@@ -61,6 +61,22 @@ const collectElements = (node: RenderedNode): RenderedElement[] => {
   return [node, ...collectElements(node.props.children as RenderedNode)];
 };
 
+const renderedTextContent = (node: RenderedNode): string => {
+  if (Array.isArray(node)) {
+    return node.map((entry) => renderedTextContent(entry)).join("");
+  }
+
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+
+  if (!isRenderedElement(node)) {
+    return "";
+  }
+
+  return renderedTextContent(node.props.children as RenderedNode);
+};
+
 const firstElementOfType = (node: RenderedNode, type: string): RenderedElement | undefined =>
   collectElements(node).find((element) => element.type === type);
 
@@ -181,6 +197,13 @@ const plainSimpleLink = {
   },
 } as const satisfies OpenLink;
 
+const emailSimpleLink = {
+  id: "email",
+  label: "Email",
+  url: "mailto:hello.team@example.com?subject=Hi%20there",
+  type: "simple",
+} as const satisfies OpenLink;
+
 const articleRichLink = {
   id: "article",
   label: "Engineering Notes",
@@ -296,6 +319,40 @@ test("rich cards keep description-image rows decorative and ordered after the de
   const image = firstElementOfType(descriptionImage.props.children as RenderedNode, "img");
   assert.ok(image);
   assert.equal(image.props.alt, "");
+});
+
+test("email cards expose contact-aware semantics and the dedicated mail icon", () => {
+  // Act
+  const tree = SimpleLinkCard({
+    link: emailSimpleLink,
+    site,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Assert
+  const anchor = firstElementOfType(tree, "a");
+  const frame = firstElementWithClass(tree, "non-payment-card-frame");
+  const description = firstElementWithClass(tree, "non-payment-card-description-email");
+  const icon = firstElementWithClass(tree, "card-icon");
+  const iconTitle = icon
+    ? firstElementOfType(icon.props.children as RenderedNode, "title")
+    : undefined;
+
+  assert.ok(anchor);
+  assert.ok(frame);
+  assert.ok(description);
+  assert.ok(icon);
+  assert.ok(iconTitle);
+  assert.equal(anchor.props["aria-label"], "Send email to hello.team@example.com");
+  assert.equal(anchor.props["aria-describedby"], "simple-link-description-email");
+  assert.equal(anchor.props["data-link-kind"], "contact");
+  assert.equal(anchor.props["data-link-scheme"], "mailto");
+  assert.equal(anchor.props["data-contact-kind"], "email");
+  assert.equal(frame.props["data-link-kind"], "contact");
+  assert.equal(frame.props["data-link-scheme"], "mailto");
+  assert.equal(frame.props["data-contact-kind"], "email");
+  assert.equal(renderedTextContent(iconTitle.props.children as RenderedNode), "Mail");
 });
 
 test("history-aware cards expose analytics then share as sibling actions without changing anchor semantics", () => {

@@ -226,6 +226,28 @@ const workSimpleLink = {
   },
 } as const satisfies OpenLink;
 
+const emailSimpleLink = {
+  id: "email",
+  label: "Email",
+  url: "mailto:Hello.Team@example.com?subject=Hi%20there",
+  type: "simple",
+} as const satisfies OpenLink;
+
+const customEmailSimpleLink = {
+  id: "business-email",
+  label: "Business Email",
+  url: "mailto:hello@example.com",
+  type: "simple",
+} as const satisfies OpenLink;
+
+const describedEmailSimpleLink = {
+  id: "press-email",
+  label: "Press Email",
+  url: "mailto:press@example.com",
+  type: "simple",
+  description: "For media requests and interview coordination",
+} as const satisfies OpenLink;
+
 test("rich profile cards resolve avatar leads, header metrics, and footer source context", () => {
   // Arrange
   const viewModel = buildRichCardViewModel(site, instagramProfileLink);
@@ -557,6 +579,47 @@ test("simple icon-led cards keep the footer text row without duplicating the lea
   assert.deepEqual(viewModel.headerMetaItems, []);
   assert.equal(viewModel.footerSourceLabel, "openlinks.dev");
   assert.equal(viewModel.showFooterIcon, false);
+});
+
+test("simple email cards derive the visible address without emitting empty source chrome", () => {
+  // Arrange
+  const sourcePresentation = resolveLinkSourcePresentation(site, emailSimpleLink);
+  const viewModel = buildSimpleCardViewModel(site, emailSimpleLink);
+
+  // Assert
+  assert.equal(sourcePresentation.sourceLabel, undefined);
+  assert.equal(sourcePresentation.showSourceLabel, true);
+  assert.equal(viewModel.linkKind, "contact");
+  assert.equal(viewModel.linkScheme, "mailto");
+  assert.equal(viewModel.contactKind, "email");
+  assert.equal(viewModel.contactValue, "Hello.Team@example.com");
+  assert.equal(viewModel.title, "Email");
+  assert.equal(viewModel.description, "Hello.Team@example.com");
+  assert.deepEqual(viewModel.headerMetaItems, []);
+  assert.equal(viewModel.sourceLabel, undefined);
+  assert.equal(viewModel.footerSourceLabel, undefined);
+  assert.equal(viewModel.showFooterIcon, false);
+});
+
+test("simple email cards keep custom labels while deriving the address as fallback copy", () => {
+  // Arrange
+  const viewModel = buildSimpleCardViewModel(site, customEmailSimpleLink);
+
+  // Assert
+  assert.equal(viewModel.title, "Business Email");
+  assert.equal(viewModel.description, "hello@example.com");
+  assert.equal(viewModel.contactValue, "hello@example.com");
+});
+
+test("simple email cards prefer explicit descriptions over derived address fallbacks", () => {
+  // Arrange
+  const viewModel = buildSimpleCardViewModel(site, describedEmailSimpleLink);
+
+  // Assert
+  assert.equal(viewModel.title, "Press Email");
+  assert.equal(viewModel.description, "For media requests and interview coordination");
+  assert.equal(viewModel.contactValue, "press@example.com");
+  assert.equal(viewModel.footerSourceLabel, undefined);
 });
 
 test("rich-card image treatment controls preview-vs-fallback lead behavior", () => {

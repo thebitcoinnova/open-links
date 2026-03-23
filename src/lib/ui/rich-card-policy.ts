@@ -8,6 +8,8 @@ import type {
   SourceLabelDefault,
 } from "../content/load-content";
 import { resolveKnownSite } from "../icons/known-sites-data";
+import type { ContactLinkKind, ResolvedLinkKind } from "../links/link-kind";
+import { resolveLinkKind } from "../links/link-kind";
 import {
   type ResolvedSocialProfileMetadata,
   resolveSocialProfileMetadata,
@@ -28,6 +30,10 @@ export interface NonPaymentCardViewModel {
   title: string;
   description: string;
   socialProfile: ResolvedSocialProfileMetadata;
+  linkKind: ResolvedLinkKind["kind"];
+  linkScheme?: string;
+  contactKind?: ContactLinkKind;
+  contactValue?: string;
   leadKind: NonPaymentCardLeadKind;
   leadImageUrl?: string;
   showDescriptionImageRow: boolean;
@@ -90,21 +96,23 @@ const extractNormalizedHostFromUrl = (url?: string): string | undefined => {
   }
 
   try {
-    return normalizeHost(new URL(url).hostname);
+    const hostname = new URL(url).hostname.trim();
+    return hostname.length > 0 ? normalizeHost(hostname) : undefined;
   } catch {
     return undefined;
   }
 };
 
-const urlDomain = (url: string | undefined): string => {
+const urlDomain = (url: string | undefined): string | undefined => {
   if (!url) {
-    return "link";
+    return undefined;
   }
 
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    const hostname = new URL(url).hostname.trim();
+    return hostname.length > 0 ? hostname.replace(/^www\./, "") : undefined;
   } catch {
-    return url;
+    return undefined;
   }
 };
 
@@ -164,12 +172,14 @@ export interface LinkSourcePresentation {
 export const resolveLinkSourcePresentation = (
   site: SiteData,
   link: OpenLink,
+  resolvedLinkKind = resolveLinkKind(link.icon, link.url),
 ): LinkSourcePresentation => {
   const metadata = link.metadata ?? {};
   const sourceDefault = resolveSourceDefault(site);
+  const fallbackSourceLabel = resolvedLinkKind.kind === "contact" ? undefined : urlDomain(link.url);
 
   return {
-    sourceLabel: metadata.sourceLabel ?? link.enrichment?.sourceLabel ?? urlDomain(link.url),
+    sourceLabel: metadata.sourceLabel ?? link.enrichment?.sourceLabel ?? fallbackSourceLabel,
     showSourceLabel:
       metadata.sourceLabelVisible ??
       link.enrichment?.sourceLabelVisible ??
@@ -247,6 +257,7 @@ export const resolveLinkCardDescription = (
   site: SiteData,
   link: OpenLink,
   socialProfile = resolveSocialProfileMetadata(link),
+  resolvedLinkKind = resolveLinkKind(link.icon, link.url),
 ): string => {
   if (socialProfile.platform && socialProfile.profileDescription) {
     return socialProfile.profileDescription;
@@ -254,7 +265,10 @@ export const resolveLinkCardDescription = (
 
   const metadataDescription = resolveMetadataText(link.metadata?.description);
   const manualDescription = resolveMetadataText(link.description);
-  const fallbackDescription = urlDomain(link.url);
+  const fallbackDescription =
+    (resolvedLinkKind.kind === "contact" ? resolvedLinkKind.value : undefined) ??
+    urlDomain(link.url) ??
+    link.label;
   const descriptionSource = resolveDescriptionSource(site, link);
 
   if (descriptionSource === "manual") {
@@ -349,8 +363,9 @@ export const buildNonPaymentCardViewModel = (
 ): NonPaymentCardViewModel => {
   const metadata = link.metadata ?? {};
   const socialProfile = resolveSocialProfileMetadata(link);
+  const resolvedLinkKind = resolveLinkKind(link.icon, link.url);
   const configuredImageTreatment = resolveImageTreatment(site);
-  const sourcePresentation = resolveLinkSourcePresentation(site, link);
+  const sourcePresentation = resolveLinkSourcePresentation(site, link, resolvedLinkKind);
   const enrichmentDisabled =
     link.enrichment?.enabled === false || metadata.enrichmentReason === "enrichment_disabled";
   const imageTreatment: RichImageTreatment =
@@ -380,8 +395,12 @@ export const buildNonPaymentCardViewModel = (
 
   return {
     title,
-    description: resolveLinkCardDescription(site, link, socialProfile),
+    description: resolveLinkCardDescription(site, link, socialProfile, resolvedLinkKind),
     socialProfile,
+    linkKind: resolvedLinkKind.kind,
+    linkScheme: resolvedLinkKind.scheme,
+    contactKind: resolvedLinkKind.kind === "contact" ? resolvedLinkKind.contactKind : undefined,
+    contactValue: resolvedLinkKind.kind === "contact" ? resolvedLinkKind.value : undefined,
     leadKind: leadVisual.leadKind,
     leadImageUrl: leadVisual.leadImageUrl,
     showDescriptionImageRow,

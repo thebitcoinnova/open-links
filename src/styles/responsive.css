@@ -180,6 +180,13 @@
     --non-payment-card-lead-size: var(--card-rich-media-thumbnail-max);
   }
 
+  body .simple-link-card[data-contact-kind="email"] .non-payment-card-description-email,
+  body .rich-link-card[data-contact-kind="email"] .non-payment-card-description-email {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+
   body .rich-link-card[data-has-description-image-row="true"] .non-payment-card-description-image {
     min-height: clamp(10rem, 20vw, 12rem);
   }

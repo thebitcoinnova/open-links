@@ -938,6 +938,15 @@ a:focus-visible {
   white-space: normal;
 }
 
+.non-payment-card-description-email {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
 .non-payment-card-description-image {
   grid-area: media;
   width: 100%;

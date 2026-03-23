@@ -1,9 +1,11 @@
 import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
+import { IconMail } from "../../lib/icons/custom-icons";
 import { type ResolvedIconPalette, resolveIconPalette } from "../../lib/icons/icon-contrast";
 import { resolveKnownSiteIcon } from "../../lib/icons/known-site-icons";
 import { resolveKnownSite, resolveKnownSiteById } from "../../lib/icons/known-sites-data";
+import { resolveLinkKind } from "../../lib/links/link-kind";
 
 export interface LinkSiteIconProps {
   icon?: string;
@@ -50,7 +52,16 @@ export const LinkSiteIcon = (props: LinkSiteIconProps) => {
   const [palette, setPalette] = createSignal<ResolvedIconPalette | undefined>();
   let paletteSyncVersion = 0;
 
+  const resolvedLinkKind = createMemo(() => resolveLinkKind(props.icon, props.url));
+  const contactKind = createMemo(() => {
+    const resolvedLink = resolvedLinkKind();
+    return resolvedLink.kind === "contact" ? resolvedLink.contactKind : undefined;
+  });
   const site = createMemo(() => {
+    if (resolvedLinkKind().kind !== "known-site") {
+      return undefined;
+    }
+
     const baseSite = resolveKnownSite(props.icon, props.url);
     if (!baseSite) {
       return undefined;
@@ -98,6 +109,10 @@ export const LinkSiteIcon = (props: LinkSiteIconProps) => {
   });
 
   const iconComponent = createMemo(() => {
+    if (contactKind() === "email") {
+      return IconMail;
+    }
+
     const resolvedSite = site();
     return resolvedSite ? resolveKnownSiteIcon(resolvedSite.id) : undefined;
   });
@@ -107,6 +122,9 @@ export const LinkSiteIcon = (props: LinkSiteIconProps) => {
       class="card-icon"
       aria-hidden="true"
       data-known-site={site()?.id ?? "unknown"}
+      data-link-kind={resolvedLinkKind().kind}
+      data-link-scheme={resolvedLinkKind().scheme}
+      data-contact-kind={contactKind()}
       data-color-mode={props.options.colorMode}
       data-contrast-fallback={palette()?.usedFallback ? "true" : "false"}
       style={siteColorStyle()}

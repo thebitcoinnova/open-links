@@ -4,6 +4,16 @@
 
 ### In Progress
 
+- [x] Add explicit `mailto:` handling to the shared non-payment card pipeline so email links no longer fall through to the generic unknown-link presentation.
+- [x] Improve default email-card UX with a dedicated mail icon, scheme-aware accessibility copy, and cleaner long-address text treatment while preserving existing override surfaces.
+- [x] Verify the email-card change with focused card/unit tests, `bun run typecheck`, `bun run biome:check`, and `git diff --check`.
+
+### Completion Review
+
+- Result: Email links now resolve through a shared internal link-kind helper instead of falling through the generic unknown-link path. `mailto:` cards derive the visible address from the URL when no explicit description is present, suppress blank source/footer labels for non-host schemes, render a dedicated neutral mail icon, expose contact-aware shell data attributes, and announce themselves accessibly as `Send email to ...`. Long email addresses now wrap safely and clamp to two lines on narrow layouts while expanding normally on desktop. The implementation also leaves a contact-scheme architecture seam in place so `tel:` can reuse the same resolver later without another card-model refactor.
+- Verification: `bun install` passed in this worktree so the component-rendering tests could resolve `solid-js`. `bun test src/lib/links/link-kind.test.ts src/lib/ui/rich-card-description-sourcing.test.ts src/components/cards/social-profile-card-rendering.test.tsx src/components/cards/non-payment-card-accessibility.test.tsx` passed. `bun run typecheck` passed. `bun run biome:check` passed. `bun run build` passed end to end, including `enrich:rich:strict`, `images:sync`, `social:preview:generate`, `validate:data`, and the final Vite production build. `git diff --check` passed.
+- Residual risk: The only unrelated code adjustment in this batch was refreshing a stale dataset assertion in `src/lib/ui/rich-card-description-sourcing.test.ts` so the existing rich-link audit reflects the current `cluborange` dataset. Email-specific share/copy/QR actions remain intentionally unchanged, so a future contact-action pass may still want to make those controls email-aware.
+
 - [x] Bundle deterministic generator fonts for the social preview so Resvg stops falling back to machine-dependent fonts.
 - [x] Replace heuristic pill sizing and `dominant-baseline` centering with font-backed Resvg bbox measurement for the eyebrow and footer badges.
 - [x] Verify the stabilized pill layout with focused generator tests, asset regeneration, `bun run typecheck`, `bun run biome:check`, and `git diff --check`.

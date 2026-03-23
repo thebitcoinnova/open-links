@@ -292,6 +292,7 @@ test("dataset audit defaults current rich links to fetched descriptions across c
       "linkedin",
       "bright-builds-facebook",
       "facebook",
+      "cluborange",
       "instagram",
       "youtube",
       "medium",
