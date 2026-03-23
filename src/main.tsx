@@ -1,10 +1,9 @@
 import type { Component } from "solid-js";
 import { render } from "solid-js/web";
 import { registerOfflineSupport } from "./lib/offline/register-service-worker";
+import { isPaymentCardEffectRoutePath } from "./lib/payments/card-effect-samples";
 import RouteIndex from "./routes/index";
-import PaymentCardEffectSamplesRoute, {
-  PAYMENT_CARD_EFFECT_SAMPLES_PATH,
-} from "./routes/payment-card-effect-samples";
+import PaymentCardEffectSamplesRoute from "./routes/payment-card-effect-samples";
 import PlaywrightPaymentQrRoute, {
   PLAYWRIGHT_PAYMENT_QR_PATH,
 } from "./routes/playwright-payment-qr";
@@ -23,7 +22,7 @@ const normalizePathname = (value: string): string => {
 const resolveRootRoute = (): Component => {
   if (typeof window !== "undefined") {
     const pathname = normalizePathname(window.location.pathname);
-    if (pathname.endsWith(PAYMENT_CARD_EFFECT_SAMPLES_PATH)) {
+    if (isPaymentCardEffectRoutePath(pathname)) {
       return PaymentCardEffectSamplesRoute;
     }
 
