@@ -55,6 +55,11 @@
           "items": { "$ref": "#/$defs/paymentCardEffect" }
         },
         "glitterPalette": { "$ref": "#/$defs/paymentCardGlitterPalette" },
+        "bombasticity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "custom": {
           "type": "object",
           "additionalProperties": true

@@ -1,3 +1,4 @@
+import { resolvePaymentCardBombasticity } from "./card-effect-bombasticity";
 import { resolveEnabledPaymentRails } from "./rails";
 import type {
   LinkPaymentConfig,
@@ -14,6 +15,7 @@ export interface ResolvedPaymentCardEffects {
   effects: PaymentCardEffect[];
   glitterPalette: PaymentCardGlitterPalette;
   tone: PaymentCardEffectTone;
+  bombasticity: number;
 }
 
 const DEFAULT_PAYMENT_CARD_EFFECTS: readonly PaymentCardEffect[] = ["particles"];
@@ -81,11 +83,21 @@ export const resolvePaymentCardEffects = ({
     return undefined;
   }
 
+  const bombasticity = resolvePaymentCardBombasticity({
+    linkBombasticity: linkEffects?.bombasticity,
+    siteBombasticityDefault: siteDefaults?.bombasticityDefault,
+  });
+
+  if (bombasticity <= 0) {
+    return undefined;
+  }
+
   const lightningCard = isLightningPaymentCard(payment);
 
   return {
     effects: resolveConfiguredEffects(linkEffects, siteDefaults, lightningCard),
     glitterPalette: linkEffects?.glitterPalette ?? siteDefaults?.glitterPaletteDefault ?? "gold",
     tone: lightningCard ? "lightning" : "default",
+    bombasticity,
   };
 };

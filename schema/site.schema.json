@@ -213,6 +213,11 @@
         "glitterPaletteDefault": {
           "$ref": "#/$defs/paymentCardGlitterPalette"
         },
+        "bombasticityDefault": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "custom": {
           "type": "object",
           "additionalProperties": true

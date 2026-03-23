@@ -154,6 +154,7 @@ Coverage:
 - `payments.effects.enabledDefault`
 - `payments.effects.defaultEffects`
 - `payments.effects.glitterPaletteDefault`
+- `payments.effects.bombasticityDefault`
 - `profileAvatarScale`
 - `footer.description`
 - `footer.ctaLabel`

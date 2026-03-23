@@ -157,6 +157,8 @@ public/generated/*
 !public/generated/.gitkeep
 !public/generated/payment-card-effects/
 !public/generated/payment-card-effects/*.png
+!public/generated/payment-card-effects/videos/
+!public/generated/payment-card-effects/videos/*.webm
 
 # Local browser automation artifacts
 .playwright-cli/

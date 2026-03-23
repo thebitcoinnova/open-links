@@ -291,6 +291,7 @@ test("lightning payment cards default to lightning sparks and gold glitter when 
   assert.ok(effectsLayer);
   assert.equal(effectsLayer.props["data-tone"], "lightning");
   assert.equal(effectsLayer.props["data-glitter-palette"], "gold");
+  assert.equal(effectsLayer.props["data-bombasticity"], "0.50");
   assert.match(String(effectsLayer.props["data-active-effects"] ?? ""), /lightning-particles/u);
   assert.match(String(effectsLayer.props["data-active-effects"] ?? ""), /glitter-particles/u);
   assert.ok(countElementsWithClass(tree, "payment-card-effects-particle--lightning") > 0);
@@ -324,9 +325,99 @@ test("site payment effect defaults can opt cards into ambient particles", () => 
   // Assert
   assert.ok(effectsLayer);
   assert.equal(effectsLayer.props["data-tone"], "default");
+  assert.equal(effectsLayer.props["data-bombasticity"], "0.50");
   assert.ok(countElementsWithClass(tree, "payment-card-effects-particle--ambient") > 0);
   assert.equal(countElementsWithClass(tree, "payment-card-effects-particle--lightning"), 0);
   assert.equal(countElementsWithClass(tree, "payment-card-effects-particle--glitter"), 0);
+});
+
+test("payment bombasticity at zero disables the effect layer entirely", () => {
+  // Arrange
+  const zeroBombasticitySite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        effects: {
+          enabledDefault: true,
+          bombasticityDefault: 0,
+        },
+      },
+    },
+  } satisfies SiteData;
+
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site: zeroBombasticitySite,
+    brandIconOptions: resolveBrandIconOptions(zeroBombasticitySite as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const article = collectElements(tree).find((element) => element.type === "article");
+  const effectsLayer = firstElementWithClass(tree, "payment-card-effects");
+
+  // Assert
+  assert.ok(article);
+  assert.equal(article.props["data-has-effects"], "false");
+  assert.equal(effectsLayer, undefined);
+});
+
+test("higher bombasticity yields more ambient particles than lower bombasticity", () => {
+  // Arrange
+  const lowBombasticitySite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        effects: {
+          enabledDefault: true,
+          bombasticityDefault: 0.25,
+        },
+      },
+    },
+  } satisfies SiteData;
+  const highBombasticitySite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        effects: {
+          enabledDefault: true,
+          bombasticityDefault: 1,
+        },
+      },
+    },
+  } satisfies SiteData;
+
+  const lowTree = PaymentLinkCard({
+    link: paymentLink,
+    site: lowBombasticitySite,
+    brandIconOptions: resolveBrandIconOptions(lowBombasticitySite as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+  const highTree = PaymentLinkCard({
+    link: paymentLink,
+    site: highBombasticitySite,
+    brandIconOptions: resolveBrandIconOptions(highBombasticitySite as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const lowEffectsLayer = firstElementWithClass(lowTree, "payment-card-effects");
+  const highEffectsLayer = firstElementWithClass(highTree, "payment-card-effects");
+  const lowAmbientCount = countElementsWithClass(lowTree, "payment-card-effects-particle--ambient");
+  const highAmbientCount = countElementsWithClass(
+    highTree,
+    "payment-card-effects-particle--ambient",
+  );
+
+  // Assert
+  assert.ok(lowEffectsLayer);
+  assert.ok(highEffectsLayer);
+  assert.equal(lowEffectsLayer.props["data-bombasticity"], "0.25");
+  assert.equal(highEffectsLayer.props["data-bombasticity"], "1.00");
+  assert.ok(highAmbientCount > lowAmbientCount);
 });
 
 test("single-rail payment cards expose inline open, copy, and QR controls", () => {

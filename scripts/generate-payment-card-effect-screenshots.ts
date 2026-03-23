@@ -5,6 +5,7 @@ import process from "node:process";
 import { chromium } from "@playwright/test";
 import {
   PAYMENT_CARD_EFFECT_SAMPLES_PATH,
+  buildPaymentCardEffectCaptureSearchParams,
   paymentCardEffectSampleFixtures,
 } from "../src/lib/payments/card-effect-samples";
 import { runCommand } from "./lib/command";
@@ -15,10 +16,12 @@ const PREVIEW_PORT = 4174;
 const PREVIEW_READY_TIMEOUT_MS = 60_000;
 
 export const DEFAULT_PAYMENT_CARD_EFFECT_SCREENSHOT_DIR = "public/generated/payment-card-effects";
+export const DEFAULT_PAYMENT_CARD_EFFECT_SCREENSHOT_BOMBASTICITY = 0.5;
 
 export interface PaymentCardEffectScreenshotOutput {
   fixtureId: string;
   title: string;
+  bombasticity: number;
   outputPath: string;
   publicPath: string;
 }
@@ -137,6 +140,7 @@ export const resolvePaymentCardEffectScreenshotOutputs = (
     return {
       fixtureId: fixture.id,
       title: fixture.title,
+      bombasticity: DEFAULT_PAYMENT_CARD_EFFECT_SCREENSHOT_BOMBASTICITY,
       outputPath: absolutePath(rootDir, relativeOutputPath),
       publicPath: normalizePublicAssetPath(relativeOutputPath),
     };
@@ -181,6 +185,16 @@ export const generatePaymentCardEffectScreenshots = async ({
       const results: PaymentCardEffectScreenshotResult[] = [];
 
       for (const output of outputs) {
+        const searchParams = buildPaymentCardEffectCaptureSearchParams({
+          fixtureId: output.fixtureId,
+          bombasticity: output.bombasticity,
+        });
+        await page.goto(
+          `${buildPreviewUrl(PAYMENT_CARD_EFFECT_SAMPLES_PATH)}?${searchParams.toString()}`,
+          {
+            waitUntil: "networkidle",
+          },
+        );
         const locator = page.locator(
           `[data-payment-card-effect-sample="${output.fixtureId}"] .payment-link-card`,
         );

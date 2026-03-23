@@ -21,6 +21,8 @@ export type PaymentQrFullscreenMode = "enabled" | "disabled";
 export type PaymentCardEffect = "particles" | "lightning-particles" | "glitter-particles";
 export type PaymentCardGlitterPalette = "gold" | "ice";
 
+export const DEFAULT_PAYMENT_CARD_BOMBASTICITY = 0.5;
+
 export interface PaymentQrConfig {
   enabled?: boolean;
   fullscreen?: PaymentQrFullscreenMode;
@@ -38,6 +40,7 @@ export interface PaymentCardEffectsConfig {
   enabled?: boolean;
   effects?: PaymentCardEffect[];
   glitterPalette?: PaymentCardGlitterPalette;
+  bombasticity?: number;
   custom?: Record<string, unknown>;
 }
 
@@ -92,6 +95,7 @@ export interface SitePaymentEffectsDefaults {
   enabledDefault?: boolean;
   defaultEffects?: PaymentCardEffect[];
   glitterPaletteDefault?: PaymentCardGlitterPalette;
+  bombasticityDefault?: number;
   custom?: Record<string, unknown>;
 }
 
@@ -123,6 +127,14 @@ export const isPaymentCardEffect = (value: unknown): value is PaymentCardEffect 
 
 export const isPaymentCardGlitterPalette = (value: unknown): value is PaymentCardGlitterPalette =>
   typeof value === "string" && (PAYMENT_CARD_GLITTER_PALETTES as readonly string[]).includes(value);
+
+export const clampPaymentCardBombasticity = (value: number | undefined): number => {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return DEFAULT_PAYMENT_CARD_BOMBASTICITY;
+  }
+
+  return Math.min(1, Math.max(0, value));
+};
 
 export const hasPaymentRails = (payment: LinkPaymentConfig | undefined): boolean =>
   Array.isArray(payment?.rails) && payment.rails.some((rail) => rail.enabled !== false);

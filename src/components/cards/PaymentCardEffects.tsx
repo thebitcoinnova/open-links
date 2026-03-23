@@ -1,4 +1,13 @@
-import { For, type JSX, Show } from "solid-js";
+import { For, type JSX, Show, createMemo } from "solid-js";
+import {
+  formatBombasticityValue,
+  resolveVisibleEffectCount,
+  resolveWashOpacity,
+  scaleEffectDistanceRem,
+  scaleEffectDurationSeconds,
+  scaleEffectOpacity,
+  scaleEffectSizeRem,
+} from "../../lib/payments/card-effect-bombasticity";
 import type { PaymentCardEffectTone } from "../../lib/payments/card-effects";
 import type { PaymentCardEffect, PaymentCardGlitterPalette } from "../../lib/payments/types";
 
@@ -6,263 +15,347 @@ interface PaymentCardEffectsProps {
   effects: PaymentCardEffect[];
   glitterPalette: PaymentCardGlitterPalette;
   tone: PaymentCardEffectTone;
+  bombasticity: number;
 }
 
 interface PaymentEffectParticle {
-  x: string;
-  y: string;
-  size: string;
-  duration: string;
-  delay: string;
+  x: number;
+  y: number;
+  sizeRem: number;
+  durationSeconds: number;
+  delaySeconds: number;
   opacity: number;
-  driftX: string;
-  driftY: string;
+  driftXRem: number;
+  driftYRem: number;
 }
 
 interface PaymentEffectSpark {
-  x: string;
-  y: string;
-  width: string;
-  height: string;
-  rotate: string;
-  duration: string;
-  delay: string;
+  x: number;
+  y: number;
+  widthRem: number;
+  heightRem: number;
+  rotateDegrees: number;
+  durationSeconds: number;
+  delaySeconds: number;
   opacity: number;
 }
 
 const AMBIENT_PARTICLES: readonly PaymentEffectParticle[] = [
   {
-    x: "11%",
-    y: "18%",
-    size: "0.4rem",
-    duration: "7.2s",
-    delay: "0s",
+    x: 11,
+    y: 18,
+    sizeRem: 0.4,
+    durationSeconds: 7.2,
+    delaySeconds: 0,
     opacity: 0.24,
-    driftX: "0.5rem",
-    driftY: "-0.9rem",
+    driftXRem: 0.5,
+    driftYRem: -0.9,
   },
   {
-    x: "23%",
-    y: "72%",
-    size: "0.3rem",
-    duration: "8.6s",
-    delay: "-1.2s",
+    x: 23,
+    y: 72,
+    sizeRem: 0.3,
+    durationSeconds: 8.6,
+    delaySeconds: -1.2,
     opacity: 0.2,
-    driftX: "-0.35rem",
-    driftY: "-0.75rem",
+    driftXRem: -0.35,
+    driftYRem: -0.75,
   },
   {
-    x: "37%",
-    y: "28%",
-    size: "0.34rem",
-    duration: "6.8s",
-    delay: "-2.8s",
+    x: 37,
+    y: 28,
+    sizeRem: 0.34,
+    durationSeconds: 6.8,
+    delaySeconds: -2.8,
     opacity: 0.18,
-    driftX: "0.45rem",
-    driftY: "-0.65rem",
+    driftXRem: 0.45,
+    driftYRem: -0.65,
   },
   {
-    x: "56%",
-    y: "14%",
-    size: "0.24rem",
-    duration: "8.2s",
-    delay: "-1.7s",
+    x: 56,
+    y: 14,
+    sizeRem: 0.24,
+    durationSeconds: 8.2,
+    delaySeconds: -1.7,
     opacity: 0.22,
-    driftX: "-0.3rem",
-    driftY: "-0.7rem",
+    driftXRem: -0.3,
+    driftYRem: -0.7,
   },
   {
-    x: "71%",
-    y: "64%",
-    size: "0.36rem",
-    duration: "7.7s",
-    delay: "-3.6s",
+    x: 71,
+    y: 64,
+    sizeRem: 0.36,
+    durationSeconds: 7.7,
+    delaySeconds: -3.6,
     opacity: 0.2,
-    driftX: "0.35rem",
-    driftY: "-0.95rem",
+    driftXRem: 0.35,
+    driftYRem: -0.95,
   },
   {
-    x: "84%",
-    y: "26%",
-    size: "0.28rem",
-    duration: "6.4s",
-    delay: "-0.9s",
+    x: 84,
+    y: 26,
+    sizeRem: 0.28,
+    durationSeconds: 6.4,
+    delaySeconds: -0.9,
     opacity: 0.24,
-    driftX: "-0.28rem",
-    driftY: "-0.55rem",
+    driftXRem: -0.28,
+    driftYRem: -0.55,
   },
   {
-    x: "91%",
-    y: "78%",
-    size: "0.32rem",
-    duration: "8.9s",
-    delay: "-4.1s",
+    x: 91,
+    y: 78,
+    sizeRem: 0.32,
+    durationSeconds: 8.9,
+    delaySeconds: -4.1,
     opacity: 0.17,
-    driftX: "0.22rem",
-    driftY: "-0.82rem",
+    driftXRem: 0.22,
+    driftYRem: -0.82,
   },
 ];
 
 const LIGHTNING_SPARKS: readonly PaymentEffectSpark[] = [
   {
-    x: "18%",
-    y: "20%",
-    width: "1.15rem",
-    height: "0.14rem",
-    rotate: "-32deg",
-    duration: "3.1s",
-    delay: "0s",
+    x: 18,
+    y: 20,
+    widthRem: 1.15,
+    heightRem: 0.14,
+    rotateDegrees: -32,
+    durationSeconds: 3.1,
+    delaySeconds: 0,
     opacity: 0.38,
   },
   {
-    x: "29%",
-    y: "43%",
-    width: "0.95rem",
-    height: "0.12rem",
-    rotate: "18deg",
-    duration: "2.8s",
-    delay: "-1s",
+    x: 29,
+    y: 43,
+    widthRem: 0.95,
+    heightRem: 0.12,
+    rotateDegrees: 18,
+    durationSeconds: 2.8,
+    delaySeconds: -1,
     opacity: 0.28,
   },
   {
-    x: "48%",
-    y: "16%",
-    width: "1.35rem",
-    height: "0.16rem",
-    rotate: "-18deg",
-    duration: "3.4s",
-    delay: "-1.5s",
+    x: 48,
+    y: 16,
+    widthRem: 1.35,
+    heightRem: 0.16,
+    rotateDegrees: -18,
+    durationSeconds: 3.4,
+    delaySeconds: -1.5,
     opacity: 0.36,
   },
   {
-    x: "64%",
-    y: "32%",
-    width: "1.05rem",
-    height: "0.15rem",
-    rotate: "34deg",
-    duration: "2.9s",
-    delay: "-0.8s",
+    x: 64,
+    y: 32,
+    widthRem: 1.05,
+    heightRem: 0.15,
+    rotateDegrees: 34,
+    durationSeconds: 2.9,
+    delaySeconds: -0.8,
     opacity: 0.32,
   },
   {
-    x: "76%",
-    y: "56%",
-    width: "1.1rem",
-    height: "0.14rem",
-    rotate: "-24deg",
-    duration: "3.2s",
-    delay: "-2.2s",
+    x: 76,
+    y: 56,
+    widthRem: 1.1,
+    heightRem: 0.14,
+    rotateDegrees: -24,
+    durationSeconds: 3.2,
+    delaySeconds: -2.2,
     opacity: 0.29,
   },
   {
-    x: "87%",
-    y: "24%",
-    width: "0.86rem",
-    height: "0.11rem",
-    rotate: "12deg",
-    duration: "2.6s",
-    delay: "-1.1s",
+    x: 87,
+    y: 24,
+    widthRem: 0.86,
+    heightRem: 0.11,
+    rotateDegrees: 12,
+    durationSeconds: 2.6,
+    delaySeconds: -1.1,
     opacity: 0.26,
   },
 ];
 
 const GLITTER_PARTICLES: readonly PaymentEffectParticle[] = [
   {
-    x: "14%",
-    y: "58%",
-    size: "0.38rem",
-    duration: "4.6s",
-    delay: "0s",
+    x: 14,
+    y: 58,
+    sizeRem: 0.38,
+    durationSeconds: 4.6,
+    delaySeconds: 0,
     opacity: 0.42,
-    driftX: "0.2rem",
-    driftY: "-0.35rem",
+    driftXRem: 0.2,
+    driftYRem: -0.35,
   },
   {
-    x: "26%",
-    y: "24%",
-    size: "0.32rem",
-    duration: "5.2s",
-    delay: "-1.3s",
+    x: 26,
+    y: 24,
+    sizeRem: 0.32,
+    durationSeconds: 5.2,
+    delaySeconds: -1.3,
     opacity: 0.36,
-    driftX: "-0.12rem",
-    driftY: "-0.28rem",
+    driftXRem: -0.12,
+    driftYRem: -0.28,
   },
   {
-    x: "43%",
-    y: "72%",
-    size: "0.42rem",
-    duration: "4.9s",
-    delay: "-0.9s",
+    x: 43,
+    y: 72,
+    sizeRem: 0.42,
+    durationSeconds: 4.9,
+    delaySeconds: -0.9,
     opacity: 0.38,
-    driftX: "0.14rem",
-    driftY: "-0.32rem",
+    driftXRem: 0.14,
+    driftYRem: -0.32,
   },
   {
-    x: "58%",
-    y: "18%",
-    size: "0.35rem",
-    duration: "5.7s",
-    delay: "-2.1s",
+    x: 58,
+    y: 18,
+    sizeRem: 0.35,
+    durationSeconds: 5.7,
+    delaySeconds: -2.1,
     opacity: 0.33,
-    driftX: "-0.18rem",
-    driftY: "-0.22rem",
+    driftXRem: -0.18,
+    driftYRem: -0.22,
   },
   {
-    x: "69%",
-    y: "47%",
-    size: "0.3rem",
-    duration: "4.4s",
-    delay: "-1.7s",
+    x: 69,
+    y: 47,
+    sizeRem: 0.3,
+    durationSeconds: 4.4,
+    delaySeconds: -1.7,
     opacity: 0.4,
-    driftX: "0.16rem",
-    driftY: "-0.25rem",
+    driftXRem: 0.16,
+    driftYRem: -0.25,
   },
   {
-    x: "82%",
-    y: "16%",
-    size: "0.34rem",
-    duration: "5.1s",
-    delay: "-0.6s",
+    x: 82,
+    y: 16,
+    sizeRem: 0.34,
+    durationSeconds: 5.1,
+    delaySeconds: -0.6,
     opacity: 0.35,
-    driftX: "-0.1rem",
-    driftY: "-0.24rem",
+    driftXRem: -0.1,
+    driftYRem: -0.24,
   },
   {
-    x: "89%",
-    y: "68%",
-    size: "0.4rem",
-    duration: "4.8s",
-    delay: "-2.6s",
+    x: 89,
+    y: 68,
+    sizeRem: 0.4,
+    durationSeconds: 4.8,
+    delaySeconds: -2.6,
     opacity: 0.39,
-    driftX: "0.18rem",
-    driftY: "-0.3rem",
+    driftXRem: 0.18,
+    driftYRem: -0.3,
   },
 ];
 
-const particleStyle = (particle: PaymentEffectParticle): JSX.CSSProperties => ({
-  "--payment-effect-x": particle.x,
-  "--payment-effect-y": particle.y,
-  "--payment-effect-size": particle.size,
-  "--payment-effect-duration": particle.duration,
-  "--payment-effect-delay": particle.delay,
-  "--payment-effect-opacity": String(particle.opacity),
-  "--payment-effect-drift-x": particle.driftX,
-  "--payment-effect-drift-y": particle.driftY,
+const formatPercent = (value: number): string => `${value}%`;
+const formatRem = (value: number): string => `${value}rem`;
+const formatSeconds = (value: number): string => `${value}s`;
+const formatDegrees = (value: number): string => `${value}deg`;
+
+const particleStyle = (
+  particle: PaymentEffectParticle,
+  bombasticity: number,
+): JSX.CSSProperties => ({
+  "--payment-effect-x": formatPercent(particle.x),
+  "--payment-effect-y": formatPercent(particle.y),
+  "--payment-effect-size": formatRem(
+    scaleEffectSizeRem({
+      rem: particle.sizeRem,
+      bombasticity,
+    }),
+  ),
+  "--payment-effect-duration": formatSeconds(
+    scaleEffectDurationSeconds({
+      seconds: particle.durationSeconds,
+      bombasticity,
+    }),
+  ),
+  "--payment-effect-delay": formatSeconds(particle.delaySeconds),
+  "--payment-effect-opacity": String(
+    scaleEffectOpacity({
+      opacity: particle.opacity,
+      bombasticity,
+    }),
+  ),
+  "--payment-effect-drift-x": formatRem(
+    scaleEffectDistanceRem({
+      rem: particle.driftXRem,
+      bombasticity,
+    }),
+  ),
+  "--payment-effect-drift-y": formatRem(
+    scaleEffectDistanceRem({
+      rem: particle.driftYRem,
+      bombasticity,
+    }),
+  ),
 });
 
-const sparkStyle = (spark: PaymentEffectSpark): JSX.CSSProperties => ({
-  "--payment-effect-x": spark.x,
-  "--payment-effect-y": spark.y,
-  "--payment-effect-width": spark.width,
-  "--payment-effect-height": spark.height,
-  "--payment-effect-rotate": spark.rotate,
-  "--payment-effect-duration": spark.duration,
-  "--payment-effect-delay": spark.delay,
-  "--payment-effect-opacity": String(spark.opacity),
+const sparkStyle = (spark: PaymentEffectSpark, bombasticity: number): JSX.CSSProperties => ({
+  "--payment-effect-x": formatPercent(spark.x),
+  "--payment-effect-y": formatPercent(spark.y),
+  "--payment-effect-width": formatRem(
+    scaleEffectSizeRem({
+      rem: spark.widthRem,
+      bombasticity,
+    }),
+  ),
+  "--payment-effect-height": formatRem(
+    scaleEffectSizeRem({
+      rem: spark.heightRem,
+      bombasticity,
+    }),
+  ),
+  "--payment-effect-rotate": formatDegrees(spark.rotateDegrees),
+  "--payment-effect-duration": formatSeconds(
+    scaleEffectDurationSeconds({
+      seconds: spark.durationSeconds,
+      bombasticity,
+    }),
+  ),
+  "--payment-effect-delay": formatSeconds(spark.delaySeconds),
+  "--payment-effect-opacity": String(
+    scaleEffectOpacity({
+      opacity: spark.opacity,
+      bombasticity,
+    }),
+  ),
 });
 
 export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
   const hasEffect = (effect: PaymentCardEffect): boolean => props.effects.includes(effect);
+  const visibleAmbientParticles = createMemo(() =>
+    AMBIENT_PARTICLES.slice(
+      0,
+      resolveVisibleEffectCount({
+        bombasticity: props.bombasticity,
+        baselineCount: AMBIENT_PARTICLES.length,
+        maximumCount: AMBIENT_PARTICLES.length,
+      }),
+    ),
+  );
+  const visibleLightningSparks = createMemo(() =>
+    LIGHTNING_SPARKS.slice(
+      0,
+      resolveVisibleEffectCount({
+        bombasticity: props.bombasticity,
+        baselineCount: LIGHTNING_SPARKS.length,
+        maximumCount: LIGHTNING_SPARKS.length,
+      }),
+    ),
+  );
+  const visibleGlitterParticles = createMemo(() =>
+    GLITTER_PARTICLES.slice(
+      0,
+      resolveVisibleEffectCount({
+        bombasticity: props.bombasticity,
+        baselineCount: GLITTER_PARTICLES.length,
+        maximumCount: GLITTER_PARTICLES.length,
+      }),
+    ),
+  );
 
   return (
     <div
@@ -271,37 +364,41 @@ export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
       data-glitter-palette={props.glitterPalette}
       data-tone={props.tone}
       data-active-effects={props.effects.join(" ")}
+      data-bombasticity={formatBombasticityValue(props.bombasticity)}
+      style={{
+        "--payment-effect-wash-opacity": String(resolveWashOpacity(props.bombasticity)),
+      }}
     >
       <span class="payment-card-effects-wash" />
 
       <Show when={hasEffect("particles")}>
-        <For each={AMBIENT_PARTICLES}>
+        <For each={visibleAmbientParticles()}>
           {(particle) => (
             <span
               class="payment-card-effects-particle payment-card-effects-particle--ambient"
-              style={particleStyle(particle)}
+              style={particleStyle(particle, props.bombasticity)}
             />
           )}
         </For>
       </Show>
 
       <Show when={hasEffect("lightning-particles")}>
-        <For each={LIGHTNING_SPARKS}>
+        <For each={visibleLightningSparks()}>
           {(spark) => (
             <span
               class="payment-card-effects-particle payment-card-effects-particle--lightning"
-              style={sparkStyle(spark)}
+              style={sparkStyle(spark, props.bombasticity)}
             />
           )}
         </For>
       </Show>
 
       <Show when={hasEffect("glitter-particles")}>
-        <For each={GLITTER_PARTICLES}>
+        <For each={visibleGlitterParticles()}>
           {(particle) => (
             <span
               class="payment-card-effects-particle payment-card-effects-particle--glitter"
-              style={particleStyle(particle)}
+              style={particleStyle(particle, props.bombasticity)}
             />
           )}
         </For>
