@@ -13,6 +13,7 @@ import {
   buildFollowerHistoryPoints,
   filterFollowerHistoryRows,
 } from "../../lib/analytics/follower-history";
+import { isDarkChartSurface, resolveChartLineColor } from "./chart-color-contrast";
 
 echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer]);
 
@@ -71,8 +72,17 @@ export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {
   const option = createMemo<EChartsCoreOption>(() => {
     const accent = readCssVariable("--accent", "#2c4f7c");
     const accentStrong = readCssVariable("--accent-strong", accent);
+    const surfaceCard = readCssVariable("--surface-card", "#171d2b");
     const border = readCssVariable("--border-subtle", "rgba(120, 132, 156, 0.35)");
+    const textPrimary = readCssVariable("--text-primary", "#f5f7fb");
     const textMuted = readCssVariable("--text-muted", "#7f8c9d");
+    const hasDarkSurface = isDarkChartSurface(surfaceCard);
+    const lineColor = resolveChartLineColor({
+      accent,
+      accentStrong,
+      background: surfaceCard,
+      textPrimary,
+    });
 
     return {
       animation: false,
@@ -142,15 +152,15 @@ export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {
           areaStyle:
             props.mode === "raw"
               ? {
-                  color: accent,
-                  opacity: 0.08,
+                  color: hasDarkSurface ? lineColor : accent,
+                  opacity: hasDarkSurface ? 0.16 : 0.08,
                 }
               : undefined,
           connectNulls: true,
           data: points().map((point) => [point.timestamp, point.value]),
           lineStyle: {
-            color: accentStrong,
-            width: 2.5,
+            color: lineColor,
+            width: 3.25,
           },
           showSymbol: false,
           smooth: 0.2,
