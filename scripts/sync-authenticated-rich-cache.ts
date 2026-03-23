@@ -25,7 +25,7 @@ import {
 } from "./shared/remote-cache-fetch";
 import { loadRemoteCachePolicyRegistry } from "./shared/remote-cache-policy";
 
-interface LinkInput {
+export interface LinkInput {
   id: string;
   label: string;
   url?: string;
@@ -38,11 +38,11 @@ interface LinkInput {
   };
 }
 
-interface LinksPayload {
+export interface LinksPayload {
   links: LinkInput[];
 }
 
-interface CliArgs {
+export interface CliArgs {
   linksPath: string;
   cachePath: string;
   policyPath: string;
@@ -53,7 +53,7 @@ interface CliArgs {
   onlyMissing: boolean;
 }
 
-interface CandidateLink {
+export interface CandidateLink {
   link: LinkInput;
   extractorId: string;
   cacheKey: string;
@@ -103,6 +103,50 @@ const writeOutputArtifact = (payload: unknown): string => {
   fs.writeFileSync(absolute, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   return absolute;
 };
+
+const shouldIncludeCandidateLink = (
+  link: LinkInput,
+  args: Pick<CliArgs, "includeDisabled" | "onlyLink" | "onlyExtractor">,
+): boolean => {
+  if (link.type !== "rich") {
+    return false;
+  }
+
+  if (!link.url) {
+    return false;
+  }
+
+  if (!args.includeDisabled && (link.enabled === false || link.enrichment?.enabled === false)) {
+    return false;
+  }
+
+  const extractorId = link.enrichment?.authenticatedExtractor?.trim();
+  if (!extractorId) {
+    return false;
+  }
+
+  if (args.onlyLink && link.id !== args.onlyLink) {
+    return false;
+  }
+
+  if (args.onlyExtractor && extractorId !== args.onlyExtractor) {
+    return false;
+  }
+
+  return true;
+};
+
+export const resolveAuthenticatedSyncCandidates = (
+  links: LinkInput[],
+  args: Pick<CliArgs, "includeDisabled" | "onlyLink" | "onlyExtractor">,
+): CandidateLink[] =>
+  links
+    .filter((link) => shouldIncludeCandidateLink(link, args))
+    .map((link) => ({
+      link,
+      extractorId: link.enrichment?.authenticatedExtractor?.trim() ?? "",
+      cacheKey: resolveAuthenticatedCacheKey(link.enrichment?.authenticatedCacheKey, link.id),
+    }));
 
 const parseArgs = (): CliArgs => {
   const args = process.argv.slice(2);
@@ -158,40 +202,7 @@ const run = async () => {
     );
   }
 
-  const candidates: CandidateLink[] = linksPayload.links
-    .filter((link) => {
-      if (link.type !== "rich") {
-        return false;
-      }
-
-      if (!link.url) {
-        return false;
-      }
-
-      if (!args.includeDisabled && link.enabled === false) {
-        return false;
-      }
-
-      const extractorId = link.enrichment?.authenticatedExtractor?.trim();
-      if (!extractorId) {
-        return false;
-      }
-
-      if (args.onlyLink && link.id !== args.onlyLink) {
-        return false;
-      }
-
-      if (args.onlyExtractor && extractorId !== args.onlyExtractor) {
-        return false;
-      }
-
-      return true;
-    })
-    .map((link) => ({
-      link,
-      extractorId: link.enrichment?.authenticatedExtractor?.trim() ?? "",
-      cacheKey: resolveAuthenticatedCacheKey(link.enrichment?.authenticatedCacheKey, link.id),
-    }));
+  const candidates = resolveAuthenticatedSyncCandidates(linksPayload.links, args);
 
   const warnings: string[] = [];
   const errors: string[] = [];
@@ -507,8 +518,10 @@ const run = async () => {
   );
 };
 
-run().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`Authenticated rich cache sync failed unexpectedly: ${message}`);
-  process.exit(1);
-});
+if (import.meta.main) {
+  run().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Authenticated rich cache sync failed unexpectedly: ${message}`);
+    process.exit(1);
+  });
+}
