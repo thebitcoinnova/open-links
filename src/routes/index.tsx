@@ -723,6 +723,7 @@ export default function RouteIndex() {
             payload={target().payload}
             ariaLabel={target().ariaLabel}
             qrAriaLabel={target().qrAriaLabel}
+            themeFingerprint={themeFingerprint()}
             onClose={closeQrDialog}
           />
         )}

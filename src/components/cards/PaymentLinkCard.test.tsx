@@ -3,6 +3,7 @@ import test from "node:test";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import { resolveBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { clearActionToastClient, registerActionToastClient } from "../../lib/ui/action-toast";
+import StyledPaymentQr from "../payments/StyledPaymentQr";
 import { PaymentLinkCard } from "./PaymentLinkCard";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
@@ -35,11 +36,51 @@ const reactRuntime = {
   },
 };
 
-(
-  globalThis as typeof globalThis & {
-    React?: typeof reactRuntime;
-  }
-).React = reactRuntime;
+const createPreservingRuntime = (...preservedTypes: unknown[]) => {
+  const preserved = new Set(preservedTypes);
+
+  return {
+    ...reactRuntime,
+    createElement(
+      type: unknown,
+      props: Record<string, unknown> | null,
+      ...children: RenderedNode[]
+    ) {
+      const normalizedChildren =
+        children.length === 0 ? undefined : children.length === 1 ? children[0] : children;
+      const normalizedProps =
+        normalizedChildren === undefined
+          ? { ...(props ?? {}) }
+          : { ...(props ?? {}), children: normalizedChildren };
+
+      if (preserved.has(type)) {
+        return {
+          type,
+          props: normalizedProps,
+        } satisfies RenderedElement;
+      }
+
+      if (typeof type === "function") {
+        return type(normalizedProps);
+      }
+
+      return {
+        type,
+        props: normalizedProps,
+      } satisfies RenderedElement;
+    },
+  };
+};
+
+const setReactRuntime = (runtime: typeof reactRuntime) => {
+  (
+    globalThis as typeof globalThis & {
+      React?: typeof reactRuntime;
+    }
+  ).React = runtime;
+};
+
+setReactRuntime(reactRuntime);
 
 const originalNavigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
 
@@ -223,4 +264,24 @@ test("payment rail copy actions emit a toast when clipboard copy succeeds", asyn
 
   clearActionToastClient();
   restoreNavigator();
+});
+
+test("payment cards pass themeFingerprint to inline QR renderers", () => {
+  // Arrange
+  setReactRuntime(createPreservingRuntime(StyledPaymentQr));
+
+  // Act
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "sleek:dark",
+  }) as RenderedNode;
+  const qr = collectElements(tree).find((element) => element.type === StyledPaymentQr);
+
+  // Assert
+  assert.ok(qr);
+  assert.equal(qr.props.themeFingerprint, "sleek:dark");
+
+  setReactRuntime(reactRuntime);
 });

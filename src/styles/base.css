@@ -1226,7 +1226,7 @@ a:focus-visible {
   border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
-  background: #fff;
+  background: var(--surface-panel);
 }
 
 .payment-rail-qr-canvas svg,
@@ -1304,7 +1304,7 @@ a:focus-visible {
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
-  background: #fff;
+  background: var(--surface-panel);
 }
 
 .qr-code-dialog-canvas svg {

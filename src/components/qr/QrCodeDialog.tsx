@@ -15,6 +15,7 @@ export interface QrCodeDialogProps {
   backgroundColor?: string;
   logoUrl?: string;
   logoSize?: number;
+  themeFingerprint?: string;
 }
 
 export const resolveQrCodeDialogAriaLabel = (title?: string): string => {
@@ -69,6 +70,7 @@ export const QrCodeDialog = (props: QrCodeDialogProps) => {
         backgroundColor={props.backgroundColor}
         logoUrl={props.logoUrl}
         logoSize={props.logoSize}
+        themeFingerprint={props.themeFingerprint}
         class="qr-code-dialog-canvas"
         ariaLabel={props.qrAriaLabel ?? resolveQrCodeDialogAriaLabel(props.title)}
       />

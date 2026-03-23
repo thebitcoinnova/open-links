@@ -1,6 +1,7 @@
 import { createEffect } from "solid-js";
 import { mountStyledQrCode } from "../../lib/payments/qr-engine";
 import type { PaymentQrStyle } from "../../lib/payments/types";
+import { resolveQrThemeColors } from "../../lib/qr/theme-colors";
 
 export interface StyledQrCodeProps {
   payload: string;
@@ -12,6 +13,7 @@ export interface StyledQrCodeProps {
   logoSize?: number;
   class?: string;
   ariaLabel?: string;
+  themeFingerprint?: string;
 }
 
 export const StyledQrCode = (props: StyledQrCodeProps) => {
@@ -20,6 +22,7 @@ export const StyledQrCode = (props: StyledQrCodeProps) => {
   createEffect(() => {
     const host = container;
     const payload = props.payload;
+    const themeFingerprint = props.themeFingerprint;
 
     if (!host) {
       return;
@@ -30,12 +33,19 @@ export const StyledQrCode = (props: StyledQrCodeProps) => {
       return;
     }
 
+    void themeFingerprint;
+
+    const { backgroundColor, foregroundColor } = resolveQrThemeColors({
+      foregroundColor: props.foregroundColor,
+      backgroundColor: props.backgroundColor,
+    });
+
     const cleanup = mountStyledQrCode(host, {
       payload,
       size: props.size,
       style: props.style,
-      foregroundColor: props.foregroundColor,
-      backgroundColor: props.backgroundColor,
+      foregroundColor,
+      backgroundColor,
       logoUrl: props.logoUrl,
       logoSize: props.logoSize,
     });

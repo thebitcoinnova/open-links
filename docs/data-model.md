@@ -280,13 +280,14 @@ Per-rail QR settings (`payment.rails[].qr`) support:
 - `enabled`
 - `fullscreen`: `enabled`, `disabled`
 - `style`: `square`, `rounded`, `dots`
-- `foregroundColor`, `backgroundColor`
+- `foregroundColor`, `backgroundColor`: optional explicit overrides for the QR modules/background
 - `logoMode`: `rail-default`, `custom`, `none`
 - `logoUrl` (required when `logoMode` is `custom`)
 - `logoSize`
 - `payload` (optional explicit QR payload override)
 
 Payment rails can include explicit app links via `payment.rails[].appLinks` for wallet/app-specific deep links.
+When QR colors are omitted, runtime defaults follow the active theme using `--text-primary` for QR modules and `--surface-panel` for the background.
 
 #### Payment example
 
@@ -642,7 +643,7 @@ Main presentation controls include:
 - `richCards.enrichment.allowManualMetadataFallback`: use manual metadata as warning-level fallback when remote metadata is missing
 - `payments.qr.displayDefault`: `always`, `toggle`, `hidden`
 - `payments.qr.styleDefault`: `square`, `rounded`, `dots`
-- `payments.qr.foregroundColorDefault`, `payments.qr.backgroundColorDefault`
+- `payments.qr.foregroundColorDefault`, `payments.qr.backgroundColorDefault`: optional site-wide overrides; when omitted, runtime defaults follow the active theme using `--text-primary` and `--surface-panel`
 - `payments.qr.logoModeDefault`: `rail-default`, `custom`, `none`
 - `payments.qr.logoSizeDefault`
 - `payments.qr.fullscreenDefault`: `enabled`, `disabled`

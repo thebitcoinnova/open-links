@@ -10,6 +10,7 @@ export interface PaymentQrFullscreenProps {
   backgroundColor?: string;
   logoUrl?: string;
   logoSize?: number;
+  themeFingerprint?: string;
   onClose: () => void;
 }
 
@@ -26,6 +27,7 @@ export const PaymentQrFullscreen = (props: PaymentQrFullscreenProps) => (
     backgroundColor={props.backgroundColor}
     logoUrl={props.logoUrl}
     logoSize={props.logoSize}
+    themeFingerprint={props.themeFingerprint}
   />
 );
 

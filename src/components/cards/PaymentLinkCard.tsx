@@ -402,6 +402,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                       backgroundColor={qrBackgroundForRail(railEntry.rail)}
                       logoUrl={qrLogoUrlForRail(railEntry.rail)}
                       logoSize={qrLogoSizeForRail(railEntry.rail)}
+                      themeFingerprint={props.themeFingerprint}
                       class="payment-rail-qr-canvas"
                       ariaLabel={`${railEntry.action.label} QR code`}
                     />
@@ -440,6 +441,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
             backgroundColor={qrBackgroundForRail(entry().rail)}
             logoUrl={qrLogoUrlForRail(entry().rail)}
             logoSize={qrLogoSizeForRail(entry().rail)}
+            themeFingerprint={props.themeFingerprint}
             onClose={() => setFullscreenRailId(undefined)}
           />
         )}

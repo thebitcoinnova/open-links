@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import AppDialog from "../dialog/AppDialog";
-import { resolveQrCodeDialogAriaLabel } from "./QrCodeDialog";
-import { QrCodeDialog } from "./QrCodeDialog";
-import StyledQrCode from "./StyledQrCode";
+import QrCodeDialog from "../qr/QrCodeDialog";
+import { PaymentQrFullscreen } from "./PaymentQrFullscreen";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
 
@@ -79,62 +77,24 @@ const setReactRuntime = (runtime: typeof reactRuntime) => {
   ).React = runtime;
 };
 
-const collectElements = (node: RenderedNode): RenderedElement[] => {
-  if (Array.isArray(node)) {
-    return node.flatMap((entry) => collectElements(entry));
-  }
-
-  if (typeof node !== "object" || node === null || !("type" in node) || !("props" in node)) {
-    return [];
-  }
-
-  return [
-    node as RenderedElement,
-    ...collectElements((node as RenderedElement).props.children as RenderedNode),
-  ];
-};
-
 setReactRuntime(reactRuntime);
 
-test("resolveQrCodeDialogAriaLabel uses the provided title", () => {
+test("PaymentQrFullscreen forwards themeFingerprint to QrCodeDialog", () => {
   // Arrange
-  const title = "GitHub";
+  setReactRuntime(createPreservingRuntime(QrCodeDialog));
 
   // Act
-  const label = resolveQrCodeDialogAriaLabel(title);
-
-  // Assert
-  assert.equal(label, "GitHub QR code");
-});
-
-test("resolveQrCodeDialogAriaLabel falls back when the title is blank", () => {
-  // Arrange
-  const title = "   ";
-
-  // Act
-  const label = resolveQrCodeDialogAriaLabel(title);
-
-  // Assert
-  assert.equal(label, "QR code");
-});
-
-test("QrCodeDialog forwards themeFingerprint to the QR renderer", () => {
-  // Arrange
-  setReactRuntime(createPreservingRuntime(AppDialog, StyledQrCode));
-
-  // Act
-  const tree = QrCodeDialog({
+  const tree = PaymentQrFullscreen({
     open: true,
-    title: "GitHub",
-    payload: "https://github.com/openlinks",
+    railLabel: "Bitcoin",
+    payload: "bitcoin:bc1qexample123",
+    themeFingerprint: "sleek:light",
     onClose: () => undefined,
-    themeFingerprint: "sleek:dark",
-  }) as RenderedNode;
-  const qrCode = collectElements(tree).find((element) => element.type === StyledQrCode);
+  }) as unknown as RenderedElement;
 
   // Assert
-  assert.ok(qrCode);
-  assert.equal(qrCode.props.themeFingerprint, "sleek:dark");
+  assert.equal(tree.type, QrCodeDialog);
+  assert.equal(tree.props.themeFingerprint, "sleek:light");
 
   setReactRuntime(reactRuntime);
 });
