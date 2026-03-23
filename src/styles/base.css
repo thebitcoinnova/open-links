@@ -1535,6 +1535,30 @@ a:focus-visible {
   color: color-mix(in srgb, var(--text-primary) 84%, var(--accent) 16%);
 }
 
+@keyframes payment-rail-qr-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.975);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes payment-rail-qr-panel-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.975);
+  }
+}
+
 .payment-rail-qr-panel {
   display: grid;
   justify-items: start;
@@ -1544,6 +1568,21 @@ a:focus-visible {
   border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, transparent 22%);
   border-radius: calc(var(--radius-md) - 0.15rem);
   background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-card) 4%);
+  opacity: 1;
+}
+
+.payment-rail-qr-panel[data-expanded] {
+  animation: payment-rail-qr-panel-enter var(--motion-mid) both;
+}
+
+.payment-rail-qr-panel[data-entered] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.payment-rail-qr-panel[data-closed] {
+  animation: payment-rail-qr-panel-exit var(--motion-mid) both;
+  pointer-events: none;
 }
 
 .payment-rail-qr-canvas {

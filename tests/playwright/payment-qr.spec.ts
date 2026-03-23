@@ -48,15 +48,19 @@ test("toggle fixture reveals and hides a web payment QR", async ({ page }) => {
 
   const card = fixtureCard(page, "single-toggle");
   const qr = card.getByRole("img", { name: "Cash App Support QR code" });
+  const qrPanel = card.locator(".payment-rail-qr-panel");
 
   await expect(qr).toHaveCount(0);
+  await expect(qrPanel).toHaveCount(0);
   await card.getByRole("button", { name: "Show Cash App Support QR code" }).click();
 
   await waitForRenderedQr(card, "Cash App Support QR code");
+  await expect(qrPanel).toHaveCount(1);
   await expect(card).toHaveScreenshot("payment-qr-toggle-expanded.png", screenshotOptions);
 
   await card.getByRole("button", { name: "Hide Cash App Support QR code" }).click();
   await expect(qr).toHaveCount(0);
+  await expect(qrPanel).toHaveCount(0);
 });
 
 test("multi-rail fixture expands a single rail without revealing the others", async ({ page }) => {

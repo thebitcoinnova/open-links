@@ -38,6 +38,8 @@ type PaymentRailEntry = {
 };
 
 type PaymentRailActionKind = "copy" | "open" | "qr";
+export type PaymentQrPanelStage = "entering" | "entered" | "exiting";
+export type PaymentQrPanelStages = Record<string, PaymentQrPanelStage>;
 
 const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
 
@@ -67,6 +69,68 @@ const clampLogoSize = (value: number | undefined): number => {
   }
 
   return Math.min(0.35, Math.max(0.15, value));
+};
+
+export const arePaymentQrPanelStagesEqual = (
+  previous: PaymentQrPanelStages,
+  next: PaymentQrPanelStages,
+): boolean => {
+  const previousKeys = Object.keys(previous);
+  const nextKeys = Object.keys(next);
+
+  if (previousKeys.length !== nextKeys.length) {
+    return false;
+  }
+
+  return previousKeys.every((key) => previous[key] === next[key]);
+};
+
+export const resolvePaymentQrPanelStages = (
+  currentStages: PaymentQrPanelStages,
+  visibleRailIds: ReadonlySet<string>,
+  qrRailIds: string[],
+): PaymentQrPanelStages => {
+  const nextStages: PaymentQrPanelStages = {};
+
+  for (const railId of qrRailIds) {
+    const currentStage = currentStages[railId];
+
+    if (visibleRailIds.has(railId)) {
+      nextStages[railId] = currentStage === "entered" ? "entered" : "entering";
+      continue;
+    }
+
+    if (currentStage) {
+      nextStages[railId] = "exiting";
+    }
+  }
+
+  return nextStages;
+};
+
+export const settlePaymentQrPanelStage = (
+  currentStages: PaymentQrPanelStages,
+  railId: string,
+): PaymentQrPanelStages => {
+  const stage = currentStages[railId];
+
+  if (!stage) {
+    return currentStages;
+  }
+
+  if (stage === "exiting") {
+    const { [railId]: _removed, ...remainingStages } = currentStages;
+    return remainingStages;
+  }
+
+  if (stage === "entering") {
+    return {
+      ...currentStages,
+      [railId]: "entered",
+    };
+  }
+
+  return currentStages;
 };
 
 export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
@@ -189,6 +253,38 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const qrFullscreenModeForRail = (rail: PaymentRail): PaymentQrFullscreenMode =>
     rail.qr?.fullscreen ?? siteQrDefaults()?.fullscreenDefault ?? "enabled";
 
+  const qrRailIds = createMemo(() =>
+    railActions()
+      .filter((railEntry) => shouldShowQr(railEntry) && Boolean(railEntry.action.qrPayload))
+      .map((railEntry) => railEntry.rail.id),
+  );
+
+  const visibleQrRailIds = createMemo(() => {
+    const nextVisibleRailIds = new Set<string>();
+
+    for (const railEntry of railActions()) {
+      const railId = railEntry.rail.id;
+
+      if (shouldShowQr(railEntry) && isQrVisible(railId) && Boolean(railEntry.action.qrPayload)) {
+        nextVisibleRailIds.add(railId);
+      }
+    }
+
+    return nextVisibleRailIds;
+  });
+  const createInitialQrPanelStages = (): PaymentQrPanelStages => {
+    const initialStages: PaymentQrPanelStages = {};
+
+    for (const railId of visibleQrRailIds()) {
+      initialStages[railId] = "entered";
+    }
+
+    return initialStages;
+  };
+  const [qrPanelStages, setQrPanelStages] = createSignal<PaymentQrPanelStages>(
+    createInitialQrPanelStages(),
+  );
+
   const canUseFullscreenForRail = (railEntry: {
     rail: PaymentRail;
     action: ResolvedPaymentRailAction;
@@ -219,6 +315,21 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     rails();
     effectiveQrDisplay();
     setToggledQrRailIds(new Set<string>());
+  });
+
+  createEffect(() => {
+    const nextQrRailIds = qrRailIds();
+    const nextVisibleRailIds = visibleQrRailIds();
+
+    setQrPanelStages((currentStages) => {
+      const nextStages = resolvePaymentQrPanelStages(
+        currentStages,
+        nextVisibleRailIds,
+        nextQrRailIds,
+      );
+
+      return arePaymentQrPanelStagesEqual(currentStages, nextStages) ? currentStages : nextStages;
+    });
   });
 
   onMount(() => {
@@ -257,6 +368,8 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     primaryAction()?.iconAlias ??
     "wallet";
   const railPanelId = (railId: string) => `payment-rail-qr-${safeId(`${props.link.id}-${railId}`)}`;
+  const qrPanelStage = (railId: string): PaymentQrPanelStage | undefined => qrPanelStages()[railId];
+  const hasMountedQrPanel = (railId: string): boolean => Boolean(qrPanelStage(railId));
   const singleRailSummaryValue = (railEntry: PaymentRailEntry): string =>
     railEntry.action.displayValue ?? description();
   const singleRailSummaryNote = (railEntry: PaymentRailEntry): string | undefined => {
@@ -330,31 +443,49 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   };
 
   const renderQrPanel = (railEntry: PaymentRailEntry, railId: string, railLabelId: string) => (
-    <Show when={railEntry.action.qrPayload}>
-      <section class="payment-rail-qr-panel" id={railPanelId(railId)} aria-labelledby={railLabelId}>
-        <StyledPaymentQr
-          payload={railEntry.action.qrPayload as string}
-          size={176}
-          style={qrStyleForRail(railEntry.rail)}
-          foregroundColor={qrForegroundForRail(railEntry.rail)}
-          backgroundColor={qrBackgroundForRail(railEntry.rail)}
-          logoUrl={qrLogoUrlForRail(railEntry.rail)}
-          logoSize={qrLogoSizeForRail(railEntry.rail)}
-          themeFingerprint={props.themeFingerprint}
-          class="payment-rail-qr-canvas"
-          ariaLabel={`${railEntry.action.label} QR code`}
-        />
+    <Show when={railEntry.action.qrPayload && qrPanelStage(railId)}>
+      {(stage) => (
+        <section
+          class="payment-rail-qr-panel"
+          id={railPanelId(railId)}
+          aria-labelledby={railLabelId}
+          aria-hidden={stage() === "exiting" ? "true" : undefined}
+          inert={stage() === "exiting" ? true : undefined}
+          data-closed={stage() === "exiting" ? "" : undefined}
+          data-entered={stage() === "entered" ? "" : undefined}
+          data-expanded={stage() === "entering" ? "" : undefined}
+          onAnimationEnd={(event) => {
+            if (event.currentTarget !== event.target) {
+              return;
+            }
 
-        <Show when={canUseFullscreenForRail(railEntry)}>
-          <button
-            type="button"
-            class="payment-rail-button payment-rail-button--quiet payment-rail-fullscreen"
-            onClick={() => setFullscreenRailId(railId)}
-          >
-            {fullscreenCtaLabel()}
-          </button>
-        </Show>
-      </section>
+            setQrPanelStages((currentStages) => settlePaymentQrPanelStage(currentStages, railId));
+          }}
+        >
+          <StyledPaymentQr
+            payload={railEntry.action.qrPayload as string}
+            size={176}
+            style={qrStyleForRail(railEntry.rail)}
+            foregroundColor={qrForegroundForRail(railEntry.rail)}
+            backgroundColor={qrBackgroundForRail(railEntry.rail)}
+            logoUrl={qrLogoUrlForRail(railEntry.rail)}
+            logoSize={qrLogoSizeForRail(railEntry.rail)}
+            themeFingerprint={props.themeFingerprint}
+            class="payment-rail-qr-canvas"
+            ariaLabel={`${railEntry.action.label} QR code`}
+          />
+
+          <Show when={canUseFullscreenForRail(railEntry)}>
+            <button
+              type="button"
+              class="payment-rail-button payment-rail-button--quiet payment-rail-fullscreen"
+              onClick={() => setFullscreenRailId(railId)}
+            >
+              {fullscreenCtaLabel()}
+            </button>
+          </Show>
+        </section>
+      )}
     </Show>
   );
 
@@ -405,8 +536,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                   const railId = railEntry.rail.id;
                   const qrVisible = () => isQrVisible(railId);
                   const railLabelId = `payment-rail-label-${safeId(`${props.link.id}-${railId}`)}`;
-                  const hasVisibleQr = () =>
-                    shouldShowQr(railEntry) && qrVisible() && Boolean(railEntry.action.qrPayload);
+                  const hasVisibleQr = () => hasMountedQrPanel(railId);
 
                   return (
                     <li
@@ -438,9 +568,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                           {renderRailActions(railEntry, railId, railLabelId, qrVisible(), false)}
                         </div>
 
-                        <Show when={hasVisibleQr()}>
-                          {renderQrPanel(railEntry, railId, railLabelId)}
-                        </Show>
+                        {renderQrPanel(railEntry, railId, railLabelId)}
                       </div>
                     </li>
                   );
@@ -454,10 +582,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
           {(railEntry) => {
             const railId = railEntry().rail.id;
             const railLabelId = `payment-rail-label-${safeId(`${props.link.id}-${railId}`)}`;
-            const hasVisibleQr = () =>
-              shouldShowQr(railEntry()) &&
-              isQrVisible(railId) &&
-              Boolean(railEntry().action.qrPayload);
+            const hasVisibleQr = () => hasMountedQrPanel(railId);
 
             return (
               <section
@@ -493,7 +618,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                   {renderRailActions(railEntry(), railId, railLabelId, isQrVisible(railId), true)}
                 </div>
 
-                <Show when={hasVisibleQr()}>{renderQrPanel(railEntry(), railId, titleId())}</Show>
+                {renderQrPanel(railEntry(), railId, titleId())}
               </section>
             );
           }}
