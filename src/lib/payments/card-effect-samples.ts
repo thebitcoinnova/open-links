@@ -54,6 +54,13 @@ export interface PaymentCardEffectVideoScenario {
   outputFileName: string;
 }
 
+export interface PaymentCardEffectMediaCaptureScenario {
+  fixtureId: string;
+  title: string;
+  bombasticity: number;
+  outputFileName: string;
+}
+
 const bitcoinQr = {
   style: "dots",
   logoMode: "none",
@@ -431,5 +438,8 @@ export const createPaymentCardEffectVideoScenarios = (): PaymentCardEffectVideoS
       )}`,
     })),
   );
+
+export const createPaymentCardEffectMediaCaptureScenarios =
+  (): PaymentCardEffectMediaCaptureScenario[] => createPaymentCardEffectVideoScenarios();
 
 export const paymentCardEffectDefaultBombasticity = DEFAULT_PAYMENT_CARD_BOMBASTICITY;

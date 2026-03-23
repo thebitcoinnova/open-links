@@ -40,6 +40,7 @@
     "test:playwright:payment-qr": "playwright test tests/playwright/payment-qr.spec.ts",
     "test:playwright:payment-qr:update": "playwright test tests/playwright/payment-qr.spec.ts --update-snapshots",
     "payment:effects:screenshots": "bun scripts/generate-payment-card-effect-screenshots.ts",
+    "payment:effects:videos": "bun scripts/generate-payment-card-effect-videos.ts",
     "public:clean": "bun scripts/clean-public-build-artifacts.ts",
     "deploy:build": "bun run scripts/deploy/build.ts",
     "deploy:build:aws": "bun run scripts/deploy/build.ts --target=aws",
