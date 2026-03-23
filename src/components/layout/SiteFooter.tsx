@@ -25,6 +25,7 @@ const toAssetUrl = (assetPath: string): string => {
 export const SiteFooter = (props: SiteFooterProps) => {
   const ctaUrl = () => props.preferences.ctaUrl.trim();
   const prompt = () => props.preferences.prompt;
+  const promptText = createMemo(() => prompt().text);
   const logoSrc = () => {
     const maybePath = props.logoPath?.trim();
     if (!maybePath) {
@@ -54,9 +55,10 @@ export const SiteFooter = (props: SiteFooterProps) => {
   });
 
   const showPrompt = createMemo(() => prompt().enabled && prompt().text.trim().length > 0);
+  const promptIsSingleLine = createMemo(() => !/[\r\n]/u.test(promptText()));
 
   const handleCopyPrompt = async () => {
-    const copied = await copyToClipboard(prompt().text);
+    const copied = await copyToClipboard(promptText());
     showActionToast({
       message: copied ? "Bootstrap prompt copied" : "Could not copy bootstrap prompt",
       status: copied ? "copied" : "failed",
@@ -88,24 +90,56 @@ export const SiteFooter = (props: SiteFooterProps) => {
             </h2>
             <p class="site-footer-prompt-explanation">{prompt().explanation}</p>
           </div>
-          <pre class="site-footer-prompt-text">
-            <code>{prompt().text}</code>
-          </pre>
+          <Show
+            when={promptIsSingleLine()}
+            fallback={
+              <div class="site-footer-prompt-multiline">
+                <pre class="site-footer-prompt-text">
+                  <code>{promptText()}</code>
+                </pre>
+                <div class="site-footer-prompt-copy-actions">
+                  <button
+                    class="site-footer-copy site-footer-prompt-copy-button"
+                    type="button"
+                    aria-label="Copy bootstrap prompt"
+                    onClick={handleCopyPrompt}
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            }
+          >
+            <div class="site-footer-prompt-copy-row">
+              <input
+                class="site-footer-prompt-input"
+                type="text"
+                value={promptText()}
+                readOnly
+                spellcheck={false}
+                aria-label="Bootstrap prompt"
+                title={promptText()}
+                onClick={(event) => event.currentTarget.select()}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+              <button
+                class="site-footer-copy site-footer-prompt-copy-button"
+                type="button"
+                aria-label="Copy bootstrap prompt"
+                onClick={handleCopyPrompt}
+              >
+                Copy
+              </button>
+            </div>
+          </Show>
         </section>
       </Show>
 
-      <Show when={ctaUrl().length > 0 || showPrompt()}>
+      <Show when={ctaUrl().length > 0}>
         <div class="site-footer-actions">
-          <Show when={ctaUrl().length > 0}>
-            <a class="site-footer-cta" href={ctaUrl()} target="_blank" rel="noopener noreferrer">
-              {props.preferences.ctaLabel}
-            </a>
-          </Show>
-          <Show when={showPrompt()}>
-            <button class="site-footer-copy" type="button" onClick={() => void handleCopyPrompt()}>
-              Copy prompt
-            </button>
-          </Show>
+          <a class="site-footer-cta" href={ctaUrl()} target="_blank" rel="noopener noreferrer">
+            {props.preferences.ctaLabel}
+          </a>
         </div>
       </Show>
 

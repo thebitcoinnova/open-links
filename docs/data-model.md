@@ -767,7 +767,7 @@ Footer content and CTA are configurable from `data/site.json`.
 - `prompt.enabled`: controls whether the footer renders the copyable bootstrap prompt card.
 - `prompt.title`: heading shown above the bootstrap prompt.
 - `prompt.explanation`: short helper copy explaining how to use the prompt.
-- `prompt.text`: copyable prompt body shown in the footer code block (when omitted, runtime uses repo-aware absolute GitHub doc URLs).
+- `prompt.text`: copyable prompt text shown in the footer compact field for single-line values, with a preformatted fallback for multiline values (when omitted, runtime uses repo-aware absolute GitHub doc URLs).
 - `showLastUpdated`: controls rendering of a subtle build-time UTC "Last updated" line.
 
 Example:
