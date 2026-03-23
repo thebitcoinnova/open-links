@@ -185,6 +185,25 @@ const multiRailPaymentLink = {
   },
 } as const satisfies OpenLink;
 
+const lightningPaymentLink = {
+  id: "lightning-tips",
+  label: "Lightning Tips",
+  type: "payment",
+  payment: {
+    primaryRailId: "lightning",
+    effects: {
+      enabled: true,
+    },
+    rails: [
+      {
+        id: "lightning",
+        rail: "lightning",
+        address: "lnurl1dp68gurn8ghj7mrww4exctnv9e3k7mf0d3sk6tm4wdhk6arfdenx2cm0d5hk6",
+      },
+    ],
+  },
+} as const satisfies OpenLink;
+
 test("payment rail copy buttons keep stable copy labels", () => {
   // Arrange
   const tree = PaymentLinkCard({
@@ -228,6 +247,82 @@ test("single-rail payment cards use the compact merged layout and remove duplica
   assert.equal(railList, undefined);
   assert.equal(actionBar, undefined);
   assert.equal(iconCount, 1);
+});
+
+test("payment cards keep special effects disabled until a config opts in", () => {
+  // Arrange
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const article = collectElements(tree).find((element) => element.type === "article");
+  const effectsLayer = firstElementWithClass(tree, "payment-card-effects");
+
+  // Assert
+  assert.ok(article);
+  assert.equal(article.props["data-has-effects"], "false");
+  assert.equal(effectsLayer, undefined);
+});
+
+test("lightning payment cards default to lightning sparks and gold glitter when enabled", () => {
+  // Arrange
+  const tree = PaymentLinkCard({
+    link: lightningPaymentLink,
+    site,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const article = collectElements(tree).find((element) => element.type === "article");
+  const effectsLayer = firstElementWithClass(tree, "payment-card-effects");
+
+  // Assert
+  assert.ok(article);
+  assert.equal(article.props["data-has-effects"], "true");
+  assert.ok(effectsLayer);
+  assert.equal(effectsLayer.props["data-tone"], "lightning");
+  assert.equal(effectsLayer.props["data-glitter-palette"], "gold");
+  assert.match(String(effectsLayer.props["data-active-effects"] ?? ""), /lightning-particles/u);
+  assert.match(String(effectsLayer.props["data-active-effects"] ?? ""), /glitter-particles/u);
+  assert.ok(countElementsWithClass(tree, "payment-card-effects-particle--lightning") > 0);
+  assert.ok(countElementsWithClass(tree, "payment-card-effects-particle--glitter") > 0);
+});
+
+test("site payment effect defaults can opt cards into ambient particles", () => {
+  // Arrange
+  const particleSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        effects: {
+          enabledDefault: true,
+        },
+      },
+    },
+  } satisfies SiteData;
+
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site: particleSite,
+    brandIconOptions: resolveBrandIconOptions(particleSite as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const effectsLayer = firstElementWithClass(tree, "payment-card-effects");
+
+  // Assert
+  assert.ok(effectsLayer);
+  assert.equal(effectsLayer.props["data-tone"], "default");
+  assert.ok(countElementsWithClass(tree, "payment-card-effects-particle--ambient") > 0);
+  assert.equal(countElementsWithClass(tree, "payment-card-effects-particle--lightning"), 0);
+  assert.equal(countElementsWithClass(tree, "payment-card-effects-particle--glitter"), 0);
 });
 
 test("single-rail payment cards expose inline open, copy, and QR controls", () => {

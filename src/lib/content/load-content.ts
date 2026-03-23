@@ -18,6 +18,9 @@ import {
 } from "./social-profile-fields";
 
 export type {
+  PaymentCardEffect,
+  PaymentCardEffectsConfig,
+  PaymentCardGlitterPalette,
   LinkPaymentConfig,
   PaymentAppLink,
   PaymentQrConfig,
@@ -27,6 +30,7 @@ export type {
   PaymentQrStyle,
   PaymentRail,
   PaymentRailType,
+  SitePaymentEffectsDefaults,
   SitePaymentQrDefaults,
   SitePaymentsConfig,
 } from "../payments/types";

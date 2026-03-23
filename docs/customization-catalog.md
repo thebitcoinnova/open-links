@@ -67,6 +67,7 @@ Coverage for each `links[]` item:
 - `group`
 - `order`
 - `enabled`
+- `payment`
 - `metadata`
 - `enrichment`
 - `custom`
@@ -143,6 +144,16 @@ Coverage:
 - `typographyScale`
 - `typography`
 - `targetSize`
+- `payments.qr.displayDefault`
+- `payments.qr.styleDefault`
+- `payments.qr.foregroundColorDefault`
+- `payments.qr.backgroundColorDefault`
+- `payments.qr.logoModeDefault`
+- `payments.qr.logoSizeDefault`
+- `payments.qr.fullscreenDefault`
+- `payments.effects.enabledDefault`
+- `payments.effects.defaultEffects`
+- `payments.effects.glitterPaletteDefault`
 - `profileAvatarScale`
 - `footer.description`
 - `footer.ctaLabel`

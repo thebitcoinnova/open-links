@@ -165,6 +165,14 @@
       "type": "string",
       "enum": ["enabled", "disabled"]
     },
+    "paymentCardEffect": {
+      "type": "string",
+      "enum": ["particles", "lightning-particles", "glitter-particles"]
+    },
+    "paymentCardGlitterPalette": {
+      "type": "string",
+      "enum": ["gold", "ice"]
+    },
     "sitePaymentQrDefaults": {
       "type": "object",
       "properties": {
@@ -188,10 +196,35 @@
       },
       "additionalProperties": true
     },
+    "sitePaymentEffectsDefaults": {
+      "type": "object",
+      "properties": {
+        "enabledDefault": {
+          "type": "boolean"
+        },
+        "defaultEffects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/paymentCardEffect"
+          }
+        },
+        "glitterPaletteDefault": {
+          "$ref": "#/$defs/paymentCardGlitterPalette"
+        },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "sitePaymentsConfig": {
       "type": "object",
       "properties": {
         "qr": { "$ref": "#/$defs/sitePaymentQrDefaults" },
+        "effects": { "$ref": "#/$defs/sitePaymentEffectsDefaults" },
         "custom": {
           "type": "object",
           "additionalProperties": true

@@ -259,6 +259,9 @@ Payment support is available in two ways:
 
 - `qrDisplay`: `always`, `toggle`, `hidden`
 - `primaryRailId`
+- `effects.enabled`: opt the card into decorative special effects
+- `effects.effects`: optional explicit effect list (`particles`, `lightning-particles`, `glitter-particles`)
+- `effects.glitterPalette`: `gold`, `ice`
 - `rails`: array of rail objects
 
 Supported rail values:
@@ -288,6 +291,7 @@ Per-rail QR settings (`payment.rails[].qr`) support:
 
 Payment rails can include explicit app links via `payment.rails[].appLinks` for wallet/app-specific deep links.
 When QR colors are omitted, runtime defaults follow the active theme using `--text-primary` for QR modules and `--surface-panel` for the background.
+When `payment.effects.enabled` is true and no explicit effect list is provided, runtime defaults to subtle ambient particles for standard payment cards, and to both `lightning-particles` and gold `glitter-particles` for cards whose primary rail is Lightning.
 
 #### Payment example
 
@@ -647,6 +651,9 @@ Main presentation controls include:
 - `payments.qr.logoModeDefault`: `rail-default`, `custom`, `none`
 - `payments.qr.logoSizeDefault`
 - `payments.qr.fullscreenDefault`: `enabled`, `disabled`
+- `payments.effects.enabledDefault`: opt payment cards into special effects by default
+- `payments.effects.defaultEffects`: optional site-wide effect list (`particles`, `lightning-particles`, `glitter-particles`)
+- `payments.effects.glitterPaletteDefault`: `gold`, `ice`
 - `footer.description`: optional descriptive footer text
 - `footer.ctaLabel`: optional CTA button label
 - `footer.ctaUrl`: optional CTA target URL (defaults to the current GitHub repository URL)

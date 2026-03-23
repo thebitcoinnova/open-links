@@ -18,6 +18,8 @@ export type PaymentQrDisplayMode = "always" | "toggle" | "hidden";
 export type PaymentQrStyle = "square" | "rounded" | "dots";
 export type PaymentQrLogoMode = "rail-default" | "custom" | "none";
 export type PaymentQrFullscreenMode = "enabled" | "disabled";
+export type PaymentCardEffect = "particles" | "lightning-particles" | "glitter-particles";
+export type PaymentCardGlitterPalette = "gold" | "ice";
 
 export interface PaymentQrConfig {
   enabled?: boolean;
@@ -29,6 +31,13 @@ export interface PaymentQrConfig {
   logoUrl?: string;
   logoSize?: number;
   payload?: string;
+  custom?: Record<string, unknown>;
+}
+
+export interface PaymentCardEffectsConfig {
+  enabled?: boolean;
+  effects?: PaymentCardEffect[];
+  glitterPalette?: PaymentCardGlitterPalette;
   custom?: Record<string, unknown>;
 }
 
@@ -64,6 +73,7 @@ export interface PaymentRail {
 export interface LinkPaymentConfig {
   qrDisplay?: PaymentQrDisplayMode;
   primaryRailId?: string;
+  effects?: PaymentCardEffectsConfig;
   rails?: PaymentRail[];
   custom?: Record<string, unknown>;
 }
@@ -78,8 +88,16 @@ export interface SitePaymentQrDefaults {
   fullscreenDefault?: PaymentQrFullscreenMode;
 }
 
+export interface SitePaymentEffectsDefaults {
+  enabledDefault?: boolean;
+  defaultEffects?: PaymentCardEffect[];
+  glitterPaletteDefault?: PaymentCardGlitterPalette;
+  custom?: Record<string, unknown>;
+}
+
 export interface SitePaymentsConfig {
   qr?: SitePaymentQrDefaults;
+  effects?: SitePaymentEffectsDefaults;
   custom?: Record<string, unknown>;
 }
 
@@ -87,12 +105,24 @@ export const PAYMENT_QR_DISPLAY_MODES = ["always", "toggle", "hidden"] as const;
 export const PAYMENT_QR_STYLES = ["square", "rounded", "dots"] as const;
 export const PAYMENT_QR_LOGO_MODES = ["rail-default", "custom", "none"] as const;
 export const PAYMENT_QR_FULLSCREEN_MODES = ["enabled", "disabled"] as const;
+export const PAYMENT_CARD_EFFECTS = [
+  "particles",
+  "lightning-particles",
+  "glitter-particles",
+] as const;
+export const PAYMENT_CARD_GLITTER_PALETTES = ["gold", "ice"] as const;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 export const isPaymentRailType = (value: unknown): value is PaymentRailType =>
   typeof value === "string" && (PAYMENT_RAIL_TYPES as readonly string[]).includes(value);
+
+export const isPaymentCardEffect = (value: unknown): value is PaymentCardEffect =>
+  typeof value === "string" && (PAYMENT_CARD_EFFECTS as readonly string[]).includes(value);
+
+export const isPaymentCardGlitterPalette = (value: unknown): value is PaymentCardGlitterPalette =>
+  typeof value === "string" && (PAYMENT_CARD_GLITTER_PALETTES as readonly string[]).includes(value);
 
 export const hasPaymentRails = (payment: LinkPaymentConfig | undefined): boolean =>
   Array.isArray(payment?.rails) && payment.rails.some((rail) => rail.enabled !== false);
