@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-22T07:16:51.149Z",
+  "updatedAt": "2026-03-23T07:29:22.232Z",
   "entries": [
     {
       "linkId": "github",
@@ -10,9 +10,9 @@
       "canonicalUrl": "https://github.com/pRizz",
       "audienceKind": "followers",
       "csvPath": "history/followers/github.csv",
-      "latestAudienceCount": 91,
-      "latestAudienceCountRaw": "91 followers",
-      "latestObservedAt": "2026-03-22T07:16:51.149Z"
+      "latestAudienceCount": 92,
+      "latestAudienceCountRaw": "92 followers",
+      "latestObservedAt": "2026-03-23T07:29:22.232Z"
     },
     {
       "linkId": "instagram",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/instagram.csv",
       "latestAudienceCount": 88,
       "latestAudienceCountRaw": "88 Followers",
-      "latestObservedAt": "2026-03-22T07:16:51.149Z"
+      "latestObservedAt": "2026-03-23T07:29:22.232Z"
     },
     {
       "linkId": "medium",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/medium.csv",
       "latestAudienceCount": 3300,
       "latestAudienceCountRaw": "3.3K followers",
-      "latestObservedAt": "2026-03-22T07:16:51.149Z"
+      "latestObservedAt": "2026-03-23T07:29:22.232Z"
     },
     {
       "linkId": "primal",
@@ -48,7 +48,7 @@
       "csvPath": "history/followers/primal.csv",
       "latestAudienceCount": 14,
       "latestAudienceCountRaw": "14 followers",
-      "latestObservedAt": "2026-03-22T07:16:51.149Z"
+      "latestObservedAt": "2026-03-23T07:29:22.232Z"
     },
     {
       "linkId": "substack",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/substack.csv",
       "latestAudienceCount": 10,
       "latestAudienceCountRaw": "10 subscribers",
-      "latestObservedAt": "2026-03-22T07:16:51.149Z"
+      "latestObservedAt": "2026-03-23T07:29:22.232Z"
     },
     {
       "linkId": "x",
@@ -72,7 +72,7 @@
       "csvPath": "history/followers/x.csv",
       "latestAudienceCount": 1353,
       "latestAudienceCountRaw": "1,353 Followers",
-      "latestObservedAt": "2026-03-22T07:16:51.149Z"
+      "latestObservedAt": "2026-03-23T07:29:22.232Z"
     },
     {
       "linkId": "youtube",
@@ -84,7 +84,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 11,
       "latestAudienceCountRaw": "11 subscribers",
-      "latestObservedAt": "2026-03-22T07:16:51.149Z"
+      "latestObservedAt": "2026-03-23T07:29:22.232Z"
     }
   ]
 }
