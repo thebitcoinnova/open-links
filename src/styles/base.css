@@ -1367,6 +1367,8 @@ a:focus-visible {
   width: min(100%, 184px);
   height: auto;
   aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
   border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
@@ -1376,6 +1378,7 @@ a:focus-visible {
 .payment-rail-qr-canvas svg,
 .qr-code-dialog-canvas svg {
   display: block;
+  margin: auto;
 }
 
 .payment-rail-fullscreen {
@@ -1449,10 +1452,6 @@ a:focus-visible {
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   background: var(--surface-panel);
-}
-
-.qr-code-dialog-canvas svg {
-  margin: auto;
 }
 
 .card-icon {

@@ -99,10 +99,21 @@
     grid-template-columns: 1fr;
   }
 
+  body .payment-rail-qr-panel {
+    justify-items: center;
+    justify-self: center;
+    text-align: center;
+    width: min(100%, 18rem);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+  }
+
   body .payment-rail-qr-canvas {
     width: min(100%, 210px);
     height: auto;
     aspect-ratio: 1 / 1;
+    margin-inline: auto;
+    border-radius: var(--radius-lg);
   }
 
   body .payment-rail-fullscreen {
@@ -120,6 +131,7 @@
   body .qr-code-dialog-canvas {
     width: min(360px, calc(100vw - var(--space-6)));
     height: min(360px, calc(100vw - var(--space-6)));
+    border-radius: var(--radius-lg);
   }
 
   body .non-payment-card-header-meta,
