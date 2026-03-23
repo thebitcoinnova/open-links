@@ -15,6 +15,9 @@ const openFixturePage = async (page: Page) => {
 const fixtureCard = (page: Page, fixtureId: string): Locator =>
   page.locator(`[data-payment-qr-fixture="${fixtureId}"] .payment-link-card`);
 
+const fullscreenButton = (scope: Locator): Locator =>
+  scope.getByRole("button", { name: /(?:Open|Tap for) Full Screen/ });
+
 const waitForRenderedQr = async (scope: Locator, ariaLabel: string): Promise<Locator> => {
   const qr = scope.getByRole("img", { name: ariaLabel });
   await expect(qr).toBeVisible();
@@ -30,7 +33,7 @@ test("single-rail fixture keeps inline and fullscreen QR states stable", async (
   await waitForRenderedQr(card, "Bitcoin Tip Jar QR code");
   await expect(card).toHaveScreenshot("payment-qr-single-inline.png", screenshotOptions);
 
-  await card.getByRole("button", { name: "Open Full Screen" }).click();
+  await fullscreenButton(card).click();
 
   const dialog = page.getByRole("dialog", { name: "Bitcoin Tip Jar QR code" });
   await waitForRenderedQr(dialog, "Bitcoin Tip Jar payment QR code");

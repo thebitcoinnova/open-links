@@ -16,7 +16,6 @@ export default defineConfig({
     serviceWorkers: "block",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
-    viewport: { width: 1440, height: 2200 },
   },
   webServer: {
     command: `bunx vite build && bunx vite preview --host ${host} --port ${port} --strictPort`,
@@ -28,10 +27,16 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium",
+      name: "desktop-chromium",
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1440, height: 2200 },
+      },
+    },
+    {
+      name: "mobile-chromium",
+      use: {
+        ...devices["Pixel 7"],
       },
     },
   ],
