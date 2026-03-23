@@ -125,6 +125,12 @@ const firstElementWithClass = (
     return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
   });
 
+const countElementsWithClass = (node: RenderedNode, className: string): number =>
+  collectElements(node).filter((element) => {
+    const classValue = element.props.class;
+    return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
+  }).length;
+
 const site = {
   title: "OpenLinks",
   description: "Profile links",
@@ -159,6 +165,26 @@ const paymentLink = {
   },
 } as const satisfies OpenLink;
 
+const multiRailPaymentLink = {
+  id: "support",
+  label: "Support",
+  type: "payment",
+  payment: {
+    rails: [
+      {
+        id: "btc",
+        rail: "bitcoin",
+        address: "bc1qexample123",
+      },
+      {
+        id: "patreon",
+        rail: "patreon",
+        url: "https://patreon.com/example",
+      },
+    ],
+  },
+} as const satisfies OpenLink;
+
 test("payment rail copy buttons keep stable copy labels", () => {
   // Arrange
   const tree = PaymentLinkCard({
@@ -176,15 +202,39 @@ test("payment rail copy buttons keep stable copy labels", () => {
 
   // Assert
   assert.equal(copyButtons.length, 1);
-  assert.equal(copyButtons[0]?.props.children, "Copy");
 });
 
-test("payment cards expose a primary QR opener when a primary href exists", () => {
+test("single-rail payment cards use the compact merged layout and remove duplicate icons", () => {
   // Arrange
   const tree = PaymentLinkCard({
     link: paymentLink,
     site,
-    onPrimaryQrOpen: () => undefined,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const article = collectElements(tree).find((element) => element.type === "article");
+  const singleLayout = firstElementWithClass(tree, "payment-single-layout");
+  const railList = firstElementWithClass(tree, "payment-rails-list");
+  const actionBar = firstElementWithClass(tree, "payment-card-action-bar");
+  const iconCount = countElementsWithClass(tree, "card-icon");
+
+  // Assert
+  assert.ok(article);
+  assert.equal(article.props["data-layout"], "single");
+  assert.equal(article.props["data-rail-count"], 1);
+  assert.ok(singleLayout);
+  assert.equal(railList, undefined);
+  assert.equal(actionBar, undefined);
+  assert.equal(iconCount, 1);
+});
+
+test("single-rail payment cards expose inline open, copy, and QR controls", () => {
+  // Arrange
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site,
     brandIconOptions: resolveBrandIconOptions(site as SiteData),
     themeFingerprint: "test",
   }) as RenderedNode;
@@ -192,35 +242,53 @@ test("payment cards expose a primary QR opener when a primary href exists", () =
   // Act
   const qrButtons = collectElements(tree).filter(
     (element) =>
-      element.type === "button" && element.props["aria-label"] === "Show Tip Jar QR code",
+      element.type === "button" && element.props["aria-label"] === "Hide Bitcoin QR code",
+  );
+  const copyButtons = collectElements(tree).filter(
+    (element) =>
+      element.type === "button" && element.props["aria-label"] === "Copy Bitcoin payment value",
+  );
+  const openLinks = collectElements(tree).filter(
+    (element) => element.type === "a" && element.props["aria-label"] === "Open Bitcoin",
+  );
+  const fullscreenButtons = collectElements(tree).filter(
+    (element) => element.type === "button" && element.props.children === "Open Full Screen",
   );
   const actionBar = firstElementWithClass(tree, "payment-card-action-bar");
-  const openLinks = collectElements(tree).filter(
-    (element) => element.type === "a" && element.props["aria-label"] === "Open Tip Jar",
-  );
 
   // Assert
-  assert.ok(actionBar);
   assert.equal(qrButtons.length, 1);
+  assert.equal(copyButtons.length, 1);
   assert.equal(openLinks.length, 1);
+  assert.equal(fullscreenButtons.length, 1);
+  assert.equal(actionBar, undefined);
 });
 
-test("payment cards still expose the fullscreen QR button when QR fullscreen is enabled", () => {
+test("multi-rail payment cards keep a rails list layout", () => {
   // Arrange
   const tree = PaymentLinkCard({
-    link: paymentLink,
+    link: multiRailPaymentLink,
     site,
     brandIconOptions: resolveBrandIconOptions(site as SiteData),
     themeFingerprint: "test",
   }) as RenderedNode;
 
   // Act
-  const fullscreenButtons = collectElements(tree).filter(
-    (element) => element.type === "button" && element.props.children === "Open Full Screen",
-  );
+  const article = collectElements(tree).find((element) => element.type === "article");
+  const singleLayout = firstElementWithClass(tree, "payment-single-layout");
+  const railList = firstElementWithClass(tree, "payment-rails-list");
+  const railItems = collectElements(tree).filter((element) => {
+    const classValue = element.props.class;
+    return typeof classValue === "string" && classValue.split(/\s+/u).includes("payment-rail-item");
+  });
 
   // Assert
-  assert.equal(fullscreenButtons.length, 1);
+  assert.ok(article);
+  assert.equal(article.props["data-layout"], "multi");
+  assert.equal(article.props["data-rail-count"], 2);
+  assert.equal(singleLayout, undefined);
+  assert.ok(railList);
+  assert.equal(railItems.length, 2);
 });
 
 test("payment rail copy actions emit a toast when clipboard copy succeeds", async () => {

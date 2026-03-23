@@ -451,8 +451,6 @@ export default function RouteIndex() {
         <PaymentLinkCard
           link={link}
           site={content.site}
-          onPrimaryQrOpen={(payload) => openLinkQrDialog(link.label, payload)}
-          target={target}
           interaction="minimal"
           brandIconOptions={brandIconOptions}
           themeFingerprint={themeFingerprint()}

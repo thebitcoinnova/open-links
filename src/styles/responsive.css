@@ -79,18 +79,24 @@
   }
 
   body .payment-card-header,
-  body .payment-rail-top-row {
-    flex-wrap: wrap;
+  body .payment-card-heading,
+  body .payment-rail-heading {
+    align-items: center;
   }
 
   body .payment-rail-actions {
-    width: 100%;
     justify-content: flex-start;
     flex-wrap: wrap;
+    padding-left: 0;
   }
 
-  body .payment-rail-button {
-    flex: 1 1 auto;
+  body .payment-rail-actions--single {
+    padding-left: 0;
+  }
+
+  body .payment-single-layout,
+  body .payment-rail-main {
+    grid-template-columns: 1fr;
   }
 
   body .payment-rail-qr-canvas {
@@ -100,7 +106,7 @@
   }
 
   body .payment-rail-fullscreen {
-    width: 100%;
+    width: auto;
   }
 
   body .qr-code-dialog {
@@ -163,6 +169,12 @@
 }
 
 @media (min-width: 761px) {
+  body .payment-single-layout[data-has-visible-qr="true"],
+  body .payment-rail-main[data-has-visible-qr="true"] {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-4);
+  }
+
   body .simple-link-card[data-lead-kind="icon"],
   body .rich-link-card[data-lead-kind="icon"] {
     --non-payment-card-lead-size: var(--non-payment-card-icon-desktop);

@@ -1,6 +1,7 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
+import { IconCopy, IconOpen, IconQrCode } from "../../lib/icons/custom-icons";
 import { resolvePaymentRailLogoUrl } from "../../lib/payments/rail-logos";
 import {
   type ResolvedPaymentRailAction,
@@ -17,7 +18,6 @@ import type {
 } from "../../lib/payments/types";
 import { copyToClipboard } from "../../lib/share/copy-to-clipboard";
 import { showActionToast } from "../../lib/ui/action-toast";
-import BottomActionBar, { type BottomActionBarItem } from "../actions/BottomActionBar";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 import PaymentQrFullscreen from "../payments/PaymentQrFullscreen";
 import StyledPaymentQr from "../payments/StyledPaymentQr";
@@ -25,26 +25,30 @@ import StyledPaymentQr from "../payments/StyledPaymentQr";
 export interface PaymentLinkCardProps {
   link: OpenLink;
   site: SiteData;
-  onPrimaryQrOpen?: (payload: string) => void;
-  target?: "_blank" | "_self";
-  rel?: string;
   interaction?: "minimal";
   brandIconOptions: ResolvedBrandIconOptions;
   themeFingerprint: string;
 }
 
+type PaymentRailEntry = {
+  rail: PaymentRail;
+  action: ResolvedPaymentRailAction;
+};
+
+type PaymentRailActionKind = "copy" | "open" | "qr";
+
 const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
 
-const linkTargetForHref = (href: string | undefined): "_blank" | "_self" => {
-  if (!href) {
-    return "_self";
+const renderPaymentRailActionIcon = (kind: PaymentRailActionKind) => {
+  if (kind === "copy") {
+    return <IconCopy class="payment-rail-button-icon" aria-hidden="true" />;
   }
 
-  if (/^https?:\/\//i.test(href)) {
-    return "_blank";
+  if (kind === "open") {
+    return <IconOpen class="payment-rail-button-icon" aria-hidden="true" />;
   }
 
-  return "_self";
+  return <IconQrCode class="payment-rail-button-icon" aria-hidden="true" />;
 };
 
 const railById = (rails: PaymentRail[], railId: string | undefined): PaymentRail | undefined => {
@@ -71,7 +75,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const siteQrDefaults = createMemo(() => props.site.ui?.payments?.qr);
   const rails = createMemo(() => resolveEnabledPaymentRails(props.link.payment));
 
-  const railActions = createMemo(() =>
+  const railActions = createMemo<PaymentRailEntry[]>(() =>
     rails().map((rail) => ({
       rail,
       action: resolvePaymentRailAction(rail),
@@ -99,31 +103,18 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const descriptionId = () => `payment-link-description-${safeId(props.link.id)}`;
 
   const description = () =>
-    props.link.description ??
-    props.link.url ??
-    "Support this profile across multiple payment rails";
+    props.link.description?.trim() ??
+    (railActions().length > 1
+      ? `${railActions().length} payment methods available`
+      : "Send support directly");
+
+  const hasSingleRail = createMemo(() => railActions().length === 1);
+  const singleRailEntry = createMemo(() => (hasSingleRail() ? railActions()[0] : undefined));
 
   const effectiveQrDisplay = (): PaymentQrDisplayMode =>
     props.link.payment?.qrDisplay ?? siteQrDefaults()?.displayDefault ?? "always";
 
-  const primaryHref = createMemo(() => {
-    const explicit = props.link.url?.trim();
-    if (explicit && explicit.length > 0) {
-      return explicit;
-    }
-
-    return resolvePrimaryPaymentHref(props.link.payment);
-  });
-
-  const primaryTarget = createMemo(() => props.target ?? linkTargetForHref(primaryHref()));
-  const primaryRel = createMemo(() =>
-    primaryTarget() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined,
-  );
-
-  const shouldShowQr = (railEntry: {
-    rail: PaymentRail;
-    action: ResolvedPaymentRailAction;
-  }): boolean => {
+  const shouldShowQr = (railEntry: PaymentRailEntry): boolean => {
     if (effectiveQrDisplay() === "hidden") {
       return false;
     }
@@ -201,9 +192,8 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     return qrFullscreenModeForRail(railEntry.rail) === "enabled";
   };
 
-  const openRailInNewTab = (railEntry: { rail: PaymentRail; action: ResolvedPaymentRailAction }):
-    | string
-    | undefined => (railEntry.action.openInNewTab ? "noopener noreferrer" : undefined);
+  const openRailInNewTab = (railEntry: PaymentRailEntry): string | undefined =>
+    railEntry.action.openInNewTab ? "noopener noreferrer" : undefined;
 
   const copyRailValue = async (label: string, value: string | undefined) => {
     if (!value) {
@@ -215,15 +205,6 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
       message: copied ? `${label} copied` : `Could not copy ${label}`,
       status: copied ? "copied" : "failed",
     });
-  };
-
-  const handleOpenPrimaryQr = () => {
-    const href = primaryHref();
-    if (!href) {
-      return;
-    }
-
-    props.onPrimaryQrOpen?.(href);
   };
 
   createEffect(() => {
@@ -261,36 +242,113 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     return railActions().find((entry) => entry.rail.id === railId);
   });
 
-  const headerIconAlias = () => props.link.icon ?? primaryAction()?.iconAlias ?? "wallet";
-  const headerIconUrl = () => primaryHref() ?? primaryAction()?.href ?? "https://openlinks.dev";
-  const actionItems = createMemo<BottomActionBarItem[]>(() => {
-    const items: BottomActionBarItem[] = [];
-    const href = primaryHref();
+  const multiHeaderIconAlias = () => props.link.icon ?? "wallet";
+  const singleHeaderIconAlias = () =>
+    props.link.icon ??
+    singleRailEntry()?.action.iconAlias ??
+    primaryAction()?.iconAlias ??
+    "wallet";
+  const railPanelId = (railId: string) => `payment-rail-qr-${safeId(`${props.link.id}-${railId}`)}`;
+  const singleRailSummaryValue = (railEntry: PaymentRailEntry): string =>
+    railEntry.action.displayValue ?? description();
+  const singleRailSummaryNote = (railEntry: PaymentRailEntry): string | undefined => {
+    const summary = description();
+    return summary === singleRailSummaryValue(railEntry) ? undefined : summary;
+  };
+  const hasRailActions = (railEntry: PaymentRailEntry): boolean =>
+    Boolean(railEntry.action.copyValue || railEntry.action.href || shouldShowQr(railEntry));
 
-    if (href && props.onPrimaryQrOpen) {
-      items.push({
-        ariaLabel: `Show ${props.link.label} QR code`,
-        kind: "qr",
-        label: "QR",
-        onClick: handleOpenPrimaryQr,
-        title: `Show ${props.link.label} QR code`,
-      });
+  const renderRailActions = (
+    railEntry: PaymentRailEntry,
+    railId: string,
+    railLabelId: string,
+    qrVisible: boolean,
+    singleRail: boolean,
+  ) => {
+    if (!hasRailActions(railEntry)) {
+      return null;
     }
 
-    if (href) {
-      items.push({
-        ariaLabel: `Open ${props.link.label}`,
-        href,
-        kind: "open",
-        label: "Open",
-        rel: primaryRel(),
-        target: primaryTarget(),
-        title: `Open ${props.link.label}`,
-      });
-    }
+    return (
+      <div
+        class={
+          singleRail ? "payment-rail-actions payment-rail-actions--single" : "payment-rail-actions"
+        }
+        aria-labelledby={railLabelId}
+      >
+        <Show when={railEntry.action.href}>
+          {(href) => (
+            <a
+              class="payment-rail-button payment-rail-button--primary"
+              href={href()}
+              target={railEntry.action.openInNewTab ? "_blank" : "_self"}
+              rel={openRailInNewTab(railEntry)}
+              aria-label={`Open ${railEntry.action.label}`}
+            >
+              {renderPaymentRailActionIcon("open")}
+              <span class="payment-rail-button-label">Open</span>
+            </a>
+          )}
+        </Show>
 
-    return items;
-  });
+        <Show when={railEntry.action.copyValue}>
+          <button
+            type="button"
+            class="payment-rail-button payment-rail-button--secondary"
+            onClick={() => copyRailValue(railEntry.action.label, railEntry.action.copyValue)}
+            aria-label={`Copy ${railEntry.action.label} payment value`}
+          >
+            {renderPaymentRailActionIcon("copy")}
+            <span class="payment-rail-button-label">Copy</span>
+          </button>
+        </Show>
+
+        <Show when={shouldShowQr(railEntry)}>
+          <button
+            type="button"
+            class="payment-rail-button payment-rail-button--toggle"
+            data-active={qrVisible ? "true" : "false"}
+            onClick={() => toggleQrVisibility(railId)}
+            aria-label={`${qrVisible ? "Hide" : "Show"} ${railEntry.action.label} QR code`}
+            aria-expanded={qrVisible}
+            aria-controls={railPanelId(railId)}
+          >
+            {renderPaymentRailActionIcon("qr")}
+            <span class="payment-rail-button-label">{qrVisible ? "Hide QR" : "Show QR"}</span>
+          </button>
+        </Show>
+      </div>
+    );
+  };
+
+  const renderQrPanel = (railEntry: PaymentRailEntry, railId: string, railLabelId: string) => (
+    <Show when={railEntry.action.qrPayload}>
+      <section class="payment-rail-qr-panel" id={railPanelId(railId)} aria-labelledby={railLabelId}>
+        <StyledPaymentQr
+          payload={railEntry.action.qrPayload as string}
+          size={176}
+          style={qrStyleForRail(railEntry.rail)}
+          foregroundColor={qrForegroundForRail(railEntry.rail)}
+          backgroundColor={qrBackgroundForRail(railEntry.rail)}
+          logoUrl={qrLogoUrlForRail(railEntry.rail)}
+          logoSize={qrLogoSizeForRail(railEntry.rail)}
+          themeFingerprint={props.themeFingerprint}
+          class="payment-rail-qr-canvas"
+          ariaLabel={`${railEntry.action.label} QR code`}
+        />
+
+        <Show when={canUseFullscreenForRail(railEntry)}>
+          <button
+            type="button"
+            class="payment-rail-button payment-rail-button--quiet payment-rail-fullscreen"
+            onClick={() => setFullscreenRailId(railId)}
+          >
+            {fullscreenCtaLabel()}
+          </button>
+        </Show>
+      </section>
+    </Show>
+  );
 
   return (
     <article
@@ -300,135 +358,126 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
       data-interaction={props.interaction ?? "minimal"}
       data-link-type={props.link.type}
       data-card-variant="payment"
+      data-layout={hasSingleRail() ? "single" : "multi"}
+      data-rail-count={railActions().length}
     >
-      <div class="payment-card-header">
-        <div class="payment-card-heading">
-          <LinkSiteIcon
-            icon={headerIconAlias()}
-            url={headerIconUrl()}
-            label={props.link.label}
-            options={props.brandIconOptions}
-            themeFingerprint={props.themeFingerprint}
-          />
-          <div class="payment-card-copy">
-            <strong id={titleId()}>{props.link.label}</strong>
-            <span id={descriptionId()}>{description()}</span>
+      <Show when={!singleRailEntry()}>
+        <section class="payment-multi-layout">
+          <div class="payment-card-header">
+            <div class="payment-card-heading">
+              <LinkSiteIcon
+                icon={multiHeaderIconAlias()}
+                url={props.link.url}
+                label={props.link.label}
+                options={props.brandIconOptions}
+                themeFingerprint={props.themeFingerprint}
+              />
+              <div class="payment-card-copy">
+                <strong id={titleId()}>{props.link.label}</strong>
+                <span id={descriptionId()}>{description()}</span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <ul class="payment-rails-list">
-        <For each={railActions()}>
-          {(railEntry) => {
-            const railId = railEntry.rail.id;
-            const showQrForRail = () => shouldShowQr(railEntry);
-            const qrVisible = () => isQrVisible(railId);
-            const railHref = () => railEntry.action.href;
-            const railTarget = () => (railEntry.action.openInNewTab ? "_blank" : "_self");
-            const railLabelId = `payment-rail-label-${safeId(`${props.link.id}-${railId}`)}`;
+          <ul class="payment-rails-list">
+            <For each={railActions()}>
+              {(railEntry) => {
+                const railId = railEntry.rail.id;
+                const qrVisible = () => isQrVisible(railId);
+                const railLabelId = `payment-rail-label-${safeId(`${props.link.id}-${railId}`)}`;
+                const hasVisibleQr = () =>
+                  shouldShowQr(railEntry) && qrVisible() && Boolean(railEntry.action.qrPayload);
 
-            return (
-              <li class="payment-rail-item" data-rail={railEntry.rail.rail}>
-                <div class="payment-rail-top-row">
-                  <div class="payment-rail-heading">
+                return (
+                  <li
+                    class="payment-rail-item"
+                    data-rail={railEntry.rail.rail}
+                    data-has-visible-qr={hasVisibleQr() ? "true" : "false"}
+                  >
+                    <div
+                      class="payment-rail-main"
+                      data-has-visible-qr={hasVisibleQr() ? "true" : "false"}
+                    >
+                      <div class="payment-rail-content">
+                        <div class="payment-rail-heading">
+                          <LinkSiteIcon
+                            icon={railEntry.action.iconAlias}
+                            url={railEntry.action.href ?? props.link.url}
+                            label={railEntry.action.label}
+                            options={props.brandIconOptions}
+                            themeFingerprint={props.themeFingerprint}
+                          />
+                          <div class="payment-rail-copy">
+                            <strong id={railLabelId}>{railEntry.action.label}</strong>
+                            <span>
+                              {railEntry.action.displayValue ?? "Configured payment rail"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {renderRailActions(railEntry, railId, railLabelId, qrVisible(), false)}
+                      </div>
+
+                      <Show when={hasVisibleQr()}>
+                        {renderQrPanel(railEntry, railId, railLabelId)}
+                      </Show>
+                    </div>
+                  </li>
+                );
+              }}
+            </For>
+          </ul>
+        </section>
+      </Show>
+
+      <Show when={singleRailEntry()}>
+        {(railEntry) => {
+          const railId = railEntry().rail.id;
+          const railLabelId = `payment-rail-label-${safeId(`${props.link.id}-${railId}`)}`;
+          const hasVisibleQr = () =>
+            shouldShowQr(railEntry()) &&
+            isQrVisible(railId) &&
+            Boolean(railEntry().action.qrPayload);
+
+          return (
+            <section
+              class="payment-single-layout"
+              data-rail={railEntry().rail.rail}
+              data-has-visible-qr={hasVisibleQr() ? "true" : "false"}
+            >
+              <div class="payment-single-main">
+                <div class="payment-card-header payment-card-header--single">
+                  <div class="payment-card-heading payment-card-heading--single">
                     <LinkSiteIcon
-                      icon={railEntry.action.iconAlias}
-                      url={railHref() ?? headerIconUrl()}
-                      label={railEntry.action.label}
+                      icon={singleHeaderIconAlias()}
+                      url={resolvePrimaryPaymentHref(props.link.payment)}
+                      label={props.link.label}
                       options={props.brandIconOptions}
                       themeFingerprint={props.themeFingerprint}
                     />
-                    <div class="payment-rail-copy">
-                      <strong id={railLabelId}>{railEntry.action.label}</strong>
-                      <span>{railEntry.action.displayValue ?? "Configured payment rail"}</span>
+                    <div class="payment-card-copy payment-card-copy--single">
+                      <strong id={titleId()}>{props.link.label}</strong>
+                      <span id={descriptionId()}>{singleRailSummaryValue(railEntry())}</span>
+                      <div class="payment-card-supporting-row">
+                        <span class="payment-card-meta-badge" id={railLabelId}>
+                          {railEntry().action.label}
+                        </span>
+                        <Show when={singleRailSummaryNote(railEntry())}>
+                          {(note) => <span class="payment-card-note">{note()}</span>}
+                        </Show>
+                      </div>
                     </div>
-                  </div>
-
-                  <div class="payment-rail-actions">
-                    <Show when={railEntry.action.copyValue}>
-                      <button
-                        type="button"
-                        class="payment-rail-button"
-                        onClick={() =>
-                          copyRailValue(railEntry.action.label, railEntry.action.copyValue)
-                        }
-                        aria-label={`Copy ${railEntry.action.label} payment value`}
-                      >
-                        Copy
-                      </button>
-                    </Show>
-
-                    <Show when={railHref()}>
-                      {(href) => (
-                        <a
-                          class="payment-rail-button"
-                          href={href()}
-                          target={railTarget()}
-                          rel={openRailInNewTab(railEntry)}
-                          aria-label={`Open ${railEntry.action.label}`}
-                        >
-                          Open
-                        </a>
-                      )}
-                    </Show>
                   </div>
                 </div>
 
-                <Show when={showQrForRail()}>
-                  <div class="payment-rail-qr-tools">
-                    <button
-                      type="button"
-                      class="payment-rail-button"
-                      onClick={() => toggleQrVisibility(railId)}
-                      aria-expanded={qrVisible()}
-                      aria-controls={`payment-rail-qr-${safeId(`${props.link.id}-${railId}`)}`}
-                    >
-                      {qrVisible() ? "Hide QR" : "Show QR"}
-                    </button>
-                  </div>
-                </Show>
+                {renderRailActions(railEntry(), railId, railLabelId, isQrVisible(railId), true)}
+              </div>
 
-                <Show when={showQrForRail() && qrVisible() && railEntry.action.qrPayload}>
-                  <section
-                    class="payment-rail-qr-panel"
-                    id={`payment-rail-qr-${safeId(`${props.link.id}-${railId}`)}`}
-                    aria-labelledby={railLabelId}
-                  >
-                    <StyledPaymentQr
-                      payload={railEntry.action.qrPayload as string}
-                      size={176}
-                      style={qrStyleForRail(railEntry.rail)}
-                      foregroundColor={qrForegroundForRail(railEntry.rail)}
-                      backgroundColor={qrBackgroundForRail(railEntry.rail)}
-                      logoUrl={qrLogoUrlForRail(railEntry.rail)}
-                      logoSize={qrLogoSizeForRail(railEntry.rail)}
-                      themeFingerprint={props.themeFingerprint}
-                      class="payment-rail-qr-canvas"
-                      ariaLabel={`${railEntry.action.label} QR code`}
-                    />
-
-                    <Show when={canUseFullscreenForRail(railEntry)}>
-                      <button
-                        type="button"
-                        class="payment-rail-button payment-rail-fullscreen"
-                        onClick={() => setFullscreenRailId(railId)}
-                      >
-                        {fullscreenCtaLabel()}
-                      </button>
-                    </Show>
-                  </section>
-                </Show>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-
-      <BottomActionBar
-        class="payment-card-action-bar"
-        items={actionItems()}
-        label={`${props.link.label} actions`}
-      />
+              <Show when={hasVisibleQr()}>{renderQrPanel(railEntry(), railId, titleId())}</Show>
+            </section>
+          );
+        }}
+      </Show>
 
       <Show when={activeFullscreenRail()}>
         {(entry) => (

@@ -382,37 +382,32 @@ a:focus-visible {
   padding: 0;
 }
 
-.card-action-row .bottom-action-bar-action,
-.payment-card-action-bar .bottom-action-bar-action {
+.card-action-row .bottom-action-bar-action {
   border: none;
   background: color-mix(in srgb, var(--surface-pill) 40%, transparent 60%);
   box-shadow: none;
   color: color-mix(in srgb, var(--text-primary) 88%, var(--accent) 12%);
 }
 
-.card-action-row .bottom-action-bar-action:hover,
-.payment-card-action-bar .bottom-action-bar-action:hover {
+.card-action-row .bottom-action-bar-action:hover {
   border-color: transparent;
   background: color-mix(in srgb, var(--surface-pill) 52%, var(--accent) 48%);
   transform: none;
   box-shadow: none;
 }
 
-.card-action-row .bottom-action-bar-action:active,
-.payment-card-action-bar .bottom-action-bar-action:active {
+.card-action-row .bottom-action-bar-action:active {
   background: color-mix(in srgb, var(--surface-pill) 34%, var(--accent) 66%);
   transform: none;
   box-shadow: none;
 }
 
-.card-action-row .bottom-action-bar-action:focus-visible,
-.payment-card-action-bar .bottom-action-bar-action:focus-visible {
+.card-action-row .bottom-action-bar-action:focus-visible {
   border-color: transparent;
   background: color-mix(in srgb, var(--surface-pill) 46%, var(--accent) 54%);
 }
 
-.card-action-row .bottom-action-bar-action[data-active="true"],
-.payment-card-action-bar .bottom-action-bar-action[data-active="true"] {
+.card-action-row .bottom-action-bar-action[data-active="true"] {
   background: color-mix(in srgb, var(--surface-pill) 40%, var(--accent) 60%);
 }
 
@@ -421,8 +416,7 @@ a:focus-visible {
   border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
 }
 
-.card-action-row,
-.payment-card-action-bar {
+.card-action-row {
   padding-top: var(--space-2);
   border-top: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
 }
@@ -1073,6 +1067,14 @@ a:focus-visible {
     var(--motion-fast), box-shadow var(--motion-fast);
 }
 
+.payment-link-card[data-layout="single"] {
+  gap: var(--space-2);
+}
+
+.payment-link-card[data-layout="multi"] {
+  gap: calc(var(--space-3) * 0.9);
+}
+
 .payment-link-card:hover {
   border-color: color-mix(in srgb, var(--border-strong) 65%, transparent 35%);
   transform: translateY(-1px);
@@ -1090,21 +1092,36 @@ a:focus-visible {
 
 .payment-card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
+}
+
+.payment-link-card[data-layout="multi"] .payment-card-header {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 68%, transparent 32%);
 }
 
 .payment-card-heading {
   min-width: 0;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
+}
+
+.payment-link-card[data-layout="multi"] .payment-card-heading .card-icon {
+  --card-icon-box-size: clamp(3.35rem, 6vw, 3.85rem);
+  --card-icon-glyph-size: calc(var(--card-icon-box-size) * 0.42);
+}
+
+.payment-card-heading--single .card-icon {
+  --card-icon-box-size: clamp(4.8rem, 9vw, 5.4rem);
+  --card-icon-glyph-size: calc(var(--card-icon-box-size) * 0.42);
 }
 
 .payment-card-copy {
   min-width: 0;
   display: grid;
-  gap: 0.08rem;
+  gap: 0.18rem;
 }
 
 .payment-card-copy strong {
@@ -1116,9 +1133,53 @@ a:focus-visible {
 .payment-card-copy span {
   color: color-mix(in srgb, var(--text-primary) 75%, var(--text-muted) 25%);
   font-size: var(--page-type-caption);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.payment-card-copy--single strong {
+  font-size: calc(var(--type-link-title) + 0.18rem);
+}
+
+.payment-card-copy--single span {
+  color: color-mix(in srgb, var(--text-primary) 86%, var(--accent) 14%);
+  font-size: calc(var(--page-type-caption) + 0.06rem);
+}
+
+.payment-card-supporting-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.payment-card-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.24rem 0.58rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-pill) 82%);
+  color: color-mix(in srgb, var(--text-primary) 92%, var(--accent) 8%);
+  font-size: var(--page-type-caption);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.payment-card-note {
+  color: var(--text-muted);
+  font-size: var(--page-type-caption);
+}
+
+.payment-single-layout {
+  display: grid;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.payment-single-main {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
 }
 
 .payment-rails-list {
@@ -1131,31 +1192,42 @@ a:focus-visible {
 
 .payment-rail-item {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
   border-radius: calc(var(--radius-md) - 0.2rem);
   padding: calc(var(--space-2) * var(--density-scale));
   background: color-mix(in srgb, var(--surface-panel) 92%, var(--surface-bg) 8%);
 }
 
-.payment-rail-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.payment-rail-main {
+  display: grid;
   gap: var(--space-3);
+  align-items: start;
+  min-width: 0;
+}
+
+.payment-rail-content {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-2);
 }
 
 .payment-rail-heading {
   min-width: 0;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-2);
+}
+
+.payment-rail-heading .card-icon {
+  --card-icon-box-size: clamp(3.9rem, 7vw, 4.55rem);
+  --card-icon-glyph-size: calc(var(--card-icon-box-size) * 0.42);
 }
 
 .payment-rail-copy {
   min-width: 0;
   display: grid;
-  gap: 0.08rem;
+  gap: 0.16rem;
 }
 
 .payment-rail-copy strong {
@@ -1166,63 +1238,135 @@ a:focus-visible {
 .payment-rail-copy span {
   color: var(--text-muted);
   font-size: var(--page-type-caption);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .payment-rail-actions {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1);
+  gap: 0.7rem;
+  padding-left: calc(clamp(3.9rem, 7vw, 4.55rem) + var(--space-2));
+}
+
+.payment-rail-actions--single {
+  padding-left: calc(clamp(4.8rem, 9vw, 5.4rem) + var(--space-3));
 }
 
 .payment-rail-button {
-  border: none;
-  background: color-mix(in srgb, var(--surface-pill) 40%, transparent 60%);
-  color: color-mix(in srgb, var(--text-primary) 88%, var(--accent) 12%);
-  border-radius: var(--radius-sm);
-  padding: 0.25rem 0.65rem;
-  min-height: calc(var(--page-target-size) - 14px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent 18%);
+  background: color-mix(in srgb, var(--surface-pill) 88%, var(--surface-panel) 12%);
+  color: color-mix(in srgb, var(--text-primary) 92%, var(--accent) 8%);
+  border-radius: 999px;
+  padding: 0.5rem 0.82rem;
+  min-height: calc(var(--page-target-size) - 10px);
   font-size: var(--page-type-caption);
   font-family: inherit;
-  font-weight: inherit;
-  line-height: inherit;
+  font-weight: 700;
+  line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color var(--motion-fast), color var(--motion-fast), box-shadow
-    var(--motion-fast), transform var(--motion-fast);
+  transition: background-color var(--motion-fast), color var(--motion-fast), border-color
+    var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast), opacity
+    var(--motion-fast);
 }
 
 .payment-rail-button:hover {
-  background: color-mix(in srgb, var(--surface-pill) 52%, var(--accent) 48%);
-  transform: none;
+  border-color: color-mix(in srgb, var(--border-strong) 72%, transparent 28%);
+  transform: translateY(-1px);
 }
 
 .payment-rail-button:active {
-  background: color-mix(in srgb, var(--surface-pill) 34%, var(--accent) 66%);
+  transform: translateY(0);
+  opacity: 0.96;
+}
+
+.payment-rail-button-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.payment-rail-button-label {
+  white-space: nowrap;
+}
+
+.payment-rail-button--primary {
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-pill) 76%);
+  border-color: color-mix(in srgb, var(--accent-strong) 44%, transparent 56%);
+  color: color-mix(in srgb, var(--text-primary) 96%, white 4%);
+}
+
+.payment-rail-button--primary:hover {
+  background: color-mix(in srgb, var(--accent) 34%, var(--surface-pill) 66%);
+}
+
+.payment-rail-button--primary:active {
+  background: color-mix(in srgb, var(--accent) 42%, var(--surface-pill) 58%);
+}
+
+.payment-rail-button--secondary:hover,
+.payment-rail-button--toggle:hover {
+  background: color-mix(in srgb, var(--surface-pill) 68%, var(--accent) 32%);
+}
+
+.payment-rail-button--secondary:active,
+.payment-rail-button--toggle:active {
+  background: color-mix(in srgb, var(--surface-pill) 58%, var(--accent) 42%);
+}
+
+.payment-rail-button--toggle[data-active="true"] {
+  background: color-mix(in srgb, var(--surface-pill) 56%, var(--accent) 44%);
+  border-color: color-mix(in srgb, var(--accent-strong) 42%, transparent 58%);
+  color: color-mix(in srgb, var(--text-primary) 96%, var(--accent) 4%);
+}
+
+.payment-rail-button--quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  padding-inline: 0;
+  min-height: auto;
+  border-radius: 0;
+}
+
+.payment-rail-button--quiet:hover {
+  background: transparent;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--text-primary) 80%, var(--accent) 20%);
   transform: none;
 }
 
 .payment-rail-button:focus-visible {
   box-shadow: var(--shadow-focus);
-  background: color-mix(in srgb, var(--surface-pill) 46%, var(--accent) 54%);
+  border-color: var(--accent-strong);
 }
 
-.payment-rail-qr-tools {
-  display: flex;
-  justify-content: flex-start;
+.payment-rail-button--quiet:focus-visible {
+  box-shadow: none;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--text-primary) 84%, var(--accent) 16%);
 }
 
 .payment-rail-qr-panel {
   display: grid;
   justify-items: start;
   gap: var(--space-2);
+  align-content: start;
+  padding: calc(var(--space-2) * 0.85);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, transparent 22%);
+  border-radius: calc(var(--radius-md) - 0.15rem);
+  background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-card) 4%);
 }
 
 .payment-rail-qr-canvas {
-  width: 176px;
-  height: 176px;
+  width: min(100%, 184px);
+  height: auto;
+  aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
@@ -1235,7 +1379,7 @@ a:focus-visible {
 }
 
 .payment-rail-fullscreen {
-  min-width: 12rem;
+  min-width: 0;
 }
 
 .qr-code-dialog-backdrop {
