@@ -64,6 +64,9 @@ test("multi-rail fixture expands a single rail without revealing the others", as
 
   const card = fixtureCard(page, "multi-rail");
 
+  await expect(card.locator(".payment-card-effects")).toHaveCount(1);
+  await expect(card.locator(".payment-card-effects-particle--lightning")).toHaveCount(6);
+  await expect(card.locator(".payment-card-effects-particle--glitter")).toHaveCount(7);
   await expect(card.getByRole("img", { name: "Lightning Support QR code" })).toHaveCount(0);
   await expect(card.getByRole("img", { name: "Project Cash App QR code" })).toHaveCount(0);
 

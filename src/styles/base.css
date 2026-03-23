@@ -1059,12 +1059,195 @@ a:focus-visible {
   display: grid;
   gap: var(--space-3);
   min-height: var(--page-target-size);
+  position: relative;
+  isolation: isolate;
   border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
   padding: calc(var(--space-3) * var(--density-scale));
   background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
   transition: border-color var(--motion-fast), transform var(--motion-fast), background-color
     var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.payment-link-card-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: inherit;
+}
+
+.payment-card-effects {
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: calc(var(--radius-md) - 1px);
+}
+
+.payment-card-effects-wash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      circle at 16% 18%,
+      color-mix(in srgb, var(--accent) 14%, transparent) 0,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 84% 26%,
+      color-mix(in srgb, white 10%, transparent) 0,
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      transparent 0%,
+      color-mix(in srgb, var(--accent) 6%, transparent) 48%,
+      transparent 72%
+    );
+  opacity: 0.8;
+}
+
+.payment-card-effects[data-tone="lightning"] .payment-card-effects-wash {
+  background: radial-gradient(
+      circle at 14% 18%,
+      color-mix(in srgb, #fde68a 20%, transparent) 0,
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 84% 24%,
+      color-mix(in srgb, #93c5fd 18%, transparent) 0,
+      transparent 38%
+    ),
+    linear-gradient(
+      140deg,
+      transparent 0%,
+      color-mix(in srgb, #fbbf24 10%, transparent) 45%,
+      transparent 70%
+    );
+}
+
+.payment-card-effects-particle {
+  position: absolute;
+  left: var(--payment-effect-x);
+  top: var(--payment-effect-y);
+  opacity: var(--payment-effect-opacity, 0.3);
+}
+
+.payment-card-effects-particle--ambient {
+  width: var(--payment-effect-size);
+  height: var(--payment-effect-size);
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 35% 35%,
+    color-mix(in srgb, white 84%, var(--accent) 16%) 0,
+    color-mix(in srgb, var(--accent) 66%, transparent) 48%,
+    transparent 100%
+  );
+  box-shadow: 0 0 1rem color-mix(in srgb, var(--accent) 20%, transparent);
+  transform: translate(-50%, -50%);
+  animation: payment-card-effect-float var(--payment-effect-duration) ease-in-out infinite;
+  animation-delay: var(--payment-effect-delay);
+}
+
+.payment-card-effects-particle--lightning {
+  width: var(--payment-effect-width);
+  height: var(--payment-effect-height);
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, #fef3c7 86%, transparent) 20%,
+    color-mix(in srgb, #fbbf24 88%, #f8fafc 12%) 54%,
+    transparent 100%
+  );
+  box-shadow: 0 0 0.65rem color-mix(in srgb, #fbbf24 34%, transparent), 0 0 1.1rem
+    color-mix(in srgb, #60a5fa 12%, transparent);
+  transform: translate(-50%, -50%) rotate(var(--payment-effect-rotate));
+  animation: payment-card-effect-lightning var(--payment-effect-duration) ease-in-out infinite;
+  animation-delay: var(--payment-effect-delay);
+}
+
+.payment-card-effects-particle--glitter {
+  width: var(--payment-effect-size);
+  height: var(--payment-effect-size);
+  background: radial-gradient(circle, #fef3c7 0, #fbbf24 58%, transparent 82%);
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  box-shadow: 0 0 0.85rem color-mix(in srgb, #fbbf24 26%, transparent);
+  transform: translate(-50%, -50%);
+  animation: payment-card-effect-glitter var(--payment-effect-duration) ease-in-out infinite;
+  animation-delay: var(--payment-effect-delay);
+}
+
+.payment-card-effects[data-glitter-palette="ice"] .payment-card-effects-particle--glitter {
+  background: radial-gradient(circle, #eff6ff 0, #93c5fd 60%, transparent 84%);
+  box-shadow: 0 0 0.85rem color-mix(in srgb, #93c5fd 22%, transparent);
+}
+
+@keyframes payment-card-effect-float {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0.92);
+    opacity: calc(var(--payment-effect-opacity, 0.3) * 0.7);
+  }
+
+  50% {
+    transform: translate(-50%, -50%)
+      translate(var(--payment-effect-drift-x), var(--payment-effect-drift-y)) scale(1.08);
+    opacity: var(--payment-effect-opacity, 0.3);
+  }
+}
+
+@keyframes payment-card-effect-lightning {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--payment-effect-rotate)) scaleX(0.78);
+    opacity: calc(var(--payment-effect-opacity, 0.3) * 0.45);
+  }
+
+  24% {
+    transform: translate(-50%, -50%) rotate(var(--payment-effect-rotate)) scaleX(1);
+    opacity: calc(var(--payment-effect-opacity, 0.3) * 0.8);
+  }
+
+  36% {
+    transform: translate(-50%, -50%) rotate(var(--payment-effect-rotate)) scaleX(1.08);
+    opacity: var(--payment-effect-opacity, 0.3);
+  }
+
+  62% {
+    transform: translate(-50%, -50%) rotate(var(--payment-effect-rotate)) scaleX(0.88);
+    opacity: calc(var(--payment-effect-opacity, 0.3) * 0.6);
+  }
+}
+
+@keyframes payment-card-effect-glitter {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.88);
+    opacity: calc(var(--payment-effect-opacity, 0.3) * 0.55);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(22deg) scale(1.12);
+    opacity: var(--payment-effect-opacity, 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-card-effects-particle--ambient,
+  .payment-card-effects-particle--glitter,
+  .payment-card-effects-particle--lightning {
+    animation: none;
+  }
+
+  .payment-card-effects-particle--ambient,
+  .payment-card-effects-particle--glitter {
+    transform: translate(-50%, -50%);
+  }
+
+  .payment-card-effects-particle--lightning {
+    transform: translate(-50%, -50%) rotate(var(--payment-effect-rotate));
+  }
 }
 
 .payment-link-card[data-layout="single"] {

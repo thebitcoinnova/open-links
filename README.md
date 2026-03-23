@@ -475,6 +475,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [Agent Triage Contract](https://raw.githubusercontent.com/pRizz/open-links/main/AGENTS.md)
 - [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md)
 - [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md)
+- [Payment Card Effect Samples](https://raw.githubusercontent.com/pRizz/open-links/main/docs/payment-card-effect-samples.md)
 - [Rich Metadata Fetch Blockers](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-metadata-fetch-blockers.md)
 - [Rich Enrichment Blockers Registry](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-enrichment-blockers-registry.md)
 - [Authenticated Rich Extractors](https://raw.githubusercontent.com/pRizz/open-links/main/docs/authenticated-rich-extractors.md)

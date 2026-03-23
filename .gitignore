@@ -155,6 +155,8 @@ data/cache/profile-avatar.runtime.json
 data/cache/rich-public-cache.runtime.json
 public/generated/*
 !public/generated/.gitkeep
+!public/generated/payment-card-effects/
+!public/generated/payment-card-effects/*.png
 
 # Local browser automation artifacts
 .playwright-cli/

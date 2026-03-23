@@ -126,6 +126,9 @@ const fixtureCards: FixtureCard[] = [
       payment: {
         qrDisplay: "toggle",
         primaryRailId: "lightning",
+        effects: {
+          enabled: true,
+        },
         rails: [
           {
             id: "lightning",

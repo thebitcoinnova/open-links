@@ -36,6 +36,32 @@
       "type": "string",
       "enum": ["enabled", "disabled"]
     },
+    "paymentCardEffect": {
+      "type": "string",
+      "enum": ["particles", "lightning-particles", "glitter-particles"]
+    },
+    "paymentCardGlitterPalette": {
+      "type": "string",
+      "enum": ["gold", "ice"]
+    },
+    "paymentCardEffectsConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "effects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/paymentCardEffect" }
+        },
+        "glitterPalette": { "$ref": "#/$defs/paymentCardGlitterPalette" },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "paymentQrConfig": {
       "type": "object",
       "properties": {
@@ -137,6 +163,7 @@
       "properties": {
         "qrDisplay": { "$ref": "#/$defs/paymentQrDisplayMode" },
         "primaryRailId": { "type": "string", "minLength": 1 },
+        "effects": { "$ref": "#/$defs/paymentCardEffectsConfig" },
         "rails": {
           "type": "array",
           "minItems": 1,
