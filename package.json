@@ -39,6 +39,7 @@
     "test:deploy": "bun test src/lib/deployment-config.test.ts scripts/lib/build-timestamp.test.ts scripts/lib/deploy-artifact.test.ts scripts/lib/aws-deploy.test.ts scripts/lib/deploy-setup.test.ts scripts/enrichment/generated-metadata.test.ts scripts/clean-public-build-artifacts.test.ts",
     "test:playwright:payment-qr": "playwright test tests/playwright/payment-qr.spec.ts",
     "test:playwright:payment-qr:update": "playwright test tests/playwright/payment-qr.spec.ts --update-snapshots",
+    "payment:effects:screenshots": "bun scripts/generate-payment-card-effect-screenshots.ts",
     "public:clean": "bun scripts/clean-public-build-artifacts.ts",
     "deploy:build": "bun run scripts/deploy/build.ts",
     "deploy:build:aws": "bun run scripts/deploy/build.ts --target=aws",
