@@ -8,6 +8,10 @@ import type {
 import { describeFollowerHistoryRange } from "../../lib/analytics/follower-history";
 import AppDialog from "../dialog/AppDialog";
 import FollowerHistoryChart from "./FollowerHistoryChart";
+import {
+  FOLLOWER_HISTORY_MODE_OPTIONS,
+  FOLLOWER_HISTORY_RANGE_OPTIONS,
+} from "./follower-history-controls";
 
 export interface FollowerHistoryModalProps {
   emptyStateMessage?: string;
@@ -21,18 +25,6 @@ export interface FollowerHistoryModalProps {
   rows: FollowerHistoryRow[];
   themeFingerprint: string;
 }
-
-export const RANGE_OPTIONS: Array<{ label: string; value: FollowerHistoryRange }> = [
-  { label: "30D", value: "30d" },
-  { label: "90D", value: "90d" },
-  { label: "180D", value: "180d" },
-  { label: "All", value: "all" },
-];
-
-export const MODE_OPTIONS: Array<{ label: string; value: FollowerHistoryMode }> = [
-  { label: "Raw", value: "raw" },
-  { label: "Growth", value: "growth" },
-];
 
 export const resolveFollowerHistoryModalAriaLabel = (entry?: FollowerHistoryIndexEntry): string =>
   `${entry?.label ?? "Platform"} follower history`;
@@ -61,7 +53,7 @@ export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
 
           <div class="analytics-controls">
             <div class="analytics-control-group" aria-label="History time range">
-              <For each={RANGE_OPTIONS}>
+              <For each={FOLLOWER_HISTORY_RANGE_OPTIONS}>
                 {(option) => (
                   <button
                     aria-pressed={props.range === option.value}
@@ -77,7 +69,7 @@ export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
             </div>
 
             <div class="analytics-control-group" aria-label="History display mode">
-              <For each={MODE_OPTIONS}>
+              <For each={FOLLOWER_HISTORY_MODE_OPTIONS}>
                 {(option) => (
                   <button
                     aria-pressed={props.mode === option.value}

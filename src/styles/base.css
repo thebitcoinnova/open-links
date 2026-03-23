@@ -569,6 +569,13 @@ a:focus-visible {
   gap: var(--space-3);
 }
 
+.analytics-page-controls {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .analytics-page-header h2,
 .analytics-card-header h3 {
   margin: 0;
@@ -634,8 +641,16 @@ a:focus-visible {
 }
 
 .analytics-chip[data-active="true"] {
-  background: color-mix(in srgb, var(--accent) 38%, var(--surface-pill) 62%);
-  border-color: color-mix(in srgb, var(--accent-strong) 65%, transparent 35%);
+  background: color-mix(in srgb, var(--accent) 72%, var(--surface-pill) 28%);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-strong) 34%, transparent), 0 12px 24px
+    color-mix(in srgb, var(--accent) 24%, transparent);
+  color: color-mix(in srgb, var(--text-primary) 96%, white 4%);
+}
+
+.analytics-chip[data-active="true"]:hover {
+  background: color-mix(in srgb, var(--accent) 80%, var(--surface-pill) 20%);
+  border-color: var(--accent-strong);
 }
 
 .analytics-empty-state {

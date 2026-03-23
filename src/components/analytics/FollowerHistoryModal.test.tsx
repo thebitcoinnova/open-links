@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { resolveFollowerHistoryModalAriaLabel } from "./FollowerHistoryModal";
 import {
-  MODE_OPTIONS,
-  RANGE_OPTIONS,
-  resolveFollowerHistoryModalAriaLabel,
-} from "./FollowerHistoryModal";
+  FOLLOWER_HISTORY_MODE_OPTIONS,
+  FOLLOWER_HISTORY_RANGE_OPTIONS,
+} from "./follower-history-controls";
 
 test("resolveFollowerHistoryModalAriaLabel uses the entry label when available", () => {
   assert.equal(
@@ -30,14 +30,14 @@ test("resolveFollowerHistoryModalAriaLabel falls back to Platform", () => {
 
 test("follower history modal range options stay in the expected order", () => {
   assert.deepEqual(
-    RANGE_OPTIONS.map((option) => option.value),
+    FOLLOWER_HISTORY_RANGE_OPTIONS.map((option) => option.value),
     ["30d", "90d", "180d", "all"],
   );
 });
 
 test("follower history modal mode options stay in the expected order", () => {
   assert.deepEqual(
-    MODE_OPTIONS.map((option) => option.value),
+    FOLLOWER_HISTORY_MODE_OPTIONS.map((option) => option.value),
     ["raw", "growth"],
   );
 });

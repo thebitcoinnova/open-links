@@ -13,6 +13,10 @@ import {
   onMount,
 } from "solid-js";
 import { Toaster, toast } from "solid-sonner";
+import {
+  FOLLOWER_HISTORY_MODE_OPTIONS,
+  FOLLOWER_HISTORY_RANGE_OPTIONS,
+} from "../components/analytics/follower-history-controls";
 import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
@@ -105,13 +109,6 @@ const sections = resolveLinkSections(
   composition.grouping,
 ) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
-
-const RANGE_OPTIONS: Array<{ label: string; value: FollowerHistoryRange }> = [
-  { label: "30D", value: "30d" },
-  { label: "90D", value: "90d" },
-  { label: "180D", value: "180d" },
-  { label: "All", value: "all" },
-];
 type PageViewKey = "analytics" | "links";
 interface QrDialogTarget {
   ariaLabel: string;
@@ -252,6 +249,7 @@ export default function RouteIndex() {
   const [connectivity, setConnectivity] = createSignal<ConnectivityStatus>("online");
   const [mode, setMode] = createSignal<UiMode>("dark");
   const [analyticsPageOpen, setAnalyticsPageOpen] = createSignal(readAnalyticsPageState());
+  const [analyticsMode, setAnalyticsMode] = createSignal<FollowerHistoryMode>("raw");
   const [analyticsRange, setAnalyticsRange] = createSignal<FollowerHistoryRange>("30d");
   const [modalRange, setModalRange] = createSignal<FollowerHistoryRange>("30d");
   const [modalMode, setModalMode] = createSignal<FollowerHistoryMode>("raw");
@@ -570,20 +568,38 @@ export default function RouteIndex() {
               Showing {describeFollowerHistoryRange(analyticsRange())} of public follower history.
             </p>
           </div>
-          <div class="analytics-control-group" aria-label="Analytics time range">
-            <For each={RANGE_OPTIONS}>
-              {(option) => (
-                <button
-                  aria-pressed={analyticsRange() === option.value}
-                  type="button"
-                  class="analytics-chip"
-                  data-active={analyticsRange() === option.value ? "true" : "false"}
-                  onClick={() => setAnalyticsRange(option.value)}
-                >
-                  {option.label}
-                </button>
-              )}
-            </For>
+          <div class="analytics-page-controls">
+            <div class="analytics-control-group" aria-label="Analytics time range">
+              <For each={FOLLOWER_HISTORY_RANGE_OPTIONS}>
+                {(option) => (
+                  <button
+                    aria-pressed={analyticsRange() === option.value}
+                    type="button"
+                    class="analytics-chip"
+                    data-active={analyticsRange() === option.value ? "true" : "false"}
+                    onClick={() => setAnalyticsRange(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                )}
+              </For>
+            </div>
+
+            <div class="analytics-control-group" aria-label="Analytics display mode">
+              <For each={FOLLOWER_HISTORY_MODE_OPTIONS}>
+                {(option) => (
+                  <button
+                    aria-pressed={analyticsMode() === option.value}
+                    type="button"
+                    class="analytics-chip"
+                    data-active={analyticsMode() === option.value ? "true" : "false"}
+                    onClick={() => setAnalyticsMode(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                )}
+              </For>
+            </div>
           </div>
         </div>
 
@@ -619,7 +635,7 @@ export default function RouteIndex() {
                     emptyStateMessage={resolveChartEmptyStateMessage(
                       allHistoryRowStates()?.get(entry.linkId),
                     )}
-                    mode="raw"
+                    mode={analyticsMode()}
                     rangeDescription={describeFollowerHistoryRange(analyticsRange())}
                     range={analyticsRange()}
                     rows={allHistoryRows().get(entry.linkId) ?? []}
