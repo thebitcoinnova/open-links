@@ -9,6 +9,7 @@
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SolidJS 1.9](https://img.shields.io/badge/SolidJS-1.9-2C4F7C?logo=solid&logoColor=white)](https://www.solidjs.com/)
 [![Vite 7.3](https://img.shields.io/badge/Vite-7.3-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![OpenLinks Site](https://openlinks.us/badges/openlinks.svg)](https://openlinks.us/)
 
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
 
