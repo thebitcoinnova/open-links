@@ -247,6 +247,8 @@ bun run ci:required
 bun run ci:strict
 ```
 
+`bun run ci:strict` matches the GitHub Actions strict lane and keeps performance findings advisory-only while preserving other strict failures.
+
 ## Common Setup Problems
 
 ### Problem: Validation errors on required fields

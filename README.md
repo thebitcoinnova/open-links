@@ -364,13 +364,14 @@ Clear flow:
 
 - `bun run quality:check` - standard quality gate.
 - `bun run quality:strict` - strict quality gate.
+- `bun run quality:strict:ci` - CI strict gate with advisory-only performance findings.
 - `bun run quality:json` - standard quality JSON report.
 - `bun run quality:strict:json` - strict quality JSON report.
 
 ### CI parity commands
 
 - `bun run ci:required` - required CI checks.
-- `bun run ci:strict` - strict CI signal checks.
+- `bun run ci:strict` - strict CI signal checks with advisory-only performance findings.
 
 ## Data Contract Rules (High-Level)
 

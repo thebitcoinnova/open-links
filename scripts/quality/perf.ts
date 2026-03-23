@@ -9,9 +9,19 @@ import type {
 } from "./types";
 
 interface RunPerformanceChecksInput {
+  advisoryOnly?: boolean;
   rootDir: string;
   strict: boolean;
   site: QualitySiteInput;
+}
+
+interface BundleMetrics {
+  totalBytes: number;
+  htmlBytes: number;
+  jsBytes: number;
+  cssBytes: number;
+  largestAssetBytes: number;
+  bakedImageBytes: number;
 }
 
 const DEFAULT_BUDGETS: Record<string, Record<string, BudgetThreshold>> = {
@@ -56,9 +66,74 @@ const normalizeThreshold = (
   return fallback;
 };
 
-const collectBundleMetrics = (rootDir: string) => {
+const SCRIPT_TAG_PATTERN = /<script\b[^>]*>/giu;
+const LINK_TAG_PATTERN = /<link\b[^>]*>/giu;
+const TYPE_ATTRIBUTE_PATTERN = /\btype=(["'])(.*?)\1/iu;
+const REL_ATTRIBUTE_PATTERN = /\brel=(["'])(.*?)\1/iu;
+const SRC_ATTRIBUTE_PATTERN = /\bsrc=(["'])(.*?)\1/iu;
+const HREF_ATTRIBUTE_PATTERN = /\bhref=(["'])(.*?)\1/iu;
+
+const collectInitialAssetReferences = (html: string): string[] => {
+  const references = new Set<string>();
+
+  for (const match of html.matchAll(SCRIPT_TAG_PATTERN)) {
+    const tag = match[0];
+    const type = TYPE_ATTRIBUTE_PATTERN.exec(tag)?.[2]?.trim().toLowerCase();
+    if (type !== "module") {
+      continue;
+    }
+
+    const source = SRC_ATTRIBUTE_PATTERN.exec(tag)?.[2]?.trim();
+    if (source) {
+      references.add(source);
+    }
+  }
+
+  for (const match of html.matchAll(LINK_TAG_PATTERN)) {
+    const tag = match[0];
+    const relValue = REL_ATTRIBUTE_PATTERN.exec(tag)?.[2]?.trim().toLowerCase();
+    if (!relValue) {
+      continue;
+    }
+
+    const relTokens = relValue.split(/\s+/u);
+    if (!relTokens.some((token) => token === "stylesheet" || token === "modulepreload")) {
+      continue;
+    }
+
+    const href = HREF_ATTRIBUTE_PATTERN.exec(tag)?.[2]?.trim();
+    if (href) {
+      references.add(href);
+    }
+  }
+
+  return Array.from(references);
+};
+
+const resolveDistAssetPath = (distDir: string, assetReference: string): string | null => {
+  const trimmedReference = assetReference.trim();
+  if (trimmedReference.length === 0 || trimmedReference.startsWith("data:")) {
+    return null;
+  }
+
+  const pathname = new URL(trimmedReference, "https://openlinks.local").pathname;
+  const segments = pathname
+    .replace(/^\/+/u, "")
+    .split("/")
+    .filter((segment) => segment.length > 0);
+
+  for (let index = 0; index < segments.length; index += 1) {
+    const candidate = path.join(distDir, ...segments.slice(index));
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+
+  return null;
+};
+
+const collectBundleMetrics = (rootDir: string): BundleMetrics | null => {
   const distDir = path.join(rootDir, "dist");
-  const assetsDir = path.join(distDir, "assets");
   const cachedContentImagesDir = path.join(distDir, "cache", "content-images");
   const indexPath = path.join(distDir, "index.html");
 
@@ -66,10 +141,11 @@ const collectBundleMetrics = (rootDir: string) => {
     return null;
   }
 
+  const html = fs.readFileSync(indexPath, "utf8");
   const htmlBytes = fs.statSync(indexPath).size;
-  const assetFiles = fs.existsSync(assetsDir)
-    ? fs.readdirSync(assetsDir).map((name) => path.join(assetsDir, name))
-    : [];
+  const assetFiles = collectInitialAssetReferences(html)
+    .map((reference) => resolveDistAssetPath(distDir, reference))
+    .filter((assetPath): assetPath is string => assetPath !== null);
 
   let totalAssetBytes = 0;
   let jsBytes = 0;
@@ -133,17 +209,11 @@ const metricLabel = (metric: string): string => {
 
 const evaluateProfile = (
   issues: QualityIssue[],
+  advisoryOnly: boolean,
   strict: boolean,
   profileName: "mobile" | "desktop",
   profileBudget: PerformanceProfileBudget | undefined,
-  metrics: {
-    totalBytes: number;
-    htmlBytes: number;
-    jsBytes: number;
-    cssBytes: number;
-    largestAssetBytes: number;
-    bakedImageBytes: number;
-  },
+  metrics: BundleMetrics,
 ) => {
   const issueStartIndex = issues.length;
   const defaults = DEFAULT_BUDGETS[profileName];
@@ -165,7 +235,7 @@ const evaluateProfile = (
     if (actual > threshold.fail) {
       issues.push({
         domain: "performance",
-        level: "error",
+        level: advisoryOnly ? "warning" : "error",
         code: "PERF_BUDGET_FAIL",
         scope: profileName,
         metric,
@@ -178,10 +248,11 @@ const evaluateProfile = (
     }
 
     if (actual > threshold.warn) {
+      const escalated = strict && !advisoryOnly;
       issues.push({
         domain: "performance",
-        level: strict ? "error" : "warning",
-        code: strict ? "PERF_BUDGET_WARN_ESCALATED" : "PERF_BUDGET_WARN",
+        level: escalated ? "error" : "warning",
+        code: escalated ? "PERF_BUDGET_WARN_ESCALATED" : "PERF_BUDGET_WARN",
         scope: profileName,
         metric,
         actual,
@@ -206,7 +277,7 @@ const evaluateProfile = (
   if (score < minimumScoreThreshold.fail) {
     issues.push({
       domain: "performance",
-      level: "error",
+      level: advisoryOnly ? "warning" : "error",
       code: "PERF_PROFILE_SCORE_FAIL",
       scope: profileName,
       metric: "minimumScore",
@@ -219,10 +290,11 @@ const evaluateProfile = (
   }
 
   if (score < minimumScoreThreshold.warn) {
+    const escalated = strict && !advisoryOnly;
     issues.push({
       domain: "performance",
-      level: strict ? "error" : "warning",
-      code: strict ? "PERF_PROFILE_SCORE_WARN_ESCALATED" : "PERF_PROFILE_SCORE_WARN",
+      level: escalated ? "error" : "warning",
+      code: escalated ? "PERF_PROFILE_SCORE_WARN_ESCALATED" : "PERF_PROFILE_SCORE_WARN",
       scope: profileName,
       metric: "minimumScore",
       actual: score,
@@ -234,6 +306,7 @@ const evaluateProfile = (
 };
 
 export const runPerformanceChecks = ({
+  advisoryOnly = false,
   rootDir,
   strict,
   site,
@@ -263,8 +336,8 @@ export const runPerformanceChecks = ({
   const mobileBudget = perfConfig?.profiles?.mobile;
   const desktopBudget = perfConfig?.profiles?.desktop;
 
-  evaluateProfile(issues, strict, "mobile", mobileBudget, metrics);
-  evaluateProfile(issues, strict, "desktop", desktopBudget, metrics);
+  evaluateProfile(issues, advisoryOnly, strict, "mobile", mobileBudget, metrics);
+  evaluateProfile(issues, advisoryOnly, strict, "desktop", desktopBudget, metrics);
 
   if (metrics.bakedImageBytes > BAKED_IMAGE_WARN_BYTES) {
     issues.push({

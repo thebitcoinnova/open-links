@@ -124,8 +124,8 @@ strict_summary() {
 ## Strict Signal Lane (Phase 5 Non-Blocking)
 - Commands:
   - \`bun run build:strict\`
-  - \`bun run quality:strict\`
-- Policy: strict failures are warning signals in this phase.
+  - \`bun run quality:strict:ci\`
+- Policy: CI strict mode keeps performance advisory-only while other strict failures remain visible.
 EOF
 }
 
@@ -137,10 +137,10 @@ run_strict() {
     failures+=("build:strict")
     write_summary <<EOF
 ### Strict Lane Follow-up
-- \`build:strict\` failed, so \`quality:strict\` was skipped because build artifacts were not produced.
+- \`build:strict\` failed, so \`quality:strict:ci\` was skipped because build artifacts were not produced.
 EOF
   else
-    run_check "strict" "quality_strict" bun run quality:strict || failures+=("quality:strict")
+    run_check "strict" "quality_strict" bun run quality:strict:ci || failures+=("quality:strict:ci")
   fi
 
   if ((${#failures[@]} > 0)); then
@@ -156,7 +156,7 @@ strict_warning_summary() {
 ### ⚠ Strict checks reported failures (non-blocking)
 - Failed strict commands: \`${FAILED_COMMANDS:-unknown}\`
 - Required checks passed, so this does not block merge/deploy in Phase 5.
-- Address strict diagnostics before advancing quality gates.
+- Address non-performance strict diagnostics before advancing quality gates.
 EOF
 }
 

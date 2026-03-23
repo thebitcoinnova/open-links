@@ -24,6 +24,7 @@ type OutputFormat = "human" | "json";
 
 interface ArgMap {
   excludeDomains: QualityDomain[];
+  warnOnlyDomains: QualityDomain[];
   strict: boolean;
   format: OutputFormat;
   reportPath?: string;
@@ -35,24 +36,18 @@ interface ArgMap {
 const ROOT = process.cwd();
 const ALL_QUALITY_DOMAINS = ["seo", "accessibility", "performance", "manual-smoke"] as const;
 
+const isQualityDomain = (value: string): value is QualityDomain =>
+  ALL_QUALITY_DOMAINS.includes(value as (typeof ALL_QUALITY_DOMAINS)[number]);
+
 const readJson = <T>(relativePath: string): T => {
   const absolutePath = path.isAbsolute(relativePath) ? relativePath : path.join(ROOT, relativePath);
   return JSON.parse(fs.readFileSync(absolutePath, "utf8")) as T;
 };
 
-const parseArgs = (): ArgMap => {
-  const args = process.argv.slice(2);
-
-  const getFlagValue = (name: string): string | undefined => {
-    const index = args.indexOf(name);
-    if (index < 0) return undefined;
-    return args[index + 1];
-  };
-
-  const formatRaw = getFlagValue("--format");
-  const excludeDomains = args
+const collectDomainFlagValues = (args: readonly string[], flagName: string): QualityDomain[] =>
+  args
     .flatMap((value, index) => {
-      if (value !== "--exclude-domain") {
+      if (value !== flagName) {
         return [];
       }
 
@@ -60,13 +55,21 @@ const parseArgs = (): ArgMap => {
       return typeof nextValue === "string" ? nextValue.split(",") : [];
     })
     .map((value) => value.trim())
-    .filter((value): value is QualityDomain =>
-      ["seo", "accessibility", "performance", "manual-smoke"].includes(value),
-    );
+    .filter(isQualityDomain);
+
+export const parseArgs = (argv = process.argv.slice(2)): ArgMap => {
+  const getFlagValue = (name: string): string | undefined => {
+    const index = argv.indexOf(name);
+    if (index < 0) return undefined;
+    return argv[index + 1];
+  };
+
+  const formatRaw = getFlagValue("--format");
 
   return {
-    excludeDomains,
-    strict: args.includes("--strict"),
+    excludeDomains: collectDomainFlagValues(argv, "--exclude-domain"),
+    warnOnlyDomains: collectDomainFlagValues(argv, "--warn-only-domain"),
+    strict: argv.includes("--strict"),
     format: formatRaw === "json" ? "json" : "human",
     reportPath: getFlagValue("--report"),
     summaryPath: getFlagValue("--summary"),
@@ -141,50 +144,66 @@ const buildResult = (
   };
 };
 
-const run = () => {
-  const args = parseArgs();
-
+export const runQualityChecks = (
+  args: ArgMap,
+): { reportPath: string; result: QualityRunResult; summaryPath: string } => {
   const site = readJson<QualitySiteInput>(args.sitePath);
   const profile = readJson<QualityProfileInput>(args.profilePath);
-
   const qualityPolicy = site.quality;
   const reportPath =
     args.reportPath ?? qualityPolicy?.reportPath ?? "data/generated/quality-report.json";
   const summaryPath =
     args.summaryPath ?? qualityPolicy?.summaryPath ?? "data/generated/quality-report.md";
+  const includedDomains = ALL_QUALITY_DOMAINS.filter(
+    (domain) => !args.excludeDomains.includes(domain),
+  ) as QualityDomain[];
+  const domainResults: QualityDomainResult[] = [];
+  let checklist: QualityRunResult["checklist"] = [];
 
-  const seoResult = runSeoChecks(site, profile);
-  const a11yResult = runA11yChecks({
-    rootDir: ROOT,
-    strict: args.strict,
-    focusContrastStrict: qualityPolicy?.accessibility?.focusContrastStrict ?? true,
-    site,
-  });
-  const manualSmokeResult = runManualSmokeChecks({
-    rootDir: ROOT,
-    checklistLabels: qualityPolicy?.accessibility?.manualSmokeChecks ?? [],
-  });
-  const perfResult = runPerformanceChecks({
-    rootDir: ROOT,
-    strict: args.strict,
-    site,
-  });
+  if (includedDomains.includes("seo")) {
+    domainResults.push(runSeoChecks(site, profile).domainResult);
+  }
 
-  const domainResults: QualityDomainResult[] = [
-    seoResult.domainResult,
-    a11yResult,
-    perfResult,
-    manualSmokeResult.domainResult,
-  ].filter((domainResult) => !args.excludeDomains.includes(domainResult.domain));
+  if (includedDomains.includes("accessibility")) {
+    domainResults.push(
+      runA11yChecks({
+        rootDir: ROOT,
+        strict: args.strict,
+        focusContrastStrict: qualityPolicy?.accessibility?.focusContrastStrict ?? true,
+        site,
+      }),
+    );
+  }
+
+  if (includedDomains.includes("performance")) {
+    domainResults.push(
+      runPerformanceChecks({
+        advisoryOnly: args.warnOnlyDomains.includes("performance"),
+        rootDir: ROOT,
+        strict: args.strict,
+        site,
+      }),
+    );
+  }
+
+  if (includedDomains.includes("manual-smoke")) {
+    const manualSmokeResult = runManualSmokeChecks({
+      rootDir: ROOT,
+      checklistLabels: qualityPolicy?.accessibility?.manualSmokeChecks ?? [],
+    });
+    checklist = manualSmokeResult.checks;
+    domainResults.push(manualSmokeResult.domainResult);
+  }
 
   const blockingDomains = resolveBlockingDomains(qualityPolicy, args.excludeDomains);
-  const result = buildResult(
-    args.strict,
-    reportPath,
-    blockingDomains,
-    domainResults,
-    manualSmokeResult.checks,
-  );
+  const result = buildResult(args.strict, reportPath, blockingDomains, domainResults, checklist);
+
+  return { reportPath, result, summaryPath };
+};
+
+const run = (): number => {
+  const args = parseArgs();
+  const { reportPath, result, summaryPath } = runQualityChecks(args);
 
   writeQualityReport(reportPath, result);
   writeQualitySummary(summaryPath, result);
@@ -195,7 +214,9 @@ const run = () => {
     console.log(formatQualityHumanOutput(result));
   }
 
-  process.exit(result.success ? 0 : 1);
+  return result.success ? 0 : 1;
 };
 
-run();
+if (import.meta.main) {
+  process.exit(run());
+}
