@@ -4,6 +4,8 @@ import {
   PAYMENT_CARD_EFFECT_EASTER_EGG_PATH,
   PAYMENT_CARD_EFFECT_ROUTE_PATHS,
   PAYMENT_CARD_EFFECT_SAMPLES_PATH,
+  PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS,
+  buildPaymentCardEffectCaptureSearchParams,
   isPaymentCardEffectRoutePath,
   paymentCardEffectDemoSections,
 } from "./card-effect-samples";
@@ -51,4 +53,21 @@ test("payment card effect demo sections include both showcase and practical exam
   assert.equal(examples.cards.length >= 4, true);
   assert.ok(multiRailExample);
   assert.ok(baselineExample);
+});
+
+test("payment card effect capture helpers keep the committed bombasticity ladder stable", () => {
+  // Arrange
+  const fixtureId = "lightning-default-combo";
+
+  // Act
+  const searchParams = buildPaymentCardEffectCaptureSearchParams({
+    fixtureId,
+    bombasticity: 0.75,
+  });
+
+  // Assert
+  assert.deepEqual(PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS, [0.25, 0.5, 0.75, 1]);
+  assert.equal(searchParams.get("capture"), "1");
+  assert.equal(searchParams.get("fixture"), fixtureId);
+  assert.equal(searchParams.get("bombasticity"), "0.75");
 });

@@ -1,5 +1,10 @@
 import type { OpenLink, SiteData } from "../content/load-content";
-import type { PaymentCardEffectsConfig, PaymentQrConfig } from "./types";
+import {
+  DEFAULT_PAYMENT_CARD_BOMBASTICITY,
+  type PaymentCardEffectsConfig,
+  type PaymentQrConfig,
+  clampPaymentCardBombasticity,
+} from "./types";
 
 export const PAYMENT_CARD_EFFECT_SAMPLES_PATH = "/__samples/payment-card-effects";
 export const PAYMENT_CARD_EFFECT_EASTER_EGG_PATH = "/spark/tip-cards";
@@ -7,9 +12,21 @@ export const PAYMENT_CARD_EFFECT_ROUTE_PATHS = [
   PAYMENT_CARD_EFFECT_SAMPLES_PATH,
   PAYMENT_CARD_EFFECT_EASTER_EGG_PATH,
 ] as const;
+export const PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM = "capture";
+export const PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM = "fixture";
+export const PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM = "bombasticity";
+export const PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS = [0.25, 0.5, 0.75, 1] as const;
+export const PAYMENT_CARD_EFFECT_CAPTURE_BOMBASTICITY_LEVELS =
+  PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS;
 
 export const isPaymentCardEffectRoutePath = (pathname: string): boolean =>
   PAYMENT_CARD_EFFECT_ROUTE_PATHS.some((routePath) => pathname.endsWith(routePath));
+
+export interface PaymentCardEffectRouteState {
+  capture: boolean;
+  fixtureId?: string;
+  bombasticity: number;
+}
 
 export interface PaymentCardEffectDemoCard {
   id: string;
@@ -28,6 +45,13 @@ export interface PaymentCardEffectDemoSection {
   description: string;
   layout?: "grid" | "stack";
   cards: readonly PaymentCardEffectDemoCard[];
+}
+
+export interface PaymentCardEffectVideoScenario {
+  fixtureId: string;
+  title: string;
+  bombasticity: number;
+  outputFileName: string;
 }
 
 const bitcoinQr = {
@@ -329,3 +353,83 @@ export const paymentCardEffectDemoSections: readonly PaymentCardEffectDemoSectio
     cards: paymentCardEffectExampleCards,
   },
 ];
+
+export const getPaymentCardEffectFixture = (
+  fixtureId: string | undefined,
+): PaymentCardEffectSampleFixture | undefined => {
+  if (!fixtureId) {
+    return undefined;
+  }
+
+  return paymentCardEffectSampleFixtures.find((fixture) => fixture.id === fixtureId);
+};
+
+export const parsePaymentCardEffectRouteState = (
+  searchParams: URLSearchParams,
+): PaymentCardEffectRouteState => {
+  const fixtureId = searchParams.get(PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM) ?? undefined;
+  const rawBombasticity = searchParams.get(PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM);
+  const maybeBombasticity =
+    rawBombasticity === null || rawBombasticity.trim().length === 0
+      ? undefined
+      : Number(rawBombasticity);
+
+  return {
+    capture: searchParams.get(PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM) === "1",
+    fixtureId: getPaymentCardEffectFixture(fixtureId) ? fixtureId : undefined,
+    bombasticity: clampPaymentCardBombasticity(maybeBombasticity),
+  };
+};
+
+export const serializePaymentCardEffectBombasticity = (bombasticity: number): string =>
+  clampPaymentCardBombasticity(bombasticity)
+    .toFixed(2)
+    .replace(/\.?0+$/u, "");
+
+export const buildPaymentCardEffectCaptureSearchParams = ({
+  fixtureId,
+  bombasticity,
+}: {
+  fixtureId: string;
+  bombasticity: number;
+}): URLSearchParams => {
+  const searchParams = new URLSearchParams();
+  searchParams.set(PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM, "1");
+  searchParams.set(PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM, fixtureId);
+  searchParams.set(
+    PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM,
+    serializePaymentCardEffectBombasticity(bombasticity),
+  );
+  return searchParams;
+};
+
+export const cloneLinkWithBombasticity = (link: OpenLink, bombasticity: number): OpenLink => {
+  if (!link.payment?.effects?.enabled) {
+    return link;
+  }
+
+  return {
+    ...link,
+    payment: {
+      ...link.payment,
+      effects: {
+        ...link.payment.effects,
+        bombasticity: clampPaymentCardBombasticity(bombasticity),
+      },
+    },
+  };
+};
+
+export const createPaymentCardEffectVideoScenarios = (): PaymentCardEffectVideoScenario[] =>
+  paymentCardEffectSampleFixtures.flatMap((fixture) =>
+    PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS.map((bombasticity) => ({
+      fixtureId: fixture.id,
+      title: fixture.title,
+      bombasticity,
+      outputFileName: `${fixture.outputFileName}-bombasticity-${serializePaymentCardEffectBombasticity(
+        bombasticity,
+      )}`,
+    })),
+  );
+
+export const paymentCardEffectDefaultBombasticity = DEFAULT_PAYMENT_CARD_BOMBASTICITY;
