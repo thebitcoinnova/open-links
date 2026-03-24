@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { SiteData } from "../../../../src/lib/content/load-content";
 import {
   STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS,
   STUDIO_LINK_TYPE_OPTIONS,
+  type StudioSiteData,
   resolveEditorLinkAccordionSummary,
   resolveEditorLinkAccordionValue,
   resolveStudioAnalyticsPageVisibilityValue,
@@ -18,7 +18,7 @@ const baseSite = {
     active: "sleek",
     available: ["sleek", "daybreak"],
   },
-} as const satisfies SiteData;
+} as const satisfies StudioSiteData;
 
 test("studio link type options stay aligned with the supported link types", () => {
   assert.deepEqual(
@@ -42,7 +42,7 @@ test("studio theme options come from normalized available themes", () => {
       active: "missing-theme",
       available: ["missing-theme"],
     },
-  } as const satisfies SiteData;
+  } as const satisfies StudioSiteData;
 
   assert.deepEqual(resolveStudioThemeOptions(site), [
     { value: "sleek", label: "sleek" },
@@ -58,7 +58,7 @@ test("studio theme options keep valid configured themes", () => {
       active: "daybreak",
       available: ["daybreak", "sleek"],
     },
-  } as const satisfies SiteData;
+  } as const satisfies StudioSiteData;
 
   assert.deepEqual(resolveStudioThemeOptions(site), [
     { value: "daybreak", label: "daybreak" },
@@ -78,7 +78,7 @@ test("studio analytics page visibility reads a disabled config", () => {
         pageEnabled: false,
       },
     },
-  } as const satisfies SiteData;
+  } as const satisfies StudioSiteData;
 
   assert.equal(resolveStudioAnalyticsPageVisibilityValue(site), "false");
 });

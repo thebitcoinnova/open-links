@@ -32,6 +32,7 @@ Use this file as the source of truth for implementation status, priorities, and 
 - [x] `P1` Dockerfiles and local compose for Studio services
 - [x] `P1` Bun-first package/runtime setup
 - [x] `P1` Studio Docker dependency-drift guardrails (workspace manifest parity in Dockerfiles + pre-commit lockfile sync gate + path-scoped CI Docker build checks)
+- [x] `P1` Studio package boundary hardening for Docker/CI builds (remove root-app runtime imports from `studio-web`)
 
 ## Phase 2: GitHub Auth and Session Management
 

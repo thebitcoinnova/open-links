@@ -1,6 +1,43 @@
-import type { LinkType, SiteData } from "../../../../src/lib/content/load-content";
-import { resolveThemeSelection } from "../../../../src/lib/theme/theme-registry";
-import { resolveAnalyticsPageEnabled } from "../../../../src/lib/ui/analytics-page-preferences";
+export type LinkType = "simple" | "rich" | "payment";
+
+export interface StudioSiteData {
+  description?: string;
+  theme?: {
+    active?: string;
+    available?: string[];
+  };
+  title?: string;
+  ui?: {
+    analytics?: {
+      pageEnabled?: boolean;
+    };
+  };
+}
+
+const ALL_THEME_IDS = [
+  "sleek",
+  "sleek-emerald",
+  "sleek-mono",
+  "midnight",
+  "daybreak",
+  "neutral",
+  "editorial",
+  "futuristic",
+  "humanist",
+] as const;
+
+const VALID_THEME_IDS = new Set<string>(ALL_THEME_IDS);
+
+const resolveAvailableThemeIds = (site: StudioSiteData): string[] => {
+  const available = site.theme?.available ?? [];
+  const valid = available.filter((themeId) => VALID_THEME_IDS.has(themeId));
+
+  if (valid.length > 0) {
+    return [...new Set(valid)];
+  }
+
+  return ["sleek", "daybreak"];
+};
 
 export interface StudioSelectOption {
   label: string;
@@ -25,14 +62,14 @@ export const STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS: StudioSelectOption[] = [
   { value: "false", label: "Hidden" },
 ];
 
-export const resolveStudioThemeOptions = (site: SiteData): StudioSelectOption[] =>
-  resolveThemeSelection(site).available.map((themeId) => ({
+export const resolveStudioThemeOptions = (site: StudioSiteData): StudioSelectOption[] =>
+  resolveAvailableThemeIds(site).map((themeId) => ({
     value: themeId,
     label: themeId,
   }));
 
-export const resolveStudioAnalyticsPageVisibilityValue = (site: SiteData): string =>
-  resolveAnalyticsPageEnabled(site) ? "true" : "false";
+export const resolveStudioAnalyticsPageVisibilityValue = (site: StudioSiteData): string =>
+  site.ui?.analytics?.pageEnabled !== false ? "true" : "false";
 
 export const resolveStudioConfirmDialogCopy = (
   action: StudioConfirmAction,

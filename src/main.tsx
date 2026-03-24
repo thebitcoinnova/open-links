@@ -4,6 +4,9 @@ import { registerOfflineSupport } from "./lib/offline/register-service-worker";
 import { isPaymentCardEffectRoutePath } from "./lib/payments/card-effect-samples";
 import RouteIndex from "./routes/index";
 import PaymentCardEffectSamplesRoute from "./routes/payment-card-effect-samples";
+import PlaywrightNavigationMenuRoute, {
+  PLAYWRIGHT_NAVIGATION_MENU_PATH,
+} from "./routes/playwright-navigation-menu";
 import PlaywrightPaymentQrRoute, {
   PLAYWRIGHT_PAYMENT_QR_PATH,
 } from "./routes/playwright-payment-qr";
@@ -28,6 +31,10 @@ const resolveRootRoute = (): Component => {
 
     if (pathname.endsWith(PLAYWRIGHT_PAYMENT_QR_PATH)) {
       return PlaywrightPaymentQrRoute;
+    }
+
+    if (pathname.endsWith(PLAYWRIGHT_NAVIGATION_MENU_PATH)) {
+      return PlaywrightNavigationMenuRoute;
     }
   }
 

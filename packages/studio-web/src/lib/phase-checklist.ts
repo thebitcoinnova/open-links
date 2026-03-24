@@ -31,6 +31,12 @@ export const phaseChecklist: PhaseChecklist[] = [
         status: "done",
         priority: "P1",
       },
+      {
+        id: "p1-6",
+        label: "Studio web package build no longer depends on root app source imports",
+        status: "done",
+        priority: "P1",
+      },
     ],
   },
   {
