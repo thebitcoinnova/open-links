@@ -13,6 +13,7 @@ import {
   onMount,
 } from "solid-js";
 import { Toaster, toast } from "solid-sonner";
+import FollowerHistorySegmentedControl from "../components/analytics/FollowerHistorySegmentedControl";
 import {
   FOLLOWER_HISTORY_MODE_OPTIONS,
   FOLLOWER_HISTORY_RANGE_OPTIONS,
@@ -22,6 +23,7 @@ import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
 import AnimatedPageSwap from "../components/layout/AnimatedPageSwap";
 import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
+import PublicPageTabs from "../components/layout/PublicPageTabs";
 import SiteFooter from "../components/layout/SiteFooter";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
@@ -76,6 +78,7 @@ import { ACTION_TOAST_OPTIONS, registerActionToastClient } from "../lib/ui/actio
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
+import { resolvePublicPageView } from "../lib/ui/public-page-view";
 import {
   buildRichCardViewModel,
   resolveRichCardVariant,
@@ -354,9 +357,15 @@ export default function RouteIndex() {
   const syncConnectivityState = () => {
     setConnectivity(readConnectivityStatus());
   };
+  const activeView = createMemo(() => resolvePublicPageView(analyticsPageOpen()));
+  const showPublicPageTabs = createMemo(() => analyticsAvailable() || activeView() === "analytics");
+  const setActiveView = (view: PageViewKey) => {
+    const nextOpen = view === "analytics";
 
-  const toggleAnalyticsPage = () => {
-    const nextOpen = !analyticsPageOpen();
+    if (nextOpen === analyticsPageOpen()) {
+      return;
+    }
+
     writeAnalyticsPageState(nextOpen);
     setAnalyticsPageOpen(nextOpen);
     setSelectedHistoryLinkId(null);
@@ -529,13 +538,10 @@ export default function RouteIndex() {
     persistModePreference(modePolicy, nextMode);
   };
 
-  const profileHeader = (analyticsActive: boolean) => (
+  const profileHeader = () => (
     <ProfileHeader
       profile={content.profile}
       richness={composition.profileRichness}
-      analyticsAvailable={analyticsAvailable()}
-      analyticsActive={analyticsActive}
-      onAnalyticsToggle={analyticsAvailable() || analyticsActive ? toggleAnalyticsPage : undefined}
       onProfileQrOpen={(payload) => openLinkQrDialog(content.profile.name, payload)}
     />
   );
@@ -544,7 +550,7 @@ export default function RouteIndex() {
     <For each={composition.blocks}>
       {(block) => (
         <Switch>
-          <Match when={block === "profile"}>{profileHeader(false)}</Match>
+          <Match when={block === "profile"}>{profileHeader()}</Match>
           <Match when={block === "links"}>
             <For each={sections}>
               {(section) => (
@@ -565,7 +571,7 @@ export default function RouteIndex() {
 
   const renderAnalyticsPage = () => (
     <>
-      {profileHeader(true)}
+      {profileHeader()}
 
       <section class="analytics-page" aria-label="Follower analytics">
         <div class="analytics-page-header">
@@ -576,37 +582,20 @@ export default function RouteIndex() {
             </p>
           </div>
           <div class="analytics-page-controls">
-            <div class="analytics-control-group" aria-label="Analytics time range">
-              <For each={FOLLOWER_HISTORY_RANGE_OPTIONS}>
-                {(option) => (
-                  <button
-                    aria-pressed={analyticsRange() === option.value}
-                    type="button"
-                    class="analytics-chip"
-                    data-active={analyticsRange() === option.value ? "true" : "false"}
-                    onClick={() => setAnalyticsRange(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </div>
-
-            <div class="analytics-control-group" aria-label="Analytics display mode">
-              <For each={FOLLOWER_HISTORY_MODE_OPTIONS}>
-                {(option) => (
-                  <button
-                    aria-pressed={analyticsMode() === option.value}
-                    type="button"
-                    class="analytics-chip"
-                    data-active={analyticsMode() === option.value ? "true" : "false"}
-                    onClick={() => setAnalyticsMode(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </div>
+            <FollowerHistorySegmentedControl
+              class="analytics-control-group"
+              label="Analytics time range"
+              options={FOLLOWER_HISTORY_RANGE_OPTIONS}
+              onChange={setAnalyticsRange}
+              value={analyticsRange()}
+            />
+            <FollowerHistorySegmentedControl
+              class="analytics-control-group"
+              label="Analytics display mode"
+              options={FOLLOWER_HISTORY_MODE_OPTIONS}
+              onChange={setAnalyticsMode}
+              value={analyticsMode()}
+            />
           </div>
         </div>
 
@@ -705,8 +694,12 @@ export default function RouteIndex() {
         </UtilityControlsMenu>
       </TopUtilityBar>
 
+      <Show when={showPublicPageTabs()}>
+        <PublicPageTabs activeView={activeView()} onViewChange={setActiveView} />
+      </Show>
+
       <AnimatedPageSwap
-        activeKey={analyticsPageOpen() ? ("analytics" as PageViewKey) : ("links" as PageViewKey)}
+        activeKey={activeView()}
         renderView={(key) => (key === "analytics" ? renderAnalyticsPage() : renderLinksPage())}
       />
 

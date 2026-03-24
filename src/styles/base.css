@@ -431,9 +431,46 @@ a:focus-visible {
   border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
 }
 
+.profile-action-bar-mobile {
+  display: none;
+}
+
+.profile-mobile-action-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .card-action-row {
   padding-top: var(--space-2);
   border-top: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
+}
+
+.mobile-overflow-menu-content {
+  z-index: 80;
+  min-width: 10rem;
+  padding: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 68%, transparent 32%);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-bg) 4%);
+  box-shadow: 0 18px 36px color-mix(in srgb, #000 18%, transparent 82%);
+}
+
+.mobile-overflow-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: calc(var(--radius-sm) * 0.95);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+}
+
+.mobile-overflow-menu-item[data-highlighted] {
+  background: color-mix(in srgb, var(--surface-pill) 54%, var(--accent) 46%);
 }
 
 .action-toast {
@@ -572,6 +609,45 @@ a:focus-visible {
   z-index: 1;
 }
 
+.public-page-tabs {
+  display: flex;
+  justify-content: center;
+}
+
+.public-page-tabs-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 64%, transparent 36%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-pill) 84%, var(--accent) 16%);
+}
+
+.public-page-tab-trigger {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  font: inherit;
+  font-size: var(--page-type-caption);
+  font-weight: 700;
+  cursor: pointer;
+  transition: color var(--motion-fast), background-color var(--motion-fast), box-shadow
+    var(--motion-fast);
+}
+
+.public-page-tab-trigger[data-selected] {
+  color: color-mix(in srgb, var(--text-primary) 96%, white 4%);
+  background: color-mix(in srgb, var(--accent) 72%, var(--surface-pill) 28%);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.public-page-tab-indicator {
+  display: none;
+}
+
 .analytics-page {
   display: grid;
   gap: var(--space-3);
@@ -627,13 +703,9 @@ a:focus-visible {
 }
 
 .analytics-control-group {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+  display: block;
 }
 
-.analytics-chip,
 .analytics-open-button,
 .analytics-modal-close-button {
   border: 1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent 28%);
@@ -648,24 +720,51 @@ a:focus-visible {
     var(--motion-fast), background-color var(--motion-fast);
 }
 
-.analytics-chip:hover,
 .analytics-open-button:hover,
 .analytics-modal-close-button:hover {
   border-color: var(--border-strong);
   transform: translateY(-1px);
 }
 
-.analytics-chip[data-active="true"] {
-  background: color-mix(in srgb, var(--accent) 72%, var(--surface-pill) 28%);
-  border-color: var(--accent-strong);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-strong) 34%, transparent), 0 12px 24px
-    color-mix(in srgb, var(--accent) 24%, transparent);
-  color: color-mix(in srgb, var(--text-primary) 96%, white 4%);
+.analytics-segmented-control {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.18rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent 28%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-pill) 84%, var(--accent) 16%);
 }
 
-.analytics-chip[data-active="true"]:hover {
-  background: color-mix(in srgb, var(--accent) 80%, var(--surface-pill) 20%);
-  border-color: var(--accent-strong);
+.analytics-segmented-item {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--motion-fast), box-shadow var(--motion-fast), color
+    var(--motion-fast);
+}
+
+.analytics-segmented-item-label {
+  display: block;
+  padding: 0.45rem 0.8rem;
+  font-size: var(--page-type-caption);
+  font-weight: 700;
+}
+
+.analytics-segmented-item[data-checked] {
+  background: color-mix(in srgb, var(--accent) 72%, var(--surface-pill) 28%);
+  color: color-mix(in srgb, var(--text-primary) 96%, white 4%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-strong) 34%, transparent), 0 12px 24px
+    color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.analytics-segmented-item:hover,
+.analytics-segmented-item:focus-visible {
+  color: var(--text-primary);
 }
 
 .analytics-empty-state {
@@ -1468,6 +1567,20 @@ a:focus-visible {
   padding-left: calc(clamp(4.8rem, 9vw, 5.4rem) + var(--space-3));
 }
 
+.payment-rail-actions-desktop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.payment-rail-actions-mobile {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
 .payment-rail-button {
   display: inline-flex;
   align-items: center;
@@ -1568,11 +1681,13 @@ a:focus-visible {
 
 @keyframes payment-rail-qr-panel-enter {
   from {
+    height: 0;
     opacity: 0;
     transform: translateY(0.35rem) scale(0.975);
   }
 
   to {
+    height: var(--kb-collapsible-content-height);
     opacity: 1;
     transform: translateY(0) scale(1);
   }
@@ -1580,11 +1695,13 @@ a:focus-visible {
 
 @keyframes payment-rail-qr-panel-exit {
   from {
+    height: var(--kb-collapsible-content-height);
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 
   to {
+    height: 0;
     opacity: 0;
     transform: translateY(0.35rem) scale(0.975);
   }
@@ -1592,6 +1709,7 @@ a:focus-visible {
 
 .payment-rail-qr-panel {
   display: grid;
+  overflow: hidden;
   justify-items: start;
   gap: var(--space-2);
   align-content: start;
@@ -1604,11 +1722,6 @@ a:focus-visible {
 
 .payment-rail-qr-panel[data-expanded] {
   animation: payment-rail-qr-panel-enter var(--motion-mid) both;
-}
-
-.payment-rail-qr-panel[data-entered] {
-  opacity: 1;
-  transform: translateY(0) scale(1);
 }
 
 .payment-rail-qr-panel[data-closed] {

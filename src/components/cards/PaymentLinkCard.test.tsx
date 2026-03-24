@@ -1,16 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import * as Collapsible from "@kobalte/core/collapsible";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import { resolveBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { setPaymentCardEffectDebugTuningValue } from "../../lib/payments/card-effect-debug-tuning";
 import { paymentCardEffectDefaultDebugTuning } from "../../lib/payments/card-effect-samples";
 import { clearActionToastClient, registerActionToastClient } from "../../lib/ui/action-toast";
+import MobileOverflowMenu from "../actions/MobileOverflowMenu";
 import StyledPaymentQr from "../payments/StyledPaymentQr";
-import {
-  PaymentLinkCard,
-  resolvePaymentQrPanelStages,
-  settlePaymentQrPanelStage,
-} from "./PaymentLinkCard";
+import { PaymentLinkCard, resolveMobilePaymentRailActionLayout } from "./PaymentLinkCard";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
 
@@ -86,7 +84,7 @@ const setReactRuntime = (runtime: typeof reactRuntime) => {
   ).React = runtime;
 };
 
-setReactRuntime(reactRuntime);
+setReactRuntime(createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content));
 
 const originalNavigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
 
@@ -550,15 +548,16 @@ test("single-rail payment cards expose inline open, copy, and QR controls", () =
   }) as RenderedNode;
 
   // Act
-  const qrButtons = collectElements(tree).filter(
+  const desktopActionBar = firstElementWithClass(tree, "payment-rail-actions-desktop");
+  const qrButtons = collectElements(desktopActionBar?.props.children as RenderedNode).filter(
     (element) =>
       element.type === "button" && element.props["aria-label"] === "Hide Bitcoin QR code",
   );
-  const copyButtons = collectElements(tree).filter(
+  const copyButtons = collectElements(desktopActionBar?.props.children as RenderedNode).filter(
     (element) =>
       element.type === "button" && element.props["aria-label"] === "Copy Bitcoin payment value",
   );
-  const openLinks = collectElements(tree).filter(
+  const openLinks = collectElements(desktopActionBar?.props.children as RenderedNode).filter(
     (element) => element.type === "a" && element.props["aria-label"] === "Open Bitcoin",
   );
   const fullscreenButtons = collectElements(tree).filter(
@@ -628,7 +627,8 @@ test("payment rail copy actions emit a toast when clipboard copy succeeds", asyn
   }) as RenderedNode;
 
   // Act
-  const copyButton = collectElements(tree).find(
+  const desktopActionBar = firstElementWithClass(tree, "payment-rail-actions-desktop");
+  const copyButton = collectElements(desktopActionBar?.props.children as RenderedNode).find(
     (element) =>
       element.type === "button" && element.props["aria-label"] === "Copy Bitcoin payment value",
   );
@@ -638,7 +638,9 @@ test("payment rail copy actions emit a toast when clipboard copy succeeds", asyn
   await (copyButton.props.onClick as () => Promise<void>)();
 
   // Assert
-  assert.deepEqual(calls, [{ message: "Bitcoin copied", variant: "default" }]);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]?.message, "Bitcoin copied");
+  assert.equal(calls[0]?.variant, "default");
 
   clearActionToastClient();
   restoreNavigator();
@@ -646,7 +648,14 @@ test("payment rail copy actions emit a toast when clipboard copy succeeds", asyn
 
 test("payment cards pass themeFingerprint to inline QR renderers", () => {
   // Arrange
-  setReactRuntime(createPreservingRuntime(StyledPaymentQr));
+  setReactRuntime(
+    createPreservingRuntime(
+      StyledPaymentQr,
+      MobileOverflowMenu,
+      Collapsible.Root,
+      Collapsible.Content,
+    ),
+  );
 
   // Act
   const tree = PaymentLinkCard({
@@ -661,54 +670,29 @@ test("payment cards pass themeFingerprint to inline QR renderers", () => {
   assert.ok(qr);
   assert.equal(qr.props.themeFingerprint, "sleek:dark");
 
-  setReactRuntime(reactRuntime);
+  setReactRuntime(
+    createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),
+  );
 });
 
-test("payment QR panel stages keep visible panels entered and hidden panels exiting", () => {
-  // Arrange
-  const currentStages = {
-    bitcoin: "entered",
-    cashapp: "entered",
-  } as const;
-  const visibleRailIds = new Set(["bitcoin"]);
-
+test("mobile payment rail action layout keeps open and QR inline before copy", () => {
   // Act
-  const nextStages = resolvePaymentQrPanelStages(currentStages, visibleRailIds, [
-    "bitcoin",
-    "cashapp",
-  ]);
+  const layout = resolveMobilePaymentRailActionLayout(["copy", "open", "qr"]);
 
   // Assert
-  assert.deepEqual(nextStages, {
-    bitcoin: "entered",
-    cashapp: "exiting",
+  assert.deepEqual(layout, {
+    inlineKinds: ["open", "qr"],
+    overflowKinds: ["copy"],
   });
 });
 
-test("settling an entering payment QR panel marks it entered", () => {
-  // Arrange
-  const currentStages = {
-    bitcoin: "entering",
-  } as const;
-
+test("mobile payment rail action layout keeps two actions inline when copy is already primary", () => {
   // Act
-  const nextStages = settlePaymentQrPanelStage(currentStages, "bitcoin");
+  const layout = resolveMobilePaymentRailActionLayout(["copy", "qr"]);
 
   // Assert
-  assert.deepEqual(nextStages, {
-    bitcoin: "entered",
+  assert.deepEqual(layout, {
+    inlineKinds: ["qr", "copy"],
+    overflowKinds: [],
   });
-});
-
-test("settling an exiting payment QR panel removes it", () => {
-  // Arrange
-  const currentStages = {
-    bitcoin: "exiting",
-  } as const;
-
-  // Act
-  const nextStages = settlePaymentQrPanelStage(currentStages, "bitcoin");
-
-  // Assert
-  assert.deepEqual(nextStages, {});
 });

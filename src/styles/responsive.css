@@ -51,6 +51,14 @@
     height: 1.36rem;
   }
 
+  body .profile-action-bar-desktop {
+    display: none;
+  }
+
+  body .profile-action-bar-mobile {
+    display: grid;
+  }
+
   body .utility-actions {
     gap: var(--space-1);
   }
@@ -145,6 +153,24 @@
     flex-direction: column;
   }
 
+  body .public-page-tabs {
+    justify-content: stretch;
+  }
+
+  body .public-page-tabs-list {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  body .public-page-tab-trigger {
+    flex: 1 1 0;
+    text-align: center;
+  }
+
+  body .analytics-segmented-control {
+    width: 100%;
+  }
+
   body .analytics-modal {
     width: calc(100vw - var(--space-4));
     max-width: calc(100vw - var(--space-4));
@@ -178,9 +204,33 @@
   body .site-footer-copy {
     width: 100%;
   }
+
+  body .payment-rail-actions-desktop {
+    display: none;
+  }
+
+  body .payment-rail-actions-mobile {
+    display: flex;
+  }
 }
 
 @media (min-width: 761px) {
+  body .profile-action-bar-mobile {
+    display: none;
+  }
+
+  body .profile-action-bar-desktop {
+    display: grid;
+  }
+
+  body .payment-rail-actions-desktop {
+    display: flex;
+  }
+
+  body .payment-rail-actions-mobile {
+    display: none;
+  }
+
   body .payment-single-layout[data-has-visible-qr="true"],
   body .payment-rail-main[data-has-visible-qr="true"] {
     grid-template-columns: minmax(0, 1fr) auto;

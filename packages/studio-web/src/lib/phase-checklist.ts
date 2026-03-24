@@ -78,6 +78,12 @@ export const phaseChecklist: PhaseChecklist[] = [
         status: "in_progress",
         priority: "P1",
       },
+      {
+        id: "p4-6",
+        label: "Kobalte select, accordion, and save/sync confirm UX polish",
+        status: "done",
+        priority: "P1",
+      },
     ],
   },
   {

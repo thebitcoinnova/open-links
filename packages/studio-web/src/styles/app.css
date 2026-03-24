@@ -16,6 +16,26 @@ body {
   box-sizing: border-box;
 }
 
+@keyframes studio-accordion-down {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: var(--kb-accordion-content-height);
+  }
+}
+
+@keyframes studio-accordion-up {
+  from {
+    height: var(--kb-accordion-content-height);
+  }
+
+  to {
+    height: 0;
+  }
+}
+
 .openlinks-studio-logo {
   width: 1.6rem;
   height: 1.6rem;

@@ -1,3 +1,4 @@
+import * as Collapsible from "@kobalte/core/collapsible";
 import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
@@ -20,6 +21,7 @@ import type {
 } from "../../lib/payments/types";
 import { copyToClipboard } from "../../lib/share/copy-to-clipboard";
 import { showActionToast } from "../../lib/ui/action-toast";
+import MobileOverflowMenu from "../actions/MobileOverflowMenu";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 import PaymentQrFullscreen from "../payments/PaymentQrFullscreen";
 import StyledPaymentQr from "../payments/StyledPaymentQr";
@@ -40,8 +42,20 @@ type PaymentRailEntry = {
 };
 
 type PaymentRailActionKind = "copy" | "open" | "qr";
-export type PaymentQrPanelStage = "entering" | "entered" | "exiting";
-export type PaymentQrPanelStages = Record<string, PaymentQrPanelStage>;
+interface PaymentRailActionDescriptor {
+  ariaLabel: string;
+  kind: PaymentRailActionKind;
+  label: string;
+  onSelect?: () => void | Promise<void>;
+  href?: string;
+  rel?: string;
+  target?: "_blank" | "_self";
+}
+
+export interface MobilePaymentRailActionLayout {
+  inlineKinds: PaymentRailActionKind[];
+  overflowKinds: PaymentRailActionKind[];
+}
 
 const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
 
@@ -73,66 +87,16 @@ const clampLogoSize = (value: number | undefined): number => {
   return Math.min(0.35, Math.max(0.15, value));
 };
 
-export const arePaymentQrPanelStagesEqual = (
-  previous: PaymentQrPanelStages,
-  next: PaymentQrPanelStages,
-): boolean => {
-  const previousKeys = Object.keys(previous);
-  const nextKeys = Object.keys(next);
+export const resolveMobilePaymentRailActionLayout = (
+  kinds: PaymentRailActionKind[],
+): MobilePaymentRailActionLayout => {
+  const orderedKinds: PaymentRailActionKind[] = ["open", "qr", "copy"];
+  const prioritizedKinds = orderedKinds.filter((kind) => kinds.includes(kind));
 
-  if (previousKeys.length !== nextKeys.length) {
-    return false;
-  }
-
-  return previousKeys.every((key) => previous[key] === next[key]);
-};
-
-export const resolvePaymentQrPanelStages = (
-  currentStages: PaymentQrPanelStages,
-  visibleRailIds: ReadonlySet<string>,
-  qrRailIds: string[],
-): PaymentQrPanelStages => {
-  const nextStages: PaymentQrPanelStages = {};
-
-  for (const railId of qrRailIds) {
-    const currentStage = currentStages[railId];
-
-    if (visibleRailIds.has(railId)) {
-      nextStages[railId] = currentStage === "entered" ? "entered" : "entering";
-      continue;
-    }
-
-    if (currentStage) {
-      nextStages[railId] = "exiting";
-    }
-  }
-
-  return nextStages;
-};
-
-export const settlePaymentQrPanelStage = (
-  currentStages: PaymentQrPanelStages,
-  railId: string,
-): PaymentQrPanelStages => {
-  const stage = currentStages[railId];
-
-  if (!stage) {
-    return currentStages;
-  }
-
-  if (stage === "exiting") {
-    const { [railId]: _removed, ...remainingStages } = currentStages;
-    return remainingStages;
-  }
-
-  if (stage === "entering") {
-    return {
-      ...currentStages,
-      [railId]: "entered",
-    };
-  }
-
-  return currentStages;
+  return {
+    inlineKinds: prioritizedKinds.slice(0, 2),
+    overflowKinds: prioritizedKinds.slice(2),
+  };
 };
 
 export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
@@ -255,38 +219,6 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const qrFullscreenModeForRail = (rail: PaymentRail): PaymentQrFullscreenMode =>
     rail.qr?.fullscreen ?? siteQrDefaults()?.fullscreenDefault ?? "enabled";
 
-  const qrRailIds = createMemo(() =>
-    railActions()
-      .filter((railEntry) => shouldShowQr(railEntry) && Boolean(railEntry.action.qrPayload))
-      .map((railEntry) => railEntry.rail.id),
-  );
-
-  const visibleQrRailIds = createMemo(() => {
-    const nextVisibleRailIds = new Set<string>();
-
-    for (const railEntry of railActions()) {
-      const railId = railEntry.rail.id;
-
-      if (shouldShowQr(railEntry) && isQrVisible(railId) && Boolean(railEntry.action.qrPayload)) {
-        nextVisibleRailIds.add(railId);
-      }
-    }
-
-    return nextVisibleRailIds;
-  });
-  const createInitialQrPanelStages = (): PaymentQrPanelStages => {
-    const initialStages: PaymentQrPanelStages = {};
-
-    for (const railId of visibleQrRailIds()) {
-      initialStages[railId] = "entered";
-    }
-
-    return initialStages;
-  };
-  const [qrPanelStages, setQrPanelStages] = createSignal<PaymentQrPanelStages>(
-    createInitialQrPanelStages(),
-  );
-
   const canUseFullscreenForRail = (railEntry: {
     rail: PaymentRail;
     action: ResolvedPaymentRailAction;
@@ -317,21 +249,6 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     rails();
     effectiveQrDisplay();
     setToggledQrRailIds(new Set<string>());
-  });
-
-  createEffect(() => {
-    const nextQrRailIds = qrRailIds();
-    const nextVisibleRailIds = visibleQrRailIds();
-
-    setQrPanelStages((currentStages) => {
-      const nextStages = resolvePaymentQrPanelStages(
-        currentStages,
-        nextVisibleRailIds,
-        nextQrRailIds,
-      );
-
-      return arePaymentQrPanelStagesEqual(currentStages, nextStages) ? currentStages : nextStages;
-    });
   });
 
   onMount(() => {
@@ -370,8 +287,6 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     primaryAction()?.iconAlias ??
     "wallet";
   const railPanelId = (railId: string) => `payment-rail-qr-${safeId(`${props.link.id}-${railId}`)}`;
-  const qrPanelStage = (railId: string): PaymentQrPanelStage | undefined => qrPanelStages()[railId];
-  const hasMountedQrPanel = (railId: string): boolean => Boolean(qrPanelStage(railId));
   const singleRailSummaryValue = (railEntry: PaymentRailEntry): string =>
     railEntry.action.displayValue ?? description();
   const singleRailSummaryNote = (railEntry: PaymentRailEntry): string | undefined => {
@@ -380,6 +295,95 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   };
   const hasRailActions = (railEntry: PaymentRailEntry): boolean =>
     Boolean(railEntry.action.copyValue || railEntry.action.href || shouldShowQr(railEntry));
+  const openRail = (railEntry: PaymentRailEntry) => {
+    const href = railEntry.action.href;
+
+    if (!href || typeof window === "undefined") {
+      return;
+    }
+
+    if (railEntry.action.openInNewTab) {
+      window.open(href, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    window.location.assign(href);
+  };
+  const resolveRailActions = (
+    railEntry: PaymentRailEntry,
+    railId: string,
+    qrVisible: boolean,
+  ): PaymentRailActionDescriptor[] => {
+    const actions: PaymentRailActionDescriptor[] = [];
+
+    if (railEntry.action.href) {
+      actions.push({
+        ariaLabel: `Open ${railEntry.action.label}`,
+        href: railEntry.action.href,
+        kind: "open",
+        label: "Open",
+        onSelect: () => openRail(railEntry),
+        rel: openRailInNewTab(railEntry),
+        target: railEntry.action.openInNewTab ? "_blank" : "_self",
+      });
+    }
+
+    if (shouldShowQr(railEntry)) {
+      actions.push({
+        ariaLabel: `${qrVisible ? "Hide" : "Show"} ${railEntry.action.label} QR code`,
+        kind: "qr",
+        label: qrVisible ? "Hide QR" : "Show QR",
+        onSelect: () => toggleQrVisibility(railId),
+      });
+    }
+
+    if (railEntry.action.copyValue) {
+      actions.push({
+        ariaLabel: `Copy ${railEntry.action.label} payment value`,
+        kind: "copy",
+        label: "Copy",
+        onSelect: () => copyRailValue(railEntry.action.label, railEntry.action.copyValue),
+      });
+    }
+
+    return actions;
+  };
+  const renderRailActionControl = (
+    action: PaymentRailActionDescriptor,
+    railId: string,
+    className: string,
+    qrVisible: boolean,
+  ) => {
+    if (action.kind === "open" && action.href) {
+      return (
+        <a
+          class={className}
+          href={action.href}
+          target={action.target}
+          rel={action.rel}
+          aria-label={action.ariaLabel}
+        >
+          {renderPaymentRailActionIcon(action.kind)}
+          <span class="payment-rail-button-label">{action.label}</span>
+        </a>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        class={className}
+        data-active={action.kind === "qr" && qrVisible ? "true" : "false"}
+        onClick={() => action.onSelect?.()}
+        aria-label={action.ariaLabel}
+        aria-expanded={action.kind === "qr" ? qrVisible : undefined}
+        aria-controls={action.kind === "qr" ? railPanelId(railId) : undefined}
+      >
+        {renderPaymentRailActionIcon(action.kind)}
+        <span class="payment-rail-button-label">{action.label}</span>
+      </button>
+    );
+  };
 
   const renderRailActions = (
     railEntry: PaymentRailEntry,
@@ -392,6 +396,15 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
       return null;
     }
 
+    const actions = resolveRailActions(railEntry, railId, qrVisible);
+    const mobileLayout = resolveMobilePaymentRailActionLayout(actions.map((action) => action.kind));
+    const inlineMobileActions = mobileLayout.inlineKinds
+      .map((kind) => actions.find((action) => action.kind === kind))
+      .filter((action): action is PaymentRailActionDescriptor => Boolean(action));
+    const overflowActions = mobileLayout.overflowKinds
+      .map((kind) => actions.find((action) => action.kind === kind))
+      .filter((action): action is PaymentRailActionDescriptor => Boolean(action));
+
     return (
       <div
         class={
@@ -399,70 +412,51 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
         }
         aria-labelledby={railLabelId}
       >
-        <Show when={railEntry.action.href}>
-          {(href) => (
-            <a
-              class="payment-rail-button payment-rail-button--primary"
-              href={href()}
-              target={railEntry.action.openInNewTab ? "_blank" : "_self"}
-              rel={openRailInNewTab(railEntry)}
-              aria-label={`Open ${railEntry.action.label}`}
-            >
-              {renderPaymentRailActionIcon("open")}
-              <span class="payment-rail-button-label">Open</span>
-            </a>
-          )}
-        </Show>
-
-        <Show when={railEntry.action.copyValue}>
-          <button
-            type="button"
-            class="payment-rail-button payment-rail-button--secondary"
-            onClick={() => copyRailValue(railEntry.action.label, railEntry.action.copyValue)}
-            aria-label={`Copy ${railEntry.action.label} payment value`}
-          >
-            {renderPaymentRailActionIcon("copy")}
-            <span class="payment-rail-button-label">Copy</span>
-          </button>
-        </Show>
-
-        <Show when={shouldShowQr(railEntry)}>
-          <button
-            type="button"
-            class="payment-rail-button payment-rail-button--toggle"
-            data-active={qrVisible ? "true" : "false"}
-            onClick={() => toggleQrVisibility(railId)}
-            aria-label={`${qrVisible ? "Hide" : "Show"} ${railEntry.action.label} QR code`}
-            aria-expanded={qrVisible}
-            aria-controls={railPanelId(railId)}
-          >
-            {renderPaymentRailActionIcon("qr")}
-            <span class="payment-rail-button-label">{qrVisible ? "Hide QR" : "Show QR"}</span>
-          </button>
-        </Show>
+        <div class="payment-rail-actions-desktop">
+          <For each={actions}>
+            {(action) =>
+              renderRailActionControl(
+                action,
+                railId,
+                `payment-rail-button ${action.kind === "open" ? "payment-rail-button--primary" : action.kind === "qr" ? "payment-rail-button--toggle" : "payment-rail-button--secondary"}`,
+                qrVisible,
+              )
+            }
+          </For>
+        </div>
+        <div class="payment-rail-actions-mobile">
+          <For each={inlineMobileActions}>
+            {(action) =>
+              renderRailActionControl(
+                action,
+                railId,
+                `payment-rail-button ${action.kind === "open" ? "payment-rail-button--primary" : action.kind === "qr" ? "payment-rail-button--toggle" : "payment-rail-button--secondary"}`,
+                qrVisible,
+              )
+            }
+          </For>
+          <MobileOverflowMenu
+            actions={overflowActions.map((action) => ({
+              label: action.label,
+              onSelect: () => action.onSelect?.(),
+            }))}
+            class="payment-rail-button payment-rail-button--secondary mobile-overflow-menu-trigger"
+            contentClass="mobile-overflow-menu-content payment-rail-overflow-menu"
+            itemClass="mobile-overflow-menu-item"
+            label={`More ${railEntry.action.label} actions`}
+          />
+        </div>
       </div>
     );
   };
 
   const renderQrPanel = (railEntry: PaymentRailEntry, railId: string, railLabelId: string) => (
-    <Show when={railEntry.action.qrPayload && qrPanelStage(railId)}>
-      {(stage) => (
-        <section
+    <Show when={railEntry.action.qrPayload && shouldShowQr(railEntry)}>
+      <Collapsible.Root open={isQrVisible(railId)}>
+        <Collapsible.Content
           class="payment-rail-qr-panel"
           id={railPanelId(railId)}
           aria-labelledby={railLabelId}
-          aria-hidden={stage() === "exiting" ? "true" : undefined}
-          inert={stage() === "exiting" ? true : undefined}
-          data-closed={stage() === "exiting" ? "" : undefined}
-          data-entered={stage() === "entered" ? "" : undefined}
-          data-expanded={stage() === "entering" ? "" : undefined}
-          onAnimationEnd={(event) => {
-            if (event.currentTarget !== event.target) {
-              return;
-            }
-
-            setQrPanelStages((currentStages) => settlePaymentQrPanelStage(currentStages, railId));
-          }}
         >
           <StyledPaymentQr
             payload={railEntry.action.qrPayload as string}
@@ -486,8 +480,8 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
               {fullscreenCtaLabel()}
             </button>
           </Show>
-        </section>
-      )}
+        </Collapsible.Content>
+      </Collapsible.Root>
     </Show>
   );
 
@@ -541,7 +535,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
                   const railId = railEntry.rail.id;
                   const qrVisible = () => isQrVisible(railId);
                   const railLabelId = `payment-rail-label-${safeId(`${props.link.id}-${railId}`)}`;
-                  const hasVisibleQr = () => hasMountedQrPanel(railId);
+                  const hasVisibleQr = () => shouldShowQr(railEntry) && qrVisible();
 
                   return (
                     <li
@@ -587,7 +581,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
           {(railEntry) => {
             const railId = railEntry().rail.id;
             const railLabelId = `payment-rail-label-${safeId(`${props.link.id}-${railId}`)}`;
-            const hasVisibleQr = () => hasMountedQrPanel(railId);
+            const hasVisibleQr = () => shouldShowQr(railEntry()) && isQrVisible(railId);
 
             return (
               <section

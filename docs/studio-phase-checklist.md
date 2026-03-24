@@ -56,6 +56,7 @@ Use this file as the source of truth for implementation status, priorities, and 
 - [x] `P1` Kobalte-backed editor navigation and mobile shell drawer refactor
 - [/] `P1` Richer field coverage for advanced `site.ui` options
 - [/] `P1` Guided `links[].metadata.profileDescription` editing for supported social profile links
+- [x] `P1` Kobalte select, accordion, and save/sync confirm UX polish
 - [ ] `P2` Undo/redo and change history in UI
 
 ## Phase 5: Save, Validation, Deploy Visibility

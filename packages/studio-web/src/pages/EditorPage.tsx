@@ -1,13 +1,25 @@
 import EditorWorkspace, { type EditorTab } from "@/components/editor/EditorWorkspace";
 import PageShell from "@/components/layout/PageShell";
+import { SimpleAccordion, SimpleAccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LabeledInput, LabeledTextarea } from "@/components/ui/field";
+import { LabeledSelect } from "@/components/ui/labeled-select";
 import StatusNotice from "@/components/ui/status-notice";
 import type { LiveRegionTone } from "@/lib/accessibility";
 import { api } from "@/lib/api";
+import {
+  STUDIO_LINK_TYPE_OPTIONS,
+  type StudioConfirmAction,
+  resolveEditorLinkAccordionSummary,
+  resolveEditorLinkAccordionValue,
+  resolveStudioConfirmDialogCopy,
+  resolveStudioThemeOptions,
+} from "@/lib/editor-options";
 import type { RepoContentPayload, ValidationResult } from "@openlinks/studio-shared";
 import { useParams } from "@solidjs/router";
 import { For, type JSX, Show, createMemo, createResource, createSignal } from "solid-js";
+import type { SiteData } from "../../../../src/lib/content/load-content";
 
 const jsonPretty = (value: unknown): string => JSON.stringify(value, null, 2);
 
@@ -37,6 +49,10 @@ export default function EditorPage() {
     links: "",
     site: "",
   });
+  const [expandedLinkSections, setExpandedLinkSections] = createSignal<string[]>([]);
+  const [pendingConfirmAction, setPendingConfirmAction] = createSignal<StudioConfirmAction | null>(
+    null,
+  );
 
   const captureBaseline = (payload: RepoContentPayload) => {
     setBaseline(JSON.stringify(payload));
@@ -51,6 +67,9 @@ export default function EditorPage() {
     const loaded = content();
     if (loaded && !baseline()) {
       captureBaseline(loaded);
+      const rawLinks = loaded.links as { links?: Record<string, unknown>[] };
+      const firstLink = Array.isArray(rawLinks.links) ? rawLinks.links[0] : undefined;
+      setExpandedLinkSections(firstLink ? [resolveEditorLinkAccordionValue(0, firstLink.id)] : []);
     }
     return loaded;
   });
@@ -140,8 +159,9 @@ export default function EditorPage() {
         >[])
       : [];
 
+    const nextLinkId = `link-${Date.now()}`;
     linksArr.push({
-      id: `link-${Date.now()}`,
+      id: nextLinkId,
       label: "New Link",
       url: "https://example.com",
       type: "simple",
@@ -151,6 +171,7 @@ export default function EditorPage() {
       ...loaded,
       links: { ...(loaded.links as Record<string, unknown>), links: linksArr },
     });
+    setExpandedLinkSections([resolveEditorLinkAccordionValue(linksArr.length - 1, nextLinkId)]);
   };
 
   const applyAdvancedJson = () => {
@@ -223,6 +244,28 @@ export default function EditorPage() {
     const raw = loaded?.links as { links?: Record<string, unknown>[] } | undefined;
     return Array.isArray(raw?.links) ? raw.links : [];
   });
+  const confirmDialogCopy = createMemo(() => {
+    const action = pendingConfirmAction();
+    return action ? resolveStudioConfirmDialogCopy(action) : null;
+  });
+  const closeConfirmDialog = () => {
+    setPendingConfirmAction(null);
+  };
+  const confirmPendingAction = async () => {
+    const action = pendingConfirmAction();
+    if (!action) {
+      return;
+    }
+
+    setPendingConfirmAction(null);
+
+    if (action === "save") {
+      await save();
+      return;
+    }
+
+    await triggerSync();
+  };
 
   return (
     <PageShell>
@@ -270,13 +313,15 @@ export default function EditorPage() {
                     Add link
                   </Button>
                 </div>
-                <div class="space-y-3">
+                <SimpleAccordion value={expandedLinkSections()} onChange={setExpandedLinkSections}>
                   <For each={linksArray()}>
                     {(link, index) => (
-                      <fieldset class="rounded-xl border border-slate-700 bg-slate-900/40 p-3">
-                        <legend class="px-1 text-sm font-semibold text-slate-100">
-                          Link {index() + 1}
-                        </legend>
+                      <SimpleAccordionItem
+                        value={resolveEditorLinkAccordionValue(index(), link.id)}
+                        summary={resolveEditorLinkAccordionSummary(index(), link).summary}
+                        summaryDetail={resolveEditorLinkAccordionSummary(index(), link).detail}
+                        summaryMeta={resolveEditorLinkAccordionSummary(index(), link).meta}
+                      >
                         <div class="grid gap-3 md:grid-cols-2">
                           <LabeledInput
                             id={`editor-link-${index()}-id`}
@@ -302,12 +347,11 @@ export default function EditorPage() {
                             }
                             value={String(link.url ?? "")}
                           />
-                          <LabeledInput
+                          <LabeledSelect
                             id={`editor-link-${index()}-type`}
                             label="Link type"
-                            onInput={(event) =>
-                              updateLink(index(), "type", event.currentTarget.value)
-                            }
+                            onChange={(value) => updateLink(index(), "type", value)}
+                            options={STUDIO_LINK_TYPE_OPTIONS}
                             value={String(link.type ?? "simple")}
                           />
                         </div>
@@ -332,10 +376,10 @@ export default function EditorPage() {
                             />
                           </div>
                         </Show>
-                      </fieldset>
+                      </SimpleAccordionItem>
                     )}
                   </For>
-                </div>
+                </SimpleAccordion>
               </>
             ),
             site: (
@@ -353,10 +397,11 @@ export default function EditorPage() {
                   onInput={(event) => updateSite("description", event.currentTarget.value)}
                   value={String(loaded().site.description ?? "")}
                 />
-                <LabeledInput
+                <LabeledSelect
                   id="editor-site-theme-active"
                   label="Active theme"
-                  onInput={(event) => {
+                  maybeDescription="Uses the normalized available theme list from site.theme.available."
+                  onChange={(value) => {
                     const currentTheme = (loaded().site.theme as Record<string, unknown>) ?? {};
                     setContent({
                       ...loaded(),
@@ -364,11 +409,12 @@ export default function EditorPage() {
                         ...loaded().site,
                         theme: {
                           ...currentTheme,
-                          active: event.currentTarget.value,
+                          active: value,
                         },
                       },
                     });
                   }}
+                  options={resolveStudioThemeOptions(loaded().site as SiteData)}
                   value={String((loaded().site.theme as { active?: string })?.active ?? "")}
                 />
               </>
@@ -433,10 +479,14 @@ export default function EditorPage() {
               <h2 class="font-display text-xl font-bold">Publish Controls</h2>
               <div class="flex flex-wrap gap-2">
                 <Button onClick={validate}>Validate</Button>
-                <Button variant="outline" onClick={save} disabled={!dirty()}>
+                <Button
+                  variant="outline"
+                  onClick={() => setPendingConfirmAction("save")}
+                  disabled={!dirty()}
+                >
                   Save to main
                 </Button>
-                <Button variant="outline" onClick={triggerSync}>
+                <Button variant="outline" onClick={() => setPendingConfirmAction("sync")}>
                   Sync upstream
                 </Button>
                 <Button
@@ -525,6 +575,18 @@ export default function EditorPage() {
             />
           );
         }}
+      </Show>
+      <Show when={confirmDialogCopy()}>
+        {(dialog) => (
+          <ConfirmDialog
+            open={Boolean(pendingConfirmAction())}
+            title={dialog().title}
+            description={dialog().description}
+            confirmLabel={dialog().confirmLabel}
+            onCancel={closeConfirmDialog}
+            onConfirm={confirmPendingAction}
+          />
+        )}
       </Show>
     </PageShell>
   );

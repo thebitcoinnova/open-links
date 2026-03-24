@@ -8,6 +8,7 @@ import type {
 import { describeFollowerHistoryRange } from "../../lib/analytics/follower-history";
 import AppDialog from "../dialog/AppDialog";
 import FollowerHistoryChart from "./FollowerHistoryChart";
+import FollowerHistorySegmentedControl from "./FollowerHistorySegmentedControl";
 import {
   FOLLOWER_HISTORY_MODE_OPTIONS,
   FOLLOWER_HISTORY_RANGE_OPTIONS,
@@ -52,37 +53,20 @@ export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
           </div>
 
           <div class="analytics-controls">
-            <div class="analytics-control-group" aria-label="History time range">
-              <For each={FOLLOWER_HISTORY_RANGE_OPTIONS}>
-                {(option) => (
-                  <button
-                    aria-pressed={props.range === option.value}
-                    type="button"
-                    class="analytics-chip"
-                    data-active={props.range === option.value ? "true" : "false"}
-                    onClick={() => props.onRangeChange(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </div>
-
-            <div class="analytics-control-group" aria-label="History display mode">
-              <For each={FOLLOWER_HISTORY_MODE_OPTIONS}>
-                {(option) => (
-                  <button
-                    aria-pressed={props.mode === option.value}
-                    type="button"
-                    class="analytics-chip"
-                    data-active={props.mode === option.value ? "true" : "false"}
-                    onClick={() => props.onModeChange(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </div>
+            <FollowerHistorySegmentedControl
+              class="analytics-control-group"
+              label="History time range"
+              options={FOLLOWER_HISTORY_RANGE_OPTIONS}
+              onChange={props.onRangeChange}
+              value={props.range}
+            />
+            <FollowerHistorySegmentedControl
+              class="analytics-control-group"
+              label="History display mode"
+              options={FOLLOWER_HISTORY_MODE_OPTIONS}
+              onChange={props.onModeChange}
+              value={props.mode}
+            />
           </div>
 
           <FollowerHistoryChart

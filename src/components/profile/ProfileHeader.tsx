@@ -3,12 +3,10 @@ import type { ProfileData } from "../../lib/content/load-content";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
 import BottomActionBar, { type BottomActionBarItem } from "../actions/BottomActionBar";
+import MobileOverflowMenu, { type MobileOverflowMenuAction } from "../actions/MobileOverflowMenu";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
-  analyticsActive?: boolean;
-  analyticsAvailable?: boolean;
-  onAnalyticsToggle?: () => void;
   onProfileQrOpen?: (payload: string) => void;
   richness?: "minimal" | "standard" | "rich";
 }
@@ -17,8 +15,6 @@ const orderedContactEntries = (contact?: Record<string, string>) =>
   Object.entries(contact ?? {}).sort((left, right) => left[0].localeCompare(right[0]));
 
 export const ProfileHeader = (props: ProfileHeaderProps) => {
-  const analyticsActive = () => props.analyticsActive ?? false;
-  const analyticsAvailable = () => props.analyticsAvailable ?? false;
   const richness = () => props.richness ?? "standard";
   const contacts = () => orderedContactEntries(props.profile.contact);
 
@@ -53,27 +49,6 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   const actionItems = (): BottomActionBarItem[] => {
     const items: BottomActionBarItem[] = [];
 
-    if ((analyticsAvailable() || analyticsActive()) && props.onAnalyticsToggle) {
-      items.push({
-        active: analyticsActive(),
-        ariaLabel: analyticsActive() ? "Back to links" : "View follower analytics",
-        kind: "analytics",
-        label: analyticsActive() ? "Back" : "Stats",
-        onClick: () => props.onAnalyticsToggle?.(),
-        title: analyticsActive() ? "Back to links" : "View follower analytics",
-      });
-    }
-
-    if (props.onProfileQrOpen) {
-      items.push({
-        ariaLabel: "Show profile QR code",
-        kind: "qr",
-        label: "QR",
-        onClick: handleOpenProfileQr,
-        title: "Show profile QR code",
-      });
-    }
-
     items.push(
       {
         ariaLabel: "Share profile",
@@ -84,6 +59,17 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         },
         title: "Share profile",
       },
+      ...(props.onProfileQrOpen
+        ? [
+            {
+              ariaLabel: "Show profile QR code",
+              kind: "qr" as const,
+              label: "QR",
+              onClick: handleOpenProfileQr,
+              title: "Show profile QR code",
+            },
+          ]
+        : []),
       {
         ariaLabel: "Copy profile link",
         kind: "copy",
@@ -96,6 +82,31 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     );
 
     return items;
+  };
+  const mobilePrimaryActionItems = (): BottomActionBarItem[] => {
+    const items = actionItems();
+    const shareAction = items.find((item) => item.kind === "share");
+    const qrAction = items.find((item) => item.kind === "qr");
+    const copyAction = items.find((item) => item.kind === "copy");
+
+    if (qrAction) {
+      return [shareAction, qrAction].filter(Boolean) as BottomActionBarItem[];
+    }
+
+    return [shareAction, copyAction].filter(Boolean) as BottomActionBarItem[];
+  };
+  const mobileOverflowActions = (): MobileOverflowMenuAction[] => {
+    const primaryKinds = new Set(mobilePrimaryActionItems().map((item) => item.kind));
+
+    return actionItems()
+      .filter(
+        (item): item is Extract<BottomActionBarItem, { onClick: () => void | Promise<void> }> =>
+          "onClick" in item && !primaryKinds.has(item.kind),
+      )
+      .map((item) => ({
+        label: item.label,
+        onSelect: item.onClick,
+      }));
   };
 
   return (
@@ -144,10 +155,39 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         </Show>
 
         <BottomActionBar
-          class="profile-action-bar"
+          class="profile-action-bar profile-action-bar-desktop"
           items={actionItems()}
           label="Profile sharing actions"
         />
+        <Show when={mobilePrimaryActionItems().length > 0}>
+          <div class="bottom-action-bar profile-action-bar profile-action-bar-mobile">
+            <For each={mobilePrimaryActionItems()}>
+              {(item) => (
+                <button
+                  type="button"
+                  class="bottom-action-bar-action"
+                  data-kind={item.kind}
+                  aria-label={item.ariaLabel}
+                  title={item.title ?? item.ariaLabel}
+                  onClick={() => {
+                    if ("onClick" in item) {
+                      void item.onClick();
+                    }
+                  }}
+                >
+                  <span class="profile-mobile-action-label">{item.label}</span>
+                </button>
+              )}
+            </For>
+            <MobileOverflowMenu
+              actions={mobileOverflowActions()}
+              class="bottom-action-bar-action mobile-overflow-menu-trigger"
+              contentClass="mobile-overflow-menu-content profile-action-overflow-menu"
+              itemClass="mobile-overflow-menu-item"
+              label="More profile actions"
+            />
+          </div>
+        </Show>
       </div>
     </section>
   );
