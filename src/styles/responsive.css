@@ -8,7 +8,6 @@
     position: sticky;
     top: 0;
     z-index: 20;
-    align-items: flex-start;
     margin: 0 calc(var(--space-3) * -0.5);
     padding: 0.55rem calc(var(--space-3) * 0.5);
     border-radius: 0.8rem;
@@ -19,7 +18,6 @@
   body .utility-brand {
     align-items: center;
   }
-
   body .profile-header {
     grid-template-columns: 1fr;
   }

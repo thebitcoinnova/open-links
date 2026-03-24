@@ -179,3 +179,15 @@
 - Result: Added `.planning/phases/14-refactor-dialogs-to-use-a-modal-library/14-RESEARCH.md` plus three execution plans. Wave 1 adopts `@kobalte/core` and builds a shared dialog shell, Wave 2 migrates the simpler payment QR fullscreen flow, and Wave 3 migrates the follower-history modal while preserving the lazy chart route flow. `.planning/ROADMAP.md` and `.planning/STATE.md` now mark Phase 14 as planned and ready for execution.
 - Verification: Reviewed the current modal components, route/card open-state seams, dialog styling hooks, the Kobalte and Ark UI official dialog docs, current npm metadata for both libraries, and the resulting planning-state diff to confirm the phase stays scoped to replacing duplicated dialog mechanics rather than reopening the entire UI system.
 - Residual risk: Phase 14 adds another runtime dependency to a route that already carries known `/` bundle-budget debt, and it currently assumes `@kobalte/core` is the lowest-risk dialog choice. If execution reveals integration blockers or larger-than-expected bundle impact, the next pass may need to reassess the library choice or split the analytics modal migration further.
+
+## task-mobile-header-alignment | 2026-03-24 17:42 | Fix public utility bar mobile alignment
+
+- [x] Restore a centered cross-axis alignment contract for the public utility bar logo/title block and hamburger trigger without changing header markup.
+- [x] Add a manual-smoke regression guard for the centered mobile header contract and cover it with a focused test.
+- [x] Run focused and repo-level verification for the header-alignment change batch.
+
+### Completion Review
+
+- Result: The public mobile utility bar now keeps the logo/title block and hamburger trigger on the same vertical centerline without changing the `TopUtilityBar` markup. The sticky mobile header no longer overrides the brand/header cross-axis alignment to `flex-start`, `.utility-title` now provides a centered target-sized alignment box, and the manual-smoke suite now flags any future regression that reintroduces a lifted brand row on mobile.
+- Verification: `bun test scripts/quality/manual-smoke.test.ts` passed. `git diff --check` passed. `bun install` completed so the worktree could resolve repo dependencies. `bun run biome:check` passed. `bun run studio:lint` passed. `bun run typecheck` passed. `bun run studio:typecheck` passed. `bun run --filter @openlinks/studio-api test` passed. `bun run studio:test:integration` passed. `bun run build` passed. A Playwright preview check at `390x844` confirmed `align-items: center` for both `.top-utility-bar` and `.utility-brand`, `min-height: 44px` for `.utility-title`, and an on-page brand/menu centerline delta of about `0.586px`, which matched the rendered screenshot.
+- Residual risk: The visual verification used the current short `OpenLinks` title. The centered title box should also keep longer wrapped titles aligned, but a future content change with a significantly longer site title is the main case worth rechecking in the browser.

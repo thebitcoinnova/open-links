@@ -17,3 +17,16 @@ test("manual smoke detects the shared mobile text-wrap contract", () => {
   assert.ok(check);
   assert.equal(check.status, "pass");
 });
+
+test("manual smoke detects the centered mobile header alignment contract", () => {
+  // Act
+  const { checks } = runManualSmokeChecks({
+    rootDir: ROOT,
+    checklistLabels: [],
+  });
+  const check = checks.find((entry) => entry.id === "mobile-header-alignment");
+
+  // Assert
+  assert.ok(check);
+  assert.equal(check.status, "pass");
+});

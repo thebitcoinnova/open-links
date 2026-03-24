@@ -38,6 +38,7 @@ export const runManualSmokeChecks = ({
   const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
   const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
   const baseCss = readText(rootDir, "src/styles/base.css");
+  const responsiveCss = readText(rootDir, "src/styles/responsive.css");
   const utilityMenuAnalysis = analyzeUtilityMenuImplementation(utilityMenu);
   const sharedNonPaymentCardHasActionLabel =
     nonPaymentCardShell.includes("<a") &&
@@ -54,6 +55,18 @@ export const runManualSmokeChecks = ({
     selectorHasDeclaration(baseCss, ".profile-contact-value", "overflow-wrap: anywhere;") &&
     selectorHasDeclaration(baseCss, ".non-payment-card-meta-item", "overflow-wrap: anywhere;") &&
     selectorHasDeclaration(baseCss, ".non-payment-card-source-label", "overflow-wrap: anywhere;");
+  const hasCenteredMobileHeaderContract =
+    selectorHasDeclaration(baseCss, ".top-utility-bar", "align-items: center;") &&
+    selectorHasDeclaration(baseCss, ".utility-title", "display: flex;") &&
+    selectorHasDeclaration(baseCss, ".utility-title", "align-items: center;") &&
+    selectorHasDeclaration(baseCss, ".utility-title", "min-height: var(--page-target-size);") &&
+    selectorHasDeclaration(baseCss, ".utility-brand", "align-items: center;") &&
+    !selectorHasDeclaration(
+      responsiveCss,
+      'body .top-utility-bar[data-sticky-mobile="true"]',
+      "align-items: flex-start;",
+    ) &&
+    !selectorHasDeclaration(responsiveCss, "body .utility-brand", "align-items: flex-start;");
 
   const checks: ManualSmokeCheckResult[] = [
     {
@@ -133,6 +146,18 @@ export const runManualSmokeChecks = ({
         : "Shared mobile text-overflow hooks or wrap-safe CSS contracts appear incomplete.",
       remediation:
         "Keep dedicated utility/profile hooks plus wrap-safe overflow handling on shared non-payment text surfaces.",
+    },
+    {
+      id: "mobile-header-alignment",
+      label:
+        checklistLabels[6] ??
+        "Mobile header brand and utility trigger stay vertically centered on the same cross-axis.",
+      status: hasCenteredMobileHeaderContract ? "pass" : "warn",
+      details: hasCenteredMobileHeaderContract
+        ? "Shared utility header keeps a centered title box and avoids mobile flex-start overrides that lift the brand above the menu trigger."
+        : "Shared utility header alignment contract is incomplete or mobile overrides still pull the brand off the menu trigger centerline.",
+      remediation:
+        "Keep the utility bar and brand centered across breakpoints, and give the title container a target-sized centered alignment box.",
     },
   ];
 
