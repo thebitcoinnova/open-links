@@ -3,6 +3,7 @@ import {
   PAYMENT_CARD_EFFECT_DEBUG_PHASES,
   PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS,
   PAYMENT_CARD_EFFECT_DEBUG_TUNING_GROUPS,
+  type PaymentCardEffectDebugPhase,
   type PaymentCardEffectDebugTuning,
   clonePaymentCardEffectDebugTuning,
   getPaymentCardEffectDebugTuningValue,
@@ -29,9 +30,41 @@ export const PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM = "bombasticity";
 export const PAYMENT_CARD_EFFECT_CAPTURE_BOMBASTICITY_LEVELS = [0.03, 0.05, 0.08, 0.1] as const;
 export const PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS =
   PAYMENT_CARD_EFFECT_CAPTURE_BOMBASTICITY_LEVELS;
+export const paymentCardEffectPreviewBombasticityByPhase = {
+  low: PAYMENT_CARD_EFFECT_CAPTURE_BOMBASTICITY_LEVELS[0],
+  mid: PAYMENT_CARD_EFFECT_CAPTURE_BOMBASTICITY_LEVELS[1],
+  max: PAYMENT_CARD_EFFECT_CAPTURE_BOMBASTICITY_LEVELS[
+    PAYMENT_CARD_EFFECT_CAPTURE_BOMBASTICITY_LEVELS.length - 1
+  ],
+} as const satisfies Record<PaymentCardEffectDebugPhase, number>;
 
 export const isPaymentCardEffectRoutePath = (pathname: string): boolean =>
   PAYMENT_CARD_EFFECT_ROUTE_PATHS.some((routePath) => pathname.endsWith(routePath));
+
+export const resolvePaymentCardEffectPreviewBombasticity = (
+  phase: PaymentCardEffectDebugPhase,
+): number => paymentCardEffectPreviewBombasticityByPhase[phase];
+
+export const resolvePaymentCardEffectPreviewPhase = (
+  bombasticity: number,
+): PaymentCardEffectDebugPhase => {
+  const normalizedBombasticity = clampPaymentCardBombasticity(bombasticity);
+  let closestPhase: PaymentCardEffectDebugPhase = "low";
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  for (const phase of PAYMENT_CARD_EFFECT_DEBUG_PHASES) {
+    const distance = Math.abs(
+      normalizedBombasticity - resolvePaymentCardEffectPreviewBombasticity(phase.id),
+    );
+
+    if (distance < closestDistance) {
+      closestPhase = phase.id;
+      closestDistance = distance;
+    }
+  }
+
+  return closestPhase;
+};
 
 export interface PaymentCardEffectRouteState {
   capture: boolean;

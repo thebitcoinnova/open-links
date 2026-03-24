@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createRoot } from "solid-js";
+import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import PaymentCardEffectSamplesRoute from "./payment-card-effect-samples";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
@@ -33,11 +34,47 @@ const reactRuntime = {
   },
 };
 
+const createPreservingRuntime = (...preservedTypes: unknown[]) => {
+  const preserved = new Set(preservedTypes);
+
+  return {
+    ...reactRuntime,
+    createElement(
+      type: unknown,
+      props: Record<string, unknown> | null,
+      ...children: RenderedNode[]
+    ) {
+      const normalizedChildren =
+        children.length === 0 ? undefined : children.length === 1 ? children[0] : children;
+      const normalizedProps =
+        normalizedChildren === undefined
+          ? { ...(props ?? {}) }
+          : { ...(props ?? {}), children: normalizedChildren };
+
+      if (preserved.has(type)) {
+        return {
+          type,
+          props: normalizedProps,
+        } satisfies RenderedElement;
+      }
+
+      if (typeof type === "function") {
+        return type(normalizedProps);
+      }
+
+      return {
+        type,
+        props: normalizedProps,
+      } satisfies RenderedElement;
+    },
+  };
+};
+
 (
   globalThis as typeof globalThis & {
     React?: typeof reactRuntime;
   }
-).React = reactRuntime;
+).React = createPreservingRuntime(PaymentLinkCard);
 
 const originalWindowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
 const originalDocumentDescriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
@@ -142,6 +179,27 @@ test("payment card effect samples route renders grouped advanced controls and hi
   assert.equal(
     inputs.some((element) => element.props.id === "payment-card-bombasticity-slider"),
     false,
+  );
+});
+
+test("payment card effect samples route shows the active live preview phase badge", () => {
+  // Arrange
+  const tree = renderRouteTree("https://example.com/spark/tip-cards?bombasticity=0.08");
+
+  // Act
+  const previewBadge = collectElements(tree).find(
+    (element) => element.props["data-payment-card-effect-preview-phase"] === "max",
+  );
+  const previewBadgeChildren = Array.isArray(previewBadge?.props.children)
+    ? previewBadge.props.children
+    : [];
+  const previewLabel = previewBadgeChildren[0];
+
+  // Assert
+  assert.ok(previewBadge);
+  assert.equal(
+    isRenderedElement(previewLabel) ? previewLabel.props.children : undefined,
+    "Previewing",
   );
 });
 

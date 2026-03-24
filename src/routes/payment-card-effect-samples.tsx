@@ -23,6 +23,8 @@ import {
   paymentCardEffectDefaultDebugTuning,
   paymentCardEffectDemoSections,
   paymentCardEffectSamplesSite,
+  resolvePaymentCardEffectPreviewBombasticity,
+  resolvePaymentCardEffectPreviewPhase,
 } from "../lib/payments/card-effect-samples";
 import {
   applyThemeState,
@@ -200,6 +202,20 @@ const controlHintStyle = {
   "font-size": "var(--type-caption)",
 } satisfies JSX.CSSProperties;
 
+const previewPhaseBadgeStyle = {
+  display: "inline-flex",
+  "align-items": "center",
+  gap: "0.35rem",
+  padding: "0.35rem 0.65rem",
+  border: "1px solid color-mix(in srgb, var(--accent-strong) 26%, var(--border-subtle) 74%)",
+  "border-radius": "999px",
+  background: "color-mix(in srgb, var(--surface-panel) 88%, var(--surface-bg) 12%)",
+  color: "var(--text-muted)",
+  "font-size": "var(--type-caption)",
+  "text-transform": "uppercase",
+  "letter-spacing": "0.04em",
+} satisfies JSX.CSSProperties;
+
 const sectionResetButtonStyle = {
   appearance: "none",
   border: "1px solid color-mix(in srgb, var(--accent-strong) 28%, var(--border-subtle) 72%)",
@@ -219,6 +235,8 @@ const cardsGridStyle = (layoutMode: "grid" | "stack"): JSX.CSSProperties => ({
   "align-items": "start",
 });
 
+const formatPreviewBombasticity = (bombasticity: number): string => bombasticity.toFixed(2);
+
 const PaymentCardEffectSamplesRoute = () => {
   const initialRouteState =
     typeof window === "undefined"
@@ -228,8 +246,13 @@ const PaymentCardEffectSamplesRoute = () => {
           debugTuning: paymentCardEffectDefaultDebugTuning,
         }
       : parsePaymentCardEffectRouteState(new URLSearchParams(window.location.search));
-  const [bombasticity] = createSignal(initialRouteState.bombasticity);
+  const [previewBombasticity, setPreviewBombasticity] = createSignal(
+    initialRouteState.bombasticity,
+  );
   const [debugTuning, setDebugTuning] = createSignal(initialRouteState.debugTuning);
+  const previewPhase = createMemo(() =>
+    resolvePaymentCardEffectPreviewPhase(previewBombasticity()),
+  );
   const routeState = createMemo(() =>
     typeof window === "undefined"
       ? initialRouteState
@@ -245,7 +268,7 @@ const PaymentCardEffectSamplesRoute = () => {
         ...section,
         cards: section.cards.map((card) => ({
           ...card,
-          link: cloneLinkWithBombasticity(card.link, bombasticity()),
+          link: cloneLinkWithBombasticity(card.link, previewBombasticity()),
         })),
       }));
     }
@@ -259,7 +282,7 @@ const PaymentCardEffectSamplesRoute = () => {
         cards: [
           {
             ...fixture,
-            link: cloneLinkWithBombasticity(fixture.link, bombasticity()),
+            link: cloneLinkWithBombasticity(fixture.link, previewBombasticity()),
           },
         ],
       },
@@ -292,7 +315,7 @@ const PaymentCardEffectSamplesRoute = () => {
       routeState: {
         capture: isCaptureMode(),
         fixtureId: routeState().fixtureId,
-        bombasticity: bombasticity(),
+        bombasticity: previewBombasticity(),
         debugTuning: debugTuning(),
       },
     });
@@ -323,21 +346,33 @@ const PaymentCardEffectSamplesRoute = () => {
               <strong>Debug tuning controls</strong>
               <p style={controlHintStyle}>
                 These sliders override the internal low, mid, and max curves without changing the
-                public payment schema. Non-default values persist in the URL, while hidden
-                bombasticity still drives the live interpolation behind the scenes.
+                public payment schema. As you drag a slider, the card preview jumps to that phase so
+                the effect change is visible immediately, and non-default values still persist in
+                the URL.
               </p>
             </div>
 
-            <button
-              type="button"
-              style={sectionResetButtonStyle}
-              disabled={isDefaultPaymentCardEffectDebugTuning(debugTuning())}
-              onClick={() => {
-                setDebugTuning(paymentCardEffectDefaultDebugTuning);
-              }}
-            >
-              Reset all
-            </button>
+            <div style={controlsHeaderStyle}>
+              <span
+                data-payment-card-effect-preview-phase={previewPhase()}
+                style={previewPhaseBadgeStyle}
+              >
+                <span>Previewing</span>
+                <strong>{previewPhase()}</strong>
+                <span>{formatPreviewBombasticity(previewBombasticity())}</span>
+              </span>
+              <button
+                type="button"
+                style={sectionResetButtonStyle}
+                disabled={isDefaultPaymentCardEffectDebugTuning(debugTuning())}
+                onClick={() => {
+                  setDebugTuning(paymentCardEffectDefaultDebugTuning);
+                  setPreviewBombasticity(paymentCardEffectDefaultBombasticity);
+                }}
+              >
+                Reset all
+              </button>
+            </div>
           </div>
 
           <div style={controlGroupsGridStyle}>
@@ -367,6 +402,7 @@ const PaymentCardEffectSamplesRoute = () => {
                             groupId: group.id,
                           }),
                         );
+                        setPreviewBombasticity(paymentCardEffectDefaultBombasticity);
                       }}
                     >
                       {`Reset ${group.label.toLowerCase()}`}
@@ -417,6 +453,9 @@ const PaymentCardEffectSamplesRoute = () => {
                                       })}
                                       style={sliderStyle}
                                       onInput={(event) => {
+                                        setPreviewBombasticity(
+                                          resolvePaymentCardEffectPreviewBombasticity(phase.id),
+                                        );
                                         setDebugTuning((currentTuning) =>
                                           setPaymentCardEffectDebugTuningValue({
                                             tuning: currentTuning,
@@ -449,7 +488,8 @@ const PaymentCardEffectSamplesRoute = () => {
             <li>Ambient, lightning, glitter, and wash now tune independently on this page.</li>
             <li>URL params only keep the non-default advanced overrides for easier sharing.</li>
             <li>
-              Hidden bombasticity still controls the live curve, with 0.10 as the max plateau.
+              The live card preview follows the low, mid, or max phase for the slider you most
+              recently changed.
             </li>
             <li>Compare the isolated effects in the showcase section after changing one group.</li>
             <li>Open the multi-rail support card and toggle QR states.</li>

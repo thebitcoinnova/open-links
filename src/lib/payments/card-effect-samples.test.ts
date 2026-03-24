@@ -13,6 +13,9 @@ import {
   parsePaymentCardEffectRouteState,
   paymentCardEffectDefaultDebugTuning,
   paymentCardEffectDemoSections,
+  paymentCardEffectPreviewBombasticityByPhase,
+  resolvePaymentCardEffectPreviewBombasticity,
+  resolvePaymentCardEffectPreviewPhase,
 } from "./card-effect-samples";
 
 test("payment card effect routes include both the internal capture path and the hidden demo alias", () => {
@@ -76,6 +79,36 @@ test("payment card effect capture helpers keep the committed bombasticity ladder
   assert.equal(searchParams.get("fixture"), fixtureId);
   assert.equal(searchParams.get("bombasticity"), "0.08");
   assert.equal(searchParams.has("ambient-opacity-low"), false);
+});
+
+test("payment card effect preview helpers map low mid and max phases onto the capture ladder", () => {
+  // Arrange
+  const lowBombasticity = paymentCardEffectPreviewBombasticityByPhase.low;
+  const midBombasticity = paymentCardEffectPreviewBombasticityByPhase.mid;
+  const maxBombasticity = paymentCardEffectPreviewBombasticityByPhase.max;
+
+  // Act
+  const resolvedLowBombasticity = resolvePaymentCardEffectPreviewBombasticity("low");
+  const resolvedMidBombasticity = resolvePaymentCardEffectPreviewBombasticity("mid");
+  const resolvedMaxBombasticity = resolvePaymentCardEffectPreviewBombasticity("max");
+  const lowPhase = resolvePaymentCardEffectPreviewPhase(lowBombasticity);
+  const midPhase = resolvePaymentCardEffectPreviewPhase(midBombasticity);
+  const maxPhase = resolvePaymentCardEffectPreviewPhase(maxBombasticity);
+  const nearMidPhase = resolvePaymentCardEffectPreviewPhase(0.06);
+
+  // Assert
+  assert.deepEqual(paymentCardEffectPreviewBombasticityByPhase, {
+    low: 0.03,
+    mid: 0.05,
+    max: 0.1,
+  });
+  assert.equal(resolvedLowBombasticity, lowBombasticity);
+  assert.equal(resolvedMidBombasticity, midBombasticity);
+  assert.equal(resolvedMaxBombasticity, maxBombasticity);
+  assert.equal(lowPhase, "low");
+  assert.equal(midPhase, "mid");
+  assert.equal(maxPhase, "max");
+  assert.equal(nearMidPhase, "mid");
 });
 
 test("payment card effect route helpers round-trip advanced tuning overrides while omitting defaults", () => {
