@@ -305,6 +305,7 @@ a:focus-visible {
 }
 
 .utility-menu-row-copy {
+  flex: 1 1 auto;
   min-width: 0;
   display: grid;
   gap: 0.18rem;
