@@ -12,6 +12,7 @@ import {
   STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS,
   STUDIO_LINK_TYPE_OPTIONS,
   type StudioConfirmAction,
+  type StudioSiteData,
   resolveEditorLinkAccordionSummary,
   resolveEditorLinkAccordionValue,
   resolveStudioAnalyticsPageVisibilityValue,
@@ -21,7 +22,6 @@ import {
 import type { RepoContentPayload, ValidationResult } from "@openlinks/studio-shared";
 import { useParams } from "@solidjs/router";
 import { For, type JSX, Show, createMemo, createResource, createSignal } from "solid-js";
-import type { SiteData } from "../../../../src/lib/content/load-content";
 
 const jsonPretty = (value: unknown): string => JSON.stringify(value, null, 2);
 
@@ -416,7 +416,7 @@ export default function EditorPage() {
                       },
                     });
                   }}
-                  options={resolveStudioThemeOptions(loaded().site as SiteData)}
+                  options={resolveStudioThemeOptions(loaded().site as StudioSiteData)}
                   value={String((loaded().site.theme as { active?: string })?.active ?? "")}
                 />
                 <LabeledSelect
@@ -447,7 +447,7 @@ export default function EditorPage() {
                     });
                   }}
                   options={STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS}
-                  value={resolveStudioAnalyticsPageVisibilityValue(loaded().site as SiteData)}
+                  value={resolveStudioAnalyticsPageVisibilityValue(loaded().site as StudioSiteData)}
                 />
               </>
             ),
