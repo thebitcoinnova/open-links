@@ -78,6 +78,12 @@ export const phaseChecklist: PhaseChecklist[] = [
         priority: "P1",
       },
       {
+        id: "p4-7",
+        label: "Animated enter and exit transitions for the studio hamburger drawer",
+        status: "done",
+        priority: "P1",
+      },
+      {
         id: "p4-3",
         label: "Expanded site.ui coverage, including analytics page visibility",
         status: "in_progress",

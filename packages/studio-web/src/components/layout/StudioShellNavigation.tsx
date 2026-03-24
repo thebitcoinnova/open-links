@@ -3,7 +3,12 @@ import * as Dialog from "@kobalte/core/dialog";
 import { A, useLocation } from "@solidjs/router";
 import { Menu, X } from "lucide-solid";
 import { For, createSignal } from "solid-js";
-import { createStudioShellNavigationModel } from "./studio-shell-navigation-model";
+import {
+  STUDIO_SHELL_NAV_DRAWER_CLASS,
+  STUDIO_SHELL_NAV_OVERLAY_CLASS,
+  STUDIO_SHELL_NAV_POSITIONER_CLASS,
+  createStudioShellNavigationModel,
+} from "./studio-shell-navigation-model";
 
 const navLinkClass = (isActive: boolean) =>
   cn(
@@ -42,11 +47,24 @@ export default function StudioShellNavigation() {
         </Dialog.Trigger>
 
         <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-40 bg-ink/65 backdrop-blur-sm" />
-          <div class="fixed inset-0 z-50 flex items-start justify-end p-4 md:hidden">
+          <Dialog.Overlay
+            class={cn(
+              "fixed inset-0 z-40 bg-ink/65 backdrop-blur-sm",
+              STUDIO_SHELL_NAV_OVERLAY_CLASS,
+            )}
+          />
+          <div
+            class={cn(
+              "fixed inset-0 z-50 flex items-start justify-end p-4 md:hidden",
+              STUDIO_SHELL_NAV_POSITIONER_CLASS,
+            )}
+          >
             <Dialog.Content
               aria-label={navigation.dialogLabel}
-              class="w-full max-w-xs rounded-3xl border border-white/15 bg-slate-950/95 p-5 text-slate-100 shadow-2xl focus:outline-none"
+              class={cn(
+                "w-full max-w-xs rounded-3xl border border-white/15 bg-slate-950/95 p-5 text-slate-100 shadow-2xl focus:outline-none",
+                STUDIO_SHELL_NAV_DRAWER_CLASS,
+              )}
             >
               <div class="flex items-center justify-between gap-3">
                 <Dialog.Title class="font-display text-lg font-bold text-white">
