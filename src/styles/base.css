@@ -142,6 +142,7 @@ a:focus-visible {
   text-transform: var(--transform-utility-title);
   color: var(--text-muted);
   font-size: var(--page-type-caption);
+  line-height: 1;
 }
 
 .utility-brand {
