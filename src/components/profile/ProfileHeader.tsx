@@ -2,7 +2,10 @@ import { For, Show } from "solid-js";
 import type { ProfileData } from "../../lib/content/load-content";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
-import BottomActionBar, { type BottomActionBarItem } from "../actions/BottomActionBar";
+import BottomActionBar, {
+  BottomActionBarActionContent,
+  type BottomActionBarItem,
+} from "../actions/BottomActionBar";
 import MobileOverflowMenu, { type MobileOverflowMenuAction } from "../actions/MobileOverflowMenu";
 
 export interface ProfileHeaderProps {
@@ -175,7 +178,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
                     }
                   }}
                 >
-                  <span class="profile-mobile-action-label">{item.label}</span>
+                  <BottomActionBarActionContent kind={item.kind} label={item.label} />
                 </button>
               )}
             </For>

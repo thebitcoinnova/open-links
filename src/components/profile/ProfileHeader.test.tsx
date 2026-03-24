@@ -117,6 +117,53 @@ test("profile header routes copy into the mobile overflow menu when QR is availa
   assert.equal(inlineButtons[2]?.props["aria-label"], "More profile actions");
 });
 
+test("profile header mobile actions reuse the shared icon action content", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    onProfileQrOpen: () => undefined,
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+  }) as RenderedNode;
+
+  // Act
+  const mobileBar = firstElementWithClass(tree, "profile-action-bar-mobile");
+  const inlineButtons = collectElements(mobileBar?.props.children as RenderedNode).filter(
+    (element) => element.type === "button",
+  );
+  const firstInlineButton = inlineButtons[0];
+  const firstInlineButtonChildren = collectElements(
+    (firstInlineButton?.props.children ?? null) as RenderedNode,
+  );
+
+  // Assert
+  assert.ok(firstInlineButton);
+  assert.ok(
+    firstInlineButtonChildren.some((element) => {
+      const classValue = element.props.class;
+      return (
+        element.type === "svg" &&
+        typeof classValue === "string" &&
+        classValue.split(/\s+/u).includes("bottom-action-bar-action-icon")
+      );
+    }),
+  );
+  assert.ok(
+    firstInlineButtonChildren.some((element) => {
+      const classValue = element.props.class;
+      return (
+        element.type === "span" &&
+        typeof classValue === "string" &&
+        classValue.split(/\s+/u).includes("bottom-action-bar-action-label")
+      );
+    }),
+  );
+  assert.equal(firstElementWithClass(tree, "profile-mobile-action-label"), undefined);
+});
+
 test("profile header still renders share and copy when QR is unavailable", () => {
   // Arrange
   const tree = ProfileHeader({

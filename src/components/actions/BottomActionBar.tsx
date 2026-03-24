@@ -57,6 +57,18 @@ const resolveActionIcon = (kind: BottomActionKind) => {
   return <IconShare class="bottom-action-bar-action-icon" aria-hidden="true" />;
 };
 
+export interface BottomActionBarActionContentProps {
+  kind: BottomActionKind;
+  label: string;
+}
+
+export const BottomActionBarActionContent = (props: BottomActionBarActionContentProps) => (
+  <span class="bottom-action-bar-action-content">
+    {resolveActionIcon(props.kind)}
+    <span class="bottom-action-bar-action-label">{props.label}</span>
+  </span>
+);
+
 export const BottomActionBar = (props: BottomActionBarProps) => {
   const rootClassName = () =>
     props.class ? `bottom-action-bar ${props.class}` : "bottom-action-bar";
@@ -78,8 +90,7 @@ export const BottomActionBar = (props: BottomActionBarProps) => {
                 aria-label={item.ariaLabel}
                 title={item.title ?? item.ariaLabel}
               >
-                {resolveActionIcon(item.kind)}
-                <span class="bottom-action-bar-action-label">{item.label}</span>
+                <BottomActionBarActionContent kind={item.kind} label={item.label} />
               </a>
             ) : (
               <button
@@ -92,8 +103,7 @@ export const BottomActionBar = (props: BottomActionBarProps) => {
                 title={item.title ?? item.ariaLabel}
                 onClick={() => item.onClick()}
               >
-                {resolveActionIcon(item.kind)}
-                <span class="bottom-action-bar-action-label">{item.label}</span>
+                <BottomActionBarActionContent kind={item.kind} label={item.label} />
               </button>
             )
           }
