@@ -5,9 +5,9 @@ import {
   resolvePaymentCardEffectGalleryMenuHref,
 } from "./index.helpers";
 
-test("payment card effect gallery menu label stays explicit about its temporary testing role", () => {
+test("payment card effect gallery menu label stays concise in the utility menu", () => {
   // Assert
-  assert.equal(PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL, "Testing: tip card sparks");
+  assert.equal(PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL, "Tip card sparks");
 });
 
 test("payment card effect gallery menu href respects the app base path", () => {

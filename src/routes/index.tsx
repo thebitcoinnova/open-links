@@ -692,18 +692,18 @@ export default function RouteIndex() {
     >
       <TopUtilityBar
         title={content.site.title}
-        controlsLabel="Site menu and display controls"
+        controlsLabel="Site menu"
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
       >
         <UtilityControlsMenu
           activeNavigationItem={activeNavigationItem()}
           analyticsHref={analyticsPageHref()}
-          analyticsSupportingText="Open follower analytics and audience history."
+          analyticsSupportingText="Audience insights"
           cardModeLabel={richRenderMode === "simple" ? "Simple only" : "Rich + simple"}
           homeHref={homePageHref}
           isOffline={isOffline()}
-          label="site menu and display controls"
+          label="site menu"
           mode={mode()}
           modePolicyLabel={modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
           onAnalyticsSelect={(event) => {
@@ -715,7 +715,7 @@ export default function RouteIndex() {
             setActiveView("links");
           }}
           onToggleMode={canToggle() ? handleModeToggle : undefined}
-          panelLabel="Site menu and display controls"
+          panelLabel="Site menu"
           testingGalleryHref={paymentCardEffectGalleryMenuHref}
           testingGalleryLabel={PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL}
           themeIntensity={themeDefinition?.intensity ?? "mild"}
