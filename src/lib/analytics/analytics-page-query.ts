@@ -4,6 +4,22 @@ const ANALYTICS_QUERY_VALUE = "all";
 export const readAnalyticsPageStateFromUrl = (url: URL): boolean =>
   url.searchParams.get(ANALYTICS_QUERY_KEY) === ANALYTICS_QUERY_VALUE;
 
+const resolveAnalyticsPageUrl = (url: URL, open: boolean): URL => {
+  const nextUrl = new URL(url.href);
+  if (open) {
+    nextUrl.searchParams.set(ANALYTICS_QUERY_KEY, ANALYTICS_QUERY_VALUE);
+  } else {
+    nextUrl.searchParams.delete(ANALYTICS_QUERY_KEY);
+  }
+
+  return nextUrl;
+};
+
+export const resolveAnalyticsPageHrefFromUrl = (url: URL, open: boolean): string => {
+  const nextUrl = resolveAnalyticsPageUrl(url, open);
+  return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+};
+
 export const readAnalyticsPageState = (): boolean => {
   if (typeof window === "undefined") {
     return false;
@@ -21,12 +37,7 @@ const updateAnalyticsPageState = (open: boolean, mode: "push" | "replace") => {
     return;
   }
 
-  const nextUrl = new URL(window.location.href);
-  if (open) {
-    nextUrl.searchParams.set(ANALYTICS_QUERY_KEY, ANALYTICS_QUERY_VALUE);
-  } else {
-    nextUrl.searchParams.delete(ANALYTICS_QUERY_KEY);
-  }
+  const nextUrl = resolveAnalyticsPageUrl(new URL(window.location.href), open);
 
   if (mode === "replace") {
     window.history.replaceState({}, "", nextUrl);

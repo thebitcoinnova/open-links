@@ -193,20 +193,6 @@
     flex-direction: column;
   }
 
-  body .public-page-tabs {
-    justify-content: stretch;
-  }
-
-  body .public-page-tabs-list {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  body .public-page-tab-trigger {
-    flex: 1 1 0;
-    text-align: center;
-  }
-
   body .analytics-segmented-control {
     width: 100%;
   }

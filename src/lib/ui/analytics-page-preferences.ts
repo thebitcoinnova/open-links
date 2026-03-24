@@ -8,7 +8,7 @@ export const resolveAnalyticsPageOpenState = (
   analyticsPageEnabled: boolean,
 ): boolean => analyticsPageEnabled && requestedOpen;
 
-export const resolvePublicPageTabsVisible = (input: {
+export const resolveAnalyticsNavigationVisible = (input: {
   analyticsAvailable: boolean;
   analyticsPageEnabled: boolean;
   analyticsPageOpen: boolean;

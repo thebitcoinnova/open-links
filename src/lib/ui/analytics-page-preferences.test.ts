@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { SiteData } from "../content/load-content";
 import {
+  resolveAnalyticsNavigationVisible,
   resolveAnalyticsPageEnabled,
   resolveAnalyticsPageOpenState,
-  resolvePublicPageTabsVisible,
 } from "./analytics-page-preferences";
 
 const baseSite = {
@@ -38,9 +38,9 @@ test("resolveAnalyticsPageOpenState blocks analytics when the page is disabled",
   assert.equal(resolveAnalyticsPageOpenState(true, true), true);
 });
 
-test("resolvePublicPageTabsVisible shows tabs only when the page is enabled", () => {
+test("resolveAnalyticsNavigationVisible shows analytics navigation only when the page is enabled", () => {
   assert.equal(
-    resolvePublicPageTabsVisible({
+    resolveAnalyticsNavigationVisible({
       analyticsAvailable: true,
       analyticsPageEnabled: true,
       analyticsPageOpen: false,
@@ -49,7 +49,7 @@ test("resolvePublicPageTabsVisible shows tabs only when the page is enabled", ()
   );
 
   assert.equal(
-    resolvePublicPageTabsVisible({
+    resolveAnalyticsNavigationVisible({
       analyticsAvailable: true,
       analyticsPageEnabled: false,
       analyticsPageOpen: false,

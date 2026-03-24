@@ -4,6 +4,7 @@ import {
   readAnalyticsPageState,
   readAnalyticsPageStateFromUrl,
   replaceAnalyticsPageState,
+  resolveAnalyticsPageHrefFromUrl,
   writeAnalyticsPageState,
 } from "./analytics-page-query";
 
@@ -33,6 +34,23 @@ test("readAnalyticsPageStateFromUrl ignores unrelated query params", () => {
   assert.equal(
     readAnalyticsPageStateFromUrl(new URL("https://openlinks.us/?view=analytics")),
     false,
+  );
+});
+
+test("resolveAnalyticsPageHrefFromUrl adds the analytics query flag", () => {
+  assert.equal(
+    resolveAnalyticsPageHrefFromUrl(new URL("https://openlinks.us/open-links/?view=links"), true),
+    "/open-links/?view=links&analytics=all",
+  );
+});
+
+test("resolveAnalyticsPageHrefFromUrl removes the analytics query flag", () => {
+  assert.equal(
+    resolveAnalyticsPageHrefFromUrl(
+      new URL("https://openlinks.us/open-links/?view=links&analytics=all#summary"),
+      false,
+    ),
+    "/open-links/?view=links#summary",
   );
 });
 

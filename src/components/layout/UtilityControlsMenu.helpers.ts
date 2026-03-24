@@ -3,6 +3,9 @@ type FocusableElement = null | Pick<HTMLButtonElement, "focus"> | undefined;
 export const resolveUtilityControlsMenuTriggerAriaLabel = (isOpen: boolean, label: string) =>
   `${isOpen ? "Close" : "Open"} ${label}`;
 
+export const resolveUtilityControlsMenuNavigationBadgeLabel = (isActive: boolean) =>
+  isActive ? "Current" : "Open";
+
 export const resolveUtilityControlsMenuOpenChange = (
   isOpen: boolean,
   setIsOpen: (value: boolean) => void,

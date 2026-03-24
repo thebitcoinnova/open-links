@@ -23,7 +23,6 @@ import RichLinkCard from "../components/cards/RichLinkCard";
 import SimpleLinkCard from "../components/cards/SimpleLinkCard";
 import AnimatedPageSwap from "../components/layout/AnimatedPageSwap";
 import LinkSection, { type LinkSectionData } from "../components/layout/LinkSection";
-import PublicPageTabs from "../components/layout/PublicPageTabs";
 import SiteFooter from "../components/layout/SiteFooter";
 import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
@@ -32,6 +31,7 @@ import QrCodeDialog from "../components/qr/QrCodeDialog";
 import {
   readAnalyticsPageState,
   replaceAnalyticsPageState,
+  resolveAnalyticsPageHrefFromUrl,
   writeAnalyticsPageState,
 } from "../lib/analytics/analytics-page-query";
 import {
@@ -76,9 +76,9 @@ import {
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { ACTION_TOAST_OPTIONS, registerActionToastClient } from "../lib/ui/action-toast";
 import {
+  resolveAnalyticsNavigationVisible,
   resolveAnalyticsPageEnabled,
   resolveAnalyticsPageOpenState,
-  resolvePublicPageTabsVisible,
 } from "../lib/ui/analytics-page-preferences";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
@@ -111,6 +111,10 @@ const typography = resolveTypographyPreferences({
 });
 const paymentCardEffectGalleryMenuHref = resolvePaymentCardEffectGalleryMenuHref(
   import.meta.env.BASE_URL,
+);
+const homePageHref = resolveAnalyticsPageHrefFromUrl(
+  new URL(import.meta.env.BASE_URL || "/", "https://openlinks.local"),
+  false,
 );
 
 registerActionToastClient({
@@ -373,12 +377,22 @@ export default function RouteIndex() {
     setConnectivity(readConnectivityStatus());
   };
   const activeView = createMemo(() => resolvePublicPageView(analyticsPageOpen()));
-  const showPublicPageTabs = createMemo(() =>
-    resolvePublicPageTabsVisible({
+  const showAnalyticsNavigation = createMemo(() =>
+    resolveAnalyticsNavigationVisible({
       analyticsAvailable: analyticsAvailable(),
       analyticsPageEnabled,
       analyticsPageOpen: analyticsPageOpen(),
     }),
+  );
+  const analyticsPageHref = createMemo(() => {
+    if (!showAnalyticsNavigation() || typeof window === "undefined") {
+      return undefined;
+    }
+
+    return resolveAnalyticsPageHrefFromUrl(new URL(window.location.href), true);
+  });
+  const activeNavigationItem = createMemo<"analytics" | "home">(() =>
+    activeView() === "analytics" ? "analytics" : "home",
   );
   const setActiveView = (view: PageViewKey) => {
     const nextOpen = resolveAnalyticsPageOpenState(view === "analytics", analyticsPageEnabled);
@@ -678,28 +692,36 @@ export default function RouteIndex() {
     >
       <TopUtilityBar
         title={content.site.title}
-        controlsLabel="Theme and mode controls"
+        controlsLabel="Site menu and display controls"
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
       >
         <UtilityControlsMenu
+          activeNavigationItem={activeNavigationItem()}
+          analyticsHref={analyticsPageHref()}
+          analyticsSupportingText="Open follower analytics and audience history."
           cardModeLabel={richRenderMode === "simple" ? "Simple only" : "Rich + simple"}
+          homeHref={homePageHref}
           isOffline={isOffline()}
-          label="theme and mode controls"
+          label="site menu and display controls"
           mode={mode()}
           modePolicyLabel={modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
+          onAnalyticsSelect={(event) => {
+            event.preventDefault();
+            setActiveView("analytics");
+          }}
+          onHomeSelect={(event) => {
+            event.preventDefault();
+            setActiveView("links");
+          }}
           onToggleMode={canToggle() ? handleModeToggle : undefined}
-          panelLabel="Theme and mode controls"
+          panelLabel="Site menu and display controls"
           testingGalleryHref={paymentCardEffectGalleryMenuHref}
           testingGalleryLabel={PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL}
           themeIntensity={themeDefinition?.intensity ?? "mild"}
           themeLabel={themeDefinition?.label ?? themeSelection.active}
         />
       </TopUtilityBar>
-
-      <Show when={showPublicPageTabs()}>
-        <PublicPageTabs activeView={activeView()} onViewChange={setActiveView} />
-      </Show>
 
       <AnimatedPageSwap
         activeKey={activeView()}
