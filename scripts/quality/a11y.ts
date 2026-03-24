@@ -225,7 +225,7 @@ export const runA11yChecks = ({
       scope: "src/components/layout/UtilityControlsMenu.tsx",
       message: "Utility controls menu is missing one or more expected close interactions.",
       remediation:
-        "Support close-on-Escape, outside pointer interactions, and focus leaving the menu surface directly or through the Kobalte popover contract.",
+        "Support close-on-Escape, outside pointer interactions, and focus restoration through the responsive Kobalte popover/dialog contract.",
     });
   }
 

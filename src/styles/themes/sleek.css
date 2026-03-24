@@ -62,7 +62,8 @@
 }
 
 :root[data-theme^="sleek"] .utility-pill,
-:root[data-theme^="sleek"] .theme-toggle {
+:root[data-theme^="sleek"] .theme-toggle,
+:root[data-theme^="sleek"] .utility-menu-badge {
   border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent 10%);
   background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-panel) 10%);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset;
@@ -79,6 +80,17 @@
   background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-pill) 4%);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset, 0 18px 32px
     color-mix(in srgb, var(--surface-bg) 54%, black 46%);
+}
+
+:root[data-theme^="sleek"] .utility-menu-drawer {
+  border-color: color-mix(in srgb, var(--border-subtle) 72%, transparent 28%);
+  background: color-mix(in srgb, var(--surface-panel) 97%, var(--surface-pill) 3%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset, 0 22px 44px
+    color-mix(in srgb, var(--surface-bg) 58%, black 42%);
+}
+
+:root[data-theme^="sleek"] .utility-menu-card {
+  background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-panel) 10%);
 }
 
 :root[data-theme^="sleek"] .profile-header {
@@ -105,8 +117,6 @@
 
 :root[data-theme^="sleek"] .utility-menu-button:hover {
   transform: none;
-  border: none;
-  background: transparent;
   box-shadow: none;
 }
 
@@ -119,7 +129,6 @@
 
 :root[data-theme^="sleek"] .utility-menu-button:active {
   transform: none;
-  background: transparent;
 }
 
 :root[data-theme^="sleek"] .non-payment-card-frame:focus-within,
@@ -129,8 +138,7 @@
 }
 
 :root[data-theme^="sleek"] .utility-menu-button:focus-visible {
-  border: none;
-  box-shadow: none;
+  box-shadow: var(--shadow-focus);
 }
 
 :root[data-theme^="sleek"] .card-icon {

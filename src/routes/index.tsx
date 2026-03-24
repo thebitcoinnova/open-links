@@ -29,7 +29,6 @@ import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import QrCodeDialog from "../components/qr/QrCodeDialog";
-import ThemeToggle from "../components/theme/ThemeToggle";
 import {
   readAnalyticsPageState,
   replaceAnalyticsPageState,
@@ -683,37 +682,19 @@ export default function RouteIndex() {
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
       >
-        <Show when={isOffline()}>
-          <span class="utility-pill utility-pill-status" aria-live="polite">
-            Offline
-          </span>
-        </Show>
-        <UtilityControlsMenu panelLabel="Theme and mode controls">
-          <Show
-            when={canToggle()}
-            fallback={
-              <span class="utility-pill" aria-live="polite">
-                {modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
-              </span>
-            }
-          >
-            <ThemeToggle mode={mode()} onToggle={handleModeToggle} />
-          </Show>
-          <span class="utility-pill" aria-live="polite">
-            {themeDefinition?.label ?? themeSelection.active} ·{" "}
-            {themeDefinition?.intensity ?? "mild"}
-          </span>
-          <span class="utility-pill" aria-live="polite">
-            Cards: {richRenderMode === "simple" ? "simple only" : "rich + simple"}
-          </span>
-          <a
-            class="utility-pill utility-pill-link"
-            href={paymentCardEffectGalleryMenuHref}
-            aria-label="Open the payment card effects testing gallery"
-          >
-            {PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL}
-          </a>
-        </UtilityControlsMenu>
+        <UtilityControlsMenu
+          cardModeLabel={richRenderMode === "simple" ? "Simple only" : "Rich + simple"}
+          isOffline={isOffline()}
+          label="theme and mode controls"
+          mode={mode()}
+          modePolicyLabel={modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
+          onToggleMode={canToggle() ? handleModeToggle : undefined}
+          panelLabel="Theme and mode controls"
+          testingGalleryHref={paymentCardEffectGalleryMenuHref}
+          testingGalleryLabel={PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL}
+          themeIntensity={themeDefinition?.intensity ?? "mild"}
+          themeLabel={themeDefinition?.label ?? themeSelection.active}
+        />
       </TopUtilityBar>
 
       <Show when={showPublicPageTabs()}>

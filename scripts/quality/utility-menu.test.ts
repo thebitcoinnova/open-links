@@ -48,6 +48,45 @@ test("analyzer accepts the Kobalte popover utility menu contract", () => {
   assert.equal(analysis.implementation, "kobalte-popover");
 });
 
+test("analyzer accepts the responsive Kobalte utility menu contract", () => {
+  // Arrange
+  const source = `
+    import * as Dialog from "@kobalte/core/dialog";
+    import * as Popover from "@kobalte/core/popover";
+
+    <Popover.Root onOpenChange={setIsDesktopOpen}>
+      <Popover.Trigger
+        class="utility-menu-button utility-menu-button--desktop"
+        aria-expanded={isDesktopOpen()}
+        aria-controls={desktopPanelId}
+      />
+      <Popover.Content onCloseAutoFocus={handleDesktopCloseAutoFocus} />
+    </Popover.Root>
+    <Dialog.Root onOpenChange={setIsMobileOpen}>
+      <Dialog.Trigger
+        class="utility-menu-button utility-menu-button--mobile"
+        aria-expanded={isMobileOpen()}
+        aria-controls={mobilePanelId}
+      />
+      <Dialog.Overlay class="utility-menu-overlay" />
+      <Dialog.Content
+        class="utility-menu-drawer"
+        onCloseAutoFocus={handleMobileCloseAutoFocus}
+      >
+        <Dialog.CloseButton class="utility-menu-close-button" />
+      </Dialog.Content>
+    </Dialog.Root>
+  `;
+
+  // Act
+  const analysis = analyzeUtilityMenuImplementation(source);
+
+  // Assert
+  assert.equal(analysis.hasDisclosureLinkage, true);
+  assert.equal(analysis.hasAcceptedCloseBehavior, true);
+  assert.equal(analysis.implementation, "kobalte-responsive");
+});
+
 test("analyzer rejects incomplete utility menu implementations", () => {
   // Arrange
   const source = `
@@ -77,5 +116,5 @@ test("current UtilityControlsMenu source satisfies the analyzer contract", () =>
   // Assert
   assert.equal(analysis.hasDisclosureLinkage, true);
   assert.equal(analysis.hasAcceptedCloseBehavior, true);
-  assert.equal(analysis.implementation, "kobalte-popover");
+  assert.equal(analysis.implementation, "kobalte-responsive");
 });
