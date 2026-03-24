@@ -40,7 +40,10 @@ jobs:
         run: bun run enrich:rich:strict:write-cache
 
       - name: Refresh public audience cache
-        run: bun run public:rich:sync
+        run: >
+          bun run public:rich:sync --
+          --allow-failures
+          --summary-json .ci-diagnostics/public-rich-sync-summary.json
 
       - name: Append follower history snapshots
         run: bash scripts/github-actions/nightly-follower-history.sh append-history
