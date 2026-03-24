@@ -32,6 +32,7 @@ import QrCodeDialog from "../components/qr/QrCodeDialog";
 import ThemeToggle from "../components/theme/ThemeToggle";
 import {
   readAnalyticsPageState,
+  replaceAnalyticsPageState,
   writeAnalyticsPageState,
 } from "../lib/analytics/analytics-page-query";
 import {
@@ -75,6 +76,11 @@ import {
 } from "../lib/theme/mode-controller";
 import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
 import { ACTION_TOAST_OPTIONS, registerActionToastClient } from "../lib/ui/action-toast";
+import {
+  resolveAnalyticsPageEnabled,
+  resolveAnalyticsPageOpenState,
+  resolvePublicPageTabsVisible,
+} from "../lib/ui/analytics-page-preferences";
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
@@ -256,9 +262,12 @@ const fetchFollowerHistoryRows = async (
 };
 
 export default function RouteIndex() {
+  const analyticsPageEnabled = resolveAnalyticsPageEnabled(content.site);
   const [connectivity, setConnectivity] = createSignal<ConnectivityStatus>("online");
   const [mode, setMode] = createSignal<UiMode>("dark");
-  const [analyticsPageOpen, setAnalyticsPageOpen] = createSignal(readAnalyticsPageState());
+  const [analyticsPageOpen, setAnalyticsPageOpen] = createSignal(
+    resolveAnalyticsPageOpenState(readAnalyticsPageState(), analyticsPageEnabled),
+  );
   const [analyticsMode, setAnalyticsMode] = createSignal<FollowerHistoryMode>("raw");
   const [analyticsRange, setAnalyticsRange] = createSignal<FollowerHistoryRange>("30d");
   const [modalRange, setModalRange] = createSignal<FollowerHistoryRange>("30d");
@@ -352,15 +361,28 @@ export default function RouteIndex() {
   );
 
   const syncAnalyticsStateFromLocation = () => {
-    setAnalyticsPageOpen(readAnalyticsPageState());
+    const requestedOpen = readAnalyticsPageState();
+    const nextOpen = resolveAnalyticsPageOpenState(requestedOpen, analyticsPageEnabled);
+
+    if (requestedOpen && !analyticsPageEnabled) {
+      replaceAnalyticsPageState(false);
+    }
+
+    setAnalyticsPageOpen(nextOpen);
   };
   const syncConnectivityState = () => {
     setConnectivity(readConnectivityStatus());
   };
   const activeView = createMemo(() => resolvePublicPageView(analyticsPageOpen()));
-  const showPublicPageTabs = createMemo(() => analyticsAvailable() || activeView() === "analytics");
+  const showPublicPageTabs = createMemo(() =>
+    resolvePublicPageTabsVisible({
+      analyticsAvailable: analyticsAvailable(),
+      analyticsPageEnabled,
+      analyticsPageOpen: analyticsPageOpen(),
+    }),
+  );
   const setActiveView = (view: PageViewKey) => {
-    const nextOpen = view === "analytics";
+    const nextOpen = resolveAnalyticsPageOpenState(view === "analytics", analyticsPageEnabled);
 
     if (nextOpen === analyticsPageOpen()) {
       return;

@@ -2,17 +2,35 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { SiteData } from "../../../../src/lib/content/load-content";
 import {
+  STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS,
   STUDIO_LINK_TYPE_OPTIONS,
   resolveEditorLinkAccordionSummary,
   resolveEditorLinkAccordionValue,
+  resolveStudioAnalyticsPageVisibilityValue,
   resolveStudioConfirmDialogCopy,
   resolveStudioThemeOptions,
 } from "./editor-options";
+
+const baseSite = {
+  title: "OpenLinks",
+  description: "Links",
+  theme: {
+    active: "sleek",
+    available: ["sleek", "daybreak"],
+  },
+} as const satisfies SiteData;
 
 test("studio link type options stay aligned with the supported link types", () => {
   assert.deepEqual(
     STUDIO_LINK_TYPE_OPTIONS.map((option) => option.value),
     ["simple", "rich", "payment"],
+  );
+});
+
+test("studio analytics page visibility options stay in the expected order", () => {
+  assert.deepEqual(
+    STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS.map((option) => option.value),
+    ["true", "false"],
   );
 });
 
@@ -46,6 +64,23 @@ test("studio theme options keep valid configured themes", () => {
     { value: "daybreak", label: "daybreak" },
     { value: "sleek", label: "sleek" },
   ]);
+});
+
+test("studio analytics page visibility defaults to shown", () => {
+  assert.equal(resolveStudioAnalyticsPageVisibilityValue(baseSite), "true");
+});
+
+test("studio analytics page visibility reads a disabled config", () => {
+  const site = {
+    ...baseSite,
+    ui: {
+      analytics: {
+        pageEnabled: false,
+      },
+    },
+  } as const satisfies SiteData;
+
+  assert.equal(resolveStudioAnalyticsPageVisibilityValue(site), "false");
 });
 
 test("studio confirm copy warns about direct main-branch saves", () => {

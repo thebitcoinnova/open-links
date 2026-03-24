@@ -1,5 +1,6 @@
 import type { LinkType, SiteData } from "../../../../src/lib/content/load-content";
 import { resolveThemeSelection } from "../../../../src/lib/theme/theme-registry";
+import { resolveAnalyticsPageEnabled } from "../../../../src/lib/ui/analytics-page-preferences";
 
 export interface StudioSelectOption {
   label: string;
@@ -19,11 +20,19 @@ export const STUDIO_LINK_TYPE_OPTIONS: Array<StudioSelectOption & { value: LinkT
   { value: "payment", label: "Payment" },
 ];
 
+export const STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS: StudioSelectOption[] = [
+  { value: "true", label: "Shown" },
+  { value: "false", label: "Hidden" },
+];
+
 export const resolveStudioThemeOptions = (site: SiteData): StudioSelectOption[] =>
   resolveThemeSelection(site).available.map((themeId) => ({
     value: themeId,
     label: themeId,
   }));
+
+export const resolveStudioAnalyticsPageVisibilityValue = (site: SiteData): string =>
+  resolveAnalyticsPageEnabled(site) ? "true" : "false";
 
 export const resolveStudioConfirmDialogCopy = (
   action: StudioConfirmAction,

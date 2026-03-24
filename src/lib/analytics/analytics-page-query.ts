@@ -16,7 +16,7 @@ export const readAnalyticsPageState = (): boolean => {
   }
 };
 
-export const writeAnalyticsPageState = (open: boolean) => {
+const updateAnalyticsPageState = (open: boolean, mode: "push" | "replace") => {
   if (typeof window === "undefined") {
     return;
   }
@@ -28,5 +28,18 @@ export const writeAnalyticsPageState = (open: boolean) => {
     nextUrl.searchParams.delete(ANALYTICS_QUERY_KEY);
   }
 
+  if (mode === "replace") {
+    window.history.replaceState({}, "", nextUrl);
+    return;
+  }
+
   window.history.pushState({}, "", nextUrl);
+};
+
+export const writeAnalyticsPageState = (open: boolean) => {
+  updateAnalyticsPageState(open, "push");
+};
+
+export const replaceAnalyticsPageState = (open: boolean) => {
+  updateAnalyticsPageState(open, "replace");
 };

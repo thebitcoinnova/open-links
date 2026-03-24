@@ -302,6 +302,9 @@ export interface SiteData {
         allowManualMetadataFallback?: boolean;
       };
     };
+    analytics?: {
+      pageEnabled?: boolean;
+    };
     payments?: SitePaymentsConfig;
     footer?: SiteFooterConfig;
   };

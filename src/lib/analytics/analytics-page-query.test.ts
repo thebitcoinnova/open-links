@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   readAnalyticsPageState,
   readAnalyticsPageStateFromUrl,
+  replaceAnalyticsPageState,
   writeAnalyticsPageState,
 } from "./analytics-page-query";
 
@@ -94,6 +95,30 @@ test("writeAnalyticsPageState removes the analytics query flag when closing anal
   writeAnalyticsPageState(false);
 
   assert.equal(pushedHref, "https://openlinks.us/?view=links");
+
+  restoreWindow();
+});
+
+test("replaceAnalyticsPageState removes the analytics query flag without pushing history", () => {
+  let replacedHref = "";
+
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: {
+      history: {
+        replaceState(_state: unknown, _title: string, nextUrl: string | URL | null | undefined) {
+          replacedHref = String(nextUrl);
+        },
+      },
+      location: {
+        href: "https://openlinks.us/?analytics=all",
+      },
+    },
+  });
+
+  replaceAnalyticsPageState(false);
+
+  assert.equal(replacedHref, "https://openlinks.us/");
 
   restoreWindow();
 });

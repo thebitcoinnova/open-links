@@ -465,6 +465,15 @@
           },
           "additionalProperties": true
         },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "pageEnabled": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
         "payments": {
           "$ref": "#/$defs/sitePaymentsConfig"
         },

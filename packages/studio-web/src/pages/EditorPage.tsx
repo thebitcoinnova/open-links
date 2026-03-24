@@ -9,10 +9,12 @@ import StatusNotice from "@/components/ui/status-notice";
 import type { LiveRegionTone } from "@/lib/accessibility";
 import { api } from "@/lib/api";
 import {
+  STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS,
   STUDIO_LINK_TYPE_OPTIONS,
   type StudioConfirmAction,
   resolveEditorLinkAccordionSummary,
   resolveEditorLinkAccordionValue,
+  resolveStudioAnalyticsPageVisibilityValue,
   resolveStudioConfirmDialogCopy,
   resolveStudioThemeOptions,
 } from "@/lib/editor-options";
@@ -416,6 +418,36 @@ export default function EditorPage() {
                   }}
                   options={resolveStudioThemeOptions(loaded().site as SiteData)}
                   value={String((loaded().site.theme as { active?: string })?.active ?? "")}
+                />
+                <LabeledSelect
+                  id="editor-site-analytics-page-visibility"
+                  label="Analytics page"
+                  maybeDescription="Controls whether the top-level Links / Analytics page switch is shown."
+                  onChange={(value) => {
+                    const currentUi = (loaded().site.ui as Record<string, unknown>) ?? {};
+                    const currentAnalytics =
+                      typeof currentUi.analytics === "object" &&
+                      currentUi.analytics !== null &&
+                      !Array.isArray(currentUi.analytics)
+                        ? (currentUi.analytics as Record<string, unknown>)
+                        : {};
+
+                    setContent({
+                      ...loaded(),
+                      site: {
+                        ...loaded().site,
+                        ui: {
+                          ...currentUi,
+                          analytics: {
+                            ...currentAnalytics,
+                            pageEnabled: value === "true",
+                          },
+                        },
+                      },
+                    });
+                  }}
+                  options={STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS}
+                  value={resolveStudioAnalyticsPageVisibilityValue(loaded().site as SiteData)}
                 />
               </>
             ),
