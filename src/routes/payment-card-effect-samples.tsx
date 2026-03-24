@@ -235,7 +235,7 @@ const PaymentCardEffectSamplesRoute = () => {
         <p style={descriptionStyle}>
           If you found this page, you found the hidden payment-card playground. It showcases the
           current particle treatments plus a few practical example tip cards, and now lets you scrub
-          their bombasticity in one place.
+          their compressed bombasticity range in one place.
         </p>
       </section>
 
@@ -259,8 +259,8 @@ const PaymentCardEffectSamplesRoute = () => {
               }}
             />
             <p style={controlHintStyle}>
-              One slider now drives every sample card effect on this page. Try 0 for totally calm
-              and 1 for maximum chaos.
+              One slider now drives every sample card effect on this page. Try 0 for totally calm,
+              0.05 for the old midpoint feel, and 0.10 for maximum chaos.
             </p>
           </div>
         </section>
@@ -268,7 +268,8 @@ const PaymentCardEffectSamplesRoute = () => {
         <section style={notePanelStyle}>
           <strong>What to try</strong>
           <ul style={noteListStyle}>
-            <li>Scrub bombasticity from 0.00 to 1.00 and compare all cards at once.</li>
+            <li>Scrub bombasticity from 0.00 to 0.10 for the meaningful live range.</li>
+            <li>Push past 0.10 to confirm the effects intentionally stay maxed out.</li>
             <li>Compare the isolated effects in the showcase section.</li>
             <li>Open the multi-rail support card and toggle QR states.</li>
             <li>Use the hidden deployed path ending in {PAYMENT_CARD_EFFECT_EASTER_EGG_PATH}.</li>

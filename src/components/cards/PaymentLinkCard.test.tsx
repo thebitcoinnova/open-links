@@ -363,7 +363,7 @@ test("payment bombasticity at zero disables the effect layer entirely", () => {
   assert.equal(effectsLayer, undefined);
 });
 
-test("higher bombasticity yields more ambient particles than lower bombasticity", () => {
+test("bombasticity ramps up much faster within the first tenth", () => {
   // Arrange
   const lowBombasticitySite = {
     ...site,
@@ -372,7 +372,7 @@ test("higher bombasticity yields more ambient particles than lower bombasticity"
       payments: {
         effects: {
           enabledDefault: true,
-          bombasticityDefault: 0.25,
+          bombasticityDefault: 0.01,
         },
       },
     },
@@ -384,7 +384,7 @@ test("higher bombasticity yields more ambient particles than lower bombasticity"
       payments: {
         effects: {
           enabledDefault: true,
-          bombasticityDefault: 1,
+          bombasticityDefault: 0.05,
         },
       },
     },
@@ -415,9 +415,76 @@ test("higher bombasticity yields more ambient particles than lower bombasticity"
   // Assert
   assert.ok(lowEffectsLayer);
   assert.ok(highEffectsLayer);
-  assert.equal(lowEffectsLayer.props["data-bombasticity"], "0.25");
-  assert.equal(highEffectsLayer.props["data-bombasticity"], "1.00");
+  assert.equal(lowEffectsLayer.props["data-bombasticity"], "0.01");
+  assert.equal(highEffectsLayer.props["data-bombasticity"], "0.05");
   assert.ok(highAmbientCount > lowAmbientCount);
+});
+
+test("payment effects plateau once bombasticity reaches the first tenth", () => {
+  // Arrange
+  const firstMaxSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        effects: {
+          enabledDefault: true,
+          bombasticityDefault: 0.1,
+        },
+      },
+    },
+  } satisfies SiteData;
+  const plateauSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        effects: {
+          enabledDefault: true,
+          bombasticityDefault: 0.5,
+        },
+      },
+    },
+  } satisfies SiteData;
+
+  const firstMaxTree = PaymentLinkCard({
+    link: paymentLink,
+    site: firstMaxSite,
+    brandIconOptions: resolveBrandIconOptions(firstMaxSite as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+  const plateauTree = PaymentLinkCard({
+    link: paymentLink,
+    site: plateauSite,
+    brandIconOptions: resolveBrandIconOptions(plateauSite as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const firstMaxEffectsLayer = firstElementWithClass(firstMaxTree, "payment-card-effects");
+  const plateauEffectsLayer = firstElementWithClass(plateauTree, "payment-card-effects");
+  const firstMaxAmbientParticle = firstElementWithClass(
+    firstMaxTree,
+    "payment-card-effects-particle--ambient",
+  );
+  const plateauAmbientParticle = firstElementWithClass(
+    plateauTree,
+    "payment-card-effects-particle--ambient",
+  );
+
+  // Assert
+  assert.ok(firstMaxEffectsLayer);
+  assert.ok(plateauEffectsLayer);
+  assert.ok(firstMaxAmbientParticle);
+  assert.ok(plateauAmbientParticle);
+  assert.equal(firstMaxEffectsLayer.props["data-bombasticity"], "0.10");
+  assert.equal(plateauEffectsLayer.props["data-bombasticity"], "0.50");
+  assert.equal(
+    countElementsWithClass(firstMaxTree, "payment-card-effects-particle--ambient"),
+    countElementsWithClass(plateauTree, "payment-card-effects-particle--ambient"),
+  );
+  assert.deepEqual(firstMaxEffectsLayer.props.style, plateauEffectsLayer.props.style);
+  assert.deepEqual(firstMaxAmbientParticle.props.style, plateauAmbientParticle.props.style);
 });
 
 test("single-rail payment cards expose inline open, copy, and QR controls", () => {

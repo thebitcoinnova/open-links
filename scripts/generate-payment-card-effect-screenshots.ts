@@ -16,7 +16,7 @@ const PREVIEW_PORT = 4174;
 const PREVIEW_READY_TIMEOUT_MS = 60_000;
 
 export const DEFAULT_PAYMENT_CARD_EFFECT_SCREENSHOT_DIR = "public/generated/payment-card-effects";
-export const DEFAULT_PAYMENT_CARD_EFFECT_SCREENSHOT_BOMBASTICITY = 0.5;
+export const DEFAULT_PAYMENT_CARD_EFFECT_SCREENSHOT_BOMBASTICITY = 0.05;
 
 export interface PaymentCardEffectScreenshotOutput {
   fixtureId: string;

@@ -82,6 +82,10 @@ import {
   resolveRichRenderMode,
 } from "../lib/ui/rich-card-policy";
 import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
+import {
+  PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL,
+  resolvePaymentCardEffectGalleryMenuHref,
+} from "./index.helpers";
 
 const content = loadContent();
 const composition = resolveComposition(content.site);
@@ -97,6 +101,9 @@ const typography = resolveTypographyPreferences({
   activeTheme: themeSelection.active,
   typographyScale: layout.typographyScale,
 });
+const paymentCardEffectGalleryMenuHref = resolvePaymentCardEffectGalleryMenuHref(
+  import.meta.env.BASE_URL,
+);
 
 registerActionToastClient({
   default: (message) => toast(message),
@@ -688,6 +695,13 @@ export default function RouteIndex() {
           <span class="utility-pill" aria-live="polite">
             Cards: {richRenderMode === "simple" ? "simple only" : "rich + simple"}
           </span>
+          <a
+            class="utility-pill utility-pill-link"
+            href={paymentCardEffectGalleryMenuHref}
+            aria-label="Open the payment card effects testing gallery"
+          >
+            {PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL}
+          </a>
         </UtilityControlsMenu>
       </TopUtilityBar>
 

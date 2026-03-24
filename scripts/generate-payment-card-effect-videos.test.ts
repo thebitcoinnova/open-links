@@ -26,26 +26,27 @@ test("resolvePaymentCardEffectVideoOutputs maps scenarios to committed WEBM path
     [
       {
         fixtureId: "particles",
-        bombasticity: 0.25,
+        bombasticity: 0.03,
         publicPath:
-          "/generated/payment-card-effects/videos/ambient-particles-bombasticity-0.25.webm",
+          "/generated/payment-card-effects/videos/ambient-particles-bombasticity-0.03.webm",
       },
       {
         fixtureId: "particles",
-        bombasticity: 0.5,
+        bombasticity: 0.05,
         publicPath:
-          "/generated/payment-card-effects/videos/ambient-particles-bombasticity-0.5.webm",
+          "/generated/payment-card-effects/videos/ambient-particles-bombasticity-0.05.webm",
       },
       {
         fixtureId: "particles",
-        bombasticity: 0.75,
+        bombasticity: 0.08,
         publicPath:
-          "/generated/payment-card-effects/videos/ambient-particles-bombasticity-0.75.webm",
+          "/generated/payment-card-effects/videos/ambient-particles-bombasticity-0.08.webm",
       },
       {
         fixtureId: "particles",
-        bombasticity: 1,
-        publicPath: "/generated/payment-card-effects/videos/ambient-particles-bombasticity-1.webm",
+        bombasticity: 0.1,
+        publicPath:
+          "/generated/payment-card-effects/videos/ambient-particles-bombasticity-0.1.webm",
       },
     ],
   );

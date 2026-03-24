@@ -87,3 +87,29 @@ test("top utility bar wraps long site titles inside a dedicated text element", (
   assert.ok(actions);
   assert.equal(actions.props["aria-label"], "Display controls");
 });
+
+test("top utility bar renders interactive children inside the actions region", () => {
+  // Arrange
+  const tree = TopUtilityBar({
+    title: "OpenLinks",
+    children: reactRuntime.createElement(
+      "a",
+      {
+        class: "utility-pill utility-pill-link",
+        href: "/spark/tip-cards",
+      },
+      "Testing: tip card sparks",
+    ),
+  }) as RenderedNode;
+
+  // Act
+  const actions = firstElementWithClass(tree, "utility-actions");
+  const testingLink = collectElements(tree).find(
+    (element) => element.type === "a" && element.props.href === "/spark/tip-cards",
+  );
+
+  // Assert
+  assert.ok(actions);
+  assert.ok(testingLink);
+  assert.equal(testingLink.props.children, "Testing: tip card sparks");
+});

@@ -13,8 +13,9 @@ Use the Easter egg route to scrub all sample cards at once:
 The page now exposes a single global bombasticity slider:
 
 - `0.0` = no decorative effect layer
-- `0.5` = the default intensity, close to the original implementation
-- `1.0` = the loudest, fastest supported treatment
+- `0.05` = roughly the old midpoint/default feel
+- `0.1` = the loudest, fastest supported treatment
+- `0.1..1.0` = intentionally plateau at the same maximum treatment
 
 The route also supports query params for deterministic capture:
 
@@ -25,7 +26,7 @@ The route also supports query params for deterministic capture:
 Example:
 
 ```text
-/__samples/payment-card-effects?fixture=lightning-default-combo&bombasticity=0.75&capture=1
+/__samples/payment-card-effects?fixture=lightning-default-combo&bombasticity=0.08&capture=1
 ```
 
 ## Regenerating committed media
@@ -51,10 +52,10 @@ The video generator writes short, low-resolution `.webm` clips under:
 
 The committed video matrix covers each showcase fixture at:
 
-- `0.25`
-- `0.5`
-- `0.75`
-- `1`
+- `0.03`
+- `0.05`
+- `0.08`
+- `0.1`
 
 ## Stable screenshots
 

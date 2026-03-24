@@ -62,12 +62,12 @@ test("payment card effect capture helpers keep the committed bombasticity ladder
   // Act
   const searchParams = buildPaymentCardEffectCaptureSearchParams({
     fixtureId,
-    bombasticity: 0.75,
+    bombasticity: 0.08,
   });
 
   // Assert
-  assert.deepEqual(PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS, [0.25, 0.5, 0.75, 1]);
+  assert.deepEqual(PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS, [0.03, 0.05, 0.08, 0.1]);
   assert.equal(searchParams.get("capture"), "1");
   assert.equal(searchParams.get("fixture"), fixtureId);
-  assert.equal(searchParams.get("bombasticity"), "0.75");
+  assert.equal(searchParams.get("bombasticity"), "0.08");
 });

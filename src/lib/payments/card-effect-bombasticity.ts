@@ -1,6 +1,9 @@
 import { DEFAULT_PAYMENT_CARD_BOMBASTICITY, clampPaymentCardBombasticity } from "./types";
 
-export const PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS = [0.25, 0.5, 0.75, 1] as const;
+const LIVE_PAYMENT_CARD_BOMBASTICITY_MAX = 0.1;
+
+export const resolveEffectivePaymentCardBombasticity = (bombasticity: number): number =>
+  clampPaymentCardBombasticity(bombasticity / LIVE_PAYMENT_CARD_BOMBASTICITY_MAX);
 
 const scaleAcrossBombasticity = ({
   bombasticity,
@@ -13,12 +16,14 @@ const scaleAcrossBombasticity = ({
   atMidpoint: number;
   atOne: number;
 }): number => {
-  if (bombasticity <= 0.5) {
-    const progress = bombasticity / 0.5;
+  const effectiveBombasticity = resolveEffectivePaymentCardBombasticity(bombasticity);
+
+  if (effectiveBombasticity <= 0.5) {
+    const progress = effectiveBombasticity / 0.5;
     return atZero + (atMidpoint - atZero) * progress;
   }
 
-  const progress = (bombasticity - 0.5) / 0.5;
+  const progress = (effectiveBombasticity - 0.5) / 0.5;
   return atMidpoint + (atOne - atMidpoint) * progress;
 };
 

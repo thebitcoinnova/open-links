@@ -262,7 +262,7 @@ Payment support is available in two ways:
 - `effects.enabled`: opt the card into decorative special effects
 - `effects.effects`: optional explicit effect list (`particles`, `lightning-particles`, `glitter-particles`)
 - `effects.glitterPalette`: `gold`, `ice`
-- `effects.bombasticity`: normalized effect intensity from `0` to `1`; `0` disables the decorative layer while `1` is the busiest/fastest presentation
+- `effects.bombasticity`: normalized effect intensity from `0` to `1`; `0` disables the decorative layer, the live curve reaches its busiest/fastest presentation by `0.1`, and `0.1..1` intentionally plateau at that maximum
 - `rails`: array of rail objects
 
 Supported rail values:
@@ -292,7 +292,7 @@ Per-rail QR settings (`payment.rails[].qr`) support:
 
 Payment rails can include explicit app links via `payment.rails[].appLinks` for wallet/app-specific deep links.
 When QR colors are omitted, runtime defaults follow the active theme using `--text-primary` for QR modules and `--surface-panel` for the background.
-When `payment.effects.enabled` is true and no explicit effect list is provided, runtime defaults to subtle ambient particles for standard payment cards, and to both `lightning-particles` and gold `glitter-particles` for cards whose primary rail is Lightning. When `payment.effects.bombasticity` is omitted, runtime falls back to `site.ui.payments.effects.bombasticityDefault`, then to the built-in midpoint default of `0.5`.
+When `payment.effects.enabled` is true and no explicit effect list is provided, runtime defaults to subtle ambient particles for standard payment cards, and to both `lightning-particles` and gold `glitter-particles` for cards whose primary rail is Lightning. When `payment.effects.bombasticity` is omitted, runtime falls back to `site.ui.payments.effects.bombasticityDefault`, then to the built-in midpoint default of `0.5`, which now renders at the maximum live treatment.
 
 #### Payment example
 
