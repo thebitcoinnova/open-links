@@ -4,7 +4,8 @@ import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/sh
 import { showActionToast } from "../../lib/ui/action-toast";
 import BottomActionBar, {
   BottomActionBarActionContent,
-  type BottomActionBarItem,
+  type BottomActionBarButtonItem,
+  type BottomActionKind,
 } from "../actions/BottomActionBar";
 import MobileOverflowMenu, { type MobileOverflowMenuAction } from "../actions/MobileOverflowMenu";
 
@@ -16,6 +17,37 @@ export interface ProfileHeaderProps {
 
 const orderedContactEntries = (contact?: Record<string, string>) =>
   Object.entries(contact ?? {}).sort((left, right) => left[0].localeCompare(right[0]));
+
+export interface MobileProfileActionLayout {
+  inlineKinds: BottomActionKind[];
+  overflowKinds: BottomActionKind[];
+}
+
+const orderedProfileActionKinds: BottomActionKind[] = ["qr", "share", "copy"];
+
+export const resolveMobileProfileActionLayout = (
+  kinds: BottomActionKind[],
+): MobileProfileActionLayout => {
+  const uniqueKinds = Array.from(new Set(kinds));
+  const orderedKinds = [
+    ...orderedProfileActionKinds.filter((kind) => uniqueKinds.includes(kind)),
+    ...uniqueKinds.filter((kind) => !orderedProfileActionKinds.includes(kind)),
+  ];
+  const inlineKinds = orderedKinds.slice(0, 2);
+  const overflowKinds = orderedKinds.slice(2);
+
+  if (overflowKinds.length === 1) {
+    return {
+      inlineKinds: orderedKinds,
+      overflowKinds: [],
+    };
+  }
+
+  return {
+    inlineKinds,
+    overflowKinds,
+  };
+};
 
 export const ProfileHeader = (props: ProfileHeaderProps) => {
   const richness = () => props.richness ?? "standard";
@@ -49,19 +81,10 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     props.onProfileQrOpen?.(resolveDocumentShareUrl());
   };
 
-  const actionItems = (): BottomActionBarItem[] => {
-    const items: BottomActionBarItem[] = [];
+  const actionItems = (): BottomActionBarButtonItem[] => {
+    const items: BottomActionBarButtonItem[] = [];
 
     items.push(
-      {
-        ariaLabel: "Share profile",
-        kind: "share",
-        label: "Share",
-        onClick: async () => {
-          await handleShareProfile();
-        },
-        title: "Share profile",
-      },
       ...(props.onProfileQrOpen
         ? [
             {
@@ -73,6 +96,15 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
             },
           ]
         : []),
+      {
+        ariaLabel: "Share profile",
+        kind: "share",
+        label: "Share",
+        onClick: async () => {
+          await handleShareProfile();
+        },
+        title: "Share profile",
+      },
       {
         ariaLabel: "Copy profile link",
         kind: "copy",
@@ -86,26 +118,22 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
 
     return items;
   };
-  const mobilePrimaryActionItems = (): BottomActionBarItem[] => {
+  const mobileActionLayout = (): MobileProfileActionLayout =>
+    resolveMobileProfileActionLayout(actionItems().map((item) => item.kind));
+
+  const mobileInlineActionItems = (): BottomActionBarButtonItem[] => {
     const items = actionItems();
-    const shareAction = items.find((item) => item.kind === "share");
-    const qrAction = items.find((item) => item.kind === "qr");
-    const copyAction = items.find((item) => item.kind === "copy");
 
-    if (qrAction) {
-      return [shareAction, qrAction].filter(Boolean) as BottomActionBarItem[];
-    }
-
-    return [shareAction, copyAction].filter(Boolean) as BottomActionBarItem[];
+    return mobileActionLayout()
+      .inlineKinds.map((kind) => items.find((item) => item.kind === kind))
+      .filter((item): item is BottomActionBarButtonItem => Boolean(item));
   };
   const mobileOverflowActions = (): MobileOverflowMenuAction[] => {
-    const primaryKinds = new Set(mobilePrimaryActionItems().map((item) => item.kind));
+    const items = actionItems();
 
-    return actionItems()
-      .filter(
-        (item): item is Extract<BottomActionBarItem, { onClick: () => void | Promise<void> }> =>
-          "onClick" in item && !primaryKinds.has(item.kind),
-      )
+    return mobileActionLayout()
+      .overflowKinds.map((kind) => items.find((item) => item.kind === kind))
+      .filter((item): item is BottomActionBarButtonItem => Boolean(item))
       .map((item) => ({
         label: item.label,
         onSelect: item.onClick,
@@ -162,9 +190,9 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
           items={actionItems()}
           label="Profile sharing actions"
         />
-        <Show when={mobilePrimaryActionItems().length > 0}>
+        <Show when={mobileInlineActionItems().length > 0}>
           <div class="bottom-action-bar profile-action-bar profile-action-bar-mobile">
-            <For each={mobilePrimaryActionItems()}>
+            <For each={mobileInlineActionItems()}>
               {(item) => (
                 <button
                   type="button"
@@ -173,9 +201,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
                   aria-label={item.ariaLabel}
                   title={item.title ?? item.ariaLabel}
                   onClick={() => {
-                    if ("onClick" in item) {
-                      void item.onClick();
-                    }
+                    void item.onClick();
                   }}
                 >
                   <BottomActionBarActionContent kind={item.kind} label={item.label} />
