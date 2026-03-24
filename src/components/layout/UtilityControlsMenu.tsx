@@ -11,11 +11,19 @@ import {
 } from "./UtilityControlsMenu.helpers";
 
 export interface UtilityControlsMenuProps {
+  activeNavigationItem?: "analytics" | "home";
+  analyticsHref?: string;
+  analyticsLabel?: string;
+  analyticsSupportingText?: string;
+  homeHref?: string;
+  homeLabel?: string;
   cardModeLabel: string;
   isOffline?: boolean;
   label?: string;
   mode: UiMode;
   modePolicyLabel?: string;
+  onAnalyticsSelect?: (event: MouseEvent) => void;
+  onHomeSelect?: (event: MouseEvent) => void;
   onToggleMode?: () => void;
   panelLabel?: string;
   testingGalleryHref?: string;
@@ -33,6 +41,7 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
   const panelLabel = () => props.panelLabel ?? "Site controls";
   const triggerAriaLabel = () =>
     resolveUtilityControlsMenuTriggerAriaLabel(isDesktopOpen() || isMobileOpen(), triggerLabel());
+  const hasNavigationSection = () => Boolean(props.homeHref) || Boolean(props.analyticsHref);
   const hasUtilitySection = () => props.isOffline || Boolean(props.testingGalleryHref);
   let maybeDesktopTriggerRef: HTMLButtonElement | undefined;
   let maybeMobileTriggerRef: HTMLButtonElement | undefined;
@@ -71,6 +80,54 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
 
   const renderMenuSections = () => (
     <>
+      <Show when={hasNavigationSection()}>
+        <section class="utility-menu-section" aria-label="Page navigation">
+          <p class="utility-menu-section-label">Navigation</p>
+          <div class="utility-menu-card">
+            <Show when={props.homeHref}>
+              <a
+                class="utility-menu-link utility-menu-row utility-menu-row--split"
+                aria-current={props.activeNavigationItem === "home" ? "page" : undefined}
+                href={props.homeHref}
+                onClick={(event) => {
+                  closeAllMenus();
+                  props.onHomeSelect?.(event);
+                }}
+              >
+                <div class="utility-menu-row-copy">
+                  <span class="utility-menu-row-label">{props.homeLabel ?? "Home"}</span>
+                  <span class="utility-menu-row-supporting">Return to the main links page.</span>
+                </div>
+                <span class="utility-menu-badge">
+                  {props.activeNavigationItem === "home" ? "Current" : "Open"}
+                </span>
+              </a>
+            </Show>
+            <Show when={props.analyticsHref}>
+              <a
+                class="utility-menu-link utility-menu-row utility-menu-row--split"
+                aria-current={props.activeNavigationItem === "analytics" ? "page" : undefined}
+                href={props.analyticsHref}
+                onClick={(event) => {
+                  closeAllMenus();
+                  props.onAnalyticsSelect?.(event);
+                }}
+              >
+                <div class="utility-menu-row-copy">
+                  <span class="utility-menu-row-label">{props.analyticsLabel ?? "Analytics"}</span>
+                  <span class="utility-menu-row-supporting">
+                    {props.analyticsSupportingText ?? "Open follower analytics."}
+                  </span>
+                </div>
+                <span class="utility-menu-badge">
+                  {props.activeNavigationItem === "analytics" ? "Current" : "Open"}
+                </span>
+              </a>
+            </Show>
+          </div>
+        </section>
+      </Show>
+
       <section class="utility-menu-section" aria-label="Appearance settings">
         <p class="utility-menu-section-label">Appearance</p>
         <div class="utility-menu-card">

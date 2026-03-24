@@ -844,45 +844,6 @@ a:focus-visible {
   z-index: 1;
 }
 
-.public-page-tabs {
-  display: flex;
-  justify-content: center;
-}
-
-.public-page-tabs-list {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 64%, transparent 36%);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-pill) 84%, var(--accent) 16%);
-}
-
-.public-page-tab-trigger {
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  border-radius: 999px;
-  padding: 0.55rem 0.95rem;
-  font: inherit;
-  font-size: var(--page-type-caption);
-  font-weight: 700;
-  cursor: pointer;
-  transition: color var(--motion-fast), background-color var(--motion-fast), box-shadow
-    var(--motion-fast);
-}
-
-.public-page-tab-trigger[data-selected] {
-  color: color-mix(in srgb, var(--text-primary) 96%, white 4%);
-  background: color-mix(in srgb, var(--accent) 72%, var(--surface-pill) 28%);
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 24%, transparent);
-}
-
-.public-page-tab-indicator {
-  display: none;
-}
-
 .analytics-page {
   display: grid;
   gap: var(--space-3);

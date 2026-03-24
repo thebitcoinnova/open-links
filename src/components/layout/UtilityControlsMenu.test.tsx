@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   createUtilityControlsMenuCloseAutoFocusHandler,
+  resolveUtilityControlsMenuNavigationBadgeLabel,
   resolveUtilityControlsMenuOpenChange,
   resolveUtilityControlsMenuTriggerAriaLabel,
 } from "./UtilityControlsMenu.helpers";
@@ -43,4 +44,9 @@ test("utility controls menu close autofocus restores focus to the trigger", () =
 
   assert.equal(event.defaultPrevented, true);
   assert.equal(focused, true);
+});
+
+test("utility controls menu navigation badge reflects the active destination", () => {
+  assert.equal(resolveUtilityControlsMenuNavigationBadgeLabel(true), "Current");
+  assert.equal(resolveUtilityControlsMenuNavigationBadgeLabel(false), "Open");
 });
