@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ProfileHeader } from "./ProfileHeader";
+import { ProfileHeader, resolveMobileProfileActionLayout } from "./ProfileHeader";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
 
@@ -69,7 +69,7 @@ const firstElementWithClass = (
     return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
   });
 
-test("profile header renders share, QR, and copy desktop actions when QR is available", () => {
+test("profile header renders QR, share, and copy desktop actions when QR is available", () => {
   // Arrange
   const tree = ProfileHeader({
     onProfileQrOpen: () => undefined,
@@ -88,12 +88,12 @@ test("profile header renders share, QR, and copy desktop actions when QR is avai
   );
 
   // Assert
-  assert.equal(buttons[0]?.props["aria-label"], "Share profile");
-  assert.equal(buttons[1]?.props["aria-label"], "Show profile QR code");
+  assert.equal(buttons[0]?.props["aria-label"], "Show profile QR code");
+  assert.equal(buttons[1]?.props["aria-label"], "Share profile");
   assert.equal(buttons[2]?.props["aria-label"], "Copy profile link");
 });
 
-test("profile header routes copy into the mobile overflow menu when QR is available", () => {
+test("profile header keeps QR, share, and copy inline on mobile when QR is available", () => {
   // Arrange
   const tree = ProfileHeader({
     onProfileQrOpen: () => undefined,
@@ -112,9 +112,31 @@ test("profile header routes copy into the mobile overflow menu when QR is availa
   );
 
   // Assert
-  assert.equal(inlineButtons[0]?.props["aria-label"], "Share profile");
-  assert.equal(inlineButtons[1]?.props["aria-label"], "Show profile QR code");
-  assert.equal(inlineButtons[2]?.props["aria-label"], "More profile actions");
+  assert.equal(inlineButtons[0]?.props["aria-label"], "Show profile QR code");
+  assert.equal(inlineButtons[1]?.props["aria-label"], "Share profile");
+  assert.equal(inlineButtons[2]?.props["aria-label"], "Copy profile link");
+});
+
+test("profile header mobile layout moves multiple trailing actions into overflow", () => {
+  // Arrange
+  const layout = resolveMobileProfileActionLayout(["share", "copy", "open", "qr"]);
+
+  // Assert
+  assert.deepEqual(layout, {
+    inlineKinds: ["qr", "share"],
+    overflowKinds: ["copy", "open"],
+  });
+});
+
+test("profile header mobile layout keeps a single trailing action inline", () => {
+  // Arrange
+  const layout = resolveMobileProfileActionLayout(["share", "copy", "qr"]);
+
+  // Assert
+  assert.deepEqual(layout, {
+    inlineKinds: ["qr", "share", "copy"],
+    overflowKinds: [],
+  });
 });
 
 test("profile header mobile actions reuse the shared icon action content", () => {
