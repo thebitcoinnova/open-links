@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import { resolveBrandIconOptions } from "../../lib/icons/brand-icon-options";
+import { setPaymentCardEffectDebugTuningValue } from "../../lib/payments/card-effect-debug-tuning";
+import { paymentCardEffectDefaultDebugTuning } from "../../lib/payments/card-effect-samples";
 import { clearActionToastClient, registerActionToastClient } from "../../lib/ui/action-toast";
 import StyledPaymentQr from "../payments/StyledPaymentQr";
 import {
@@ -485,6 +487,57 @@ test("payment effects plateau once bombasticity reaches the first tenth", () => 
   );
   assert.deepEqual(firstMaxEffectsLayer.props.style, plateauEffectsLayer.props.style);
   assert.deepEqual(firstMaxAmbientParticle.props.style, plateauAmbientParticle.props.style);
+});
+
+test("payment link cards pass debug tuning overrides down to the effects layer", () => {
+  // Arrange
+  const loudSite = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        effects: {
+          enabledDefault: true,
+          bombasticityDefault: 0.1,
+        },
+      },
+    },
+  } satisfies SiteData;
+  const debugTuning = setPaymentCardEffectDebugTuningValue({
+    tuning: setPaymentCardEffectDebugTuningValue({
+      tuning: setPaymentCardEffectDebugTuningValue({
+        tuning: paymentCardEffectDefaultDebugTuning,
+        groupId: "ambient",
+        metricId: "count",
+        phase: "low",
+        value: 2,
+      }),
+      groupId: "ambient",
+      metricId: "count",
+      phase: "mid",
+      value: 2,
+    }),
+    groupId: "ambient",
+    metricId: "count",
+    phase: "max",
+    value: 2,
+  });
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site: loudSite,
+    brandIconOptions: resolveBrandIconOptions(loudSite as SiteData),
+    themeFingerprint: "test",
+    effectDebugTuning: debugTuning,
+  }) as RenderedNode;
+
+  // Act
+  const effectsLayer = firstElementWithClass(tree, "payment-card-effects");
+  const ambientCount = countElementsWithClass(tree, "payment-card-effects-particle--ambient");
+
+  // Assert
+  assert.ok(effectsLayer);
+  assert.equal(effectsLayer.props["data-bombasticity"], "0.10");
+  assert.equal(ambientCount, 2);
 });
 
 test("single-rail payment cards expose inline open, copy, and QR controls", () => {

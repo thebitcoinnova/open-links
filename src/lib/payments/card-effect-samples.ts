@@ -1,5 +1,16 @@
 import type { OpenLink, SiteData } from "../content/load-content";
 import {
+  PAYMENT_CARD_EFFECT_DEBUG_PHASES,
+  PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS,
+  PAYMENT_CARD_EFFECT_DEBUG_TUNING_GROUPS,
+  type PaymentCardEffectDebugTuning,
+  clonePaymentCardEffectDebugTuning,
+  getPaymentCardEffectDebugTuningValue,
+  resolvePaymentCardEffectDebugQueryParam,
+  resolvePaymentCardEffectDebugTuning,
+  setPaymentCardEffectDebugTuningValue,
+} from "./card-effect-debug-tuning";
+import {
   DEFAULT_PAYMENT_CARD_BOMBASTICITY,
   type PaymentCardEffectsConfig,
   type PaymentQrConfig,
@@ -26,6 +37,7 @@ export interface PaymentCardEffectRouteState {
   capture: boolean;
   fixtureId?: string;
   bombasticity: number;
+  debugTuning: PaymentCardEffectDebugTuning;
 }
 
 export interface PaymentCardEffectDemoCard {
@@ -371,6 +383,136 @@ export const getPaymentCardEffectFixture = (
   return paymentCardEffectSampleFixtures.find((fixture) => fixture.id === fixtureId);
 };
 
+export const paymentCardEffectDefaultDebugTuning = clonePaymentCardEffectDebugTuning(
+  PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS,
+);
+
+export const parsePaymentCardEffectDebugTuning = (
+  searchParams: URLSearchParams,
+): PaymentCardEffectDebugTuning => {
+  let debugTuning = clonePaymentCardEffectDebugTuning(paymentCardEffectDefaultDebugTuning);
+
+  for (const group of PAYMENT_CARD_EFFECT_DEBUG_TUNING_GROUPS) {
+    for (const metric of group.metrics) {
+      for (const phase of PAYMENT_CARD_EFFECT_DEBUG_PHASES) {
+        const rawValue = searchParams.get(
+          resolvePaymentCardEffectDebugQueryParam({
+            groupId: group.id,
+            metricId: metric.metricId,
+            phase: phase.id,
+          }),
+        );
+
+        if (rawValue === null || rawValue.trim().length === 0) {
+          continue;
+        }
+
+        const value = Number(rawValue);
+
+        if (Number.isNaN(value)) {
+          continue;
+        }
+
+        debugTuning = setPaymentCardEffectDebugTuningValue({
+          tuning: debugTuning,
+          groupId: group.id,
+          metricId: metric.metricId,
+          phase: phase.id,
+          value,
+        });
+      }
+    }
+  }
+
+  return resolvePaymentCardEffectDebugTuning(debugTuning);
+};
+
+export const applyPaymentCardEffectDebugTuningSearchParams = ({
+  searchParams,
+  debugTuning,
+}: {
+  searchParams: URLSearchParams;
+  debugTuning: PaymentCardEffectDebugTuning;
+}): void => {
+  const resolvedDebugTuning = resolvePaymentCardEffectDebugTuning(debugTuning);
+
+  for (const group of PAYMENT_CARD_EFFECT_DEBUG_TUNING_GROUPS) {
+    for (const metric of group.metrics) {
+      for (const phase of PAYMENT_CARD_EFFECT_DEBUG_PHASES) {
+        const queryParam = resolvePaymentCardEffectDebugQueryParam({
+          groupId: group.id,
+          metricId: metric.metricId,
+          phase: phase.id,
+        });
+        const value = getPaymentCardEffectDebugTuningValue({
+          tuning: resolvedDebugTuning,
+          groupId: group.id,
+          metricId: metric.metricId,
+          phase: phase.id,
+        });
+        const defaultValue = getPaymentCardEffectDebugTuningValue({
+          tuning: paymentCardEffectDefaultDebugTuning,
+          groupId: group.id,
+          metricId: metric.metricId,
+          phase: phase.id,
+        });
+
+        searchParams.delete(queryParam);
+
+        if (value === defaultValue) {
+          continue;
+        }
+
+        searchParams.set(
+          queryParam,
+          metric.step === 1 ? String(Math.round(value)) : value.toFixed(2),
+        );
+      }
+    }
+  }
+};
+
+export const applyPaymentCardEffectRouteStateSearchParams = ({
+  searchParams,
+  routeState,
+}: {
+  searchParams: URLSearchParams;
+  routeState: PaymentCardEffectRouteState;
+}): void => {
+  searchParams.set(
+    PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM,
+    serializePaymentCardEffectBombasticity(routeState.bombasticity),
+  );
+
+  if (routeState.capture) {
+    searchParams.set(PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM, "1");
+  } else {
+    searchParams.delete(PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM);
+  }
+
+  if (routeState.fixtureId) {
+    searchParams.set(PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM, routeState.fixtureId);
+  } else {
+    searchParams.delete(PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM);
+  }
+
+  applyPaymentCardEffectDebugTuningSearchParams({
+    searchParams,
+    debugTuning: routeState.debugTuning,
+  });
+};
+
+export const buildPaymentCardEffectRouteSearchParams = (
+  routeState: PaymentCardEffectRouteState,
+): URLSearchParams => {
+  const searchParams = new URLSearchParams();
+  applyPaymentCardEffectRouteStateSearchParams({
+    searchParams,
+    routeState,
+  });
+  return searchParams;
+};
+
 export const parsePaymentCardEffectRouteState = (
   searchParams: URLSearchParams,
 ): PaymentCardEffectRouteState => {
@@ -385,6 +527,7 @@ export const parsePaymentCardEffectRouteState = (
     capture: searchParams.get(PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM) === "1",
     fixtureId: getPaymentCardEffectFixture(fixtureId) ? fixtureId : undefined,
     bombasticity: clampPaymentCardBombasticity(maybeBombasticity),
+    debugTuning: parsePaymentCardEffectDebugTuning(searchParams),
   };
 };
 
@@ -400,14 +543,12 @@ export const buildPaymentCardEffectCaptureSearchParams = ({
   fixtureId: string;
   bombasticity: number;
 }): URLSearchParams => {
-  const searchParams = new URLSearchParams();
-  searchParams.set(PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM, "1");
-  searchParams.set(PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM, fixtureId);
-  searchParams.set(
-    PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM,
-    serializePaymentCardEffectBombasticity(bombasticity),
-  );
-  return searchParams;
+  return buildPaymentCardEffectRouteSearchParams({
+    capture: true,
+    fixtureId,
+    bombasticity,
+    debugTuning: paymentCardEffectDefaultDebugTuning,
+  });
 };
 
 export const cloneLinkWithBombasticity = (link: OpenLink, bombasticity: number): OpenLink => {

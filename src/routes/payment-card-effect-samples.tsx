@@ -2,18 +2,27 @@ import { For, type JSX, Show, createEffect, createMemo, createSignal } from "sol
 import PaymentLinkCard from "../components/cards/PaymentLinkCard";
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
 import {
-  PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM,
-  PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM,
+  PAYMENT_CARD_EFFECT_DEBUG_PHASES,
+  PAYMENT_CARD_EFFECT_DEBUG_TUNING_GROUPS,
+  formatPaymentCardEffectDebugMetricValue,
+  getPaymentCardEffectDebugTuningValue,
+  isDefaultPaymentCardEffectDebugTuning,
+  isDefaultPaymentCardEffectDebugTuningGroup,
+  resetPaymentCardEffectDebugTuningGroup,
+  resolvePaymentCardEffectDebugQueryParam,
+  setPaymentCardEffectDebugTuningValue,
+} from "../lib/payments/card-effect-debug-tuning";
+import {
   PAYMENT_CARD_EFFECT_EASTER_EGG_PATH,
-  PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM,
   PAYMENT_CARD_EFFECT_SAMPLES_PATH,
+  applyPaymentCardEffectRouteStateSearchParams,
   cloneLinkWithBombasticity,
   getPaymentCardEffectFixture,
   parsePaymentCardEffectRouteState,
   paymentCardEffectDefaultBombasticity,
+  paymentCardEffectDefaultDebugTuning,
   paymentCardEffectDemoSections,
   paymentCardEffectSamplesSite,
-  serializePaymentCardEffectBombasticity,
 } from "../lib/payments/card-effect-samples";
 import {
   applyThemeState,
@@ -112,6 +121,66 @@ const sliderRowStyle = {
   gap: "0.55rem",
 } satisfies JSX.CSSProperties;
 
+const controlsHeaderStyle = {
+  display: "flex",
+  "justify-content": "space-between",
+  gap: "1rem",
+  "align-items": "center",
+  "flex-wrap": "wrap",
+} satisfies JSX.CSSProperties;
+
+const controlsHeaderCopyStyle = {
+  display: "grid",
+  gap: "0.3rem",
+} satisfies JSX.CSSProperties;
+
+const controlGroupsGridStyle = {
+  display: "grid",
+  gap: "0.95rem",
+} satisfies JSX.CSSProperties;
+
+const controlGroupStyle = {
+  display: "grid",
+  gap: "0.8rem",
+  padding: "0.95rem 1rem",
+  border: "1px solid color-mix(in srgb, var(--border-subtle) 76%, transparent 24%)",
+  "border-radius": "var(--radius-md)",
+  background: "color-mix(in srgb, var(--surface-panel) 90%, var(--surface-bg) 10%)",
+} satisfies JSX.CSSProperties;
+
+const controlGroupHeaderStyle = {
+  display: "flex",
+  "justify-content": "space-between",
+  gap: "1rem",
+  "align-items": "start",
+  "flex-wrap": "wrap",
+} satisfies JSX.CSSProperties;
+
+const controlGroupCopyStyle = {
+  display: "grid",
+  gap: "0.25rem",
+} satisfies JSX.CSSProperties;
+
+const controlMetricsStyle = {
+  display: "grid",
+  gap: "0.9rem",
+} satisfies JSX.CSSProperties;
+
+const metricPanelStyle = {
+  display: "grid",
+  gap: "0.6rem",
+  padding: "0.8rem 0.85rem",
+  border: "1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent 28%)",
+  "border-radius": "var(--radius-sm)",
+  background: "color-mix(in srgb, var(--surface-panel) 84%, var(--surface-bg) 16%)",
+} satisfies JSX.CSSProperties;
+
+const phaseGridStyle = {
+  display: "grid",
+  gap: "0.7rem",
+  "grid-template-columns": "repeat(auto-fit, minmax(12rem, 1fr))",
+} satisfies JSX.CSSProperties;
+
 const sliderLabelStyle = {
   display: "flex",
   "justify-content": "space-between",
@@ -131,6 +200,17 @@ const controlHintStyle = {
   "font-size": "var(--type-caption)",
 } satisfies JSX.CSSProperties;
 
+const sectionResetButtonStyle = {
+  appearance: "none",
+  border: "1px solid color-mix(in srgb, var(--accent-strong) 28%, var(--border-subtle) 72%)",
+  "border-radius": "999px",
+  padding: "0.45rem 0.8rem",
+  background: "color-mix(in srgb, var(--surface-panel) 85%, var(--surface-bg) 15%)",
+  color: "var(--text-default)",
+  "font-size": "var(--type-caption)",
+  cursor: "pointer",
+} satisfies JSX.CSSProperties;
+
 const cardsGridStyle = (layoutMode: "grid" | "stack"): JSX.CSSProperties => ({
   display: "grid",
   gap: "1rem",
@@ -145,9 +225,11 @@ const PaymentCardEffectSamplesRoute = () => {
       ? {
           capture: false,
           bombasticity: paymentCardEffectDefaultBombasticity,
+          debugTuning: paymentCardEffectDefaultDebugTuning,
         }
       : parsePaymentCardEffectRouteState(new URLSearchParams(window.location.search));
-  const [bombasticity, setBombasticity] = createSignal(initialRouteState.bombasticity);
+  const [bombasticity] = createSignal(initialRouteState.bombasticity);
+  const [debugTuning, setDebugTuning] = createSignal(initialRouteState.debugTuning);
   const routeState = createMemo(() =>
     typeof window === "undefined"
       ? initialRouteState
@@ -205,20 +287,15 @@ const PaymentCardEffectSamplesRoute = () => {
     }
 
     const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.set(
-      PAYMENT_CARD_EFFECT_BOMBASTICITY_QUERY_PARAM,
-      serializePaymentCardEffectBombasticity(bombasticity()),
-    );
-
-    if (isCaptureMode()) {
-      nextUrl.searchParams.set(PAYMENT_CARD_EFFECT_CAPTURE_QUERY_PARAM, "1");
-    }
-
-    const fixtureId = routeState().fixtureId;
-
-    if (fixtureId) {
-      nextUrl.searchParams.set(PAYMENT_CARD_EFFECT_FIXTURE_QUERY_PARAM, fixtureId);
-    }
+    applyPaymentCardEffectRouteStateSearchParams({
+      searchParams: nextUrl.searchParams,
+      routeState: {
+        capture: isCaptureMode(),
+        fixtureId: routeState().fixtureId,
+        bombasticity: bombasticity(),
+        debugTuning: debugTuning(),
+      },
+    });
 
     window.history.replaceState({}, "", nextUrl);
   });
@@ -234,48 +311,152 @@ const PaymentCardEffectSamplesRoute = () => {
         <h1 style={titleStyle}>Tip card sparks</h1>
         <p style={descriptionStyle}>
           If you found this page, you found the hidden payment-card playground. It showcases the
-          current particle treatments plus a few practical example tip cards, and now lets you scrub
-          their compressed bombasticity range in one place.
+          current particle treatments plus a few practical example tip cards, and now lets you tune
+          the low, mid, and max curves for each effect family in one place.
         </p>
       </section>
 
       <Show when={!isCaptureMode()}>
         <section style={controlsPanelStyle}>
-          <div style={sliderRowStyle}>
-            <label for="payment-card-bombasticity-slider" style={sliderLabelStyle}>
-              <strong>Bombasticity</strong>
-              <span>{serializePaymentCardEffectBombasticity(bombasticity())}</span>
-            </label>
-            <input
-              id="payment-card-bombasticity-slider"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={serializePaymentCardEffectBombasticity(bombasticity())}
-              style={sliderStyle}
-              onInput={(event) => {
-                setBombasticity(Number(event.currentTarget.value));
+          <div style={controlsHeaderStyle}>
+            <div style={controlsHeaderCopyStyle}>
+              <strong>Debug tuning controls</strong>
+              <p style={controlHintStyle}>
+                These sliders override the internal low, mid, and max curves without changing the
+                public payment schema. Non-default values persist in the URL, while hidden
+                bombasticity still drives the live interpolation behind the scenes.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              style={sectionResetButtonStyle}
+              disabled={isDefaultPaymentCardEffectDebugTuning(debugTuning())}
+              onClick={() => {
+                setDebugTuning(paymentCardEffectDefaultDebugTuning);
               }}
-            />
-            <p style={controlHintStyle}>
-              One slider now drives every sample card effect on this page. Try 0 for totally calm,
-              0.05 for the old midpoint feel, and 0.10 for maximum chaos.
-            </p>
+            >
+              Reset all
+            </button>
+          </div>
+
+          <div style={controlGroupsGridStyle}>
+            <For each={PAYMENT_CARD_EFFECT_DEBUG_TUNING_GROUPS}>
+              {(group) => (
+                <section
+                  data-payment-card-effect-control-group={group.id}
+                  style={controlGroupStyle}
+                >
+                  <div style={controlGroupHeaderStyle}>
+                    <div style={controlGroupCopyStyle}>
+                      <strong>{group.label}</strong>
+                      <p style={controlHintStyle}>{group.description}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      style={sectionResetButtonStyle}
+                      disabled={isDefaultPaymentCardEffectDebugTuningGroup({
+                        tuning: debugTuning(),
+                        groupId: group.id,
+                      })}
+                      onClick={() => {
+                        setDebugTuning((currentTuning) =>
+                          resetPaymentCardEffectDebugTuningGroup({
+                            tuning: currentTuning,
+                            groupId: group.id,
+                          }),
+                        );
+                      }}
+                    >
+                      {`Reset ${group.label.toLowerCase()}`}
+                    </button>
+                  </div>
+
+                  <div style={controlMetricsStyle}>
+                    <For each={group.metrics}>
+                      {(metric) => (
+                        <section style={metricPanelStyle}>
+                          <strong>{metric.label}</strong>
+                          <div style={phaseGridStyle}>
+                            <For each={PAYMENT_CARD_EFFECT_DEBUG_PHASES}>
+                              {(phase) => {
+                                const inputId = resolvePaymentCardEffectDebugQueryParam({
+                                  groupId: group.id,
+                                  metricId: metric.metricId,
+                                  phase: phase.id,
+                                });
+                                const value = () =>
+                                  getPaymentCardEffectDebugTuningValue({
+                                    tuning: debugTuning(),
+                                    groupId: group.id,
+                                    metricId: metric.metricId,
+                                    phase: phase.id,
+                                  });
+
+                                return (
+                                  <div style={sliderRowStyle}>
+                                    <label for={inputId} style={sliderLabelStyle}>
+                                      <span>{phase.label}</span>
+                                      <span>
+                                        {formatPaymentCardEffectDebugMetricValue({
+                                          metric,
+                                          value: value(),
+                                        })}
+                                      </span>
+                                    </label>
+                                    <input
+                                      id={inputId}
+                                      type="range"
+                                      min={String(metric.min)}
+                                      max={String(metric.max)}
+                                      step={String(metric.step)}
+                                      value={formatPaymentCardEffectDebugMetricValue({
+                                        metric,
+                                        value: value(),
+                                      })}
+                                      style={sliderStyle}
+                                      onInput={(event) => {
+                                        setDebugTuning((currentTuning) =>
+                                          setPaymentCardEffectDebugTuningValue({
+                                            tuning: currentTuning,
+                                            groupId: group.id,
+                                            metricId: metric.metricId,
+                                            phase: phase.id,
+                                            value: Number(event.currentTarget.value),
+                                          }),
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              }}
+                            </For>
+                          </div>
+                        </section>
+                      )}
+                    </For>
+                  </div>
+                </section>
+              )}
+            </For>
           </div>
         </section>
 
         <section style={notePanelStyle}>
           <strong>What to try</strong>
           <ul style={noteListStyle}>
-            <li>Scrub bombasticity from 0.00 to 0.10 for the meaningful live range.</li>
-            <li>Push past 0.10 to confirm the effects intentionally stay maxed out.</li>
-            <li>Compare the isolated effects in the showcase section.</li>
+            <li>Ambient, lightning, glitter, and wash now tune independently on this page.</li>
+            <li>URL params only keep the non-default advanced overrides for easier sharing.</li>
+            <li>
+              Hidden bombasticity still controls the live curve, with 0.10 as the max plateau.
+            </li>
+            <li>Compare the isolated effects in the showcase section after changing one group.</li>
             <li>Open the multi-rail support card and toggle QR states.</li>
             <li>Use the hidden deployed path ending in {PAYMENT_CARD_EFFECT_EASTER_EGG_PATH}.</li>
             <li>
-              The screenshot and video generators still render the internal sample path for stable
-              captures.
+              Capture scripts still render the internal sample path and default tuning for stable
+              screenshots and videos.
             </li>
           </ul>
         </section>
@@ -305,6 +486,7 @@ const PaymentCardEffectSamplesRoute = () => {
                         interaction="minimal"
                         brandIconOptions={brandIconOptions}
                         themeFingerprint={themeFingerprint}
+                        effectDebugTuning={debugTuning()}
                       />
                     </div>
                   </section>

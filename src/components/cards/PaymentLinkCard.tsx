@@ -2,6 +2,7 @@ import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount }
 import type { OpenLink, SiteData } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import { IconCopy, IconOpen, IconQrCode } from "../../lib/icons/custom-icons";
+import type { PaymentCardEffectDebugTuning } from "../../lib/payments/card-effect-debug-tuning";
 import { resolvePaymentCardEffects } from "../../lib/payments/card-effects";
 import { resolvePaymentRailLogoUrl } from "../../lib/payments/rail-logos";
 import {
@@ -30,6 +31,7 @@ export interface PaymentLinkCardProps {
   interaction?: "minimal";
   brandIconOptions: ResolvedBrandIconOptions;
   themeFingerprint: string;
+  effectDebugTuning?: PaymentCardEffectDebugTuning;
 }
 
 type PaymentRailEntry = {
@@ -509,6 +511,7 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
             glitterPalette={effects().glitterPalette}
             tone={effects().tone}
             bombasticity={effects().bombasticity}
+            debugTuning={props.effectDebugTuning}
           />
         )}
       </Show>

@@ -1,3 +1,7 @@
+import {
+  PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS,
+  type PaymentCardEffectDebugCurve,
+} from "./card-effect-debug-tuning";
 import { DEFAULT_PAYMENT_CARD_BOMBASTICITY, clampPaymentCardBombasticity } from "./types";
 
 const LIVE_PAYMENT_CARD_BOMBASTICITY_MAX = 0.1;
@@ -38,18 +42,20 @@ export const resolvePaymentCardBombasticity = ({
 export const scaleEffectOpacity = ({
   opacity,
   bombasticity,
+  curve = PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS.ambient.opacity,
 }: {
   opacity: number;
   bombasticity: number;
+  curve?: PaymentCardEffectDebugCurve;
 }): number =>
   Number(
     (
       opacity *
       scaleAcrossBombasticity({
         bombasticity,
-        atZero: 0.18,
-        atMidpoint: 1,
-        atOne: 1.4,
+        atZero: curve.low,
+        atMidpoint: curve.mid,
+        atOne: curve.max,
       })
     ).toFixed(3),
   );
@@ -57,18 +63,20 @@ export const scaleEffectOpacity = ({
 export const scaleEffectDurationSeconds = ({
   seconds,
   bombasticity,
+  curve = PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS.ambient.duration,
 }: {
   seconds: number;
   bombasticity: number;
+  curve?: PaymentCardEffectDebugCurve;
 }): number =>
   Number(
     (
       seconds *
       scaleAcrossBombasticity({
         bombasticity,
-        atZero: 1.55,
-        atMidpoint: 1,
-        atOne: 0.62,
+        atZero: curve.low,
+        atMidpoint: curve.mid,
+        atOne: curve.max,
       })
     ).toFixed(3),
   );
@@ -76,18 +84,20 @@ export const scaleEffectDurationSeconds = ({
 export const scaleEffectDistanceRem = ({
   rem,
   bombasticity,
+  curve = PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS.ambient.drift,
 }: {
   rem: number;
   bombasticity: number;
+  curve?: PaymentCardEffectDebugCurve;
 }): number =>
   Number(
     (
       rem *
       scaleAcrossBombasticity({
         bombasticity,
-        atZero: 0.2,
-        atMidpoint: 1,
-        atOne: 1.6,
+        atZero: curve.low,
+        atMidpoint: curve.mid,
+        atOne: curve.max,
       })
     ).toFixed(3),
   );
@@ -95,55 +105,58 @@ export const scaleEffectDistanceRem = ({
 export const scaleEffectSizeRem = ({
   rem,
   bombasticity,
+  curve = PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS.ambient.size,
 }: {
   rem: number;
   bombasticity: number;
+  curve?: PaymentCardEffectDebugCurve;
 }): number =>
   Number(
     (
       rem *
       scaleAcrossBombasticity({
         bombasticity,
-        atZero: 0.78,
-        atMidpoint: 1,
-        atOne: 1.18,
+        atZero: curve.low,
+        atMidpoint: curve.mid,
+        atOne: curve.max,
       })
     ).toFixed(3),
   );
 
 export const resolveVisibleEffectCount = ({
   bombasticity,
-  baselineCount,
-  maximumCount,
-  minimumVisibleCount = 1,
+  curve = PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS.ambient.count,
 }: {
   bombasticity: number;
-  baselineCount: number;
-  maximumCount: number;
-  minimumVisibleCount?: number;
+  curve?: PaymentCardEffectDebugCurve;
 }): number => {
   if (bombasticity <= 0) {
     return 0;
   }
 
-  const safeMinimumVisibleCount = Math.min(minimumVisibleCount, baselineCount);
   const scaledCount = scaleAcrossBombasticity({
     bombasticity,
-    atZero: safeMinimumVisibleCount,
-    atMidpoint: baselineCount,
-    atOne: maximumCount,
+    atZero: curve.low,
+    atMidpoint: curve.mid,
+    atOne: curve.max,
   });
 
-  return Math.max(safeMinimumVisibleCount, Math.min(maximumCount, Math.round(scaledCount)));
+  return Math.max(curve.low, Math.min(curve.max, Math.round(scaledCount)));
 };
 
-export const resolveWashOpacity = (bombasticity: number): number =>
+export const resolveWashOpacity = ({
+  bombasticity,
+  curve = PAYMENT_CARD_EFFECT_DEBUG_TUNING_DEFAULTS.wash,
+}: {
+  bombasticity: number;
+  curve?: PaymentCardEffectDebugCurve;
+}): number =>
   Number(
     scaleAcrossBombasticity({
       bombasticity,
-      atZero: 0.12,
-      atMidpoint: 0.8,
-      atOne: 1.45,
+      atZero: curve.low,
+      atMidpoint: curve.mid,
+      atOne: curve.max,
     }).toFixed(3),
   );
 

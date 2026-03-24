@@ -8,6 +8,12 @@ import {
   scaleEffectOpacity,
   scaleEffectSizeRem,
 } from "../../lib/payments/card-effect-bombasticity";
+import {
+  type PaymentCardEffectAmbientDebugTuning,
+  type PaymentCardEffectDebugTuning,
+  type PaymentCardEffectLightningDebugTuning,
+  resolvePaymentCardEffectDebugTuning,
+} from "../../lib/payments/card-effect-debug-tuning";
 import type { PaymentCardEffectTone } from "../../lib/payments/card-effects";
 import type { PaymentCardEffect, PaymentCardGlitterPalette } from "../../lib/payments/types";
 
@@ -16,6 +22,7 @@ interface PaymentCardEffectsProps {
   glitterPalette: PaymentCardGlitterPalette;
   tone: PaymentCardEffectTone;
   bombasticity: number;
+  debugTuning?: PaymentCardEffectDebugTuning;
 }
 
 interface PaymentEffectParticle {
@@ -257,6 +264,7 @@ const formatDegrees = (value: number): string => `${value}deg`;
 const particleStyle = (
   particle: PaymentEffectParticle,
   bombasticity: number,
+  tuning: Pick<PaymentCardEffectAmbientDebugTuning, "opacity" | "size" | "duration" | "drift">,
 ): JSX.CSSProperties => ({
   "--payment-effect-x": formatPercent(particle.x),
   "--payment-effect-y": formatPercent(particle.y),
@@ -264,12 +272,14 @@ const particleStyle = (
     scaleEffectSizeRem({
       rem: particle.sizeRem,
       bombasticity,
+      curve: tuning.size,
     }),
   ),
   "--payment-effect-duration": formatSeconds(
     scaleEffectDurationSeconds({
       seconds: particle.durationSeconds,
       bombasticity,
+      curve: tuning.duration,
     }),
   ),
   "--payment-effect-delay": formatSeconds(particle.delaySeconds),
@@ -277,35 +287,44 @@ const particleStyle = (
     scaleEffectOpacity({
       opacity: particle.opacity,
       bombasticity,
+      curve: tuning.opacity,
     }),
   ),
   "--payment-effect-drift-x": formatRem(
     scaleEffectDistanceRem({
       rem: particle.driftXRem,
       bombasticity,
+      curve: tuning.drift,
     }),
   ),
   "--payment-effect-drift-y": formatRem(
     scaleEffectDistanceRem({
       rem: particle.driftYRem,
       bombasticity,
+      curve: tuning.drift,
     }),
   ),
 });
 
-const sparkStyle = (spark: PaymentEffectSpark, bombasticity: number): JSX.CSSProperties => ({
+const sparkStyle = (
+  spark: PaymentEffectSpark,
+  bombasticity: number,
+  tuning: Pick<PaymentCardEffectLightningDebugTuning, "opacity" | "size" | "duration">,
+): JSX.CSSProperties => ({
   "--payment-effect-x": formatPercent(spark.x),
   "--payment-effect-y": formatPercent(spark.y),
   "--payment-effect-width": formatRem(
     scaleEffectSizeRem({
       rem: spark.widthRem,
       bombasticity,
+      curve: tuning.size,
     }),
   ),
   "--payment-effect-height": formatRem(
     scaleEffectSizeRem({
       rem: spark.heightRem,
       bombasticity,
+      curve: tuning.size,
     }),
   ),
   "--payment-effect-rotate": formatDegrees(spark.rotateDegrees),
@@ -313,6 +332,7 @@ const sparkStyle = (spark: PaymentEffectSpark, bombasticity: number): JSX.CSSPro
     scaleEffectDurationSeconds({
       seconds: spark.durationSeconds,
       bombasticity,
+      curve: tuning.duration,
     }),
   ),
   "--payment-effect-delay": formatSeconds(spark.delaySeconds),
@@ -320,19 +340,20 @@ const sparkStyle = (spark: PaymentEffectSpark, bombasticity: number): JSX.CSSPro
     scaleEffectOpacity({
       opacity: spark.opacity,
       bombasticity,
+      curve: tuning.opacity,
     }),
   ),
 });
 
 export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
+  const tuning = createMemo(() => resolvePaymentCardEffectDebugTuning(props.debugTuning));
   const hasEffect = (effect: PaymentCardEffect): boolean => props.effects.includes(effect);
   const visibleAmbientParticles = createMemo(() =>
     AMBIENT_PARTICLES.slice(
       0,
       resolveVisibleEffectCount({
         bombasticity: props.bombasticity,
-        baselineCount: AMBIENT_PARTICLES.length,
-        maximumCount: AMBIENT_PARTICLES.length,
+        curve: tuning().ambient.count,
       }),
     ),
   );
@@ -341,8 +362,7 @@ export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
       0,
       resolveVisibleEffectCount({
         bombasticity: props.bombasticity,
-        baselineCount: LIGHTNING_SPARKS.length,
-        maximumCount: LIGHTNING_SPARKS.length,
+        curve: tuning().lightning.count,
       }),
     ),
   );
@@ -351,8 +371,7 @@ export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
       0,
       resolveVisibleEffectCount({
         bombasticity: props.bombasticity,
-        baselineCount: GLITTER_PARTICLES.length,
-        maximumCount: GLITTER_PARTICLES.length,
+        curve: tuning().glitter.count,
       }),
     ),
   );
@@ -366,7 +385,12 @@ export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
       data-active-effects={props.effects.join(" ")}
       data-bombasticity={formatBombasticityValue(props.bombasticity)}
       style={{
-        "--payment-effect-wash-opacity": String(resolveWashOpacity(props.bombasticity)),
+        "--payment-effect-wash-opacity": String(
+          resolveWashOpacity({
+            bombasticity: props.bombasticity,
+            curve: tuning().wash,
+          }),
+        ),
       }}
     >
       <span class="payment-card-effects-wash" />
@@ -376,7 +400,7 @@ export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
           {(particle) => (
             <span
               class="payment-card-effects-particle payment-card-effects-particle--ambient"
-              style={particleStyle(particle, props.bombasticity)}
+              style={particleStyle(particle, props.bombasticity, tuning().ambient)}
             />
           )}
         </For>
@@ -387,7 +411,7 @@ export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
           {(spark) => (
             <span
               class="payment-card-effects-particle payment-card-effects-particle--lightning"
-              style={sparkStyle(spark, props.bombasticity)}
+              style={sparkStyle(spark, props.bombasticity, tuning().lightning)}
             />
           )}
         </For>
@@ -398,7 +422,7 @@ export const PaymentCardEffects = (props: PaymentCardEffectsProps) => {
           {(particle) => (
             <span
               class="payment-card-effects-particle payment-card-effects-particle--glitter"
-              style={particleStyle(particle, props.bombasticity)}
+              style={particleStyle(particle, props.bombasticity, tuning().glitter)}
             />
           )}
         </For>

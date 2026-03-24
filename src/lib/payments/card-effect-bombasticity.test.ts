@@ -46,11 +46,11 @@ test("scaled payment effects plateau once bombasticity reaches the first tenth",
       rem: 0.4,
       bombasticity: bombasticityAtFirstMax,
     }),
-    wash: resolveWashOpacity(bombasticityAtFirstMax),
+    wash: resolveWashOpacity({
+      bombasticity: bombasticityAtFirstMax,
+    }),
     visibleCount: resolveVisibleEffectCount({
       bombasticity: bombasticityAtFirstMax,
-      baselineCount: 7,
-      maximumCount: 7,
     }),
   };
   const atFullRange = {
@@ -70,11 +70,11 @@ test("scaled payment effects plateau once bombasticity reaches the first tenth",
       rem: 0.4,
       bombasticity: bombasticityAtFullRange,
     }),
-    wash: resolveWashOpacity(bombasticityAtFullRange),
+    wash: resolveWashOpacity({
+      bombasticity: bombasticityAtFullRange,
+    }),
     visibleCount: resolveVisibleEffectCount({
       bombasticity: bombasticityAtFullRange,
-      baselineCount: 7,
-      maximumCount: 7,
     }),
   };
 

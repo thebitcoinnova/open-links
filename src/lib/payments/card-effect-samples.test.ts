@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { resetPaymentCardEffectDebugTuningGroup } from "./card-effect-debug-tuning";
 import {
   PAYMENT_CARD_EFFECT_EASTER_EGG_PATH,
   PAYMENT_CARD_EFFECT_ROUTE_PATHS,
   PAYMENT_CARD_EFFECT_SAMPLES_PATH,
   PAYMENT_CARD_EFFECT_VIDEO_BOMBASTICITY_LEVELS,
+  applyPaymentCardEffectRouteStateSearchParams,
   buildPaymentCardEffectCaptureSearchParams,
+  buildPaymentCardEffectRouteSearchParams,
   isPaymentCardEffectRoutePath,
+  parsePaymentCardEffectRouteState,
+  paymentCardEffectDefaultDebugTuning,
   paymentCardEffectDemoSections,
 } from "./card-effect-samples";
 
@@ -70,4 +75,99 @@ test("payment card effect capture helpers keep the committed bombasticity ladder
   assert.equal(searchParams.get("capture"), "1");
   assert.equal(searchParams.get("fixture"), fixtureId);
   assert.equal(searchParams.get("bombasticity"), "0.08");
+  assert.equal(searchParams.has("ambient-opacity-low"), false);
+});
+
+test("payment card effect route helpers round-trip advanced tuning overrides while omitting defaults", () => {
+  // Arrange
+  const searchParams = new URLSearchParams();
+  searchParams.set("capture", "1");
+  searchParams.set("fixture", "particles");
+  searchParams.set("bombasticity", "0.08");
+  searchParams.set("ambient-opacity-low", "0.27");
+  searchParams.set("glitter-duration-max", "1.91");
+  searchParams.set("wash-low", "0.05");
+
+  // Act
+  const routeState = parsePaymentCardEffectRouteState(searchParams);
+  const serializedSearchParams = buildPaymentCardEffectRouteSearchParams(routeState);
+
+  // Assert
+  assert.equal(routeState.capture, true);
+  assert.equal(routeState.fixtureId, "particles");
+  assert.equal(routeState.bombasticity, 0.08);
+  assert.equal(routeState.debugTuning.ambient.opacity.low, 0.27);
+  assert.equal(routeState.debugTuning.glitter.duration.max, 1.91);
+  assert.equal(routeState.debugTuning.wash.low, 0.05);
+  assert.equal(serializedSearchParams.get("ambient-opacity-low"), "0.27");
+  assert.equal(serializedSearchParams.get("glitter-duration-max"), "1.91");
+  assert.equal(serializedSearchParams.get("wash-low"), "0.05");
+  assert.equal(serializedSearchParams.has("ambient-opacity-mid"), false);
+});
+
+test("payment card effect route parsing clamps advanced tuning ranges and enforces count ordering", () => {
+  // Arrange
+  const searchParams = new URLSearchParams();
+  searchParams.set("ambient-count-low", "6");
+  searchParams.set("ambient-count-mid", "2");
+  searchParams.set("ambient-count-max", "1");
+  searchParams.set("lightning-size-low", "99");
+  searchParams.set("wash-low", "-1");
+
+  // Act
+  const routeState = parsePaymentCardEffectRouteState(searchParams);
+
+  // Assert
+  assert.deepEqual(routeState.debugTuning.ambient.count, {
+    low: 6,
+    mid: 6,
+    max: 6,
+  });
+  assert.equal(routeState.debugTuning.lightning.size.low, 2);
+  assert.equal(routeState.debugTuning.wash.low, 0);
+});
+
+test("resetting advanced tuning groups and all overrides preserves the core route params", () => {
+  // Arrange
+  const routeState = parsePaymentCardEffectRouteState(
+    new URLSearchParams(
+      "capture=1&fixture=particles&bombasticity=0.08&ambient-opacity-low=0.27&glitter-size-max=1.50",
+    ),
+  );
+
+  const groupResetSearchParams = new URLSearchParams("unrelated=1");
+  const allResetSearchParams = new URLSearchParams("unrelated=1");
+
+  // Act
+  applyPaymentCardEffectRouteStateSearchParams({
+    searchParams: groupResetSearchParams,
+    routeState: {
+      ...routeState,
+      debugTuning: resetPaymentCardEffectDebugTuningGroup({
+        tuning: routeState.debugTuning,
+        groupId: "ambient",
+      }),
+    },
+  });
+  applyPaymentCardEffectRouteStateSearchParams({
+    searchParams: allResetSearchParams,
+    routeState: {
+      ...routeState,
+      debugTuning: paymentCardEffectDefaultDebugTuning,
+    },
+  });
+
+  // Assert
+  assert.equal(groupResetSearchParams.get("capture"), "1");
+  assert.equal(groupResetSearchParams.get("fixture"), "particles");
+  assert.equal(groupResetSearchParams.get("bombasticity"), "0.08");
+  assert.equal(groupResetSearchParams.get("glitter-size-max"), "1.50");
+  assert.equal(groupResetSearchParams.has("ambient-opacity-low"), false);
+  assert.equal(groupResetSearchParams.get("unrelated"), "1");
+  assert.equal(allResetSearchParams.get("capture"), "1");
+  assert.equal(allResetSearchParams.get("fixture"), "particles");
+  assert.equal(allResetSearchParams.get("bombasticity"), "0.08");
+  assert.equal(allResetSearchParams.has("ambient-opacity-low"), false);
+  assert.equal(allResetSearchParams.has("glitter-size-max"), false);
+  assert.equal(allResetSearchParams.get("unrelated"), "1");
 });
