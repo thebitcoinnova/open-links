@@ -63,8 +63,10 @@ interface CliArgs {
   onlyLink?: string;
   onlyMissing: boolean;
   force: boolean;
+  allowFailures?: boolean;
   headed: boolean;
   browserWaitMs: number;
+  summaryJsonPath?: string;
 }
 
 interface LinkInput {
@@ -144,6 +146,7 @@ export interface PublicRichSyncRunEntry {
   status: "synced" | "skipped" | "failed";
   reason: string;
   artifactPath?: string;
+  detail?: string;
 }
 
 export interface PublicRichSyncResult {
@@ -153,6 +156,14 @@ export interface PublicRichSyncResult {
   failed: number;
   entries: PublicRichSyncRunEntry[];
   registry: PublicCacheRegistry;
+}
+
+export interface PublicRichSyncSummary {
+  dirty: boolean;
+  processed: number;
+  skipped: number;
+  failed: number;
+  entries: PublicRichSyncRunEntry[];
 }
 
 const safeTrim = (value: unknown): string | undefined => {
@@ -208,11 +219,13 @@ const parseArgs = (argv = process.argv.slice(2)): CliArgs => ({
   onlyLink: getFlagValue(argv, "--only-link")?.trim(),
   onlyMissing: argv.includes("--only-missing"),
   force: argv.includes("--force"),
+  allowFailures: argv.includes("--allow-failures"),
   headed: argv.includes("--headed"),
   browserWaitMs: Math.max(
     1_000,
     parseInteger(getFlagValue(argv, "--wait-ms")) ?? DEFAULT_BROWSER_WAIT_MS,
   ),
+  summaryJsonPath: getFlagValue(argv, "--summary-json"),
 });
 
 const isRichLink = (link: LinkInput): link is RichLinkInput =>
@@ -365,6 +378,9 @@ const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
     ...entry.metadata,
   },
 });
+
+const toErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
 const extractEvalResult = (value: unknown): Record<string, unknown> | null => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -614,6 +630,28 @@ const defaultDependencies: PublicRichSyncDependencies = {
   log: (message) => console.log(message),
 };
 
+export const buildPublicRichSyncRunSummary = (
+  result: Pick<PublicRichSyncResult, "dirty" | "processed" | "skipped" | "failed" | "entries">,
+): PublicRichSyncSummary => ({
+  dirty: result.dirty,
+  processed: result.processed,
+  skipped: result.skipped,
+  failed: result.failed,
+  entries: result.entries.map((entry) => ({ ...entry })),
+});
+
+export const writePublicRichSyncRunSummary = (
+  summaryPath: string,
+  summary: PublicRichSyncSummary,
+): void => {
+  writeJsonArtifact(absolutePath(summaryPath), summary);
+};
+
+export const shouldPublicRichSyncExitWithFailure = (
+  result: Pick<PublicRichSyncResult, "failed">,
+  allowFailures: boolean,
+): boolean => result.failed > 0 && !allowFailures;
+
 export const runPublicRichSyncWithDependencies = async (
   args: CliArgs,
   dependencies: PublicRichSyncDependencies,
@@ -658,123 +696,135 @@ export const runPublicRichSyncWithDependencies = async (
   for (const candidate of candidates) {
     const generatedAt = dependencies.nowIso();
     const existingEntry = registry.entries[candidate.link.id];
+    try {
+      if (
+        args.onlyMissing &&
+        !args.force &&
+        hasRequiredAudienceMetrics(candidate.target.id, existingEntry)
+      ) {
+        skipped += 1;
+        entries.push({
+          linkId: candidate.link.id,
+          status: "skipped",
+          reason: skipReasonForTarget(candidate.target.id),
+        });
+        dependencies.log(
+          `[public:rich:sync] skip ${candidate.link.id}: ${skipMessageForTarget(candidate.target.id)}.`,
+        );
+        continue;
+      }
 
-    if (
-      args.onlyMissing &&
-      !args.force &&
-      hasRequiredAudienceMetrics(candidate.target.id, existingEntry)
-    ) {
-      skipped += 1;
-      entries.push({
-        linkId: candidate.link.id,
-        status: "skipped",
-        reason: skipReasonForTarget(candidate.target.id),
-      });
-      dependencies.log(
-        `[public:rich:sync] skip ${candidate.link.id}: ${skipMessageForTarget(candidate.target.id)}.`,
-      );
-      continue;
-    }
+      let workingEntry = existingEntry ? cloneEntry(existingEntry) : undefined;
+      if (!hasBaseProfileMetadata(workingEntry)) {
+        workingEntry = await dependencies.bootstrapBaseEntry({
+          link: candidate.link,
+          target: candidate.target,
+          existingEntry: workingEntry,
+          generatedAt,
+          remoteCachePolicyRegistry,
+          remoteCacheStats,
+        });
+        registry.entries[candidate.link.id] = workingEntry;
+        registry.updatedAt = generatedAt;
+        dirty = true;
+        dependencies.log(`[public:rich:sync] bootstrapped base metadata for ${candidate.link.id}.`);
+      }
 
-    let workingEntry = existingEntry ? cloneEntry(existingEntry) : undefined;
-    if (!hasBaseProfileMetadata(workingEntry)) {
-      workingEntry = await dependencies.bootstrapBaseEntry({
+      processed += 1;
+      const capture = await dependencies.captureAudienceMetrics({
         link: candidate.link,
         target: candidate.target,
-        existingEntry: workingEntry,
+        headed: args.headed,
+        browserWaitMs: args.browserWaitMs,
         generatedAt,
-        remoteCachePolicyRegistry,
-        remoteCacheStats,
       });
-      registry.entries[candidate.link.id] = workingEntry;
+
+      if (!capture.ok) {
+        const detail =
+          capture.error ?? captureSummaryForTarget(candidate.target.id, capture.metrics);
+        failed += 1;
+        entries.push({
+          linkId: candidate.link.id,
+          status: "failed",
+          reason: missingMetricsReasonForTarget(candidate.target.id),
+          artifactPath: capture.artifactPath,
+          detail,
+        });
+        dependencies.log(
+          `[public:rich:sync] fail ${candidate.link.id}: ${detail} (${capture.artifactPath})`,
+        );
+        continue;
+      }
+
+      const nextEntry = workingEntry ? cloneEntry(workingEntry) : undefined;
+      if (!nextEntry) {
+        throw new Error(`Internal error: working entry missing for '${candidate.link.id}'.`);
+      }
+
+      nextEntry.metadata.followersCount = capture.metrics.followersCount;
+      nextEntry.metadata.followersCountRaw = capture.metrics.followersCountRaw;
+      if (capture.metrics.followingCount !== undefined) {
+        nextEntry.metadata.followingCount = capture.metrics.followingCount;
+      }
+      if (capture.metrics.followingCountRaw) {
+        nextEntry.metadata.followingCountRaw = capture.metrics.followingCountRaw;
+      }
+      if (capture.metrics.profileDescription) {
+        nextEntry.metadata.profileDescription = capture.metrics.profileDescription;
+      }
+
+      const stabilizedEntry = buildPublicCacheEntry({
+        previous: workingEntry,
+        linkId: candidate.link.id,
+        sourceUrl: nextEntry.sourceUrl,
+        metadata: nextEntry.metadata,
+        updatedAt: generatedAt,
+        etag: nextEntry.etag,
+        lastModified: nextEntry.lastModified,
+        cacheControl: nextEntry.cacheControl,
+        expiresAt: nextEntry.expiresAt,
+        checkedAt: nextEntry.checkedAt,
+      });
+
+      if (arePublicCacheEntriesEqual(workingEntry, stabilizedEntry)) {
+        skipped += 1;
+        entries.push({
+          linkId: candidate.link.id,
+          status: "skipped",
+          reason: "counts_unchanged",
+        });
+        dependencies.log(
+          `[public:rich:sync] no-op ${candidate.link.id}: captured audience metrics matched the committed cache.`,
+        );
+        continue;
+      }
+
+      registry.entries[candidate.link.id] = stabilizedEntry;
       registry.updatedAt = generatedAt;
       dirty = true;
-      dependencies.log(`[public:rich:sync] bootstrapped base metadata for ${candidate.link.id}.`);
-    }
-
-    processed += 1;
-    const capture = await dependencies.captureAudienceMetrics({
-      link: candidate.link,
-      target: candidate.target,
-      headed: args.headed,
-      browserWaitMs: args.browserWaitMs,
-      generatedAt,
-    });
-
-    if (!capture.ok) {
+      entries.push({
+        linkId: candidate.link.id,
+        status: "synced",
+        reason: existingEntry ? "counts_refreshed" : "bootstrapped_and_refreshed",
+        artifactPath: capture.artifactPath,
+      });
+      dependencies.log(
+        `[public:rich:sync] synced ${candidate.link.id}: ${captureSummaryForTarget(
+          candidate.target.id,
+          capture.metrics,
+        )} (${capture.artifactPath})`,
+      );
+    } catch (candidateError: unknown) {
+      const detail = toErrorMessage(candidateError);
       failed += 1;
       entries.push({
         linkId: candidate.link.id,
         status: "failed",
-        reason: missingMetricsReasonForTarget(candidate.target.id),
-        artifactPath: capture.artifactPath,
+        reason: "sync_error",
+        detail,
       });
-      dependencies.log(
-        `[public:rich:sync] fail ${candidate.link.id}: ${
-          capture.error ?? captureSummaryForTarget(candidate.target.id, capture.metrics)
-        } (${capture.artifactPath})`,
-      );
-      continue;
+      dependencies.log(`[public:rich:sync] fail ${candidate.link.id}: ${detail}`);
     }
-
-    const nextEntry = workingEntry ? cloneEntry(workingEntry) : undefined;
-    if (!nextEntry) {
-      throw new Error(`Internal error: working entry missing for '${candidate.link.id}'.`);
-    }
-
-    nextEntry.metadata.followersCount = capture.metrics.followersCount;
-    nextEntry.metadata.followersCountRaw = capture.metrics.followersCountRaw;
-    if (capture.metrics.followingCount !== undefined) {
-      nextEntry.metadata.followingCount = capture.metrics.followingCount;
-    }
-    if (capture.metrics.followingCountRaw) {
-      nextEntry.metadata.followingCountRaw = capture.metrics.followingCountRaw;
-    }
-    if (capture.metrics.profileDescription) {
-      nextEntry.metadata.profileDescription = capture.metrics.profileDescription;
-    }
-
-    const stabilizedEntry = buildPublicCacheEntry({
-      previous: workingEntry,
-      linkId: candidate.link.id,
-      sourceUrl: nextEntry.sourceUrl,
-      metadata: nextEntry.metadata,
-      updatedAt: generatedAt,
-      etag: nextEntry.etag,
-      lastModified: nextEntry.lastModified,
-      cacheControl: nextEntry.cacheControl,
-      expiresAt: nextEntry.expiresAt,
-      checkedAt: nextEntry.checkedAt,
-    });
-
-    if (arePublicCacheEntriesEqual(workingEntry, stabilizedEntry)) {
-      skipped += 1;
-      entries.push({
-        linkId: candidate.link.id,
-        status: "skipped",
-        reason: "counts_unchanged",
-      });
-      dependencies.log(
-        `[public:rich:sync] no-op ${candidate.link.id}: captured audience metrics matched the committed cache.`,
-      );
-      continue;
-    }
-
-    registry.entries[candidate.link.id] = stabilizedEntry;
-    registry.updatedAt = generatedAt;
-    dirty = true;
-    entries.push({
-      linkId: candidate.link.id,
-      status: "synced",
-      reason: existingEntry ? "counts_refreshed" : "bootstrapped_and_refreshed",
-      artifactPath: capture.artifactPath,
-    });
-    dependencies.log(
-      `[public:rich:sync] synced ${candidate.link.id}: ${captureSummaryForTarget(
-        candidate.target.id,
-        capture.metrics,
-      )} (${capture.artifactPath})`,
-    );
   }
 
   if (dirty) {
@@ -798,6 +848,9 @@ export const runPublicRichSyncWithDependencies = async (
 const runCli = async () => {
   const args = parseArgs();
   const result = await runPublicRichSyncWithDependencies(args, defaultDependencies);
+  if (args.summaryJsonPath) {
+    writePublicRichSyncRunSummary(args.summaryJsonPath, buildPublicRichSyncRunSummary(result));
+  }
 
   console.log("");
   console.log("Public rich sync summary");
@@ -806,7 +859,7 @@ const runCli = async () => {
   console.log(`Failed: ${result.failed}`);
   console.log(`Cache updated: ${result.dirty ? "yes" : "no"}`);
 
-  if (result.failed > 0) {
+  if (shouldPublicRichSyncExitWithFailure(result, args.allowFailures ?? false)) {
     process.exit(1);
   }
 };

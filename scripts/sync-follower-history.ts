@@ -24,12 +24,14 @@ import {
   readFollowerHistoryCsvFile,
   writeFollowerHistoryIndex,
 } from "./follower-history/append-history";
+import type { PublicRichSyncSummary } from "./public-rich-sync";
 
 interface CliArgs {
   authCachePath: string;
   dryRun: boolean;
   linksPath: string;
   observedAt?: string;
+  publicRichSyncSummaryPath?: string;
   publicCachePath: string;
   summaryJsonPath?: string;
 }
@@ -101,6 +103,31 @@ const readOptionalAuthenticatedCache = (cachePath: string) => {
   }
 };
 
+export const resolvePublicRichSyncFailedLinkIds = (
+  summary: Pick<PublicRichSyncSummary, "entries"> | null | undefined,
+): Set<string> =>
+  new Set(
+    (summary?.entries ?? [])
+      .filter((entry) => entry.status === "failed")
+      .map((entry) => entry.linkId),
+  );
+
+const readOptionalPublicRichSyncSummary = (
+  summaryPath: string | undefined,
+): PublicRichSyncSummary | null => {
+  const resolvedPath = trimToUndefined(summaryPath);
+  if (!resolvedPath) {
+    return null;
+  }
+
+  const absolute = absolutePath(resolvedPath);
+  if (!fs.existsSync(absolute)) {
+    return null;
+  }
+
+  return JSON.parse(fs.readFileSync(absolute, "utf8")) as PublicRichSyncSummary;
+};
+
 const resolveArgs = (argv = process.argv.slice(2)): CliArgs => {
   const getFlagValue = (flag: string): string | undefined => {
     const index = argv.indexOf(flag);
@@ -121,6 +148,7 @@ const resolveArgs = (argv = process.argv.slice(2)): CliArgs => {
     dryRun: argv.includes("--dry-run"),
     linksPath: getFlagValue("--links") ?? "data/links.json",
     observedAt: getFlagValue("--observed-at"),
+    publicRichSyncSummaryPath: getFlagValue("--public-rich-sync-summary"),
     publicCachePath: getFlagValue("--public-cache") ?? DEFAULT_PUBLIC_CACHE_PATH,
     summaryJsonPath: getFlagValue("--summary-json"),
   };
@@ -180,9 +208,20 @@ const resolveSnapshots = (
   publicRegistry: ReturnType<typeof loadPublicCacheRegistry>,
   authenticatedRegistry: ReturnType<typeof readOptionalAuthenticatedCache>,
   observedAt: string,
+  options?: {
+    log?: (message: string) => void;
+    skipLinkIds?: ReadonlySet<string>;
+  },
 ): HistorySnapshot[] =>
   links.flatMap((link) => {
     if (link.enabled === false || link.type === "payment") {
+      return [];
+    }
+
+    if (options?.skipLinkIds?.has(link.id)) {
+      options.log?.(
+        `[followers:history:sync] skip ${link.id}: public audience refresh failed earlier in this run.`,
+      );
       return [];
     }
 
@@ -229,20 +268,48 @@ const resolveSnapshots = (
     ];
   });
 
-const buildIndexEntries = (snapshots: readonly HistorySnapshot[]): FollowerHistoryIndexEntry[] =>
-  snapshots
-    .map((snapshot) => {
+const resolveTrackedFollowerHistoryPlatforms = (links: readonly OpenLink[]): string[] => [
+  ...new Set(
+    links.flatMap((link) => {
+      if (link.enabled === false || link.type === "payment") {
+        return [];
+      }
+
+      const platform = trimToUndefined(link.icon) ?? trimToUndefined(link.id);
+      const canonicalUrl = trimToUndefined(link.url);
+      if (!platform || !canonicalUrl) {
+        return [];
+      }
+
+      return [platform];
+    }),
+  ),
+];
+
+export const buildFollowerHistoryIndexEntries = (
+  links: readonly OpenLink[],
+  options?: {
+    historyRepoRoot?: string;
+  },
+): FollowerHistoryIndexEntry[] =>
+  resolveTrackedFollowerHistoryPlatforms(links)
+    .map((platform) => {
       const rows = normalizeFollowerHistoryRows(
-        readFollowerHistoryCsvFile(buildFollowerHistoryCsvRepoPath(snapshot.platform)),
+        readFollowerHistoryCsvFile(
+          buildFollowerHistoryCsvRepoPath(platform, {
+            historyRepoRoot: options?.historyRepoRoot,
+          }),
+        ),
       );
       const latest = rows[rows.length - 1];
       if (!latest) {
         return null;
       }
 
+      const label = links.find((link) => link.id === latest.linkId)?.label ?? latest.platform;
       return {
         linkId: latest.linkId,
-        label: snapshot.label,
+        label,
         platform: latest.platform,
         handle: latest.handle,
         canonicalUrl: latest.canonicalUrl,
@@ -307,11 +374,17 @@ export const run = (args = resolveArgs()): HistoryRunSummary => {
   const linksPayload = readJson<LinksPayload>(args.linksPath);
   const publicRegistry = loadPublicCacheRegistry({ cachePath: args.publicCachePath });
   const authenticatedRegistry = readOptionalAuthenticatedCache(args.authCachePath);
+  const publicRichSyncSummary = readOptionalPublicRichSyncSummary(args.publicRichSyncSummaryPath);
+  const failedPublicRichSyncLinkIds = resolvePublicRichSyncFailedLinkIds(publicRichSyncSummary);
   const snapshots = resolveSnapshots(
     linksPayload.links,
     publicRegistry,
     authenticatedRegistry,
     observedAt,
+    {
+      log: (message) => console.log(message),
+      skipLinkIds: failedPublicRichSyncLinkIds,
+    },
   );
   const finish = (summary: HistoryRunSummary): HistoryRunSummary => {
     if (args.summaryJsonPath) {
@@ -372,7 +445,7 @@ export const run = (args = resolveArgs()): HistoryRunSummary => {
     };
   });
 
-  const indexEntries = buildIndexEntries(snapshots);
+  const indexEntries = buildFollowerHistoryIndexEntries(linksPayload.links);
   const indexChanged = writeFollowerHistoryIndex(indexEntries, observedAt);
   const summary = createHistoryRunSummary({
     dryRun: false,

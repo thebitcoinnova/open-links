@@ -11,7 +11,9 @@ write_output() {
 
 append_history() {
   mkdir -p .ci-diagnostics
-  bun scripts/sync-follower-history.ts --summary-json .ci-diagnostics/nightly-follower-history-summary.json
+  bun scripts/sync-follower-history.ts \
+    --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json \
+    --summary-json .ci-diagnostics/nightly-follower-history-summary.json
 }
 
 commit_and_push() {

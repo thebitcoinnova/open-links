@@ -7,6 +7,10 @@ const summaryPath = ".ci-diagnostics/nightly-follower-history-summary.json";
 const historySummary = fs.existsSync(summaryPath)
   ? JSON.parse(fs.readFileSync(summaryPath, "utf8"))
   : null;
+const publicRichSyncSummaryPath = ".ci-diagnostics/public-rich-sync-summary.json";
+const publicRichSyncSummary = fs.existsSync(publicRichSyncSummaryPath)
+  ? JSON.parse(fs.readFileSync(publicRichSyncSummaryPath, "utf8"))
+  : null;
 const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
 
@@ -27,6 +31,23 @@ const readCacheRevalidationSummaries = () => {
 lines.push("## Nightly Follower History");
 lines.push(`- Event: \`${process.env.GITHUB_EVENT_NAME ?? "unknown"}\``);
 lines.push(`- Publish result: \`${process.env.PUSH_RESULT || "unknown"}\``);
+
+if (publicRichSyncSummary) {
+  lines.push(`- Public audience sync failures: \`${publicRichSyncSummary.failed}\``);
+
+  const failedEntries = publicRichSyncSummary.entries.filter((entry) => entry.status === "failed");
+  if (failedEntries.length > 0) {
+    lines.push(
+      "- Public audience sync ran in best-effort mode; failed links were excluded from this run's history snapshots.",
+    );
+    lines.push("");
+    lines.push("| Public audience link | Reason | Detail |");
+    lines.push("| --- | --- | --- |");
+    for (const entry of failedEntries) {
+      lines.push(`| \`${entry.linkId}\` | \`${entry.reason}\` | ${entry.detail ?? "n/a"} |`);
+    }
+  }
+}
 
 if (historySummary) {
   const changedCount = historySummary.snapshots.filter((snapshot) => snapshot.csvChanged).length;
