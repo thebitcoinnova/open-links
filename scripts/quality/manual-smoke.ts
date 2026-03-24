@@ -106,7 +106,7 @@ export const runManualSmokeChecks = ({
       id: "utility-controls-menu",
       label:
         checklistLabels[4] ??
-        "Utility controls collapse into a disclosure menu that remains keyboard reachable.",
+        "Utility controls collapse into a responsive controls surface that remains keyboard reachable.",
       status:
         routeIndex.includes("<UtilityControlsMenu") &&
         utilityMenuAnalysis.hasDisclosureLinkage &&
@@ -120,7 +120,7 @@ export const runManualSmokeChecks = ({
           ? `Utility controls menu integration, disclosure semantics, and ${utilityMenuAnalysis.implementation} close behavior detected.`
           : "Utility controls menu integration, disclosure semantics, or accepted close behavior appear incomplete.",
       remediation:
-        "Render utility controls inside UtilityControlsMenu with aria-expanded/aria-controls linkage plus either legacy manual close handling or the Kobalte popover contract.",
+        "Render utility controls inside UtilityControlsMenu with aria-expanded/aria-controls linkage plus either legacy manual close handling or the responsive Kobalte menu contract.",
     },
     {
       id: "mobile-text-overflow",
