@@ -1,43 +1,40 @@
-<!-- coding-and-architecture-requirements:begin -->
-<!-- source-repository: https://github.com/bright-builds-llc/coding-and-architecture-requirements -->
-<!-- version-pin: main -->
-<!-- canonical-entrypoint: https://github.com/bright-builds-llc/coding-and-architecture-requirements/blob/main/standards/index.md -->
-<!-- audit-manifest: coding-and-architecture-requirements.audit.md -->
-<!-- coding-and-architecture-requirements:end -->
-
 # CONTRIBUTING.md
 
-Use this file as the starting point for contributing to OpenLinks.
+<!-- coding-and-architecture-requirements-managed-file: CONTRIBUTING.md -->
 
-## Default Contribution Expectations
+Use this file as the starting point for a downstream repository's contribution guide.
 
-- Follow [AGENTS.md](AGENTS.md).
-- Use the pinned Bright Builds standards repository as the canonical standards source.
+## Default contribution expectations
+
+- Follow the local `AGENTS.md`.
+- Use the pinned version of the central standards repository as the canonical reference.
 - Prefer simple, root-cause fixes over broad rewrites.
-- Record deliberate local deviations in [standards-overrides.md](standards-overrides.md).
+- Document repo-specific exceptions in `standards-overrides.md`.
 
-## Code Expectations
+## Code expectations
 
 - Keep business logic in a functional core when practical.
 - Prefer early returns and shallow control flow.
+- Prefix internal nullable or optional names with `maybe`, including functions, bindings, and internal fields, and use `MaybeX` aliases only when they materially clarify a repeated nullable surface.
 - Split oversized functions and files into sensible units.
+- Do not hide substantial foreign-language logic inside strings; keep workflow and automation config thin, move scripts, queries, and similar artifacts into repo-owned or language-aware files, make checked-in scripts rerunnable when sensible, and have them leave breadcrumb-heavy logs and summaries in a repo-defined gitignored location.
 - Parse boundary input into domain types when that removes repeated validation.
 - Apply any relevant language-specific guidance from the pinned canonical standards.
 
-## Verification Expectations
+## Verification expectations
 
-Run the repo-required verification commands before opening a pull request:
+- Before committing, run the relevant repo-native verification steps for the changed paths, including Markdown or shell formatter checks when supported tools are already available and local guidance does not define a clearer workflow, and do not commit if they fail.
+- Prefer a repo-owned verify/check/validate/ci command when it exists over reconstructing tool commands by hand.
+- Heavy integration, end-to-end, or external-service suites may stay pre-push or CI-only when local guidance or `standards-overrides.md` documents that choice.
+- If hooks appear to own verification here and the local workflow is unclear, clarify whether the repo expects hooks, manual checks, or both.
 
-- `bun run biome:check`
-- `bun run studio:lint`
-- `bun run typecheck`
-- `bun run studio:typecheck`
-- `bun run --filter @openlinks/studio-api test`
-- `bun run studio:test:integration`
+## Test expectations
 
-Run `bun run build` when your change affects the public site bundle, build pipeline, or any path whose behavior is validated through the production build.
+- Unit test pure code and business logic.
+- Keep each unit test focused on one concept.
+- Use explicit Arrange, Act, Assert sections unless the structure is truly obvious.
 
-## Pull Request Expectations
+## Pull request expectations
 
 - Explain the behavior change, not just the code movement.
 - Call out any new exceptions to the standards.

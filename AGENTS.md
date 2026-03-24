@@ -14,6 +14,12 @@ Read this file first, then the pinned canonical standards entrypoint, then any
 relevant canonical standards pages, and finally apply `standards-overrides.md`
 for deliberate local deviations.
 
+## Repo-Local Guidance
+
+The managed Bright Builds baseline now lives in `AGENTS.bright-builds.md`.
+Everything below this heading is OpenLinks-specific local guidance that takes
+precedence when it is more specific.
+
 ## Canonical Standards Source
 
 - Standards repository: `https://github.com/bright-builds-llc/coding-and-architecture-requirements`
@@ -208,3 +214,13 @@ When updating the active task tracker file (`tasks/todo.md` or `.codex/tasks/tod
 - [`docs/ai-guided-customization.md`](docs/ai-guided-customization.md)
 - [`docs/studio-self-serve.md`](docs/studio-self-serve.md)
 - [`docs/studio-phase-checklist.md`](docs/studio-phase-checklist.md)
+
+
+<!-- coding-and-architecture-requirements-managed:begin -->
+# Bright Builds Standards
+
+- Study `AGENTS.bright-builds.md` as part of the repository instructions.
+- Maintain and study a `## Repo-Local Guidance` section elsewhere in this file for recurring repo-specific workflow facts, commands, and links.
+- Study `standards-overrides.md` for deliberate repo-specific exceptions and override decisions.
+- If instructions elsewhere in `AGENTS.md` conflict with `AGENTS.bright-builds.md`, follow the repo-local instructions and treat them as an explicit local exception.
+<!-- coding-and-architecture-requirements-managed:end -->

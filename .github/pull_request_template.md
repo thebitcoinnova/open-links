@@ -1,17 +1,12 @@
-<!-- coding-and-architecture-requirements:begin -->
-<!-- source-repository: https://github.com/bright-builds-llc/coding-and-architecture-requirements -->
-<!-- version-pin: main -->
-<!-- canonical-entrypoint: https://github.com/bright-builds-llc/coding-and-architecture-requirements/blob/main/standards/index.md -->
-<!-- audit-manifest: coding-and-architecture-requirements.audit.md -->
-<!-- coding-and-architecture-requirements:end -->
-
 # Pull Request Template
+
+<!-- coding-and-architecture-requirements-managed-file: .github/pull_request_template.md -->
 
 ## Summary
 
 Describe the behavior change and why it is needed.
 
-## Standards Impact
+## Standards impact
 
 - [ ] Business logic still follows the intended functional core / imperative shell shape.
 - [ ] New or changed pure/business logic has unit tests.
@@ -20,13 +15,9 @@ Describe the behavior change and why it is needed.
 
 ## Verification
 
-- [ ] `bun run biome:check`
-- [ ] `bun run studio:lint`
-- [ ] `bun run typecheck`
-- [ ] `bun run studio:typecheck`
-- [ ] `bun run --filter @openlinks/studio-api test`
-- [ ] `bun run studio:test:integration`
-- [ ] Additional changed-path validation is described below
+- [ ] Relevant repo-native verification ran and passed when applicable
+- [ ] Any CI-only or hook-owned verification exception is documented
+- [ ] Changed paths were validated manually when appropriate
 
 ## Risks
 
