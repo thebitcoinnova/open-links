@@ -32,6 +32,15 @@ const requireBoundingBox = async (
   return maybeBoundingBox;
 };
 
+const readScrollMetrics = async (
+  locator: Locator,
+): Promise<{ clientHeight: number; scrollHeight: number; scrollTop: number }> =>
+  locator.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    scrollTop: element.scrollTop,
+  }));
+
 test.describe("navigation menu mobile drawer", () => {
   test.skip(({ isMobile }) => !isMobile, "Mobile-only navigation drawer coverage");
 
@@ -64,5 +73,41 @@ test.describe("navigation menu mobile drawer", () => {
     await expect(
       page.getByRole("button", { name: "Open site menu and display controls" }),
     ).toBeFocused();
+  });
+
+  test("keeps the final menu items reachable on short mobile viewports", async ({ page }) => {
+    await page.setViewportSize({ width: 412, height: 520 });
+    await openFixturePage(page);
+
+    const drawer = await openMobileDrawer(page);
+    const paymentGalleryLink = drawer.getByRole("link", { name: /Payment card effects gallery/u });
+    const viewportHeight = page.viewportSize()?.height ?? 520;
+
+    const initialDrawerMetrics = await readScrollMetrics(drawer);
+    expect(initialDrawerMetrics.scrollHeight).toBeGreaterThan(initialDrawerMetrics.clientHeight);
+
+    const drawerBox = await requireBoundingBox(drawer, "Drawer");
+    expect(drawerBox.y + drawerBox.height).toBeLessThanOrEqual(viewportHeight);
+
+    const paymentGalleryBoxBeforeScroll = await requireBoundingBox(
+      paymentGalleryLink,
+      "Payment gallery link before scrolling",
+    );
+    expect(paymentGalleryBoxBeforeScroll.y + paymentGalleryBoxBeforeScroll.height).toBeGreaterThan(
+      drawerBox.y + drawerBox.height,
+    );
+
+    await drawer.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    await expect.poll(async () => (await readScrollMetrics(drawer)).scrollTop).toBeGreaterThan(0);
+
+    const paymentGalleryBoxAfterScroll = await requireBoundingBox(
+      paymentGalleryLink,
+      "Payment gallery link after scrolling",
+    );
+    expect(
+      paymentGalleryBoxAfterScroll.y + paymentGalleryBoxAfterScroll.height,
+    ).toBeLessThanOrEqual(drawerBox.y + drawerBox.height);
   });
 });

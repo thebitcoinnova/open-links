@@ -86,6 +86,10 @@
     width: min(100%, 22rem);
     max-width: min(22rem, calc(100vw - var(--space-4)));
     min-height: min(30rem, calc(100dvh - var(--space-8)));
+    max-height: calc(100dvh - var(--space-6));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   body .utility-menu-drawer-positioner {
