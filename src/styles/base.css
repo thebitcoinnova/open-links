@@ -622,6 +622,14 @@ a:focus-visible {
   flex: 0 0 auto;
 }
 
+.bottom-action-bar-action-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
 .bottom-action-bar-action-label {
   min-width: 0;
   overflow: hidden;
@@ -669,13 +677,6 @@ a:focus-visible {
 
 .profile-action-bar-mobile {
   display: none;
-}
-
-.profile-mobile-action-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .card-action-row {
