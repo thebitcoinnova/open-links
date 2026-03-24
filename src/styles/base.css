@@ -243,6 +243,7 @@ a:focus-visible {
 
 .utility-menu-header-copy {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .utility-menu-header-actions {
