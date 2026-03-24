@@ -116,18 +116,18 @@ const PlaywrightNavigationMenuRoute = () => {
 
       <TopUtilityBar
         title={fixtureSite.title}
-        controlsLabel="Site menu and display controls"
+        controlsLabel="Site menu"
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
       >
         <UtilityControlsMenu
           activeNavigationItem={activeNavigationItem()}
           analyticsHref="#analytics"
-          analyticsSupportingText="Open follower analytics and audience history."
+          analyticsSupportingText="Audience insights"
           cardModeLabel="Rich + simple"
           homeHref="#home"
           isOffline
-          label="site menu and display controls"
+          label="site menu"
           mode="dark"
           modePolicyLabel="Dark mode fixed"
           onAnalyticsSelect={(event) => {
@@ -138,9 +138,9 @@ const PlaywrightNavigationMenuRoute = () => {
             event.preventDefault();
             setActiveNavigationItem("home");
           }}
-          panelLabel="Site menu and display controls"
+          panelLabel="Site menu"
           testingGalleryHref="#testing-gallery"
-          testingGalleryLabel="Payment card effects gallery"
+          testingGalleryLabel="Tip card sparks"
           themeIntensity={themeSelection.activeDefinition.intensity}
           themeLabel={themeSelection.activeDefinition.label}
         />

@@ -11,11 +11,11 @@ const openFixturePage = async (page: Page) => {
 };
 
 const openMobileDrawer = async (page: Page): Promise<Locator> => {
-  const trigger = page.getByRole("button", { name: "Open site menu and display controls" });
+  const trigger = page.getByRole("button", { name: "Open site menu" });
   await expect(trigger).toBeVisible();
   await trigger.click();
 
-  const drawer = page.getByRole("dialog", { name: "Site menu and display controls" });
+  const drawer = page.getByRole("dialog", { name: "Site menu" });
   await expect(drawer).toBeVisible();
   return drawer;
 };
@@ -48,7 +48,7 @@ test.describe("navigation menu mobile drawer", () => {
     await openFixturePage(page);
 
     const drawer = await openMobileDrawer(page);
-    const homeLink = drawer.getByRole("link", { name: /Home Return to the main links page\./ });
+    const homeLink = drawer.getByRole("link", { name: /Home Links and profile/u });
     const homeCopy = homeLink.locator(".utility-menu-row-copy");
     const homeBadge = homeLink.locator(".utility-menu-badge");
 
@@ -65,14 +65,12 @@ test.describe("navigation menu mobile drawer", () => {
     await openFixturePage(page);
 
     const drawer = await openMobileDrawer(page);
-    const homeLink = drawer.getByRole("link", { name: /Home Return to the main links page\./ });
+    const homeLink = drawer.getByRole("link", { name: /Home Links and profile/u });
 
     await homeLink.click();
 
     await expect(drawer).toBeHidden();
-    await expect(
-      page.getByRole("button", { name: "Open site menu and display controls" }),
-    ).toBeFocused();
+    await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
   });
 
   test("keeps the final menu items reachable on short mobile viewports", async ({ page }) => {
@@ -80,34 +78,41 @@ test.describe("navigation menu mobile drawer", () => {
     await openFixturePage(page);
 
     const drawer = await openMobileDrawer(page);
-    const paymentGalleryLink = drawer.getByRole("link", { name: /Payment card effects gallery/u });
+    const paymentGalleryLink = drawer.getByRole("link", {
+      name: /Tip card sparks Visual effect sandbox/u,
+    });
     const viewportHeight = page.viewportSize()?.height ?? 520;
 
     const initialDrawerMetrics = await readScrollMetrics(drawer);
-    expect(initialDrawerMetrics.scrollHeight).toBeGreaterThan(initialDrawerMetrics.clientHeight);
-
     const drawerBox = await requireBoundingBox(drawer, "Drawer");
     expect(drawerBox.y + drawerBox.height).toBeLessThanOrEqual(viewportHeight);
-
     const paymentGalleryBoxBeforeScroll = await requireBoundingBox(
       paymentGalleryLink,
-      "Payment gallery link before scrolling",
-    );
-    expect(paymentGalleryBoxBeforeScroll.y + paymentGalleryBoxBeforeScroll.height).toBeGreaterThan(
-      drawerBox.y + drawerBox.height,
+      "Payment gallery link",
     );
 
-    await drawer.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    await expect.poll(async () => (await readScrollMetrics(drawer)).scrollTop).toBeGreaterThan(0);
+    if (initialDrawerMetrics.scrollHeight > initialDrawerMetrics.clientHeight) {
+      expect(
+        paymentGalleryBoxBeforeScroll.y + paymentGalleryBoxBeforeScroll.height,
+      ).toBeGreaterThan(drawerBox.y + drawerBox.height);
 
-    const paymentGalleryBoxAfterScroll = await requireBoundingBox(
-      paymentGalleryLink,
-      "Payment gallery link after scrolling",
-    );
+      await drawer.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      await expect.poll(async () => (await readScrollMetrics(drawer)).scrollTop).toBeGreaterThan(0);
+
+      const paymentGalleryBoxAfterScroll = await requireBoundingBox(
+        paymentGalleryLink,
+        "Payment gallery link after scrolling",
+      );
+      expect(
+        paymentGalleryBoxAfterScroll.y + paymentGalleryBoxAfterScroll.height,
+      ).toBeLessThanOrEqual(drawerBox.y + drawerBox.height);
+      return;
+    }
+
     expect(
-      paymentGalleryBoxAfterScroll.y + paymentGalleryBoxAfterScroll.height,
+      paymentGalleryBoxBeforeScroll.y + paymentGalleryBoxBeforeScroll.height,
     ).toBeLessThanOrEqual(drawerBox.y + drawerBox.height);
   });
 });

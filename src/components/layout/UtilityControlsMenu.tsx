@@ -6,6 +6,7 @@ import type { UiMode } from "../../lib/theme/mode-controller";
 import ThemeToggle from "../theme/ThemeToggle";
 import {
   createUtilityControlsMenuCloseAutoFocusHandler,
+  resolveUtilityControlsMenuNavigationBadgeLabel,
   resolveUtilityControlsMenuOpenChange,
   resolveUtilityControlsMenuTriggerAriaLabel,
 } from "./UtilityControlsMenu.helpers";
@@ -37,12 +38,14 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
   const [isMobileOpen, setIsMobileOpen] = createSignal(false);
   const desktopPanelId = `utility-controls-panel-${createUniqueId()}`;
   const mobilePanelId = `utility-controls-drawer-${createUniqueId()}`;
-  const triggerLabel = () => props.label ?? "site controls";
-  const panelLabel = () => props.panelLabel ?? "Site controls";
+  const triggerLabel = () => props.label ?? "site menu";
+  const panelLabel = () => props.panelLabel ?? "Site menu";
+  const modeStatusLabel = () =>
+    props.modePolicyLabel ?? `${props.mode === "dark" ? "Dark" : "Light"} mode fixed`;
   const triggerAriaLabel = () =>
     resolveUtilityControlsMenuTriggerAriaLabel(isDesktopOpen() || isMobileOpen(), triggerLabel());
   const hasNavigationSection = () => Boolean(props.homeHref) || Boolean(props.analyticsHref);
-  const hasUtilitySection = () => props.isOffline || Boolean(props.testingGalleryHref);
+  const hasUtilitySection = () => Boolean(props.testingGalleryHref);
   let maybeDesktopTriggerRef: HTMLButtonElement | undefined;
   let maybeMobileTriggerRef: HTMLButtonElement | undefined;
   const handleDesktopCloseAutoFocus = createUtilityControlsMenuCloseAutoFocusHandler(
@@ -80,10 +83,20 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
 
   const renderMenuSections = () => (
     <>
+      <div class="utility-menu-meta">
+        <span class="utility-menu-meta-item">
+          {props.themeLabel} · {props.themeIntensity}
+        </span>
+        <span class="utility-menu-meta-item">{props.cardModeLabel}</span>
+        <Show when={props.isOffline}>
+          <span class="utility-menu-meta-item utility-menu-meta-item--status">Offline ready</span>
+        </Show>
+      </div>
+
       <Show when={hasNavigationSection()}>
         <section class="utility-menu-section" aria-label="Page navigation">
-          <p class="utility-menu-section-label">Navigation</p>
-          <div class="utility-menu-card">
+          <p class="utility-menu-section-label">Navigate</p>
+          <div class="utility-menu-card utility-menu-card--list">
             <Show when={props.homeHref}>
               <a
                 class="utility-menu-link utility-menu-row utility-menu-row--split"
@@ -96,10 +109,12 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
               >
                 <div class="utility-menu-row-copy">
                   <span class="utility-menu-row-label">{props.homeLabel ?? "Home"}</span>
-                  <span class="utility-menu-row-supporting">Return to the main links page.</span>
+                  <span class="utility-menu-row-supporting">Links and profile</span>
                 </div>
                 <span class="utility-menu-badge">
-                  {props.activeNavigationItem === "home" ? "Current" : "Open"}
+                  {resolveUtilityControlsMenuNavigationBadgeLabel(
+                    props.activeNavigationItem === "home",
+                  )}
                 </span>
               </a>
             </Show>
@@ -116,11 +131,13 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
                 <div class="utility-menu-row-copy">
                   <span class="utility-menu-row-label">{props.analyticsLabel ?? "Analytics"}</span>
                   <span class="utility-menu-row-supporting">
-                    {props.analyticsSupportingText ?? "Open follower analytics."}
+                    {props.analyticsSupportingText ?? "Audience insights"}
                   </span>
                 </div>
                 <span class="utility-menu-badge">
-                  {props.activeNavigationItem === "analytics" ? "Current" : "Open"}
+                  {resolveUtilityControlsMenuNavigationBadgeLabel(
+                    props.activeNavigationItem === "analytics",
+                  )}
                 </span>
               </a>
             </Show>
@@ -128,72 +145,10 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
         </section>
       </Show>
 
-      <section class="utility-menu-section" aria-label="Appearance settings">
-        <p class="utility-menu-section-label">Appearance</p>
-        <div class="utility-menu-card">
-          <div class="utility-menu-row utility-menu-row--split">
-            <div class="utility-menu-row-copy">
-              <span class="utility-menu-row-label">Color mode</span>
-              <span class="utility-menu-row-supporting">
-                Switch between light and dark presentation.
-              </span>
-            </div>
-            <Show
-              when={props.onToggleMode}
-              fallback={
-                <span class="utility-menu-badge">
-                  {props.modePolicyLabel ??
-                    `${props.mode === "dark" ? "Dark" : "Light"} mode fixed`}
-                </span>
-              }
-            >
-              <ThemeToggle mode={props.mode} onToggle={() => props.onToggleMode?.()} />
-            </Show>
-          </div>
-          <div class="utility-menu-row utility-menu-row--split">
-            <div class="utility-menu-row-copy">
-              <span class="utility-menu-row-label">Theme palette</span>
-              <span class="utility-menu-row-supporting">
-                Current surface styling and intensity.
-              </span>
-            </div>
-            <span class="utility-menu-badge">
-              {props.themeLabel} · {props.themeIntensity}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section class="utility-menu-section" aria-label="Content settings">
-        <p class="utility-menu-section-label">Content</p>
-        <div class="utility-menu-card">
-          <div class="utility-menu-row utility-menu-row--split">
-            <div class="utility-menu-row-copy">
-              <span class="utility-menu-row-label">Card rendering</span>
-              <span class="utility-menu-row-supporting">
-                Current balance between simple and rich cards.
-              </span>
-            </div>
-            <span class="utility-menu-badge">{props.cardModeLabel}</span>
-          </div>
-        </div>
-      </section>
-
       <Show when={hasUtilitySection()}>
-        <section class="utility-menu-section" aria-label="Utility links and status">
-          <p class="utility-menu-section-label">Utilities</p>
-          <div class="utility-menu-card">
-            <Show when={props.isOffline}>
-              <div class="utility-menu-row utility-menu-row--split">
-                <div class="utility-menu-row-copy">
-                  <span class="utility-menu-row-label">Connection</span>
-                  <span class="utility-menu-row-supporting">
-                    The page is using offline-safe resources where available.
-                  </span>
-                </div>
-                <span class="utility-menu-badge utility-menu-badge--status">Offline</span>
-              </div>
-            </Show>
+        <section class="utility-menu-section" aria-label="Utility links">
+          <p class="utility-menu-section-label">Extras</p>
+          <div class="utility-menu-card utility-menu-card--list">
             <Show when={props.testingGalleryHref}>
               <a
                 class="utility-menu-link utility-menu-row utility-menu-row--split"
@@ -202,17 +157,21 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
               >
                 <div class="utility-menu-row-copy">
                   <span class="utility-menu-row-label">
-                    {props.testingGalleryLabel ?? "Payment card effects gallery"}
+                    {props.testingGalleryLabel ?? "Tip card sparks"}
                   </span>
-                  <span class="utility-menu-row-supporting">
-                    Open the visual testing gallery for payment card effects.
-                  </span>
+                  <span class="utility-menu-row-supporting">Visual effect sandbox</span>
                 </div>
                 <span class="utility-menu-badge">Open</span>
               </a>
             </Show>
           </div>
         </section>
+      </Show>
+
+      <Show when={props.isOffline}>
+        <div class="utility-menu-footer">
+          <p class="utility-menu-note">Offline-safe content is active where available.</p>
+        </div>
       </Show>
     </>
   );
@@ -238,7 +197,7 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
           <Show when={props.isOffline}>
             <>
               <span class="utility-menu-button-status" aria-hidden="true" />
-              <span class="sr-only">Offline status available in site controls.</span>
+              <span class="sr-only">Offline status available in site menu.</span>
             </>
           </Show>
         </Popover.Trigger>
@@ -252,11 +211,17 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
             <div class="utility-menu-shell">
               <div class="utility-menu-header">
                 <div class="utility-menu-header-copy">
-                  <p class="utility-menu-kicker">Preferences</p>
+                  <p class="utility-menu-kicker">Menu</p>
                   <h3 class="utility-menu-title">{panelLabel()}</h3>
-                  <p class="utility-menu-description">
-                    Adjust appearance, card rendering, and utility shortcuts.
-                  </p>
+                  <p class="utility-menu-description">Quick links and display controls.</p>
+                </div>
+                <div class="utility-menu-header-actions">
+                  <Show
+                    when={props.onToggleMode}
+                    fallback={<span class="utility-menu-badge">{modeStatusLabel()}</span>}
+                  >
+                    <ThemeToggle mode={props.mode} onToggle={() => props.onToggleMode?.()} />
+                  </Show>
                 </div>
               </div>
               {renderMenuSections()}
@@ -279,7 +244,7 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
           <Show when={props.isOffline}>
             <>
               <span class="utility-menu-button-status" aria-hidden="true" />
-              <span class="sr-only">Offline status available in site controls.</span>
+              <span class="sr-only">Offline status available in site menu.</span>
             </>
           </Show>
         </Dialog.Trigger>
@@ -295,19 +260,25 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
               <div class="utility-menu-shell">
                 <div class="utility-menu-header">
                   <div class="utility-menu-header-copy">
-                    <p class="utility-menu-kicker">Preferences</p>
+                    <p class="utility-menu-kicker">Menu</p>
                     <Dialog.Title class="utility-menu-title">{panelLabel()}</Dialog.Title>
-                    <p class="utility-menu-description">
-                      Adjust appearance, card rendering, and utility shortcuts.
-                    </p>
+                    <p class="utility-menu-description">Quick links and display controls.</p>
                   </div>
-                  <Dialog.CloseButton
-                    type="button"
-                    class="utility-menu-close-button"
-                    aria-label={`Close ${panelLabel()}`}
-                  >
-                    Done
-                  </Dialog.CloseButton>
+                  <div class="utility-menu-header-actions">
+                    <Show
+                      when={props.onToggleMode}
+                      fallback={<span class="utility-menu-badge">{modeStatusLabel()}</span>}
+                    >
+                      <ThemeToggle mode={props.mode} onToggle={() => props.onToggleMode?.()} />
+                    </Show>
+                    <Dialog.CloseButton
+                      type="button"
+                      class="utility-menu-close-button"
+                      aria-label={`Close ${panelLabel()}`}
+                    >
+                      Close
+                    </Dialog.CloseButton>
+                  </div>
                 </div>
                 {renderMenuSections()}
               </div>

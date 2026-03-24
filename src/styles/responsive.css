@@ -98,16 +98,35 @@
   }
 
   body .utility-menu-shell {
-    gap: var(--space-3);
+    gap: var(--space-2);
   }
 
   body .utility-menu-card {
-    padding: var(--space-2);
+    padding: 0.55rem;
   }
 
   body .utility-menu-row--split {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  body .utility-menu-header {
+    gap: var(--space-2);
+  }
+
+  body .utility-menu-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  body .utility-menu-header-actions .theme-toggle,
+  body .utility-menu-header-actions .utility-menu-badge,
+  body .utility-menu-close-button {
+    width: 100%;
+  }
+
+  body .utility-menu-meta {
+    gap: 0.4rem;
   }
 
   body .utility-menu-row .theme-toggle,
