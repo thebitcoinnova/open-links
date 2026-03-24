@@ -140,7 +140,7 @@ const PlaywrightNavigationMenuRoute = () => {
           }}
           panelLabel="Site menu"
           testingGalleryHref="#testing-gallery"
-          testingGalleryLabel="Payment card effects sandbox"
+          testingGalleryLabel="Tip card sparks"
           themeIntensity={themeSelection.activeDefinition.intensity}
           themeLabel={themeSelection.activeDefinition.label}
         />
