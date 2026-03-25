@@ -226,6 +226,11 @@ Coverage:
 - `imageFit`
 - `descriptionImageRow.default`
 - `descriptionImageRow.sites`
+- `descriptionImageRow.placement.default`
+- `descriptionImageRow.placement.sites`
+- `descriptionImageRow.bannerMinAspectRatio`
+- `descriptionImageRow.nonBannerFallback.default`
+- `descriptionImageRow.nonBannerFallback.sites`
 - `mobile.imageLayout` (legacy no-op for unified non-payment card layout)
 - `enrichment.enabledByDefault`
 - `enrichment.timeoutMs`
@@ -269,12 +274,16 @@ High-signal examples:
   - `{"metadata":{"handle":"pryszkie","profileDescription":"We the people demand justice for the victims.","sourceLabel":"x.com"}}`
 - Explicit handle for a custom-domain Substack profile:
   - `{"metadata":{"handle":"peterryszkiewicz"}}`
-- Disable the extra rich-card description-image row globally:
+- Disable extra rich-profile preview media globally:
   - `"descriptionImageRow": { "default": "off" }`
 - Disable it for one site while leaving the global default on:
   - `"descriptionImageRow": { "default": "auto", "sites": { "substack": "off" } }`
 - Target one exact custom-domain host:
   - `"descriptionImageRow": { "default": "auto", "sites": { "peter.ryszkiewicz.us": "off" } }`
+- Keep the old bottom-row layout for all rich profile preview media:
+  - `"descriptionImageRow": { "placement": { "default": "bottom-row" } }`
+- Tighten banner qualification and show compact fallback media for non-banners:
+  - `"descriptionImageRow": { "bannerMinAspectRatio": 2.4, "nonBannerFallback": { "default": "compact-end" } }`
 
 Derived behavior without dedicated config keys:
 

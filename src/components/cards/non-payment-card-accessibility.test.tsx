@@ -42,6 +42,37 @@ const reactRuntime = {
   }
 ).React = reactRuntime;
 
+const mockImageDimensionsByUrl = new Map<string, { naturalWidth: number; naturalHeight: number }>([
+  ["/cache/content-images/substack-preview.jpg", { naturalWidth: 2400, naturalHeight: 900 }],
+  [
+    "/cache/content-images/substack-square-preview.jpg",
+    { naturalWidth: 1200, naturalHeight: 1200 },
+  ],
+]);
+
+class MockImage {
+  complete = false;
+  naturalWidth = 0;
+  naturalHeight = 0;
+
+  set src(value: string) {
+    const maybeDimensions = mockImageDimensionsByUrl.get(value);
+    this.complete = true;
+    this.naturalWidth = maybeDimensions?.naturalWidth ?? 0;
+    this.naturalHeight = maybeDimensions?.naturalHeight ?? 0;
+  }
+
+  addEventListener() {}
+
+  removeEventListener() {}
+}
+
+(
+  globalThis as typeof globalThis & {
+    Image?: typeof Image;
+  }
+).Image = MockImage as unknown as typeof Image;
+
 const isRenderedElement = (value: RenderedNode): value is RenderedElement =>
   typeof value === "object" &&
   value !== null &&
@@ -174,6 +205,15 @@ const richSubstackLink = {
     handle: "peterryszkiewicz",
     image: "/cache/content-images/substack-preview.jpg",
     profileImage: "/cache/content-images/substack-avatar.jpg",
+  },
+} as const satisfies OpenLink;
+
+const richSubstackSquarePreviewLink = {
+  ...richSubstackLink,
+  id: "substack-square",
+  metadata: {
+    ...richSubstackLink.metadata,
+    image: "/cache/content-images/substack-square-preview.jpg",
   },
 } as const satisfies OpenLink;
 
@@ -328,7 +368,7 @@ test("non-profile rich fallback cards keep action-oriented accessible props from
   });
 });
 
-test("rich cards keep description-image rows decorative and ordered after the description", () => {
+test("rich cards render top banners decoratively ahead of the summary flow", () => {
   // Act
   const tree = RichLinkCard({
     link: richSubstackLink,
@@ -339,16 +379,79 @@ test("rich cards keep description-image rows decorative and ordered after the de
 
   // Assert
   const anchor = firstElementOfType(tree, "a");
-  const descriptionImage = firstElementWithClass(tree, "non-payment-card-description-image");
+  const topBanner = firstElementWithClass(tree, "non-payment-card-profile-preview-top-banner");
+  const summaryIndex = elementIndex(tree, (element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" &&
+      classValue.split(/\s+/u).includes("non-payment-card-summary")
+    );
+  });
   const descriptionIndex = elementIndex(
     tree,
     (element) => element.props.id === "rich-link-description-substack",
   );
-  const descriptionImageIndex = elementIndex(
+  const topBannerIndex = elementIndex(
     tree,
     (element) =>
       typeof element.props.class === "string" &&
-      element.props.class.split(/\s+/u).includes("non-payment-card-description-image"),
+      element.props.class.split(/\s+/u).includes("non-payment-card-profile-preview-top-banner"),
+  );
+
+  assert.ok(anchor);
+  assert.equal(anchor.props["data-has-profile-preview-media"], "true");
+  assert.equal(anchor.props["data-profile-preview-render"], "top-banner");
+  assert.ok(topBanner);
+  assert.equal(topBanner.props["aria-hidden"], "true");
+  assert.ok(topBannerIndex >= 0);
+  assert.ok(summaryIndex > topBannerIndex);
+  assert.ok(descriptionIndex >= 0);
+  assert.ok(descriptionIndex > topBannerIndex);
+
+  const image = firstElementOfType(topBanner.props.children as RenderedNode, "img");
+  assert.ok(image);
+  assert.equal(image.props.alt, "");
+});
+
+test("legacy bottom-row placement keeps preview media after the description and before the footer", () => {
+  // Arrange
+  const legacyPlacementSite = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        descriptionImageRow: {
+          placement: {
+            default: "bottom-row",
+          },
+        },
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const tree = RichLinkCard({
+    link: richSubstackLink,
+    viewModel: buildRichCardViewModel(legacyPlacementSite, richSubstackLink),
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Assert
+  const anchor = firstElementOfType(tree, "a");
+  const bottomRowPreview = firstElementWithClass(
+    tree,
+    "non-payment-card-profile-preview-bottom-row",
+  );
+  const descriptionIndex = elementIndex(
+    tree,
+    (element) => element.props.id === "rich-link-description-substack",
+  );
+  const bottomRowIndex = elementIndex(
+    tree,
+    (element) =>
+      typeof element.props.class === "string" &&
+      element.props.class.split(/\s+/u).includes("non-payment-card-profile-preview-bottom-row"),
   );
   const footerIndex = elementIndex(tree, (element) => {
     const classValue = element.props.class;
@@ -358,16 +461,62 @@ test("rich cards keep description-image rows decorative and ordered after the de
   });
 
   assert.ok(anchor);
-  assert.equal(anchor.props["data-has-description-image-row"], "true");
-  assert.ok(descriptionImage);
-  assert.equal(descriptionImage.props["aria-hidden"], "true");
+  assert.equal(anchor.props["data-profile-preview-render"], "bottom-row");
+  assert.ok(bottomRowPreview);
   assert.ok(descriptionIndex >= 0);
-  assert.ok(descriptionImageIndex > descriptionIndex);
-  assert.ok(footerIndex > descriptionImageIndex);
+  assert.ok(bottomRowIndex > descriptionIndex);
+  assert.ok(footerIndex > bottomRowIndex);
+});
 
-  const image = firstElementOfType(descriptionImage.props.children as RenderedNode, "img");
-  assert.ok(image);
-  assert.equal(image.props.alt, "");
+test("compact-end fallback renders after footer content when a preview image is too tall for the banner slot", () => {
+  // Arrange
+  const compactFallbackSite = {
+    ...site,
+    ui: {
+      richCards: {
+        ...site.ui.richCards,
+        descriptionImageRow: {
+          bannerMinAspectRatio: 2,
+          nonBannerFallback: {
+            default: "compact-end",
+          },
+        },
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const tree = RichLinkCard({
+    link: richSubstackSquarePreviewLink,
+    viewModel: buildRichCardViewModel(compactFallbackSite, richSubstackSquarePreviewLink),
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Assert
+  const anchor = firstElementOfType(tree, "a");
+  const compactPreview = firstElementWithClass(
+    tree,
+    "non-payment-card-profile-preview-compact-end",
+  );
+  const compactPreviewIndex = elementIndex(
+    tree,
+    (element) =>
+      typeof element.props.class === "string" &&
+      element.props.class.split(/\s+/u).includes("non-payment-card-profile-preview-compact-end"),
+  );
+  const footerIndex = elementIndex(tree, (element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" && classValue.split(/\s+/u).includes("non-payment-card-footer")
+    );
+  });
+
+  assert.ok(anchor);
+  assert.equal(anchor.props["data-profile-preview-render"], "compact-end");
+  assert.ok(compactPreview);
+  assert.ok(footerIndex >= 0);
+  assert.ok(compactPreviewIndex > footerIndex);
 });
 
 test("email cards expose contact-aware semantics and the dedicated mail icon", () => {

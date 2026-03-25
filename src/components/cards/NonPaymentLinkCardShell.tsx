@@ -1,4 +1,4 @@
-import { For, Show, createMemo } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import type { OpenLink } from "../../lib/content/load-content";
 import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-options";
 import type { ShareLinkResult } from "../../lib/share/share-link";
@@ -6,7 +6,9 @@ import { showActionToast } from "../../lib/ui/action-toast";
 import type {
   NonPaymentCardMetaItem,
   NonPaymentCardViewModel,
+  RichProfilePreviewRenderKind,
 } from "../../lib/ui/rich-card-policy";
+import { resolveProfilePreviewRenderKind } from "../../lib/ui/rich-card-policy";
 import BottomActionBar, { type BottomActionBarItem } from "../actions/BottomActionBar";
 import LinkSiteIcon from "../icons/LinkSiteIcon";
 
@@ -31,6 +33,8 @@ export interface NonPaymentLinkCardShellProps {
 }
 
 const safeId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+const profilePreviewAspectRatioCache = new Map<string, number | null>();
+const pendingProfilePreviewAspectRatioUrls = new Set<string>();
 
 const metaItemClassName = (item: NonPaymentCardMetaItem): string => {
   if (item.kind === "handle") {
@@ -44,8 +48,26 @@ const metaItemClassName = (item: NonPaymentCardMetaItem): string => {
   return "non-payment-card-meta-item card-source-inline";
 };
 
+const resolveNaturalAspectRatio = (
+  naturalWidth: number,
+  naturalHeight: number,
+): number | undefined => {
+  if (
+    !Number.isFinite(naturalWidth) ||
+    !Number.isFinite(naturalHeight) ||
+    naturalWidth <= 0 ||
+    naturalHeight <= 0
+  ) {
+    return undefined;
+  }
+
+  return naturalWidth / naturalHeight;
+};
+
 export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => {
   const cardActions = createMemo(() => props.resolveCardActions?.() ?? []);
+  const profilePreview = () => props.viewModel.profilePreview;
+  const [profilePreviewMeasurementVersion, setProfilePreviewMeasurementVersion] = createSignal(0);
   const target = () => props.target ?? "_blank";
   const rel = () => (target() === "_blank" ? (props.rel ?? "noopener noreferrer") : undefined);
   const interaction = () => props.interaction ?? "minimal";
@@ -115,6 +137,70 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
     })),
   );
   const hasActions = () => actionItems().length > 0;
+  const resolveMeasuredProfilePreviewAspectRatio = (): number | undefined => {
+    const currentProfilePreview = profilePreview();
+    const previewImageUrl = currentProfilePreview.imageUrl;
+
+    if (
+      !currentProfilePreview.enabled ||
+      !previewImageUrl ||
+      currentProfilePreview.placement === "bottom-row" ||
+      typeof Image === "undefined"
+    ) {
+      return undefined;
+    }
+
+    const cachedRatio = profilePreviewAspectRatioCache.get(previewImageUrl);
+    if (cachedRatio !== undefined) {
+      return cachedRatio ?? undefined;
+    }
+
+    if (pendingProfilePreviewAspectRatioUrls.has(previewImageUrl)) {
+      return undefined;
+    }
+
+    pendingProfilePreviewAspectRatioUrls.add(previewImageUrl);
+    const image = new Image();
+    const settle = (maybeAspectRatio: number | undefined) => {
+      profilePreviewAspectRatioCache.set(previewImageUrl, maybeAspectRatio ?? null);
+      pendingProfilePreviewAspectRatioUrls.delete(previewImageUrl);
+      setProfilePreviewMeasurementVersion((value) => value + 1);
+      image.removeEventListener("load", handleLoad);
+      image.removeEventListener("error", handleError);
+    };
+    const handleLoad = () => {
+      settle(resolveNaturalAspectRatio(image.naturalWidth, image.naturalHeight));
+    };
+    const handleError = () => {
+      settle(undefined);
+    };
+
+    image.addEventListener("load", handleLoad);
+    image.addEventListener("error", handleError);
+    image.src = previewImageUrl;
+
+    if (image.complete) {
+      const maybeAspectRatio = resolveNaturalAspectRatio(image.naturalWidth, image.naturalHeight);
+      profilePreviewAspectRatioCache.set(previewImageUrl, maybeAspectRatio ?? null);
+      pendingProfilePreviewAspectRatioUrls.delete(previewImageUrl);
+      image.removeEventListener("load", handleLoad);
+      image.removeEventListener("error", handleError);
+      return maybeAspectRatio;
+    }
+
+    return profilePreviewAspectRatioCache.get(previewImageUrl) ?? undefined;
+  };
+  const profilePreviewRenderKind = createMemo<RichProfilePreviewRenderKind>(() => {
+    profilePreviewMeasurementVersion();
+
+    return resolveProfilePreviewRenderKind({
+      enabled: profilePreview().enabled && Boolean(profilePreview().imageUrl),
+      placement: profilePreview().placement,
+      maybeMeasuredAspectRatio: resolveMeasuredProfilePreviewAspectRatio(),
+      bannerMinAspectRatio: profilePreview().bannerMinAspectRatio,
+      nonBannerFallback: profilePreview().nonBannerFallback,
+    });
+  });
 
   return (
     <div
@@ -122,6 +208,9 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       data-card-variant={props.cardVariant}
       data-has-actions={hasActions() ? "true" : "false"}
       data-has-profile-layout={hasProfileLayout() ? "true" : "false"}
+      data-has-profile-preview-media={profilePreview().enabled ? "true" : "false"}
+      data-profile-preview-placement={profilePreview().placement}
+      data-profile-preview-render={profilePreviewRenderKind()}
       data-link-kind={props.viewModel.linkKind}
       data-link-scheme={props.viewModel.linkScheme}
       data-contact-kind={props.viewModel.contactKind}
@@ -145,13 +234,27 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-has-profile-layout={hasProfileLayout() ? "true" : "false"}
         data-has-header-meta={hasHeaderMeta() ? "true" : "false"}
         data-has-footer={showFooter() ? "true" : "false"}
-        data-has-description-image-row={props.viewModel.showDescriptionImageRow ? "true" : "false"}
+        data-has-profile-preview-media={profilePreview().enabled ? "true" : "false"}
+        data-profile-preview-placement={profilePreview().placement}
+        data-profile-preview-render={profilePreviewRenderKind()}
         data-has-actions={hasActions() ? "true" : "false"}
         data-link-kind={props.viewModel.linkKind}
         data-link-scheme={props.viewModel.linkScheme}
         data-contact-kind={props.viewModel.contactKind}
       >
-        <span class="non-payment-card-shell">
+        <span
+          class="non-payment-card-shell"
+          data-profile-preview-render={profilePreviewRenderKind()}
+        >
+          <Show when={profilePreviewRenderKind() === "top-banner" && profilePreview().imageUrl}>
+            <span
+              class="rich-card-media non-payment-card-profile-preview non-payment-card-profile-preview-top-banner"
+              aria-hidden="true"
+            >
+              <img src={profilePreview().imageUrl} alt="" loading="lazy" />
+            </span>
+          </Show>
+
           <span class={`non-payment-card-lead non-payment-card-lead-${props.viewModel.leadKind}`}>
             <Show when={props.viewModel.leadKind === "preview" && props.viewModel.leadImageUrl}>
               <span class="rich-card-media non-payment-card-lead-media" aria-hidden="true">
@@ -202,15 +305,12 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
             {props.viewModel.description}
           </span>
 
-          <Show
-            when={
-              props.cardVariant === "rich" &&
-              props.viewModel.showDescriptionImageRow &&
-              props.viewModel.descriptionImageUrl
-            }
-          >
-            <span class="rich-card-media non-payment-card-description-image" aria-hidden="true">
-              <img src={props.viewModel.descriptionImageUrl} alt="" loading="lazy" />
+          <Show when={profilePreviewRenderKind() === "bottom-row" && profilePreview().imageUrl}>
+            <span
+              class="rich-card-media non-payment-card-profile-preview non-payment-card-profile-preview-bottom-row"
+              aria-hidden="true"
+            >
+              <img src={profilePreview().imageUrl} alt="" loading="lazy" />
             </span>
           </Show>
 
@@ -232,6 +332,15 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
                   {props.viewModel.footerSourceLabel}
                 </span>
               </Show>
+            </span>
+          </Show>
+
+          <Show when={profilePreviewRenderKind() === "compact-end" && profilePreview().imageUrl}>
+            <span
+              class="rich-card-media non-payment-card-profile-preview non-payment-card-profile-preview-compact-end"
+              aria-hidden="true"
+            >
+              <img src={profilePreview().imageUrl} alt="" loading="lazy" />
             </span>
           </Show>
         </span>

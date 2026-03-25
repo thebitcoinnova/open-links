@@ -1,5 +1,7 @@
 import type {
   OpenLink,
+  RichCardDescriptionImageNonBannerFallback,
+  RichCardDescriptionImagePlacement,
   RichCardDescriptionImageRowMode,
   RichCardDescriptionSource,
   RichCardImageFit,
@@ -20,10 +22,19 @@ export type ResolvedCardVariant = "simple" | "rich";
 export type NonPaymentCardLeadKind = "preview" | "avatar" | "icon";
 export type NonPaymentCardMetaKind = "handle" | "metric" | "source";
 export type NonPaymentCardVariant = ResolvedCardVariant;
+export type RichProfilePreviewRenderKind = "hidden" | "top-banner" | "bottom-row" | "compact-end";
 
 export interface NonPaymentCardMetaItem {
   kind: NonPaymentCardMetaKind;
   text: string;
+}
+
+export interface NonPaymentCardProfilePreview {
+  enabled: boolean;
+  imageUrl?: string;
+  placement: RichCardDescriptionImagePlacement;
+  bannerMinAspectRatio: number;
+  nonBannerFallback: RichCardDescriptionImageNonBannerFallback;
 }
 
 export interface NonPaymentCardViewModel {
@@ -36,8 +47,7 @@ export interface NonPaymentCardViewModel {
   contactValue?: string;
   leadKind: NonPaymentCardLeadKind;
   leadImageUrl?: string;
-  showDescriptionImageRow: boolean;
-  descriptionImageUrl?: string;
+  profilePreview: NonPaymentCardProfilePreview;
   headerMetaItems: NonPaymentCardMetaItem[];
   imageTreatment: RichImageTreatment;
   imageFit: RichCardImageFit;
@@ -83,6 +93,13 @@ const resolveImageFit = (site: SiteData, link: OpenLink): RichCardImageFit => {
 
 const isDescriptionImageRowMode = (value: unknown): value is RichCardDescriptionImageRowMode =>
   value === "auto" || value === "off";
+
+const isDescriptionImagePlacement = (value: unknown): value is RichCardDescriptionImagePlacement =>
+  value === "top-banner" || value === "bottom-row";
+
+const isDescriptionImageNonBannerFallback = (
+  value: unknown,
+): value is RichCardDescriptionImageNonBannerFallback => value === "off" || value === "compact-end";
 
 const normalizeHost = (value: string): string =>
   value
@@ -187,13 +204,10 @@ export const resolveLinkSourcePresentation = (
   };
 };
 
-const resolveDescriptionImageRowMode = (
-  site: SiteData,
+const collectDescriptionImageRowOverrideCandidates = (
   link: OpenLink,
   sourcePresentation: LinkSourcePresentation,
-): RichCardDescriptionImageRowMode => {
-  const rowConfig = site.ui?.richCards?.descriptionImageRow;
-  const siteOverrides = rowConfig?.sites ?? {};
+): string[] => {
   const overrideCandidates = new Set<string>();
   const normalizedUrlHost = extractNormalizedHostFromUrl(link.url);
   const normalizedSourceLabel = normalizeHostLikeLabel(sourcePresentation.sourceLabel);
@@ -211,13 +225,67 @@ const resolveDescriptionImageRowMode = (
     overrideCandidates.add(knownSite.id);
   }
 
-  for (const key of overrideCandidates) {
+  return [...overrideCandidates];
+};
+
+const resolveDescriptionImageRowMode = (
+  site: SiteData,
+  link: OpenLink,
+  sourcePresentation: LinkSourcePresentation,
+): RichCardDescriptionImageRowMode => {
+  const rowConfig = site.ui?.richCards?.descriptionImageRow;
+  const siteOverrides = rowConfig?.sites ?? {};
+
+  for (const key of collectDescriptionImageRowOverrideCandidates(link, sourcePresentation)) {
     if (isDescriptionImageRowMode(siteOverrides[key])) {
       return siteOverrides[key];
     }
   }
 
   return rowConfig?.default === "off" ? "off" : "auto";
+};
+
+const resolveDescriptionImageRowPlacement = (
+  site: SiteData,
+  link: OpenLink,
+  sourcePresentation: LinkSourcePresentation,
+): RichCardDescriptionImagePlacement => {
+  const placementConfig = site.ui?.richCards?.descriptionImageRow?.placement;
+  const siteOverrides = placementConfig?.sites ?? {};
+
+  for (const key of collectDescriptionImageRowOverrideCandidates(link, sourcePresentation)) {
+    if (isDescriptionImagePlacement(siteOverrides[key])) {
+      return siteOverrides[key];
+    }
+  }
+
+  return placementConfig?.default === "bottom-row" ? "bottom-row" : "top-banner";
+};
+
+const resolveDescriptionImageRowBannerMinAspectRatio = (site: SiteData): number => {
+  const configuredValue = site.ui?.richCards?.descriptionImageRow?.bannerMinAspectRatio;
+  return typeof configuredValue === "number" &&
+    Number.isFinite(configuredValue) &&
+    configuredValue > 0
+    ? configuredValue
+    : 2;
+};
+
+const resolveDescriptionImageRowNonBannerFallback = (
+  site: SiteData,
+  link: OpenLink,
+  sourcePresentation: LinkSourcePresentation,
+): RichCardDescriptionImageNonBannerFallback => {
+  const fallbackConfig = site.ui?.richCards?.descriptionImageRow?.nonBannerFallback;
+  const siteOverrides = fallbackConfig?.sites ?? {};
+
+  for (const key of collectDescriptionImageRowOverrideCandidates(link, sourcePresentation)) {
+    if (isDescriptionImageNonBannerFallback(siteOverrides[key])) {
+      return siteOverrides[key];
+    }
+  }
+
+  return fallbackConfig?.default === "compact-end" ? "compact-end" : "off";
 };
 
 export const resolveFooterSourceLabel = (
@@ -356,6 +424,40 @@ const buildHeaderMetaItems = (
   return items;
 };
 
+export interface ResolveProfilePreviewRenderKindInput {
+  enabled: boolean;
+  placement: RichCardDescriptionImagePlacement;
+  maybeMeasuredAspectRatio?: number;
+  bannerMinAspectRatio: number;
+  nonBannerFallback: RichCardDescriptionImageNonBannerFallback;
+}
+
+export const resolveProfilePreviewRenderKind = (
+  input: ResolveProfilePreviewRenderKindInput,
+): RichProfilePreviewRenderKind => {
+  if (!input.enabled) {
+    return "hidden";
+  }
+
+  if (input.placement === "bottom-row") {
+    return "bottom-row";
+  }
+
+  if (
+    typeof input.maybeMeasuredAspectRatio !== "number" ||
+    !Number.isFinite(input.maybeMeasuredAspectRatio) ||
+    input.maybeMeasuredAspectRatio <= 0
+  ) {
+    return "hidden";
+  }
+
+  if (input.maybeMeasuredAspectRatio >= input.bannerMinAspectRatio) {
+    return "top-banner";
+  }
+
+  return input.nonBannerFallback === "compact-end" ? "compact-end" : "hidden";
+};
+
 export const buildNonPaymentCardViewModel = (
   site: SiteData,
   link: OpenLink,
@@ -376,13 +478,20 @@ export const buildNonPaymentCardViewModel = (
   const imageFit = resolveImageFit(site, link);
   const leadVisual = resolveLeadVisual(variant, socialProfile, imageTreatment);
   const descriptionImageRowMode = resolveDescriptionImageRowMode(site, link, sourcePresentation);
-  const showDescriptionImageRow =
+  const showProfilePreview =
     variant === "rich" &&
     socialProfile.usesProfileLayout &&
     imageTreatment !== "off" &&
     descriptionImageRowMode !== "off" &&
     socialProfile.hasDistinctPreviewImage &&
     Boolean(socialProfile.previewImageUrl);
+  const profilePreview: NonPaymentCardProfilePreview = {
+    enabled: showProfilePreview,
+    imageUrl: showProfilePreview ? socialProfile.previewImageUrl : undefined,
+    placement: resolveDescriptionImageRowPlacement(site, link, sourcePresentation),
+    bannerMinAspectRatio: resolveDescriptionImageRowBannerMinAspectRatio(site),
+    nonBannerFallback: resolveDescriptionImageRowNonBannerFallback(site, link, sourcePresentation),
+  };
   const headerMetaItems = buildHeaderMetaItems(variant, socialProfile, sourcePresentation);
   const footerSourceLabel =
     sourcePresentation.showSourceLabel && sourcePresentation.sourceLabel
@@ -403,8 +512,7 @@ export const buildNonPaymentCardViewModel = (
     contactValue: resolvedLinkKind.kind === "contact" ? resolvedLinkKind.value : undefined,
     leadKind: leadVisual.leadKind,
     leadImageUrl: leadVisual.leadImageUrl,
-    showDescriptionImageRow,
-    descriptionImageUrl: showDescriptionImageRow ? socialProfile.previewImageUrl : undefined,
+    profilePreview,
     headerMetaItems,
     imageTreatment,
     imageFit,

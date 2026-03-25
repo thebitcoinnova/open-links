@@ -446,7 +446,7 @@ const richLinkNeedsPreviewValidation = (
   } as unknown as OpenLink;
   const viewModel = buildRichCardViewModel(siteData as SiteData, mergedLink);
 
-  return viewModel.leadKind === "preview" || viewModel.showDescriptionImageRow;
+  return viewModel.leadKind === "preview" || viewModel.profilePreview.enabled;
 };
 
 const hasRichPreviewValidationCandidates = (

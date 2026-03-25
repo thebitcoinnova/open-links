@@ -248,7 +248,9 @@
     overflow: visible;
   }
 
-  body .rich-link-card[data-has-description-image-row="true"] .non-payment-card-description-image {
+  body
+    .rich-link-card[data-profile-preview-render="bottom-row"]
+    .non-payment-card-profile-preview-bottom-row {
     min-height: clamp(10rem, 20vw, 12rem);
   }
 }

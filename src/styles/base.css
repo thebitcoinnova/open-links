@@ -993,7 +993,6 @@ a:focus-visible {
   border-radius: calc(var(--radius-md) - 0.2rem);
   background: color-mix(in srgb, var(--accent) 18%, var(--surface-pill) 82%);
   border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
-  min-height: 9.5rem;
 }
 
 .rich-card-media img {
@@ -1003,7 +1002,8 @@ a:focus-visible {
   display: block;
 }
 
-.rich-link-card[data-image-fit="cover"] .rich-card-media img {
+.rich-link-card[data-image-fit="cover"] .non-payment-card-lead-media img,
+.rich-link-card[data-image-fit="cover"] .non-payment-card-profile-preview-bottom-row img {
   object-fit: cover;
 }
 
@@ -1033,12 +1033,28 @@ a:focus-visible {
   align-items: start;
 }
 
-.rich-link-card[data-has-description-image-row="true"] .non-payment-card-shell {
+.rich-link-card[data-profile-preview-render="top-banner"] .non-payment-card-shell {
+  grid-template-areas:
+    "banner banner"
+    "lead summary"
+    "lead description"
+    "lead footer";
+}
+
+.rich-link-card[data-profile-preview-render="bottom-row"] .non-payment-card-shell {
   grid-template-areas:
     "lead summary"
     "lead description"
     "media media"
     "footer footer";
+}
+
+.rich-link-card[data-profile-preview-render="compact-end"] .non-payment-card-shell {
+  grid-template-areas:
+    "lead summary"
+    "lead description"
+    "lead footer"
+    "lead end-media";
 }
 
 .non-payment-card-lead {
@@ -1152,12 +1168,39 @@ a:focus-visible {
   overflow: hidden;
 }
 
-.non-payment-card-description-image {
+.non-payment-card-profile-preview {
+  min-width: 0;
+}
+
+.non-payment-card-profile-preview-top-banner {
+  grid-area: banner;
+  min-height: 0;
+}
+
+.non-payment-card-profile-preview-top-banner img,
+.non-payment-card-profile-preview-compact-end img {
+  height: auto;
+  object-fit: contain;
+}
+
+.non-payment-card-profile-preview-bottom-row {
   grid-area: media;
   width: 100%;
   min-width: 0;
   min-height: clamp(9.5rem, 34vw, 11.5rem);
   aspect-ratio: 1.9 / 1;
+}
+
+.non-payment-card-profile-preview-compact-end {
+  grid-area: end-media;
+  width: min(100%, 15rem);
+  max-width: 100%;
+  min-height: 0;
+  justify-self: start;
+}
+
+.non-payment-card-profile-preview-compact-end img {
+  max-height: 8rem;
 }
 
 .non-payment-card-footer {

@@ -393,6 +393,55 @@
                     "type": "string",
                     "enum": ["auto", "off"]
                   }
+                },
+                "placement": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "string",
+                      "enum": ["top-banner", "bottom-row"],
+                      "default": "top-banner"
+                    },
+                    "sites": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "additionalProperties": {
+                        "type": "string",
+                        "enum": ["top-banner", "bottom-row"]
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "bannerMinAspectRatio": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "default": 2
+                },
+                "nonBannerFallback": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "string",
+                      "enum": ["off", "compact-end"],
+                      "default": "off"
+                    },
+                    "sites": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "additionalProperties": {
+                        "type": "string",
+                        "enum": ["off", "compact-end"]
+                      }
+                    }
+                  },
+                  "additionalProperties": true
                 }
               },
               "additionalProperties": true

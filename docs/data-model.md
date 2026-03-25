@@ -642,8 +642,13 @@ Main presentation controls include:
 - `brandIcons.iconOverrides`: optional known-site alias remap map (`{ "x": "twitter" }`)
 - `richCards.imageFit`: `contain` (default preserve mode), `cover`
 - `richCards.descriptionSource`: `fetched` (default), `manual`
-- `richCards.descriptionImageRow.default`: `auto` (default) or `off` for the extra full-width rich-card media row
+- `richCards.descriptionImageRow.default`: `auto` (default) or `off` for extra rich-profile preview media
 - `richCards.descriptionImageRow.sites`: optional override map keyed by exact hostnames or known site ids such as `substack`
+- `richCards.descriptionImageRow.placement.default`: `top-banner` (default) or `bottom-row`
+- `richCards.descriptionImageRow.placement.sites`: optional placement override map keyed like `descriptionImageRow.sites`
+- `richCards.descriptionImageRow.bannerMinAspectRatio`: numeric banner cutoff (default `2`)
+- `richCards.descriptionImageRow.nonBannerFallback.default`: `off` (default) or `compact-end`
+- `richCards.descriptionImageRow.nonBannerFallback.sites`: optional fallback override map keyed like `descriptionImageRow.sites`
 - `richCards.mobile.imageLayout`: legacy `inline` / `full-width` setting retained for backward compatibility; unified non-payment card layout now ignores it
 - `richCards.enrichment.publicCachePath`: path to committed public rich-cache manifest
 - `richCards.enrichment.authenticatedCachePath`: path to authenticated rich-cache manifest
@@ -700,13 +705,26 @@ Migration note: previous behavior was effectively crop-first (`cover`). If you w
 
 #### `ui.richCards.descriptionImageRow`
 
-Controls the optional full-width media row used by rich profile cards when `metadata.image` is distinct from `metadata.profileImage`.
+Controls optional preview media for rich profile cards when `metadata.image` is distinct from `metadata.profileImage`.
 
 - `default`
-  - `auto` (default): show the row when the card is rich, profile-oriented, and has a distinct preview image
-  - `off`: never render the extra row
+  - `auto` (default): enable profile preview media when the card is rich, profile-oriented, and has a distinct preview image
+  - `off`: never render the extra preview media
 - `sites`
   - optional override map keyed by exact hostnames (`peter.ryszkiewicz.us`) or known site ids (`substack`, `github`, `medium`)
+- `placement.default`
+  - `top-banner` (default): render banner-shaped preview images above the avatar/title block
+  - `bottom-row`: preserve the legacy full-width media row after the description
+- `placement.sites`
+  - optional override map keyed like `sites`
+- `bannerMinAspectRatio`
+  - default `2`
+  - preview images below the cutoff are treated as non-banner media
+- `nonBannerFallback.default`
+  - `off` (default): hide non-banner preview images when `placement.default` resolves to `top-banner`
+  - `compact-end`: render non-banner preview images as a compact end-of-card tile in the content column
+- `nonBannerFallback.sites`
+  - optional override map keyed like `sites`
 
 Resolution precedence:
 
@@ -716,8 +734,9 @@ Resolution precedence:
 
 Additional notes:
 
-- The row is rich-card only; simple cards ignore it.
-- `richCards.imageTreatment: "off"` also suppresses the row.
+- The preview media is rich-card only; simple cards ignore it.
+- `richCards.imageTreatment: "off"` also suppresses it.
+- `top-banner` qualification is runtime-only and uses the image's natural width/height ratio.
 - Cards without a distinct preview image continue to render only the avatar/header plus description/footer flow.
 
 #### `ui.richCards.mobile.imageLayout`

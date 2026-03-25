@@ -319,8 +319,11 @@ test("description image rows default to auto for rich profile cards with distinc
   // Assert
   assert.equal(richViewModel.leadKind, "avatar");
   assert.equal(richViewModel.leadImageUrl, "/cache/content-images/substack-avatar.jpg");
-  assert.equal(richViewModel.showDescriptionImageRow, true);
-  assert.equal(richViewModel.descriptionImageUrl, "/cache/content-images/substack-preview.jpg");
+  assert.equal(richViewModel.profilePreview.enabled, true);
+  assert.equal(richViewModel.profilePreview.imageUrl, "/cache/content-images/substack-preview.jpg");
+  assert.equal(richViewModel.profilePreview.placement, "top-banner");
+  assert.equal(richViewModel.profilePreview.bannerMinAspectRatio, 2);
+  assert.equal(richViewModel.profilePreview.nonBannerFallback, "off");
 });
 
 test("site policy can disable description image rows globally", () => {
@@ -343,8 +346,8 @@ test("site policy can disable description image rows globally", () => {
 
   // Assert
   assert.equal(richViewModel.leadKind, "avatar");
-  assert.equal(richViewModel.showDescriptionImageRow, false);
-  assert.equal(richViewModel.descriptionImageUrl, undefined);
+  assert.equal(richViewModel.profilePreview.enabled, false);
+  assert.equal(richViewModel.profilePreview.imageUrl, undefined);
 });
 
 test("host-level description image row overrides win without changing the global default", () => {
@@ -389,7 +392,10 @@ test("host-level description image row overrides win without changing the global
   const unaffectedViewModel = buildRichCardViewModel(hostOverrideSite, githubDistinctPreviewLink);
 
   // Assert
-  assert.equal(hostOverrideViewModel.showDescriptionImageRow, false);
-  assert.equal(unaffectedViewModel.showDescriptionImageRow, true);
-  assert.equal(unaffectedViewModel.descriptionImageUrl, "/cache/content-images/github-preview.jpg");
+  assert.equal(hostOverrideViewModel.profilePreview.enabled, false);
+  assert.equal(unaffectedViewModel.profilePreview.enabled, true);
+  assert.equal(
+    unaffectedViewModel.profilePreview.imageUrl,
+    "/cache/content-images/github-preview.jpg",
+  );
 });

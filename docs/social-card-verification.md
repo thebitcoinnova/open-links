@@ -17,7 +17,8 @@ If this guide surfaces a docs or behavior issue, prefer fixing it through the re
 
 - [ ] Desktop: supported social profile cards still render avatar-first identity rows, handles, and audience metrics where available.
 - [ ] Desktop: non-profile fallback cards still use preview/icon-led presentation instead of accidentally switching onto the profile layout.
-- [ ] Desktop: Substack-style rich profile cards only show the extra description-image row when the current policy allows it.
+- [ ] Desktop: banner-shaped rich profile preview images render as compact top banners when the current policy allows it.
+- [ ] Desktop: legacy `bottom-row` placement and `compact-end` fallback still render in the right order when configured.
 - [ ] Desktop: cards with follower-history data show analytics first and share second in the header action row.
 - [ ] Desktop: cards without follower-history data still show share without a broken analytics control.
 - [ ] Desktop: the profile header still shows share, and when analytics is available it stays immediately to the left of share.
@@ -35,7 +36,7 @@ If this guide surfaces a docs or behavior issue, prefer fixing it through the re
 |------|--------------------|
 | Profile-card rendering, audience metrics, fallback rich/simple presentation | `src/components/cards/social-profile-card-rendering.test.tsx` |
 | `profileDescription` precedence, manual/fetched description rules, description-image-row policy | `src/lib/ui/rich-card-description-sourcing.test.ts` |
-| Card action-row semantics, share-only cards, fallback rich-card accessibility | `src/components/cards/non-payment-card-accessibility.test.tsx` |
+| Card action-row semantics, top-banner/bottom-row/compact-end accessibility ordering, share-only cards | `src/components/cards/non-payment-card-accessibility.test.tsx` |
 | Profile-header analytics/share button order and share-only fallback | `src/components/profile/ProfileHeader.test.tsx` |
 | Clean URL share payload and clipboard fallback behavior | `src/lib/share/share-link.test.ts` |
 | Follower-history CSV parsing, range filtering, raw/growth point generation | `src/lib/analytics/follower-history.test.ts` |
@@ -59,7 +60,7 @@ Confirm:
 - non-profile cards still keep preview/icon-led layout and footer source context
 - custom-domain source labels still clarify as `Platform · domain` when appropriate
 
-### 2. Description precedence and rich profile media rows
+### 2. Description precedence and rich profile preview media
 
 Focus on X-style `profileDescription` and Substack-style distinct preview imagery.
 
@@ -67,8 +68,11 @@ Confirm:
 
 - `profileDescription` wins only for supported social profile links
 - non-profile links ignore stray `profileDescription`
-- turning `descriptionImageRow` off suppresses the extra media row without reverting the card to preview-led layout
-- simple cards do not grow the extra description-image row even if preview media is distinct
+- turning `descriptionImageRow` off suppresses the extra preview media without reverting the card to preview-led layout
+- default `top-banner` placement only promotes genuinely wide preview images
+- legacy `bottom-row` placement still renders the preview after the description
+- `compact-end` fallback only appears when the preview misses the banner ratio cutoff and that fallback is enabled
+- simple cards do not grow extra profile preview media even if preview media is distinct
 
 ### 3. Profile-header actions
 

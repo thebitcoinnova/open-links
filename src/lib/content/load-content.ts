@@ -56,11 +56,26 @@ export type RichCardImageFit = "cover" | "contain";
 export type RichCardMobileImageLayout = "inline" | "full-width";
 export type RichCardDescriptionSource = "fetched" | "manual";
 export type RichCardDescriptionImageRowMode = "auto" | "off";
+export type RichCardDescriptionImagePlacement = "top-banner" | "bottom-row";
+export type RichCardDescriptionImageNonBannerFallback = "off" | "compact-end";
 export type QualityDomain = "seo" | "accessibility" | "performance" | "manual-smoke";
+
+export interface RichCardDescriptionImagePlacementConfig {
+  default?: RichCardDescriptionImagePlacement;
+  sites?: Record<string, RichCardDescriptionImagePlacement>;
+}
+
+export interface RichCardDescriptionImageNonBannerFallbackConfig {
+  default?: RichCardDescriptionImageNonBannerFallback;
+  sites?: Record<string, RichCardDescriptionImageNonBannerFallback>;
+}
 
 export interface RichCardDescriptionImageRowConfig {
   default?: RichCardDescriptionImageRowMode;
   sites?: Record<string, RichCardDescriptionImageRowMode>;
+  placement?: RichCardDescriptionImagePlacementConfig;
+  bannerMinAspectRatio?: number;
+  nonBannerFallback?: RichCardDescriptionImageNonBannerFallbackConfig;
 }
 
 export interface QualitySeoMetadata {
