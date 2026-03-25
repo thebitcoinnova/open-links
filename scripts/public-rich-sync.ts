@@ -276,15 +276,43 @@ const hasBaseProfileMetadata = (entry: PublicCacheEntry | undefined): boolean =>
     return false;
   }
 
-  return (
+  const hasBaseMetadata =
     typeof entry.metadata.title === "string" &&
     entry.metadata.title.trim().length > 0 &&
     typeof entry.metadata.description === "string" &&
     entry.metadata.description.trim().length > 0 &&
     typeof entry.metadata.image === "string" &&
-    entry.metadata.image.trim().length > 0 &&
+    entry.metadata.image.trim().length > 0;
+
+  if (!hasBaseMetadata) {
+    return false;
+  }
+
+  if (
     typeof entry.metadata.profileImage === "string" &&
     entry.metadata.profileImage.trim().length > 0
+  ) {
+    return true;
+  }
+
+  if (
+    typeof entry.metadata.membersCount === "number" &&
+    Number.isFinite(entry.metadata.membersCount)
+  ) {
+    return true;
+  }
+
+  if (
+    typeof entry.metadata.membersCountRaw === "string" &&
+    entry.metadata.membersCountRaw.trim().length > 0
+  ) {
+    return true;
+  }
+
+  return (
+    typeof entry.metadata.sourceLabel === "string" &&
+    entry.metadata.sourceLabel.trim().length > 0 &&
+    behaviorForTarget("x-public-community").requiresMembersCount
   );
 };
 

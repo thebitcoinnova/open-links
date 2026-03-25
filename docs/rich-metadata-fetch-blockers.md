@@ -49,7 +49,7 @@ These domains are currently treated as unsupported for direct unauthenticated me
 |---|---|---|---|---|---|---|
 | LinkedIn | `https://www.linkedin.com/in/peter-ryszkiewicz/` | `2026-02-24T11:29:52Z` | `2026-02-24T11:45:37Z` | `HTTP 999`, authwall redirect script | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor`) or keep direct enrichment disabled/manual metadata |
 | Medium | `https://medium.com/@peterryszkiewicz` | `2026-02-24T11:30:11Z` | `2026-03-08T14:01:38Z` | `HTTP 403`, Cloudflare challenge page ("Just a moment...") | Unsupported direct fetch | Prefer built-in public augmentation (RSS/feed path) and committed public cache; use `bun run public:rich:sync -- --only-link medium` for optional public browser follower capture |
-| X | `https://x.com/pryszkie` | `2026-02-26T09:55:42Z` | `2026-02-26T09:55:47Z` | `HTTP 200` shell response with missing `title`, `description`, and `image` | Unsupported direct fetch | Prefer built-in public augmentation (oEmbed + avatar base metadata) and committed public cache; use `bun run public:rich:sync -- --only-link x` for optional public browser audience capture |
+| X | `https://x.com/pryszkie` | `2026-02-26T09:55:42Z` | `2026-03-25T18:23:19Z` | `HTTP 200` shell response with missing `title`, `description`, and `image` for normal direct fetch; X community pages expose usable OG metadata to public crawler-style fetches | Unsupported direct fetch | Prefer built-in public augmentation (oEmbed + avatar for profiles, direct OG community metadata for X communities) and committed public cache; use `bun run public:rich:sync -- --only-link x` or `--only-link <x-community-link-id>` for optional public browser audience capture |
 | Facebook | `https://www.facebook.com/peter.ryszkiewicz` | `2026-02-26T10:06:38Z` | `2026-02-26T10:06:49Z` | `HTTP 200` response with generic title and missing image metadata | Unsupported direct fetch | Prefer authenticated extractor cache (`authenticatedExtractor=facebook-auth-browser`), fallback to manual metadata |
 
 ## Findings Log
@@ -113,8 +113,8 @@ Refresh command:
 
 - Link id: `x`
 - URL: `https://x.com/pryszkie`
-- Latest decision: Use built-in public augmentation through `bun run enrich:rich:strict` for base metadata, plus optional public browser refresh via `bun run public:rich:sync -- --only-link x` for follower/following counts.
-- Reason: Direct fetch reproducibly returns `metadata_missing` under strict enrichment (`HTTP 200` response but missing `title`, `description`, `image`), while the logged-out public profile reliably exposes `1,351 Followers` and `643 Following` to a normal browser session. X therefore stays on the public-cache path and layers audience metrics in as best-effort browser-captured metadata rather than reintroducing an authenticated extractor.
+- Latest decision: Use built-in public augmentation through `bun run enrich:rich:strict` for base metadata, plus optional public browser refresh via `bun run public:rich:sync -- --only-link x` (profiles) or `--only-link <x-community-link-id>` (communities) for audience counts.
+- Reason: Normal direct fetch reproducibly returns `metadata_missing` under strict enrichment (`HTTP 200` response but missing `title`, `description`, `image`), while logged-out public profile/community surfaces are still recoverable through supported public augmentation paths. Profile URLs use oEmbed + avatar capture, and X community URLs use public OG metadata from the community page itself. X therefore stays on the public-cache path and layers audience metrics in as best-effort browser-captured metadata rather than reintroducing an authenticated extractor.
 
 Refresh command:
 
@@ -130,6 +130,9 @@ Refresh command:
 | `2026-02-26T09:54:24Z` | `bun run setup:rich-auth` with `x-auth-browser` configured on link `x` | Cache entry captured (`cacheKey=x`) and local asset committed under `public/cache/rich-authenticated/` |
 | `2026-03-07T23:12:09Z` | Public-first extractor audit + migration | X support moved into built-in public augmentation via oEmbed + avatar capture and committed public cache; X no longer requires `authenticatedExtractor` |
 | `2026-03-08T19:05:44Z` | `bun run public:rich:sync -- --only-link x` | Captured `1,351 Followers` and `643 Following` from the public X profile into `data/cache/rich-public-cache.json`; subsequent `bun run enrich:rich:strict` propagated the counts into generated rich metadata |
+| `2026-03-25T18:20:58Z` | `bun run public:rich:sync -- --only-link x-community` against `https://x.com/i/communities/1871996451812769951` before parser fix | Failed bootstrap with `X public augmentation captured placeholder community metadata: sign_in_prompt.` because the parser treated incidental logged-out page chrome text as a fatal placeholder even when `og:title`, `og:description`, and `og:image` were present |
+| `2026-03-25T18:23:18Z` | Public crawler-style fetch probe of `https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig` | `HTTP 200` with `cache-control` and `last-modified`; image host is suitable for committed `images:sync` caching once `pbs.twimg.com` is included in `data/policy/remote-cache-policy.json` |
+| `2026-03-25T18:23:19Z` | Raw community fetch probe of `https://x.com/i/communities/1871996451812769951` with crawler-style headers | `HTTP 200` with usable `og:title`, `og:description`, `og:image`; confirmed that X community base metadata is publicly available without authentication and should stay on the public augmentation path |
 
 ### Facebook
 
