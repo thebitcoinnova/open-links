@@ -129,3 +129,45 @@ test("falls back to the built-in PNG social image when no SEO image is configure
     "https://openlinks.us/openlinks-social-fallback.png",
   );
 });
+
+test("defaults person pages to profile phrasing when no description fallback is available", () => {
+  // Arrange
+  const site = {
+    title: "OpenLinks",
+    description: "",
+  };
+  const profile = {
+    entityType: "person" as const,
+    name: "",
+    bio: "",
+  };
+
+  // Act
+  const resolved = resolveSeoMetadata(site, profile, {
+    fallbackOrigin: "https://openlinks.us/",
+  });
+
+  // Assert
+  assert.equal(resolved.metadata.description, "OpenLinks profile");
+});
+
+test("defaults organization pages to neutral page phrasing when no description fallback is available", () => {
+  // Arrange
+  const site = {
+    title: "OpenLinks",
+    description: "",
+  };
+  const profile = {
+    entityType: "organization" as const,
+    name: "",
+    bio: "",
+  };
+
+  // Act
+  const resolved = resolveSeoMetadata(site, profile, {
+    fallbackOrigin: "https://openlinks.us/",
+  });
+
+  // Assert
+  assert.equal(resolved.metadata.description, "OpenLinks page");
+});

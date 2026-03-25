@@ -1,4 +1,9 @@
 import { For, Show } from "solid-js";
+import {
+  isPersonEntityType,
+  resolveEntityPageLabel,
+  resolveEntityPageNoun,
+} from "../../lib/content/entity-type";
 import type { ProfileData } from "../../lib/content/load-content";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
@@ -52,14 +57,16 @@ export const resolveMobileProfileActionLayout = (
 export const ProfileHeader = (props: ProfileHeaderProps) => {
   const richness = () => props.richness ?? "standard";
   const contacts = () => orderedContactEntries(props.profile.contact);
+  const pageNoun = () => resolveEntityPageNoun(props.profile.entityType);
+  const pageLabel = () => resolveEntityPageLabel(props.profile.entityType);
 
   const handleShareProfile = async () => {
     showActionToast(
       await shareLink({
-        copiedMessage: `${props.profile.name} link shared`,
-        failedMessage: `Could not share ${props.profile.name}`,
+        copiedMessage: `${props.profile.name} ${pageNoun()} shared`,
+        failedMessage: `Could not share ${props.profile.name} ${pageNoun()}`,
         mode: "url-only",
-        sharedMessage: `${props.profile.name} link shared`,
+        sharedMessage: `${props.profile.name} ${pageNoun()} shared`,
         text: props.profile.headline,
         title: props.profile.name,
         url: resolveDocumentShareUrl(),
@@ -70,8 +77,8 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   const handleCopyProfileLink = async () => {
     showActionToast(
       await copyLink({
-        copiedMessage: "Profile link copied",
-        failedMessage: "Could not copy profile link",
+        copiedMessage: `${pageLabel()} link copied`,
+        failedMessage: `Could not copy ${pageNoun()} link`,
         url: resolveDocumentShareUrl(),
       }),
     );
@@ -88,31 +95,31 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
       ...(props.onProfileQrOpen
         ? [
             {
-              ariaLabel: "Show profile QR code",
+              ariaLabel: `Show ${pageNoun()} QR code`,
               kind: "qr" as const,
               label: "QR",
               onClick: handleOpenProfileQr,
-              title: "Show profile QR code",
+              title: `Show ${pageNoun()} QR code`,
             },
           ]
         : []),
       {
-        ariaLabel: "Share profile",
+        ariaLabel: `Share ${pageNoun()}`,
         kind: "share",
         label: "Share",
         onClick: async () => {
           await handleShareProfile();
         },
-        title: "Share profile",
+        title: `Share ${pageNoun()}`,
       },
       {
-        ariaLabel: "Copy profile link",
+        ariaLabel: `Copy ${pageNoun()} link`,
         kind: "copy",
         label: "Copy",
         onClick: async () => {
           await handleCopyProfileLink();
         },
-        title: "Copy profile link",
+        title: `Copy ${pageNoun()} link`,
       },
     );
 
@@ -141,7 +148,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   };
 
   return (
-    <section class="profile-header" aria-label="Profile">
+    <section class="profile-header" aria-label={pageLabel()}>
       <Show when={props.profile.avatar && richness() !== "minimal"}>
         <img class="profile-avatar" src={props.profile.avatar} alt="" loading="lazy" />
       </Show>
@@ -163,7 +170,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
             <Show when={props.profile.location}>
               <li>Location: {props.profile.location}</li>
             </Show>
-            <Show when={props.profile.pronouns}>
+            <Show when={isPersonEntityType(props.profile.entityType) && props.profile.pronouns}>
               <li>Pronouns: {props.profile.pronouns}</li>
             </Show>
             <Show when={props.profile.status}>
@@ -188,7 +195,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         <BottomActionBar
           class="profile-action-bar profile-action-bar-desktop"
           items={actionItems()}
-          label="Profile sharing actions"
+          label={`${pageLabel()} sharing actions`}
         />
         <Show when={mobileInlineActionItems().length > 0}>
           <div class="bottom-action-bar profile-action-bar profile-action-bar-mobile">
@@ -213,7 +220,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
               class="bottom-action-bar-action mobile-overflow-menu-trigger"
               contentClass="mobile-overflow-menu-content profile-action-overflow-menu"
               itemClass="mobile-overflow-menu-item"
-              label="More profile actions"
+              label={`More ${pageNoun()} actions`}
             />
           </div>
         </Show>

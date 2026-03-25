@@ -5,6 +5,11 @@
   "type": "object",
   "required": ["name", "headline", "avatar", "bio"],
   "properties": {
+    "entityType": {
+      "type": "string",
+      "enum": ["person", "organization"],
+      "description": "Optional entity classification. Defaults to person when omitted for backward compatibility."
+    },
     "name": {
       "type": "string",
       "minLength": 1

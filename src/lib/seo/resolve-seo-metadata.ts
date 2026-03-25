@@ -2,6 +2,7 @@ import {
   type SiteSeoContentImageField,
   getSiteSeoContentImageSlotId,
 } from "../content/content-image-slots";
+import { type EntityType, resolveEntityPageNoun } from "../content/entity-type";
 
 export interface SeoMetadata {
   title: string;
@@ -35,6 +36,7 @@ export interface SeoSiteInput {
 }
 
 export interface SeoProfileInput {
+  entityType?: EntityType;
   name?: string;
   bio?: string;
 }
@@ -320,6 +322,7 @@ export const resolveSeoMetadata = (
   const defaults = seo?.defaults ?? {};
   const profileOverrides = seo?.overrides?.profile ?? {};
   const baseOrigin = resolveBaseOrigin(site, options.fallbackOrigin);
+  const pageNoun = resolveEntityPageNoun(profile.entityType);
 
   const title =
     firstString(
@@ -335,7 +338,7 @@ export const resolveSeoMetadata = (
       defaults.description,
       profile.bio,
       site.description,
-    ) ?? "OpenLinks profile";
+    ) ?? `OpenLinks ${pageNoun}`;
 
   const canonicalResolution = resolveCanonical(
     site,

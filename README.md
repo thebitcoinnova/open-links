@@ -230,13 +230,13 @@ Manual fallback:
 
 - edit these files directly when you need the lower-level path
 
-- `data/profile.json` - identity and profile details.
+- `data/profile.json` - primary entity identity details for a person or organization.
 - `data/links.json` - simple/rich/payment links, groups, ordering.
 - `data/site.json` - theme, UI, quality, and deployment-related config.
 
 Linktree-assisted bootstrap:
 
-- use `bun run bootstrap:linktree -- --url https://linktr.ee/<handle>` to generate reviewable profile/link candidates before editing `data/profile.json` and `data/links.json`
+- use `bun run bootstrap:linktree -- --url https://linktr.ee/<handle>` to generate reviewable entity/link candidates before editing `data/profile.json` and `data/links.json`
 
 Starter presets:
 

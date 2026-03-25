@@ -12,6 +12,7 @@ import {
   getLinkContentImageSlotId,
   resolveContentImageResolvedPathForSlot,
 } from "./content-image-slots";
+import { type EntityType, resolveEntityType } from "./entity-type";
 import {
   type SocialProfileMetadataFields,
   mergeMetadataWithManualSocialProfileOverrides,
@@ -198,6 +199,7 @@ export interface ProfileData {
   headline: string;
   avatar: string;
   bio: string;
+  entityType?: EntityType;
   location?: string;
   pronouns?: string;
   status?: string;
@@ -610,6 +612,7 @@ export const loadContent = () => {
   const profile: ProfileData = {
     ...profileSource,
     avatar: resolveProfileAvatarPath(),
+    entityType: resolveEntityType(profileSource.entityType),
   };
   const site = siteData as SiteData;
   const linksPayload = linksData as LinksData;
