@@ -33,6 +33,21 @@ test("resolves supported URL handles", () => {
       handle: "peterryszkiewicz",
     },
     {
+      url: "https://rumble.com/user/Vaxxchoice",
+      extractorId: "rumble",
+      handle: "vaxxchoice",
+    },
+    {
+      url: "https://rumble.com/c/InTheLitterBox/about",
+      extractorId: "rumble",
+      handle: "inthelitterbox",
+    },
+    {
+      url: "https://rumble.com/Shmah",
+      extractorId: "rumble",
+      handle: "shmah",
+    },
+    {
       url: "https://primal.net/peterryszkiewicz",
       extractorId: "primal",
       handle: "peterryszkiewicz",
@@ -80,6 +95,12 @@ test("marks reserved or non-profile paths as supported but unresolved", () => {
       reason: "not_profile_url",
     },
     { url: "https://instagram.com/explore", extractorId: "instagram", reason: "not_profile_url" },
+    { url: "https://rumble.com/videos", extractorId: "rumble", reason: "not_profile_url" },
+    {
+      url: "https://rumble.com/v74yfh2-truth-be-told-roundtable.html",
+      extractorId: "rumble",
+      reason: "not_profile_url",
+    },
     { url: "https://primal.net/home", extractorId: "primal", reason: "not_profile_url" },
     {
       url: "https://medium.com/topics/technology",

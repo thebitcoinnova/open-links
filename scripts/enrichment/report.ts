@@ -47,6 +47,7 @@ const PROFILE_PLATFORMS: SupportedSocialProfilePlatform[] = [
   "linkedin",
   "medium",
   "primal",
+  "rumble",
   "substack",
   "x",
   "youtube",

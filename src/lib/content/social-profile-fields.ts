@@ -8,6 +8,7 @@ export type SupportedSocialProfilePlatform =
   | "linkedin"
   | "medium"
   | "primal"
+  | "rumble"
   | "substack"
   | "x"
   | "youtube";
@@ -52,6 +53,7 @@ const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
   linkedin: ["profileImage"],
   medium: ["profileImage"],
   primal: ["profileImage"],
+  rumble: ["profileImage", "followersCount"],
   substack: ["profileImage", "subscribersCount"],
   x: ["profileImage"],
   youtube: ["profileImage", "subscribersCount"],

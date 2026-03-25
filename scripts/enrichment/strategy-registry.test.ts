@@ -62,6 +62,25 @@ test("resolves the medium and substack public strategies with their rewritten so
   assert.equal(substack.source.sourceUrl, "https://substack.com/@peterryszkiewicz");
 });
 
+test("resolves the Rumble public strategy to the about page for profile metadata", () => {
+  // Arrange
+  const strategy = resolvePublicEnrichmentStrategy({
+    url: "https://rumble.com/c/InTheLitterBox/videos",
+  });
+  const target = resolvePublicAugmentationTarget({
+    url: "https://rumble.com/c/InTheLitterBox/videos",
+  });
+
+  // Assert
+  assert.equal(strategy.id, "rumble-public-profile");
+  assert.equal(strategy.branch, "public_augmented");
+  assert.equal(strategy.sourceKind, "html");
+  assert.equal(strategy.source.sourceUrl, "https://rumble.com/c/InTheLitterBox/about");
+  assert.ok(target);
+  assert.equal(target.id, "rumble-public-profile");
+  assert.equal(target.sourceUrl, strategy.source.sourceUrl);
+});
+
 test("resolves authenticated strategies and keeps the legacy authenticated adapter aligned", () => {
   // Arrange
   const strategy = resolveEnrichmentStrategy({
@@ -93,6 +112,7 @@ test("lists the current public, authenticated, and default direct strategies", (
     "medium-public-feed",
     "primal-public-profile",
     "public-direct-html",
+    "rumble-public-profile",
     "substack-public-profile",
     "x-public-oembed",
     "youtube-public-profile",

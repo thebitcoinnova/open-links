@@ -7,6 +7,7 @@ export type HandleExtractorId =
   | "linkedin"
   | "facebook"
   | "instagram"
+  | "rumble"
   | "primal"
   | "medium"
   | "substack"
@@ -50,6 +51,7 @@ const LINKEDIN_HOSTS = new Set(["linkedin.com", "lnkd.in"]);
 const FACEBOOK_HOSTS = new Set(["facebook.com", "m.facebook.com", "fb.com"]);
 const INSTAGRAM_HOSTS = new Set(["instagram.com"]);
 const CLUB_ORANGE_DOMAIN = "cluborange.org";
+const RUMBLE_HOSTS = new Set(["rumble.com"]);
 const PRIMAL_HOSTS = new Set(["primal.net"]);
 const MEDIUM_HOSTS = new Set(["medium.com"]);
 const SUBSTACK_HOSTS = new Set(["substack.com"]);
@@ -177,6 +179,33 @@ const PRIMAL_RESERVED = new Set([
   "signup",
   "wallet",
 ]);
+
+const RUMBLE_RESERVED = new Set([
+  "about",
+  "account",
+  "ads",
+  "c",
+  "categories",
+  "channel",
+  "channels",
+  "contact-us",
+  "embed",
+  "help",
+  "live",
+  "login",
+  "logout",
+  "news",
+  "our-picks",
+  "privacy",
+  "search",
+  "settings",
+  "terms",
+  "user",
+  "video",
+  "videos",
+]);
+
+const RUMBLE_PROFILE_TABS = new Set(["about", "channels", "livestreams", "reposts", "videos"]);
 
 const CLUB_ORANGE_RESERVED = new Set([
   "about",
@@ -437,6 +466,59 @@ const resolveInstagram = (segments: string[]): HandleResolution => {
   return resolved("instagram", candidate);
 };
 
+const hasOnlyAllowedRumbleSuffix = (segments: string[], handleIndex: number): boolean => {
+  if (segments.length <= handleIndex + 1) {
+    return true;
+  }
+
+  if (segments.length !== handleIndex + 2) {
+    return false;
+  }
+
+  const maybeTab = toLowerTrimmed(segments[handleIndex + 1] ?? "");
+  return !!maybeTab && RUMBLE_PROFILE_TABS.has(maybeTab);
+};
+
+const resolveRumble = (segments: string[]): HandleResolution => {
+  const first = toLowerTrimmed(segments[0] ?? "");
+  if (!first) {
+    return supportedWithoutHandle("rumble", "missing_handle_segment");
+  }
+
+  if (first === "user" || first === "c") {
+    const rawCandidate = segments[1];
+    if (!rawCandidate) {
+      return supportedWithoutHandle("rumble", "missing_handle_segment");
+    }
+
+    if (!hasOnlyAllowedRumbleSuffix(segments, 1)) {
+      return supportedWithoutHandle("rumble", "not_profile_url");
+    }
+
+    const candidate = normalizeHandle(rawCandidate);
+    if (!candidate || !/^[a-z0-9][a-z0-9._-]{0,99}$/.test(candidate)) {
+      return supportedWithoutHandle("rumble", "invalid_handle");
+    }
+
+    return resolved("rumble", candidate);
+  }
+
+  if (RUMBLE_RESERVED.has(first) || /\.html$/i.test(first)) {
+    return supportedWithoutHandle("rumble", "not_profile_url");
+  }
+
+  if (!hasOnlyAllowedRumbleSuffix(segments, 0)) {
+    return supportedWithoutHandle("rumble", "not_profile_url");
+  }
+
+  const candidate = normalizeHandle(first);
+  if (!candidate || !/^[a-z0-9][a-z0-9._-]{0,99}$/.test(candidate)) {
+    return supportedWithoutHandle("rumble", "invalid_handle");
+  }
+
+  return resolved("rumble", candidate);
+};
+
 const resolveClubOrange = (segments: string[]): HandleResolution => {
   const candidate = toLowerTrimmed((segments[0] ?? "").replace(/^@+/, ""));
   if (!candidate) {
@@ -620,6 +702,10 @@ export const resolveHandleFromUrl = (input: ResolveHandleFromUrlInput): HandleRe
 
   if (INSTAGRAM_HOSTS.has(host)) {
     return resolveInstagram(segments);
+  }
+
+  if (RUMBLE_HOSTS.has(host)) {
+    return resolveRumble(segments);
   }
 
   if (host === CLUB_ORANGE_DOMAIN || isSubdomainOf(host, CLUB_ORANGE_DOMAIN)) {

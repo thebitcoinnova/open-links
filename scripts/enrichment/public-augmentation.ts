@@ -13,6 +13,7 @@ import {
   toSourceLabel,
 } from "./document-primitives";
 import { parseMetadata } from "./parse-metadata";
+import { parseRumblePublicProfile, resolveRumbleAboutUrl } from "./rumble-public-profile";
 import { parseAudienceCount } from "./social-profile-counts";
 import type {
   EnrichmentStrategy,
@@ -32,6 +33,7 @@ type PublicAugmentationOutcome = NormalizedEnrichmentResult;
 
 export type PublicAugmentationStrategyId =
   | "primal-public-profile"
+  | "rumble-public-profile"
   | "medium-public-feed"
   | "substack-public-profile"
   | "x-public-oembed"
@@ -806,6 +808,32 @@ const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
             normalize: (body) => parsePrimalPublicProfile(input.url, body),
           }
         : null,
+  },
+  {
+    id: "rumble-public-profile",
+    branch: "public_augmented",
+    sourceKind: "html",
+    matches: (input) => resolveSupportedSocialProfile(input)?.platform === "rumble",
+    resolve: (input) => {
+      if (resolveSupportedSocialProfile(input)?.platform !== "rumble") {
+        return null;
+      }
+
+      const sourceUrl = resolveRumbleAboutUrl(input.url);
+      return {
+        id: "rumble-public-profile",
+        branch: "public_augmented",
+        sourceKind: "html",
+        source: {
+          sourceUrl,
+          headers: {
+            "accept-language": "en-US,en;q=0.9",
+            "user-agent": PUBLIC_BROWSER_USER_AGENT,
+          },
+        },
+        normalize: (body) => parseRumblePublicProfile(sourceUrl, body),
+      };
+    },
   },
   {
     id: "substack-public-profile",

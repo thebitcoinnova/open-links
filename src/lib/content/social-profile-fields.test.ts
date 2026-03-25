@@ -70,6 +70,7 @@ test("supported social profile detection supports the expanded platform set but 
   const linkedinProfileUrl = "https://www.linkedin.com/in/peter-ryszkiewicz/";
   const mediumProfileUrl = "https://medium.com/@peterryszkiewicz";
   const clubOrangeProfileUrl = "https://app.cluborange.org/pryszkie";
+  const rumbleProfileUrl = "https://rumble.com/c/InTheLitterBox";
   const primalProfileUrl = "https://primal.net/peterryszkiewicz";
   const substackProfileUrl = "https://peterryszkiewicz.substack.com/";
   const substackCustomDomainUrl = "https://peter.ryszkiewicz.us/";
@@ -86,6 +87,7 @@ test("supported social profile detection supports the expanded platform set but 
   const linkedinProfile = resolveSupportedSocialProfile({ url: linkedinProfileUrl });
   const mediumProfile = resolveSupportedSocialProfile({ url: mediumProfileUrl });
   const clubOrangeProfile = resolveSupportedSocialProfile({ url: clubOrangeProfileUrl });
+  const rumbleProfile = resolveSupportedSocialProfile({ url: rumbleProfileUrl });
   const primalProfile = resolveSupportedSocialProfile({ url: primalProfileUrl });
   const substackProfile = resolveSupportedSocialProfile({ url: substackProfileUrl });
   const substackCustomDomainProfile = resolveSupportedSocialProfile({
@@ -124,6 +126,11 @@ test("supported social profile detection supports the expanded platform set but 
     platform: "cluborange",
     handle: "pryszkie",
     expectedFields: ["profileImage"],
+  });
+  assert.deepEqual(rumbleProfile, {
+    platform: "rumble",
+    handle: "inthelitterbox",
+    expectedFields: ["profileImage", "followersCount"],
   });
   assert.deepEqual(primalProfile, {
     platform: "primal",

@@ -52,7 +52,7 @@ Current support split at a glance:
 
 - `authenticated_required`: LinkedIn, Facebook
 - `public_direct`: Club Orange
-- `public_augmented` / public-first: GitHub, Instagram, Medium, Primal, Substack, X, YouTube
+- `public_augmented` / public-first: GitHub, Instagram, Medium, Primal, Rumble, Substack, X, YouTube
 
 Current public-direct example outside the authenticated framework:
 
@@ -121,7 +121,7 @@ Behavior notes:
 - `--only-missing --force` refreshes selected links even when cache is valid.
 - By default, sync ignores links disabled at either `links[].enabled=false` or `links[].enrichment.enabled=false`; use `--include-disabled` to override that filter intentionally.
 
-For Medium, X, Instagram, and YouTube, use `bun run enrich:rich:strict` for routine enrichment instead. Those platforms now use the public-cache pipeline: routine enrich runs keep `data/cache/rich-public-cache.json` unchanged and only update the local public-cache runtime overlay, while `bun run enrich:rich:strict:write-cache` is the explicit command for persisting refreshed committed public metadata.
+For Medium, Rumble, X, Instagram, and YouTube, use `bun run enrich:rich:strict` for routine enrichment instead. Those platforms now use the public-cache pipeline: routine enrich runs keep `data/cache/rich-public-cache.json` unchanged and only update the local public-cache runtime overlay, while `bun run enrich:rich:strict:write-cache` is the explicit command for persisting refreshed committed public metadata.
 
 If you are validating the end-user social-card surface rather than extractor internals, pair this guide with:
 

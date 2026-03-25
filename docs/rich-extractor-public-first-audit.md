@@ -18,6 +18,7 @@ Current public-profile reference examples outside the authenticated framework:
 - Club Orange: direct public HTML metadata at `app.cluborange.org/<handle>` exposes title, bio, and avatar without authentication
 - GitHub: public HTML augmentation for avatar + follower/following counts
 - Primal: generic public enrichment with profile-image normalization
+- Rumble: public `about` pages expose the authored description, follower count, avatar, and preview image without authentication
 - Substack: canonical public profile fetch with original custom-domain source-label preservation
 
 Current authenticated reference examples:
