@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import process from "node:process";
+import { fileURLToPath } from "node:url";
 
-const ROOT = process.cwd();
-const EMBEDDED_CODE_ROOT = path.resolve(ROOT, "scripts", "embedded-code");
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const EMBEDDED_CODE_ROOT = path.resolve(MODULE_DIR, "..", "embedded-code");
 const embeddedCodeCache = new Map<string, string>();
 const TOKEN_PATTERN = /__[A-Za-z0-9_]+__/g;
 
