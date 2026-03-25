@@ -76,14 +76,12 @@ test("top utility bar wraps long site titles inside a dedicated text element", (
 
   // Act
   const header = collectElements(tree).find((element) => element.type === "header");
-  const mainRow = firstElementWithClass(tree, "top-utility-bar-main");
   const brandText = firstElementWithClass(tree, "utility-brand-text");
   const actions = firstElementWithClass(tree, "utility-actions");
 
   // Assert
   assert.ok(header);
   assert.equal(header.props["data-sticky-mobile"], "true");
-  assert.ok(mainRow);
   assert.ok(brandText);
   assert.equal(brandText.props.children, longTitle);
   assert.ok(actions);
@@ -105,14 +103,12 @@ test("top utility bar renders interactive children inside the actions region", (
   }) as RenderedNode;
 
   // Act
-  const mainRow = firstElementWithClass(tree, "top-utility-bar-main");
   const actions = firstElementWithClass(tree, "utility-actions");
   const testingLink = collectElements(tree).find(
     (element) => element.type === "a" && element.props.href === "/spark/tip-cards",
   );
 
   // Assert
-  assert.ok(mainRow);
   assert.ok(actions);
   assert.ok(testingLink);
   assert.equal(testingLink.props.children, "Testing: tip card sparks");

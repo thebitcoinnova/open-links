@@ -1,5 +1,5 @@
 import * as Collapsible from "@kobalte/core/collapsible";
-import { For, createSignal, createUniqueId } from "solid-js";
+import { For, createEffect, createSignal, createUniqueId, onCleanup } from "solid-js";
 import { IconMenu } from "../../lib/icons/custom-icons";
 import type { UiMode } from "../../lib/theme/mode-controller";
 import {
@@ -53,6 +53,7 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
     });
 
   let maybeTriggerRef: HTMLButtonElement | undefined;
+  let maybeMenuRef: HTMLDivElement | undefined;
 
   const closeMenuAndRestoreFocus = () => {
     setIsOpen(false);
@@ -77,60 +78,93 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
     closeMenuAndRestoreFocus();
   };
 
-  return (
-    <Collapsible.Root class="utility-menu" open={isOpen()} onOpenChange={setIsOpen}>
-      <Collapsible.Trigger
-        ref={maybeTriggerRef}
-        type="button"
-        class="utility-menu-button"
-        data-open={isOpen() ? "true" : "false"}
-        aria-controls={panelId}
-        aria-expanded={isOpen()}
-        aria-label={triggerAriaLabel()}
-      >
-        <IconMenu aria-hidden="true" />
-        {props.isOffline ? (
-          <>
-            <span class="utility-menu-button-status" aria-hidden="true" />
-            <span class="sr-only">Offline status available in site menu.</span>
-          </>
-        ) : null}
-      </Collapsible.Trigger>
+  createEffect(() => {
+    if (!isOpen() || typeof window === "undefined") {
+      return;
+    }
 
-      <Collapsible.Content
-        as="section"
-        id={panelId}
-        class="utility-menu-panel"
-        aria-label={MENU_REGION_LABEL}
-      >
-        <div class="utility-menu-list">
-          <For each={rows()}>
-            {(row) =>
-              row.kind === "link" ? (
-                <a
-                  class="utility-menu-link utility-menu-row"
-                  data-current={row.isCurrent ? "true" : undefined}
-                  aria-current={row.isCurrent ? "page" : undefined}
-                  href={row.href}
-                  onClick={(event) => handleLinkSelect(row.key, event)}
-                >
-                  <span class="utility-menu-row-label">{row.label}</span>
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  class="utility-menu-action utility-menu-row"
-                  aria-label={resolveUtilityControlsMenuThemeActionLabel(props.mode)}
-                  onClick={handleThemeToggle}
-                >
-                  <span class="utility-menu-row-label">{row.label}</span>
-                </button>
-              )
-            }
-          </For>
-        </div>
-      </Collapsible.Content>
-    </Collapsible.Root>
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node) || maybeMenuRef?.contains(target)) {
+        return;
+      }
+
+      closeMenuAndRestoreFocus();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      event.preventDefault();
+      closeMenuAndRestoreFocus();
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown, true);
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => {
+      window.removeEventListener("pointerdown", handlePointerDown, true);
+      window.removeEventListener("keydown", handleKeyDown);
+    });
+  });
+
+  return (
+    <div ref={maybeMenuRef} class="utility-menu">
+      <Collapsible.Root open={isOpen()} onOpenChange={setIsOpen}>
+        <Collapsible.Trigger
+          ref={maybeTriggerRef}
+          type="button"
+          class="utility-menu-button"
+          data-open={isOpen() ? "true" : "false"}
+          aria-controls={panelId}
+          aria-expanded={isOpen()}
+          aria-label={triggerAriaLabel()}
+        >
+          <IconMenu aria-hidden="true" />
+          {props.isOffline ? (
+            <>
+              <span class="utility-menu-button-status" aria-hidden="true" />
+              <span class="sr-only">Offline status available in site menu.</span>
+            </>
+          ) : null}
+        </Collapsible.Trigger>
+
+        <Collapsible.Content
+          as="section"
+          id={panelId}
+          class="utility-menu-panel"
+          aria-label={MENU_REGION_LABEL}
+        >
+          <div class="utility-menu-list">
+            <For each={rows()}>
+              {(row) =>
+                row.kind === "link" ? (
+                  <a
+                    class="utility-menu-link utility-menu-row"
+                    data-current={row.isCurrent ? "true" : undefined}
+                    aria-current={row.isCurrent ? "page" : undefined}
+                    href={row.href}
+                    onClick={(event) => handleLinkSelect(row.key, event)}
+                  >
+                    <span class="utility-menu-row-label">{row.label}</span>
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    class="utility-menu-action utility-menu-row"
+                    aria-label={resolveUtilityControlsMenuThemeActionLabel(props.mode)}
+                    onClick={handleThemeToggle}
+                  >
+                    <span class="utility-menu-row-label">{row.label}</span>
+                  </button>
+                )
+              }
+            </For>
+          </div>
+        </Collapsible.Content>
+      </Collapsible.Root>
+    </div>
   );
 };
 

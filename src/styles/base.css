@@ -126,12 +126,10 @@ a:focus-visible {
 }
 
 .top-utility-bar {
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
-  min-width: 0;
-}
-
-.top-utility-bar-main {
   min-width: 0;
 }
 
@@ -141,6 +139,7 @@ a:focus-visible {
   margin: 0;
   min-width: 0;
   min-height: var(--page-target-size);
+  flex: 1 1 auto;
   font-family: var(--font-display);
   letter-spacing: var(--tracking-utility-title);
   text-transform: var(--transform-utility-title);
@@ -172,17 +171,15 @@ a:focus-visible {
 }
 
 .utility-actions {
-  display: grid;
+  display: flex;
   align-items: center;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
   gap: var(--space-2);
-  grid-row: 1 / span 2;
   min-width: 0;
+  flex: 0 0 auto;
 }
 
 .utility-menu {
-  display: contents;
+  position: relative;
 }
 
 .utility-pill {
@@ -216,16 +213,20 @@ a:focus-visible {
 }
 
 .utility-menu-panel {
-  width: 100%;
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 40;
+  width: min(22rem, calc(100vw - var(--space-6)));
+  max-height: min(28rem, calc(100dvh - var(--space-8)));
   margin: 0;
   padding: 0.32rem;
   border: 1px solid color-mix(in srgb, var(--border-subtle) 76%, transparent 24%);
   border-radius: calc(var(--radius-lg) + 0.15rem);
   background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-bg) 4%);
   box-shadow: 0 20px 40px color-mix(in srgb, #000 16%, transparent 84%);
-  grid-column: 1 / -1;
-  grid-row: 2;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .utility-menu-panel[data-expanded] {
@@ -1911,9 +1912,6 @@ a:focus-visible {
   min-width: var(--page-target-size);
   padding: 0;
   display: inline-grid;
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: end;
   place-items: center;
   line-height: 1;
   box-shadow: 0 12px 24px color-mix(in srgb, var(--surface-bg) 8%, transparent 92%);

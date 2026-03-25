@@ -29,23 +29,21 @@ export const TopUtilityBar = (props: TopUtilityBarProps) => {
 
   return (
     <header class="top-utility-bar" data-sticky-mobile={stickyOnMobile() ? "true" : "false"}>
-      <div class="top-utility-bar-main">
-        <h2 class="utility-title" id={titleId}>
-          <span class="utility-brand">
-            <Show when={logoSrc()}>
-              {(src) => (
-                <img
-                  class="utility-logo"
-                  src={src()}
-                  alt={props.logoAlt ?? ""}
-                  aria-hidden={props.logoAlt ? undefined : "true"}
-                />
-              )}
-            </Show>
-            <span class="utility-brand-text">{props.title}</span>
-          </span>
-        </h2>
-      </div>
+      <h2 class="utility-title" id={titleId}>
+        <span class="utility-brand">
+          <Show when={logoSrc()}>
+            {(src) => (
+              <img
+                class="utility-logo"
+                src={src()}
+                alt={props.logoAlt ?? ""}
+                aria-hidden={props.logoAlt ? undefined : "true"}
+              />
+            )}
+          </Show>
+          <span class="utility-brand-text">{props.title}</span>
+        </span>
+      </h2>
       <div
         class="utility-actions"
         aria-label={props.controlsLabel ?? "Display controls"}

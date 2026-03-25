@@ -44,28 +44,39 @@ const openSiteMenu = async (page: Page): Promise<Locator> => {
 test.describe("navigation menu mobile layout", () => {
   test.skip(({ isMobile }) => !isMobile, "Mobile-only navigation menu coverage");
 
-  test("opens as an inline full-width region with only tappable rows", async ({ page }) => {
+  test("opens as a floating region with only tappable rows", async ({ page }) => {
     // Arrange
     await page.setViewportSize({ width: 390, height: 844 });
     await openFixturePage(page);
+    const fixtureArticle = page.locator("article").first();
+    const topBar = page.locator(".top-utility-bar");
+    const articleBoxBeforeOpen = await requireBoundingBox(
+      fixtureArticle,
+      "Fixture article before open",
+    );
+    const topBarBoxBeforeOpen = await requireBoundingBox(topBar, "Top utility bar before open");
 
     // Act
     const panel = await openSiteMenu(page);
     const trigger = page.getByRole("button", { name: "Close site menu" });
-    const topBar = page.locator(".top-utility-bar");
     const rowTypes = await panel
       .locator(".utility-menu-list > *")
       .evaluateAll((elements) => elements.map((element) => element.tagName.toLowerCase()));
+    const articleBoxAfterOpen = await requireBoundingBox(
+      fixtureArticle,
+      "Fixture article after open",
+    );
+    const topBarBoxAfterOpen = await requireBoundingBox(topBar, "Top utility bar after open");
     const triggerBox = await requireBoundingBox(trigger, "Site menu trigger");
-    const topBarBox = await requireBoundingBox(topBar, "Top utility bar");
     const panelBox = await requireBoundingBox(panel, "Site menu panel");
+    const viewportWidth = page.viewportSize()?.width ?? 390;
 
     // Assert
     expect(rowTypes).toEqual(["a", "a", "a", "button"]);
     expect(panelBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height - 4);
-    expect(panelBox.x).toBeGreaterThanOrEqual(topBarBox.x);
-    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(topBarBox.x + topBarBox.width + 1);
-    expect(panelBox.width).toBeGreaterThan(topBarBox.width - 20);
+    expect(Math.abs(topBarBoxAfterOpen.height - topBarBoxBeforeOpen.height)).toBeLessThanOrEqual(1);
+    expect(Math.abs(articleBoxAfterOpen.y - articleBoxBeforeOpen.y)).toBeLessThanOrEqual(1);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(viewportWidth + 1);
   });
 
   test("keeps the flat row stack readable without horizontal overflow on narrow screens", async ({
@@ -141,24 +152,41 @@ test.describe("navigation menu mobile layout", () => {
 test.describe("navigation menu desktop layout", () => {
   test.skip(({ isMobile }) => isMobile, "Desktop-only navigation menu coverage");
 
-  test("opens as the same inline region below the top bar on desktop", async ({ page }) => {
+  test("opens as the same floating region below the top bar on desktop", async ({ page }) => {
     // Arrange
     await page.setViewportSize({ width: 1100, height: 900 });
     await openFixturePage(page);
+    const fixtureArticle = page.locator("article").first();
+    const topBar = page.locator(".top-utility-bar");
+    const articleBoxBeforeOpen = await requireBoundingBox(
+      fixtureArticle,
+      "Desktop fixture article before open",
+    );
+    const topBarBoxBeforeOpen = await requireBoundingBox(
+      topBar,
+      "Desktop top utility bar before open",
+    );
 
     // Act
     const panel = await openSiteMenu(page);
     const trigger = page.getByRole("button", { name: "Close site menu" });
-    const topBar = page.locator(".top-utility-bar");
+    const articleBoxAfterOpen = await requireBoundingBox(
+      fixtureArticle,
+      "Desktop fixture article after open",
+    );
+    const topBarBoxAfterOpen = await requireBoundingBox(
+      topBar,
+      "Desktop top utility bar after open",
+    );
     const triggerBox = await requireBoundingBox(trigger, "Desktop site menu trigger");
     const panelBox = await requireBoundingBox(panel, "Desktop site menu panel");
-    const topBarBox = await requireBoundingBox(topBar, "Desktop top utility bar");
+    const viewportWidth = page.viewportSize()?.width ?? 1100;
 
     // Assert
     expect(panelBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height - 4);
-    expect(panelBox.x).toBeGreaterThanOrEqual(topBarBox.x);
-    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(topBarBox.x + topBarBox.width + 1);
-    expect(panelBox.width).toBeGreaterThan(topBarBox.width - 20);
+    expect(Math.abs(topBarBoxAfterOpen.height - topBarBoxBeforeOpen.height)).toBeLessThanOrEqual(1);
+    expect(Math.abs(articleBoxAfterOpen.y - articleBoxBeforeOpen.y)).toBeLessThanOrEqual(1);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(viewportWidth + 1);
   });
 
   test("closes and restores focus after selecting the analytics row on desktop", async ({
