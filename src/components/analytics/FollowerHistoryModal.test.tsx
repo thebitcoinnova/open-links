@@ -24,6 +24,24 @@ test("resolveFollowerHistoryModalAriaLabel uses the entry label when available",
   );
 });
 
+test("resolveFollowerHistoryModalAriaLabel reflects member history entries", () => {
+  assert.equal(
+    resolveFollowerHistoryModalAriaLabel({
+      audienceKind: "members",
+      csvPath: "/history/x.csv",
+      canonicalUrl: "https://x.com/i/communities/1871996451812769951",
+      handle: "1871996451812769951",
+      label: "PARANOID BITCOIN ANARCHISTS",
+      latestAudienceCount: 785,
+      latestAudienceCountRaw: "785 Members",
+      latestObservedAt: "2026-03-11T00:00:00Z",
+      linkId: "x-community",
+      platform: "x",
+    }),
+    "PARANOID BITCOIN ANARCHISTS member history",
+  );
+});
+
 test("resolveFollowerHistoryModalAriaLabel falls back to Platform", () => {
   assert.equal(resolveFollowerHistoryModalAriaLabel(undefined), "Platform follower history");
 });

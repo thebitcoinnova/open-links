@@ -13,6 +13,11 @@ test("resolves supported URL handles", () => {
     { url: "https://github.com/pRizz", extractorId: "github", handle: "prizz" },
     { url: "https://x.com/pryszkie", extractorId: "x", handle: "pryszkie" },
     {
+      url: "https://x.com/i/communities/1871996451812769951",
+      extractorId: "x",
+      handle: "1871996451812769951",
+    },
+    {
       url: "https://www.linkedin.com/in/peter-ryszkiewicz/",
       extractorId: "linkedin",
       handle: "peter-ryszkiewicz",
@@ -158,4 +163,15 @@ test("prefers manual metadata handle over URL-derived handle", () => {
   assert.equal(resolved.source, "metadata");
   assert.equal(resolved.handle, "mymanualhandle");
   assert.equal(resolved.displayHandle, "@mymanualhandle");
+});
+
+test("hides X community ids from handle display text", () => {
+  const resolved = resolveLinkHandle({
+    url: "https://x.com/i/communities/1871996451812769951",
+    icon: "x",
+  });
+
+  assert.equal(resolved.source, "url");
+  assert.equal(resolved.handle, "1871996451812769951");
+  assert.equal(resolved.displayHandle, undefined);
 });

@@ -75,6 +75,7 @@ test("supported social profile detection supports the expanded platform set but 
   const substackProfileUrl = "https://peterryszkiewicz.substack.com/";
   const substackCustomDomainUrl = "https://peter.ryszkiewicz.us/";
   const xProfileUrl = "https://x.com/pryszkie";
+  const xCommunityUrl = "https://x.com/i/communities/1871996451812769951";
   const facebookProfileUrl = "https://www.facebook.com/peter.ryszkiewicz";
   const facebookPeopleProfileUrl =
     "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/";
@@ -96,6 +97,7 @@ test("supported social profile detection supports the expanded platform set but 
     metadataHandle: "@peterryszkiewicz",
   });
   const xProfile = resolveSupportedSocialProfile({ url: xProfileUrl });
+  const xCommunity = resolveSupportedSocialProfile({ url: xCommunityUrl, icon: "x" });
   const facebookProfile = resolveSupportedSocialProfile({ url: facebookProfileUrl });
   const facebookPeopleProfile = resolveSupportedSocialProfile({ url: facebookPeopleProfileUrl });
   const unsupportedLinkedinPage = resolveSupportedSocialProfile({ url: linkedinFeedUrl });
@@ -152,6 +154,7 @@ test("supported social profile detection supports the expanded platform set but 
     handle: "pryszkie",
     expectedFields: ["profileImage"],
   });
+  assert.equal(xCommunity, null);
   assert.deepEqual(facebookProfile, {
     platform: "facebook",
     handle: "peter.ryszkiewicz",

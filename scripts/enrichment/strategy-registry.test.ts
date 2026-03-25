@@ -42,6 +42,27 @@ test("resolves the x public strategy and keeps the legacy adapter aligned", () =
   assert.equal(target.acceptHeader, strategy.source.acceptHeader);
 });
 
+test("resolves X communities to the direct public community strategy", () => {
+  // Arrange
+  const strategy = resolvePublicEnrichmentStrategy({
+    url: "https://x.com/i/communities/1871996451812769951",
+    icon: "x",
+  });
+  const target = resolvePublicAugmentationTarget({
+    url: "https://x.com/i/communities/1871996451812769951",
+    icon: "x",
+  });
+
+  // Assert
+  assert.equal(strategy.id, "x-public-community");
+  assert.equal(strategy.branch, "public_augmented");
+  assert.equal(strategy.sourceKind, "html");
+  assert.equal(strategy.source.sourceUrl, "https://x.com/i/communities/1871996451812769951");
+  assert.ok(target);
+  assert.equal(target.id, "x-public-community");
+  assert.equal(target.sourceUrl, strategy.source.sourceUrl);
+});
+
 test("resolves the medium and substack public strategies with their rewritten source urls", () => {
   // Arrange
   const medium = resolvePublicEnrichmentStrategy({
@@ -114,6 +135,7 @@ test("lists the current public, authenticated, and default direct strategies", (
     "public-direct-html",
     "rumble-public-profile",
     "substack-public-profile",
+    "x-public-community",
     "x-public-oembed",
     "youtube-public-profile",
   ]);

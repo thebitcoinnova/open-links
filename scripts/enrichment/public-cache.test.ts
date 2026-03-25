@@ -756,6 +756,35 @@ test("preserves X audience metrics when oEmbed refresh metadata does not include
   assert.equal(merged.sourceLabel, "x.com");
 });
 
+test("preserves X community member counts when page refresh metadata does not include them", () => {
+  // Arrange
+  const merged = mergePublicCacheMetadataForTarget({
+    targetId: "x-public-community",
+    previous: {
+      title: "PARANOID BITCOIN ANARCHISTS",
+      description:
+        "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+      image:
+        "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+      membersCount: 785,
+      membersCountRaw: "785 Members",
+    },
+    next: {
+      title: "PARANOID BITCOIN ANARCHISTS",
+      description:
+        "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+      image:
+        "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+      sourceLabel: "x.com",
+    },
+  });
+
+  // Assert
+  assert.equal(merged.membersCount, 785);
+  assert.equal(merged.membersCountRaw, "785 Members");
+  assert.equal(merged.sourceLabel, "x.com");
+});
+
 test("preserves Primal audience metrics when profile refresh metadata does not include them", () => {
   // Arrange
   const merged = mergePublicCacheMetadataForTarget({

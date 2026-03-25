@@ -19,7 +19,7 @@ export const parseAudienceCount = (rawValue: string | undefined): number | undef
     return undefined;
   }
 
-  const match = trimmed.match(/([0-9][0-9.,\s]*)([KMB])?/i);
+  const match = trimmed.match(/([0-9][0-9.,\s]*)([KMB])?(?=\s|$)/i);
   if (!match) {
     return undefined;
   }

@@ -97,6 +97,25 @@ const xRichLink = {
   },
 } as const satisfies OpenLink;
 
+const xCommunityRichLink = {
+  id: "x-community",
+  label: "PARANOID BITCOIN ANARCHISTS",
+  url: "https://x.com/i/communities/1871996451812769951",
+  type: "rich",
+  icon: "x",
+  description: "Bitcoin community",
+  metadata: {
+    title: "PARANOID BITCOIN ANARCHISTS",
+    description:
+      "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+    sourceLabel: "x.com",
+    image:
+      "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+    membersCount: 785,
+    membersCountRaw: "785 Members",
+  },
+} as const satisfies OpenLink;
+
 const primalRichLink = {
   id: "primal",
   label: "Primal",
@@ -343,6 +362,34 @@ test("x rich cards surface best-effort public audience metrics without changing 
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["1.4K Followers", "648 Following"],
   );
+});
+
+test("x community rich cards show member counts without a synthetic handle row", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, xCommunityRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "preview");
+  assert.equal(
+    viewModel.leadImageUrl,
+    "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+  );
+  assert.equal(viewModel.title, "PARANOID BITCOIN ANARCHISTS");
+  assert.equal(
+    viewModel.description,
+    "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+  );
+  assert.deepEqual(
+    viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
+    ["metric:785 Members"],
+  );
+  assert.equal(viewModel.footerSourceLabel, "x.com");
+  assert.equal(viewModel.profilePreview.enabled, false);
+  assert.deepEqual(
+    viewModel.socialProfile.metrics.map((metric) => metric.displayText),
+    ["785 Members"],
+  );
+  assert.equal(viewModel.socialProfile.handleDisplay, undefined);
 });
 
 test("primal rich cards surface public audience metrics in the shared profile header row", () => {

@@ -298,6 +298,32 @@ const toPathSegments = (pathname: string): string[] =>
 
 const toLowerTrimmed = (value: string): string => value.trim().toLowerCase();
 
+const isXCommunitySegments = (segments: string[]): boolean => {
+  const first = toLowerTrimmed(segments[0] ?? "");
+  const second = toLowerTrimmed(segments[1] ?? "");
+  const maybeCommunityId = toLowerTrimmed(segments[2] ?? "");
+
+  return first === "i" && second === "communities" && /^\d{5,30}$/.test(maybeCommunityId);
+};
+
+export const isXCommunityUrl = (input: ResolveHandleFromUrlInput): boolean => {
+  if (!input.url || input.url.trim().length === 0) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(input.url);
+    const host = normalizeHost(parsed.hostname);
+    if (!X_HOSTS.has(host)) {
+      return false;
+    }
+
+    return isXCommunitySegments(toPathSegments(parsed.pathname));
+  } catch {
+    return false;
+  }
+};
+
 export const normalizeHandle = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
     return undefined;
@@ -369,6 +395,10 @@ const resolveX = (segments: string[]): HandleResolution => {
   const candidate = segments[0];
   if (!candidate) {
     return supportedWithoutHandle("x", "missing_handle_segment");
+  }
+
+  if (isXCommunitySegments(segments)) {
+    return resolved("x", toLowerTrimmed(segments[2] ?? ""));
   }
 
   const normalizedCandidate = toLowerTrimmed(candidate.replace(/^@+/, ""));
@@ -738,11 +768,12 @@ export const resolveHandleFromUrl = (input: ResolveHandleFromUrlInput): HandleRe
 export const resolveLinkHandle = (input: ResolveLinkHandleInput): ResolvedLinkHandle => {
   const metadataHandle = normalizeHandle(input.metadataHandle);
   const resolution = resolveHandleFromUrl(input);
+  const hideDisplayHandle = resolution.extractorId === "x" && isXCommunityUrl(input);
 
   if (metadataHandle) {
     return {
       handle: metadataHandle,
-      displayHandle: `@${metadataHandle}`,
+      displayHandle: hideDisplayHandle ? undefined : `@${metadataHandle}`,
       source: "metadata",
       resolution,
     };
@@ -751,7 +782,7 @@ export const resolveLinkHandle = (input: ResolveLinkHandleInput): ResolvedLinkHa
   if (resolution.handle) {
     return {
       handle: resolution.handle,
-      displayHandle: `@${resolution.handle}`,
+      displayHandle: hideDisplayHandle ? undefined : `@${resolution.handle}`,
       source: "url",
       resolution,
     };
