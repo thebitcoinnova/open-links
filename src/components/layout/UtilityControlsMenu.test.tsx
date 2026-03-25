@@ -1,52 +1,79 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  createUtilityControlsMenuCloseAutoFocusHandler,
-  resolveUtilityControlsMenuNavigationBadgeLabel,
-  resolveUtilityControlsMenuOpenChange,
+  resolveUtilityControlsMenuRows,
+  resolveUtilityControlsMenuThemeActionLabel,
   resolveUtilityControlsMenuTriggerAriaLabel,
 } from "./UtilityControlsMenu.helpers";
 
 test("utility controls menu trigger label reflects the next toggle action", () => {
-  assert.equal(
-    resolveUtilityControlsMenuTriggerAriaLabel(false, "controls menu"),
-    "Open controls menu",
-  );
-  assert.equal(
-    resolveUtilityControlsMenuTriggerAriaLabel(true, "controls menu"),
-    "Close controls menu",
-  );
+  // Arrange
+  const closedLabel = resolveUtilityControlsMenuTriggerAriaLabel(false, "controls menu");
+  const openLabel = resolveUtilityControlsMenuTriggerAriaLabel(true, "controls menu");
+
+  // Act
+  const labels = [closedLabel, openLabel];
+
+  // Assert
+  assert.deepEqual(labels, ["Open controls menu", "Close controls menu"]);
 });
 
-test("utility controls menu open-change handler tracks open and close transitions", () => {
-  const openStates: boolean[] = [];
+test("utility controls menu theme action label reflects the next mode", () => {
+  // Arrange
+  const darkModeLabel = resolveUtilityControlsMenuThemeActionLabel("dark");
+  const lightModeLabel = resolveUtilityControlsMenuThemeActionLabel("light");
 
-  resolveUtilityControlsMenuOpenChange(true, (nextOpen) => {
-    openStates.push(nextOpen);
-  });
-  resolveUtilityControlsMenuOpenChange(false, (nextOpen) => {
-    openStates.push(nextOpen);
-  });
+  // Act
+  const labels = [darkModeLabel, lightModeLabel];
 
-  assert.deepEqual(openStates, [true, false]);
+  // Assert
+  assert.deepEqual(labels, ["Switch to light mode", "Switch to dark mode"]);
 });
 
-test("utility controls menu close autofocus restores focus to the trigger", () => {
-  let focused = false;
-  const event = new Event("close", { cancelable: true });
-  const handleCloseAutoFocus = createUtilityControlsMenuCloseAutoFocusHandler(() => ({
-    focus: () => {
-      focused = true;
-    },
+test("utility controls menu rows stay in flat order and mark the active destination", () => {
+  // Arrange
+  const rows = resolveUtilityControlsMenuRows({
+    activeNavigationItem: "analytics",
+    analyticsHref: "/analytics",
+    analyticsLabel: "Analytics",
+    canToggleMode: true,
+    homeHref: "/",
+    homeLabel: "Home",
+    mode: "dark",
+    testingGalleryHref: "/spark/tip-cards",
+    testingGalleryLabel: "Tip card sparks",
+  });
+
+  // Act
+  const orderedRows = rows.map((row) => ({
+    isCurrent: row.isCurrent ?? false,
+    key: row.key,
+    kind: row.kind,
+    label: row.label,
   }));
 
-  handleCloseAutoFocus(event);
-
-  assert.equal(event.defaultPrevented, true);
-  assert.equal(focused, true);
+  // Assert
+  assert.deepEqual(orderedRows, [
+    { isCurrent: false, key: "home", kind: "link", label: "Home" },
+    { isCurrent: true, key: "analytics", kind: "link", label: "Analytics" },
+    { isCurrent: false, key: "testing-gallery", kind: "link", label: "Tip card sparks" },
+    { isCurrent: false, key: "theme", kind: "button", label: "Switch to light mode" },
+  ]);
 });
 
-test("utility controls menu navigation badge reflects the active destination", () => {
-  assert.equal(resolveUtilityControlsMenuNavigationBadgeLabel(true), "Current");
-  assert.equal(resolveUtilityControlsMenuNavigationBadgeLabel(false), "Open");
+test("utility controls menu omits unavailable rows", () => {
+  // Arrange
+  const rows = resolveUtilityControlsMenuRows({
+    analyticsHref: undefined,
+    canToggleMode: false,
+    homeHref: "/",
+    mode: "light",
+    testingGalleryHref: undefined,
+  });
+
+  // Act
+  const rowKeys = rows.map((row) => row.key);
+
+  // Assert
+  assert.deepEqual(rowKeys, ["home"]);
 });

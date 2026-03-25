@@ -63,7 +63,8 @@
 
 :root[data-theme^="sleek"] .utility-pill,
 :root[data-theme^="sleek"] .theme-toggle,
-:root[data-theme^="sleek"] .utility-menu-badge {
+:root[data-theme^="sleek"] .utility-menu-link,
+:root[data-theme^="sleek"] .utility-menu-action {
   border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent 10%);
   background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-panel) 10%);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset;
@@ -82,22 +83,6 @@
     color-mix(in srgb, var(--surface-bg) 54%, black 46%);
 }
 
-:root[data-theme^="sleek"] .utility-menu-drawer {
-  border-color: color-mix(in srgb, var(--border-subtle) 72%, transparent 28%);
-  background: color-mix(in srgb, var(--surface-panel) 97%, var(--surface-pill) 3%);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent) inset, 0 22px 44px
-    color-mix(in srgb, var(--surface-bg) 58%, black 42%);
-}
-
-:root[data-theme^="sleek"] .utility-menu-card {
-  background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-panel) 10%);
-}
-
-:root[data-theme^="sleek"] .utility-menu-meta-item {
-  border-color: color-mix(in srgb, var(--border-subtle) 82%, transparent 18%);
-  background: color-mix(in srgb, var(--surface-pill) 82%, var(--surface-panel) 18%);
-}
-
 :root[data-theme^="sleek"] .profile-header {
   border: none;
   background: transparent;
@@ -113,7 +98,9 @@
 }
 
 :root[data-theme^="sleek"] .non-payment-card-frame:hover,
-:root[data-theme^="sleek"] .theme-toggle:hover {
+:root[data-theme^="sleek"] .theme-toggle:hover,
+:root[data-theme^="sleek"] .utility-menu-link:hover,
+:root[data-theme^="sleek"] .utility-menu-action:hover {
   transform: none;
   border-color: color-mix(in srgb, var(--border-strong) 60%, transparent 40%);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent), 0 14px 30px
@@ -127,7 +114,9 @@
 
 :root[data-theme^="sleek"] .non-payment-card-frame:has(> .simple-link-card:active),
 :root[data-theme^="sleek"] .non-payment-card-frame:has(> .rich-link-card:active),
-:root[data-theme^="sleek"] .theme-toggle:active {
+:root[data-theme^="sleek"] .theme-toggle:active,
+:root[data-theme^="sleek"] .utility-menu-link:active,
+:root[data-theme^="sleek"] .utility-menu-action:active {
   transform: none;
   background: color-mix(in srgb, var(--surface-card) 86%, var(--accent) 14%);
 }
@@ -137,7 +126,9 @@
 }
 
 :root[data-theme^="sleek"] .non-payment-card-frame:focus-within,
-:root[data-theme^="sleek"] .theme-toggle:focus-visible {
+:root[data-theme^="sleek"] .theme-toggle:focus-visible,
+:root[data-theme^="sleek"] .utility-menu-link:focus-visible,
+:root[data-theme^="sleek"] .utility-menu-action:focus-visible {
   border-color: var(--accent-strong);
   box-shadow: var(--shadow-focus), 0 12px 26px color-mix(in srgb, var(--surface-bg) 58%, black 42%);
 }

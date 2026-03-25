@@ -73,7 +73,7 @@ import {
   resolveInitialMode,
   resolveModePolicy,
 } from "../lib/theme/mode-controller";
-import { getThemeDefinition, resolveThemeSelection } from "../lib/theme/theme-registry";
+import { resolveThemeSelection } from "../lib/theme/theme-registry";
 import { ACTION_TOAST_OPTIONS, registerActionToastClient } from "../lib/ui/action-toast";
 import {
   resolveAnalyticsNavigationVisible,
@@ -84,11 +84,7 @@ import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
 import { resolvePublicPageView } from "../lib/ui/public-page-view";
-import {
-  buildRichCardViewModel,
-  resolveRichCardVariant,
-  resolveRichRenderMode,
-} from "../lib/ui/rich-card-policy";
+import { buildRichCardViewModel, resolveRichCardVariant } from "../lib/ui/rich-card-policy";
 import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
 import {
   PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL,
@@ -99,11 +95,9 @@ const content = loadContent();
 const composition = resolveComposition(content.site);
 const layout = resolveLayoutPreferences(content.site);
 const footerPreferences = resolveFooterPreferences(content.site);
-const richRenderMode = resolveRichRenderMode(content.site);
 const modePolicy = resolveModePolicy(content.site);
 const brandIconOptions = resolveBrandIconOptions(content.site);
 const themeSelection = resolveThemeSelection(content.site);
-const themeDefinition = getThemeDefinition(themeSelection.active);
 const typography = resolveTypographyPreferences({
   site: content.site,
   activeTheme: themeSelection.active,
@@ -699,13 +693,10 @@ export default function RouteIndex() {
         <UtilityControlsMenu
           activeNavigationItem={activeNavigationItem()}
           analyticsHref={analyticsPageHref()}
-          analyticsSupportingText="Audience insights"
-          cardModeLabel={richRenderMode === "simple" ? "Simple only" : "Rich + simple"}
           homeHref={homePageHref}
           isOffline={isOffline()}
           label="site menu"
           mode={mode()}
-          modePolicyLabel={modePolicy === "static-dark" ? "Dark mode fixed" : "Light mode fixed"}
           onAnalyticsSelect={(event) => {
             event.preventDefault();
             setActiveView("analytics");
@@ -715,11 +706,8 @@ export default function RouteIndex() {
             setActiveView("links");
           }}
           onToggleMode={canToggle() ? handleModeToggle : undefined}
-          panelLabel="Site menu"
           testingGalleryHref={paymentCardEffectGalleryMenuHref}
           testingGalleryLabel={PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL}
-          themeIntensity={themeDefinition?.intensity ?? "mild"}
-          themeLabel={themeDefinition?.label ?? themeSelection.active}
         />
       </TopUtilityBar>
 

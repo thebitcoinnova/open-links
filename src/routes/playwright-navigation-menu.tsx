@@ -3,6 +3,7 @@ import TopUtilityBar from "../components/layout/TopUtilityBar";
 import UtilityControlsMenu from "../components/layout/UtilityControlsMenu";
 import type { SiteData } from "../lib/content/load-content";
 import {
+  type UiMode,
   applyThemeState,
   applyTypographyState,
   resolveModePolicy,
@@ -85,11 +86,12 @@ const PlaywrightNavigationMenuRoute = () => {
   const [activeNavigationItem, setActiveNavigationItem] = createSignal<"analytics" | "home">(
     "analytics",
   );
+  const [mode, setMode] = createSignal<UiMode>("dark");
 
   createEffect(() => {
     applyThemeState({
       themeId: themeSelection.active,
-      mode: "dark",
+      mode: mode(),
       policy: modePolicy,
       density: layout.density,
     });
@@ -123,13 +125,10 @@ const PlaywrightNavigationMenuRoute = () => {
         <UtilityControlsMenu
           activeNavigationItem={activeNavigationItem()}
           analyticsHref="#analytics"
-          analyticsSupportingText="Audience insights"
-          cardModeLabel="Rich + simple"
           homeHref="#home"
           isOffline
           label="site menu"
-          mode="dark"
-          modePolicyLabel="Dark mode fixed"
+          mode={mode()}
           onAnalyticsSelect={(event) => {
             event.preventDefault();
             setActiveNavigationItem("analytics");
@@ -138,11 +137,11 @@ const PlaywrightNavigationMenuRoute = () => {
             event.preventDefault();
             setActiveNavigationItem("home");
           }}
-          panelLabel="Site menu"
+          onToggleMode={() => {
+            setMode((currentMode) => (currentMode === "dark" ? "light" : "dark"));
+          }}
           testingGalleryHref="#testing-gallery"
           testingGalleryLabel="Tip card sparks"
-          themeIntensity={themeSelection.activeDefinition.intensity}
-          themeLabel={themeSelection.activeDefinition.label}
         />
       </TopUtilityBar>
 
@@ -150,8 +149,8 @@ const PlaywrightNavigationMenuRoute = () => {
         <article style={panelStyle}>
           <h2 style={titleStyle}>Fixture notes</h2>
           <p style={descriptionStyle}>
-            Use this route to verify that stacked menu rows stay readable on narrow screens and that
-            selecting a navigation destination closes the drawer.
+            Use this route to verify that the flat row list stays readable on narrow screens and
+            that selecting a row closes the inline menu.
           </p>
         </article>
       </section>

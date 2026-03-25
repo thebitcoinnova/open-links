@@ -61,87 +61,13 @@
     gap: var(--space-1);
   }
 
-  body .utility-menu-button {
-    width: var(--page-target-size);
-    min-width: var(--page-target-size);
-    padding: 0;
-  }
-
-  body .utility-menu-button--desktop {
-    display: none;
-  }
-
-  body .utility-menu-button--mobile {
-    display: inline-grid;
-  }
-
   body .utility-menu-panel {
-    min-width: min(18rem, calc(100vw - var(--space-5)));
-    max-width: calc(100vw - var(--space-5));
+    padding: 0.28rem;
   }
 
-  body .utility-menu-drawer {
-    width: min(100%, 22rem);
-    max-width: min(22rem, calc(100vw - var(--space-4)));
-    min-height: min(30rem, calc(100dvh - var(--space-8)));
-    max-height: calc(100dvh - var(--space-6));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  body .utility-menu-drawer-positioner {
-    padding: var(--space-3);
-    align-items: flex-start;
-  }
-
-  body .utility-menu-shell {
-    gap: var(--space-2);
-  }
-
-  body .utility-menu-card {
-    padding: 0.55rem;
-  }
-
-  body .utility-menu-row--split {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  body .utility-menu-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-2);
-  }
-
-  body .utility-menu-header-copy {
-    width: 100%;
-  }
-
-  body .utility-menu-header-actions {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-  }
-
-  body .utility-menu-header-actions .theme-toggle,
-  body .utility-menu-header-actions .utility-menu-badge,
-  body .utility-menu-close-button {
-    width: 100%;
-  }
-
-  body .utility-menu-meta {
-    gap: 0.4rem;
-  }
-
-  body .utility-menu-row .theme-toggle,
-  body .utility-menu-badge {
-    width: 100%;
-  }
-
-  body .utility-menu-badge {
-    justify-content: center;
+  body .utility-menu-link,
+  body .utility-menu-action {
+    padding-inline: 0.74rem;
   }
 
   body .non-payment-card-frame[data-card-variant="simple"] {
@@ -271,14 +197,6 @@
 }
 
 @media (min-width: 761px) {
-  body .utility-menu-button--desktop {
-    display: inline-grid;
-  }
-
-  body .utility-menu-button--mobile {
-    display: none;
-  }
-
   body .profile-action-bar-mobile {
     display: none;
   }

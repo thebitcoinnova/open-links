@@ -10,26 +10,6 @@ const openFixturePage = async (page: Page) => {
   ).toBeVisible();
 };
 
-const openMobileDrawer = async (page: Page): Promise<Locator> => {
-  const trigger = page.getByRole("button", { name: "Open site menu" });
-  await expect(trigger).toBeVisible();
-  await trigger.click();
-
-  const drawer = page.getByRole("dialog", { name: "Site menu" });
-  await expect(drawer).toBeVisible();
-  return drawer;
-};
-
-const openDesktopPopover = async (page: Page): Promise<Locator> => {
-  const trigger = page.locator(".utility-menu-button--desktop");
-  await expect(trigger).toBeVisible();
-  await trigger.click();
-
-  const panel = page.locator(".utility-menu-panel");
-  await expect(panel).toBeVisible();
-  return panel;
-};
-
 const requireBoundingBox = async (
   locator: Locator,
   description: string,
@@ -42,15 +22,6 @@ const requireBoundingBox = async (
   return maybeBoundingBox;
 };
 
-const readScrollMetrics = async (
-  locator: Locator,
-): Promise<{ clientHeight: number; scrollHeight: number; scrollTop: number }> =>
-  locator.evaluate((element) => ({
-    clientHeight: element.clientHeight,
-    scrollHeight: element.scrollHeight,
-    scrollTop: element.scrollTop,
-  }));
-
 const readWidthMetrics = async (
   locator: Locator,
 ): Promise<{ clientWidth: number; scrollWidth: number }> =>
@@ -59,140 +30,150 @@ const readWidthMetrics = async (
     scrollWidth: element.scrollWidth,
   }));
 
-test.describe("navigation menu mobile drawer", () => {
-  test.skip(({ isMobile }) => !isMobile, "Mobile-only navigation drawer coverage");
+const openSiteMenu = async (page: Page): Promise<Locator> => {
+  const trigger = page.getByRole("button", { name: "Open site menu" });
+  await expect(trigger).toBeVisible();
+  await trigger.click();
 
-  test("keeps stacked navigation rows readable on narrow screens", async ({ page }) => {
+  const panel = page.getByRole("region", { name: "Site menu" });
+  await expect(panel).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close site menu" })).toBeVisible();
+  return panel;
+};
+
+test.describe("navigation menu mobile layout", () => {
+  test.skip(({ isMobile }) => !isMobile, "Mobile-only navigation menu coverage");
+
+  test("opens as an inline full-width region with only tappable rows", async ({ page }) => {
+    // Arrange
+    await page.setViewportSize({ width: 390, height: 844 });
     await openFixturePage(page);
 
-    const drawer = await openMobileDrawer(page);
-    const homeLink = drawer.getByRole("link", { name: /Home Links and profile/u });
-    const homeCopy = homeLink.locator(".utility-menu-row-copy");
-    const homeBadge = homeLink.locator(".utility-menu-badge");
+    // Act
+    const panel = await openSiteMenu(page);
+    const trigger = page.getByRole("button", { name: "Close site menu" });
+    const topBar = page.locator(".top-utility-bar");
+    const rowTypes = await panel
+      .locator(".utility-menu-list > *")
+      .evaluateAll((elements) => elements.map((element) => element.tagName.toLowerCase()));
+    const triggerBox = await requireBoundingBox(trigger, "Site menu trigger");
+    const topBarBox = await requireBoundingBox(topBar, "Top utility bar");
+    const panelBox = await requireBoundingBox(panel, "Site menu panel");
 
-    await expect(homeCopy).toBeVisible();
-    await expect(homeBadge).toBeVisible();
-
-    const copyBox = await requireBoundingBox(homeCopy, "Home copy");
-    const badgeBox = await requireBoundingBox(homeBadge, "Home badge");
-    expect(copyBox.width).toBeGreaterThan(120);
-    expect(badgeBox.y).toBeGreaterThan(copyBox.y + copyBox.height - 4);
+    // Assert
+    expect(rowTypes).toEqual(["a", "a", "a", "button"]);
+    expect(panelBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height - 4);
+    expect(panelBox.x).toBeGreaterThanOrEqual(topBarBox.x);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(topBarBox.x + topBarBox.width + 1);
+    expect(panelBox.width).toBeGreaterThan(topBarBox.width - 20);
   });
 
-  test("closes the drawer after selecting a navigation destination", async ({ page }) => {
+  test("keeps the flat row stack readable without horizontal overflow on narrow screens", async ({
+    page,
+  }) => {
+    // Arrange
+    await page.setViewportSize({ width: 320, height: 700 });
     await openFixturePage(page);
 
-    const drawer = await openMobileDrawer(page);
-    const homeLink = drawer.getByRole("link", { name: /Home Links and profile/u });
+    // Act
+    const panel = await openSiteMenu(page);
+    const homeLink = panel.getByRole("link", { name: "Home", exact: true });
+    const analyticsLink = panel.getByRole("link", { name: "Analytics", exact: true });
+    const panelMetrics = await readWidthMetrics(panel);
+    const homeBox = await requireBoundingBox(homeLink, "Home row");
+    const analyticsBox = await requireBoundingBox(analyticsLink, "Analytics row");
+    const panelBox = await requireBoundingBox(panel, "Site menu panel");
 
-    await homeLink.click();
+    // Assert
+    expect(panelMetrics.scrollWidth).toBeLessThanOrEqual(panelMetrics.clientWidth + 1);
+    expect(homeBox.width).toBeGreaterThan(panelBox.width - 24);
+    expect(analyticsBox.width).toBeGreaterThan(panelBox.width - 24);
+  });
 
-    await expect(drawer).toBeHidden();
+  test("closes and restores focus after selecting a navigation row", async ({ page }) => {
+    // Arrange
+    await openFixturePage(page);
+    const panel = await openSiteMenu(page);
+
+    // Act
+    await panel.getByRole("link", { name: "Home", exact: true }).click();
+
+    // Assert
+    await expect(page.getByRole("region", { name: "Site menu" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
   });
 
-  test("stacks drawer header controls without horizontal overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
+  test("keeps the final row reachable on short mobile viewports", async ({ page }) => {
+    // Arrange
+    await page.setViewportSize({ width: 390, height: 520 });
     await openFixturePage(page);
 
-    const drawer = await openMobileDrawer(page);
-    const header = drawer.locator(".utility-menu-header");
-    const headerCopy = header.locator(".utility-menu-header-copy");
-    const headerActions = header.locator(".utility-menu-header-actions");
-    const closeButton = drawer.getByRole("button", { name: "Close Site menu" });
+    // Act
+    const panel = await openSiteMenu(page);
+    const themeButton = panel.getByRole("button", { name: "Switch to light mode", exact: true });
+    const viewportHeight = page.viewportSize()?.height ?? 520;
+    const themeButtonBox = await requireBoundingBox(themeButton, "Theme action row");
 
-    await expect(headerCopy).toBeVisible();
-    await expect(closeButton).toBeVisible();
-
-    const headerFlexDirection = await header.evaluate(
-      (element) => getComputedStyle(element).flexDirection,
-    );
-    expect(headerFlexDirection).toBe("column");
-
-    const drawerBox = await requireBoundingBox(drawer, "Drawer");
-    const headerCopyBox = await requireBoundingBox(headerCopy, "Drawer header copy");
-    const headerActionsBox = await requireBoundingBox(headerActions, "Drawer header actions");
-    const closeButtonBox = await requireBoundingBox(closeButton, "Drawer close button");
-    const drawerWidthMetrics = await readWidthMetrics(drawer);
-
-    expect(headerCopyBox.width).toBeGreaterThan(drawerBox.width - 48);
-    expect(headerActionsBox.y).toBeGreaterThan(headerCopyBox.y + headerCopyBox.height - 4);
-    expect(closeButtonBox.x + closeButtonBox.width).toBeLessThanOrEqual(
-      drawerBox.x + drawerBox.width + 1,
-    );
-    expect(drawerWidthMetrics.scrollWidth).toBeLessThanOrEqual(drawerWidthMetrics.clientWidth + 1);
+    // Assert
+    expect(themeButtonBox.y + themeButtonBox.height).toBeLessThanOrEqual(viewportHeight);
   });
 
-  test("keeps the final menu items reachable on short mobile viewports", async ({ page }) => {
-    await page.setViewportSize({ width: 412, height: 520 });
+  test("toggles the theme row and closes the menu", async ({ page }) => {
+    // Arrange
     await openFixturePage(page);
+    const panel = await openSiteMenu(page);
 
-    const drawer = await openMobileDrawer(page);
-    const paymentGalleryLink = drawer.getByRole("link", {
-      name: /Tip card sparks Visual effect sandbox/u,
-    });
-    const viewportHeight = page.viewportSize()?.height ?? 520;
+    // Act
+    await panel.getByRole("button", { name: "Switch to light mode", exact: true }).click();
 
-    const initialDrawerMetrics = await readScrollMetrics(drawer);
-    const drawerBox = await requireBoundingBox(drawer, "Drawer");
-    expect(drawerBox.y + drawerBox.height).toBeLessThanOrEqual(viewportHeight);
-    const paymentGalleryBoxBeforeScroll = await requireBoundingBox(
-      paymentGalleryLink,
-      "Payment gallery link",
-    );
+    // Assert
+    await expect(page.getByRole("region", { name: "Site menu" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
+    await expect.poll(() => page.locator("html").getAttribute("data-mode")).toBe("light");
 
-    if (initialDrawerMetrics.scrollHeight > initialDrawerMetrics.clientHeight) {
-      expect(
-        paymentGalleryBoxBeforeScroll.y + paymentGalleryBoxBeforeScroll.height,
-      ).toBeGreaterThan(drawerBox.y + drawerBox.height);
-
-      await drawer.evaluate((element) => {
-        element.scrollTop = element.scrollHeight;
-      });
-      await expect.poll(async () => (await readScrollMetrics(drawer)).scrollTop).toBeGreaterThan(0);
-
-      const paymentGalleryBoxAfterScroll = await requireBoundingBox(
-        paymentGalleryLink,
-        "Payment gallery link after scrolling",
-      );
-      expect(
-        paymentGalleryBoxAfterScroll.y + paymentGalleryBoxAfterScroll.height,
-      ).toBeLessThanOrEqual(drawerBox.y + drawerBox.height);
-      return;
-    }
-
-    expect(
-      paymentGalleryBoxBeforeScroll.y + paymentGalleryBoxBeforeScroll.height,
-    ).toBeLessThanOrEqual(drawerBox.y + drawerBox.height);
+    const reopenedPanel = await openSiteMenu(page);
+    await expect(
+      reopenedPanel.getByRole("button", { name: "Switch to dark mode", exact: true }),
+    ).toBeVisible();
   });
 });
 
-test.describe("navigation menu desktop popover", () => {
-  test.skip(({ isMobile }) => isMobile, "Desktop-only navigation popover coverage");
+test.describe("navigation menu desktop layout", () => {
+  test.skip(({ isMobile }) => isMobile, "Desktop-only navigation menu coverage");
 
-  test("keeps popover header and navigation rows aligned on desktop widths", async ({ page }) => {
-    await page.setViewportSize({ width: 1024, height: 900 });
+  test("opens as the same inline region below the top bar on desktop", async ({ page }) => {
+    // Arrange
+    await page.setViewportSize({ width: 1100, height: 900 });
     await openFixturePage(page);
 
-    await expect(page.locator(".utility-menu-button--mobile")).toBeHidden();
-    const panel = await openDesktopPopover(page);
-    const viewportWidth = page.viewportSize()?.width ?? 1024;
-    const headerCopy = panel.locator(".utility-menu-header-copy");
-    const headerActions = panel.locator(".utility-menu-header-actions");
-    const homeLink = panel.getByRole("link", { name: /Home Links and profile/u });
-    const homeCopy = homeLink.locator(".utility-menu-row-copy");
-    const homeBadge = homeLink.locator(".utility-menu-badge");
+    // Act
+    const panel = await openSiteMenu(page);
+    const trigger = page.getByRole("button", { name: "Close site menu" });
+    const topBar = page.locator(".top-utility-bar");
+    const triggerBox = await requireBoundingBox(trigger, "Desktop site menu trigger");
+    const panelBox = await requireBoundingBox(panel, "Desktop site menu panel");
+    const topBarBox = await requireBoundingBox(topBar, "Desktop top utility bar");
 
-    const panelBox = await requireBoundingBox(panel, "Desktop popover");
-    const headerCopyBox = await requireBoundingBox(headerCopy, "Desktop header copy");
-    const headerActionsBox = await requireBoundingBox(headerActions, "Desktop header actions");
-    const homeCopyBox = await requireBoundingBox(homeCopy, "Desktop home copy");
-    const homeBadgeBox = await requireBoundingBox(homeBadge, "Desktop home badge");
+    // Assert
+    expect(panelBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height - 4);
+    expect(panelBox.x).toBeGreaterThanOrEqual(topBarBox.x);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(topBarBox.x + topBarBox.width + 1);
+    expect(panelBox.width).toBeGreaterThan(topBarBox.width - 20);
+  });
 
-    expect(panelBox.x).toBeGreaterThanOrEqual(0);
-    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(viewportWidth);
-    expect(headerCopyBox.width).toBeGreaterThan(140);
-    expect(Math.abs(headerActionsBox.y - headerCopyBox.y)).toBeLessThan(8);
-    expect(homeBadgeBox.x).toBeGreaterThan(homeCopyBox.x + homeCopyBox.width - 4);
+  test("closes and restores focus after selecting the analytics row on desktop", async ({
+    page,
+  }) => {
+    // Arrange
+    await page.setViewportSize({ width: 1100, height: 900 });
+    await openFixturePage(page);
+    const panel = await openSiteMenu(page);
+
+    // Act
+    await panel.getByRole("link", { name: "Analytics", exact: true }).click();
+
+    // Assert
+    await expect(page.getByRole("region", { name: "Site menu" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
   });
 });
