@@ -12,7 +12,7 @@ Record recurring repo-specific workflow facts in `AGENTS.md` under `## Repo-Loca
 
 - Standards repository: `https://github.com/bright-builds-llc/coding-and-architecture-requirements`
 - Version pin: `main`
-- Exact commit: `188e2776ac3d4f8dc87d8d2836ea4ed6bd6a5284`
+- Exact commit: `1615f58f3934dbb7cebf1e6058ee989569b33ad9`
 - Canonical entrypoint: `https://github.com/bright-builds-llc/coding-and-architecture-requirements/blob/main/standards/index.md`
 - Audit manifest path: `coding-and-architecture-requirements.audit.md`
 
@@ -21,6 +21,7 @@ Record recurring repo-specific workflow facts in `AGENTS.md` under `## Repo-Loca
 - Prefer functional core / imperative shell for business logic.
 - Prefer early returns over nesting.
 - Prefix internal nullable or optional names with `maybe`, including functions, bindings, and internal fields, and use `MaybeX` aliases only when they materially clarify a repeated nullable surface.
+- In user-facing, app-like websites and apps, expose version, commit, and build provenance in a normal visible product surface, show `Unavailable` for missing fields, and provide a copyable summary with the exact commit when available.
 - Treat functions over roughly 200 lines as refactor triggers.
 - Do not hide substantial foreign-language logic inside strings; keep orchestration thin, move scripts, queries, and similar artifacts into repo-owned or language-aware files, and make checked-in scripts rerunnable when sensible with breadcrumb-heavy logs and summaries in a repo-defined gitignored location.
 - Treat files over roughly 628 lines as refactor triggers.
