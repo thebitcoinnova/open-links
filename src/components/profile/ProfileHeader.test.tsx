@@ -298,3 +298,53 @@ test("profile header keeps long profile copy and contact values in wrap-safe ele
   assert.ok(contactValue);
   assert.equal(contactValue.props.children, longContactValue);
 });
+
+test("profile header uses page-oriented copy for organization entities", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    onProfileQrOpen: () => undefined,
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Independent software studio",
+      entityType: "organization",
+      headline: "Building durable tools",
+      name: "Bright Builds LLC",
+    },
+  }) as RenderedNode;
+
+  // Act
+  const section = firstElementWithClass(tree, "profile-header");
+  const desktopBar = firstElementWithClass(tree, "profile-action-bar-desktop");
+  const buttons = collectElements(desktopBar?.props.children as RenderedNode).filter(
+    (element) => element.type === "button",
+  );
+
+  // Assert
+  assert.equal(section?.props["aria-label"], "Page");
+  assert.equal(buttons[0]?.props["aria-label"], "Show page QR code");
+  assert.equal(buttons[1]?.props["aria-label"], "Share page");
+  assert.equal(buttons[2]?.props["aria-label"], "Copy page link");
+});
+
+test("profile header hides pronouns for organization entities", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Independent software studio",
+      entityType: "organization",
+      headline: "Building durable tools",
+      name: "Bright Builds LLC",
+      pronouns: "they/them",
+    },
+    richness: "rich",
+  }) as RenderedNode;
+
+  // Act
+  const metaList = firstElementWithClass(tree, "profile-meta");
+  const renderedText = JSON.stringify(metaList?.props.children ?? null);
+
+  // Assert
+  assert.ok(metaList);
+  assert.doesNotMatch(renderedText, /Pronouns:/u);
+});

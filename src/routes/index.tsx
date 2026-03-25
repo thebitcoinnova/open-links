@@ -45,6 +45,7 @@ import {
   parseFollowerHistoryCsv,
   parseFollowerHistoryIndex,
 } from "../lib/analytics/follower-history";
+import { resolveEntityAnalyticsLabel, resolveEntityPageLabel } from "../lib/content/entity-type";
 import { loadContent, resolveGeneratedContentImageUrl } from "../lib/content/load-content";
 import { resolveBrandIconOptions } from "../lib/icons/brand-icon-options";
 import {
@@ -602,10 +603,13 @@ export default function RouteIndex() {
     <>
       {profileHeader()}
 
-      <section class="analytics-page" aria-label="Follower analytics">
+      <section
+        class="analytics-page"
+        aria-label={resolveEntityAnalyticsLabel(content.profile.entityType)}
+      >
         <div class="analytics-page-header">
           <div>
-            <h2>Follower Analytics</h2>
+            <h2>{resolveEntityAnalyticsLabel(content.profile.entityType)}</h2>
             <p>
               Showing {describeFollowerHistoryRange(analyticsRange())} of public follower history.
             </p>
@@ -678,7 +682,7 @@ export default function RouteIndex() {
 
   return (
     <main
-      aria-label="OpenLinks profile and links"
+      aria-label={`OpenLinks ${resolveEntityPageLabel(content.profile.entityType).toLowerCase()} and links`}
       class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
       style={
         { "--profile-avatar-scale": String(layout.profileAvatarScale) } as Record<string, string>

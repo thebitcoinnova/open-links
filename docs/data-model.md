@@ -43,7 +43,7 @@ changes here can propagate into that downstream project as well.
 
 | File | Purpose | Required for build | Notes |
 |------|---------|--------------------|-------|
-| `data/profile.json` | Identity, bio, profile metadata | Yes | Primary hero/profile content |
+| `data/profile.json` | Primary entity identity and bio metadata | Yes | Stable compatibility path for the primary hero/entity record |
 | `data/links.json` | All rendered links + groups + order | Yes | Supports `simple`, `rich`, and `payment` cards |
 | `data/site.json` | Theme, UI preferences, quality policy | Yes | Also controls quality and deploy-relevant behavior |
 
@@ -51,12 +51,24 @@ changes here can propagate into that downstream project as well.
 
 Schema: `schema/profile.schema.json`
 
+`data/profile.json` remains the stable upstream contract path for backward
+compatibility, but the record itself can represent the primary public entity for
+the site, including a person or an organization.
+
 ### Required fields
 
 - `name` (string)
 - `headline` (string)
 - `avatar` (URI string)
 - `bio` (string, max 500)
+
+### Entity typing
+
+- `entityType` (optional string enum: `person` or `organization`)
+- When omitted, runtime behavior defaults to `person` for backward
+  compatibility.
+- Keep using `data/profile.json` even for organizations; the path is stable
+  across validation, Studio, and downstream consumers.
 
 ### Avatar materialization behavior
 
@@ -72,8 +84,9 @@ Schema: `schema/profile.schema.json`
 
 ### Common optional fields
 
+- `entityType`
 - `location`
-- `pronouns`
+- `pronouns` (primarily relevant for `entityType: "person"`)
 - `status`
 - `profileLinks` (array of `{ label, url }`)
 - `contact` (object, supports `email`, `website`, plus extensions)
@@ -89,6 +102,7 @@ If you are using the recommended AI or Studio paths, treat the JSON examples bel
   "headline": "What you do",
   "avatar": "https://example.com/avatar.jpg",
   "bio": "One to two sentences about your work and interests.",
+  "entityType": "person",
   "location": "City, Country",
   "profileLinks": [
     {
@@ -101,6 +115,22 @@ If you are using the recommended AI or Studio paths, treat the JSON examples bel
   },
   "custom": {
     "profileVariant": "default"
+  }
+}
+```
+
+### Organization example
+
+```json
+{
+  "name": "Bright Builds LLC",
+  "headline": "Product engineering for ambitious teams",
+  "avatar": "https://example.com/logo.png",
+  "bio": "We design and ship software systems, automation, and product platforms.",
+  "entityType": "organization",
+  "contact": {
+    "website": "https://example.com",
+    "email": "hello@example.com"
   }
 }
 ```

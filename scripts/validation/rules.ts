@@ -36,6 +36,7 @@ const PROFILE_KEYS = new Set([
   "headline",
   "avatar",
   "bio",
+  "entityType",
   "location",
   "pronouns",
   "status",
