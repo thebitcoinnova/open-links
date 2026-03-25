@@ -8,6 +8,7 @@ import {
   assertArtifactMatchesTarget,
   assertDeployArtifactIntegrity,
   classifyArtifactPath,
+  collectArtifactFiles,
   diffDeployManifests,
   getInvalidationPaths,
 } from "./deploy-artifact";
@@ -16,8 +17,31 @@ test("classifyArtifactPath marks hashed build assets immutable", () => {
   // Arrange / Act / Assert
   assert.equal(classifyArtifactPath("assets/app-abcdef12.js"), "immutable");
   assert.equal(classifyArtifactPath("about/index.html"), "html");
+  assert.equal(classifyArtifactPath("build-info.json"), "metadata");
   assert.equal(classifyArtifactPath("robots.txt"), "metadata");
   assert.equal(classifyArtifactPath("badges/openlinks.svg"), "asset");
+});
+
+test("collectArtifactFiles preserves build-info.json as metadata", async () => {
+  // Arrange
+  const artifactDir = await mkdtemp(path.join(tmpdir(), "open-links-deploy-artifact-"));
+
+  try {
+    await writeFile(path.join(artifactDir, "index.html"), "<!doctype html>", "utf8");
+    await writeFile(
+      path.join(artifactDir, "build-info.json"),
+      '{"builtAtIso":"2026-03-25T14:05:00.000Z","commitSha":"","commitShortSha":"","commitUrl":""}\n',
+      "utf8",
+    );
+
+    // Act
+    const files = await collectArtifactFiles(artifactDir);
+
+    // Assert
+    assert.equal(files.find((file) => file.path === "build-info.json")?.cacheClass, "metadata");
+  } finally {
+    await rm(artifactDir, { force: true, recursive: true });
+  }
 });
 
 test("diffDeployManifests identifies uploads and deletes", () => {

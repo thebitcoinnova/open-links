@@ -61,7 +61,7 @@
     "footer": {
       "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.",
       "ctaLabel": "Create Your OpenLinks",
-      "showLastUpdated": true,
+      "showBuildInfo": true,
       "prompt": {
         "enabled": true,
         "title": "Create your own OpenLinks site",

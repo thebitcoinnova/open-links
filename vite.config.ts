@@ -1,8 +1,9 @@
-import { defineConfig } from "vite";
+import { type Plugin, defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import solidPlugin from "vite-plugin-solid";
 import profileData from "./data/profile.json";
 import siteData from "./data/site.json";
+import { resolveBuildInfo, serializeBuildInfo } from "./scripts/lib/build-info";
 import { resolveStableBuildTimestamp } from "./scripts/lib/build-timestamp";
 import {
   deploymentConfig,
@@ -35,6 +36,10 @@ const repositoryDocsRef = resolveGitHubRepositoryRef(process.env.OPENLINKS_REPOS
 const deployTargetRaw = process.env.OPENLINKS_DEPLOY_TARGET?.trim();
 const baseModeRaw = process.env.PAGES_BASE_MODE?.trim().toLowerCase();
 const explicitBasePath = process.env.BASE_PATH?.trim();
+const buildInfo = resolveBuildInfo({
+  buildTimestamp: process.env.OPENLINKS_BUILD_TIMESTAMP,
+  repositorySlug,
+});
 
 const normalizeBasePath = (value: string): string => {
   const prefixed = value.startsWith("/") ? value : `/${value}`;
@@ -65,7 +70,7 @@ const resolveBasePath = (): string => {
 const base = resolveBasePath();
 const deployTarget = deployTargetRaw ? parseDeployTarget(deployTargetRaw) : null;
 const buildTimestamp = resolveStableBuildTimestamp({
-  explicitValue: process.env.OPENLINKS_BUILD_TIMESTAMP,
+  explicitValue: buildInfo.builtAtIso,
 });
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -136,6 +141,18 @@ const replaceSeoTokens = (html: string): string => {
   return output;
 };
 
+const buildInfoAssetPlugin = (outputBuildInfo: typeof buildInfo): Plugin => ({
+  apply: "build",
+  generateBundle() {
+    this.emitFile({
+      fileName: "build-info.json",
+      source: serializeBuildInfo(outputBuildInfo),
+      type: "asset",
+    });
+  },
+  name: "openlinks-build-info",
+});
+
 export default defineConfig({
   plugins: [
     {
@@ -144,6 +161,7 @@ export default defineConfig({
         return replaceSeoTokens(html);
       },
     },
+    buildInfoAssetPlugin(buildInfo),
     solidPlugin(),
     VitePWA({
       injectRegister: false,
@@ -195,7 +213,10 @@ export default defineConfig({
     target: "esnext",
   },
   define: {
-    __OPENLINKS_BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp),
+    __OPENLINKS_BUILD_INFO__: JSON.stringify({
+      ...buildInfo,
+      builtAtIso: buildTimestamp,
+    }),
     __OPENLINKS_CANONICAL_ORIGIN__: JSON.stringify(
       deployTarget
         ? deploymentConfig.primaryCanonicalOrigin

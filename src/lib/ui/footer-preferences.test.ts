@@ -29,7 +29,7 @@ test("resolveFooterPreferences returns the expanded footer defaults", () => {
   );
   assert.equal(preferences.ctaLabel, "Create Your OpenLinks");
   assert.equal(preferences.ctaUrl, buildGitHubRepositoryUrl());
-  assert.equal(preferences.showLastUpdated, true);
+  assert.equal(preferences.showBuildInfo, true);
   assert.equal(preferences.prompt.enabled, true);
   assert.equal(preferences.prompt.title, "Create your own OpenLinks site");
   assert.equal(
@@ -51,6 +51,7 @@ test("resolveFooterPreferences trims custom prompt fields and respects explicit 
         text: "  Follow the custom bootstrap flow exactly.  ",
         title: "  Bootstrap this fork  ",
       },
+      showBuildInfo: false,
       showLastUpdated: false,
     }),
   );
@@ -58,11 +59,24 @@ test("resolveFooterPreferences trims custom prompt fields and respects explicit 
   assert.equal(preferences.description, "Custom footer copy");
   assert.equal(preferences.ctaLabel, "Launch my fork");
   assert.equal(preferences.ctaUrl, "https://example.com/openlinks");
-  assert.equal(preferences.showLastUpdated, false);
+  assert.equal(preferences.showBuildInfo, false);
   assert.deepEqual(preferences.prompt, {
     enabled: false,
     explanation: "Paste this into your coding agent of choice.",
     text: "Follow the custom bootstrap flow exactly.",
     title: "Bootstrap this fork",
   });
+});
+
+test("resolveFooterPreferences keeps showBuildInfo precedence over the legacy showLastUpdated flag", () => {
+  // Arrange / Act
+  const preferences = resolveFooterPreferences(
+    createSite({
+      showBuildInfo: false,
+      showLastUpdated: true,
+    }),
+  );
+
+  // Assert
+  assert.equal(preferences.showBuildInfo, false);
 });

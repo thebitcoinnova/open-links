@@ -662,7 +662,8 @@ Main presentation controls include:
 - `footer.prompt.title`: optional prompt section title
 - `footer.prompt.explanation`: optional short explanation above the prompt text
 - `footer.prompt.text`: optional copyable bootstrap prompt text (defaults to the canonical generated bootstrap prompt with absolute GitHub doc URLs for this repository)
-- `footer.showLastUpdated`: toggle subtle build-time UTC timestamp display
+- `footer.showBuildInfo`: toggle the footer build-provenance row (`Built <UTC>` plus an optional commit link)
+- `footer.showLastUpdated`: legacy alias for `footer.showBuildInfo`
 
 Maintainers should keep the markdown OpenClaw prompt snippets synchronized with `bun run openclaw:prompts:sync` and verify drift with `bun run openclaw:prompts:check`.
 
@@ -777,7 +778,8 @@ Footer content and CTA are configurable from `data/site.json`.
 - `prompt.title`: heading shown above the bootstrap prompt.
 - `prompt.explanation`: short helper copy explaining how to use the prompt.
 - `prompt.text`: copyable prompt text shown in the footer compact field for single-line values, with a preformatted fallback for multiline values (when omitted, runtime uses repo-aware absolute GitHub doc URLs).
-- `showLastUpdated`: controls rendering of a subtle build-time UTC "Last updated" line.
+- `showBuildInfo`: controls rendering of the footer build-provenance row (`Built <UTC>` plus an optional `Commit <shortSha>` link).
+- `showLastUpdated`: legacy alias for `showBuildInfo`. `showBuildInfo` wins when both are present.
 
 Example:
 
@@ -792,11 +794,14 @@ Example:
         "title": "Create your own OpenLinks site",
         "explanation": "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository."
       },
-      "showLastUpdated": true
+      "showBuildInfo": true
     }
   }
 }
 ```
+
+The footer build-provenance row and `/build-info.json` expose the same runtime fields:
+`builtAtIso`, `commitSha`, `commitShortSha`, and `commitUrl`.
 
 #### `ui.typography`
 

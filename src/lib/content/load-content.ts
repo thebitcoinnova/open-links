@@ -236,6 +236,7 @@ export interface SiteFooterConfig {
   description?: string;
   ctaLabel?: string;
   ctaUrl?: string;
+  showBuildInfo?: boolean;
   showLastUpdated?: boolean;
   prompt?: SiteFooterPromptConfig;
 }

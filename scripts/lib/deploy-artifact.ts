@@ -196,6 +196,7 @@ export function classifyArtifactPath(relativePath: string): DeployCacheClass {
 
   if (
     relativePath === ".nojekyll" ||
+    relativePath === "build-info.json" ||
     relativePath === "deploy-manifest.json" ||
     relativePath === "favicon.ico" ||
     relativePath === "robots.txt" ||

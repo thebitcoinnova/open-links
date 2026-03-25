@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { BuildInfo } from "../../lib/build-info";
 import { buildOpenClawBootstrapPrompt } from "../../lib/openclaw-prompts";
 import { clearActionToastClient, registerActionToastClient } from "../../lib/ui/action-toast";
 import type { ResolvedFooterPreferences } from "../../lib/ui/footer-preferences";
@@ -99,15 +100,25 @@ const createPreferences = (
     title: "Create your own OpenLinks site",
     ...promptOverrides,
   },
-  showLastUpdated: true,
+  showBuildInfo: true,
+  ...overrides,
+});
+
+const createBuildInfo = (overrides: Partial<BuildInfo> = {}): BuildInfo => ({
+  builtAtIso: "2026-03-25T14:05:00.000Z",
+  commitSha: "0123456789abcdef0123456789abcdef01234567",
+  commitShortSha: "0123456",
+  commitUrl: "https://github.com/pRizz/open-links/commit/0123456789abcdef0123456789abcdef01234567",
   ...overrides,
 });
 
 test("site footer renders a compact single-line bootstrap prompt row by default", () => {
   // Arrange
   const preferences = createPreferences();
+  const buildInfo = createBuildInfo();
   const tree = SiteFooter({
     preferences,
+    buildInfo,
   }) as RenderedNode;
 
   // Act
@@ -164,6 +175,7 @@ test("site footer copy action emits a toast when bootstrap prompt copy succeeds"
   const preferences = createPreferences();
   const tree = SiteFooter({
     preferences,
+    buildInfo: createBuildInfo(),
   }) as RenderedNode;
 
   // Act
@@ -184,8 +196,10 @@ test("site footer copy action emits a toast when bootstrap prompt copy succeeds"
 test("site footer falls back to the multiline prompt block when prompt text contains line breaks", () => {
   // Arrange
   const preferences = createPreferences({}, { text: "Line one\nLine two" });
+  const buildInfo = createBuildInfo();
   const tree = SiteFooter({
     preferences,
+    buildInfo,
   }) as RenderedNode;
 
   // Act
@@ -201,4 +215,51 @@ test("site footer falls back to the multiline prompt block when prompt text cont
   assert.ok(promptText);
   assert.equal(promptInput, undefined);
   assert.equal(promptCode?.props.children, preferences.prompt.text);
+});
+
+test("site footer renders build metadata in utc with a commit link", () => {
+  // Arrange
+  const tree = SiteFooter({
+    buildInfo: createBuildInfo(),
+    preferences: createPreferences(),
+  }) as RenderedNode;
+
+  // Act
+  const buildTime = collectElements(tree).find(
+    (element) => element.type === "time" && element.props.datetime === "2026-03-25T14:05:00.000Z",
+  );
+  const commitLink = collectElements(tree).find(
+    (element) =>
+      element.type === "a" &&
+      element.props.href ===
+        "https://github.com/pRizz/open-links/commit/0123456789abcdef0123456789abcdef01234567",
+  );
+
+  // Assert
+  assert.equal(buildTime?.props.children, "2026-03-25 14:05 UTC");
+  assert.deepEqual(commitLink?.props.children, ["Commit ", "0123456"]);
+  assert.equal(commitLink?.props.title, "Commit: 0123456789abcdef0123456789abcdef01234567");
+});
+
+test("site footer omits the commit link when commit metadata is incomplete", () => {
+  // Arrange
+  const tree = SiteFooter({
+    buildInfo: createBuildInfo({
+      commitSha: "",
+      commitShortSha: "",
+      commitUrl: "",
+    }),
+    preferences: createPreferences(),
+  }) as RenderedNode;
+
+  // Act
+  const commitLink = collectElements(tree).find(
+    (element) =>
+      element.type === "a" &&
+      typeof element.props.href === "string" &&
+      `${element.props.href}`.includes("/commit/"),
+  );
+
+  // Assert
+  assert.equal(commitLink, undefined);
 });

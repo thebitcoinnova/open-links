@@ -13,7 +13,7 @@ export interface ResolvedFooterPreferences {
   ctaLabel: string;
   ctaUrl: string;
   prompt: ResolvedFooterPromptPreferences;
-  showLastUpdated: boolean;
+  showBuildInfo: boolean;
 }
 
 const DEFAULT_DESCRIPTION =
@@ -68,6 +68,11 @@ export const resolveFooterPreferences = (site: SiteData): ResolvedFooterPreferen
     ctaLabel: toOptionalTrimmed(footer?.ctaLabel) ?? DEFAULT_CTA_LABEL,
     ctaUrl: toOptionalTrimmed(footer?.ctaUrl) ?? resolveDefaultCtaUrl(),
     prompt: resolveFooterPromptPreferences(site),
-    showLastUpdated: typeof footer?.showLastUpdated === "boolean" ? footer.showLastUpdated : true,
+    showBuildInfo:
+      typeof footer?.showBuildInfo === "boolean"
+        ? footer.showBuildInfo
+        : typeof footer?.showLastUpdated === "boolean"
+          ? footer.showLastUpdated
+          : true,
   };
 };

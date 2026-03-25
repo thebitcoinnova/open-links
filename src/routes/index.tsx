@@ -718,7 +718,7 @@ export default function RouteIndex() {
 
       <SiteFooter
         preferences={footerPreferences}
-        buildTimestampIso={__OPENLINKS_BUILD_TIMESTAMP__}
+        buildInfo={__OPENLINKS_BUILD_INFO__}
         logoPath="branding/openlinks-logo/openlinks-logo.svg"
         logoAlt="OpenLinks logo"
       />

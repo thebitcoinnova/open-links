@@ -163,7 +163,8 @@ Coverage:
 - `footer.prompt.title`
 - `footer.prompt.explanation`
 - `footer.prompt.text`
-- `footer.showLastUpdated`
+- `footer.showBuildInfo`
+- `footer.showLastUpdated` (legacy alias)
 
 ## 8) `site.ui.typography` (`site-ui-typography`)
 

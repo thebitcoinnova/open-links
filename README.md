@@ -328,6 +328,11 @@ High-signal deployment checks:
 4. `Verify Production Deployment` is green when AWS deploy is enabled.
 5. If deploy fails, review workflow summaries and diagnostics artifacts.
 
+Live build provenance surfaces:
+
+- Footer row: `Built <UTC>` plus `Commit <shortSha>` when commit metadata is available.
+- JSON endpoint: `/build-info.json` with `builtAtIso`, `commitSha`, `commitShortSha`, and `commitUrl`.
+
 ## Validation and Build Commands
 
 ### Core commands

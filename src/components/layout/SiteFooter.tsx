@@ -1,19 +1,15 @@
 import { Show, createMemo } from "solid-js";
+import { type BuildInfo, formatBuildTimestampUtc } from "../../lib/build-info";
 import { copyToClipboard } from "../../lib/share/copy-to-clipboard";
 import { showActionToast } from "../../lib/ui/action-toast";
 import type { ResolvedFooterPreferences } from "../../lib/ui/footer-preferences";
 
 export interface SiteFooterProps {
   preferences: ResolvedFooterPreferences;
-  buildTimestampIso?: string;
+  buildInfo?: BuildInfo;
   logoPath?: string;
   logoAlt?: string;
 }
-
-const localFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
 
 const toAssetUrl = (assetPath: string): string => {
   const base = import.meta.env.BASE_URL || "/";
@@ -36,22 +32,34 @@ export const SiteFooter = (props: SiteFooterProps) => {
 
   const buildDate = createMemo(() => {
     if (
-      typeof props.buildTimestampIso !== "string" ||
-      props.buildTimestampIso.trim().length === 0
+      typeof props.buildInfo?.builtAtIso !== "string" ||
+      props.buildInfo.builtAtIso.trim().length === 0
     ) {
       return null;
     }
 
-    const parsed = new Date(props.buildTimestampIso);
+    const parsed = new Date(props.buildInfo.builtAtIso);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   });
 
   const formattedBuildDate = createMemo(() => {
-    const parsed = buildDate();
-    if (!parsed) {
+    const builtAtIso = props.buildInfo?.builtAtIso;
+    if (typeof builtAtIso !== "string" || builtAtIso.trim().length === 0) {
       return "";
     }
-    return localFormatter.format(parsed);
+
+    return formatBuildTimestampUtc(builtAtIso);
+  });
+  const showCommitLink = createMemo(
+    () =>
+      typeof props.buildInfo?.commitShortSha === "string" &&
+      props.buildInfo.commitShortSha.trim().length > 0 &&
+      typeof props.buildInfo?.commitUrl === "string" &&
+      props.buildInfo.commitUrl.trim().length > 0,
+  );
+  const commitTitle = createMemo(() => {
+    const commitSha = props.buildInfo?.commitSha?.trim();
+    return commitSha ? `Commit: ${commitSha}` : undefined;
   });
 
   const showPrompt = createMemo(() => prompt().enabled && prompt().text.trim().length > 0);
@@ -143,9 +151,22 @@ export const SiteFooter = (props: SiteFooterProps) => {
         </div>
       </Show>
 
-      <Show when={props.preferences.showLastUpdated && buildDate()}>
+      <Show when={props.preferences.showBuildInfo && buildDate()}>
         <p class="site-footer-meta">
-          Last updated <time datetime={buildDate()?.toISOString()}>{formattedBuildDate()}</time>
+          <span title={props.buildInfo?.builtAtIso}>
+            Built <time datetime={buildDate()?.toISOString()}>{formattedBuildDate()}</time>
+          </span>
+          <Show when={showCommitLink()}>
+            {" · "}
+            <a
+              href={props.buildInfo?.commitUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+              title={commitTitle()}
+            >
+              Commit {props.buildInfo?.commitShortSha}
+            </a>
+          </Show>
         </p>
       </Show>
     </footer>
