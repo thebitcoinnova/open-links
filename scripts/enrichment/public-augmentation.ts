@@ -285,14 +285,23 @@ const detectMediumPlaceholderSignals = (xml: string): string[] => {
 
 const detectXPlaceholderSignals = (input: {
   title?: string;
+  description?: string;
   providerName?: string;
   html?: string;
 }): string[] => {
-  const combined = [input.title ?? "", input.providerName ?? "", input.html ?? ""]
+  const combined = [
+    input.title ?? "",
+    input.description ?? "",
+    input.providerName ?? "",
+    input.html ?? "",
+  ]
     .join("\n")
     .toLowerCase();
   return detectPlaceholderSignals(combined, [
-    { label: "oembed_unavailable", pattern: /not found|no status found|invalid url/i },
+    {
+      label: "oembed_unavailable",
+      pattern: /not found|no status found|invalid url|nothing to see here|doesn['’]?t exist/i,
+    },
     { label: "sign_in_prompt", pattern: /sign in|log in/i },
     {
       label: "challenge_page",
@@ -694,9 +703,11 @@ const parseXCommunityPage = (sourceUrl: string, html: string): PublicAugmentatio
   const title = safeTrim(parsed.metadata.title);
   const description = safeTrim(parsed.metadata.description);
   const image = safeTrim(parsed.metadata.image);
+  const hasCompleteCommunityMetadata = Boolean(title && description && image);
   const placeholderSignals = detectXPlaceholderSignals({
     title,
-    html,
+    description,
+    html: hasCompleteCommunityMetadata ? undefined : html,
   });
 
   if (placeholderSignals.length > 0) {

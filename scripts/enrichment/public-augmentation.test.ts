@@ -162,6 +162,50 @@ test("parses X community crawler metadata into a banner-first payload", () => {
   assert.equal(parsed?.metadata.sourceLabel, "x.com");
 });
 
+test("accepts X community metadata when the page also includes incidental sign-in copy", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://x.com/i/communities/1871996451812769951",
+    icon: "x",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="PARANOID BITCOIN ANARCHISTS" />
+        <meta
+          property="og:description"
+          content="Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns"
+        />
+        <meta
+          property="og:image"
+          content="https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig"
+        />
+      </head>
+      <body>
+        <nav>
+          <a href="/i/flow/login">Sign in</a>
+          <a href="/i/flow/signup">Log in</a>
+        </nav>
+      </body>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "PARANOID BITCOIN ANARCHISTS");
+  assert.equal(
+    parsed?.metadata.description,
+    "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+  );
+  assert.equal(
+    parsed?.metadata.image,
+    "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+  );
+});
+
 test("resolves a Medium public augmentation target that uses the profile feed", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({

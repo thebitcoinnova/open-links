@@ -41,6 +41,14 @@ const xLink = {
   },
 } as const;
 
+const xCommunityLink = {
+  id: "x-community",
+  label: "PARANOID BITCOIN ANARCHISTS",
+  url: "https://x.com/i/communities/1871996451812769951",
+  type: "rich",
+  icon: "x",
+} as const;
+
 const primalLink = {
   id: "primal",
   label: "Primal",
@@ -98,6 +106,26 @@ const createXBaseEntry = (
     sourceLabel: "x.com",
   },
   cacheControl: "must-revalidate, max-age=3153600000",
+});
+
+const createXCommunityBaseEntry = (
+  linkId: string,
+  generatedAt: string,
+  sourceUrl: string,
+): PublicCacheEntry => ({
+  linkId,
+  sourceUrl,
+  capturedAt: generatedAt,
+  updatedAt: generatedAt,
+  metadata: {
+    title: "PARANOID BITCOIN ANARCHISTS",
+    description:
+      "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+    image:
+      "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+    sourceLabel: "x.com",
+  },
+  cacheControl: "no-cache, no-store, must-revalidate",
 });
 
 const createPrimalBaseEntry = (
@@ -493,6 +521,65 @@ test("bootstraps a missing X cache entry and overlays follower, following, and p
     writtenRegistry?.entries.x?.metadata.profileDescription,
     "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
   );
+});
+
+test("bootstraps a missing X community cache entry without requiring a profile image", async () => {
+  // Arrange
+  let bootstrapCalls = 0;
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "x-community",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [xCommunityLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: (_path, registry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(registry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        assert.equal(target.id, "x-public-community");
+        return createXCommunityBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "x-public-community");
+        return captureSuccess(
+          {
+            membersCount: 785,
+            membersCountRaw: "785 Members",
+          },
+          "output/playwright/public-rich-sync/x-community-2026-03-08.json",
+        );
+      },
+      nowIso: () => "2026-03-08T18:11:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.processed, 1);
+  assert.equal(
+    writtenRegistry?.entries["x-community"]?.sourceUrl,
+    "https://x.com/i/communities/1871996451812769951",
+  );
+  assert.equal(
+    writtenRegistry?.entries["x-community"]?.metadata.image,
+    "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+  );
+  assert.equal(writtenRegistry?.entries["x-community"]?.metadata.profileImage, undefined);
+  assert.equal(writtenRegistry?.entries["x-community"]?.metadata.membersCount, 785);
+  assert.equal(writtenRegistry?.entries["x-community"]?.metadata.membersCountRaw, "785 Members");
 });
 
 test("X sync in only-missing mode still refreshes when one audience metric is absent", async () => {

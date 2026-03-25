@@ -528,7 +528,7 @@ During routine `bun run enrich:rich` / `bun run enrich:rich:strict` runs, succes
 
 If a direct/public fetch fails but a committed public cache entry already exists, enrichment reuses that stale cached metadata as a warning-level fallback. In `bun run validate:data:strict`, that stale-cache reuse remains non-strict-blocking when the cached metadata is complete and does not require manual fallback; stale cache entries that are incomplete still fail strict validation. No raw public HTML snapshots are committed, and header-only refreshes no longer rewrite tracked cache timestamps.
 
-Built-in public augmentation currently covers Medium (RSS/feed), Rumble (public about-page fetch with avatar/banner separation), Substack (canonical public profile fetch with original source-label preservation), X (oEmbed + avatar), Instagram (public page metadata), and YouTube (public page metadata) without using `authenticatedExtractor`.
+Built-in public augmentation currently covers Medium (RSS/feed), Rumble (public about-page fetch with avatar/banner separation), Substack (canonical public profile fetch with original source-label preservation), X profiles (oEmbed + avatar), X communities (public OG community metadata), Instagram (public page metadata), and YouTube (public page metadata) without using `authenticatedExtractor`.
 
 When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 

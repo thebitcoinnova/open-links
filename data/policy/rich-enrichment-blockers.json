@@ -54,7 +54,7 @@
         "Use manual links[].metadata fields for rich cards.",
         "Prefer built-in public augmentation via npm run enrich:rich:strict so metadata is captured through the committed public cache."
       ],
-      "plannedSupportNote": "Built-in public augmentation is available via the X oEmbed + avatar capture path.",
+      "plannedSupportNote": "Built-in public augmentation is available via the X oEmbed + avatar capture path for profiles and direct public OG community metadata for X community URLs.",
       "docs": ["docs/rich-metadata-fetch-blockers.md", "docs/authenticated-rich-extractors.md"]
     },
     {
