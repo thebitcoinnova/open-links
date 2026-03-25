@@ -31,6 +31,8 @@ export interface PublicCacheMetadata {
   followingCountRaw?: string;
   subscribersCount?: number;
   subscribersCountRaw?: string;
+  membersCount?: number;
+  membersCountRaw?: string;
   sourceLabel?: string;
 }
 
@@ -807,7 +809,8 @@ export const mergePublicCacheMetadataForTarget = (input: {
   const preservesAudienceMetrics =
     input.targetId === "medium-public-feed" ||
     input.targetId === "primal-public-profile" ||
-    input.targetId === "x-public-oembed";
+    input.targetId === "x-public-oembed" ||
+    input.targetId === "x-public-community";
 
   if (!input.previous || !preservesAudienceMetrics) {
     return next;
@@ -827,7 +830,9 @@ export const mergePublicCacheMetadataForTarget = (input: {
           "followingCountRaw",
           "profileDescription",
         ] as const)
-      : (["followersCount", "followersCountRaw", "followingCount", "followingCountRaw"] as const);
+      : input.targetId === "x-public-community"
+        ? (["membersCount", "membersCountRaw"] as const)
+        : (["followersCount", "followersCountRaw", "followingCount", "followingCountRaw"] as const);
 
   for (const field of fieldsToPreserve) {
     if (hasDefinedMetadataValue(mergedRecord[field])) {

@@ -22,6 +22,20 @@ test("resolves an X public augmentation target that uses oEmbed instead of direc
   assert.match(target.sourceUrl, /^https:\/\/publish\.twitter\.com\/oembed\?/);
 });
 
+test("resolves an X community augmentation target that fetches the community page directly", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://x.com/i/communities/1871996451812769951",
+    icon: "x",
+  });
+
+  // Assert
+  assert.ok(target);
+  assert.equal(target.id, "x-public-community");
+  assert.equal(target.sourceUrl, "https://x.com/i/communities/1871996451812769951");
+  assert.equal(target.acceptHeader, undefined);
+});
+
 test("resolves a Primal public augmentation target that fetches the profile page directly", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({
@@ -102,6 +116,50 @@ test("parses X oEmbed metadata into an avatar-first profile payload", () => {
   assert.equal(parsed?.metadata.profileDescription, undefined);
   assert.equal(parsed?.metadata.image, "https://unavatar.io/x/pryszkie");
   assert.equal(parsed?.metadata.profileImage, "https://unavatar.io/x/pryszkie");
+});
+
+test("parses X community crawler metadata into a banner-first payload", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://x.com/i/communities/1871996451812769951",
+    icon: "x",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="PARANOID BITCOIN ANARCHISTS" />
+        <meta
+          property="og:description"
+          content="Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns"
+        />
+        <meta
+          property="og:image"
+          content="https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig"
+        />
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "PARANOID BITCOIN ANARCHISTS");
+  assert.equal(
+    parsed?.metadata.description,
+    "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+  );
+  assert.equal(
+    parsed?.metadata.image,
+    "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+  );
+  assert.equal(
+    parsed?.metadata.ogImage,
+    "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+  );
+  assert.equal(parsed?.metadata.profileImage, undefined);
+  assert.equal(parsed?.metadata.sourceLabel, "x.com");
 });
 
 test("resolves a Medium public augmentation target that uses the profile feed", () => {

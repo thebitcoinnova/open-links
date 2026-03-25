@@ -229,6 +229,50 @@ test("formats X audience metrics from cached public-profile counts", () => {
   ]);
 });
 
+test("formats X community member metrics without a handle row", () => {
+  // Arrange
+  const link = {
+    id: "x-community",
+    label: "PARANOID BITCOIN ANARCHISTS",
+    url: "https://x.com/i/communities/1871996451812769951",
+    type: "rich",
+    icon: "x",
+    metadata: {
+      title: "PARANOID BITCOIN ANARCHISTS",
+      description:
+        "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
+      image:
+        "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
+      sourceLabel: "x.com",
+      membersCount: 785,
+      membersCountRaw: "785 Member",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "x");
+  assert.equal(resolved.displayName, "PARANOID BITCOIN ANARCHISTS");
+  assert.equal(resolved.handle, "1871996451812769951");
+  assert.equal(resolved.handleDisplay, undefined);
+  assert.equal(resolved.usesProfileLayout, false);
+  assert.equal(resolved.profileImageUrl, undefined);
+  assert.equal(resolved.previewImageUrl, link.metadata.image);
+  assert.deepEqual(resolved.metrics, [
+    {
+      kind: "members",
+      label: "Members",
+      count: 785,
+      rawText: "785 Member",
+      parsedCountCompactText: "785",
+      displayLabel: "Member",
+      displayText: "785 Member",
+    },
+  ]);
+});
+
 test("formats Primal audience metrics from cached public-profile counts", () => {
   // Arrange
   const link = {

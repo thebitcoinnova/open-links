@@ -80,6 +80,7 @@ const normalizeRegistry = (raw: AuthenticatedCacheRegistry): AuthenticatedCacheR
         followersCountRaw: entry.metadata.followersCountRaw?.trim(),
         followingCountRaw: entry.metadata.followingCountRaw?.trim(),
         subscribersCountRaw: entry.metadata.subscribersCountRaw?.trim(),
+        membersCountRaw: entry.metadata.membersCountRaw?.trim(),
         sourceLabel: entry.metadata.sourceLabel?.trim(),
       },
       assets: {
@@ -216,6 +217,8 @@ const toEnrichmentMetadata = (entry: AuthenticatedCacheEntry): EnrichmentMetadat
   followingCountRaw: entry.metadata.followingCountRaw,
   subscribersCount: entry.metadata.subscribersCount,
   subscribersCountRaw: entry.metadata.subscribersCountRaw,
+  membersCount: entry.metadata.membersCount,
+  membersCountRaw: entry.metadata.membersCountRaw,
   sourceLabel: entry.metadata.sourceLabel,
 });
 

@@ -43,10 +43,26 @@ const resolveYAxisLabel = (
   mode: FollowerHistoryMode,
 ): string => {
   if (mode === "growth") {
-    return audienceKind === "subscribers" ? "Subscriber change" : "Follower change";
+    if (audienceKind === "subscribers") {
+      return "Subscriber change";
+    }
+
+    if (audienceKind === "members") {
+      return "Member change";
+    }
+
+    return "Follower change";
   }
 
-  return audienceKind === "subscribers" ? "Subscribers" : "Followers";
+  if (audienceKind === "subscribers") {
+    return "Subscribers";
+  }
+
+  if (audienceKind === "members") {
+    return "Members";
+  }
+
+  return "Followers";
 };
 
 export const FollowerHistoryChart = (props: FollowerHistoryChartProps) => {

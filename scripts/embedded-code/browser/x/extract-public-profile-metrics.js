@@ -1,6 +1,7 @@
 (() => {
   const normalize = (value) => value.replace(/\s+/g, " ").trim();
-  const audiencePattern = /\b(?:\d[\d.,]*|\d+(?:\.\d+)?[KMBkmb])\s+(?:followers?|following)\b/i;
+  const audiencePattern =
+    /\b(?:\d[\d.,]*|\d+(?:\.\d+)?[KMBkmb])\s+(?:followers?|following|members?)\b/i;
   const metricTexts = [];
   const seen = new Set();
   const selectors = ["a", "button", "span", "div", "p", "li", "h1", "h2", "h3"];

@@ -97,3 +97,23 @@ test("returns partial X metrics when only one audience count is visible", () => 
   assert.equal(parsed.followingCount, undefined);
   assert.equal(parsed.followingCountRaw, undefined);
 });
+
+test("parses X community member counts from rendered page text", () => {
+  // Arrange
+  const snapshot = {
+    currentUrl: "https://x.com/i/communities/1871996451812769951",
+    title: "PARANOID BITCOIN ANARCHISTS Community / X",
+    bodyText:
+      "PARANOID BITCOIN ANARCHISTS Hold your keys | Run a Node Paranoid 785 Member Join Top Latest Media About Community",
+  };
+
+  // Act
+  const parsed = parseXPublicProfileMetrics(snapshot);
+
+  // Assert
+  assert.equal(parsed.membersCount, 785);
+  assert.equal(parsed.membersCountRaw, "785 Member");
+  assert.equal(parsed.followersCount, undefined);
+  assert.equal(parsed.followingCount, undefined);
+  assert.deepEqual(parsed.placeholderSignals, []);
+});

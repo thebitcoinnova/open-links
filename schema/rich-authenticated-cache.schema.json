@@ -107,6 +107,14 @@
                 "type": "string",
                 "minLength": 1
               },
+              "membersCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "membersCountRaw": {
+                "type": "string",
+                "minLength": 1
+              },
               "sourceLabel": {
                 "type": "string",
                 "minLength": 1

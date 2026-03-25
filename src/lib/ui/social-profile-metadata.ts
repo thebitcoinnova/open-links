@@ -4,9 +4,9 @@ import {
   resolveSupportedSocialProfile,
 } from "../content/social-profile-fields";
 import type { HandleExtractorId } from "../identity/handle-resolver";
-import { resolveLinkHandle } from "../identity/handle-resolver";
+import { isXCommunityUrl, resolveLinkHandle } from "../identity/handle-resolver";
 
-export type SocialAudienceMetricKind = "followers" | "following" | "subscribers";
+export type SocialAudienceMetricKind = "followers" | "following" | "subscribers" | "members";
 
 export interface SocialAudienceMetric {
   kind: SocialAudienceMetricKind;
@@ -143,6 +143,10 @@ const pushMetric = (
 
 export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProfileMetadata => {
   const metadata = link.metadata ?? {};
+  const isXCommunity = isXCommunityUrl({
+    url: link.url,
+    icon: link.icon,
+  });
   const resolvedHandle = resolveLinkHandle({
     metadataHandle: metadata.handle,
     url: link.url,
@@ -189,6 +193,13 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     normalizedMetadata.subscribersCount,
     normalizedMetadata.subscribersCountRaw,
   );
+  pushMetric(
+    metrics,
+    "members",
+    "Members",
+    normalizedMetadata.membersCount,
+    normalizedMetadata.membersCountRaw,
+  );
 
   return {
     platform,
@@ -197,7 +208,9 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     profileDescription,
     handle: resolvedHandle.handle,
     handleDisplay: resolvedHandle.displayHandle,
-    usesProfileLayout: Boolean(supportedProfile || profileImageUrl || metrics.length > 0),
+    usesProfileLayout: Boolean(
+      !isXCommunity && (supportedProfile || profileImageUrl || metrics.length > 0),
+    ),
     hasDistinctPreviewImage: Boolean(
       previewImageUrl && (!profileImageUrl || previewImageUrl !== profileImageUrl),
     ),

@@ -91,15 +91,23 @@ interface MediumPublicTarget extends PublicAugmentationTarget {
   id: "medium-public-feed";
 }
 
-interface XPublicTarget extends PublicAugmentationTarget {
+interface XProfilePublicTarget extends PublicAugmentationTarget {
   id: "x-public-oembed";
+}
+
+interface XCommunityPublicTarget extends PublicAugmentationTarget {
+  id: "x-public-community";
 }
 
 interface PrimalPublicTarget extends PublicAugmentationTarget {
   id: "primal-public-profile";
 }
 
-type SyncablePublicTarget = MediumPublicTarget | PrimalPublicTarget | XPublicTarget;
+type SyncablePublicTarget =
+  | MediumPublicTarget
+  | PrimalPublicTarget
+  | XProfilePublicTarget
+  | XCommunityPublicTarget;
 type SyncablePublicTargetId = SyncablePublicTarget["id"];
 type PublicBrowserAudienceSnapshot = PublicAudienceBrowserSnapshot;
 export type PublicBrowserAudienceMetrics = PublicAudienceMetrics;
@@ -239,13 +247,21 @@ const isPrimalPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is PrimalPublicTarget => target?.id === "primal-public-profile";
 
-const isXPublicTarget = (target: PublicAugmentationTarget | null): target is XPublicTarget =>
-  target?.id === "x-public-oembed";
+const isXProfilePublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is XProfilePublicTarget => target?.id === "x-public-oembed";
+
+const isXCommunityPublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is XCommunityPublicTarget => target?.id === "x-public-community";
 
 const isSyncablePublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is SyncablePublicTarget =>
-  isMediumPublicTarget(target) || isPrimalPublicTarget(target) || isXPublicTarget(target);
+  isMediumPublicTarget(target) ||
+  isPrimalPublicTarget(target) ||
+  isXProfilePublicTarget(target) ||
+  isXCommunityPublicTarget(target);
 
 const hasDefinedAudienceMetric = (value: number | string | undefined): boolean => {
   if (typeof value === "number") {
@@ -277,6 +293,7 @@ interface SyncableTargetBehavior {
   snippet: string;
   parseMetrics: (snapshot: PublicAudienceBrowserSnapshot) => PublicBrowserAudienceMetrics;
   requiresFollowingCount: boolean;
+  requiresMembersCount: boolean;
   requiresProfileDescription: boolean;
 }
 
@@ -286,6 +303,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     snippet: MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseMediumPublicProfileMetrics,
     requiresFollowingCount: false,
+    requiresMembersCount: false,
     requiresProfileDescription: false,
   },
   "primal-public-profile": {
@@ -293,6 +311,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     snippet: PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parsePrimalPublicProfileMetrics,
     requiresFollowingCount: true,
+    requiresMembersCount: false,
     requiresProfileDescription: false,
   },
   "x-public-oembed": {
@@ -300,7 +319,16 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
     requiresFollowingCount: true,
+    requiresMembersCount: false,
     requiresProfileDescription: true,
+  },
+  "x-public-community": {
+    label: "X community",
+    snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseXPublicProfileMetrics,
+    requiresFollowingCount: false,
+    requiresMembersCount: true,
+    requiresProfileDescription: false,
   },
 } as const satisfies Record<SyncablePublicTargetId, SyncableTargetBehavior>;
 
@@ -319,6 +347,13 @@ const hasRequiredAudienceMetrics = (
     hasDefinedAudienceMetric(entry.metadata.followersCount) ||
     hasDefinedAudienceMetric(entry.metadata.followersCountRaw);
 
+  if (behaviorForTarget(targetId).requiresMembersCount) {
+    return (
+      hasDefinedAudienceMetric(entry.metadata.membersCount) ||
+      hasDefinedAudienceMetric(entry.metadata.membersCountRaw)
+    );
+  }
+
   if (!behaviorForTarget(targetId).requiresFollowingCount) {
     return hasFollowers;
   }
@@ -334,43 +369,51 @@ const hasRequiredAudienceMetrics = (
 };
 
 const skipReasonForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresProfileDescription
-    ? "profile_metadata_present"
-    : behaviorForTarget(targetId).requiresFollowingCount
-      ? "audience_present"
-      : "followers_present";
+  behaviorForTarget(targetId).requiresMembersCount
+    ? "members_present"
+    : behaviorForTarget(targetId).requiresProfileDescription
+      ? "profile_metadata_present"
+      : behaviorForTarget(targetId).requiresFollowingCount
+        ? "audience_present"
+        : "followers_present";
 
 const skipMessageForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresProfileDescription
-    ? "followers, following, and profile description already present"
-    : behaviorForTarget(targetId).requiresFollowingCount
-      ? "followers and following already present"
-      : "followers already present";
+  behaviorForTarget(targetId).requiresMembersCount
+    ? "members already present"
+    : behaviorForTarget(targetId).requiresProfileDescription
+      ? "followers, following, and profile description already present"
+      : behaviorForTarget(targetId).requiresFollowingCount
+        ? "followers and following already present"
+        : "followers already present";
 
 const missingMetricsReasonForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresProfileDescription
-    ? "profile_metadata_missing"
-    : behaviorForTarget(targetId).requiresFollowingCount
-      ? "audience_missing"
-      : "followers_missing";
+  behaviorForTarget(targetId).requiresMembersCount
+    ? "members_missing"
+    : behaviorForTarget(targetId).requiresProfileDescription
+      ? "profile_metadata_missing"
+      : behaviorForTarget(targetId).requiresFollowingCount
+        ? "audience_missing"
+        : "followers_missing";
 
 const captureSummaryForTarget = (
   targetId: SyncablePublicTargetId,
   metrics: PublicBrowserAudienceMetrics,
 ): string =>
-  !behaviorForTarget(targetId).requiresFollowingCount
-    ? (metrics.followersCountRaw ?? "followers missing")
-    : behaviorForTarget(targetId).requiresProfileDescription
-      ? `${metrics.followingCountRaw ?? "following missing"} / ${
-          metrics.followersCountRaw ?? "followers missing"
-        } / ${
-          metrics.profileDescription
-            ? "profile description captured"
-            : "profile description missing"
-        }`
-      : `${metrics.followingCountRaw ?? "following missing"} / ${
-          metrics.followersCountRaw ?? "followers missing"
-        }`;
+  behaviorForTarget(targetId).requiresMembersCount
+    ? (metrics.membersCountRaw ?? "members missing")
+    : !behaviorForTarget(targetId).requiresFollowingCount
+      ? (metrics.followersCountRaw ?? "followers missing")
+      : behaviorForTarget(targetId).requiresProfileDescription
+        ? `${metrics.followingCountRaw ?? "following missing"} / ${
+            metrics.followersCountRaw ?? "followers missing"
+          } / ${
+            metrics.profileDescription
+              ? "profile description captured"
+              : "profile description missing"
+          }`
+        : `${metrics.followingCountRaw ?? "following missing"} / ${
+            metrics.followersCountRaw ?? "followers missing"
+          }`;
 
 const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
   ...entry,
@@ -515,6 +558,12 @@ const buildAudienceCaptureError = (
     return `${behaviorForTarget(targetId).label} public browser capture saw placeholder content: ${metrics.placeholderSignals.join(
       ", ",
     )}.`;
+  }
+
+  if (behaviorForTarget(targetId).requiresMembersCount) {
+    return metrics.membersCountRaw
+      ? undefined
+      : `${behaviorForTarget(targetId).label} public browser capture did not find a member count.`;
   }
 
   if (!behaviorForTarget(targetId).requiresFollowingCount) {
@@ -763,6 +812,12 @@ export const runPublicRichSyncWithDependencies = async (
 
       nextEntry.metadata.followersCount = capture.metrics.followersCount;
       nextEntry.metadata.followersCountRaw = capture.metrics.followersCountRaw;
+      if (capture.metrics.membersCount !== undefined) {
+        nextEntry.metadata.membersCount = capture.metrics.membersCount;
+      }
+      if (capture.metrics.membersCountRaw) {
+        nextEntry.metadata.membersCountRaw = capture.metrics.membersCountRaw;
+      }
       if (capture.metrics.followingCount !== undefined) {
         nextEntry.metadata.followingCount = capture.metrics.followingCount;
       }

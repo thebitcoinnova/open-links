@@ -14,7 +14,7 @@ export const FOLLOWER_HISTORY_COLUMNS = [
 ] as const;
 
 export type FollowerHistoryColumn = (typeof FOLLOWER_HISTORY_COLUMNS)[number];
-export type FollowerHistoryAudienceKind = "followers" | "subscribers";
+export type FollowerHistoryAudienceKind = "followers" | "subscribers" | "members";
 export type FollowerHistorySource = "authenticated-cache" | "manual" | "public-cache";
 export type FollowerHistoryRange = "30d" | "90d" | "180d" | "all";
 export type FollowerHistoryMode = "growth" | "raw";
@@ -77,6 +77,8 @@ export interface FollowerHistoryLikeMetadata {
   followersCountRaw?: string;
   subscribersCount?: number;
   subscribersCountRaw?: string;
+  membersCount?: number;
+  membersCountRaw?: string;
 }
 
 export const FOLLOWER_HISTORY_RANGE_DAYS = {
@@ -109,7 +111,7 @@ const trimToUndefined = (value: unknown): string | undefined => {
 };
 
 const isAudienceKind = (value: string): value is FollowerHistoryAudienceKind =>
-  value === "followers" || value === "subscribers";
+  value === "followers" || value === "subscribers" || value === "members";
 
 const isSource = (value: string): value is FollowerHistorySource =>
   value === "authenticated-cache" || value === "manual" || value === "public-cache";
@@ -200,7 +202,7 @@ export const parseCompactAudienceCount = (value: string | undefined): number | u
   const normalized = trimmed
     .toLowerCase()
     .replaceAll(",", "")
-    .replace(/followers?|subscribers?/gu, "")
+    .replace(/followers?|subscribers?|members?/gu, "")
     .trim();
 
   const match = normalized.match(/^(\d+(?:\.\d+)?)([kmb])?$/u);
@@ -223,6 +225,28 @@ export const resolveFollowerHistoryPrimaryAudience = (
 ): FollowerHistoryPrimaryAudience | null => {
   if (!metadata) {
     return null;
+  }
+
+  const membersRaw = trimToUndefined(metadata.membersCountRaw);
+  const membersCount =
+    typeof metadata.membersCount === "number" && Number.isFinite(metadata.membersCount)
+      ? metadata.membersCount
+      : parseCompactAudienceCount(membersRaw);
+
+  if (membersCount !== undefined && membersRaw) {
+    return {
+      audienceKind: "members",
+      audienceCount: membersCount,
+      audienceCountRaw: membersRaw,
+    };
+  }
+
+  if (membersCount !== undefined) {
+    return {
+      audienceKind: "members",
+      audienceCount: membersCount,
+      audienceCountRaw: `${membersCount.toLocaleString("en-US")} members`,
+    };
   }
 
   const subscriberRaw = trimToUndefined(metadata.subscribersCountRaw);

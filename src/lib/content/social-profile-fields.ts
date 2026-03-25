@@ -1,4 +1,8 @@
-import { normalizeHandle, resolveHandleFromUrl } from "../identity/handle-resolver";
+import {
+  isXCommunityUrl,
+  normalizeHandle,
+  resolveHandleFromUrl,
+} from "../identity/handle-resolver";
 
 export type SupportedSocialProfilePlatform =
   | "cluborange"
@@ -12,11 +16,16 @@ export type SupportedSocialProfilePlatform =
   | "substack"
   | "x"
   | "youtube";
-export type SocialProfileMetricField = "followersCount" | "followingCount" | "subscribersCount";
+export type SocialProfileMetricField =
+  | "followersCount"
+  | "followingCount"
+  | "subscribersCount"
+  | "membersCount";
 export type SocialProfileMetricRawField =
   | "followersCountRaw"
   | "followingCountRaw"
-  | "subscribersCountRaw";
+  | "subscribersCountRaw"
+  | "membersCountRaw";
 export type SocialProfileMetadataField =
   | "profileDescription"
   | "profileImage"
@@ -33,6 +42,8 @@ export interface SocialProfileMetadataFields {
   followingCountRaw?: string;
   subscribersCount?: number;
   subscribersCountRaw?: string;
+  membersCount?: number;
+  membersCountRaw?: string;
 }
 
 export interface SupportedSocialProfileTarget {
@@ -85,6 +96,8 @@ export const SOCIAL_PROFILE_METADATA_FIELDS = [
   "followingCountRaw",
   "subscribersCount",
   "subscribersCountRaw",
+  "membersCount",
+  "membersCountRaw",
 ] as const satisfies readonly SocialProfileMetadataField[];
 
 const hasDefinedProfileValue = (value: unknown): boolean => {
@@ -172,6 +185,10 @@ export const resolveSupportedSocialProfile = (input: {
   icon?: string;
   metadataHandle?: unknown;
 }): SupportedSocialProfileTarget | null => {
+  if (isXCommunityUrl(input)) {
+    return null;
+  }
+
   const resolution = resolveHandleFromUrl(input);
   const metadataHandle = normalizeHandle(input.metadataHandle);
 

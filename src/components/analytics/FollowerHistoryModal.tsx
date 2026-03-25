@@ -27,8 +27,20 @@ export interface FollowerHistoryModalProps {
   themeFingerprint: string;
 }
 
+const resolveAudienceLabel = (entry?: FollowerHistoryIndexEntry): string => {
+  if (entry?.audienceKind === "subscribers") {
+    return "subscriber";
+  }
+
+  if (entry?.audienceKind === "members") {
+    return "member";
+  }
+
+  return "follower";
+};
+
 export const resolveFollowerHistoryModalAriaLabel = (entry?: FollowerHistoryIndexEntry): string =>
-  `${entry?.label ?? "Platform"} follower history`;
+  `${entry?.label ?? "Platform"} ${resolveAudienceLabel(entry)} history`;
 
 export const FollowerHistoryModal = (props: FollowerHistoryModalProps) => (
   <AppDialog

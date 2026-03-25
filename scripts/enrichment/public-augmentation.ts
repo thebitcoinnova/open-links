@@ -1,5 +1,9 @@
 import { resolveSupportedSocialProfile } from "../../src/lib/content/social-profile-fields";
-import { normalizeHandle, resolveHandleFromUrl } from "../../src/lib/identity/handle-resolver";
+import {
+  isXCommunityUrl,
+  normalizeHandle,
+  resolveHandleFromUrl,
+} from "../../src/lib/identity/handle-resolver";
 import {
   decodeEntities,
   detectPlaceholderSignals,
@@ -24,6 +28,8 @@ import type {
 
 export const PUBLIC_BROWSER_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+export const X_COMMUNITY_METADATA_USER_AGENT =
+  "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)";
 const INSTAGRAM_DESCRIPTION_PATTERN =
   /^\s*(?<followersValue>[^,]+?)\s+(?<followersLabel>Followers?),\s*(?<followingValue>[^,]+?)\s+(?<followingLabel>Following)\b/i;
 const YOUTUBE_THUMBNAIL_URL_PATTERN =
@@ -36,6 +42,7 @@ export type PublicAugmentationStrategyId =
   | "rumble-public-profile"
   | "medium-public-feed"
   | "substack-public-profile"
+  | "x-public-community"
   | "x-public-oembed"
   | "instagram-public-profile"
   | "youtube-public-profile";
@@ -682,6 +689,32 @@ const parseXOEmbed = (sourceUrl: string, payloadText: string): PublicAugmentatio
   });
 };
 
+const parseXCommunityPage = (sourceUrl: string, html: string): PublicAugmentationOutcome => {
+  const parsed = parseMetadata(html, sourceUrl);
+  const title = safeTrim(parsed.metadata.title);
+  const description = safeTrim(parsed.metadata.description);
+  const image = safeTrim(parsed.metadata.image);
+  const placeholderSignals = detectXPlaceholderSignals({
+    title,
+    html,
+  });
+
+  if (placeholderSignals.length > 0) {
+    throw new Error(
+      `X public augmentation captured placeholder community metadata: ${placeholderSignals.join(", ")}.`,
+    );
+  }
+
+  return resolveCompleteness({
+    title,
+    description,
+    image,
+    ogImage: safeTrim(parsed.metadata.ogImage),
+    twitterImage: safeTrim(parsed.metadata.twitterImage),
+    sourceLabel: "x.com",
+  });
+};
+
 const parseInstagramPublicProfile = (
   sourceUrl: string,
   html: string,
@@ -874,16 +907,46 @@ const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
     },
   },
   {
+    id: "x-public-community",
+    branch: "public_augmented",
+    sourceKind: "html",
+    matches: (input) => isXCommunityUrl(input),
+    resolve: (input) =>
+      isXCommunityUrl(input)
+        ? {
+            id: "x-public-community",
+            branch: "public_augmented",
+            sourceKind: "html",
+            source: {
+              sourceUrl: input.url,
+              headers: {
+                "accept-language": "en-US,en;q=0.9",
+                "user-agent": X_COMMUNITY_METADATA_USER_AGENT,
+              },
+            },
+            normalize: (body) => parseXCommunityPage(input.url, body),
+          }
+        : null,
+  },
+  {
     id: "x-public-oembed",
     branch: "public_augmented",
     sourceKind: "oembed",
     matches: (input) => {
       const handleResolution = resolveHandleFromUrl(input);
-      return handleResolution.reason === "resolved" && handleResolution.extractorId === "x";
+      return (
+        !isXCommunityUrl(input) &&
+        handleResolution.reason === "resolved" &&
+        handleResolution.extractorId === "x"
+      );
     },
     resolve: (input) => {
       const handleResolution = resolveHandleFromUrl(input);
-      if (handleResolution.reason !== "resolved" || handleResolution.extractorId !== "x") {
+      if (
+        isXCommunityUrl(input) ||
+        handleResolution.reason !== "resolved" ||
+        handleResolution.extractorId !== "x"
+      ) {
         return null;
       }
 
