@@ -34,6 +34,35 @@ precedence when it is more specific.
 - `standards-overrides.md` records explicit local deviations from the canonical standards.
 - OpenLinks-specific operational rules for rich enrichment, Studio delivery tracking, and task hygiene remain mandatory for this repo.
 
+## Downstream Consumer Awareness
+
+`open-links` is also an active upstream dependency for
+[`open-links-sites`](https://github.com/pRizz/open-links-sites), which uses this
+repo as the canonical renderer and shared contract source for multi-site output.
+
+Current downstream usage to keep in mind:
+
+- `open-links-sites` is a control repo for many individual OpenLinks sites.
+- It pins this repo's upstream revision in `config/upstream-open-links.json`.
+- Its automation clones this repo during scheduled sync and deploy flows.
+- It reuses this repo's schemas, support files, enrichment/validation scripts,
+  and canonical person-page renderer.
+
+Compatibility-sensitive surfaces include:
+
+- `schema/` and the `data/profile.json`, `data/links.json`, and `data/site.json`
+  contract shape
+- `data/policy/`, authenticated-cache support files, and
+  `public/history/followers`
+- upstream script entrypoints and assumptions used by downstream import/build
+  flows
+- build/render output conventions that downstream smoke checks and site
+  assembly rely on
+
+When changes here touch those surfaces, explicitly consider downstream impact
+and mention that impact in the final summary, even when no downstream changes
+are required.
+
 ## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.
@@ -212,6 +241,7 @@ When updating the active task tracker file (`tasks/todo.md` or `.codex/tasks/tod
 - [`docs/create-new-rich-content-extractor.md`](docs/create-new-rich-content-extractor.md)
 - [`docs/openclaw-update-crud.md`](docs/openclaw-update-crud.md)
 - [`docs/ai-guided-customization.md`](docs/ai-guided-customization.md)
+- [`docs/downstream-open-links-sites.md`](docs/downstream-open-links-sites.md)
 - [`docs/studio-self-serve.md`](docs/studio-self-serve.md)
 - [`docs/studio-phase-checklist.md`](docs/studio-phase-checklist.md)
 

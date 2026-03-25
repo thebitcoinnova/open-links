@@ -17,6 +17,14 @@ This project is developer-first, but that does not mean raw JSON should be your 
 1. Use the repo's AI workflows/skills and checked-in automation docs for repo-native CRUD.
 2. Use the Studio webapp when the browser-based self-serve editor fits your workflow.
 3. Drop to direct JSON edits only when you need lower-level control or a manual fallback.
+
+OpenLinks is also an active upstream dependency for
+[`open-links-sites`](https://github.com/pRizz/open-links-sites), a downstream
+control repo that builds many individual sites on top of this renderer and data
+contract. Maintainers should treat shared schema, policy, script, and
+build-output changes here as potentially downstream-visible work. See
+[`docs/downstream-open-links-sites.md`](docs/downstream-open-links-sites.md)
+for the current synopsis.
 <!-- OPENLINKS_SCREENSHOT_ANCHOR -->
 <!-- OPENLINKS_SCREENSHOT_START -->
 ![OpenLinks preview](docs/assets/openlinks-preview.png)
@@ -483,6 +491,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - [Agent Triage Contract](https://raw.githubusercontent.com/pRizz/open-links/main/AGENTS.md)
 - [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md)
 - [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md)
+- [Downstream: open-links-sites](https://raw.githubusercontent.com/pRizz/open-links/main/docs/downstream-open-links-sites.md)
 - [Payment Card Effect Samples](https://raw.githubusercontent.com/pRizz/open-links/main/docs/payment-card-effect-samples.md)
 - [Rich Metadata Fetch Blockers](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-metadata-fetch-blockers.md)
 - [Rich Enrichment Blockers Registry](https://raw.githubusercontent.com/pRizz/open-links/main/docs/rich-enrichment-blockers-registry.md)

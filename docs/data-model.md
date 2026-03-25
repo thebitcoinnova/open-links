@@ -26,6 +26,11 @@ Supporting docs:
 - `docs/ai-guided-customization.md`
 - `docs/studio-self-serve.md`
 
+The three-file contract in this document and the upstream schemas under
+`schema/` are also mirrored by
+[`open-links-sites`](https://github.com/pRizz/open-links-sites), so breaking
+changes here can propagate into that downstream project as well.
+
 ## Guiding Principles
 
 - Keep core fields in schema-defined keys.
