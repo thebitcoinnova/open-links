@@ -492,6 +492,63 @@ test("extracts YouTube subscriber text from the page header metadata rows", () =
   });
 });
 
+test("extracts YouTube subscriber text from the current about-page channel view model", () => {
+  // Arrange
+  const html =
+    '"aboutChannelViewModel":{"description":"Podcast clips","subscriberCountText":"131 subscribers","viewCountText":"24,399 views","canonicalChannelUrl":"http://www.youtube.com/@Livewiththehive","channelId":"UC9N1jIBZAC-20yYEpkeIbFA"}';
+
+  // Act
+  const subscriberText = extractYoutubeSubscriberCountRaw(html);
+  const parsed = parseYoutubeProfileMetadata(html);
+
+  // Assert
+  assert.equal(subscriberText, "131 subscribers");
+  assert.deepEqual(parsed, {
+    subscribersCount: 131,
+    subscribersCountRaw: "131 subscribers",
+  });
+});
+
+test("parses YouTube about-page enrichment metadata with subscriber counts", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://youtube.com/@livewiththehive?si=tQizrqZ7AVqSBimH&sub_confirmation=1",
+    icon: "youtube",
+  });
+  const html = `
+    <html>
+      <head>
+        <title>Live with the Hive - YouTube</title>
+        <meta property="og:title" content="Live with the Hive" />
+        <meta property="og:description" content="Hive Minded podcast clips and updates." />
+        <meta property="og:image" content="https://i.ytimg.com/vi/example/hqdefault.jpg" />
+        <link itemprop="thumbnailUrl" href="https://yt3.googleusercontent.com/live-with-the-hive=s900-c-k-c0x00ffffff-no-rj" />
+      </head>
+      <body>
+        "aboutChannelViewModel":{"description":"Podcast clips","subscriberCountText":"131 subscribers","viewCountText":"24,399 views","canonicalChannelUrl":"http://www.youtube.com/@Livewiththehive","channelId":"UC9N1jIBZAC-20yYEpkeIbFA"}
+      </body>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(target?.id, "youtube-public-profile");
+  assert.equal(target?.sourceUrl, "https://www.youtube.com/@livewiththehive/about");
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "Live with the Hive");
+  assert.equal(parsed?.metadata.description, "Hive Minded podcast clips and updates.");
+  assert.equal(parsed?.metadata.image, "https://i.ytimg.com/vi/example/hqdefault.jpg");
+  assert.equal(
+    parsed?.metadata.profileImage,
+    "https://yt3.googleusercontent.com/live-with-the-hive=s900-c-k-c0x00ffffff-no-rj",
+  );
+  assert.equal(parsed?.metadata.subscribersCount, 131);
+  assert.equal(parsed?.metadata.subscribersCountRaw, "131 subscribers");
+  assert.equal(parsed?.metadata.sourceLabel, "youtube.com");
+});
+
 test("prefers the explicit YouTube thumbnailUrl profile image surface", () => {
   // Arrange
   const html = [

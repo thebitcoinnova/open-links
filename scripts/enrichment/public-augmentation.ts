@@ -34,6 +34,9 @@ const INSTAGRAM_DESCRIPTION_PATTERN =
   /^\s*(?<followersValue>[^,]+?)\s+(?<followersLabel>Followers?),\s*(?<followingValue>[^,]+?)\s+(?<followingLabel>Following)\b/i;
 const YOUTUBE_THUMBNAIL_URL_PATTERN =
   /itemprop="thumbnailUrl" href="([^"]+)"|"channelMetadataRenderer":\{.*?"avatar":\{"thumbnails":\[\{"url":"([^"]+)"/s;
+const YOUTUBE_ABOUT_CHANNEL_MARKER = '"aboutChannelViewModel":{';
+const YOUTUBE_METADATA_ROWS_MARKER = '"metadataRows":[';
+const YOUTUBE_SUBSCRIBER_SEGMENT_LENGTH = 5_000;
 
 type PublicAugmentationOutcome = NormalizedEnrichmentResult;
 
@@ -427,15 +430,12 @@ const resolveYoutubeTargetUrl = (sourceUrl: string): string => {
     throw new Error(`YouTube URL '${sourceUrl}' is missing a profile path segment.`);
   }
 
-  if (first.startsWith("@")) {
-    return `https://www.youtube.com/${first}`;
+  let profilePath = `/${first}`;
+  if (!first.startsWith("@") && (first === "channel" || first === "c" || first === "user")) {
+    profilePath = `/${first}/${segments[1]}`;
   }
 
-  if ((first === "channel" || first === "c" || first === "user") && segments[1]) {
-    return `https://www.youtube.com/${first}/${segments[1]}`;
-  }
-
-  return `https://www.youtube.com/${first}`;
+  return `https://www.youtube.com${profilePath}/about`;
 };
 
 const isLikelySubstackProfileUrl = (input: ResolvePublicAugmentationTargetInput): boolean => {
@@ -522,20 +522,46 @@ export const parseInstagramProfileMetadata = (
 };
 
 export const extractYoutubeSubscriberCountRaw = (html: string): string | undefined => {
-  const metadataRowsMarker = '"metadataRows":[';
-  const startIndex = html.indexOf(metadataRowsMarker);
-  if (startIndex < 0) {
-    return undefined;
+  const extractSubscriberTextFromSegment = (
+    marker: string,
+    patterns: RegExp[],
+  ): string | undefined => {
+    const maybeStartIndex = html.indexOf(marker);
+    if (maybeStartIndex < 0) {
+      return undefined;
+    }
+
+    const maybeSegment = html.slice(
+      maybeStartIndex,
+      maybeStartIndex + YOUTUBE_SUBSCRIBER_SEGMENT_LENGTH,
+    );
+    return firstMatch(maybeSegment, patterns);
+  };
+
+  const maybeAboutPageCount = extractSubscriberTextFromSegment(YOUTUBE_ABOUT_CHANNEL_MARKER, [
+    /"subscriberCountText":"([^"]+ subscribers?)"/i,
+    /"subscriberCountText":\{[^}]*"(?:simpleText|content)":"([^"]+ subscribers?)"/i,
+  ]);
+  if (maybeAboutPageCount) {
+    return maybeAboutPageCount;
   }
 
-  const segment = html.slice(startIndex, startIndex + 2_500);
-  const contentMatch = /"content":"([^"]+ subscribers?)"/i.exec(segment);
-  if (contentMatch?.[1]) {
-    return safeTrim(contentMatch[1]);
+  const maybeLegacyCount = extractSubscriberTextFromSegment(YOUTUBE_METADATA_ROWS_MARKER, [
+    /"content":"([^"]+ subscribers?)"/i,
+    /"accessibilityLabel":"([^"]+ subscribers?)"/i,
+  ]);
+  if (maybeLegacyCount) {
+    return maybeLegacyCount;
   }
 
-  const accessibilityMatch = /"accessibilityLabel":"([^"]+ subscribers?)"/i.exec(segment);
-  return safeTrim(accessibilityMatch?.[1]);
+  const maybeSubscriberCount = firstMatch(html, [
+    /"subscriberCountText":"([^"]+ subscribers?)"/i,
+    /"subscriberCountText":\{[^}]*"(?:simpleText|content)":"([^"]+ subscribers?)"/i,
+  ]);
+  if (maybeSubscriberCount) {
+    return maybeSubscriberCount;
+  }
+  return undefined;
 };
 
 export const extractYoutubeProfileImageUrl = (html: string): string | undefined => {
