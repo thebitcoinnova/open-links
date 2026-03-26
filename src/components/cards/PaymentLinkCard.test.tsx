@@ -208,6 +208,35 @@ const lightningPaymentLink = {
   },
 } as const satisfies OpenLink;
 
+const clubOrangeLightningPaymentLink = {
+  id: "cluborange-lightning-tips",
+  label: "Club Orange Tips",
+  icon: "cluborange",
+  type: "payment",
+  payment: {
+    primaryRailId: "lightning",
+    rails: [
+      {
+        id: "lightning",
+        rail: "lightning",
+        address: "peterryszkiewicz@cluborange.org",
+        qr: {
+          badge: {
+            mode: "auto",
+          },
+        },
+      },
+    ],
+  },
+} as const satisfies OpenLink;
+
+const decodeSvgDataUrl = (value: string): string => {
+  const prefix = "data:image/svg+xml;charset=utf-8,";
+
+  assert.ok(value.startsWith(prefix));
+  return decodeURIComponent(value.slice(prefix.length));
+};
+
 test("payment rail copy buttons keep stable copy labels", () => {
   // Arrange
   const tree = PaymentLinkCard({
@@ -669,6 +698,43 @@ test("payment cards pass themeFingerprint to inline QR renderers", () => {
   // Assert
   assert.ok(qr);
   assert.equal(qr.props.themeFingerprint, "sleek:dark");
+
+  setReactRuntime(
+    createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),
+  );
+});
+
+test("club orange lightning tip cards resolve an auto composite QR badge", () => {
+  // Arrange
+  setReactRuntime(
+    createPreservingRuntime(
+      StyledPaymentQr,
+      MobileOverflowMenu,
+      Collapsible.Root,
+      Collapsible.Content,
+    ),
+  );
+
+  // Act
+  const tree = PaymentLinkCard({
+    link: clubOrangeLightningPaymentLink,
+    site,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+  const article = collectElements(tree).find((element) => element.type === "article");
+  const qr = collectElements(tree).find((element) => element.type === StyledPaymentQr);
+
+  // Assert
+  assert.ok(article);
+  assert.equal(article.props["data-layout"], "single");
+  assert.ok(qr);
+  assert.equal(qr.props.logoSize, 0.24);
+  assert.match(String(qr.props.logoUrl), /^data:image\/svg\+xml/u);
+
+  const svg = decodeSvgDataUrl(String(qr.props.logoUrl));
+  assert.match(svg, /#E86B10/u);
+  assert.match(svg, /#F2A900/u);
 
   setReactRuntime(
     createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),

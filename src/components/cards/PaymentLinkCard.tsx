@@ -5,7 +5,7 @@ import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-option
 import { IconCopy, IconOpen, IconQrCode } from "../../lib/icons/custom-icons";
 import type { PaymentCardEffectDebugTuning } from "../../lib/payments/card-effect-debug-tuning";
 import { resolvePaymentCardEffects } from "../../lib/payments/card-effects";
-import { resolvePaymentRailLogoUrl } from "../../lib/payments/rail-logos";
+import { clampPaymentQrImageSize, resolvePaymentQrLogoUrl } from "../../lib/payments/qr-badges";
 import {
   type ResolvedPaymentRailAction,
   resolveEnabledPaymentRails,
@@ -77,14 +77,6 @@ const railById = (rails: PaymentRail[], railId: string | undefined): PaymentRail
   }
 
   return rails.find((rail) => rail.id === railId);
-};
-
-const clampLogoSize = (value: number | undefined): number => {
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return 0.24;
-  }
-
-  return Math.min(0.35, Math.max(0.15, value));
 };
 
 export const resolveMobilePaymentRailActionLayout = (
@@ -207,11 +199,18 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     rail.qr?.logoMode ?? siteQrDefaults()?.logoModeDefault ?? "rail-default";
 
   const qrLogoSizeForRail = (rail: PaymentRail): number =>
-    clampLogoSize(rail.qr?.logoSize ?? siteQrDefaults()?.logoSizeDefault);
+    clampPaymentQrImageSize(
+      rail.qr?.badge?.size ?? rail.qr?.logoSize ?? siteQrDefaults()?.logoSizeDefault,
+    );
 
   const qrLogoUrlForRail = (rail: PaymentRail): string | undefined =>
-    resolvePaymentRailLogoUrl({
+    resolvePaymentQrLogoUrl({
+      badge: rail.qr?.badge,
+      linkIcon: props.link.icon,
+      linkUrl: props.link.url,
       railType: rail.rail,
+      railIcon: rail.icon,
+      railUrl: rail.url,
       logoMode: qrLogoModeForRail(rail),
       customLogoUrl: rail.qr?.logoUrl,
     });

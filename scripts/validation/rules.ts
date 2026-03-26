@@ -1,4 +1,8 @@
-import { KNOWN_SITE_ALIASES, normalizeKnownSiteAlias } from "../../src/lib/icons/known-sites-data";
+import {
+  KNOWN_SITE_ALIASES,
+  normalizeKnownSiteAlias,
+  resolveKnownSiteId,
+} from "../../src/lib/icons/known-sites-data";
 import { normalizeHandle, resolveHandleFromUrl } from "../../src/lib/identity/handle-resolver";
 import { type PaymentRailType, isPaymentRailType } from "../../src/lib/payments/types";
 
@@ -535,6 +539,78 @@ const checkPaymentQrConfig = (source: string, path: string, value: unknown): Val
       path: `${path}.logoSize`,
       message: `QR logoSize ${value.logoSize} is outside the recommended 0.15-0.35 range for scan reliability.`,
       remediation: "Use qr.logoSize between 0.15 and 0.35 to reduce scanning failures.",
+    });
+  }
+
+  const badge = isRecord(value.badge) ? value.badge : undefined;
+  const badgeMode = toStringOrUndefined(badge?.mode);
+  const badgeItems = Array.isArray(badge?.items) ? badge.items : undefined;
+
+  if (badgeMode === "custom" && (!badgeItems || badgeItems.length === 0)) {
+    issues.push({
+      level: "error",
+      source,
+      path: `${path}.badge.items`,
+      message: "QR badge mode 'custom' requires at least one badge item.",
+      remediation: "Provide qr.badge.items when qr.badge.mode is set to custom.",
+    });
+  }
+
+  if (badgeItems && badgeItems.length > 2) {
+    issues.push({
+      level: "error",
+      source,
+      path: `${path}.badge.items`,
+      message: `QR badge supports at most 2 items, received ${badgeItems.length}.`,
+      remediation: "Limit qr.badge.items to 1 or 2 entries to preserve scan reliability.",
+    });
+  }
+
+  if (badgeItems) {
+    badgeItems.forEach((item, itemIndex) => {
+      if (!isRecord(item)) {
+        return;
+      }
+
+      const itemType = toStringOrUndefined(item.type);
+      const itemValue = toStringOrUndefined(item.value);
+
+      if ((itemType === "site" || itemType === "asset") && !itemValue) {
+        issues.push({
+          level: "error",
+          source,
+          path: `${path}.badge.items[${itemIndex}].value`,
+          message: `QR badge item '${itemType}' requires a value.`,
+          remediation: `Provide qr.badge.items[${itemIndex}].value for ${itemType} badge items.`,
+        });
+      }
+
+      if (itemType === "site" && itemValue && !resolveKnownSiteId(itemValue)) {
+        issues.push({
+          level: "error",
+          source,
+          path: `${path}.badge.items[${itemIndex}].value`,
+          message: `QR badge site '${itemValue}' is not a known site id.`,
+          remediation:
+            "Use a supported known-site id such as 'cluborange', 'lightning', or 'bitcoin'.",
+        });
+      }
+
+      if (itemType === "asset") {
+        issues.push(
+          ...checkLogoUrlShape(source, `${path}.badge.items[${itemIndex}].value`, item.value),
+        );
+      }
+    });
+  }
+
+  if (typeof badge?.size === "number" && (badge.size < 0.15 || badge.size > 0.35)) {
+    issues.push({
+      level: "warning",
+      source,
+      path: `${path}.badge.size`,
+      message: `QR badge size ${badge.size} is outside the recommended 0.15-0.35 range for scan reliability.`,
+      remediation: "Use qr.badge.size between 0.15 and 0.35 to reduce scanning failures.",
     });
   }
 

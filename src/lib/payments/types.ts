@@ -17,11 +17,24 @@ export type PaymentRailType = (typeof PAYMENT_RAIL_TYPES)[number];
 export type PaymentQrDisplayMode = "always" | "toggle" | "hidden";
 export type PaymentQrStyle = "square" | "rounded" | "dots";
 export type PaymentQrLogoMode = "rail-default" | "custom" | "none";
+export type PaymentQrBadgeMode = "auto" | "custom" | "none";
+export type PaymentQrBadgeItemType = "rail" | "site" | "asset";
 export type PaymentQrFullscreenMode = "enabled" | "disabled";
 export type PaymentCardEffect = "particles" | "lightning-particles" | "glitter-particles";
 export type PaymentCardGlitterPalette = "gold" | "ice";
 
 export const DEFAULT_PAYMENT_CARD_BOMBASTICITY = 0.5;
+
+export interface PaymentQrBadgeItem {
+  type: PaymentQrBadgeItemType;
+  value?: string;
+}
+
+export interface PaymentQrBadgeConfig {
+  mode?: PaymentQrBadgeMode;
+  size?: number;
+  items?: PaymentQrBadgeItem[];
+}
 
 export interface PaymentQrConfig {
   enabled?: boolean;
@@ -32,6 +45,7 @@ export interface PaymentQrConfig {
   logoMode?: PaymentQrLogoMode;
   logoUrl?: string;
   logoSize?: number;
+  badge?: PaymentQrBadgeConfig;
   payload?: string;
   custom?: Record<string, unknown>;
 }
@@ -108,6 +122,8 @@ export interface SitePaymentsConfig {
 export const PAYMENT_QR_DISPLAY_MODES = ["always", "toggle", "hidden"] as const;
 export const PAYMENT_QR_STYLES = ["square", "rounded", "dots"] as const;
 export const PAYMENT_QR_LOGO_MODES = ["rail-default", "custom", "none"] as const;
+export const PAYMENT_QR_BADGE_MODES = ["auto", "custom", "none"] as const;
+export const PAYMENT_QR_BADGE_ITEM_TYPES = ["rail", "site", "asset"] as const;
 export const PAYMENT_QR_FULLSCREEN_MODES = ["enabled", "disabled"] as const;
 export const PAYMENT_CARD_EFFECTS = [
   "particles",

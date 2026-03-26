@@ -89,3 +89,26 @@ test("multi-rail fixture expands a single rail without revealing the others", as
   await expect(card.getByRole("img", { name: "Lightning Support QR code" })).toHaveCount(0);
   await expect(card).toHaveScreenshot("payment-qr-multi-rail-expanded.png", screenshotOptions);
 });
+
+test("composite auto-badge fixture keeps the inline and fullscreen badge stable", async ({
+  page,
+}) => {
+  await openFixturePage(page);
+
+  const card = fixtureCard(page, "composite-auto-badge");
+  const qr = await waitForRenderedQr(card, "Club Orange Lightning QR code");
+
+  await expect(qr.locator("svg image")).toHaveCount(1);
+  await expect(card).toHaveScreenshot("payment-qr-composite-auto-badge.png", screenshotOptions);
+
+  await fullscreenButton(card).click();
+
+  const dialog = page.getByRole("dialog", { name: "Club Orange Lightning QR code" });
+  const fullscreenQr = await waitForRenderedQr(dialog, "Club Orange Lightning payment QR code");
+
+  await expect(fullscreenQr.locator("svg image")).toHaveCount(1);
+  await expect(dialog).toHaveScreenshot(
+    "payment-qr-composite-auto-badge-dialog.png",
+    screenshotOptions,
+  );
+});

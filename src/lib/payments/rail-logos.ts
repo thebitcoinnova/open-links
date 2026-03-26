@@ -14,7 +14,7 @@ const railLogoPaths: Record<PaymentRailType, string> = {
   "custom-crypto": "/payment-logos/generic-crypto.svg",
 };
 
-const toAssetUrl = (assetPath: string): string => {
+export const toAssetUrl = (assetPath: string): string => {
   const base = import.meta.env.BASE_URL || "/";
   const normalizedBase = base.endsWith("/") ? base : `${base}/`;
   const normalizedPath = assetPath.startsWith("/") ? assetPath.slice(1) : assetPath;
@@ -22,7 +22,7 @@ const toAssetUrl = (assetPath: string): string => {
   return `${normalizedBase}${normalizedPath}`;
 };
 
-const normalizeCustomLogoUrl = (value: string | undefined): string | undefined => {
+export const normalizeCustomLogoUrl = (value: string | undefined): string | undefined => {
   if (!value) {
     return undefined;
   }

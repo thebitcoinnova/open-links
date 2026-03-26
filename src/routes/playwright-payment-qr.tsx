@@ -159,6 +159,40 @@ const fixtureCards: FixtureCard[] = [
       },
     },
   },
+  {
+    id: "composite-auto-badge",
+    title: "Composite auto badge",
+    description:
+      "A Club Orange + Lightning payment QR badge composed from one site icon and one rail symbol.",
+    link: {
+      id: "cluborange-lightning-tips",
+      label: "Club Orange Tips",
+      description: "The QR should render a composed Club Orange and Lightning center badge.",
+      icon: "cluborange",
+      type: "payment",
+      payment: {
+        qrDisplay: "always",
+        primaryRailId: "lightning",
+        rails: [
+          {
+            id: "lightning",
+            rail: "lightning",
+            label: "Club Orange Lightning",
+            address: "peterryszkiewicz@cluborange.org",
+            qr: {
+              style: "dots",
+              logoMode: "none",
+              foregroundColor: "#f59e0b",
+              backgroundColor: "#111827",
+              badge: {
+                mode: "auto",
+              },
+            },
+          },
+        ],
+      },
+    },
+  },
 ];
 
 const themeSelection = resolveThemeSelection(fixtureSite);

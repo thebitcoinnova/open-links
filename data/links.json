@@ -188,6 +188,32 @@
         "handle": "peterryszkiewicz"
       },
       "custom": {}
+    },
+    {
+      "id": "cluborange-lightning-tips",
+      "label": "Club Orange Tips",
+      "type": "payment",
+      "icon": "cluborange",
+      "description": "Tip me over Lightning via Club Orange",
+      "group": "support",
+      "enabled": true,
+      "payment": {
+        "primaryRailId": "lightning",
+        "rails": [
+          {
+            "id": "lightning",
+            "rail": "lightning",
+            "label": "Lightning",
+            "address": "peterryszkiewicz@cluborange.org",
+            "qr": {
+              "badge": {
+                "mode": "auto"
+              }
+            }
+          }
+        ]
+      },
+      "custom": {}
     }
   ],
   "groups": [
@@ -224,7 +250,8 @@
     "facebook",
     "instagram",
     "youtube",
-    "medium"
+    "medium",
+    "cluborange-lightning-tips"
   ],
   "custom": {}
 }

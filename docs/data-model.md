@@ -323,9 +323,13 @@ Per-rail QR settings (`payment.rails[].qr`) support:
 - `logoMode`: `rail-default`, `custom`, `none`
 - `logoUrl` (required when `logoMode` is `custom`)
 - `logoSize`
+- `badge.mode`: `auto`, `custom`, `none`
+- `badge.size`: optional center-badge size override using the same normalized scale as `logoSize`
+- `badge.items`: up to 2 entries using `{ "type": "rail" }`, `{ "type": "site", "value": "<known-site-id>" }`, or `{ "type": "asset", "value": "/payment-logos/example.svg" }`
 - `payload` (optional explicit QR payload override)
 
 Payment rails can include explicit app links via `payment.rails[].appLinks` for wallet/app-specific deep links.
+When `payment.rails[].qr.badge.mode` is `auto`, runtime tries to infer a platform logo from `link.icon`, then `payment.rails[].icon`, then `payment.rails[].url` or `link.url`, and combines it with the rail symbol when both resolve and differ.
 When QR colors are omitted, runtime defaults follow the active theme using `--text-primary` for QR modules and `--surface-panel` for the background.
 When `payment.effects.enabled` is true and no explicit effect list is provided, runtime defaults to subtle ambient particles for standard payment cards, and to both `lightning-particles` and gold `glitter-particles` for cards whose primary rail is Lightning. When `payment.effects.bombasticity` is omitted, runtime falls back to `site.ui.payments.effects.bombasticityDefault`, then to the built-in midpoint default of `0.5`, which now renders at the maximum live treatment.
 
