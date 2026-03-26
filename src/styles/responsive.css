@@ -130,6 +130,11 @@
     border-radius: var(--radius-lg);
   }
 
+  body .payment-rail-qr-activator {
+    justify-items: center;
+    text-align: center;
+  }
+
   body .payment-rail-qr-canvas {
     width: min(100%, 210px);
     height: auto;
@@ -140,6 +145,9 @@
 
   body .payment-rail-fullscreen {
     width: auto;
+    justify-self: center;
+    justify-content: center;
+    text-align: center;
   }
 
   body .qr-code-dialog {
