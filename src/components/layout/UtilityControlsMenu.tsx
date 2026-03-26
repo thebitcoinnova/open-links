@@ -1,5 +1,6 @@
-import * as Collapsible from "@kobalte/core/collapsible";
-import { For, createEffect, createSignal, createUniqueId, onCleanup } from "solid-js";
+import * as Dialog from "@kobalte/core/dialog";
+import * as Popover from "@kobalte/core/popover";
+import { For, createSignal, createUniqueId } from "solid-js";
 import { IconMenu } from "../../lib/icons/custom-icons";
 import type { UiMode } from "../../lib/theme/mode-controller";
 import {
@@ -33,12 +34,19 @@ const restoreFocusSoon = (getTrigger: () => HTMLButtonElement | undefined) => {
   });
 };
 
+const createCloseAutoFocusHandler = (getTrigger: () => HTMLButtonElement | undefined) => {
+  return (event: Event) => {
+    event.preventDefault();
+    restoreFocusSoon(getTrigger);
+  };
+};
+
 export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
-  const [isOpen, setIsOpen] = createSignal(false);
-  const panelId = `utility-controls-panel-${createUniqueId()}`;
+  const [isDesktopOpen, setIsDesktopOpen] = createSignal(false);
+  const [isMobileOpen, setIsMobileOpen] = createSignal(false);
+  const desktopPanelId = `utility-controls-panel-desktop-${createUniqueId()}`;
+  const mobilePanelId = `utility-controls-panel-mobile-${createUniqueId()}`;
   const triggerLabel = () => props.label ?? "site menu";
-  const triggerAriaLabel = () =>
-    resolveUtilityControlsMenuTriggerAriaLabel(isOpen(), triggerLabel());
   const rows = () =>
     resolveUtilityControlsMenuRows({
       activeNavigationItem: props.activeNavigationItem,
@@ -52,16 +60,23 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
       testingGalleryLabel: props.testingGalleryLabel,
     });
 
-  let maybeTriggerRef: HTMLButtonElement | undefined;
-  let maybeMenuRef: HTMLDivElement | undefined;
+  let maybeDesktopTriggerRef: HTMLButtonElement | undefined;
+  let maybeMobileTriggerRef: HTMLButtonElement | undefined;
 
-  const closeMenuAndRestoreFocus = () => {
-    setIsOpen(false);
-    restoreFocusSoon(() => maybeTriggerRef);
+  const closeDesktopMenu = () => {
+    setIsDesktopOpen(false);
   };
 
-  const handleLinkSelect = (rowKey: UtilityControlsMenuRowKey, event: MouseEvent) => {
-    closeMenuAndRestoreFocus();
+  const closeMobileMenu = () => {
+    setIsMobileOpen(false);
+  };
+
+  const handleLinkSelect = (
+    rowKey: UtilityControlsMenuRowKey,
+    event: MouseEvent,
+    closeMenu: () => void,
+  ) => {
+    closeMenu();
 
     if (rowKey === "home") {
       props.onHomeSelect?.(event);
@@ -73,97 +88,126 @@ export const UtilityControlsMenu = (props: UtilityControlsMenuProps) => {
     }
   };
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = (closeMenu: () => void) => {
     props.onToggleMode?.();
-    closeMenuAndRestoreFocus();
+    closeMenu();
   };
 
-  createEffect(() => {
-    if (!isOpen() || typeof window === "undefined") {
-      return;
-    }
+  const handleDesktopCloseAutoFocus = createCloseAutoFocusHandler(() => maybeDesktopTriggerRef);
+  const handleMobileCloseAutoFocus = createCloseAutoFocusHandler(() => maybeMobileTriggerRef);
 
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node) || maybeMenuRef?.contains(target)) {
-        return;
-      }
+  const renderTriggerContents = () => (
+    <>
+      <IconMenu aria-hidden="true" />
+      {props.isOffline ? (
+        <>
+          <span class="utility-menu-button-status" aria-hidden="true" />
+          <span class="sr-only">Offline status available in site menu.</span>
+        </>
+      ) : null}
+    </>
+  );
 
-      closeMenuAndRestoreFocus();
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") {
-        return;
-      }
-
-      event.preventDefault();
-      closeMenuAndRestoreFocus();
-    };
-
-    window.addEventListener("pointerdown", handlePointerDown, true);
-    window.addEventListener("keydown", handleKeyDown);
-    onCleanup(() => {
-      window.removeEventListener("pointerdown", handlePointerDown, true);
-      window.removeEventListener("keydown", handleKeyDown);
-    });
-  });
+  const renderRows = (closeMenu: () => void) => (
+    <div class="utility-menu-list">
+      <For each={rows()}>
+        {(row) =>
+          row.kind === "link" ? (
+            <a
+              class="utility-menu-link utility-menu-row"
+              data-current={row.isCurrent ? "true" : undefined}
+              aria-current={row.isCurrent ? "page" : undefined}
+              href={row.href}
+              onClick={(event) => handleLinkSelect(row.key, event, closeMenu)}
+            >
+              <span class="utility-menu-row-label">{row.label}</span>
+            </a>
+          ) : (
+            <button
+              type="button"
+              class="utility-menu-action utility-menu-row"
+              aria-label={resolveUtilityControlsMenuThemeActionLabel(props.mode)}
+              onClick={() => handleThemeToggle(closeMenu)}
+            >
+              <span class="utility-menu-row-label">{row.label}</span>
+            </button>
+          )
+        }
+      </For>
+    </div>
+  );
 
   return (
-    <div ref={maybeMenuRef} class="utility-menu">
-      <Collapsible.Root open={isOpen()} onOpenChange={setIsOpen}>
-        <Collapsible.Trigger
-          ref={maybeTriggerRef}
+    <div class="utility-menu">
+      <Popover.Root
+        gutter={8}
+        open={isDesktopOpen()}
+        onOpenChange={setIsDesktopOpen}
+        placement="bottom-end"
+      >
+        <Popover.Trigger
+          ref={maybeDesktopTriggerRef}
           type="button"
-          class="utility-menu-button"
-          data-open={isOpen() ? "true" : "false"}
-          aria-controls={panelId}
-          aria-expanded={isOpen()}
-          aria-label={triggerAriaLabel()}
+          class="utility-menu-button utility-menu-button--desktop"
+          data-open={isDesktopOpen() ? "true" : "false"}
+          aria-controls={desktopPanelId}
+          aria-expanded={isDesktopOpen()}
+          aria-label={resolveUtilityControlsMenuTriggerAriaLabel(isDesktopOpen(), triggerLabel())}
         >
-          <IconMenu aria-hidden="true" />
-          {props.isOffline ? (
-            <>
-              <span class="utility-menu-button-status" aria-hidden="true" />
-              <span class="sr-only">Offline status available in site menu.</span>
-            </>
-          ) : null}
-        </Collapsible.Trigger>
+          {renderTriggerContents()}
+        </Popover.Trigger>
 
-        <Collapsible.Content
-          as="section"
-          id={panelId}
-          class="utility-menu-panel"
-          aria-label={MENU_REGION_LABEL}
+        <Popover.Portal>
+          <Popover.Content
+            id={desktopPanelId}
+            class="utility-menu-panel utility-menu-panel--desktop"
+            onCloseAutoFocus={handleDesktopCloseAutoFocus}
+            aria-label={MENU_REGION_LABEL}
+          >
+            <Popover.Title class="sr-only">{MENU_REGION_LABEL}</Popover.Title>
+            {renderRows(closeDesktopMenu)}
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+
+      <Dialog.Root open={isMobileOpen()} onOpenChange={setIsMobileOpen}>
+        <Dialog.Trigger
+          ref={maybeMobileTriggerRef}
+          type="button"
+          class="utility-menu-button utility-menu-button--mobile"
+          data-open={isMobileOpen() ? "true" : "false"}
+          aria-controls={mobilePanelId}
+          aria-expanded={isMobileOpen()}
+          aria-label={resolveUtilityControlsMenuTriggerAriaLabel(isMobileOpen(), triggerLabel())}
         >
-          <div class="utility-menu-list">
-            <For each={rows()}>
-              {(row) =>
-                row.kind === "link" ? (
-                  <a
-                    class="utility-menu-link utility-menu-row"
-                    data-current={row.isCurrent ? "true" : undefined}
-                    aria-current={row.isCurrent ? "page" : undefined}
-                    href={row.href}
-                    onClick={(event) => handleLinkSelect(row.key, event)}
-                  >
-                    <span class="utility-menu-row-label">{row.label}</span>
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    class="utility-menu-action utility-menu-row"
-                    aria-label={resolveUtilityControlsMenuThemeActionLabel(props.mode)}
-                    onClick={handleThemeToggle}
-                  >
-                    <span class="utility-menu-row-label">{row.label}</span>
-                  </button>
-                )
-              }
-            </For>
+          {renderTriggerContents()}
+        </Dialog.Trigger>
+
+        <Dialog.Portal>
+          <Dialog.Overlay class="utility-menu-overlay" />
+          <div class="utility-menu-drawer-positioner">
+            <Dialog.Content
+              id={mobilePanelId}
+              class="utility-menu-drawer"
+              onCloseAutoFocus={handleMobileCloseAutoFocus}
+              aria-label={MENU_REGION_LABEL}
+            >
+              <div class="utility-menu-drawer-header">
+                <Dialog.Title class="utility-menu-drawer-title">{MENU_REGION_LABEL}</Dialog.Title>
+                <Dialog.CloseButton
+                  type="button"
+                  class="utility-menu-close-button"
+                  aria-label={`Close ${triggerLabel()}`}
+                >
+                  Close
+                </Dialog.CloseButton>
+              </div>
+
+              {renderRows(closeMobileMenu)}
+            </Dialog.Content>
           </div>
-        </Collapsible.Content>
-      </Collapsible.Root>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 };

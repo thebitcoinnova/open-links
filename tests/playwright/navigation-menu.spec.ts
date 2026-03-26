@@ -30,21 +30,37 @@ const readWidthMetrics = async (
     scrollWidth: element.scrollWidth,
   }));
 
-const openSiteMenu = async (page: Page): Promise<Locator> => {
+const openDesktopSiteMenu = async (page: Page): Promise<{ panel: Locator; trigger: Locator }> => {
   const trigger = page.getByRole("button", { name: "Open site menu" });
   await expect(trigger).toBeVisible();
   await trigger.click();
 
-  const panel = page.getByRole("region", { name: "Site menu" });
+  const panel = page.getByRole("dialog", { name: "Site menu" });
   await expect(panel).toBeVisible();
-  await expect(page.getByRole("button", { name: "Close site menu" })).toBeVisible();
-  return panel;
+  await expect(page.locator(".utility-menu-overlay")).toHaveCount(0);
+  const openTrigger = page.getByRole("button", { name: "Close site menu" });
+  await expect(openTrigger).toBeVisible();
+
+  return { panel, trigger: openTrigger };
+};
+
+const openMobileSiteMenu = async (page: Page): Promise<{ panel: Locator; trigger: Locator }> => {
+  const trigger = page.getByRole("button", { name: "Open site menu" });
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+
+  const panel = page.getByRole("dialog", { name: "Site menu" });
+  await expect(panel).toBeVisible();
+  await expect(page.locator(".utility-menu-overlay")).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Close site menu" })).toBeVisible();
+
+  return { panel, trigger };
 };
 
 test.describe("navigation menu mobile layout", () => {
   test.skip(({ isMobile }) => !isMobile, "Mobile-only navigation menu coverage");
 
-  test("opens as a floating region with only tappable rows", async ({ page }) => {
+  test("opens as a drawer dialog with only tappable rows", async ({ page }) => {
     // Arrange
     await page.setViewportSize({ width: 390, height: 844 });
     await openFixturePage(page);
@@ -57,8 +73,7 @@ test.describe("navigation menu mobile layout", () => {
     const topBarBoxBeforeOpen = await requireBoundingBox(topBar, "Top utility bar before open");
 
     // Act
-    const panel = await openSiteMenu(page);
-    const trigger = page.getByRole("button", { name: "Close site menu" });
+    const { panel } = await openMobileSiteMenu(page);
     const rowTypes = await panel
       .locator(".utility-menu-list > *")
       .evaluateAll((elements) => elements.map((element) => element.tagName.toLowerCase()));
@@ -67,15 +82,14 @@ test.describe("navigation menu mobile layout", () => {
       "Fixture article after open",
     );
     const topBarBoxAfterOpen = await requireBoundingBox(topBar, "Top utility bar after open");
-    const triggerBox = await requireBoundingBox(trigger, "Site menu trigger");
     const panelBox = await requireBoundingBox(panel, "Site menu panel");
     const viewportWidth = page.viewportSize()?.width ?? 390;
 
     // Assert
     expect(rowTypes).toEqual(["a", "a", "a", "button"]);
-    expect(panelBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height - 4);
     expect(Math.abs(topBarBoxAfterOpen.height - topBarBoxBeforeOpen.height)).toBeLessThanOrEqual(1);
     expect(Math.abs(articleBoxAfterOpen.y - articleBoxBeforeOpen.y)).toBeLessThanOrEqual(1);
+    expect(panelBox.x).toBeGreaterThanOrEqual(0);
     expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(viewportWidth + 1);
   });
 
@@ -87,7 +101,7 @@ test.describe("navigation menu mobile layout", () => {
     await openFixturePage(page);
 
     // Act
-    const panel = await openSiteMenu(page);
+    const { panel } = await openMobileSiteMenu(page);
     const homeLink = panel.getByRole("link", { name: "Home", exact: true });
     const analyticsLink = panel.getByRole("link", { name: "Analytics", exact: true });
     const panelMetrics = await readWidthMetrics(panel);
@@ -97,20 +111,46 @@ test.describe("navigation menu mobile layout", () => {
 
     // Assert
     expect(panelMetrics.scrollWidth).toBeLessThanOrEqual(panelMetrics.clientWidth + 1);
-    expect(homeBox.width).toBeGreaterThan(panelBox.width - 24);
-    expect(analyticsBox.width).toBeGreaterThan(panelBox.width - 24);
+    expect(homeBox.width).toBeGreaterThanOrEqual(panelBox.width - 28);
+    expect(analyticsBox.width).toBeGreaterThanOrEqual(panelBox.width - 28);
+  });
+
+  test("closes via overlay interaction and restores focus to the trigger", async ({ page }) => {
+    // Arrange
+    await openFixturePage(page);
+    await openMobileSiteMenu(page);
+
+    // Act
+    await page.locator(".utility-menu-overlay").click({ position: { x: 8, y: 8 } });
+
+    // Assert
+    await expect(page.getByRole("dialog", { name: "Site menu" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
+  });
+
+  test("closes via Escape and restores focus to the trigger", async ({ page }) => {
+    // Arrange
+    await openFixturePage(page);
+    await openMobileSiteMenu(page);
+
+    // Act
+    await page.keyboard.press("Escape");
+
+    // Assert
+    await expect(page.getByRole("dialog", { name: "Site menu" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
   });
 
   test("closes and restores focus after selecting a navigation row", async ({ page }) => {
     // Arrange
     await openFixturePage(page);
-    const panel = await openSiteMenu(page);
+    const { panel } = await openMobileSiteMenu(page);
 
     // Act
     await panel.getByRole("link", { name: "Home", exact: true }).click();
 
     // Assert
-    await expect(page.getByRole("region", { name: "Site menu" })).toBeHidden();
+    await expect(page.getByRole("dialog", { name: "Site menu" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
   });
 
@@ -120,7 +160,7 @@ test.describe("navigation menu mobile layout", () => {
     await openFixturePage(page);
 
     // Act
-    const panel = await openSiteMenu(page);
+    const { panel } = await openMobileSiteMenu(page);
     const themeButton = panel.getByRole("button", { name: "Switch to light mode", exact: true });
     const viewportHeight = page.viewportSize()?.height ?? 520;
     const themeButtonBox = await requireBoundingBox(themeButton, "Theme action row");
@@ -132,17 +172,17 @@ test.describe("navigation menu mobile layout", () => {
   test("toggles the theme row and closes the menu", async ({ page }) => {
     // Arrange
     await openFixturePage(page);
-    const panel = await openSiteMenu(page);
+    const { panel } = await openMobileSiteMenu(page);
 
     // Act
     await panel.getByRole("button", { name: "Switch to light mode", exact: true }).click();
 
     // Assert
-    await expect(page.getByRole("region", { name: "Site menu" })).toBeHidden();
+    await expect(page.getByRole("dialog", { name: "Site menu" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
     await expect.poll(() => page.locator("html").getAttribute("data-mode")).toBe("light");
 
-    const reopenedPanel = await openSiteMenu(page);
+    const { panel: reopenedPanel } = await openMobileSiteMenu(page);
     await expect(
       reopenedPanel.getByRole("button", { name: "Switch to dark mode", exact: true }),
     ).toBeVisible();
@@ -168,8 +208,7 @@ test.describe("navigation menu desktop layout", () => {
     );
 
     // Act
-    const panel = await openSiteMenu(page);
-    const trigger = page.getByRole("button", { name: "Close site menu" });
+    const { panel, trigger } = await openDesktopSiteMenu(page);
     const articleBoxAfterOpen = await requireBoundingBox(
       fixtureArticle,
       "Desktop fixture article after open",
@@ -195,13 +234,13 @@ test.describe("navigation menu desktop layout", () => {
     // Arrange
     await page.setViewportSize({ width: 1100, height: 900 });
     await openFixturePage(page);
-    const panel = await openSiteMenu(page);
+    const { panel } = await openDesktopSiteMenu(page);
 
     // Act
     await panel.getByRole("link", { name: "Analytics", exact: true }).click();
 
     // Assert
-    await expect(page.getByRole("region", { name: "Site menu" })).toBeHidden();
+    await expect(page.getByRole("dialog", { name: "Site menu" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Open site menu" })).toBeFocused();
   });
 });

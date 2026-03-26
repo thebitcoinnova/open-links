@@ -61,8 +61,26 @@
     gap: var(--space-1);
   }
 
+  body .utility-menu-button--desktop {
+    display: none;
+  }
+
+  body .utility-menu-button--mobile {
+    display: inline-grid;
+  }
+
   body .utility-menu-panel {
     padding: 0.28rem;
+  }
+
+  body .utility-menu-drawer-positioner {
+    padding: var(--space-3);
+  }
+
+  body .utility-menu-drawer {
+    width: min(21rem, calc(100vw - var(--space-4)));
+    max-width: calc(100vw - var(--space-4));
+    max-height: calc(100dvh - var(--space-4));
   }
 
   body .utility-menu-link,

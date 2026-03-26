@@ -112,7 +112,7 @@ const PlaywrightNavigationMenuRoute = () => {
         <p style={eyebrowStyle}>Playwright fixture route</p>
         <h1 style={titleStyle}>Navigation menu fixtures</h1>
         <p style={descriptionStyle}>
-          Stable utility menu content for mobile layout and interaction assertions.
+          Stable utility menu content for desktop popover and mobile drawer interaction assertions.
         </p>
       </section>
 
@@ -149,8 +149,8 @@ const PlaywrightNavigationMenuRoute = () => {
         <article style={panelStyle}>
           <h2 style={titleStyle}>Fixture notes</h2>
           <p style={descriptionStyle}>
-            Use this route to verify that the flat row list stays readable on narrow screens and
-            that selecting a row closes the inline menu.
+            Use this route to verify that desktop keeps an anchored popover while mobile upgrades to
+            a drawer with overlay dismissal, Escape close, and trigger focus restoration.
           </p>
         </article>
       </section>
