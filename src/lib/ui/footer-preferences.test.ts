@@ -25,7 +25,7 @@ test("resolveFooterPreferences returns the expanded footer defaults", () => {
 
   assert.equal(
     preferences.description,
-    "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize JSON, and publish fast.",
+    "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
   );
   assert.equal(preferences.ctaLabel, "Create Your OpenLinks");
   assert.equal(preferences.ctaUrl, buildGitHubRepositoryUrl());
