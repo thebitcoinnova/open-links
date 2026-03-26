@@ -34,7 +34,7 @@
         "followingCount": 93,
         "followingCountRaw": "93 following"
       },
-      "etag": "W/\"f9839ec252375d6ee12b96848551109a\""
+      "etag": "W/\"cd28aed62c41db89798d8258701cbb63\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -112,7 +112,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-03-23T07:28:41.016Z",
+      "updatedAt": "2026-03-26T07:27:11.468Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -120,12 +120,12 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1353,
-        "followersCountRaw": "1,353 Followers",
+        "followersCount": 1354,
+        "followersCountRaw": "1,354 Followers",
         "followingCount": 657,
         "followingCountRaw": "657 Following"
       },
-      "lastModified": "Wed, 25 Mar 2026 07:21:53 GMT"
+      "lastModified": "Thu, 26 Mar 2026 07:26:47 GMT"
     },
     "youtube": {
       "linkId": "youtube",
