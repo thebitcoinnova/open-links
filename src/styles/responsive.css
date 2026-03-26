@@ -122,6 +122,7 @@
   }
 
   body .payment-rail-qr-panel {
+    margin-inline: auto;
     justify-items: center;
     justify-self: center;
     text-align: center;

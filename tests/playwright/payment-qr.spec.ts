@@ -30,6 +30,26 @@ const waitForRenderedQr = async (scope: Locator, ariaLabel: string): Promise<Loc
   return qr;
 };
 
+const expectHorizontallyCentered = async (
+  container: Locator,
+  item: Locator,
+  tolerance = 6,
+): Promise<void> => {
+  const [containerBox, itemBox] = await Promise.all([container.boundingBox(), item.boundingBox()]);
+
+  expect(containerBox).not.toBeNull();
+  expect(itemBox).not.toBeNull();
+
+  if (!containerBox || !itemBox) {
+    return;
+  }
+
+  const containerCenter = containerBox.x + containerBox.width / 2;
+  const itemCenter = itemBox.x + itemBox.width / 2;
+
+  expect(Math.abs(containerCenter - itemCenter)).toBeLessThanOrEqual(tolerance);
+};
+
 test("single-rail fixture keeps inline and fullscreen QR states stable", async ({ page }) => {
   await openFixturePage(page);
 
@@ -64,6 +84,11 @@ test("toggle fixture reveals, hides, and re-reveals a web payment QR without cli
   await waitForRenderedQr(card, "Cash App Support QR code");
   await expect(qrPanel).toHaveCount(1);
   await expect(fullscreenButton(card)).toBeVisible();
+
+  if ((page.viewportSize()?.width ?? 1440) <= 760) {
+    await expectHorizontallyCentered(card, qrPanel);
+  }
+
   await expect(card).toHaveScreenshot("payment-qr-toggle-expanded.png", screenshotOptions);
 
   await card.getByRole("button", { name: "Hide Cash App Support QR code" }).click();
@@ -74,6 +99,11 @@ test("toggle fixture reveals, hides, and re-reveals a web payment QR without cli
   await waitForRenderedQr(card, "Cash App Support QR code");
   await expect(qrPanel).toHaveCount(1);
   await expect(fullscreenButton(card)).toBeVisible();
+
+  if ((page.viewportSize()?.width ?? 1440) <= 760) {
+    await expectHorizontallyCentered(card, qrPanel);
+  }
+
   await expect(card).toHaveScreenshot("payment-qr-toggle-expanded.png", screenshotOptions);
 });
 
