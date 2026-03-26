@@ -18,6 +18,11 @@ const fixtureCard = (page: Page, fixtureId: string): Locator =>
 const fullscreenButton = (scope: Locator): Locator =>
   scope.getByRole("button", { name: /(?:Open|Tap for) Full Screen/ });
 
+const fullscreenQrActivator = (scope: Locator, railLabel: string): Locator =>
+  scope.getByRole("button", {
+    name: new RegExp(`(?:Open|Tap for) Full Screen for ${railLabel} QR code`),
+  });
+
 const waitForRenderedQr = async (scope: Locator, ariaLabel: string): Promise<Locator> => {
   const qr = scope.getByRole("img", { name: ariaLabel });
   await expect(qr).toBeVisible();
@@ -33,7 +38,7 @@ test("single-rail fixture keeps inline and fullscreen QR states stable", async (
   await waitForRenderedQr(card, "Bitcoin Tip Jar QR code");
   await expect(card).toHaveScreenshot("payment-qr-single-inline.png", screenshotOptions);
 
-  await fullscreenButton(card).click();
+  await fullscreenQrActivator(card, "Bitcoin Tip Jar").click();
 
   const dialog = page.getByRole("dialog", { name: "Bitcoin Tip Jar QR code" });
   await waitForRenderedQr(dialog, "Bitcoin Tip Jar payment QR code");
@@ -99,6 +104,7 @@ test("composite auto-badge fixture keeps the inline and fullscreen badge stable"
   const qr = await waitForRenderedQr(card, "Club Orange Lightning QR code");
 
   await expect(qr.locator("svg image")).toHaveCount(1);
+  await expect(fullscreenQrActivator(card, "Club Orange Lightning")).toBeVisible();
   await expect(card).toHaveScreenshot("payment-qr-composite-auto-badge.png", screenshotOptions);
 
   await fullscreenButton(card).click();

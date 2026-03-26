@@ -589,8 +589,11 @@ test("single-rail payment cards expose inline open, copy, and QR controls", () =
   const openLinks = collectElements(desktopActionBar?.props.children as RenderedNode).filter(
     (element) => element.type === "a" && element.props["aria-label"] === "Open Bitcoin",
   );
-  const fullscreenButtons = collectElements(tree).filter(
-    (element) => element.type === "button" && element.props.children === "Open Full Screen",
+  const fullscreenActivators = collectElements(tree).filter(
+    (element) =>
+      element.type === "button" &&
+      element.props.class === "payment-rail-qr-activator" &&
+      element.props["aria-label"] === "Open Full Screen for Bitcoin QR code",
   );
   const actionBar = firstElementWithClass(tree, "payment-card-action-bar");
 
@@ -598,7 +601,7 @@ test("single-rail payment cards expose inline open, copy, and QR controls", () =
   assert.equal(qrButtons.length, 1);
   assert.equal(copyButtons.length, 1);
   assert.equal(openLinks.length, 1);
-  assert.equal(fullscreenButtons.length, 1);
+  assert.equal(fullscreenActivators.length, 1);
   assert.equal(actionBar, undefined);
 });
 
