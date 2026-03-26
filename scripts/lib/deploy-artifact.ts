@@ -311,6 +311,7 @@ export async function copyArtifact(sourceDir: string, destinationDir: string) {
 
 export async function assertArtifactMatchesTarget(outputDir: string, rawTarget?: string) {
   const target = parseDeployTarget(rawTarget);
+  const targetConfig = getDeployTargetConfig(target);
   const htmlFilePaths = (await listRelativeFiles(outputDir)).filter((relativePath) =>
     relativePath.endsWith(".html"),
   );
@@ -333,25 +334,24 @@ export async function assertArtifactMatchesTarget(outputDir: string, rawTarget?:
       );
     }
 
-    if (target === "aws" && pagesBasePathPattern.test(html)) {
+    if (targetConfig.basePath === "/" && pagesBasePathPattern.test(html)) {
       throw new Error(`Artifact ${relativePath} still contains the GitHub Pages base path.`);
     }
 
-    if (target === "github-pages") {
+    if (targetConfig.basePath !== "/") {
       const maybeUnprefixedReference = html.match(unprefixedRootReferencePattern);
       if (maybeUnprefixedReference) {
         throw new Error(
           `Artifact ${relativePath} still contains an unprefixed root reference: ${maybeUnprefixedReference[0]}`,
         );
       }
-
-      if (!html.includes('meta name="robots" content="noindex, nofollow"')) {
-        throw new Error(`Artifact ${relativePath} did not include a noindex robots meta tag.`);
-      }
     }
 
-    if (target === "aws" && !html.includes('meta name="robots" content="index, follow"')) {
-      throw new Error(`Artifact ${relativePath} did not include an indexable robots meta tag.`);
+    const expectedRobots = targetConfig.shouldIndex ? "index, follow" : "noindex, nofollow";
+    if (!html.includes(`meta name="robots" content="${expectedRobots}"`)) {
+      throw new Error(
+        `Artifact ${relativePath} did not include the expected robots meta tag '${expectedRobots}'.`,
+      );
     }
   }
 }

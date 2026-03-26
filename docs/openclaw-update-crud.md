@@ -16,6 +16,7 @@ In scope:
 
 - Day-2 CRUD updates for `data/profile.json`, `data/links.json`, and `data/site.json`.
 - Optional full customization-audit path across all data-driven knobs in `docs/customization-catalog.md`.
+- Deployment target and primary-host changes when the user wants deployment settings or docs updated.
 - Startup interaction-level selection.
 - Identity-research on/off control.
 - Deterministic local/fork resolution.
@@ -43,6 +44,11 @@ If `customization_path=customization-audit`, OpenClaw must also ask for:
 1. `audit_scope`: `full` or `focused`.
 2. `focus_areas`: optional list used when `audit_scope=focused`.
 
+If the request touches deployment settings, OpenClaw must also ask for:
+
+1. `deployment_targets`: any of `github-pages`, `render`, `railway`, `aws`
+2. `primary_host`: `github-pages`, `render`, `railway`, `aws`, `custom-domain`, or `unchanged`
+
 ## Defaults
 
 If user does not choose explicitly:
@@ -56,6 +62,11 @@ Conditional defaults when `customization_path=customization-audit`:
 
 - `audit_scope`: default to `full`.
 - `focus_areas`: default to none.
+
+Conditional deployment defaults when deployment settings are in scope:
+
+- forks: `deployment_targets=github-pages`, `primary_host=github-pages`
+- upstream repo: `deployment_targets=aws,github-pages`, `primary_host=aws`
 
 If no seeds are provided and research is enabled, proceed with authoritative-chain identity discovery.
 
@@ -179,7 +190,7 @@ Execute in this exact order:
      - `data/cache/rich-authenticated-cache.json`
      - `public/cache/rich-authenticated/*`
 9. Commit and push directly to `main`.
-10. Verify CI + Deploy Production success for pushed SHA.
+10. Verify CI plus the relevant selected deployment targets for the pushed SHA.
 11. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
 12. Update README deployment URL marker block only when normalized URL/status values changed.
 13. Commit and push README URL update only if step 12 changed file content.

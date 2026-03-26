@@ -1,0 +1,29 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "bun run deploy:build:railway"
+watchPatterns = [
+  "data/**",
+  "public/**",
+  "schema/**",
+  "scripts/deploy/**",
+  "scripts/enrichment/**",
+  "scripts/lib/**",
+  "scripts/clean-public-build-artifacts.ts",
+  "scripts/enrich-rich-links.ts",
+  "scripts/generate-site-badge.ts",
+  "scripts/generate-site-social-preview.ts",
+  "scripts/sync-content-images.ts",
+  "scripts/sync-profile-avatar.ts",
+  "scripts/validate-data.ts",
+  "src/**",
+  "index.html",
+  "package.json",
+  "tsconfig.json",
+  "vite.config.ts",
+]
+
+[deploy]
+startCommand = "bun run scripts/deploy/serve-static-site.ts --root=.artifacts/deploy/railway"
+healthcheckPath = "/build-info.json"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

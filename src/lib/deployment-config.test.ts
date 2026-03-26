@@ -4,13 +4,17 @@ import {
   buildGitHubPagesUrl,
   deploymentConfig,
   getCanonicalUrl,
+  getDeployTargetConfig,
   getPublicUrl,
   getRobotsMetaContent,
   getRobotsTxt,
   isUpstreamRepository,
   normalizeBasePath,
+  normalizeDeployPublicOrigin,
   parseDeployTarget,
   resolvePrimaryCanonicalOrigin,
+  resolveRailwayPublicOrigin,
+  resolveRenderPublicOrigin,
 } from "./deployment-config";
 
 test("canonical urls always point at the primary openlinks.us host", () => {
@@ -53,6 +57,8 @@ test("base path normalization and target parsing stay stable for deploy scripts"
   assert.equal(normalizeBasePath("/open-links/"), "/open-links/");
   assert.equal(normalizeBasePath(""), "/");
   assert.equal(parseDeployTarget("github-pages"), "github-pages");
+  assert.equal(parseDeployTarget("render"), "render");
+  assert.equal(parseDeployTarget("railway"), "railway");
   assert.equal(parseDeployTarget("unexpected"), "aws");
 });
 
@@ -68,4 +74,35 @@ test("fork repositories default canonical origin to their pages url until aws is
     resolvePrimaryCanonicalOrigin("someone/open-links-fork"),
     "https://someone.github.io/open-links-fork",
   );
+});
+
+test("provider public-origin helpers normalize overrides and provider variables", () => {
+  // Arrange / Act / Assert
+  assert.equal(normalizeDeployPublicOrigin("railway.example.com"), "https://railway.example.com");
+  assert.equal(
+    resolveRenderPublicOrigin(undefined, "https://open-links.onrender.com"),
+    "https://open-links.onrender.com",
+  );
+  assert.equal(
+    resolveRailwayPublicOrigin(undefined, "open-links-production.up.railway.app"),
+    "https://open-links-production.up.railway.app",
+  );
+  assert.equal(
+    resolveRenderPublicOrigin("https://custom.example.com", "https://ignored.onrender.com"),
+    "https://custom.example.com",
+  );
+});
+
+test("root-path provider targets stay mirrors until their public url matches the primary canonical origin", () => {
+  // Arrange / Act
+  const renderTarget = getDeployTargetConfig("render");
+  const railwayTarget = getDeployTargetConfig("railway");
+
+  // Assert
+  assert.equal(renderTarget.basePath, "/");
+  assert.equal(railwayTarget.basePath, "/");
+  assert.equal(renderTarget.shouldIndex, false);
+  assert.equal(railwayTarget.shouldIndex, false);
+  assert.equal(getRobotsMetaContent("render"), "noindex, nofollow");
+  assert.equal(getRobotsMetaContent("railway"), "noindex, nofollow");
 });

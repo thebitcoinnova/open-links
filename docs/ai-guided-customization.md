@@ -58,7 +58,7 @@ If you are running OpenClaw bootstrap flow in this repository, use `docs/opencla
 5. If identity confidence is low, ask one identity confirmation question before writing identity fields.
 6. Skip low-confidence social inferences and report them under `Not Applied`.
 7. Do not infer or add payment links or crypto addresses unless explicitly requested by the user.
-8. Verify CI + Deploy Production for the pushed SHA and collect deployment URLs (`aws` plus `github-pages` when AWS is enabled).
+8. Verify CI plus the relevant selected deployment targets for the pushed SHA and collect deployment URLs.
 9. Report deployment URLs as a structured table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
 10. Update the `README.md` `OPENCLAW_DEPLOY_URLS` marker block only when normalized URL/status values changed.
 
@@ -73,7 +73,8 @@ Before running the wizard with an AI agent, prepare:
 - your profile details,
 - your desired links (simple and rich) or a Linktree URL,
 - theme/mode preferences,
-- deployment target (default upstream target: AWS canonical site plus GitHub Pages mirror).
+- deployment targets (`github-pages`, optional `render`, optional `railway`, and upstream-only `aws`),
+- primary host choice (default fork-safe primary: `github-pages`).
 
 ## Recommended Agent Prompt
 
@@ -263,12 +264,17 @@ Agent should confirm:
 
 - GitHub Pages source is GitHub Actions.
 - CI workflow is passing.
-- Deploy workflow has a successful run on `main`.
+- the selected primary host is explicit (`github-pages`, `render`, `railway`, `aws`, or custom domain).
+- the relevant deploy surface is healthy:
+  - GitHub Actions `Deploy Production` for AWS/GitHub Pages
+  - provider-native live URL + `build-info.json` for Render/Railway
 
 References:
 
 - `docs/quickstart.md`
 - `docs/deployment.md`
+- `docs/deployment-render.md`
+- `docs/deployment-railway.md`
 
 Opt-out:
 

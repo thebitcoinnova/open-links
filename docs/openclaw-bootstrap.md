@@ -64,13 +64,17 @@ Execute in this exact order.
    - `bun run build`
    - `bun run quality:check`
 11. Commit and push directly to `main`.
-12. Verify GitHub Pages source is set to **GitHub Actions**.
-13. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
-14. Poll CI and Deploy Production workflow status for the pushed SHA.
-15. On success, collect deployment URLs.
-16. Post structured URL summary in chat using the schema in this file.
-17. Update the README deploy URL marker block only if normalized URL/status values changed.
-18. Commit/push README update if and only if step 17 changed file content.
+12. Resolve deployment target selection and primary host:
+   - upstream default: `aws` primary + `github-pages` mirror
+   - fork default: `github-pages` primary
+   - optional fork additions: `render`, `railway`
+13. Verify GitHub Pages source is set to **GitHub Actions**.
+14. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
+15. Poll CI and all relevant deploy surfaces for the pushed SHA.
+16. On success, collect deployment URLs.
+17. Post structured URL summary in chat using the schema in this file.
+18. Update the README deploy URL marker block only if normalized URL/status values changed.
+19. Commit/push README update if and only if step 18 changed file content.
 
 ## Automation and Identity Confirmation Rule
 
@@ -153,6 +157,8 @@ Never let step 4 override steps 1-3.
 
 - `aws`
 - `github-pages`
+- `render`
+- `railway`
 
 ### Workflow evidence sources
 
@@ -160,13 +166,17 @@ Never let step 4 override steps 1-3.
 - Deploy workflow: `.github/workflows/deploy-pages.yml`
 - AWS deployment evidence: `Deploy AWS Canonical Site` job summary and `deploy:aws:publish` step summary.
 - Pages deployment URL source: `steps.deployment.outputs.page_url` in `Deploy GitHub Pages Mirror`.
+- Render deployment evidence: live `build-info.json` at the deployed public URL plus the Render deploy logs/dashboard.
+- Railway deployment evidence: live `build-info.json` at the deployed public URL plus the Railway deploy logs/dashboard.
 
 ### Required success checks for pushed SHA
 
 1. CI `required-checks` succeeded on the relevant commit lineage.
-2. Deploy Production workflow ran for `main` and concluded `success`.
+2. GitHub Pages deployment succeeded when GitHub Pages is a selected target.
 3. AWS canonical deployment succeeded when AWS deploy is enabled.
-4. GitHub Pages mirror deployment succeeded or was skipped because the live manifest already matched.
+4. Render deployment serves the pushed SHA when Render is a selected target.
+5. Railway deployment serves the pushed SHA when Railway is a selected target.
+6. Exactly one selected host is primary/indexable and all other selected hosts canonicalize to it.
 
 ### Bounded auto-retry policy
 
@@ -188,7 +198,7 @@ Use this stable schema for chat output and README marker-block updates.
 
 | Field | Description |
 |------|-------------|
-| `target` | Deployment target id (for example `aws`, `github-pages`) |
+| `target` | Deployment target id (for example `aws`, `github-pages`, `render`, `railway`) |
 | `status` | `success`, `warning`, or `failed` |
 | `primary_url` | Main user-facing URL |
 | `additional_urls` | Comma-separated auxiliary URLs or `none` |
@@ -197,7 +207,8 @@ Use this stable schema for chat output and README marker-block updates.
 ### Current required rows
 
 For the upstream repo, include both `aws` and `github-pages`.
-For forks without AWS opt-in, include `github-pages` only.
+For forks, include `github-pages` by default plus `render` and/or `railway` when configured.
+For forks without AWS opt-in, omit `aws`.
 
 Example format:
 
@@ -205,11 +216,8 @@ Example format:
 |--------|--------|-------------|-----------------|----------|
 | aws | success | https://openlinks.us/ | none | deploy-pages.yml -> Deploy AWS Canonical Site |
 | github-pages | success | https://<owner>.github.io/<repo>/ | canonical=https://openlinks.us/ | deploy-pages.yml -> Deploy GitHub Pages Mirror -> `steps.deployment.outputs.page_url` |
-
-### Future target compatibility
-
-When new deployment targets are supported, append additional rows using the same columns.
-Do not change existing column names or semantics.
+| render | success | https://<service>.onrender.com/ | canonical=https://<primary-host>/ | Render -> live /build-info.json |
+| railway | success | https://<service>.up.railway.app/ | canonical=https://<primary-host>/ | Railway -> live /build-info.json |
 
 ## README Deploy URL Marker-Block Contract
 

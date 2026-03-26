@@ -1,9 +1,20 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { deploymentConfig, getCanonicalUrl, getPublicUrl } from "../../src/lib/deployment-config";
+import type { BuildInfo } from "../../src/lib/build-info";
+import {
+  type DeployTarget,
+  deploymentConfig,
+  parseDeployTarget,
+} from "../../src/lib/deployment-config";
+import { resolveBuildInfo } from "../lib/build-info";
 import { runCommand } from "../lib/command";
 import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
+import {
+  assertLiveTargetSnapshot,
+  buildLiveTargetExpectation,
+  normalizePublicBaseUrl,
+} from "../lib/live-deploy-verify";
 import { parseArgs } from "./shared";
 
 interface VerificationHttpResponse {
@@ -18,82 +29,124 @@ interface VerificationHttpResponse {
 const args = parseArgs(process.argv.slice(2));
 const retries = Number(args.retries ?? "12");
 const delayMs = Number(args["delay-ms"] ?? "5000");
+const explicitTarget = args.target?.trim();
+const explicitTargets = args.targets
+  ?.split(",")
+  .map((entry) => entry.trim())
+  .filter(Boolean);
+const targets = resolveTargets(explicitTarget, explicitTargets);
+const expectedCommitSha =
+  args["expect-commit-sha"]?.trim() || resolveBuildInfo().commitSha.trim() || undefined;
 const verificationResults = [];
 const commandName = "deploy:verify";
 const run = await createDeployRun({
   command: commandName,
   mode: "check",
-  target: "verification",
+  target: targets.join(","),
 });
 
 await run.addBreadcrumb({
-  data: { delayMs, retries },
-  detail: "Starting production verification checks.",
+  data: { delayMs, expectedCommitSha, retries, targets },
+  detail: "Starting live deployment verification checks.",
   status: "info",
   step: "initialize",
 });
 
-const canonicalUrl = getCanonicalUrl("/");
-const canonicalResponse = await requestWithRetries(canonicalUrl, retries, delayMs);
-const canonicalHtml = canonicalResponse.body;
+const discoveredRemoteState: Array<{
+  buildInfoUrl: string;
+  expectedCanonicalUrl: string;
+  expectedRobotsMeta: string;
+  publicUrl: string;
+  target: DeployTarget;
+}> = [];
+const resultingUrls: string[] = [];
 
-assert(canonicalResponse.ok, `Expected ${canonicalUrl} to return 200.`);
-assert(
-  canonicalHtml.includes(
-    `rel="canonical" href="${getCanonicalUrl("/").replaceAll('"', "&quot;")}"`,
-  ),
-  `Expected ${canonicalUrl} to include a canonical link to ${getCanonicalUrl("/")}.`,
-);
-assert(
-  canonicalHtml.includes('name="robots" content="index, follow"'),
-  `Expected ${canonicalUrl} to include an indexable robots meta tag.`,
-);
+for (const target of targets) {
+  const publicOrigin = resolveExplicitPublicOrigin(target, args);
+  const expectation = buildLiveTargetExpectation(target, {
+    expectedCommitSha,
+    publicOrigin,
+  });
+  const htmlResponse = await requestWithRetries(expectation.publicUrl, retries, delayMs);
+  const buildInfoResponse = await requestWithRetries(expectation.buildInfoUrl, retries, delayMs);
 
-verificationResults.push({
-  detail: `${canonicalUrl} returned ${canonicalResponse.status} via ${canonicalResponse.source} and included canonical/indexable metadata.`,
-  name: "canonical host",
-  status: "passed" as const,
-});
+  assert(htmlResponse.ok, `Expected ${expectation.publicUrl} to return 200.`);
+  assert(buildInfoResponse.ok, `Expected ${expectation.buildInfoUrl} to return 200.`);
 
-const pagesUrl = getPublicUrl("github-pages", "/");
-const pagesResponse = await requestWithRetries(pagesUrl, retries, delayMs);
-const pagesHtml = pagesResponse.body;
+  const buildInfo = parseBuildInfo(buildInfoResponse.body, target);
+  assertLiveTargetSnapshot(expectation, {
+    buildInfo,
+    html: htmlResponse.body,
+  });
 
-assert(pagesResponse.ok, `Expected ${pagesUrl} to return 200.`);
-assert(
-  pagesHtml.includes('name="robots" content="noindex, nofollow"'),
-  `Expected ${pagesUrl} to include a noindex robots meta tag.`,
-);
-assert(
-  pagesHtml.includes(`rel="canonical" href="${getCanonicalUrl("/").replaceAll('"', "&quot;")}"`),
-  `Expected ${pagesUrl} to canonicalize to ${getCanonicalUrl("/")}.`,
-);
-
-verificationResults.push({
-  detail: `${pagesUrl} returned ${pagesResponse.status} via ${pagesResponse.source}, noindexed the mirror, and pointed at the canonical AWS URL.`,
-  name: "GitHub Pages mirror",
-  status: "passed" as const,
-});
+  verificationResults.push({
+    detail: `${expectation.publicUrl} returned ${htmlResponse.status} via ${htmlResponse.source}, ${expectation.buildInfoUrl} reported commit ${buildInfo.commitSha || "<empty>"}, and the page matched the expected canonical/robots policy.`,
+    name: target,
+    status: "passed" as const,
+  });
+  discoveredRemoteState.push({
+    buildInfoUrl: expectation.buildInfoUrl,
+    expectedCanonicalUrl: expectation.expectedCanonicalUrl,
+    expectedRobotsMeta: expectation.expectedRobotsMeta,
+    publicUrl: expectation.publicUrl,
+    target,
+  });
+  resultingUrls.push(expectation.publicUrl);
+}
 
 const summary = {
   appliedChanges: [] as string[],
   artifactDir: undefined,
   artifactHash: undefined,
   command: commandName,
-  discoveredRemoteState: {
-    canonicalOrigin: deploymentConfig.primaryCanonicalOrigin,
-    pagesOrigin: getPublicUrl("github-pages", "/"),
-  },
+  discoveredRemoteState,
   mode: "check" as const,
-  plannedChanges: {},
-  resultingUrls: [deploymentConfig.primaryCanonicalOrigin, pagesUrl],
+  plannedChanges: {
+    expectedCommitSha,
+    targets,
+  },
+  resultingUrls,
   skippedReasons: [] as string[],
-  target: "verification",
+  target: targets.join(","),
   verificationResults,
 };
 
 const { runDirectory } = await writeDeploySummary(summary, { runDirectory: run.runDirectory });
 console.log(`Deployment verification complete. Summary: ${runDirectory}`);
+
+function resolveTargets(
+  maybeTarget: string | undefined,
+  maybeTargets: string[] | undefined,
+): DeployTarget[] {
+  if (maybeTarget) {
+    return [parseDeployTarget(maybeTarget)];
+  }
+
+  if (maybeTargets && maybeTargets.length > 0) {
+    return maybeTargets.map((target) => parseDeployTarget(target));
+  }
+
+  return ["aws", "github-pages"];
+}
+
+function resolveExplicitPublicOrigin(target: DeployTarget, parsedArgs: Record<string, string>) {
+  const genericOrigin = normalizePublicBaseUrl(parsedArgs["public-origin"]);
+  if (genericOrigin && targets.length === 1) {
+    return genericOrigin;
+  }
+
+  return normalizePublicBaseUrl(parsedArgs[`${target}-origin`]);
+}
+
+function parseBuildInfo(body: string, target: DeployTarget) {
+  try {
+    return JSON.parse(body) as BuildInfo;
+  } catch (error) {
+    throw new Error(
+      `Expected ${target} build-info.json to contain valid JSON. ${(error as Error).message}`,
+    );
+  }
+}
 
 async function requestWithRetries(url: string, retries: number, delayMs: number) {
   let lastError: Error | null = null;

@@ -1,16 +1,23 @@
 # Adapter Contract (Conceptual)
 
-This document describes the expected shape of future deployment adapters for OpenLinks.
+This document describes the deployment-adapter shape OpenLinks uses today and the constraints future hosts should follow.
 
 Important:
 
-- This is documentation-only guidance for v1.
-- It is not a runtime plugin API.
-- It does not introduce new production code behavior.
+- This is not a runtime plugin API.
+- The current repo now ships first-class target adapters for AWS, GitHub Pages, Render, and Railway.
+- Future hosts should extend the same isolation boundary instead of reopening app-level rendering code.
 
 ## Purpose
 
-OpenLinks is currently GitHub Pages-first. Future host targets (for example S3, Railway static hosting, Cloudflare Pages, Netlify) should not require rewriting application code.
+OpenLinks currently supports:
+
+- AWS
+- GitHub Pages
+- Render
+- Railway
+
+Future host targets (for example S3, Cloudflare Pages, Netlify) should not require rewriting application code.
 
 The adapter concept exists to keep deployment concerns separate from content/rendering concerns.
 
@@ -75,7 +82,7 @@ When implementing a real adapter in a later phase, verification should include:
 
 ## Suggested Documentation Pattern for Future Adapters
 
-If/when adapters are implemented, each adapter doc should include:
+Each adapter doc should include:
 
 1. Required credentials and where to store them.
 2. Minimal setup steps.
@@ -96,15 +103,6 @@ Before declaring an adapter stable, validate:
 
 ## Relationship to Existing Docs
 
-- `docs/deployment.md` explains current GitHub Pages-first operations.
-- This document describes portability expectations for future host adapters.
-
-## Non-Goals in v1
-
-This document does not provide:
-
-- host-specific IaC templates,
-- end-to-end scripts for non-GitHub deploy,
-- runtime adapter registration APIs.
-
-Those belong to future implementation phases.
+- `docs/deployment.md` explains the current multi-target deployment operations.
+- `docs/deployment-render.md` and `docs/deployment-railway.md` describe the two provider-native fork targets now implemented.
+- This document describes the portability expectations that still apply when more hosts are added.

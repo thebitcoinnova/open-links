@@ -181,3 +181,27 @@ test("assertArtifactMatchesTarget rejects unprefixed root references for github 
     await rm(artifactDir, { force: true, recursive: true });
   }
 });
+
+test("assertArtifactMatchesTarget accepts root-path noindex artifacts for render and railway mirrors", async () => {
+  // Arrange
+  const artifactDir = await mkdtemp(path.join(tmpdir(), "open-links-deploy-artifact-"));
+
+  try {
+    await writeFile(
+      path.join(artifactDir, "index.html"),
+      [
+        "<!doctype html>",
+        '<meta name="robots" content="noindex, nofollow">',
+        '<link rel="modulepreload" href="/assets/app.js">',
+        '<img src="/favicon.ico" alt="favicon">',
+      ].join(""),
+      "utf8",
+    );
+
+    // Act / Assert
+    await assert.doesNotReject(() => assertArtifactMatchesTarget(artifactDir, "render"));
+    await assert.doesNotReject(() => assertArtifactMatchesTarget(artifactDir, "railway"));
+  } finally {
+    await rm(artifactDir, { force: true, recursive: true });
+  }
+});

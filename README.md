@@ -92,6 +92,7 @@ GitHub Pages fork example:
 - Build-time rich/SEO image materialization with local-only runtime behavior.
 - Offline-friendly public app shell with cached same-origin assets and graceful analytics fallback after first online visit.
 - GitHub Actions CI + AWS canonical deploy + GitHub Pages mirror pipeline already wired.
+- Checked-in Render and Railway deployment targets for fork-first provider-native hosting.
 - Theme and layout controls designed for forking and customization.
 - Data-driven typography overrides via `data/site.json` (`ui.typography`).
 
@@ -264,6 +265,7 @@ OpenClaw should update only the rows between the exact marker lines below:
 
 - rewrite only marker-bounded rows,
 - commit only if normalized URL/status values changed.
+- additional optional rows may include `render` and `railway` when a fork configures those targets.
 
 OPENCLAW_DEPLOY_URLS_START
 | target | status | primary_url | additional_urls | evidence |
@@ -287,12 +289,18 @@ Recommended flow:
 ## First Production Deploy (Quick Path)
 
 1. Push to `main`.
-2. In GitHub repository settings, set Pages source to **GitHub Actions**.
-3. For the upstream `openlinks.us` deploy, run `bun run deploy:setup` first, then rerun with `--apply` once the check-mode summary is clean.
-4. Wait for:
-   - `.github/workflows/ci.yml` to succeed.
-   - `.github/workflows/deploy-pages.yml` (`Deploy Production`) to deploy.
-5. Open `https://openlinks.us/` and the Pages mirror URL from the deployment job summary.
+2. Pick your first target:
+   - default fork-safe path: GitHub Pages via **GitHub Actions**
+   - provider-native fork paths: Render or Railway
+   - upstream-only path: AWS + GitHub Pages
+3. Use the matching guide:
+   - [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md)
+   - [Render Deployment Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment-render.md)
+   - [Railway Deployment Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment-railway.md)
+4. Wait for GitHub CI to pass on `main`.
+5. Verify the live target:
+   - GitHub Pages / upstream AWS through workflow summaries
+   - Render / Railway with `bun run deploy:verify:live -- --target=<target> --public-origin=<live-url>`
 
 Local parity commands:
 
@@ -304,10 +312,12 @@ bun run ci:strict
 Then use:
 
 - [Deployment Operations Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment.md) for full troubleshooting and diagnostics flow.
+- [Render Deployment Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment-render.md) for the provider-native Render path.
+- [Railway Deployment Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment-railway.md) for the provider-native Railway path.
 - [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md) for deployment URL reporting and README marker-block updates.
 - [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md) for existing repo update sessions and interaction-mode behavior.
 - [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md) for Linktree-first bootstrap of profile/link candidates.
-- [Adapter Contract Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/adapter-contract.md) for future non-GitHub host planning.
+- [Adapter Contract Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/adapter-contract.md) for the current deployment-adapter design and future host planning.
 
 ## OpenLinks Studio (Experimental Control Plane)
 

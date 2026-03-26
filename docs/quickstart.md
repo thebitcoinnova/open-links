@@ -1,6 +1,6 @@
 # Quickstart
 
-This guide is the fastest path from fork to first successful local run and GitHub Pages deployment.
+This guide is the fastest path from fork to first successful local run and first public deployment.
 
 ## Preferred: OpenClaw One-Message Paths
 
@@ -213,14 +213,42 @@ git commit -m "feat: personalize OpenLinks data"
 git push
 ```
 
-### 2) Enable Pages with GitHub Actions
+### 2) Choose your target
 
-In your repository settings:
+#### GitHub Pages (default fork-safe primary)
 
-1. Go to **Pages**.
+1. In repository settings, open **Pages**.
 2. Set **Build and deployment source** to **GitHub Actions**.
+3. Verify:
+   - `.github/workflows/ci.yml` succeeded
+   - `.github/workflows/deploy-pages.yml` (`Deploy Production`) published the Pages site
+4. Open the Pages URL from the workflow summary.
 
-### 3) Prepare AWS production deploy for `openlinks.us`
+#### Render (provider-native)
+
+1. Follow `docs/deployment-render.md`.
+2. Build command is already checked in through `render.yaml`.
+3. After the first provider deploy, register the live URL:
+
+```bash
+bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrender.com
+```
+
+4. Add `--promote-primary` only if Render should become the canonical host.
+
+#### Railway (provider-native)
+
+1. Follow `docs/deployment-railway.md`.
+2. Build and deploy commands are already checked in through `railway.toml`.
+3. After the first provider deploy and public-domain generation, register the live URL:
+
+```bash
+bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.railway.app
+```
+
+4. Add `--promote-primary` only if Railway should become the canonical host.
+
+#### AWS upstream-only flow
 
 Run the deploy setup flow in check mode first:
 
@@ -230,19 +258,23 @@ bun run deploy:setup
 
 When the summaries show the expected GitHub/AWS plan, rerun the mutating steps with `--apply`.
 
-### 4) Verify workflows
+### 3) Verify the live target
 
-Check workflow runs:
+For GitHub Pages and upstream AWS, verify GitHub workflow summaries.
 
-- `.github/workflows/ci.yml` (required checks and strict signals)
-- `.github/workflows/deploy-pages.yml` (`Deploy Production`)
+For Render or Railway, verify the live target directly:
 
-When deployment succeeds, open `https://openlinks.us/` and the Pages mirror URL from the workflow summary.
+```bash
+bun run deploy:verify:live -- --target=render --public-origin=https://<service>.onrender.com
+bun run deploy:verify:live -- --target=railway --public-origin=https://<service>.up.railway.app
+```
 
 OpenLinks also publishes a canonical SVG badge for your deployed site:
 
 - custom domain: `https://<your-domain>/badges/openlinks.svg`
 - GitHub Pages fork: `https://<owner>.github.io/<repo>/badges/openlinks.svg`
+- Render fork: `https://<service>.onrender.com/badges/openlinks.svg`
+- Railway fork: `https://<service>.up.railway.app/badges/openlinks.svg`
 
 Recommended Markdown embed:
 
@@ -252,7 +284,7 @@ Recommended Markdown embed:
 
 ## Optional Manual Deploy Dispatch
 
-`Deploy Production` still supports manual dispatch, but it is now config-driven:
+`Deploy Production` still supports manual dispatch for the AWS + GitHub Pages workflow, but it is now config-driven:
 
 - dispatch it on `main`,
 - the workflow builds fresh deploy artifacts when it cannot reuse CI outputs,
@@ -399,6 +431,31 @@ Fix:
 1. Verify CI succeeded on `main` and uploaded `deploy-aws-site` plus `deploy-pages-site`.
 2. Re-run `Deploy Production` manually on `main`; it can rebuild artifacts as fallback.
 
+### Problem: Render or Railway still canonicalizes to the wrong host
+
+Symptoms:
+
+- The provider site is live, but `<link rel="canonical">` still points at GitHub Pages or another host.
+- The provider page still emits `noindex, nofollow` after you meant to promote it.
+
+Fix:
+
+1. Register the live provider URL in tracked config:
+
+```bash
+bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrender.com --promote-primary
+# or
+bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.railway.app --promote-primary
+```
+
+2. Commit and push the resulting `data/site.json` and `README.md` changes.
+3. Let the provider redeploy the new commit.
+4. Re-run:
+
+```bash
+bun run deploy:verify:live -- --target=<render|railway> --public-origin=https://<live-url>
+```
+
 ## Day-2 Update Loop
 
 After initial publish, your normal update cycle is:
@@ -451,3 +508,5 @@ bun run setup:rich-auth
 - Blockers registry guide: `docs/rich-enrichment-blockers-registry.md`
 - AI-guided customization wizard: `docs/ai-guided-customization.md`
 - Deployment operations: `docs/deployment.md`
+- Render deployment: `docs/deployment-render.md`
+- Railway deployment: `docs/deployment-railway.md`

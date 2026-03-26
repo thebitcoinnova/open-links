@@ -5,7 +5,7 @@ import {
   resolveGitHubRepositorySlug,
 } from "./github-repository";
 
-export type DeployTarget = "aws" | "github-pages";
+export type DeployTarget = "aws" | "github-pages" | "railway" | "render";
 
 export interface DeployTargetConfig {
   id: DeployTarget;
@@ -19,6 +19,8 @@ const DEFAULT_GITHUB_OWNER =
   DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG.split("/")[0]?.toLowerCase() ?? "prizz";
 const DEFAULT_GITHUB_REPOSITORY = DEFAULT_GITHUB_REPOSITORY_NAME;
 const PRIMARY_CANONICAL_DOMAIN = "openlinks.us";
+const RAILWAY_PLACEHOLDER_ORIGIN = "https://railway.local";
+const RENDER_PLACEHOLDER_ORIGIN = "https://render.local";
 
 const githubRepositorySlug = normalizeGitHubRepositorySlug(process.env.GITHUB_REPOSITORY);
 
@@ -42,6 +44,8 @@ const repositorySlug = resolveGitHubRepositorySlug(
 const primaryCanonicalOrigin = resolvePrimaryCanonicalOrigin(repositorySlug);
 const githubPagesIsMirror =
   normalizeOrigin(githubPagesUrl) !== normalizeOrigin(primaryCanonicalOrigin);
+const renderPublicOrigin = resolveRenderPublicOrigin();
+const railwayPublicOrigin = resolveRailwayPublicOrigin();
 
 export const deploymentConfig = {
   awsRegion: "us-east-1",
@@ -69,21 +73,51 @@ export const deploymentConfig = {
 } as const;
 
 export const deployTargets: Record<DeployTarget, DeployTargetConfig> = {
-  aws: {
+  aws: buildDeployTargetConfig({
+    basePath: "/",
     id: "aws",
     label: "AWS canonical site",
-    basePath: "/",
     publicOrigin: deploymentConfig.primaryCanonicalOrigin,
-    shouldIndex: true,
-  },
-  "github-pages": {
+  }),
+  "github-pages": buildDeployTargetConfig({
+    basePath: deploymentConfig.githubPagesBasePath,
     id: "github-pages",
     label: githubPagesIsMirror ? "GitHub Pages mirror" : "GitHub Pages site",
-    basePath: deploymentConfig.githubPagesBasePath,
     publicOrigin: githubPagesUrl,
-    shouldIndex: !githubPagesIsMirror,
-  },
+  }),
+  railway: buildDeployTargetConfig({
+    basePath: "/",
+    id: "railway",
+    label:
+      normalizeOrigin(railwayPublicOrigin) ===
+      normalizeOrigin(deploymentConfig.primaryCanonicalOrigin)
+        ? "Railway primary site"
+        : "Railway mirror",
+    publicOrigin: railwayPublicOrigin,
+  }),
+  render: buildDeployTargetConfig({
+    basePath: "/",
+    id: "render",
+    label:
+      normalizeOrigin(renderPublicOrigin) ===
+      normalizeOrigin(deploymentConfig.primaryCanonicalOrigin)
+        ? "Render primary site"
+        : "Render mirror",
+    publicOrigin: renderPublicOrigin,
+  }),
 };
+
+function buildDeployTargetConfig(
+  input: Omit<DeployTargetConfig, "shouldIndex">,
+): DeployTargetConfig {
+  const publicOrigin = normalizeOrigin(input.publicOrigin);
+  return {
+    ...input,
+    publicOrigin,
+    shouldIndex:
+      normalizeOrigin(deploymentConfig.primaryCanonicalOrigin) === normalizeOrigin(publicOrigin),
+  };
+}
 
 export function normalizeBasePath(value?: string) {
   if (!value || value.trim().length === 0) {
@@ -101,13 +135,36 @@ export function normalizeOrigin(input: string) {
   return input.replace(/\/$/, "");
 }
 
+export function normalizeDeployPublicOrigin(input?: string) {
+  const trimmed = input?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    const url = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
+    return normalizeOrigin(url.origin);
+  } catch {
+    return undefined;
+  }
+}
+
 export function normalizeRoutePath(input: string) {
   const withLeadingSlash = input.startsWith("/") ? input : `/${input}`;
   return withLeadingSlash === "/" ? "/" : withLeadingSlash.replace(/\/$/, "");
 }
 
 export function parseDeployTarget(input?: string): DeployTarget {
-  return input === "github-pages" ? "github-pages" : "aws";
+  switch (input?.trim()) {
+    case "github-pages":
+      return "github-pages";
+    case "railway":
+      return "railway";
+    case "render":
+      return "render";
+    default:
+      return "aws";
+  }
 }
 
 export function isUpstreamRepository(input: string) {
@@ -166,7 +223,9 @@ export function getExpectedAssetPrefix(target: DeployTarget) {
 }
 
 export function getUnexpectedTargetPrefix(target: DeployTarget) {
-  return target === "aws" ? deploymentConfig.githubPagesBasePath : "/assets/";
+  return getDeployTargetConfig(target).basePath === "/"
+    ? deploymentConfig.githubPagesBasePath
+    : "/assets/";
 }
 
 export function joinOriginAndRoute(origin: string, route: string) {
@@ -174,4 +233,26 @@ export function joinOriginAndRoute(origin: string, route: string) {
   const normalizedRoute = normalizeRoutePath(route);
 
   return normalizedRoute === "/" ? `${normalizedOrigin}/` : `${normalizedOrigin}${normalizedRoute}`;
+}
+
+export function resolveRenderPublicOrigin(
+  maybeOverride = process.env.OPENLINKS_DEPLOY_PUBLIC_ORIGIN,
+  maybeRenderExternalUrl = process.env.RENDER_EXTERNAL_URL,
+) {
+  return (
+    normalizeDeployPublicOrigin(maybeOverride) ??
+    normalizeDeployPublicOrigin(maybeRenderExternalUrl) ??
+    RENDER_PLACEHOLDER_ORIGIN
+  );
+}
+
+export function resolveRailwayPublicOrigin(
+  maybeOverride = process.env.OPENLINKS_DEPLOY_PUBLIC_ORIGIN,
+  maybeRailwayPublicDomain = process.env.RAILWAY_PUBLIC_DOMAIN,
+) {
+  return (
+    normalizeDeployPublicOrigin(maybeOverride) ??
+    normalizeDeployPublicOrigin(maybeRailwayPublicDomain) ??
+    RAILWAY_PLACEHOLDER_ORIGIN
+  );
 }
