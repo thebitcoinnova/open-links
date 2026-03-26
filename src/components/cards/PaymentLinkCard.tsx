@@ -449,40 +449,60 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     );
   };
 
-  const renderQrPanel = (railEntry: PaymentRailEntry, railId: string, railLabelId: string) => (
-    <Show when={railEntry.action.qrPayload && shouldShowQr(railEntry)}>
-      <Collapsible.Root open={isQrVisible(railId)}>
-        <Collapsible.Content
-          class="payment-rail-qr-panel"
-          id={railPanelId(railId)}
-          aria-labelledby={railLabelId}
-        >
-          <StyledPaymentQr
-            payload={railEntry.action.qrPayload as string}
-            size={176}
-            style={qrStyleForRail(railEntry.rail)}
-            foregroundColor={qrForegroundForRail(railEntry.rail)}
-            backgroundColor={qrBackgroundForRail(railEntry.rail)}
-            logoUrl={qrLogoUrlForRail(railEntry.rail)}
-            logoSize={qrLogoSizeForRail(railEntry.rail)}
-            themeFingerprint={props.themeFingerprint}
-            class="payment-rail-qr-canvas"
-            ariaLabel={`${railEntry.action.label} QR code`}
-          />
-
-          <Show when={canUseFullscreenForRail(railEntry)}>
-            <button
-              type="button"
-              class="payment-rail-button payment-rail-button--quiet payment-rail-fullscreen"
-              onClick={() => setFullscreenRailId(railId)}
-            >
-              {fullscreenCtaLabel()}
-            </button>
-          </Show>
-        </Collapsible.Content>
-      </Collapsible.Root>
-    </Show>
+  const renderInlineQrCanvas = (railEntry: PaymentRailEntry) => (
+    <StyledPaymentQr
+      payload={railEntry.action.qrPayload as string}
+      size={176}
+      style={qrStyleForRail(railEntry.rail)}
+      foregroundColor={qrForegroundForRail(railEntry.rail)}
+      backgroundColor={qrBackgroundForRail(railEntry.rail)}
+      logoUrl={qrLogoUrlForRail(railEntry.rail)}
+      logoSize={qrLogoSizeForRail(railEntry.rail)}
+      themeFingerprint={props.themeFingerprint}
+      class="payment-rail-qr-canvas"
+      ariaLabel={`${railEntry.action.label} QR code`}
+    />
   );
+
+  const renderQrPanel = (railEntry: PaymentRailEntry, railId: string, railLabelId: string) => {
+    const fullscreenEnabled = () => canUseFullscreenForRail(railEntry);
+    const fullscreenLabel = () => `${fullscreenCtaLabel()} for ${railEntry.action.label} QR code`;
+    const openFullscreen = () => {
+      if (!fullscreenEnabled()) {
+        return;
+      }
+
+      setFullscreenRailId(railId);
+    };
+
+    return (
+      <Show when={railEntry.action.qrPayload && shouldShowQr(railEntry)}>
+        <Collapsible.Root open={isQrVisible(railId)}>
+          <Collapsible.Content
+            class="payment-rail-qr-panel"
+            id={railPanelId(railId)}
+            aria-labelledby={railLabelId}
+            data-fullscreen-enabled={fullscreenEnabled() ? "true" : "false"}
+          >
+            <Show when={fullscreenEnabled()} fallback={renderInlineQrCanvas(railEntry)}>
+              <button
+                type="button"
+                class="payment-rail-qr-activator"
+                onClick={openFullscreen}
+                aria-label={fullscreenLabel()}
+                title={fullscreenLabel()}
+              >
+                {renderInlineQrCanvas(railEntry)}
+                <span class="payment-rail-button payment-rail-button--quiet payment-rail-fullscreen">
+                  {fullscreenCtaLabel()}
+                </span>
+              </button>
+            </Show>
+          </Collapsible.Content>
+        </Collapsible.Root>
+      </Show>
+    );
+  };
 
   return (
     <article

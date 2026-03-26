@@ -61,6 +61,7 @@ a:focus-visible {
 
 .utility-menu-button:focus-visible,
 .payment-rail-button:focus-visible,
+.payment-rail-qr-activator:focus-visible,
 .qr-code-dialog-close-button:focus-visible,
 .site-footer-cta:focus-visible {
   outline: none;
@@ -1769,6 +1770,37 @@ a:focus-visible {
   background: color-mix(in srgb, var(--surface-panel) 96%, var(--surface-card) 4%);
   opacity: 1;
   animation: payment-rail-qr-panel-enter var(--motion-mid) both;
+}
+
+.payment-rail-qr-panel[data-fullscreen-enabled="true"] {
+  padding: 0;
+}
+
+.payment-rail-qr-activator {
+  width: 100%;
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: var(--space-2);
+  padding: calc(var(--space-2) * 0.85);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: box-shadow var(--motion-fast), background-color var(--motion-fast);
+}
+
+.payment-rail-qr-activator:hover {
+  background: color-mix(in srgb, var(--surface-panel) 72%, var(--accent) 28%);
+}
+
+.payment-rail-qr-activator:focus-visible {
+  box-shadow: var(--shadow-focus);
 }
 
 .payment-rail-qr-canvas {
