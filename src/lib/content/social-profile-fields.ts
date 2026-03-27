@@ -17,6 +17,19 @@ export type SupportedSocialProfilePlatform =
   | "substack"
   | "x"
   | "youtube";
+export const SUPPORTED_SOCIAL_PROFILE_PLATFORMS = [
+  "cluborange",
+  "facebook",
+  "github",
+  "instagram",
+  "linkedin",
+  "medium",
+  "primal",
+  "rumble",
+  "substack",
+  "x",
+  "youtube",
+] as const satisfies readonly SupportedSocialProfilePlatform[];
 export type SocialProfileMetricField =
   | "followersCount"
   | "followingCount"
@@ -90,10 +103,11 @@ const PROFILE_IMAGE_BACKFILL_PLATFORMS = new Set<SupportedSocialProfilePlatform>
   "youtube",
 ]);
 
-const isSupportedSocialProfilePlatform = (
+export const isSupportedSocialProfilePlatform = (
   value: unknown,
 ): value is SupportedSocialProfilePlatform =>
-  typeof value === "string" && value in EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM;
+  typeof value === "string" &&
+  SUPPORTED_SOCIAL_PROFILE_PLATFORMS.includes(value as SupportedSocialProfilePlatform);
 
 const isLinkProfileSemantics = (value: unknown): value is LinkProfileSemantics =>
   value === "auto" || value === "profile" || value === "non_profile";
