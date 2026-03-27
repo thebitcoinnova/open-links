@@ -1,128 +1,110 @@
 # Feature Research
 
-**Domain:** Developer-first social links site generator (template/fork model)
-**Researched:** 2026-02-22
+**Domain:** OpenLinks v1.2 profile-header quick links and usability polish
+**Researched:** 2026-03-27
 **Confidence:** HIGH
 
 ## Feature Landscape
 
-### Table Stakes (Users Expect These)
-
-Features users assume exist. Missing these means the project feels unfinished.
+### Table Stakes
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Profile identity block (name, avatar, bio) | Every links hub needs clear owner identity | LOW | Core above-the-fold content. |
-| Link cards with title + URL + icon | Fundamental job-to-be-done | LOW | Must support known social platforms with quality icons. |
-| Mobile-first responsive design | Most traffic comes from mobile social taps | MEDIUM | Touch targets and card spacing are critical. |
-| Theme support with dark/light | Users expect personalization and readability | MEDIUM | Dark default is a product decision here. |
-| SEO metadata + social share tags | Creator pages should preview well in search/chat | MEDIUM | Static generation helps crawlers and social unfurling. |
-| Accessibility baseline (keyboard/contrast/labels) | Public profile pages must be inclusive | MEDIUM | Should be CI-checked, not manual-only. |
-| GitHub-native deployment automation | Fork/template users expect one-push deploy | MEDIUM | Actions pipeline is part of product UX, not just DevOps. |
+| Quick access to major social destinations | Users expect the most recognizable platforms to be one tap away | LOW | Best implemented as a compact icon lineup above the action bar. |
+| Direct mapping to real profile/channel links | Shortcut surfaces must land on the user's actual destination | LOW | Derive from enabled top-level links, not placeholder config. |
+| Mobile-safe responsive layout | The header is primarily consumed on phones | MEDIUM | The strip cannot crowd or weaken the existing share/copy/QR controls. |
+| Accessible labels and keyboard behavior | Icon-only controls are otherwise ambiguous | LOW | Each icon needs a descriptive label, title, and clear focus state. |
+| Stable ordering | Users scan quick-link rows by expectation, not randomness | LOW | Prefer a predictable platform-priority order with fallback to content order. |
 
-### Differentiators (Competitive Advantage)
+### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Strict JSON schema for all content | Safer edits and better AI-agent compatibility | MEDIUM | Reduces broken deploys in forks. |
-| Mixed simple/rich card rendering | Balances speed and richer previews | MEDIUM | Per-link config keeps control in user hands. |
-| Build-time metadata enrichment with fallback | Rich previews without runtime risk | HIGH | Requires caching/retry/backoff strategy. |
-| Theme tokens + layout template hooks | Makes deep customization feasible for forks | MEDIUM | Prevents design lock-in. |
-| Multi-target deployment architecture | Future host portability | HIGH | Keep in CI abstraction, not page code. |
+| Auto-derived Quick Links from `links.json` | No second maintainer workflow and no duplicated data entry | MEDIUM | Fits the repo's developer-first data model. |
+| Eligibility rules based on known-site detection | Keeps the strip limited to recognizable destinations like X, YouTube, GitHub, LinkedIn, Instagram | MEDIUM | Reuses the existing known-site registry. |
+| Header-level polish around discoverability | Gives the profile top section a clearer hierarchy before users hit the larger card list | MEDIUM | Supports the broader usability-polish framing of the milestone. |
 
-### Anti-Features (Commonly Requested, Often Problematic)
+### Anti-Features
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Full CMS with auth in v1 | Non-developers want no-code editing | Heavy scope expansion and infra/security burden | Keep JSON + git workflow for developer audience |
-| Runtime third-party analytics scripts by default | "Need metrics" instinct | Privacy/performance regressions and legal overhead | Optional post-v1 integration docs |
-| Live metadata fetching in browser | Seems "always fresh" | CORS failures, slow UX, API throttling | Build-time enrichment + cached snapshots |
-| Plugin marketplace early | Appears extensible | Governance and compatibility burden too soon | Simple extension points + documented APIs |
+| Full branded wordmarks beside every icon | Feels explicit | Inflates header height and conflicts with platform-brand guidance | Use icon-only buttons with screen-reader labels and hover titles |
+| User-managed duplicate quick-link lists | Seems configurable | Adds config drift against `links[]` | Auto-derive from existing enabled links |
+| Showing every known-site link | Feels comprehensive | Overcrowds the header and weakens “quick” scanning | Limit to a curated popular-platform subset and/or a max visible count |
+| Non-profile destinations in the strip | Feels flexible | Breaks the mental model of “jump to my socials” | Keep Quick Links scoped to recognized social/profile endpoints |
 
-## Feature Dependencies
+## Expected Behavior
 
-```text
-Schema validation
-    └──requires──> JSON data contract
-                       └──requires──> documentation examples
+### Core user flow
 
-Rich cards
-    └──requires──> metadata enrichment pipeline
-                       └──requires──> cache/fallback model
+1. A visitor lands on the profile page.
+2. Above the current share/copy/QR action bar, they see a compact row of recognizable platform icons.
+3. Tapping an icon opens that specific profile or channel link directly.
+4. If the user has no eligible major-platform links, the Quick Links section does not render.
 
-Theme extensibility
-    └──requires──> design token system
-                       └──requires──> component style boundaries
+### Common expectations
 
-Multi-target deploy
-    └──requires──> CI abstraction of build/deploy steps
-```
+- The strip should feel faster to scan than the full card list.
+- Quick Links should not replace the full cards; they are shortcuts into the same destinations.
+- The lineup should prefer common social platforms before niche destinations.
+- The strip should remain visually secondary to the name/headline/bio and not overpower the page identity.
 
-### Dependency Notes
+## Recommended Scope for v1.2
 
-- **Rich cards require metadata enrichment pipeline:** without this, "rich" cards degrade into hand-entered duplicates.
-- **Theme extensibility requires style boundaries:** direct component style coupling blocks fork-level customization.
-- **Deployment portability requires CI abstraction:** provider conditionals in app code create long-term coupling.
+### In milestone
 
-## MVP Definition
+- [ ] Quick Links strip in the top-level profile header above the action bar
+- [ ] Auto-derivation from enabled known-site profile/channel links in `links.json`
+- [ ] Recognizable icon treatment for popular platforms already supported by the repo
+- [ ] Responsive wrapping/overflow behavior that keeps the header usable on mobile
+- [ ] Accessible labels, focus states, and external-link semantics
 
-### Launch With (v1)
+### Reasonable adjacent polish
 
-- [ ] JSON schema-validated profile and links data model — core reliability for forks
-- [ ] SolidJS static profile page with sleek cards UI — core user-visible product
-- [ ] Simple and rich card types, user-configurable per-link — core content flexibility
-- [ ] Dark default + light mode toggle + 1-2 starter themes — core customization promise
-- [ ] Known-platform icon support + fallback icon — baseline polish
-- [ ] GitHub Actions validate/build/deploy to GitHub Pages — core publish flow
-- [ ] Accessibility + SEO + performance checks in CI — core quality gate
+- [ ] Header spacing and hierarchy adjustments needed to fit Quick Links cleanly
+- [ ] Tests for quick-link eligibility, ordering, and empty-state suppression
+- [ ] Small documentation updates if maintainer-facing behavior changes materially
 
-### Add After Validation (v1.x)
+### Defer to later milestone
 
-- [ ] Build-time metadata fetch cache hardening (retry policy, stale fallback)
-- [ ] Additional starter themes and layout variants
-- [ ] Better docs for deployment-target adapter extension
+- [ ] Manual per-platform ordering controls
+- [ ] Separate Quick Links configuration in Studio
+- [ ] Per-theme or per-platform badge styles beyond the default treatment
+- [ ] Analytics or counters embedded into the Quick Links strip
 
-### Future Consideration (v2+)
+## Proposed Categories for Requirements
 
-- [ ] CLI for CRUD on JSON backing data
-- [ ] AI skill for guided CRUD workflows
-- [ ] In-site editor that opens GitHub PRs
-- [ ] Custom domain automation helpers
-- [ ] Additional deployment targets (AWS/Railway) with maintained adapters
+### Quick Links Discovery
 
-## Feature Prioritization Matrix
+- Which platforms qualify for the strip
+- How the links are ordered
+- When the strip renders vs stays hidden
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| JSON schema validation pipeline | HIGH | MEDIUM | P1 |
-| Static profile/cards UI | HIGH | MEDIUM | P1 |
-| GitHub Pages auto deploy workflow | HIGH | MEDIUM | P1 |
-| Theming and dark/light support | HIGH | MEDIUM | P1 |
-| Rich card metadata enrichment | MEDIUM | HIGH | P2 |
-| Deployment target adapters | MEDIUM | HIGH | P2 |
-| In-site PR editor | MEDIUM | HIGH | P3 |
+### Header Interaction and Accessibility
 
-**Priority key:**
-- P1: Must have for launch
-- P2: Should have, add when possible
-- P3: Nice to have, future consideration
+- Keyboard and screen-reader semantics
+- External-link behavior and titles
+- Mobile layout behavior when the strip is long
 
-## Competitor Feature Analysis
+### Maintainer Model
 
-| Feature | Linktree-like tools | Carrd-like tools | Our Approach |
-|---------|---------------------|------------------|--------------|
-| Hosted account model | Common | Optional account model | Explicitly excluded in v1 |
-| Visual editing | Strong | Strong | Defer; use JSON + git first |
-| Customizable themes | Moderate | Strong | Theme tokens + template hooks |
-| Static deployment ownership | Limited (platform-hosted) | Mixed | GitHub-first user-owned hosting |
-| Rich social previews | Partial | Limited | Build-time enrichment + fallback |
+- No duplicate data entry
+- Predictable derivation from existing link metadata
+- Clear fallback when links are unsupported or generic
 
 ## Sources
 
-- Project interview inputs (developer audience and scope)
-- [SolidStart docs](https://docs.solidjs.com/solid-start)
-- [GitHub Pages workflow docs](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
+- Local code inspection on 2026-03-27:
+  - `src/components/profile/ProfileHeader.tsx`
+  - `src/lib/icons/known-sites-data.ts`
+  - `src/lib/content/social-profile-fields.ts`
+  - `data/links.json`
+  - `data/profile.json`
+- [YouTube Brand Resources and Guidelines](https://www.youtube.com/yt/about/brand-resources/)
+- [LinkedIn [in] Logo guidelines](https://brand.linkedin.com/in-logo)
+- [GitHub Logo guidance](https://brand.github.com/foundations/logo)
+- [X brand guidelines PDF](https://about.x.com/content/dam/about-twitter/x/brand-toolkit/x-brand-guidelines.pdf)
 
 ---
-*Feature research for: developer-first social links generator*
-*Researched: 2026-02-22*
+*Feature research for: OpenLinks v1.2 quick links milestone*
+*Researched: 2026-03-27*

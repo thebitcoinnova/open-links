@@ -1,176 +1,133 @@
 # Pitfalls Research
 
-**Domain:** Developer-first static links generator with rich preview support
-**Researched:** 2026-02-22
+**Domain:** OpenLinks v1.2 profile-header quick links and usability polish
+**Researched:** 2026-03-27
 **Confidence:** HIGH
 
 ## Critical Pitfalls
 
-### Pitfall 1: Rich Metadata Fetches Break the Build
+### Pitfall 1: Duplicate link sources drift apart
 
 **What goes wrong:**
-External URLs time out, block requests, or return malformed tags, causing build failures or inconsistent card previews.
+Quick Links are sourced from `profileLinks` or a new config block while the main cards still come from `links[]`, so the header and the card list stop matching.
 
 **Why it happens:**
-Teams treat rich metadata as mandatory and tightly couple network fetch success to static build completion.
+Teams optimize for quick implementation and accidentally create a second authoring path.
 
 **How to avoid:**
-Make metadata enrichment optional with strict timeout limits, retries, and fallback to user-provided metadata.
+Derive Quick Links from enabled top-level `links[]` items and keep one source of truth.
 
 **Warning signs:**
-Increasing CI flake rate, repeated timeout errors, or cards disappearing between builds.
+A platform appears in the header but not the card list, or vice versa.
 
 **Phase to address:**
-Phase 3 (rich cards + enrichment pipeline).
+Quick Links foundation phase.
 
 ---
 
-### Pitfall 2: Schema Drift Across Forks
+### Pitfall 2: Icon-only UI ships without usable labels
 
 **What goes wrong:**
-Forks add custom fields without versioning or migration guidance, then future template updates break their builds.
+Sighted users can infer the brand, but keyboard and screen-reader users get ambiguous or repetitive controls.
 
 **Why it happens:**
-No schema versioning discipline, weak docs, and no compatibility policy.
+The visual design focuses on “just icons” and forgets that the semantic name has to travel somewhere else.
 
 **How to avoid:**
-Version schema files, publish migration notes, and keep extension points explicit (`custom` object namespaces).
+Every quick link needs an explicit accessible name, descriptive title, visible focus treatment, and correct anchor semantics.
 
 **Warning signs:**
-Frequent PR comments about "template update broke my data" and ad-hoc local patching.
+Tests only assert icon rendering, not labels or keyboard focus order.
 
 **Phase to address:**
-Phase 1 (data contract and validation foundation).
+Quick Links foundation phase.
 
 ---
 
-### Pitfall 3: Theme Extensibility Looks Flexible but Isn’t
+### Pitfall 3: Header density regresses on mobile
 
 **What goes wrong:**
-Fork owners can tweak colors but cannot change layouts or card composition without invasive rewrites.
+The Quick Links strip plus the existing action bar crowd the top of the page, causing wrapping chaos or pushing core identity content too far down.
 
 **Why it happens:**
-Theme choices are implemented as shallow CSS switches instead of component/layout extension points.
+Desktop-first spacing assumptions do not survive narrow screens.
 
 **How to avoid:**
-Define tokenized themes and explicit layout templates; keep card renderers style-agnostic.
+Design the strip as a compact secondary row, test at small phone widths, and cap the number of visible quick links if needed.
 
 **Warning signs:**
-Theme PRs require editing core components, or forks duplicate large UI files.
+Three or more wrapped rows in the profile header, clipped icons, or action controls pushed below the fold.
 
 **Phase to address:**
-Phase 2 (UI/theming architecture).
+Quick Links UI phase.
 
 ---
 
-### Pitfall 4: Accessibility and SEO Regress Under Visual Polish
+### Pitfall 4: Platform marks are treated like product branding
 
 **What goes wrong:**
-Beautiful cards ship with poor contrast, missing semantics, weak focus states, and incomplete meta tags.
+The header uses oversized logos, recolored marks, or combinations that imply endorsement.
 
 **Why it happens:**
-Polish is validated visually, not through accessibility/SEO checks.
+The team treats platform icons as decorative art instead of trademarked brand assets.
 
 **How to avoid:**
-Add automated accessibility and SEO checks in CI plus manual keyboard/screen-reader smoke tests.
+Use the existing approved icon shapes, keep them secondary, do not modify them, and link them only to the matching platform destination.
 
 **Warning signs:**
-Lighthouse accessibility drops, keyboard traps, or pages with duplicate/missing titles/descriptions.
+Wordmarks appear in the strip, icons are custom-styled beyond contrast-safe theming, or the section visually dominates the page title.
 
 **Phase to address:**
-Phase 4 (quality hardening before broad release).
+Quick Links UI phase.
 
 ---
 
-### Pitfall 5: GitHub Pages Path/Domain Misconfiguration
+### Pitfall 5: Quick Links become another nav system
 
 **What goes wrong:**
-Site works locally but breaks in production due to incorrect base path, branch/artifact settings, or CNAME handling.
+The strip starts absorbing analytics toggles, copy/share actions, or non-social shortcuts and stops being a clean “jump to major platforms” surface.
 
 **Why it happens:**
-Deployment assumptions are hard-coded and not validated against actual Pages config.
+Once a new row exists, unrelated actions get added to it.
 
 **How to avoid:**
-Centralize base URL config, test deploy workflow in CI, and document custom-domain steps for v2.
+Keep the strip scoped to direct external social/profile destinations only; leave share/copy/QR in the existing action bar.
 
 **Warning signs:**
-404 assets on deployed site, broken theme assets, or intermittent deploy rollbacks.
+Buttons and links are mixed, or the section label no longer describes the contents accurately.
 
 **Phase to address:**
-Phase 5 (deployment hardening + docs).
+Requirements and roadmap scoping.
 
-## Technical Debt Patterns
+## Brand-Use Watchouts
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Skipping schema validation in local dev | Faster iteration | CI-only failures and poor contributor UX | Never; keep fast local validate command |
-| Embedding all styles in components | Quicker initial UI build | Hard-to-extend theming and fork divergence | Acceptable only for throwaway prototypes |
-| Storing fetched metadata without TTL policy | Simpler implementation | Stale previews and confusing drift | Acceptable only with explicit manual refresh command |
+| Platform | Watchout | Safer implementation |
+|----------|----------|----------------------|
+| X | Black/white treatment and clear space should be preserved | Use a compact monochrome-capable mark in a small icon lineup |
+| YouTube | Full logo use is more constrained than icon use | Use the icon only, and only when linking to the actual channel |
+| LinkedIn | The full LinkedIn logo is restricted; the `[in]` mark is the social-lineup treatment | Use the `[in]` icon treatment only |
+| GitHub | Social-button use is fine, but the mark cannot imply endorsement or become the site's own branding | Keep the GitHub icon secondary and unmodified |
 
-## Integration Gotchas
+## Verification Traps
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| GitHub Pages | Wrong base path for project pages | Derive base path from repo config/environment |
-| OG metadata fetch | Unlimited request concurrency | Apply rate limits, retries, and per-domain timeout |
-| Icon imports | Importing whole icon sets | Tree-shake or include only referenced icons |
-
-## Performance Traps
-
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Shipping large icon bundles | Slow initial page load | Import only needed icons, verify bundle size in CI | Typically visible above 100+ icons |
-| Large rich preview images unoptimized | High LCP and bandwidth usage | Use constrained image dimensions and lazy loading | Common on mobile networks |
-| Excessive client-side interactivity | Increased JS and reduced responsiveness | Keep runtime JS minimal; prefer static render | Shows early on low-end devices |
-
-## Security Mistakes
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Rendering unsanitized HTML from metadata | XSS on public profile pages | Sanitize or strip untrusted HTML fields |
-| Allowing non-http(s) URL schemes | Link-based injection and abuse | Enforce URL scheme validation in schema |
-| Putting deploy secrets in repo | Credential leakage | Use GitHub Actions secrets/environment protections |
-
-## UX Pitfalls
-
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Over-animated cards | Distracting and motion-sensitive discomfort | Use restrained motion with reduced-motion support |
-| Poor dark/light contrast tuning | Readability and accessibility issues | Tokenize contrast pairs and run automated checks |
-| Inconsistent card hierarchy | Users miss primary links | Enforce layout rhythm and semantic heading structure |
-
-## "Looks Done But Isn't" Checklist
-
-- [ ] **Schema validation:** Often missing actionable error messages — verify errors include field paths and fix hints.
-- [ ] **Rich cards:** Often missing fallback states — verify preview still renders when metadata fetch fails.
-- [ ] **Theming:** Often missing non-default mode QA — verify both dark and light at mobile and desktop breakpoints.
-- [ ] **Deployment:** Often missing production-path checks — verify deployed assets load under GitHub Pages base path.
-- [ ] **Accessibility:** Often missing keyboard audit — verify full navigation without mouse.
-
-## Recovery Strategies
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Metadata fetch instability | MEDIUM | Disable enrichment gate, serve cached/manual metadata, patch retry policy |
-| Schema drift in forks | HIGH | Add migration docs/scripts, introduce compatibility mode, publish change advisory |
-| Broken Pages deploy path | LOW | Fix base path config, rerun workflow, add regression check in CI |
-
-## Pitfall-to-Phase Mapping
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Metadata fetch build failures | Phase 3 | CI passes with network failure simulation and fallback cards rendered |
-| Schema drift across forks | Phase 1 | Versioned schema + migration doc present; invalid forks fail with clear diagnostics |
-| Theme extensibility gaps | Phase 2 | New theme can be added without editing core card logic |
-| A11y/SEO regressions | Phase 4 | Quality gates pass (Lighthouse/a11y checks + manual smoke) |
-| Pages config breakage | Phase 5 | Deployed preview verifies base path and assets resolve |
+- [ ] The strip hides itself when no eligible platforms exist.
+- [ ] The strip order is deterministic.
+- [ ] Every icon link has a descriptive accessible name.
+- [ ] Small-screen rendering stays intact above the action bar.
+- [ ] The action bar still works and remains visually distinct.
 
 ## Sources
 
-- [SolidStart docs](https://docs.solidjs.com/solid-start)
-- [GitHub Pages workflow docs](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
-- Prior art and common failure modes from static-site and CI/CD ecosystems
+- Local code inspection on 2026-03-27:
+  - `src/components/profile/ProfileHeader.tsx`
+  - `src/lib/icons/known-sites-data.ts`
+  - `src/lib/icons/site-icon-graphics.ts`
+  - `src/lib/links/link-kind.ts`
+- [X brand guidelines PDF](https://about.x.com/content/dam/about-twitter/x/brand-toolkit/x-brand-guidelines.pdf)
+- [YouTube Brand Resources and Guidelines](https://www.youtube.com/yt/about/brand-resources/)
+- [LinkedIn [in] Logo guidelines](https://brand.linkedin.com/in-logo)
+- [GitHub Logo guidance](https://brand.github.com/foundations/logo)
 
 ---
-*Pitfalls research for: developer-first static links generator*
-*Researched: 2026-02-22*
+*Pitfalls research for: OpenLinks v1.2 quick links milestone*
+*Researched: 2026-03-27*

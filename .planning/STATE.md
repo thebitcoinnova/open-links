@@ -2,21 +2,22 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-09)
+See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Define the next versioned milestone now that the Phase 14 dialog-library follow-up is complete
+**Current focus:** Define requirements and roadmap for v1.2 Profile Quick Links + Header Usability Polish
 
 ## Current Position
 
-Phase: 14 (complete)
-Plan: 14-01, 14-02, 14-03
-Status: Phase 14 complete; ready for `$gsd-new-milestone`
-Next Phase: 14 - Refactor Dialogs to Use a Modal Library
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for milestone v1.2
+Next Phase: 15 - Quick Links Foundation (proposed)
+Active Milestone: v1.2-profile-quick-links-header-usability-polish
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-11 - Completed Phase 14 with a shared Kobalte-backed dialog wrapper and migrated analytics/payment modal consumers.
+Last activity: 2026-03-27 - Started milestone v1.2 and completed milestone research for profile quick links and header usability polish.
 
-Progress: [##########] 100%
+Progress: [..........] 0%
 
 ## Performance Metrics
 
@@ -77,8 +78,7 @@ Progress: [##########] 100%
 
 ### Pending Todos
 
-- Start the next milestone with `$gsd-new-milestone`.
-- Decide whether the next milestone should prioritize performance debt, SEO cleanup, broader social coverage, or further product-surface expansion.
+- Define the v1.2 requirements and roadmap around profile quick links plus closely related header polish.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -91,6 +91,6 @@ Progress: [##########] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-11 14:50
-Stopped at: Phase 14 complete; the next planning step is `$gsd-new-milestone`.
-Resume file: .planning/ROADMAP.md
+Last session: 2026-03-27 10:00
+Stopped at: Research complete for v1.2; next step is to define milestone requirements.
+Resume file: .planning/REQUIREMENTS.md

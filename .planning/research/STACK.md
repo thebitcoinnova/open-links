@@ -1,7 +1,7 @@
 # Stack Research
 
-**Domain:** Developer-first static social links site generator
-**Researched:** 2026-02-22
+**Domain:** OpenLinks v1.2 profile-header quick links and usability polish
+**Researched:** 2026-03-27
 **Confidence:** HIGH
 
 ## Recommended Stack
@@ -10,89 +10,76 @@
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| `@solidjs/start` + `solid-js` | `1.3.0` + `1.9.11` | Static-rendered Solid app and component runtime | SolidStart supports static prerendering while preserving SolidJS ergonomics for a polished UI. |
-| TypeScript | `5.9.3` | Typed app + schema/tooling scripts | Strong typing is critical for maintainable JSON-driven rendering and contributor onboarding. |
-| JSON Schema (Draft 2020-12) + AJV | `ajv@8.18.0`, `ajv-formats@3.0.1` | Validate profile/link metadata before build | Schema-first validation gives deterministic builds and clear contributor feedback. |
-| GitHub Actions + GitHub Pages | `actions/checkout@v5`, `actions/configure-pages@v5`, `actions/upload-pages-artifact@v4`, `actions/deploy-pages@v4` | CI validation/build/deploy | First-class for fork/template workflows and zero-maintenance static hosting. |
+| `solid-js` | `1.9.11` | Profile-header UI composition | Already owns the public profile header and action bar, so Quick Links can stay in the existing component model. |
+| TypeScript | `5.9.3` | Typed quick-link derivation and config normalization | The milestone depends on safe mapping from `links.json` into a smaller profile-header navigation surface. |
+| `simple-icons` | `15.22.0` | Popular platform glyphs | Already powers the repo's known-site icon system, so no new icon package is needed. |
+| Existing OpenLinks known-site registry | repo-local | Platform/domain/icon resolution | `src/lib/icons/known-sites-data.ts` and `src/lib/icons/site-icon-graphics.ts` already cover the popular platforms this milestone needs. |
 
 ### Supporting Libraries
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| `@solidjs/meta` | `0.29.4` | SEO tags (`title`, `description`, OG tags) | Use on profile and detail routes for crawlability and social share quality. |
-| `@solidjs/router` | `0.15.4` | Route handling for profile/layout variations | Use if multiple routes are needed (for example themed layouts or category views). |
-| `open-graph-scraper` | `6.11.0` | Build-time rich metadata extraction | Use for optional rich card previews with cache/fallback behavior. |
-| `unplugin-icons` + `@iconify-json/simple-icons` | `23.0.1` + `1.2.71` | Well-known platform icons | Use for recognizable social branding with local/static icon delivery. |
-| `lightningcss` | `1.31.1` | CSS optimization + vendor handling | Use in production build for smaller, faster CSS without heavy framework lock-in. |
+| Library / Module | Purpose | When to Use |
+|------------------|---------|-------------|
+| `src/components/profile/ProfileHeader.tsx` | Header composition seam | Use as the insertion point for the Quick Links strip above the existing action bar. |
+| `src/lib/icons/known-sites-data.ts` | Detect known platforms from `icon` or URL | Use to derive which top-level links qualify for Quick Links. |
+| `src/lib/icons/known-site-icons.tsx` | Render approved icon glyphs already bundled in the app | Use for compact icon-only quick-link buttons. |
+| `src/lib/links/link-kind.ts` | Normalize link types and schemes | Use to exclude contact/generic links from the Quick Links lineup. |
+| Existing Biome + TypeScript checks | Regression guard | Use to keep the milestone low-risk because this feature touches shared header UI. |
 
-### Development Tools
+## Recommended Additions
 
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| `vitest` (`4.0.18`) | Unit and integration tests | Validate schema parsing, card rendering, and metadata fallback behavior. |
-| `eslint` (`10.0.1`) | Static analysis | Enforce consistent TS/Solid patterns in template repos and forks. |
-| `prettier` (`3.8.1`) | Formatting | Keeps generated docs/config edits contributor-friendly. |
+| Add | Why | Notes |
+|-----|-----|-------|
+| Small profile-header quick-link resolver module | Keeps derivation logic out of the view file | Recommended path: derive from existing `links.json`, not `profileLinks`. |
+| Dedicated `QuickLinksStrip` component | Isolates layout, keyboard labels, and responsive behavior | Keeps `ProfileHeader.tsx` below the file-size threshold and easier to test. |
+| Header-focused tests | Confirms ordering, eligibility, and accessible labeling | Needed because the new strip sits in a high-traffic part of the page. |
 
-## Installation
-
-```bash
-# Core
-npm install @solidjs/start solid-js @solidjs/meta @solidjs/router
-
-# Supporting
-npm install ajv ajv-formats open-graph-scraper unplugin-icons @iconify-json/simple-icons lightningcss
-
-# Dev dependencies
-npm install -D typescript vitest eslint prettier @types/node
-```
-
-## Alternatives Considered
-
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| SolidStart static prerendering | Vite + `vite-plugin-solid` SPA | Use when you only need a single route and minimal SEO surface. |
-| AJV + JSON Schema | Zod-only runtime schemas | Use when schema export/interoperability is not needed outside TS code. |
-| GitHub Pages CI deploy | Netlify/Cloudflare Pages | Use when you need previews/edge features beyond GitHub-native workflow. |
-| Iconify/simple-icons local assets | Remote icon CDNs | Use only if bundle size constraints require strict icon-on-demand loading strategy. |
-
-## What NOT to Use
+## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Runtime client-side metadata scraping | CORS failures, latency, privacy risk, and unstable UX | Build-time scraping with cache + fallback fields in JSON |
-| Hard-coding provider-specific deploy logic in app code | Makes non-GitHub targets painful later | Deployment adapter layer in CI/config |
-| Theme logic embedded directly in components | Fork customization becomes brittle and expensive | Token-based themes + layout templates |
-| Unvalidated JSON writes | Broken builds and silent rendering failures | CI schema validation gate before build |
+| A new icon dependency | Existing icon coverage is already broad and bundled | Reuse `simple-icons` through the current known-site graphics pipeline |
+| A second social-link source of truth | `profileLinks` plus `links[]` would drift | Derive Quick Links from enabled top-level `links[]` items |
+| Remote logo fetches | Adds runtime fragility and trademark inconsistency | Keep local SVG assets from the current icon registry |
+| Large branded wordmarks in the strip | Conflicts with platform-brand guidance and steals focus from the profile | Use compact icon buttons with accessible text labels |
 
-## Stack Patterns by Variant
+## External Brand Guidance Impact
 
-**If shipping fastest MVP on one page:**
-- Use SolidStart with a single prerendered route and minimal routing.
-- Because this keeps SEO/static benefits while avoiding architecture churn later.
+These guidelines affect implementation even though no new package is required:
 
-**If adding multiple profile/layout routes:**
-- Use `@solidjs/router` route modules + shared JSON data loader.
-- Because route boundaries keep theme/layout experiments isolated.
+- **X:** use the current black/white logo treatment and maintain clear space; the guide frames the mark as a signpost for where audiences can find you.
+- **YouTube:** explicitly allows the icon in a social icon lineup when it links to a YouTube channel; do not use the full wordmark in icon rows.
+- **LinkedIn:** the `[in]` mark is the allowed social-lineup treatment for members linking to their profile; do not use the full LinkedIn wordmark.
+- **GitHub:** the Invertocat is allowed as a social button to link to a GitHub profile or project, but it must stay secondary and unmodified.
 
-**If adding non-GitHub deployment targets:**
-- Use target-specific workflow files calling shared build steps.
-- Because provider differences stay in CI config rather than product code.
+## Integration Recommendation
 
-## Version Compatibility
+### Preferred implementation
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| `@solidjs/start@1.3.0` | `solid-js@1.9.11` | Same ecosystem release family; preferred pairing for SolidStart apps. |
-| `vite-plugin-solid@2.11.10` | `vite@7.3.1` | For Vite-only fallback architecture; keep versions aligned. |
-| `ajv@8.18.0` | `ajv-formats@3.0.1` | Standard pairing for URL/date/email format validation. |
+1. Reuse the existing known-site registry to classify eligible links.
+2. Derive a compact Quick Links array from enabled top-level social/profile links.
+3. Render the strip in `ProfileHeader` above the current `BottomActionBar`.
+4. Keep the visual treatment secondary: icon-only or icon-primary buttons, strong accessible labels, direct external links.
+
+### Avoided implementation
+
+1. Adding milestone-specific JSON fields before the auto-derived behavior is proven.
+2. Making Quick Links depend on rich-metadata success.
+3. Treating the strip as a second navigation system with view toggles or analytics state.
 
 ## Sources
 
-- [SolidStart docs](https://docs.solidjs.com/solid-start) — static prerendering and framework direction
-- [SolidStart prerender guide](https://docs.solidjs.com/solid-start/building-your-application/rendering/static-site-generation-ssg) — static generation behavior
-- [GitHub Pages Actions guide](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) — deployment workflow actions and versions
-- npm registry (`npm view`) on 2026-02-22 — package versions for stack selection
+- Local code inspection on 2026-03-27:
+  - `src/components/profile/ProfileHeader.tsx`
+  - `src/lib/icons/known-sites-data.ts`
+  - `src/lib/icons/known-site-icons.tsx`
+  - `src/lib/icons/site-icon-graphics.ts`
+  - `src/lib/links/link-kind.ts`
+  - `package.json`
+- [X brand guidelines PDF](https://about.x.com/content/dam/about-twitter/x/brand-toolkit/x-brand-guidelines.pdf)
+- [YouTube Brand Resources and Guidelines](https://www.youtube.com/yt/about/brand-resources/)
+- [LinkedIn [in] Logo guidelines](https://brand.linkedin.com/in-logo)
+- [GitHub Logo guidance](https://brand.github.com/foundations/logo)
 
 ---
-*Stack research for: developer-first static social links generator*
-*Researched: 2026-02-22*
+*Stack research for: OpenLinks v1.2 quick links milestone*
+*Researched: 2026-03-27*

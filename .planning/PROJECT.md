@@ -8,15 +8,25 @@ OpenLinks is a developer-first, free, open source, version-controlled static web
 
 A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
 
+## Current Milestone: v1.2 Profile Quick Links + Header Usability Polish
+
+**Goal:** Add a compact Quick Links strip above the top-level profile action bar by deriving major-platform social shortcuts from existing top-level links, while tightening the profile header's usability on mobile and desktop.
+
+**Target features:**
+- Quick Links section above the profile action bar for popular, recognizable social platforms such as X, YouTube, GitHub, LinkedIn, and Instagram when matching links exist.
+- Auto-derived eligibility and ordering from enabled `data/links.json` entries so maintainers do not manage a second shortcut list.
+- Header-level responsive, accessibility, and spacing polish needed to fit the new shortcut strip cleanly without weakening the current share/copy/QR action bar.
+
 ## Current State
 
 - **Shipped version:** v1.1 (2026-03-10)
-- **Active milestone:** none
-- **Latest delivered scope:** v1.1 shipped phases 7-12 plus inserted Phase 08.1 across 22 plans and 66 summarized tasks
+- **Active milestone:** v1.2 (requirements definition in progress)
+- **Latest delivered scope:** v1.1 shipped phases 7-12 plus inserted Phase 08.1 across 22 plans and 66 summarized tasks, followed by the Phase 13-14 post-v1.1 toast and dialog follow-up
 - **Primary stack:** SolidJS + TypeScript + JSON schema validation + GitHub Actions + GitHub Pages
 - **Quality posture:** SEO/a11y/performance checks remain integrated and CI-gated, with known remaining debt around `/` performance budgets and fallback social-image warnings
 - **Extensibility posture:** documented theme/layout/deployment extension pathways plus AI-guided and Studio-assisted CRUD paths for maintainers
 - **Maintainer workflow posture:** prefer repo AI workflows/skills or Studio for routine CRUD; use direct JSON editing as the lower-level fallback
+- **Planning focus:** define and roadmap the v1.2 Quick Links and header-usability milestone without reopening the broader static-site architecture
 
 ## Validated
 
@@ -30,8 +40,9 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 
 ## Next Milestone Goals
 
-- Define the next versioned milestone with `$gsd-new-milestone`.
-- Decide whether the next milestone should prioritize performance/SEO debt cleanup, broader audience extraction coverage, or further card/template branching.
+- Deliver a compact profile-header Quick Links strip that makes major social destinations faster to scan and tap.
+- Keep `data/links.json` as the single source of truth for both the full card list and the new header shortcut surface.
+- Limit v1.2 to Quick Links plus closely related header polish; defer larger editor/config and broader product-surface expansion work.
 - Keep the current static-build and additive-metadata architecture unless a future milestone intentionally reopens those constraints.
 
 ## Known Debt Carrying Forward
@@ -91,4 +102,4 @@ Recent UI polish work exposed a gap: social profile links still read more like g
 </details>
 
 ---
-*Last updated: 2026-03-10 after archiving v1.1 milestone*
+*Last updated: 2026-03-27 after starting milestone v1.2*

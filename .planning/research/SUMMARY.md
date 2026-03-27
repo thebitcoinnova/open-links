@@ -1,146 +1,103 @@
 # Project Research Summary
 
 **Project:** OpenLinks
-**Domain:** Developer-first static social links site generator
-**Researched:** 2026-02-22
+**Domain:** v1.2 profile-header quick links and usability polish
+**Researched:** 2026-03-27
 **Confidence:** HIGH
 
 ## Executive Summary
 
-OpenLinks sits in the "link-in-bio" space but with a developer-owned, repository-first operating model. The most robust architecture is a SolidJS static site generated from schema-validated JSON, deployed through GitHub Actions to GitHub Pages. This aligns directly with the product goal: fork/template, edit data, push, publish.
+The next milestone should stay narrow: add a profile-header Quick Links strip above the existing action bar, and use that work to tighten the top-of-page usability without reopening broader layout or data-model architecture. The codebase already has the required primitives: the profile header owns the right insertion point, the known-site registry can classify popular platforms, and the icon system already bundles recognizable SVGs for the relevant brands.
 
-The recommended approach is schema-first and CI-enforced. Treat JSON as the contract, enforce it before every build, and keep rendering/theme systems decoupled so forks can customize deeply without rewriting core logic. Rich cards should be supported, but metadata enrichment must be resilient and optional so external network instability does not undermine reliability.
-
-The largest risks are schema drift across forks, fragile metadata fetching, and polish-induced accessibility regressions. These are manageable with versioned schemas, fallback-rich pipelines, and non-negotiable quality gates in CI.
+The strongest implementation path is to derive Quick Links from enabled top-level social links in `data/links.json`. That preserves one source of truth, avoids new authoring burden, and fits the repo's developer-first model. External brand guidance from GitHub, LinkedIn, X, and YouTube all point in the same direction: keep the marks small, secondary, unmodified, and linked directly to the matching profile/channel.
 
 ## Key Findings
 
-### Recommended Stack
+### Stack additions
 
-SolidStart + SolidJS with TypeScript provides a modern static-capable frontend foundation with strong SEO and performance characteristics. AJV-based schema validation gives deterministic build quality, and GitHub-native workflows provide the best onboarding and deployment path for template/fork users.
+- No new dependency is required.
+- Reuse `simple-icons@15.22.0` through the existing icon pipeline.
+- Add one small resolver helper and one focused header component instead of expanding `ProfileHeader.tsx` inline.
 
-**Core technologies:**
-- **SolidStart + SolidJS**: Static rendering and component UI model — modern and suitable for polished link pages.
-- **JSON Schema + AJV**: Content contract and validation — prevents broken fork deployments.
-- **GitHub Actions + GitHub Pages**: Automated validation/build/deploy — matches product distribution strategy.
+### New feature table stakes
 
-### Expected Features
+- Quick Links render only when eligible known-site social/profile links exist.
+- The strip appears above the profile action bar and stays compact on mobile.
+- Each icon links directly to the corresponding destination and has accessible labeling.
+- Ordering is deterministic and based on expected major-platform priority.
 
-This domain expects profile identity, clean link cards, responsive design, theme support, and strong SEO/accessibility basics. OpenLinks-specific differentiation comes from schema rigor, mixed simple/rich card support, and customization/deployment extensibility.
+### Watch out for
 
-**Must have (table stakes):**
-- Profile + link cards with known platform icons
-- Responsive UI with dark/light support
-- GitHub-based automated deploy flow
+- Do not create a second source of truth separate from `links[]`.
+- Do not let Quick Links absorb share/copy/QR or other app actions.
+- Do not ship icon-only controls without descriptive accessible names.
+- Do not enlarge or modify platform marks in ways that conflict with official brand guidance.
 
-**Should have (competitive):**
-- JSON schema validation and typed errors
-- Theme tokens + layout extension points
-- Optional build-time rich metadata previews
+## Recommended Requirement Categories
 
-**Defer (v2+):**
-- CLI CRUD tool
-- In-site GitHub PR editor
-- Full deployment adapter suite beyond Pages
+### Quick Links Discovery
 
-### Architecture Approach
+- Derive eligible major-platform destinations from existing top-level links.
+- Show a compact, recognizable icon lineup above the action bar.
+- Hide the section entirely when there are no qualifying links.
 
-Use a three-layer model: authoring/config (`data/` + `schema/`), deterministic build pipeline (validate -> optional enrich -> prerender), and hosting workflows (GitHub Pages first, adapters later). Keep deployment-provider details outside app code and keep themes decoupled from card data.
+### Header Interaction and Accessibility
 
-**Major components:**
-1. **Data contract and validator** — defines and enforces schema.
-2. **Rendering and theming system** — turns validated data into accessible, extensible UI.
-3. **Deployment automation** — validates, builds, and publishes reliably.
+- Ensure icon links are keyboard-accessible and clearly labeled.
+- Preserve the current action bar behavior and hierarchy.
+- Keep the header usable at narrow mobile widths.
 
-### Critical Pitfalls
+### Maintainer Model
 
-1. **Fragile metadata fetches** — avoid by making enrichment optional with strict fallback behavior.
-2. **Schema drift in forks** — avoid via versioned schemas and migration guidance.
-3. **Shallow theming architecture** — avoid by tokenizing themes and isolating layout templates.
-4. **A11y/SEO regressions under visual polish** — avoid with CI quality gates and manual smoke checks.
-5. **GitHub Pages path misconfiguration** — avoid with centralized base path config and deploy verification.
+- Keep `links.json` as the canonical source for destinations.
+- Avoid requiring duplicate manual configuration for the same social accounts.
+- Keep the feature compatible with the current known-site/icon architecture.
 
-## Implications for Roadmap
+## Roadmap Implications
 
-Based on research, suggested phase structure:
+Recommended roadmap shape:
 
-### Phase 1: Data Contract + Validation Foundation
-**Rationale:** Everything depends on trusted content structure.
-**Delivers:** JSON schemas, validation scripts, sample data, clear error reporting.
-**Addresses:** Table-stakes reliability and contributor experience.
-**Avoids:** Schema drift and broken builds.
+1. **Phase 15: Quick Links Foundation**
+   - Add resolver logic, eligibility rules, ordering, and tests.
+   - Confirm the strip derives from existing links without new data-model complexity.
 
-### Phase 2: Core UI + Theme Architecture
-**Rationale:** User-facing value starts once data can render reliably.
-**Delivers:** Solid profile page, simple cards, dark/light default themes, tokenized styling.
-**Uses:** SolidStart rendering and component boundaries.
-**Implements:** Rendering/theming architecture components.
+2. **Phase 16: Profile Header UI + Responsive Polish**
+   - Add the visual strip to `ProfileHeader`.
+   - Tune spacing, focus states, wrapping, and small-screen behavior.
 
-### Phase 3: Rich Cards + Metadata Enrichment
-**Rationale:** Differentiator after core flow is stable.
-**Delivers:** Rich card type, optional build-time metadata enrichment, fallback logic.
-**Addresses:** Differentiation without runtime fragility.
+3. **Phase 17: Docs + Regression Hardening**
+   - Update relevant docs if the header behavior changes materially.
+   - Add regression coverage for accessibility and empty-state behavior.
 
-### Phase 4: Quality Hardening (Perf/A11y/SEO)
-**Rationale:** Production readiness requires measurable quality gates.
-**Delivers:** CI checks, Lighthouse baselines, accessibility and SEO regression guards.
-**Avoids:** "Looks done but isn't" launch failures.
+## Sources
 
-### Phase 5: GitHub Template + Deployment Hardening
-**Rationale:** Distribution and maintainability close the loop.
-**Delivers:** Template-first onboarding docs, GitHub Pages workflow polish, extension points for future deploy adapters.
-**Implements:** First-class fork/template experience.
+### Primary
 
-### Phase Ordering Rationale
-
-- Validation first prevents downstream churn and broken UI assumptions.
-- Theming architecture must be set before rich features to avoid rework.
-- Rich metadata is intentionally sequenced after stable simple-card rendering.
-- Quality and deployment hardening close risk gaps before broader adoption.
-
-### Research Flags
-
-Phases likely needing deeper research during planning:
-- **Phase 3:** Metadata enrichment policy (timeouts, retry strategy, cache invalidation).
-- **Phase 5:** Deployment adapter abstraction for non-GitHub targets.
-
-Phases with standard patterns (skip research-phase):
-- **Phase 1:** JSON schema + AJV validation flow is well-documented.
-- **Phase 2:** Solid component/theming patterns are established.
+- Local code inspection on 2026-03-27:
+  - `src/components/profile/ProfileHeader.tsx`
+  - `src/routes/index.tsx`
+  - `src/lib/icons/known-sites-data.ts`
+  - `src/lib/icons/known-site-icons.tsx`
+  - `src/lib/icons/site-icon-graphics.ts`
+  - `src/lib/links/link-kind.ts`
+  - `data/links.json`
+  - `package.json`
+- [X brand guidelines PDF](https://about.x.com/content/dam/about-twitter/x/brand-toolkit/x-brand-guidelines.pdf)
+- [YouTube Brand Resources and Guidelines](https://www.youtube.com/yt/about/brand-resources/)
+- [LinkedIn [in] Logo guidelines](https://brand.linkedin.com/in-logo)
+- [GitHub Logo guidance](https://brand.github.com/foundations/logo)
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Verified via official Solid and GitHub docs plus package registry versions |
-| Features | HIGH | Strong alignment between domain expectations and user-stated goals |
-| Architecture | HIGH | Conventional static-pipeline model with clear extension points |
-| Pitfalls | HIGH | Common failure modes are concrete and actionable for this scope |
+| Stack | HIGH | The repo already has the needed dependencies and icon infrastructure. |
+| Features | HIGH | The user-defined milestone is narrow and aligns with established profile-link UX patterns. |
+| Architecture | HIGH | Quick Links fit cleanly into existing header and known-site seams. |
+| Pitfalls | HIGH | Main risks are straightforward: duplication, accessibility, mobile density, and brand misuse. |
 
 **Overall confidence:** HIGH
 
-### Gaps to Address
-
-- **Rich metadata policy:** Decide strict behavior for cache TTL, failed-domain retries, and manual overrides.
-- **Theme contract boundaries:** Define what is guaranteed stable API vs customizable internals for forks.
-
-## Sources
-
-### Primary (HIGH confidence)
-
-- [SolidStart docs](https://docs.solidjs.com/solid-start) — framework and app model
-- [Solid static generation docs](https://docs.solidjs.com/solid-start/building-your-application/rendering/static-site-generation-ssg) — SSG behavior
-- [GitHub Pages custom workflow docs](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) — deployment workflow actions
-- npm registry (`npm view`) snapshots on 2026-02-22 — stack version verification
-
-### Secondary (MEDIUM confidence)
-
-- Comparable feature sets from link-page products (Linktree/Carrd class tools)
-
-### Tertiary (LOW confidence)
-
-- None required for current scope
-
 ---
-*Research completed: 2026-02-22*
-*Ready for roadmap: yes*
+*Research completed: 2026-03-27*
+*Ready for requirements: yes*
