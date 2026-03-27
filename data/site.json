@@ -53,6 +53,8 @@
       "qr": {
         "displayDefault": "always",
         "styleDefault": "dots",
+        "foregroundColorDefault": "#f8fafc",
+        "backgroundColorDefault": "#101625",
         "logoModeDefault": "rail-default",
         "logoSizeDefault": 0.24,
         "fullscreenDefault": "enabled"
