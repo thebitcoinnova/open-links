@@ -146,6 +146,45 @@ test("canonical quick-links marker only breaks ties within the same platform", (
   );
 });
 
+test("same-platform duplicates fall back to content order when no canonical marker is present", () => {
+  // Arrange
+  const links: OpenLink[] = [
+    createLink({
+      id: "instagram-primary",
+      label: "Instagram",
+      type: "rich",
+      url: "https://www.instagram.com/peterryszkiewicz/",
+      icon: "instagram",
+    }),
+    createLink({
+      id: "instagram-secondary",
+      label: "Instagram Backup",
+      type: "rich",
+      url: "https://www.instagram.com/peterryszkiewicz.backup/",
+      icon: "instagram",
+    }),
+    createLink({
+      id: "linkedin",
+      label: "LinkedIn",
+      type: "rich",
+      url: "https://www.linkedin.com/in/peter-ryszkiewicz/",
+      icon: "linkedin",
+    }),
+  ];
+
+  // Act
+  const quickLinks = resolveProfileQuickLinks(links);
+
+  // Assert
+  assert.deepEqual(
+    quickLinks.map((link) => ({ id: link.id, platform: link.platform })),
+    [
+      { id: "instagram-primary", platform: "instagram" },
+      { id: "linkedin", platform: "linkedin" },
+    ],
+  );
+});
+
 test("non-profile, disabled, payment, and unsupported links are excluded", () => {
   // Arrange
   const links: OpenLink[] = [
