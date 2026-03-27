@@ -174,6 +174,15 @@ export interface LinkEnrichmentPolicy {
   [key: string]: unknown;
 }
 
+export interface LinkQuickLinksCustomConfig {
+  canonical?: boolean;
+}
+
+export interface LinkCustomConfig {
+  quickLinks?: LinkQuickLinksCustomConfig;
+  [key: string]: unknown;
+}
+
 export interface OpenLink {
   id: string;
   label: string;
@@ -187,7 +196,7 @@ export interface OpenLink {
   metadata?: RichLinkMetadata;
   enrichment?: LinkEnrichmentPolicy;
   payment?: LinkPaymentConfig;
-  custom?: Record<string, unknown>;
+  custom?: LinkCustomConfig;
 }
 
 export interface LinkGroup {

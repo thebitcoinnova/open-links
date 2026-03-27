@@ -13,6 +13,10 @@ export interface ResolvedProfileQuickLink {
   contentOrder: number;
 }
 
+interface QuickLinkCandidate extends ResolvedProfileQuickLink {
+  isCanonical: boolean;
+}
+
 export const PROFILE_QUICK_LINK_PRIORITY = [
   "x",
   "youtube",
@@ -60,10 +64,36 @@ const compareQuickLinks = (
   return compareByContentOrder(left, right);
 };
 
-const resolveQuickLinkCandidate = (
-  link: OpenLink,
-  index: number,
-): ResolvedProfileQuickLink | null => {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const resolveCanonicalQuickLink = (link: OpenLink): boolean => {
+  const maybe_custom = link.custom;
+
+  if (!isRecord(maybe_custom)) {
+    return false;
+  }
+
+  const maybe_quick_links = maybe_custom.quickLinks;
+  if (!isRecord(maybe_quick_links)) {
+    return false;
+  }
+
+  return maybe_quick_links.canonical === true;
+};
+
+const compareCandidatesWithinPlatform = (
+  left: QuickLinkCandidate,
+  right: QuickLinkCandidate,
+): number => {
+  if (left.isCanonical !== right.isCanonical) {
+    return left.isCanonical ? -1 : 1;
+  }
+
+  return compareByContentOrder(left, right);
+};
+
+const resolveQuickLinkCandidate = (link: OpenLink, index: number): QuickLinkCandidate | null => {
   if (link.enabled === false || !link.url) {
     return null;
   }
@@ -86,22 +116,31 @@ const resolveQuickLinkCandidate = (
     icon: link.icon,
     platform: maybe_supported_profile.platform,
     contentOrder: resolveContentOrder(link, index),
+    isCanonical: resolveCanonicalQuickLink(link),
   };
 };
 
 export const resolveProfileQuickLinks = (links: OpenLink[]): ResolvedProfileQuickLink[] => {
   const candidates = links
     .map((link, index) => resolveQuickLinkCandidate(link, index))
-    .filter((link): link is ResolvedProfileQuickLink => Boolean(link))
+    .filter((link): link is QuickLinkCandidate => Boolean(link))
     .sort(compareQuickLinks);
 
-  const winners = new Map<SupportedSocialProfilePlatform, ResolvedProfileQuickLink>();
+  const winners = new Map<SupportedSocialProfilePlatform, QuickLinkCandidate>();
 
   for (const candidate of candidates) {
-    if (!winners.has(candidate.platform)) {
+    const maybe_existing = winners.get(candidate.platform);
+    if (!maybe_existing) {
+      winners.set(candidate.platform, candidate);
+      continue;
+    }
+
+    if (compareCandidatesWithinPlatform(candidate, maybe_existing) < 0) {
       winners.set(candidate.platform, candidate);
     }
   }
 
-  return Array.from(winners.values()).sort(compareQuickLinks);
+  return Array.from(winners.values())
+    .sort(compareQuickLinks)
+    .map(({ isCanonical: _isCanonical, ...quickLink }) => quickLink);
 };
