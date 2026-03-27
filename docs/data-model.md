@@ -332,6 +332,7 @@ Payment rails can include explicit app links via `payment.rails[].appLinks` for 
 When `payment.rails[].qr.badge.mode` is `auto`, runtime tries to infer a platform logo from `link.icon`, then `payment.rails[].icon`, then `payment.rails[].url` or `link.url`, and combines it with the rail symbol when both resolve and differ.
 For branded payment cards, `links[].icon` (or a rail-level icon override) controls the card-shell icon and also seeds QR `auto` badge inference. If a new payment platform should render in card chrome like Club Orange does, add it to the shared known-site registry instead of relying on `badge.items.asset`.
 `badge.items.asset` affects only the QR center badge. It does not change the card-shell icon, known-site resolution, or other surfaces that use shared icon rendering.
+Without explicit `payment.rails[].qr.badge.mode` or `payment.rails[].qr.logoMode` overrides, runtime now applies that same local-first identity logic by default: it composes site/company + rail when both resolve, otherwise falls back to whichever single identity resolves.
 When QR colors are omitted, runtime defaults follow the active theme using `--text-primary` for QR modules and `--surface-panel` for the background.
 When `payment.effects.enabled` is true and no explicit effect list is provided, runtime defaults to subtle ambient particles for standard payment cards, and to both `lightning-particles` and gold `glitter-particles` for cards whose primary rail is Lightning. When `payment.effects.bombasticity` is omitted, runtime falls back to `site.ui.payments.effects.bombasticityDefault`, then to the built-in midpoint default of `0.5`, which now renders at the maximum live treatment.
 
@@ -702,6 +703,7 @@ Main presentation controls include:
 - `payments.qr.styleDefault`: `square`, `rounded`, `dots`
 - `payments.qr.foregroundColorDefault`, `payments.qr.backgroundColorDefault`: optional site-wide overrides; when omitted, runtime defaults follow the active theme using `--text-primary` and `--surface-panel`
 - `payments.qr.logoModeDefault`: `rail-default`, `custom`, `none`
+  `rail-default` preserves the single-rail fallback when no site/company identity resolves, while explicit per-rail `logoMode` still overrides the newer implicit composite default
 - `payments.qr.logoSizeDefault`
 - `payments.qr.fullscreenDefault`: `enabled`, `disabled`
 - `payments.effects.enabledDefault`: opt payment cards into special effects by default

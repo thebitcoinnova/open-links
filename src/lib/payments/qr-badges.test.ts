@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { OpenLink } from "../content/load-content";
 import { resolvePaymentQrLogoUrl } from "./qr-badges";
 import { resolvePaymentRailLogoUrl } from "./rail-logos";
 
@@ -10,14 +11,49 @@ const decodeSvgDataUrl = (value: string): string => {
   return decodeURIComponent(value.slice(prefix.length));
 };
 
-test("auto QR badges compose Club Orange and Lightning when both resolve", () => {
+const clubOrangeLightningLink = {
+  id: "cluborange-lightning-tips",
+  label: "Club Orange Tips",
+  type: "payment",
+  icon: "cluborange",
+} satisfies OpenLink;
+
+const clubOrangeLightningRail = {
+  id: "lightning",
+  rail: "lightning",
+  address: "peterryszkiewicz@cluborange.org",
+} as const;
+
+const strikeLightningLink = {
+  id: "strike-lightning-tips",
+  label: "Strike Tips",
+  type: "payment",
+  icon: "strike",
+} satisfies OpenLink;
+
+const strikeLightningRail = {
+  id: "lightning",
+  rail: "lightning",
+  address: "pryszkie@strike.me",
+} as const;
+
+const lightningOnlyLink = {
+  id: "lightning-tips",
+  label: "Lightning Tips",
+  type: "payment",
+} satisfies OpenLink;
+
+const lightningOnlyRail = {
+  id: "lightning",
+  rail: "lightning",
+  address: "lnurl1dp68gurn8ghj7mrww4exctnv9e3k7mf0d3sk6tm4wdhk6arfdenx2cm0d5hk6",
+} as const;
+
+test("default payment QR logos compose site and rail identities when both resolve", () => {
   // Act
   const logoUrl = resolvePaymentQrLogoUrl({
-    badge: {
-      mode: "auto",
-    },
-    linkIcon: "cluborange",
-    railType: "lightning",
+    link: clubOrangeLightningLink,
+    rail: clubOrangeLightningRail,
   });
 
   // Assert
@@ -33,8 +69,8 @@ test("auto QR badges compose Strike and Lightning when both resolve", () => {
     badge: {
       mode: "auto",
     },
-    linkIcon: "strike",
-    railType: "lightning",
+    link: strikeLightningLink,
+    rail: strikeLightningRail,
   });
 
   // Assert
@@ -44,13 +80,11 @@ test("auto QR badges compose Strike and Lightning when both resolve", () => {
   assert.match(svg, /#F2A900/u);
 });
 
-test("auto QR badges fall back to the legacy rail logo when no platform resolves", () => {
+test("payment QR logos fall back to the rail logo when no site identity resolves", () => {
   // Act
   const resolved = resolvePaymentQrLogoUrl({
-    badge: {
-      mode: "auto",
-    },
-    railType: "lightning",
+    link: lightningOnlyLink,
+    rail: lightningOnlyRail,
   });
 
   // Assert
@@ -62,12 +96,31 @@ test("auto QR badges fall back to the legacy rail logo when no platform resolves
   );
 });
 
+test("explicit rail logo mode still overrides the implicit composite default", () => {
+  // Act
+  const resolved = resolvePaymentQrLogoUrl({
+    link: clubOrangeLightningLink,
+    logoMode: "rail-default",
+    rail: clubOrangeLightningRail,
+  });
+
+  // Assert
+  assert.equal(
+    resolved,
+    resolvePaymentRailLogoUrl({
+      logoMode: "rail-default",
+      railType: "lightning",
+    }),
+  );
+});
+
 test("legacy single-logo configuration still works without a badge override", () => {
   // Act
   const resolved = resolvePaymentQrLogoUrl({
+    link: lightningOnlyLink,
     customLogoUrl: "/payment-logos/paypal.svg",
     logoMode: "custom",
-    railType: "lightning",
+    rail: lightningOnlyRail,
   });
 
   // Assert

@@ -220,10 +220,25 @@ const clubOrangeLightningPaymentLink = {
         id: "lightning",
         rail: "lightning",
         address: "peterryszkiewicz@cluborange.org",
+      },
+    ],
+  },
+} as const satisfies OpenLink;
+
+const explicitRailLogoPaymentLink = {
+  id: "cluborange-lightning-tips-explicit-rail-logo",
+  label: "Club Orange Tips",
+  icon: "cluborange",
+  type: "payment",
+  payment: {
+    primaryRailId: "lightning",
+    rails: [
+      {
+        id: "lightning",
+        rail: "lightning",
+        address: "peterryszkiewicz@cluborange.org",
         qr: {
-          badge: {
-            mode: "auto",
-          },
+          logoMode: "rail-default",
         },
       },
     ],
@@ -730,7 +745,7 @@ test("payment cards pass themeFingerprint to inline QR renderers", () => {
   );
 });
 
-test("club orange lightning tip cards resolve an auto composite QR badge", () => {
+test("club orange lightning tip cards resolve a composite QR badge by default", () => {
   // Arrange
   setReactRuntime(
     createPreservingRuntime(
@@ -761,6 +776,35 @@ test("club orange lightning tip cards resolve an auto composite QR badge", () =>
   const svg = decodeSvgDataUrl(String(qr.props.logoUrl));
   assert.match(svg, /#E86B10/u);
   assert.match(svg, /#F2A900/u);
+
+  setReactRuntime(
+    createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),
+  );
+});
+
+test("explicit payment QR logo modes still override the default composite badge", () => {
+  // Arrange
+  setReactRuntime(
+    createPreservingRuntime(
+      StyledPaymentQr,
+      MobileOverflowMenu,
+      Collapsible.Root,
+      Collapsible.Content,
+    ),
+  );
+
+  // Act
+  const tree = PaymentLinkCard({
+    link: explicitRailLogoPaymentLink,
+    site,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+  const qr = collectElements(tree).find((element) => element.type === StyledPaymentQr);
+
+  // Assert
+  assert.ok(qr);
+  assert.equal(qr.props.logoUrl, "/payment-logos/lightning.svg");
 
   setReactRuntime(
     createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),

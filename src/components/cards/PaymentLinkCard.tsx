@@ -15,7 +15,6 @@ import {
 import type {
   PaymentQrDisplayMode,
   PaymentQrFullscreenMode,
-  PaymentQrLogoMode,
   PaymentQrStyle,
   PaymentRail,
 } from "../../lib/payments/types";
@@ -195,9 +194,6 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const qrBackgroundForRail = (rail: PaymentRail): string | undefined =>
     rail.qr?.backgroundColor ?? siteQrDefaults()?.backgroundColorDefault;
 
-  const qrLogoModeForRail = (rail: PaymentRail): PaymentQrLogoMode =>
-    rail.qr?.logoMode ?? siteQrDefaults()?.logoModeDefault ?? "rail-default";
-
   const qrLogoSizeForRail = (rail: PaymentRail): number =>
     clampPaymentQrImageSize(
       rail.qr?.badge?.size ?? rail.qr?.logoSize ?? siteQrDefaults()?.logoSizeDefault,
@@ -206,13 +202,11 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const qrLogoUrlForRail = (rail: PaymentRail): string | undefined =>
     resolvePaymentQrLogoUrl({
       badge: rail.qr?.badge,
-      linkIcon: props.link.icon,
-      linkUrl: props.link.url,
-      railType: rail.rail,
-      railIcon: rail.icon,
-      railUrl: rail.url,
-      logoMode: qrLogoModeForRail(rail),
+      defaultLogoMode: siteQrDefaults()?.logoModeDefault,
+      link: props.link,
+      logoMode: rail.qr?.logoMode,
       customLogoUrl: rail.qr?.logoUrl,
+      rail,
     });
 
   const qrFullscreenModeForRail = (rail: PaymentRail): PaymentQrFullscreenMode =>

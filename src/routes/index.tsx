@@ -59,6 +59,7 @@ import {
   resolveFollowerHistoryEmptyStateMessage,
 } from "../lib/offline/offline-status";
 import { isPaymentCapableLink } from "../lib/payments/types";
+import { resolveQrLogo } from "../lib/qr/logo-resolver";
 import {
   resolveBaseAwareAssetPath,
   resolveBasePathFromUrl,
@@ -126,6 +127,8 @@ const showGroupHeading = composition.grouping !== "none";
 type PageViewKey = "analytics" | "links";
 interface QrDialogTarget {
   ariaLabel: string;
+  logoSize: number;
+  logoUrl?: string;
   payload: string;
   qrAriaLabel: string;
   title: string;
@@ -415,12 +418,35 @@ export default function RouteIndex() {
     setSelectedQrTarget(target);
   };
 
-  const openLinkQrDialog = (title: string, payload: string) => {
+  const openProfileQrDialog = (payload: string) => {
+    const qrLogo = resolveQrLogo({
+      kind: "profile",
+      avatarUrl: content.profile.avatar,
+    });
+
     openQrDialog({
-      ariaLabel: `${title} QR code`,
+      ariaLabel: `${content.profile.name} QR code`,
+      logoSize: qrLogo.logoSize,
+      logoUrl: qrLogo.logoUrl,
       payload,
-      qrAriaLabel: `${title} link QR code`,
-      title,
+      qrAriaLabel: `${content.profile.name} profile QR code`,
+      title: content.profile.name,
+    });
+  };
+
+  const openLinkQrDialog = (link: (typeof content.links)[number], payload: string) => {
+    const qrLogo = resolveQrLogo({
+      kind: "link",
+      link,
+    });
+
+    openQrDialog({
+      ariaLabel: `${link.label} QR code`,
+      logoSize: qrLogo.logoSize,
+      logoUrl: qrLogo.logoUrl,
+      payload,
+      qrAriaLabel: `${link.label} link QR code`,
+      title: link.label,
     });
   };
 
@@ -439,7 +465,7 @@ export default function RouteIndex() {
               ariaLabel: `Show ${link.label} QR code`,
               kind: "qr" as const,
               onClick: () => {
-                openLinkQrDialog(link.label, shareUrl);
+                openLinkQrDialog(link, shareUrl);
                 return undefined;
               },
               title: `Show ${link.label} QR code`,
@@ -572,7 +598,7 @@ export default function RouteIndex() {
     <ProfileHeader
       profile={content.profile}
       richness={composition.profileRichness}
-      onProfileQrOpen={(payload) => openLinkQrDialog(content.profile.name, payload)}
+      onProfileQrOpen={openProfileQrDialog}
     />
   );
 
@@ -761,6 +787,8 @@ export default function RouteIndex() {
             payload={target().payload}
             ariaLabel={target().ariaLabel}
             qrAriaLabel={target().qrAriaLabel}
+            logoUrl={target().logoUrl}
+            logoSize={target().logoSize}
             themeFingerprint={themeFingerprint()}
             onClose={closeQrDialog}
           />

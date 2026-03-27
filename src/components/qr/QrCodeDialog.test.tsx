@@ -139,6 +139,29 @@ test("QrCodeDialog forwards themeFingerprint to the QR renderer", () => {
   setReactRuntime(reactRuntime);
 });
 
+test("QrCodeDialog forwards QR logo props to the QR renderer", () => {
+  // Arrange
+  setReactRuntime(createPreservingRuntime(AppDialog, StyledQrCode));
+
+  // Act
+  const tree = QrCodeDialog({
+    open: true,
+    title: "GitHub",
+    payload: "https://github.com/openlinks",
+    logoUrl: "/cache/content-images/github-avatar.jpg",
+    logoSize: 0.3,
+    onClose: () => undefined,
+  }) as RenderedNode;
+  const qrCode = collectElements(tree).find((element) => element.type === StyledQrCode);
+
+  // Assert
+  assert.ok(qrCode);
+  assert.equal(qrCode.props.logoUrl, "/cache/content-images/github-avatar.jpg");
+  assert.equal(qrCode.props.logoSize, 0.3);
+
+  setReactRuntime(reactRuntime);
+});
+
 test("QrCodeDialog wraps the QR renderer in a centered body container", () => {
   // Arrange
   setReactRuntime(createPreservingRuntime(AppDialog, StyledQrCode));
