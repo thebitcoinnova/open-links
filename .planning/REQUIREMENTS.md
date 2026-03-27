@@ -51,23 +51,23 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| QLINK-01 | TBD | Pending |
-| QLINK-02 | TBD | Pending |
-| QLINK-03 | TBD | Pending |
-| QLINK-04 | TBD | Pending |
-| QLINK-05 | TBD | Pending |
-| HEAD-01 | TBD | Pending |
-| HEAD-02 | TBD | Pending |
-| HEAD-03 | TBD | Pending |
-| MAINT-01 | TBD | Pending |
-| QUAL-07 | TBD | Pending |
-| DOC-08 | TBD | Pending |
+| QLINK-01 | Phase 15 | Pending |
+| QLINK-02 | Phase 15 | Pending |
+| QLINK-03 | Phase 15 | Pending |
+| QLINK-04 | Phase 15 | Pending |
+| QLINK-05 | Phase 16 | Pending |
+| HEAD-01 | Phase 16 | Pending |
+| HEAD-02 | Phase 16 | Pending |
+| HEAD-03 | Phase 16 | Pending |
+| MAINT-01 | Phase 15 | Pending |
+| QUAL-07 | Phase 17 | Pending |
+| DOC-08 | Phase 17 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11
+- Mapped to phases: 11
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after initial v1.2 definition draft*
+*Last updated: 2026-03-27 after roadmap traceability mapping*
