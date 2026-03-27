@@ -602,11 +602,15 @@ a:focus-visible {
 }
 
 .section-heading {
-  margin: calc(var(--space-3) * var(--density-scale)) 0 calc(var(--space-3) * var(--density-scale));
+  margin: calc(var(--space-4) * var(--density-scale)) 0 calc(var(--space-4) * var(--density-scale));
   font-size: var(--page-type-caption);
   letter-spacing: var(--tracking-section-heading);
   text-transform: var(--transform-section-heading);
   color: color-mix(in srgb, var(--accent) 66%, var(--text-primary) 34%);
+}
+
+.link-section {
+  margin-top: calc(var(--space-3) * var(--density-scale));
 }
 
 .link-section.grouping-bands {
