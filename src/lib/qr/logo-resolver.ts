@@ -13,7 +13,9 @@ import { resolveSocialProfileMetadata } from "../ui/social-profile-metadata";
 import {
   type ResolvedQrBadgeEntry,
   dedupeQrBadgeEntries,
+  resolveAssetQrBadgeEntry,
   resolveComposedQrBadgeUrl,
+  resolveComposedQrBadgeUrlWithEmbeddedAssets,
   resolveKnownSiteQrBadgeEntry,
 } from "./logo-badges";
 
@@ -22,10 +24,17 @@ export interface ResolvedQrLogo {
   logoUrl?: string;
 }
 
+interface ResolvedQrBadgeComposition {
+  entries: ResolvedQrBadgeEntry[];
+  fallbackLogoUrl?: string;
+  foregroundEntryIndex?: 0 | 1;
+}
+
 export type ResolveQrLogoInput =
   | {
       kind: "profile";
       avatarUrl?: string;
+      siteLogoUrl?: string;
       logoSize?: number;
     }
   | {
@@ -71,32 +80,131 @@ export const clampQrLogoSize = (value: number | undefined): number => {
   return clamp(value, 0.15, 0.35);
 };
 
-const resolveLinkQrLogoUrl = (link: OpenLink): string | undefined => {
+const resolveBadgeUrl = (
+  entries: ResolvedQrBadgeEntry[],
+  options?: { foregroundEntryIndex?: 0 | 1 },
+): string | undefined => {
+  const dedupedEntries = dedupeQrBadgeEntries(entries);
+
+  if (dedupedEntries.length === 0) {
+    return undefined;
+  }
+
+  return resolveComposedQrBadgeUrl(dedupedEntries, options);
+};
+
+const resolveBadgeCompositionUrl = (composition: ResolvedQrBadgeComposition): string | undefined =>
+  resolveBadgeUrl(composition.entries, {
+    foregroundEntryIndex: composition.foregroundEntryIndex,
+  }) ?? composition.fallbackLogoUrl;
+
+const resolveEmbeddedBadgeCompositionUrl = async (
+  composition: ResolvedQrBadgeComposition,
+  baseUrl?: string,
+): Promise<string | undefined> =>
+  (await resolveComposedQrBadgeUrlWithEmbeddedAssets(
+    composition.entries,
+    {
+      foregroundEntryIndex: composition.foregroundEntryIndex,
+    },
+    baseUrl,
+  )) ?? composition.fallbackLogoUrl;
+
+const resolveLinkPrimaryBadgeEntry = (
+  link: OpenLink,
+): Extract<ResolvedQrBadgeEntry, { kind: "asset" }> | undefined => {
   const socialProfile = resolveSocialProfileMetadata(link);
 
   if (socialProfile.usesProfileLayout && socialProfile.profileImageUrl) {
-    return socialProfile.profileImageUrl;
+    return resolveAssetQrBadgeEntry(socialProfile.profileImageUrl, `${link.label} profile image`);
   }
 
   if (socialProfile.hasDistinctPreviewImage && socialProfile.previewImageUrl) {
-    return socialProfile.previewImageUrl;
+    return resolveAssetQrBadgeEntry(socialProfile.previewImageUrl, `${link.label} preview image`);
   }
 
-  const maybeKnownSite = resolveKnownSite(link.icon, link.url);
-  if (!maybeKnownSite) {
-    return undefined;
-  }
-
-  const maybeBadgeEntry = resolveKnownSiteQrBadgeEntry(maybeKnownSite.id);
-  if (!maybeBadgeEntry) {
-    return undefined;
-  }
-
-  return resolveComposedQrBadgeUrl([maybeBadgeEntry]);
+  return undefined;
 };
 
 const resolveRailEntry = (railType: PaymentRailType): ResolvedQrBadgeEntry | undefined =>
   resolveKnownSiteQrBadgeEntry(paymentRailSiteIds[railType]);
+
+const resolveLinkSiteEntry = (link: OpenLink): ResolvedQrBadgeEntry | undefined => {
+  const maybeKnownSite = resolveKnownSite(link.icon, link.url);
+
+  if (!maybeKnownSite) {
+    return undefined;
+  }
+
+  return resolveKnownSiteQrBadgeEntry(maybeKnownSite.id);
+};
+
+const resolveProfileQrLogoUrl = (
+  input: Extract<ResolveQrLogoInput, { kind: "profile" }>,
+): string | undefined => {
+  return resolveBadgeCompositionUrl(resolveProfileQrBadgeComposition(input));
+};
+
+const resolveProfileQrBadgeComposition = (
+  input: Extract<ResolveQrLogoInput, { kind: "profile" }>,
+): ResolvedQrBadgeComposition => {
+  const maybeAvatarEntry = resolveAssetQrBadgeEntry(input.avatarUrl, "Profile avatar");
+
+  if (!maybeAvatarEntry) {
+    return {
+      entries: [],
+    };
+  }
+
+  const maybeSiteEntry = resolveAssetQrBadgeEntry(input.siteLogoUrl, "Site logo");
+
+  if (!maybeSiteEntry) {
+    return {
+      entries: [maybeAvatarEntry],
+      fallbackLogoUrl: maybeAvatarEntry.url,
+    };
+  }
+
+  return {
+    entries: [maybeAvatarEntry, maybeSiteEntry],
+    fallbackLogoUrl: maybeAvatarEntry.url,
+    foregroundEntryIndex: 0,
+  };
+};
+
+const resolveLinkQrLogoUrl = (link: OpenLink): string | undefined => {
+  return resolveBadgeCompositionUrl(resolveLinkQrBadgeComposition(link));
+};
+
+const resolveLinkQrBadgeComposition = (link: OpenLink): ResolvedQrBadgeComposition => {
+  const maybePrimaryEntry = resolveLinkPrimaryBadgeEntry(link);
+  const maybeSiteEntry = resolveLinkSiteEntry(link);
+
+  if (maybePrimaryEntry && maybeSiteEntry) {
+    return {
+      entries: [maybePrimaryEntry, maybeSiteEntry],
+      fallbackLogoUrl: maybePrimaryEntry.url,
+      foregroundEntryIndex: 0,
+    };
+  }
+
+  if (maybePrimaryEntry?.kind === "asset") {
+    return {
+      entries: [maybePrimaryEntry],
+      fallbackLogoUrl: maybePrimaryEntry.url,
+    };
+  }
+
+  if (maybeSiteEntry) {
+    return {
+      entries: [maybeSiteEntry],
+    };
+  }
+
+  return {
+    entries: [],
+  };
+};
 
 const resolvePaymentAutoSiteEntry = (
   link: OpenLink,
@@ -296,7 +404,7 @@ export const resolveQrLogo = (input: ResolveQrLogoInput): ResolvedQrLogo => {
   if (input.kind === "profile") {
     return {
       logoSize: clampQrLogoSize(input.logoSize),
-      logoUrl: input.avatarUrl,
+      logoUrl: resolveProfileQrLogoUrl(input),
     };
   }
 
@@ -310,5 +418,28 @@ export const resolveQrLogo = (input: ResolveQrLogoInput): ResolvedQrLogo => {
   return {
     logoSize: clampQrLogoSize(input.logoSize),
     logoUrl: resolvePaymentQrLogoUrl(input),
+  };
+};
+
+export const resolveQrLogoWithEmbeddedAssets = async (
+  input: Extract<ResolveQrLogoInput, { kind: "profile" | "link" }>,
+  baseUrl?: string,
+): Promise<ResolvedQrLogo> => {
+  if (input.kind === "profile") {
+    return {
+      logoSize: clampQrLogoSize(input.logoSize),
+      logoUrl: await resolveEmbeddedBadgeCompositionUrl(
+        resolveProfileQrBadgeComposition(input),
+        baseUrl,
+      ),
+    };
+  }
+
+  return {
+    logoSize: clampQrLogoSize(input.logoSize),
+    logoUrl: await resolveEmbeddedBadgeCompositionUrl(
+      resolveLinkQrBadgeComposition(input.link),
+      baseUrl,
+    ),
   };
 };

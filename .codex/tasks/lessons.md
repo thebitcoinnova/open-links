@@ -71,3 +71,13 @@
 - What went wrong: I treated the first auto-width pill fix as durable even though it still sized and centered the labels from heuristic font estimates while the PNG renderer was free to use fallback fonts, so the exported social card could remain visibly misaligned.
 - Preventive rule: When a design artifact is rasterized by a headless renderer, validate the final rendered output against the exact fonts and measurement engine the renderer uses before declaring the layout stable.
 - Trigger signal to catch it earlier: The layout fix depends on estimated text metrics, `dominant-baseline`, or other approximations while the render pipeline does not explicitly pin the fonts or measure actual glyph bounds.
+
+## lesson-inline-raster-assets-in-composed-qr-badges | 2026-03-26 20:23
+### What went wrong
+The dual-identity QR badge change composed raster profile photos into an SVG data URL by leaving the photo as an external asset reference, which rendered the vector site logo but left the photo badge white in the actual QR dialog.
+
+### Preventive rule
+When composing QR badge SVGs that mix vector marks with raster photos or avatars, inline the raster assets as `data:` URLs before handing the composed SVG to the QR renderer instead of relying on nested external image references.
+
+### Trigger signal to catch it earlier
+Any QR or badge change that generates an SVG data URL containing `<image href="/cache/...jpg">`, `<image href="/cache/...png">`, or other external raster paths should be treated as a likely rendering bug and verified with an embedded-asset test before shipping.

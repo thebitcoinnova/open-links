@@ -76,6 +76,7 @@ the site, including a person or an organization.
 - During `bun run dev` and `bun run build`, avatar sync fetches and stores a local copy at `public/cache/profile-avatar/profile-avatar.<ext>`.
 - Avatar sync writes the committed stable manifest `data/cache/profile-avatar.json` plus the gitignored runtime overlay `data/cache/profile-avatar.runtime.json`.
 - Runtime rendering uses the local resolved path from the committed avatar manifest, not the raw remote URL.
+- The main profile/site QR also reuses the resolved avatar and automatically pairs it with the site brand mark when both assets are available; there is no separate profile-QR config surface.
 - On fetch failure:
   - cached local avatar is reused when available, or
   - fallback file `public/profile-avatar-fallback.svg` is used.
@@ -243,6 +244,7 @@ For supported profile links, start with the link shell and let build-time enrich
 ```
 
 When enrichment succeeds, runtime can reuse the normalized metadata for avatar-first profile rendering, handle display, audience metrics, follower-history snapshots, and card analytics availability without requiring manual metadata in `data/links.json`.
+The same identity metadata now also feeds QR center badges for non-payment links: when runtime resolves both a primary identity image (`metadata.profileImage` first, then a distinct `metadata.image`) and a known site identity from `links[].icon` or the URL, the QR code automatically renders a two-item side-by-side badge with both identities. No extra JSON configuration is required.
 
 If you are using AI workflows or Studio for CRUD, this is the reference shape to target. Directly editing `data/links.json` is the manual fallback path.
 

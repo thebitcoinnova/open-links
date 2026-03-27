@@ -18,8 +18,25 @@ interface ComposeQrBadgeOptions {
   foregroundEntryIndex?: 0 | 1;
 }
 
+const EMBEDDED_ASSET_URL_CACHE = new Map<string, Promise<string>>();
+
 const toEncodedSvgDataUrl = (svg: string): string =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+
+const toBase64 = (bytes: Uint8Array): string => {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(bytes).toString("base64");
+  }
+
+  let binary = "";
+  const chunkSize = 0x8000;
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+
+  return btoa(binary);
+};
 
 const escapeXml = (value: string): string =>
   value
@@ -167,6 +184,67 @@ const composeBadgeSvg = (
   ].join("");
 };
 
+const resolveAssetBaseUrl = (baseUrl: string | undefined): string | undefined => {
+  if (baseUrl) {
+    return baseUrl;
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.href;
+  }
+
+  return undefined;
+};
+
+const resolveAbsoluteAssetUrl = (url: string, baseUrl: string | undefined): string | undefined => {
+  try {
+    return new URL(url, baseUrl).toString();
+  } catch {
+    return undefined;
+  }
+};
+
+const resolveEmbeddedAssetUrl = async (
+  url: string,
+  baseUrl: string | undefined,
+): Promise<string> => {
+  if (/^(?:data|blob):/iu.test(url)) {
+    return url;
+  }
+
+  const resolvedBaseUrl = resolveAssetBaseUrl(baseUrl);
+  const absoluteUrl = resolveAbsoluteAssetUrl(url, resolvedBaseUrl);
+
+  if (!absoluteUrl) {
+    return url;
+  }
+
+  const cached = EMBEDDED_ASSET_URL_CACHE.get(absoluteUrl);
+  if (cached) {
+    return cached;
+  }
+
+  const pending = (async () => {
+    try {
+      const response = await fetch(absoluteUrl);
+      if (!response.ok) {
+        return url;
+      }
+
+      const blob = await response.blob();
+      const contentType = blob.type || response.headers.get("content-type") || "image/png";
+      const base64 = toBase64(new Uint8Array(await blob.arrayBuffer()));
+
+      return `data:${contentType};base64,${base64}`;
+    } catch {
+      return url;
+    }
+  })();
+
+  EMBEDDED_ASSET_URL_CACHE.set(absoluteUrl, pending);
+  return pending;
+};
+
 export const dedupeQrBadgeEntries = (entries: ResolvedQrBadgeEntry[]): ResolvedQrBadgeEntry[] => {
   const seen = new Set<string>();
 
@@ -180,6 +258,23 @@ export const dedupeQrBadgeEntries = (entries: ResolvedQrBadgeEntry[]): ResolvedQ
     seen.add(key);
     return true;
   });
+};
+
+export const resolveAssetQrBadgeEntry = (
+  url: string | undefined,
+  label: string,
+): Extract<ResolvedQrBadgeEntry, { kind: "asset" }> | undefined => {
+  const normalizedUrl = url?.trim();
+
+  if (!normalizedUrl) {
+    return undefined;
+  }
+
+  return {
+    kind: "asset",
+    label,
+    url: normalizedUrl,
+  };
 };
 
 export const resolveKnownSiteQrBadgeEntry = (
@@ -216,4 +311,37 @@ export const resolveComposedQrBadgeUrl = (
   }
 
   return toEncodedSvgDataUrl(composeBadgeSvg(entries, options));
+};
+
+export const resolveComposedQrBadgeUrlWithEmbeddedAssets = async (
+  entries: ResolvedQrBadgeEntry[],
+  options?: ComposeQrBadgeOptions,
+  baseUrl?: string,
+): Promise<string | undefined> => {
+  if (entries.length === 0) {
+    return undefined;
+  }
+
+  if (entries.length === 1) {
+    const [entry] = entries;
+
+    if (entry?.kind === "asset") {
+      return entry.url;
+    }
+  }
+
+  const embeddedEntries = await Promise.all(
+    entries.map(async (entry): Promise<ResolvedQrBadgeEntry> => {
+      if (entry.kind !== "asset") {
+        return entry;
+      }
+
+      return {
+        ...entry,
+        url: await resolveEmbeddedAssetUrl(entry.url, baseUrl),
+      };
+    }),
+  );
+
+  return toEncodedSvgDataUrl(composeBadgeSvg(embeddedEntries, options));
 };

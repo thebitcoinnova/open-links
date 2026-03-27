@@ -59,7 +59,6 @@ import {
   resolveFollowerHistoryEmptyStateMessage,
 } from "../lib/offline/offline-status";
 import { isPaymentCapableLink } from "../lib/payments/types";
-import { resolveQrLogo } from "../lib/qr/logo-resolver";
 import {
   resolveBaseAwareAssetPath,
   resolveBasePathFromUrl,
@@ -90,7 +89,10 @@ import { buildRichCardViewModel, resolveRichCardVariant } from "../lib/ui/rich-c
 import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
 import {
   PAYMENT_CARD_EFFECT_GALLERY_MENU_LABEL,
+  type QrDialogTarget,
+  resolveLinkQrDialogTarget,
   resolvePaymentCardEffectGalleryMenuHref,
+  resolveProfileQrDialogTarget,
 } from "./index.helpers";
 
 const content = loadContent();
@@ -106,6 +108,10 @@ const typography = resolveTypographyPreferences({
   typographyScale: layout.typographyScale,
 });
 const paymentCardEffectGalleryMenuHref = resolvePaymentCardEffectGalleryMenuHref(
+  import.meta.env.BASE_URL,
+);
+const profileQrSiteLogoUrl = resolveBaseAwareAssetPath(
+  "branding/openlinks-logo/openlinks-logo.svg",
   import.meta.env.BASE_URL,
 );
 const homePageHref = resolveAnalyticsPageHrefFromUrl(
@@ -125,14 +131,6 @@ const sections = resolveLinkSections(
 ) as LinkSectionData[];
 const showGroupHeading = composition.grouping !== "none";
 type PageViewKey = "analytics" | "links";
-interface QrDialogTarget {
-  ariaLabel: string;
-  logoSize: number;
-  logoUrl?: string;
-  payload: string;
-  qrAriaLabel: string;
-  title: string;
-}
 
 const FollowerHistoryChart = lazy(() => import("../components/analytics/FollowerHistoryChart"));
 const FollowerHistoryModal = lazy(() => import("../components/analytics/FollowerHistoryModal"));
@@ -418,36 +416,25 @@ export default function RouteIndex() {
     setSelectedQrTarget(target);
   };
 
-  const openProfileQrDialog = (payload: string) => {
-    const qrLogo = resolveQrLogo({
-      kind: "profile",
-      avatarUrl: content.profile.avatar,
-    });
-
-    openQrDialog({
-      ariaLabel: `${content.profile.name} QR code`,
-      logoSize: qrLogo.logoSize,
-      logoUrl: qrLogo.logoUrl,
-      payload,
-      qrAriaLabel: `${content.profile.name} profile QR code`,
-      title: content.profile.name,
-    });
+  const openProfileQrDialog = async (payload: string) => {
+    openQrDialog(
+      await resolveProfileQrDialogTarget({
+        baseUrl: typeof window === "undefined" ? undefined : window.location.href,
+        payload,
+        profile: content.profile,
+        siteLogoUrl: profileQrSiteLogoUrl,
+      }),
+    );
   };
 
-  const openLinkQrDialog = (link: (typeof content.links)[number], payload: string) => {
-    const qrLogo = resolveQrLogo({
-      kind: "link",
-      link,
-    });
-
-    openQrDialog({
-      ariaLabel: `${link.label} QR code`,
-      logoSize: qrLogo.logoSize,
-      logoUrl: qrLogo.logoUrl,
-      payload,
-      qrAriaLabel: `${link.label} link QR code`,
-      title: link.label,
-    });
+  const openLinkQrDialog = async (link: (typeof content.links)[number], payload: string) => {
+    openQrDialog(
+      await resolveLinkQrDialogTarget({
+        baseUrl: typeof window === "undefined" ? undefined : window.location.href,
+        link,
+        payload,
+      }),
+    );
   };
 
   const closeQrDialog = () => {
@@ -465,7 +452,7 @@ export default function RouteIndex() {
               ariaLabel: `Show ${link.label} QR code`,
               kind: "qr" as const,
               onClick: () => {
-                openLinkQrDialog(link, shareUrl);
+                void openLinkQrDialog(link, shareUrl);
                 return undefined;
               },
               title: `Show ${link.label} QR code`,

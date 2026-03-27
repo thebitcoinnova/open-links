@@ -15,11 +15,27 @@ test("profile QR logos use the resolved profile avatar", () => {
   const resolved = resolveQrLogo({
     kind: "profile",
     avatarUrl: "/cache/profile-avatar/profile-avatar.jpg",
+    siteLogoUrl: "/branding/openlinks-logo/openlinks-logo.svg",
+  });
+
+  // Assert
+  assert.ok(resolved.logoUrl);
+  assert.match(String(resolved.logoUrl), /^data:image\/svg\+xml/u);
+  const svg = decodeSvgDataUrl(String(resolved.logoUrl));
+  assert.match(svg, /\/cache\/profile-avatar\/profile-avatar\.jpg/u);
+  assert.match(svg, /\/branding\/openlinks-logo\/openlinks-logo\.svg/u);
+  assert.equal(resolved.logoSize, 0.24);
+});
+
+test("profile QR logos fall back to the avatar when no site logo resolves", () => {
+  // Act
+  const resolved = resolveQrLogo({
+    kind: "profile",
+    avatarUrl: "/cache/profile-avatar/profile-avatar.jpg",
   });
 
   // Assert
   assert.equal(resolved.logoUrl, "/cache/profile-avatar/profile-avatar.jpg");
-  assert.equal(resolved.logoSize, 0.24);
 });
 
 test("link QR logos prefer normalized profile images for profile-style links", () => {
@@ -43,16 +59,46 @@ test("link QR logos prefer normalized profile images for profile-style links", (
   });
 
   // Assert
-  assert.equal(resolved.logoUrl, "/cache/content-images/github-avatar.jpg");
+  assert.ok(resolved.logoUrl);
+  assert.match(String(resolved.logoUrl), /^data:image\/svg\+xml/u);
+  const svg = decodeSvgDataUrl(String(resolved.logoUrl));
+  assert.match(svg, /\/cache\/content-images\/github-avatar\.jpg/u);
+  assert.match(svg, /#181717/u);
 });
 
-test("link QR logos fall back to preview images for non-profile rich links", () => {
+test("link QR logos compose preview images with site badges for non-profile rich links", () => {
   // Arrange
   const link = {
     id: "article",
     label: "Article",
     type: "rich",
-    icon: "notion",
+    icon: "facebook",
+    url: "https://example.com/articles/1",
+    metadata: {
+      image: "/cache/content-images/article-preview.jpg",
+    },
+  } satisfies OpenLink;
+
+  // Act
+  const resolved = resolveQrLogo({
+    kind: "link",
+    link,
+  });
+
+  // Assert
+  assert.ok(resolved.logoUrl);
+  assert.match(String(resolved.logoUrl), /^data:image\/svg\+xml/u);
+  const svg = decodeSvgDataUrl(String(resolved.logoUrl));
+  assert.match(svg, /\/cache\/content-images\/article-preview\.jpg/u);
+  assert.match(svg, /#1877F2/u);
+});
+
+test("link QR logos keep plain preview images when no site identity resolves", () => {
+  // Arrange
+  const link = {
+    id: "article",
+    label: "Article",
+    type: "rich",
     url: "https://example.com/articles/1",
     metadata: {
       image: "/cache/content-images/article-preview.jpg",
