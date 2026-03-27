@@ -51,7 +51,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| QLINK-01 | Phase 15 | Pending |
+| QLINK-01 | Phase 16 | Pending |
 | QLINK-02 | Phase 15 | Pending |
 | QLINK-03 | Phase 15 | Pending |
 | QLINK-04 | Phase 15 | Pending |

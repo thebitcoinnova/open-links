@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Plan Phase 15 using the captured quick-links foundation context
+**Current focus:** Execute the Phase 15 Quick Links foundation plans
 
 ## Current Position
 
 Phase: 15
-Plan: —
-Status: Phase 15 context gathered; ready for `$gsd-plan-phase 15`
+Plan: 15-01, 15-02, 15-03
+Status: Phase 15 planned across 3 waves; ready for `$gsd-execute-phase 15`
 Next Phase: 15 - Quick Links Foundation
 Active Milestone: v1.2-profile-quick-links-header-usability-polish
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-27 - Captured Phase 15 context for quick-links eligibility, ordering, and same-platform tie handling.
+Last activity: 2026-03-27 - Planned Phase 15 across three waves for quick-link derivation, header integration, and regression coverage.
 
 Progress: [..........] 0%
 
@@ -78,7 +78,7 @@ Progress: [..........] 0%
 
 ### Pending Todos
 
-- Start Phase 15 planning with `$gsd-plan-phase 15`.
+- Execute Phase 15 with `$gsd-execute-phase 15`.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -92,5 +92,5 @@ Progress: [..........] 0%
 ## Session Continuity
 
 Last session: 2026-03-27 05:44
-Stopped at: Phase 15 context gathered.
-Resume file: .planning/phases/15-quick-links-foundation/15-CONTEXT.md
+Stopped at: Phase 15 planned and verified.
+Resume file: .planning/phases/15-quick-links-foundation/15-01-PLAN.md

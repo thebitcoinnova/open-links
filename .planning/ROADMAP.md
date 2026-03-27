@@ -17,7 +17,7 @@ v1.2 keeps scope tight around the profile header: add a Quick Links strip above 
 
 **Goal:** Derive eligible Quick Links from existing top-level links with deterministic ordering, empty-state suppression, and no duplicate maintainer workflow.
 **Depends on:** Phase 14
-**Requirements:** QLINK-01, QLINK-02, QLINK-03, QLINK-04, MAINT-01
+**Requirements:** QLINK-02, QLINK-03, QLINK-04, MAINT-01
 **Plans:** 3 plans
 
 Plans:
@@ -40,7 +40,7 @@ Plans:
 
 **Goal:** Render a compact, icon-first Quick Links strip above the profile action bar with accessible labels and resilient mobile/desktop layout behavior.
 **Depends on:** Phase 15
-**Requirements:** QLINK-05, HEAD-01, HEAD-02, HEAD-03
+**Requirements:** QLINK-01, QLINK-05, HEAD-01, HEAD-02, HEAD-03
 **Plans:** 3 plans
 
 Plans:
