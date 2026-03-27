@@ -7,6 +7,7 @@ import {
 import type { ProfileData } from "../../lib/content/load-content";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
+import type { ResolvedProfileQuickLinksState } from "../../lib/ui/profile-quick-links";
 import BottomActionBar, {
   BottomActionBarActionContent,
   type BottomActionBarButtonItem,
@@ -16,6 +17,7 @@ import MobileOverflowMenu, { type MobileOverflowMenuAction } from "../actions/Mo
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
+  quickLinks?: ResolvedProfileQuickLinksState;
   onProfileQrOpen?: (payload: string) => void;
   richness?: "minimal" | "standard" | "rich";
 }

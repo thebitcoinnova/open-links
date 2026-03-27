@@ -84,6 +84,7 @@ import {
 import { resolveComposition, resolveLinkSections } from "../lib/ui/composition";
 import { resolveFooterPreferences } from "../lib/ui/footer-preferences";
 import { resolveLayoutPreferences } from "../lib/ui/layout-preferences";
+import { resolveProfileQuickLinksState } from "../lib/ui/profile-quick-links";
 import { resolvePublicPageView } from "../lib/ui/public-page-view";
 import { buildRichCardViewModel, resolveRichCardVariant } from "../lib/ui/rich-card-policy";
 import { resolveTypographyPreferences } from "../lib/ui/typography-preferences";
@@ -110,6 +111,7 @@ const typography = resolveTypographyPreferences({
 const paymentCardEffectGalleryMenuHref = resolvePaymentCardEffectGalleryMenuHref(
   import.meta.env.BASE_URL,
 );
+const profileQuickLinks = resolveProfileQuickLinksState(content.links);
 const profileQrSiteLogoUrl = resolveBaseAwareAssetPath(
   "branding/openlinks-logo/openlinks-logo.svg",
   import.meta.env.BASE_URL,
@@ -584,6 +586,7 @@ export default function RouteIndex() {
   const profileHeader = () => (
     <ProfileHeader
       profile={content.profile}
+      quickLinks={profileQuickLinks}
       richness={composition.profileRichness}
       onProfileQrOpen={openProfileQrDialog}
     />

@@ -13,6 +13,11 @@ export interface ResolvedProfileQuickLink {
   contentOrder: number;
 }
 
+export interface ResolvedProfileQuickLinksState {
+  hasAny: boolean;
+  items: ResolvedProfileQuickLink[];
+}
+
 interface QuickLinkCandidate extends ResolvedProfileQuickLink {
   isCanonical: boolean;
 }
@@ -143,4 +148,15 @@ export const resolveProfileQuickLinks = (links: OpenLink[]): ResolvedProfileQuic
   return Array.from(winners.values())
     .sort(compareQuickLinks)
     .map(({ isCanonical: _isCanonical, ...quickLink }) => quickLink);
+};
+
+export const resolveProfileQuickLinksState = (
+  links: OpenLink[],
+): ResolvedProfileQuickLinksState => {
+  const items = resolveProfileQuickLinks(links);
+
+  return {
+    hasAny: items.length > 0,
+    items,
+  };
 };
