@@ -787,6 +787,105 @@ test("payment cards pass themeFingerprint to inline QR renderers", () => {
   );
 });
 
+test("payment cards pass site payment QR color defaults to inline QR renderers", () => {
+  // Arrange
+  setReactRuntime(
+    createPreservingRuntime(
+      StyledPaymentQr,
+      MobileOverflowMenu,
+      Collapsible.Root,
+      Collapsible.Content,
+    ),
+  );
+  const siteWithPaymentQrDefaults = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        qr: {
+          foregroundColorDefault: "#f8fafc",
+          backgroundColorDefault: "#101625",
+        },
+      },
+    },
+  } satisfies SiteData;
+
+  // Act
+  const tree = PaymentLinkCard({
+    link: paymentLink,
+    site: siteWithPaymentQrDefaults,
+    brandIconOptions: resolveBrandIconOptions(siteWithPaymentQrDefaults as SiteData),
+    themeFingerprint: "sleek:light",
+  }) as RenderedNode;
+  const qr = collectElements(tree).find((element) => element.type === StyledPaymentQr);
+
+  // Assert
+  assert.ok(qr);
+  assert.equal(qr.props.foregroundColor, "#f8fafc");
+  assert.equal(qr.props.backgroundColor, "#101625");
+
+  setReactRuntime(
+    createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),
+  );
+});
+
+test("payment rail QR colors override site payment QR defaults", () => {
+  // Arrange
+  setReactRuntime(
+    createPreservingRuntime(
+      StyledPaymentQr,
+      MobileOverflowMenu,
+      Collapsible.Root,
+      Collapsible.Content,
+    ),
+  );
+  const siteWithPaymentQrDefaults = {
+    ...site,
+    ui: {
+      ...site.ui,
+      payments: {
+        qr: {
+          foregroundColorDefault: "#f8fafc",
+          backgroundColorDefault: "#101625",
+        },
+      },
+    },
+  } satisfies SiteData;
+  const paymentLinkWithExplicitQrColors = {
+    ...paymentLink,
+    payment: {
+      ...paymentLink.payment,
+      rails: [
+        {
+          ...paymentLink.payment.rails[0],
+          qr: {
+            foregroundColor: "#047857",
+            backgroundColor: "#ecfdf5",
+          },
+        },
+      ],
+    },
+  } satisfies OpenLink;
+
+  // Act
+  const tree = PaymentLinkCard({
+    link: paymentLinkWithExplicitQrColors,
+    site: siteWithPaymentQrDefaults,
+    brandIconOptions: resolveBrandIconOptions(siteWithPaymentQrDefaults as SiteData),
+    themeFingerprint: "sleek:light",
+  }) as RenderedNode;
+  const qr = collectElements(tree).find((element) => element.type === StyledPaymentQr);
+
+  // Assert
+  assert.ok(qr);
+  assert.equal(qr.props.foregroundColor, "#047857");
+  assert.equal(qr.props.backgroundColor, "#ecfdf5");
+
+  setReactRuntime(
+    createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),
+  );
+});
+
 test("club orange lightning tip cards resolve a composite QR badge by default", () => {
   // Arrange
   setReactRuntime(
