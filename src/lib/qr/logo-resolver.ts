@@ -192,6 +192,9 @@ const resolveDefaultPaymentLogoUrl = (input: {
   });
 };
 
+const shouldRenderPaymentSiteEntryInForeground = (railType: PaymentRailType): boolean =>
+  railType === "lightning";
+
 const resolveAutoPaymentLogoUrl = (input: {
   customLogoUrl?: string;
   defaultLogoMode?: PaymentQrLogoMode;
@@ -202,7 +205,11 @@ const resolveAutoPaymentLogoUrl = (input: {
   const maybeRailEntry = resolveRailEntry(input.rail.rail);
 
   if (maybeSiteEntry && maybeRailEntry) {
-    return resolveComposedQrBadgeUrl([maybeSiteEntry, maybeRailEntry]);
+    return resolveComposedQrBadgeUrl([maybeSiteEntry, maybeRailEntry], {
+      foregroundEntryIndex: shouldRenderPaymentSiteEntryInForeground(input.rail.rail)
+        ? 0
+        : undefined,
+    });
   }
 
   if (maybeSiteEntry) {

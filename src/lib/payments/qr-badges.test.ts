@@ -11,6 +11,18 @@ const decodeSvgDataUrl = (value: string): string => {
   return decodeURIComponent(value.slice(prefix.length));
 };
 
+const assertSvgRenderOrder = (svg: string, firstColor: string, secondColor: string): void => {
+  const firstIndex = svg.indexOf(firstColor);
+  const secondIndex = svg.indexOf(secondColor);
+
+  assert.notEqual(firstIndex, -1, `${firstColor} should appear in the composed badge SVG.`);
+  assert.notEqual(secondIndex, -1, `${secondColor} should appear in the composed badge SVG.`);
+  assert.ok(
+    firstIndex < secondIndex,
+    `${firstColor} should render before ${secondColor} in the composed badge SVG.`,
+  );
+};
+
 const clubOrangeLightningLink = {
   id: "cluborange-lightning-tips",
   label: "Club Orange Tips",
@@ -61,6 +73,7 @@ test("default payment QR logos compose site and rail identities when both resolv
   const svg = decodeSvgDataUrl(logoUrl);
   assert.match(svg, /#E86B10/u);
   assert.match(svg, /#F2A900/u);
+  assertSvgRenderOrder(svg, "#F2A900", "#E86B10");
 });
 
 test("auto QR badges compose Strike and Lightning when both resolve", () => {
@@ -78,6 +91,7 @@ test("auto QR badges compose Strike and Lightning when both resolve", () => {
   const svg = decodeSvgDataUrl(logoUrl);
   assert.match(svg, /#111111/u);
   assert.match(svg, /#F2A900/u);
+  assertSvgRenderOrder(svg, "#F2A900", "#111111");
 });
 
 test("payment QR logos fall back to the rail logo when no site identity resolves", () => {

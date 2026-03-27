@@ -275,6 +275,18 @@ const decodeSvgDataUrl = (value: string): string => {
   return decodeURIComponent(value.slice(prefix.length));
 };
 
+const assertSvgRenderOrder = (svg: string, firstColor: string, secondColor: string): void => {
+  const firstIndex = svg.indexOf(firstColor);
+  const secondIndex = svg.indexOf(secondColor);
+
+  assert.notEqual(firstIndex, -1, `${firstColor} should appear in the composed badge SVG.`);
+  assert.notEqual(secondIndex, -1, `${secondColor} should appear in the composed badge SVG.`);
+  assert.ok(
+    firstIndex < secondIndex,
+    `${firstColor} should render before ${secondColor} in the composed badge SVG.`,
+  );
+};
+
 test("payment rail copy buttons keep stable copy labels", () => {
   // Arrange
   const tree = PaymentLinkCard({
@@ -776,6 +788,7 @@ test("club orange lightning tip cards resolve a composite QR badge by default", 
   const svg = decodeSvgDataUrl(String(qr.props.logoUrl));
   assert.match(svg, /#E86B10/u);
   assert.match(svg, /#F2A900/u);
+  assertSvgRenderOrder(svg, "#F2A900", "#E86B10");
 
   setReactRuntime(
     createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),
@@ -845,6 +858,7 @@ test("strike lightning tip cards resolve an auto composite QR badge", () => {
   const svg = decodeSvgDataUrl(String(qr.props.logoUrl));
   assert.match(svg, /#111111/u);
   assert.match(svg, /#F2A900/u);
+  assertSvgRenderOrder(svg, "#F2A900", "#111111");
 
   setReactRuntime(
     createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),

@@ -14,6 +14,10 @@ export type ResolvedQrBadgeEntry =
       url: string;
     };
 
+interface ComposeQrBadgeOptions {
+  foregroundEntryIndex?: 0 | 1;
+}
+
 const toEncodedSvgDataUrl = (svg: string): string =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
@@ -101,7 +105,10 @@ const renderBadgeEntry = (
   ].join("");
 };
 
-const composeBadgeSvg = (entries: ResolvedQrBadgeEntry[]): string => {
+const composeBadgeSvg = (
+  entries: ResolvedQrBadgeEntry[],
+  options?: ComposeQrBadgeOptions,
+): string => {
   const limitedEntries = entries.slice(0, 2);
   const outerFrame =
     '<rect x="4" y="4" width="56" height="56" rx="18" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1.5" />';
@@ -115,11 +122,47 @@ const composeBadgeSvg = (entries: ResolvedQrBadgeEntry[]): string => {
     ].join("");
   }
 
+  const positionedEntries = [
+    {
+      centerX: 23,
+      centerY: 32,
+      entry: limitedEntries[0] as ResolvedQrBadgeEntry,
+      entryIndex: 0 as const,
+      radius: 14,
+    },
+    {
+      centerX: 41,
+      centerY: 32,
+      entry: limitedEntries[1] as ResolvedQrBadgeEntry,
+      entryIndex: 1 as const,
+      radius: 14,
+    },
+  ];
+  const foregroundEntryIndex = options?.foregroundEntryIndex ?? 1;
+  const backgroundEntries = positionedEntries.filter(
+    (entry) => entry.entryIndex !== foregroundEntryIndex,
+  );
+  const maybeForegroundEntry = positionedEntries.find(
+    (entry) => entry.entryIndex === foregroundEntryIndex,
+  );
+
   return [
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="QR badge">',
     outerFrame,
-    renderBadgeEntry(limitedEntries[0] as ResolvedQrBadgeEntry, 0, 23, 32, 14),
-    renderBadgeEntry(limitedEntries[1] as ResolvedQrBadgeEntry, 1, 41, 32, 14),
+    ...backgroundEntries.map((entry) =>
+      renderBadgeEntry(entry.entry, entry.entryIndex, entry.centerX, entry.centerY, entry.radius),
+    ),
+    ...(maybeForegroundEntry
+      ? [
+          renderBadgeEntry(
+            maybeForegroundEntry.entry,
+            maybeForegroundEntry.entryIndex,
+            maybeForegroundEntry.centerX,
+            maybeForegroundEntry.centerY,
+            maybeForegroundEntry.radius,
+          ),
+        ]
+      : []),
     "</svg>",
   ].join("");
 };
@@ -156,7 +199,10 @@ export const resolveKnownSiteQrBadgeEntry = (
   };
 };
 
-export const resolveComposedQrBadgeUrl = (entries: ResolvedQrBadgeEntry[]): string | undefined => {
+export const resolveComposedQrBadgeUrl = (
+  entries: ResolvedQrBadgeEntry[],
+  options?: ComposeQrBadgeOptions,
+): string | undefined => {
   if (entries.length === 0) {
     return undefined;
   }
@@ -169,5 +215,5 @@ export const resolveComposedQrBadgeUrl = (entries: ResolvedQrBadgeEntry[]): stri
     }
   }
 
-  return toEncodedSvgDataUrl(composeBadgeSvg(entries));
+  return toEncodedSvgDataUrl(composeBadgeSvg(entries, options));
 };
