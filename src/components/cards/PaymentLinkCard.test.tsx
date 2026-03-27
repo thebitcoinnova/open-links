@@ -135,6 +135,13 @@ const countElementsWithClass = (node: RenderedNode, className: string): number =
     return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
   }).length;
 
+const firstElementWithProp = (
+  node: RenderedNode,
+  propName: string,
+  value: unknown,
+): RenderedElement | undefined =>
+  collectElements(node).find((element) => element.props[propName] === value);
+
 const site = {
   title: "OpenLinks",
   description: "Profile links",
@@ -248,7 +255,6 @@ const explicitRailLogoPaymentLink = {
 const strikeLightningPaymentLink = {
   id: "strike-lightning-tips",
   label: "Strike Tips",
-  icon: "strike",
   type: "payment",
   payment: {
     primaryRailId: "lightning",
@@ -256,13 +262,37 @@ const strikeLightningPaymentLink = {
       {
         id: "lightning",
         rail: "lightning",
+        provider: "strike",
         label: "Strike Lightning",
-        address: "pryszkie@strike.me",
+        address: "openlinks@strike.me",
         qr: {
           badge: {
             mode: "auto",
           },
         },
+      },
+    ],
+  },
+} as const satisfies OpenLink;
+
+const mixedProviderMultiRailPaymentLink = {
+  id: "mixed-provider-support",
+  label: "Mixed Provider Support",
+  type: "payment",
+  payment: {
+    rails: [
+      {
+        id: "lightning",
+        rail: "lightning",
+        provider: "strike",
+        label: "Strike Lightning",
+        address: "openlinks@strike.me",
+      },
+      {
+        id: "cashapp",
+        rail: "cashapp",
+        label: "Cash App Support",
+        url: "https://cash.app/$openlinks",
       },
     ],
   },
@@ -863,6 +893,25 @@ test("strike lightning tip cards resolve an auto composite QR badge", () => {
   setReactRuntime(
     createPreservingRuntime(MobileOverflowMenu, Collapsible.Root, Collapsible.Content),
   );
+});
+
+test("mixed-brand multi-rail payment cards keep the generic wallet header icon", () => {
+  // Arrange
+  const tree = PaymentLinkCard({
+    link: mixedProviderMultiRailPaymentLink,
+    site,
+    brandIconOptions: resolveBrandIconOptions(site as SiteData),
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const headerIcon = firstElementWithClass(tree, "card-icon");
+  const walletIcon = firstElementWithProp(tree, "data-known-site", "wallet");
+
+  // Assert
+  assert.ok(headerIcon);
+  assert.equal(headerIcon.props["data-known-site"], "wallet");
+  assert.ok(walletIcon);
 });
 
 test("mobile payment rail action layout keeps open and QR inline before copy", () => {

@@ -662,6 +662,17 @@ const checkPaymentRail = (source: string, path: string, value: unknown): Validat
 
   issues.push(...checkKnownIconAlias(source, `${path}.icon`, value.icon));
 
+  if (typeof value.provider === "string" && !resolveKnownSiteId(value.provider)) {
+    issues.push({
+      level: "error",
+      source,
+      path: `${path}.provider`,
+      message: `Payment provider '${value.provider}' is not a known site id or alias.`,
+      remediation:
+        "Register the provider in src/lib/icons/known-sites-data.ts, then use that known site id or alias.",
+    });
+  }
+
   const url = toStringOrUndefined(value.url);
   const uri = toStringOrUndefined(value.uri);
   const address = toStringOrUndefined(value.address);

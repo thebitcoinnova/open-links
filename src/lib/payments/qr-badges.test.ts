@@ -36,19 +36,6 @@ const clubOrangeLightningRail = {
   address: "peterryszkiewicz@cluborange.org",
 } as const;
 
-const strikeLightningLink = {
-  id: "strike-lightning-tips",
-  label: "Strike Tips",
-  type: "payment",
-  icon: "strike",
-} satisfies OpenLink;
-
-const strikeLightningRail = {
-  id: "lightning",
-  rail: "lightning",
-  address: "pryszkie@strike.me",
-} as const;
-
 const lightningOnlyLink = {
   id: "lightning-tips",
   label: "Lightning Tips",
@@ -76,14 +63,17 @@ test("default payment QR logos compose site and rail identities when both resolv
   assertSvgRenderOrder(svg, "#F2A900", "#E86B10");
 });
 
-test("auto QR badges compose Strike and Lightning when both resolve", () => {
+test("auto QR badges compose Strike and Lightning when provider is explicit", () => {
   // Act
   const logoUrl = resolvePaymentQrLogoUrl({
     badge: {
       mode: "auto",
     },
-    link: strikeLightningLink,
-    rail: strikeLightningRail,
+    link: lightningOnlyLink,
+    rail: {
+      ...lightningOnlyRail,
+      provider: "strike",
+    },
   });
 
   // Assert
@@ -94,9 +84,80 @@ test("auto QR badges compose Strike and Lightning when both resolve", () => {
   assertSvgRenderOrder(svg, "#F2A900", "#111111");
 });
 
-test("payment QR logos fall back to the rail logo when no site identity resolves", () => {
+test("auto QR badges compose Strike and Lightning when provider is inferred from rail URL", () => {
+  // Act
+  const logoUrl = resolvePaymentQrLogoUrl({
+    badge: {
+      mode: "auto",
+    },
+    link: lightningOnlyLink,
+    rail: {
+      ...lightningOnlyRail,
+      url: "https://strike.me/$openlinks",
+    },
+  });
+
+  // Assert
+  assert.ok(logoUrl);
+  const svg = decodeSvgDataUrl(logoUrl);
+  assert.match(svg, /#111111/u);
+  assert.match(svg, /#F2A900/u);
+});
+
+test("auto QR badges compose Strike and Lightning when provider is inferred from icon alias", () => {
+  // Act
+  const logoUrl = resolvePaymentQrLogoUrl({
+    badge: {
+      mode: "auto",
+    },
+    link: lightningOnlyLink,
+    rail: {
+      ...lightningOnlyRail,
+      icon: "strike",
+    },
+  });
+
+  // Assert
+  assert.ok(logoUrl);
+  const svg = decodeSvgDataUrl(logoUrl);
+  assert.match(svg, /#111111/u);
+  assert.match(svg, /#F2A900/u);
+});
+
+test("auto QR badges fall back to the single rail logo when provider matches the rail brand", () => {
   // Act
   const resolved = resolvePaymentQrLogoUrl({
+    badge: {
+      mode: "auto",
+    },
+    link: {
+      id: "cashapp-support",
+      label: "Cash App Support",
+      type: "payment",
+    },
+    rail: {
+      id: "cashapp",
+      rail: "cashapp",
+      provider: "cashapp",
+      url: "https://cash.app/$openlinks",
+    },
+  });
+
+  // Assert
+  assert.equal(
+    resolved,
+    resolvePaymentRailLogoUrl({
+      railType: "cashapp",
+    }),
+  );
+});
+
+test("payment QR logos fall back to the rail logo when no provider identity resolves", () => {
+  // Act
+  const resolved = resolvePaymentQrLogoUrl({
+    badge: {
+      mode: "auto",
+    },
     link: lightningOnlyLink,
     rail: lightningOnlyRail,
   });
@@ -126,6 +187,28 @@ test("explicit rail logo mode still overrides the implicit composite default", (
       railType: "lightning",
     }),
   );
+});
+
+test("custom QR badge mode overrides inferred provider composition", () => {
+  // Act
+  const logoUrl = resolvePaymentQrLogoUrl({
+    badge: {
+      mode: "custom",
+      items: [{ type: "site", value: "paypal" }, { type: "rail" }],
+    },
+    link: lightningOnlyLink,
+    rail: {
+      ...lightningOnlyRail,
+      provider: "strike",
+    },
+  });
+
+  // Assert
+  assert.ok(logoUrl);
+  const svg = decodeSvgDataUrl(logoUrl);
+  assert.match(svg, /#003087/u);
+  assert.match(svg, /#F2A900/u);
+  assert.doesNotMatch(svg, /#111111/u);
 });
 
 test("legacy single-logo configuration still works without a badge override", () => {

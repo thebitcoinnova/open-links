@@ -14,7 +14,15 @@ const createGraphicIcon = (graphic: SiteIconGraphic): KnownSiteIconComponent => 
       {...props}
     >
       <title>{graphic.title}</title>
-      <For each={graphic.paths}>{(path) => <path d={path} />}</For>
+      <For each={graphic.paths}>
+        {(path) =>
+          typeof path === "string" ? (
+            <path d={path} />
+          ) : (
+            <path d={path.d} fill-rule={path.fillRule} clip-rule={path.clipRule} />
+          )
+        }
+      </For>
     </svg>
   );
 };

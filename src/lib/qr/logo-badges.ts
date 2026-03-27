@@ -1,5 +1,9 @@
 import { type KnownSiteId, resolveKnownSiteById } from "../icons/known-sites-data";
-import { type SiteIconGraphic, resolveKnownSiteGraphic } from "../icons/site-icon-graphics";
+import {
+  type SiteIconGraphic,
+  type SiteIconGraphicPath,
+  resolveKnownSiteGraphic,
+} from "../icons/site-icon-graphics";
 
 export type ResolvedQrBadgeEntry =
   | {
@@ -85,10 +89,25 @@ const renderGraphic = (
   const scale = targetSize / Math.max(width, height);
   const translateX = centerX - (width * scale) / 2 - minX * scale;
   const translateY = centerY - (height * scale) / 2 - minY * scale;
+  const renderPath = (path: string | SiteIconGraphicPath): string => {
+    if (typeof path === "string") {
+      return `<path d="${escapeXml(path)}" />`;
+    }
+
+    const attributes = [
+      `d="${escapeXml(path.d)}"`,
+      path.fillRule ? `fill-rule="${escapeXml(path.fillRule)}"` : undefined,
+      path.clipRule ? `clip-rule="${escapeXml(path.clipRule)}"` : undefined,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .join(" ");
+
+    return `<path ${attributes} />`;
+  };
 
   return [
     `<g fill="${escapeXml(color)}" transform="translate(${translateX} ${translateY}) scale(${scale})">`,
-    ...graphic.paths.map((path) => `<path d="${escapeXml(path)}" />`),
+    ...graphic.paths.map(renderPath),
     "</g>",
   ].join("");
 };

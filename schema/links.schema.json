@@ -175,6 +175,7 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "rail": { "$ref": "#/$defs/paymentRailType" },
+        "provider": { "type": "string", "minLength": 1 },
         "label": { "type": "string" },
         "enabled": { "type": "boolean" },
         "icon": { "type": "string" },

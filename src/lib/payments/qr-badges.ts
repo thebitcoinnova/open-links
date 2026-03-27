@@ -1,11 +1,6 @@
 import type { OpenLink } from "../content/load-content";
 import { clampQrLogoSize, resolveQrLogo } from "../qr/logo-resolver";
-import type {
-  PaymentQrBadgeConfig,
-  PaymentQrLogoMode,
-  PaymentRail,
-  PaymentRailType,
-} from "./types";
+import type { PaymentQrBadgeConfig, PaymentQrLogoMode, PaymentRail } from "./types";
 
 export const resolvePaymentQrLogoUrl = (input: {
   badge?: PaymentQrBadgeConfig;
@@ -27,5 +22,3 @@ export const resolvePaymentQrLogoUrl = (input: {
 
 export const clampPaymentQrImageSize = (value: number | undefined): number =>
   clampQrLogoSize(value);
-
-export type { PaymentQrBadgeConfig, PaymentQrLogoMode, PaymentRail, PaymentRailType };

@@ -14,3 +14,11 @@ command = "bun dev"
 name = "git pull"
 icon = "tool"
 command = "git pull"
+
+[[actions]]
+name = "bun run"
+icon = "run"
+command = '''
+bun install
+bun run dev
+'''

@@ -68,6 +68,7 @@ export interface PaymentAppLink {
 export interface PaymentRail {
   id: string;
   rail: PaymentRailType;
+  provider?: string;
   label?: string;
   enabled?: boolean;
   icon?: string;

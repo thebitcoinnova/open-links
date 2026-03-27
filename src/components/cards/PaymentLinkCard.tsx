@@ -5,6 +5,7 @@ import type { ResolvedBrandIconOptions } from "../../lib/icons/brand-icon-option
 import { IconCopy, IconOpen, IconQrCode } from "../../lib/icons/custom-icons";
 import type { PaymentCardEffectDebugTuning } from "../../lib/payments/card-effect-debug-tuning";
 import { resolvePaymentCardEffects } from "../../lib/payments/card-effects";
+import { resolveSharedPaymentBrandSite } from "../../lib/payments/payment-identities";
 import { clampPaymentQrImageSize, resolvePaymentQrLogoUrl } from "../../lib/payments/qr-badges";
 import {
   type ResolvedPaymentRailAction,
@@ -107,7 +108,10 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
   const railActions = createMemo<PaymentRailEntry[]>(() =>
     rails().map((rail) => ({
       rail,
-      action: resolvePaymentRailAction(rail),
+      action: resolvePaymentRailAction(rail, {
+        linkIcon: props.link.icon,
+        linkUrl: props.link.url,
+      }),
     })),
   );
 
@@ -122,7 +126,10 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     const preferredRail = primaryRail();
 
     if (preferredRail) {
-      return resolvePaymentRailAction(preferredRail);
+      return resolvePaymentRailAction(preferredRail, {
+        linkIcon: props.link.icon,
+        linkUrl: props.link.url,
+      });
     }
 
     return undefined;
@@ -273,7 +280,34 @@ export const PaymentLinkCard = (props: PaymentLinkCardProps) => {
     return railActions().find((entry) => entry.rail.id === railId);
   });
 
-  const multiHeaderIconAlias = () => props.link.icon ?? "wallet";
+  const sharedMultiHeaderBrandSite = createMemo(() => {
+    if (props.link.icon || props.link.url) {
+      return undefined;
+    }
+
+    return resolveSharedPaymentBrandSite(
+      rails().map((rail) => ({
+        linkIcon: props.link.icon,
+        linkUrl: props.link.url,
+        provider: rail.provider,
+        railIcon: rail.icon,
+        railType: rail.rail,
+        railUrl: rail.url,
+      })),
+    );
+  });
+
+  const multiHeaderIconAlias = () => {
+    if (props.link.icon) {
+      return props.link.icon;
+    }
+
+    if (props.link.url) {
+      return undefined;
+    }
+
+    return sharedMultiHeaderBrandSite()?.id ?? "wallet";
+  };
   const singleHeaderIconAlias = () =>
     props.link.icon ??
     singleRailEntry()?.action.iconAlias ??

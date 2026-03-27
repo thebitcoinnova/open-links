@@ -302,6 +302,14 @@ Payment support is available in two ways:
 - `effects.bombasticity`: normalized effect intensity from `0` to `1`; `0` disables the decorative layer, the live curve reaches its busiest/fastest presentation by `0.1`, and `0.1..1` intentionally plateau at that maximum
 - `rails`: array of rail objects
 
+Each payment rail keeps two identity concepts separate when needed:
+
+- `rail`: the payment network, protocol, or canonical payment rail (`lightning`, `bitcoin`, `cashapp`, etc.)
+- `provider`: optional branded provider/service/wallet identity for that rail, using a known-site id or alias from `src/lib/icons/known-sites-data.ts`
+
+Use `provider` when the payment brand differs from the rail itself, for example Strike on Lightning.
+If `provider` is omitted, runtime falls back to existing identity inference from `payment.rails[].icon`, `payment.rails[].url`, `links[].icon`, and `links[].url` where possible.
+
 Supported rail values:
 
 - `patreon`
@@ -331,10 +339,19 @@ Per-rail QR settings (`payment.rails[].qr`) support:
 - `payload` (optional explicit QR payload override)
 
 Payment rails can include explicit app links via `payment.rails[].appLinks` for wallet/app-specific deep links.
-When `payment.rails[].qr.badge.mode` is `auto`, runtime tries to infer a platform logo from `link.icon`, then `payment.rails[].icon`, then `payment.rails[].url` or `link.url`, and combines it with the rail symbol when both resolve and differ.
-For branded payment cards, `links[].icon` (or a rail-level icon override) controls the card-shell icon and also seeds QR `auto` badge inference. If a new payment platform should render in card chrome like Club Orange does, add it to the shared known-site registry instead of relying on `badge.items.asset`.
-`badge.items.asset` affects only the QR center badge. It does not change the card-shell icon, known-site resolution, or other surfaces that use shared icon rendering.
-Without explicit `payment.rails[].qr.badge.mode` or `payment.rails[].qr.logoMode` overrides, runtime now applies that same local-first identity logic by default: it composes site/company + rail when both resolve, otherwise falls back to whichever single identity resolves.
+When `payment.rails[].qr.badge.mode` is `auto`, runtime resolves provider identity in this order:
+
+1. explicit `payment.rails[].provider`
+2. known `payment.rails[].icon`
+3. known `payment.rails[].url`
+4. known `links[].icon`
+5. known `links[].url`
+
+Auto mode composes the provider brand and rail symbol when both resolve and differ. If only the rail identity resolves, or the provider and rail are the same brand, runtime falls back to the normal single-logo behavior for the active `logoMode`.
+`badge.mode: custom` always wins over auto/provider inference.
+For branded payment cards, that same explicit or inferred provider identity also feeds card chrome and other shared payment identity surfaces. If a new provider should render outside the QR too, register it in the shared known-site/icon registry instead of relying on `badge.items.asset`.
+`badge.items.asset` affects only the QR center badge. It does not change card-shell icon resolution, known-site matching, or other shared identity surfaces.
+Without explicit `payment.rails[].qr.badge.mode` or `payment.rails[].qr.logoMode` overrides, runtime applies the same shared identity logic by default: compose provider/company + rail when both resolve distinctly, otherwise fall back to the normal single-logo behavior for the active/default logo mode.
 When QR colors are omitted, runtime defaults follow the active theme using `--text-primary` for QR modules and `--surface-panel` for the background.
 When `payment.effects.enabled` is true and no explicit effect list is provided, runtime defaults to subtle ambient particles for standard payment cards, and to both `lightning-particles` and gold `glitter-particles` for cards whose primary rail is Lightning. When `payment.effects.bombasticity` is omitted, runtime falls back to `site.ui.payments.effects.bombasticityDefault`, then to the built-in midpoint default of `0.5`, which now renders at the maximum live treatment.
 
@@ -372,6 +389,53 @@ When `payment.effects.enabled` is true and no explicit effect list is provided, 
   "custom": {}
 }
 ```
+
+#### Provider-over-rail example
+
+Use `provider` when the payment website/company is distinct from the rail itself:
+
+```json
+{
+  "id": "strike-lightning",
+  "label": "Strike Tips",
+  "type": "payment",
+  "description": "Tip me on Lightning via Strike",
+  "payment": {
+    "primaryRailId": "lightning",
+    "rails": [
+      {
+        "id": "lightning",
+        "rail": "lightning",
+        "provider": "strike",
+        "label": "Strike Lightning",
+        "address": "openlinks@strike.me",
+        "qr": {
+          "badge": {
+            "mode": "auto"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+With the example above:
+
+- card chrome can use Strike identity
+- QR auto-badge mode can compose Strike + Lightning automatically
+- downstream repos only need the upstream sync/pin update unless they want to opt into explicit `provider` on their own data
+
+#### Adding future payment providers
+
+To add a future branded provider such as River, Voltage, or Wallet of Satoshi through the same path:
+
+1. Register the provider once in `src/lib/icons/known-sites-data.ts`.
+2. Add its graphic in `src/lib/icons/site-icon-graphics.ts` and `src/lib/icons/known-site-icons.tsx`.
+3. Add an optional asset in `public/payment-logos/` if you want an explicit custom-logo file path.
+4. Use `payment.rails[].provider` or rely on known icon/URL inference.
+
+No QR resolver branch should be needed for a new provider once the central registration work is done.
 
 ### Rich image materialization behavior
 

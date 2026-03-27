@@ -1,3 +1,4 @@
+import { resolvePaymentRailIdentityForRail, resolvePaymentRailSiteId } from "./payment-identities";
 import type { LinkPaymentConfig, PaymentRail, PaymentRailType } from "./types";
 
 export interface ResolvedPaymentRailAction {
@@ -85,17 +86,17 @@ const railTypeLabelMap: Record<PaymentRailType, string> = {
 };
 
 const railIconAliasMap: Record<PaymentRailType, string> = {
-  patreon: "patreon",
-  kofi: "kofi",
-  paypal: "paypal",
-  cashapp: "cashapp",
-  stripe: "stripe",
-  coinbase: "coinbase",
-  bitcoin: "bitcoin",
-  lightning: "lightning",
-  ethereum: "ethereum",
-  solana: "solana",
-  "custom-crypto": "wallet",
+  patreon: resolvePaymentRailSiteId("patreon"),
+  kofi: resolvePaymentRailSiteId("kofi"),
+  paypal: resolvePaymentRailSiteId("paypal"),
+  cashapp: resolvePaymentRailSiteId("cashapp"),
+  stripe: resolvePaymentRailSiteId("stripe"),
+  coinbase: resolvePaymentRailSiteId("coinbase"),
+  bitcoin: resolvePaymentRailSiteId("bitcoin"),
+  lightning: resolvePaymentRailSiteId("lightning"),
+  ethereum: resolvePaymentRailSiteId("ethereum"),
+  solana: resolvePaymentRailSiteId("solana"),
+  "custom-crypto": resolvePaymentRailSiteId("custom-crypto"),
 };
 
 export const paymentRailLabel = (railType: PaymentRailType): string => railTypeLabelMap[railType];
@@ -251,7 +252,13 @@ const resolveDisplayValue = (rail: PaymentRail, href?: string): string | undefin
   );
 };
 
-export const resolvePaymentRailAction = (rail: PaymentRail): ResolvedPaymentRailAction => {
+export const resolvePaymentRailAction = (
+  rail: PaymentRail,
+  context?: {
+    linkIcon?: string;
+    linkUrl?: string;
+  },
+): ResolvedPaymentRailAction => {
   const href = resolveRailHref(rail);
   const displayValue = resolveDisplayValue(rail, href);
 
@@ -264,7 +271,7 @@ export const resolvePaymentRailAction = (rail: PaymentRail): ResolvedPaymentRail
   return {
     rail,
     label: trimString(rail.label) ?? paymentRailLabel(rail.rail),
-    iconAlias: trimString(rail.icon) ?? paymentRailIconAlias(rail.rail),
+    iconAlias: resolvePaymentRailIdentityForRail(rail, context).effectiveIconAlias,
     href,
     qrPayload,
     copyValue: explicitCopy,

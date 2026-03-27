@@ -1,6 +1,10 @@
 import type { OpenLink } from "../content/load-content";
 import type { KnownSiteId } from "../icons/known-sites-data";
 import { resolveKnownSite } from "../icons/known-sites-data";
+import {
+  resolvePaymentRailIdentity,
+  resolvePaymentRailSiteId,
+} from "../payments/payment-identities";
 import { normalizeCustomLogoUrl, resolvePaymentRailLogoUrl } from "../payments/rail-logos";
 import type {
   PaymentQrBadgeConfig,
@@ -54,20 +58,6 @@ export type ResolveQrLogoInput =
     };
 
 const DEFAULT_QR_LOGO_SIZE = 0.24;
-
-const paymentRailSiteIds: Record<PaymentRailType, KnownSiteId> = {
-  patreon: "patreon",
-  kofi: "kofi",
-  paypal: "paypal",
-  cashapp: "cashapp",
-  stripe: "stripe",
-  coinbase: "coinbase",
-  bitcoin: "bitcoin",
-  lightning: "lightning",
-  ethereum: "ethereum",
-  solana: "solana",
-  "custom-crypto": "wallet",
-};
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -127,7 +117,7 @@ const resolveLinkPrimaryBadgeEntry = (
 };
 
 const resolveRailEntry = (railType: PaymentRailType): ResolvedQrBadgeEntry | undefined =>
-  resolveKnownSiteQrBadgeEntry(paymentRailSiteIds[railType]);
+  resolveKnownSiteQrBadgeEntry(resolvePaymentRailSiteId(railType));
 
 const resolveLinkSiteEntry = (link: OpenLink): ResolvedQrBadgeEntry | undefined => {
   const maybeKnownSite = resolveKnownSite(link.icon, link.url);
@@ -206,22 +196,25 @@ const resolveLinkQrBadgeComposition = (link: OpenLink): ResolvedQrBadgeCompositi
   };
 };
 
-const resolvePaymentAutoSiteEntry = (
+const resolveAutoPaymentBadgeEntries = (
   link: OpenLink,
   rail: PaymentRail,
-): ResolvedQrBadgeEntry | undefined => {
-  const maybeKnownSite =
-    resolveKnownSite(link.icon, link.url) ?? resolveKnownSite(rail.icon, rail.url);
+): ResolvedQrBadgeEntry[] => {
+  const autoBadgeSiteIds = resolvePaymentRailIdentity({
+    linkIcon: link.icon,
+    linkUrl: link.url,
+    provider: rail.provider,
+    railIcon: rail.icon,
+    railType: rail.rail,
+    railUrl: rail.url,
+  }).autoBadgeSiteIds;
 
-  if (!maybeKnownSite) {
-    return undefined;
-  }
-
-  if (maybeKnownSite.id === paymentRailSiteIds[rail.rail]) {
-    return undefined;
-  }
-
-  return resolveKnownSiteQrBadgeEntry(maybeKnownSite.id);
+  return dedupeQrBadgeEntries(
+    autoBadgeSiteIds.flatMap((siteId): ResolvedQrBadgeEntry[] => {
+      const maybeSiteEntry = resolveKnownSiteQrBadgeEntry(siteId as KnownSiteId);
+      return maybeSiteEntry ? [maybeSiteEntry] : [];
+    }),
+  ).slice(0, 2);
 };
 
 const resolveBadgeItems = (
@@ -309,22 +302,17 @@ const resolveAutoPaymentLogoUrl = (input: {
   link: OpenLink;
   rail: PaymentRail;
 }): string | undefined => {
-  const maybeSiteEntry = resolvePaymentAutoSiteEntry(input.link, input.rail);
-  const maybeRailEntry = resolveRailEntry(input.rail.rail);
+  const autoEntries = resolveAutoPaymentBadgeEntries(input.link, input.rail);
 
-  if (maybeSiteEntry && maybeRailEntry) {
-    return resolveComposedQrBadgeUrl([maybeSiteEntry, maybeRailEntry], {
+  if (autoEntries.length > 1) {
+    return resolveComposedQrBadgeUrl(autoEntries, {
       foregroundEntryIndex: shouldRenderPaymentSiteEntryInForeground(input.rail.rail)
         ? 0
         : undefined,
     });
   }
 
-  if (maybeSiteEntry) {
-    return resolveComposedQrBadgeUrl([maybeSiteEntry]);
-  }
-
-  if (maybeRailEntry) {
+  if (autoEntries.length === 1 && autoEntries[0]?.kind === "graphic") {
     return resolveDefaultPaymentLogoUrl({
       customLogoUrl: input.customLogoUrl,
       defaultLogoMode: input.defaultLogoMode,
