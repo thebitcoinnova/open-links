@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-18T08:26:22.333Z",
+  "generatedAt": "2026-03-27T00:09:27.753Z",
   "bySlot": {
     "link:primal:image": {
       "resolvedPath": "cache/content-images/433895ee9e31178b956d5a5ff8c19006fa6227ec7569373f15d66df759a116d5.jpg",
@@ -96,6 +96,24 @@
       "updatedAt": "2026-03-18T08:26:20.435Z",
       "contentType": "image/jpeg",
       "bytes": 387224
+    },
+    "link:cluborange-referral:image": {
+      "resolvedPath": "cache/content-images/bd1b93b531ddb5cb1391ac47c2b6fd136a2415ba5f6460c09f36c74cb07426b1.webp",
+      "updatedAt": "2026-03-27T00:09:25.712Z",
+      "contentType": "image/webp",
+      "bytes": 179684
+    },
+    "link:cluborange-referral:ogImage": {
+      "resolvedPath": "cache/content-images/bd1b93b531ddb5cb1391ac47c2b6fd136a2415ba5f6460c09f36c74cb07426b1.webp",
+      "updatedAt": "2026-03-27T00:09:25.938Z",
+      "contentType": "image/webp",
+      "bytes": 179684
+    },
+    "link:cluborange-referral:twitterImage": {
+      "resolvedPath": "cache/content-images/bd1b93b531ddb5cb1391ac47c2b6fd136a2415ba5f6460c09f36c74cb07426b1.webp",
+      "updatedAt": "2026-03-27T00:09:26.032Z",
+      "contentType": "image/webp",
+      "bytes": 179684
     },
     "link:instagram:image": {
       "resolvedPath": "cache/content-images/35a71a4916c222981fa4d860b4a76cf5b5784a8db873f582ff1e60ba7d4ee0e6.jpg",

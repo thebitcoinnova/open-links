@@ -41,6 +41,7 @@ const YOUTUBE_SUBSCRIBER_SEGMENT_LENGTH = 5_000;
 type PublicAugmentationOutcome = NormalizedEnrichmentResult;
 
 export type PublicAugmentationStrategyId =
+  | "cluborange-referral-signup"
   | "primal-public-profile"
   | "rumble-public-profile"
   | "medium-public-feed"
@@ -494,6 +495,71 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
 const buildGenericXDescription = (displayHandle: string): string =>
   `Posts and updates from @${displayHandle} on X.`;
 
+const decodeOpaqueUrlPathSegment = (segment: string): string => {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+};
+
+const extractClubOrangeReferralCode = (sourceUrl: string): string | null => {
+  let parsed: URL;
+  try {
+    parsed = new URL(sourceUrl);
+  } catch {
+    return null;
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  const normalizedHost = host.replace(/^www\./, "");
+  const segments = parsed.pathname
+    .split("/")
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0);
+
+  if (host === "signup.cluborange.org") {
+    if (segments.length !== 2 || segments[0] !== "co") {
+      return null;
+    }
+
+    const rawReferral = segments[1];
+    if (!rawReferral) {
+      return null;
+    }
+
+    const decodedReferral = decodeOpaqueUrlPathSegment(rawReferral);
+    return decodedReferral.length > 0 ? decodedReferral : null;
+  }
+
+  if (normalizedHost !== "cluborange.org") {
+    return null;
+  }
+
+  if (segments.length !== 1 || segments[0] !== "signup") {
+    return null;
+  }
+
+  const referral = parsed.searchParams.get("referral");
+  return typeof referral === "string" && referral.length > 0 ? referral : null;
+};
+
+const isClubOrangeReferralSignupUrl = (sourceUrl: string): boolean =>
+  extractClubOrangeReferralCode(sourceUrl) !== null;
+
+const buildClubOrangeReferralSignupUrl = (sourceUrl: string): string => {
+  const referral = extractClubOrangeReferralCode(sourceUrl);
+  if (!referral) {
+    throw new Error(
+      `Club Orange referral signup augmentation only supports referral URLs. Got '${sourceUrl}'.`,
+    );
+  }
+
+  const targetUrl = new URL("https://www.cluborange.org/signup");
+  targetUrl.searchParams.set("referral", referral);
+  return targetUrl.toString();
+};
+
 export const parseInstagramProfileMetadata = (
   description: string | undefined,
 ): InstagramProfileMetadata => {
@@ -629,6 +695,25 @@ const parsePrimalPublicProfile = (sourceUrl: string, html: string): PublicAugmen
     profileImage: safeTrim(parsed.metadata.image),
     handle,
     sourceLabel: "primal.net",
+  });
+};
+
+const parseClubOrangeReferralSignupPage = (
+  input: {
+    originalUrl: string;
+    fetchUrl: string;
+  },
+  html: string,
+): PublicAugmentationOutcome => {
+  const parsed = parseMetadata(html, input.fetchUrl);
+
+  return resolveCompleteness({
+    title: safeTrim(parsed.metadata.title),
+    description: safeTrim(parsed.metadata.description),
+    image: safeTrim(parsed.metadata.image),
+    ogImage: safeTrim(parsed.metadata.ogImage),
+    twitterImage: safeTrim(parsed.metadata.twitterImage),
+    sourceLabel: toSourceLabel(input.originalUrl) ?? parsed.metadata.sourceLabel,
   });
 };
 
@@ -823,6 +908,31 @@ const parseYoutubePublicProfile = (sourceUrl: string, html: string): PublicAugme
 };
 
 const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
+  {
+    id: "cluborange-referral-signup",
+    branch: "public_augmented",
+    sourceKind: "html",
+    matches: (input) => isClubOrangeReferralSignupUrl(input.url),
+    resolve: (input) =>
+      isClubOrangeReferralSignupUrl(input.url)
+        ? {
+            id: "cluborange-referral-signup",
+            branch: "public_augmented",
+            sourceKind: "html",
+            source: {
+              sourceUrl: buildClubOrangeReferralSignupUrl(input.url),
+            },
+            normalize: (body) =>
+              parseClubOrangeReferralSignupPage(
+                {
+                  originalUrl: input.url,
+                  fetchUrl: buildClubOrangeReferralSignupUrl(input.url),
+                },
+                body,
+              ),
+          }
+        : null,
+  },
   {
     id: "instagram-public-profile",
     branch: "public_augmented",

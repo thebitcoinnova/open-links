@@ -70,6 +70,7 @@ test("supported social profile detection supports the expanded platform set but 
   const linkedinProfileUrl = "https://www.linkedin.com/in/peter-ryszkiewicz/";
   const mediumProfileUrl = "https://medium.com/@peterryszkiewicz";
   const clubOrangeProfileUrl = "https://app.cluborange.org/pryszkie";
+  const clubOrangeReferralUrl = "https://signup.cluborange.org/co/pryszkie";
   const rumbleProfileUrl = "https://rumble.com/c/InTheLitterBox";
   const primalProfileUrl = "https://primal.net/peterryszkiewicz";
   const substackProfileUrl = "https://peterryszkiewicz.substack.com/";
@@ -88,6 +89,10 @@ test("supported social profile detection supports the expanded platform set but 
   const linkedinProfile = resolveSupportedSocialProfile({ url: linkedinProfileUrl });
   const mediumProfile = resolveSupportedSocialProfile({ url: mediumProfileUrl });
   const clubOrangeProfile = resolveSupportedSocialProfile({ url: clubOrangeProfileUrl });
+  const clubOrangeReferral = resolveSupportedSocialProfile({
+    url: clubOrangeReferralUrl,
+    icon: "cluborange",
+  });
   const rumbleProfile = resolveSupportedSocialProfile({ url: rumbleProfileUrl });
   const primalProfile = resolveSupportedSocialProfile({ url: primalProfileUrl });
   const substackProfile = resolveSupportedSocialProfile({ url: substackProfileUrl });
@@ -129,6 +134,7 @@ test("supported social profile detection supports the expanded platform set but 
     handle: "pryszkie",
     expectedFields: ["profileImage"],
   });
+  assert.equal(clubOrangeReferral, null);
   assert.deepEqual(rumbleProfile, {
     platform: "rumble",
     handle: "inthelitterbox",

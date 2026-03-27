@@ -36,6 +36,94 @@ test("resolves an X community augmentation target that fetches the community pag
   assert.equal(target.acceptHeader, undefined);
 });
 
+test("resolves a Club Orange referral-host augmentation target to the canonical signup page", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://signup.cluborange.org/co/PrySzkie-42",
+    icon: "cluborange",
+  });
+
+  // Assert
+  assert.ok(target);
+  assert.equal(target.id, "cluborange-referral-signup");
+  assert.equal(target.sourceUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
+});
+
+test("resolves a canonical Club Orange signup referral URL through the same augmentation target", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://www.cluborange.org/signup?referral=PrySzkie-42",
+    icon: "cluborange",
+  });
+
+  // Assert
+  assert.ok(target);
+  assert.equal(target.id, "cluborange-referral-signup");
+  assert.equal(target.sourceUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
+});
+
+test("parses Club Orange referral signup metadata from the canonical public signup page", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://signup.cluborange.org/co/pryszkie",
+    icon: "cluborange",
+  });
+  const html = `
+    <html>
+      <head>
+        <title>Join Club Orange — Connect with 19K+ Bitcoiners</title>
+        <meta
+          name="description"
+          content="Join 19,000+ Bitcoiners in 71 countries. Get a Club Orange membership starting at $40/year or pay in sats."
+        />
+        <meta property="og:title" content="Join Club Orange — Connect with 19K+ Bitcoiners" />
+        <meta
+          property="og:description"
+          content="Join 19,000+ Bitcoiners in 71 countries. Get a Club Orange membership starting at $40/year or pay in sats."
+        />
+        <meta
+          property="og:image"
+          content="https://cdn.prod.website-files.com/example/bitcoin-social-layer.webp"
+        />
+        <meta property="twitter:title" content="Join Club Orange — Connect with 19K+ Bitcoiners" />
+        <meta
+          property="twitter:description"
+          content="Join 19,000+ Bitcoiners in 71 countries. Get a Club Orange membership starting at $40/year or pay in sats."
+        />
+        <meta
+          property="twitter:image"
+          content="https://cdn.prod.website-files.com/example/bitcoin-social-layer.webp"
+        />
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "Join Club Orange — Connect with 19K+ Bitcoiners");
+  assert.equal(
+    parsed?.metadata.description,
+    "Join 19,000+ Bitcoiners in 71 countries. Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.equal(
+    parsed?.metadata.image,
+    "https://cdn.prod.website-files.com/example/bitcoin-social-layer.webp",
+  );
+  assert.equal(
+    parsed?.metadata.ogImage,
+    "https://cdn.prod.website-files.com/example/bitcoin-social-layer.webp",
+  );
+  assert.equal(
+    parsed?.metadata.twitterImage,
+    "https://cdn.prod.website-files.com/example/bitcoin-social-layer.webp",
+  );
+  assert.equal(parsed?.metadata.sourceLabel, "signup.cluborange.org");
+  assert.equal(parsed?.metadata.profileImage, undefined);
+});
+
 test("resolves a Primal public augmentation target that fetches the profile page directly", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({

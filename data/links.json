@@ -127,6 +127,21 @@
       "custom": {}
     },
     {
+      "id": "cluborange-referral",
+      "label": "Join Club Orange",
+      "url": "https://signup.cluborange.org/co/pryszkie",
+      "type": "rich",
+      "icon": "cluborange",
+      "description": "Club Orange signup and referral landing page",
+      "group": "favorites",
+      "order": 13,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
+    },
+    {
       "id": "instagram",
       "label": "Instagram",
       "url": "https://www.instagram.com/peterryszkiewicz/",
@@ -240,6 +255,7 @@
   ],
   "order": [
     "cluborange",
+    "cluborange-referral",
     "primal",
     "github",
     "substack",
