@@ -553,15 +553,10 @@ test("email cards expose contact-aware semantics and the dedicated mail icon", (
   assert.equal(renderedTextContent(iconTitle.props.children as RenderedNode), "Mail");
 });
 
-test("history-aware cards expose analytics then share as sibling actions without changing anchor semantics", () => {
+test("history-aware cards expose stats after share actions without changing anchor semantics", () => {
   // Act
   const tree = RichLinkCard({
     resolveCardActions: () => [
-      {
-        ariaLabel: "View GitHub follower history",
-        kind: "analytics",
-        onClick: () => undefined,
-      },
       {
         ariaLabel: "Show GitHub QR code",
         kind: "qr",
@@ -577,6 +572,11 @@ test("history-aware cards expose analytics then share as sibling actions without
         kind: "copy",
         onClick: () =>
           Promise.resolve({ message: "GitHub link copied", status: "copied" as const }),
+      },
+      {
+        ariaLabel: "View GitHub follower history",
+        kind: "analytics",
+        onClick: () => undefined,
       },
     ],
     link: richGithubLink,
@@ -602,10 +602,10 @@ test("history-aware cards expose analytics then share as sibling actions without
   assert.equal(anchor.props["aria-label"], "Open pRizz in a new tab");
   assert.ok(actionRow);
   assert.equal(buttons.length, 4);
-  assert.equal(buttons[0]?.props["aria-label"], "View GitHub follower history");
-  assert.equal(buttons[1]?.props["aria-label"], "Show GitHub QR code");
-  assert.equal(buttons[2]?.props["aria-label"], "Share GitHub");
-  assert.equal(buttons[3]?.props["aria-label"], "Copy GitHub link");
+  assert.equal(buttons[0]?.props["aria-label"], "Show GitHub QR code");
+  assert.equal(buttons[1]?.props["aria-label"], "Share GitHub");
+  assert.equal(buttons[2]?.props["aria-label"], "Copy GitHub link");
+  assert.equal(buttons[3]?.props["aria-label"], "View GitHub follower history");
   assert.equal(frame.props["data-card-variant"], "rich");
   assert.equal(frame.props["data-has-actions"], "true");
   assert.equal(frame.props["data-has-profile-layout"], "true");

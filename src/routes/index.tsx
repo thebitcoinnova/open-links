@@ -490,6 +490,7 @@ export default function RouteIndex() {
       }
 
       return [
+        ...shareActions,
         {
           ariaLabel: `View ${link.label} follower history`,
           kind: "analytics" as const,
@@ -499,7 +500,6 @@ export default function RouteIndex() {
           },
           title: `View ${link.label} follower history`,
         },
-        ...shareActions,
       ];
     };
 
