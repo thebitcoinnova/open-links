@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Execute the Phase 15 Quick Links foundation plans
+**Current focus:** Start Phase 16 discussion for the visible Quick Links UI and responsive polish
 
 ## Current Position
 
-Phase: 15
+Phase: 15 (complete)
 Plan: 15-01, 15-02, 15-03
-Status: Phase 15 planned across 3 waves; ready for `$gsd-execute-phase 15`
-Next Phase: 15 - Quick Links Foundation
+Status: Phase 15 complete; ready for `$gsd-discuss-phase 16`
+Next Phase: 16 - Profile Header Quick Links UI + Responsive Polish
 Active Milestone: v1.2-profile-quick-links-header-usability-polish
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-27 - Planned Phase 15 across three waves for quick-link derivation, header integration, and regression coverage.
+Last activity: 2026-03-27 - Verified Phase 15 after completing the resolver, route-to-header seam, and focused foundation regression bundle.
 
-Progress: [..........] 0%
+Progress: [###.......] 33%
 
 ## Performance Metrics
 
@@ -78,7 +78,7 @@ Progress: [..........] 0%
 
 ### Pending Todos
 
-- Execute Phase 15 with `$gsd-execute-phase 15`.
+- Start Phase 16 with `$gsd-discuss-phase 16` or `$gsd-plan-phase 16`.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -91,6 +91,6 @@ Progress: [..........] 0%
 
 ## Session Continuity
 
-Last session: 2026-03-27 05:44
-Stopped at: Phase 15 planned and verified.
-Resume file: .planning/phases/15-quick-links-foundation/15-01-PLAN.md
+Last session: 2026-03-27 07:40
+Stopped at: Phase 15 complete and verified.
+Resume file: .planning/ROADMAP.md

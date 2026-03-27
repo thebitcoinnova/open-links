@@ -16,14 +16,15 @@ v1.2 keeps scope tight around the profile header: add a Quick Links strip above 
 ### Phase 15: Quick Links Foundation
 
 **Goal:** Derive eligible Quick Links from existing top-level links with deterministic ordering, empty-state suppression, and no duplicate maintainer workflow.
+**Status:** ✅ Complete (2026-03-27)
 **Depends on:** Phase 14
 **Requirements:** QLINK-02, QLINK-03, QLINK-04, MAINT-01
 **Plans:** 3 plans
 
 Plans:
-- [ ] 15-01: Define quick-link eligibility rules, major-platform priority, and derivation helpers from enabled top-level links.
-- [ ] 15-02: Wire the header-facing quick-link view model and hide the section cleanly when no eligible links exist.
-- [ ] 15-03: Add focused tests for derivation, filtering, and deterministic ordering.
+- [x] 15-01: Define quick-link eligibility rules, major-platform priority, and derivation helpers from enabled top-level links.
+- [x] 15-02: Wire the header-facing quick-link view model and hide the section cleanly when no eligible links exist.
+- [x] 15-03: Add focused tests for derivation, filtering, and deterministic ordering.
 
 **Details:**
 - Reuse the existing known-site registry and icon system rather than adding new dependencies or remote brand assets.
@@ -35,6 +36,12 @@ Plans:
 - Only eligible major-platform social/profile destinations appear in the strip.
 - Ordering is deterministic and stable across builds.
 - The header can suppress the section entirely when no quick links qualify.
+
+**Success Criteria Met:**
+- Quick Links now derive from enabled `links[]` data through a pure resolver rather than `profileLinks` or another registry.
+- Eligibility stays bounded to supported social/profile-style platforms, with the approved priority list and one-winner-per-platform behavior covered by tests.
+- Route-to-header Quick Links state now exists as a non-visual seam, keeping visible-strip work deferred to Phase 16.
+- Focused helper/header tests, `bun run typecheck`, and `bun run build` all passed for the foundation layer.
 
 ### Phase 16: Profile Header Quick Links UI + Responsive Polish
 
