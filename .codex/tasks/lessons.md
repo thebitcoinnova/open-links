@@ -81,3 +81,13 @@ When composing QR badge SVGs that mix vector marks with raster photos or avatars
 
 ### Trigger signal to catch it earlier
 Any QR or badge change that generates an SVG data URL containing `<image href="/cache/...jpg">`, `<image href="/cache/...png">`, or other external raster paths should be treated as a likely rendering bug and verified with an embedded-asset test before shipping.
+
+## lesson-sync-and-install-before-work | 2026-03-27 05:21
+### What went wrong
+I started work on a stale local checkout and only synchronized with `origin/main` later during commit/push, which turned the integration into a rebase/conflict exercise instead of starting from the current upstream state. I also did not make `bun install` part of the default startup routine.
+
+### Preventive rule
+Before substantive work in `open-links`, first run `git fetch origin --prune`, then a safe `git pull --ff-only`, and then `bun install` from the repo root unless the user explicitly asks to work against the unsynced local state or a higher-priority constraint forbids mutation.
+
+### Trigger signal to catch it earlier
+Any new coding task that starts on a local branch without a same-turn fetch/pull check and dependency sync should be treated as out of policy before implementation begins.

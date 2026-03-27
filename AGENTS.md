@@ -93,6 +93,20 @@ For branded payment/tip cards, verify card-shell icon resolution and QR badge re
 - `badge.items.asset` only changes the QR center badge. It does not change the card-shell icon.
 - If a new payment platform should render like an existing first-class brand such as Club Orange, add it to the shared known-site icon pipeline rather than relying on a QR-only asset.
 
+## Startup Sync Rule
+
+Before starting substantive work in this repository, agents must sync local code and dependencies first:
+
+1. Run `git fetch origin --prune`.
+2. Pull the latest code for the current branch using a safe fast-forward path (`git pull --ff-only`) before continuing.
+3. Run `bun install` from the repo root before analysis, edits, or verification.
+
+Exceptions:
+
+- If the user explicitly asks to work against the current local state without syncing, follow the user's instruction.
+- If local changes, branch divergence, permissions, or another blocker prevent a safe pull, stop and report the blocker instead of forcing a merge or resetting state.
+- If higher-priority tool or mode constraints disallow mutation, note the constraint and sync as soon as it is allowed.
+
 ## Pre-Commit Requirements (Mandatory)
 
 Before creating any commit in this repository:
