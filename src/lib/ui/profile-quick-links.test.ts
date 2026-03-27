@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { OpenLink } from "../content/load-content";
-import { PROFILE_QUICK_LINK_PRIORITY, resolveProfileQuickLinks } from "./profile-quick-links";
+import {
+  PROFILE_QUICK_LINK_PRIORITY,
+  resolveProfileQuickLinks,
+  resolveProfileQuickLinksState,
+} from "./profile-quick-links";
 
 const createLink = (
   overrides: Partial<OpenLink> & Pick<OpenLink, "id" | "label" | "type">,
@@ -215,6 +219,55 @@ test("empty results stay empty when nothing qualifies", () => {
 
   // Assert
   assert.deepEqual(quickLinks, []);
+});
+
+test("quick-link state exposes hasAny and preserves the ordered winners", () => {
+  // Arrange
+  const links: OpenLink[] = [
+    createLink({
+      id: "substack",
+      label: "Substack",
+      type: "rich",
+      url: "https://example.substack.com/",
+      icon: "substack",
+    }),
+    createLink({
+      id: "github",
+      label: "GitHub",
+      type: "rich",
+      url: "https://github.com/pRizz",
+      icon: "github",
+    }),
+  ];
+
+  // Act
+  const quickLinksState = resolveProfileQuickLinksState(links);
+
+  // Assert
+  assert.equal(quickLinksState.hasAny, true);
+  assert.deepEqual(
+    quickLinksState.items.map((link) => link.id),
+    ["github", "substack"],
+  );
+});
+
+test("quick-link state stays empty when no supported profile destinations qualify", () => {
+  // Arrange
+  const links: OpenLink[] = [
+    createLink({
+      id: "home",
+      label: "Website",
+      type: "simple",
+      url: "https://openlinks.us",
+    }),
+  ];
+
+  // Act
+  const quickLinksState = resolveProfileQuickLinksState(links);
+
+  // Assert
+  assert.equal(quickLinksState.hasAny, false);
+  assert.deepEqual(quickLinksState.items, []);
 });
 
 test("priority list stays locked to the approved major-platform order", () => {
