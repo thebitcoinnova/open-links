@@ -30,6 +30,9 @@ export interface ContentImageLinkInput {
   url?: unknown;
   icon?: unknown;
   metadata?: ContentImageMetadataLike;
+  enrichment?: {
+    profileSemantics?: unknown;
+  };
 }
 
 export interface GeneratedRichMetadataInput {
@@ -148,6 +151,7 @@ export const resolveEffectiveLinkContentImageMetadata = (input: {
     url: trimToUndefined(input.link.url),
     icon: trimToUndefined(input.link.icon),
     metadataHandle: mergedMetadata.handle ?? manualMetadata?.handle ?? generatedMetadata?.handle,
+    profileSemantics: input.link.enrichment?.profileSemantics,
   });
 
   return (normalizeSupportedSocialProfileMetadata(mergedMetadata, supportedProfile) ??

@@ -89,3 +89,92 @@ test("QR badge validation rejects more than two custom badge items", () => {
     ),
   );
 });
+
+test("supported-family links still emit handle coverage warnings in auto mode", () => {
+  const issues = runPolicyRules({
+    profile,
+    links: {
+      links: [
+        {
+          id: "cluborange-referral",
+          label: "Join Club Orange",
+          url: "https://signup.cluborange.org/co/pryszkie",
+          type: "rich",
+          icon: "cluborange",
+          enabled: true,
+          enrichment: {
+            enabled: true,
+          },
+        },
+      ],
+    },
+    site,
+  });
+
+  assert.ok(
+    issues.some(
+      (issue) =>
+        issue.path === "$.links[0].metadata.handle" &&
+        issue.message.includes("Handle extraction warning for link 'cluborange-referral'"),
+    ),
+  );
+});
+
+test("non-profile rich links suppress supported-family handle coverage warnings", () => {
+  const issues = runPolicyRules({
+    profile,
+    links: {
+      links: [
+        {
+          id: "cluborange-referral",
+          label: "Join Club Orange",
+          url: "https://signup.cluborange.org/co/pryszkie",
+          type: "rich",
+          icon: "cluborange",
+          enabled: true,
+          enrichment: {
+            enabled: true,
+            profileSemantics: "non_profile",
+          },
+        },
+      ],
+    },
+    site,
+  });
+
+  assert.equal(
+    issues.some((issue) => issue.path === "$.links[0].metadata.handle"),
+    false,
+  );
+});
+
+test("explicit profile semantics warn when no supported profile can be resolved", () => {
+  const issues = runPolicyRules({
+    profile,
+    links: {
+      links: [
+        {
+          id: "homepage",
+          label: "Homepage",
+          url: "https://openlinks.us",
+          type: "rich",
+          icon: "github",
+          enabled: true,
+          enrichment: {
+            enabled: true,
+            profileSemantics: "profile",
+          },
+        },
+      ],
+    },
+    site,
+  });
+
+  assert.ok(
+    issues.some(
+      (issue) =>
+        issue.path === "$.links[0].enrichment.profileSemantics" &&
+        issue.message.includes("Profile semantics warning for link 'homepage'"),
+    ),
+  );
+});

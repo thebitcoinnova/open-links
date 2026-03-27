@@ -137,7 +137,8 @@
       "order": 13,
       "enabled": true,
       "enrichment": {
-        "enabled": true
+        "enabled": true,
+        "profileSemantics": "non_profile"
       },
       "custom": {}
     },

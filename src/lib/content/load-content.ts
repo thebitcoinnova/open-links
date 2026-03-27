@@ -14,6 +14,7 @@ import {
 } from "./content-image-slots";
 import { type EntityType, resolveEntityType } from "./entity-type";
 import {
+  type LinkProfileSemantics,
   type SocialProfileMetadataFields,
   mergeMetadataWithManualSocialProfileOverrides,
 } from "./social-profile-fields";
@@ -163,6 +164,7 @@ export interface RichLinkMetadata extends SocialProfileMetadataFields {
 
 export interface LinkEnrichmentPolicy {
   enabled?: boolean;
+  profileSemantics?: LinkProfileSemantics;
   allowKnownBlocker?: boolean;
   authenticatedExtractor?: string;
   authenticatedCacheKey?: string;

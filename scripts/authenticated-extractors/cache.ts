@@ -227,6 +227,7 @@ export interface ValidateAuthenticatedCacheEntryInput {
   expectedLinkId: string;
   expectedExtractorId: string;
   expectedUrl: string;
+  profileSemantics?: unknown;
   warnAgeDays: number;
   registry: AuthenticatedCacheRegistry;
 }
@@ -376,6 +377,7 @@ export const validateAuthenticatedCacheEntry = (
   const supportedProfile = resolveSupportedSocialProfile({
     url: input.expectedUrl,
     metadataHandle: cacheMetadata.handle,
+    profileSemantics: input.profileSemantics,
   });
   const enrichmentMetadata =
     normalizeSupportedSocialProfileMetadata(cacheMetadata, supportedProfile) ?? cacheMetadata;

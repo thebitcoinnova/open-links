@@ -4,6 +4,7 @@ import {
   resolveHandleFromUrl,
 } from "../identity/handle-resolver";
 
+export type LinkProfileSemantics = "auto" | "profile" | "non_profile";
 export type SupportedSocialProfilePlatform =
   | "cluborange"
   | "facebook"
@@ -56,6 +57,13 @@ export interface SocialProfileMetadataLike extends SocialProfileMetadataFields {
   image?: string;
 }
 
+export interface ResolveSupportedSocialProfileInput {
+  url?: string;
+  icon?: string;
+  metadataHandle?: unknown;
+  profileSemantics?: unknown;
+}
+
 const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
   cluborange: ["profileImage"],
   facebook: ["profileImage"],
@@ -86,6 +94,12 @@ const isSupportedSocialProfilePlatform = (
   value: unknown,
 ): value is SupportedSocialProfilePlatform =>
   typeof value === "string" && value in EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM;
+
+const isLinkProfileSemantics = (value: unknown): value is LinkProfileSemantics =>
+  value === "auto" || value === "profile" || value === "non_profile";
+
+export const resolveLinkProfileSemantics = (value: unknown): LinkProfileSemantics =>
+  isLinkProfileSemantics(value) ? value : "auto";
 
 export const SOCIAL_PROFILE_METADATA_FIELDS = [
   "profileDescription",
@@ -180,11 +194,13 @@ export const normalizeSupportedSocialProfileMetadata = <T extends SocialProfileM
   } as T;
 };
 
-export const resolveSupportedSocialProfile = (input: {
-  url?: string;
-  icon?: string;
-  metadataHandle?: unknown;
-}): SupportedSocialProfileTarget | null => {
+export const resolveSupportedSocialProfile = (
+  input: ResolveSupportedSocialProfileInput,
+): SupportedSocialProfileTarget | null => {
+  if (resolveLinkProfileSemantics(input.profileSemantics) === "non_profile") {
+    return null;
+  }
+
   if (isXCommunityUrl(input)) {
     return null;
   }

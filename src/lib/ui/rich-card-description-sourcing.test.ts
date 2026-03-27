@@ -191,6 +191,32 @@ test("supported profile links prefer profile descriptions over generic descripti
   );
 });
 
+test("explicit non-profile semantics suppress profileDescription precedence on supported-family links", () => {
+  // Arrange
+  const nonProfileClubOrangeLink = {
+    id: "cluborange-referral",
+    label: "Join Club Orange",
+    url: "https://app.cluborange.org/pryszkie",
+    type: "rich",
+    icon: "cluborange",
+    description: "Manual signup copy",
+    metadata: {
+      description: "Fetched signup copy",
+      profileDescription: "Profile copy that should not override the generic description",
+      descriptionSource: "fetched",
+    },
+    enrichment: {
+      profileSemantics: "non_profile",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const description = resolveLinkCardDescription(site, nonProfileClubOrangeLink);
+
+  // Assert
+  assert.equal(description, "Fetched signup copy");
+});
+
 test("supported profile links without profileDescription still obey description-source fallback rules", () => {
   // Arrange
   const mediumProfileLink = {
@@ -280,7 +306,8 @@ test("dataset audit defaults current rich links to fetched descriptions across c
         generatedMetadata,
       );
       return mergedMetadata ? { ...link, metadata: mergedMetadata } : link;
-    });
+    })
+    .filter((link): link is OpenLink & { metadata: RichLinkMetadata } => Boolean(link.metadata));
 
   // Assert
   assert.deepEqual(

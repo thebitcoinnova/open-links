@@ -33,6 +33,7 @@ export interface LinkInput {
   enabled?: boolean;
   enrichment?: {
     enabled?: boolean;
+    profileSemantics?: unknown;
     authenticatedExtractor?: string;
     authenticatedCacheKey?: string;
   };
@@ -261,6 +262,7 @@ const run = async () => {
         expectedLinkId: candidate.link.id,
         expectedExtractorId: candidate.extractorId,
         expectedUrl: candidate.link.url ?? "",
+        profileSemantics: candidate.link.enrichment?.profileSemantics,
         warnAgeDays: DEFAULT_WARN_AGE_DAYS,
         registry: cache,
       });

@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   mergeMetadataWithManualSocialProfileOverrides,
   normalizeSupportedSocialProfileMetadata,
+  resolveLinkProfileSemantics,
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
 } from "./social-profile-fields";
@@ -63,6 +64,13 @@ test("profile description stays additive when only generated metadata provides i
   });
 });
 
+test("profile semantics default to auto and preserve explicit overrides", () => {
+  assert.equal(resolveLinkProfileSemantics(undefined), "auto");
+  assert.equal(resolveLinkProfileSemantics("profile"), "profile");
+  assert.equal(resolveLinkProfileSemantics("non_profile"), "non_profile");
+  assert.equal(resolveLinkProfileSemantics("unexpected"), "auto");
+});
+
 test("supported social profile detection supports the expanded platform set but stays conservative for non-profile URLs", () => {
   // Arrange
   const instagramProfileUrl = "https://www.instagram.com/peterryszkiewicz/";
@@ -71,6 +79,7 @@ test("supported social profile detection supports the expanded platform set but 
   const mediumProfileUrl = "https://medium.com/@peterryszkiewicz";
   const clubOrangeProfileUrl = "https://app.cluborange.org/pryszkie";
   const clubOrangeReferralUrl = "https://signup.cluborange.org/co/pryszkie";
+  const supportedClubOrangeNonProfileUrl = "https://app.cluborange.org/pryszkie";
   const rumbleProfileUrl = "https://rumble.com/c/InTheLitterBox";
   const primalProfileUrl = "https://primal.net/peterryszkiewicz";
   const substackProfileUrl = "https://peterryszkiewicz.substack.com/";
@@ -92,6 +101,22 @@ test("supported social profile detection supports the expanded platform set but 
   const clubOrangeReferral = resolveSupportedSocialProfile({
     url: clubOrangeReferralUrl,
     icon: "cluborange",
+  });
+  const clubOrangeNonProfile = resolveSupportedSocialProfile({
+    url: supportedClubOrangeNonProfileUrl,
+    icon: "cluborange",
+    profileSemantics: "non_profile",
+  });
+  const manuallyResolvedClubOrangeProfile = resolveSupportedSocialProfile({
+    url: "https://public.cluborange.org/user/66f980c41eac7211678dff16",
+    icon: "cluborange",
+    metadataHandle: "pryszkie",
+    profileSemantics: "profile",
+  });
+  const unsupportedForcedProfile = resolveSupportedSocialProfile({
+    url: "https://openlinks.us",
+    metadataHandle: "pryszkie",
+    profileSemantics: "profile",
   });
   const rumbleProfile = resolveSupportedSocialProfile({ url: rumbleProfileUrl });
   const primalProfile = resolveSupportedSocialProfile({ url: primalProfileUrl });
@@ -135,6 +160,13 @@ test("supported social profile detection supports the expanded platform set but 
     expectedFields: ["profileImage"],
   });
   assert.equal(clubOrangeReferral, null);
+  assert.equal(clubOrangeNonProfile, null);
+  assert.deepEqual(manuallyResolvedClubOrangeProfile, {
+    platform: "cluborange",
+    handle: "pryszkie",
+    expectedFields: ["profileImage"],
+  });
+  assert.equal(unsupportedForcedProfile, null);
   assert.deepEqual(rumbleProfile, {
     platform: "rumble",
     handle: "inthelitterbox",

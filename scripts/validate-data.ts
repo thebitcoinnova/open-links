@@ -638,6 +638,7 @@ const remoteCachePolicyCoverageIssues = (input: {
       metadataHandle: toStringOrUndefined(
         isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
       ),
+      profileSemantics: enrichment?.profileSemantics,
     });
     const authenticatedExtractor = toStringOrUndefined(enrichment?.authenticatedExtractor);
     if (authenticatedExtractor) {
@@ -1059,6 +1060,7 @@ const supportedSocialProfileMetadataIssues = (
       url,
       icon: toStringOrUndefined(rawLink.icon),
       metadataHandle: isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
+      profileSemantics: enrichment?.profileSemantics,
     });
     const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
     const manualMetadata = isRecord(rawLink.metadata) ? rawLink.metadata : {};
@@ -1070,6 +1072,7 @@ const supportedSocialProfileMetadataIssues = (
         url,
         icon: toStringOrUndefined(rawLink.icon),
         metadataHandle: mergedMetadata.handle,
+        profileSemantics: enrichment?.profileSemantics,
       }) ?? supportedProfile;
     if (!resolvedSupportedProfile) {
       return;
@@ -1108,6 +1111,7 @@ interface AuthenticatedExtractorTarget {
   url: string;
   extractorId: string;
   cacheKey: string;
+  enrichment?: Record<string, unknown>;
 }
 
 const collectAuthenticatedExtractorTargets = (
@@ -1152,6 +1156,7 @@ const collectAuthenticatedExtractorTargets = (
       url,
       extractorId,
       cacheKey,
+      enrichment,
     });
   });
 
@@ -1267,6 +1272,7 @@ const authenticatedExtractorConfigIssues = (
       expectedLinkId: target.linkId,
       expectedExtractorId: target.extractorId,
       expectedUrl: target.url,
+      profileSemantics: target.enrichment?.profileSemantics,
       warnAgeDays,
       registry: cacheRegistry,
     });

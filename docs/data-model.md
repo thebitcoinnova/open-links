@@ -444,6 +444,7 @@ Runtime notes:
 - `profileDescription` only changes card copy for supported social profile links. Non-profile links continue to use `descriptionSource` plus the existing fetched/manual fallback order.
 - `followersCount*`, `followingCount*`, and `subscribersCount*` drive the profile-header metric chips on supported social cards.
 - Those audience fields also feed the follower-history pipeline when a nightly or local `bun run followers:history:sync` snapshot is taken.
+- `links[].enrichment.profileSemantics="non_profile"` is the supported way to keep a rich link on generic rich-card behavior even when the URL belongs to a profile-capable site family.
 
 #### URL-first handle extraction (v1)
 
@@ -451,8 +452,12 @@ Runtime notes:
 - Resolution precedence is:
   1. manual `links[].metadata.handle`
   2. URL-derived handle when supported
+- `links[].enrichment.profileSemantics` controls whether a rich link participates in profile handling:
+  - `auto` (default): infer from URL family plus the handle rules above
+  - `profile`: require profile semantics when a supported profile can be resolved; validation warns when it cannot
+  - `non_profile`: opt out of profile semantics, handle warnings, profile-header metadata expectations, and avatar-first profile layout
 - Supported extractor families in v1: GitHub, X/Twitter, LinkedIn, Facebook, Instagram, Medium, Substack patterns.
-- If a URL is from a supported family but no handle can be resolved and `metadata.handle` is missing, validation emits a warning-level handle coverage issue.
+- If a URL is from a supported family but no handle can be resolved and `metadata.handle` is missing, validation emits a warning-level handle coverage issue unless `links[].enrichment.profileSemantics="non_profile"` is set.
 - Handle coverage warnings are non-strict-blocking and do not fail `bun run validate:data:strict`.
 
 Current profile-card-capable rich-link families include:
@@ -474,6 +479,7 @@ Profile styling is still data-driven rather than a separate link type. A support
 Per-link controls:
 
 - `enabled`
+- `profileSemantics`: `auto` (default), `profile`, or `non_profile`
 - `allowKnownBlocker`: explicit override to force-attempt enrichment for a known blocked domain
 - `authenticatedExtractor`: use committed authenticated cache instead of public enrichment for true auth-required domains (currently LinkedIn and Facebook)
 - `authenticatedCacheKey`: optional cache-key override (default uses `link.id`)

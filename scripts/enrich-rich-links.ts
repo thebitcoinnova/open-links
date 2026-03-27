@@ -2,9 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import {
+  type LinkProfileSemantics,
   SOCIAL_PROFILE_METADATA_FIELDS,
   mergeMetadataWithManualSocialProfileOverrides,
   normalizeSupportedSocialProfileMetadata,
+  resolveLinkProfileSemantics,
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
 } from "../src/lib/content/social-profile-fields";
@@ -91,6 +93,7 @@ interface LinkInput {
   metadata?: EnrichmentMetadata;
   enrichment?: {
     enabled?: boolean;
+    profileSemantics?: LinkProfileSemantics;
     allowKnownBlocker?: boolean;
     authenticatedExtractor?: string;
     authenticatedCacheKey?: string;
@@ -288,6 +291,7 @@ const resolveSupportedProfileForMetadata = (
     url: link.url,
     icon: link.icon,
     metadataHandle: metadata.handle,
+    profileSemantics: link.enrichment?.profileSemantics,
   }) ?? fallbackSupportedProfile;
 
 const maybeReconcileAuthenticatedProfileDescriptions = async (input: {
@@ -678,16 +682,20 @@ const run = async () => {
   let abortedEarly = false;
 
   for (const link of richLinks) {
+    const profileSemantics = resolveLinkProfileSemantics(link.enrichment?.profileSemantics);
     const supportedProfile = resolveSupportedSocialProfile({
       url: link.url,
       icon: link.icon,
       metadataHandle: link.metadata?.handle,
+      profileSemantics,
     });
     const urlDerivedHandle = resolveHandleFromUrl({
       url: link.url,
       icon: link.icon,
     }).handle;
-    const handleForMetadata = normalizeHandle(link.metadata?.handle) ?? urlDerivedHandle;
+    const handleForMetadata =
+      normalizeHandle(link.metadata?.handle) ??
+      (profileSemantics === "non_profile" ? undefined : urlDerivedHandle);
     const linkEnabled = link.enrichment?.enabled ?? config.enabledByDefault;
     const authenticatedExtractorId = link.enrichment?.authenticatedExtractor?.trim();
 
@@ -909,6 +917,7 @@ const run = async () => {
         expectedLinkId: link.id,
         expectedExtractorId: authenticatedExtractorId,
         expectedUrl: link.url,
+        profileSemantics: link.enrichment?.profileSemantics,
         warnAgeDays: config.authenticatedCacheWarnAgeDays,
         registry: authenticatedCacheRegistry,
       });

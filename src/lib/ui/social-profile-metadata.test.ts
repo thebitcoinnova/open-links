@@ -183,6 +183,44 @@ test("treats Club Orange public profile metadata as an avatar-first social profi
   assert.deepEqual(resolved.metrics, []);
 });
 
+test("explicit non-profile semantics keep supported-family links on generic rich-card metadata", () => {
+  // Arrange
+  const link = {
+    id: "cluborange-referral",
+    label: "Join Club Orange",
+    url: "https://app.cluborange.org/pryszkie",
+    type: "rich",
+    icon: "cluborange",
+    metadata: {
+      title: "Join Club Orange",
+      description: "Signup-first referral copy",
+      profileDescription: "Profile copy that should not win",
+      image: "/cache/content-images/cluborange-referral-preview.jpg",
+      profileImage: "/cache/content-images/cluborange-referral-avatar.jpg",
+      followersCount: 19_000,
+      followersCountRaw: "19K Followers",
+    },
+    enrichment: {
+      profileSemantics: "non_profile",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, undefined);
+  assert.equal(resolved.displayName, "Join Club Orange");
+  assert.equal(resolved.profileDescription, undefined);
+  assert.equal(resolved.handle, undefined);
+  assert.equal(resolved.handleDisplay, undefined);
+  assert.equal(resolved.usesProfileLayout, false);
+  assert.equal(resolved.hasDistinctPreviewImage, true);
+  assert.equal(resolved.profileImageUrl, undefined);
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/cluborange-referral-preview.jpg");
+  assert.deepEqual(resolved.metrics, []);
+});
+
 test("formats X audience metrics from cached public-profile counts", () => {
   // Arrange
   const link = {

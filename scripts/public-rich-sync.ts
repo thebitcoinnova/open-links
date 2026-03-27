@@ -76,6 +76,9 @@ interface LinkInput {
   type: "simple" | "rich" | "payment";
   icon?: string;
   metadata?: Record<string, unknown>;
+  enrichment?: {
+    profileSemantics?: unknown;
+  };
 }
 
 interface LinksPayload {
@@ -511,6 +514,7 @@ export const bootstrapPublicBaseEntry = async (
     url: input.link.url,
     icon: input.link.icon,
     metadataHandle: input.link.metadata?.handle,
+    profileSemantics: input.link.enrichment?.profileSemantics,
   });
   const augmentedMetadata = augmentSupportedSocialProfileMetadata({
     html: fetched.html,

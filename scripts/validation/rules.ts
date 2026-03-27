@@ -1,4 +1,8 @@
 import {
+  resolveLinkProfileSemantics,
+  resolveSupportedSocialProfile,
+} from "../../src/lib/content/social-profile-fields";
+import {
   KNOWN_SITE_ALIASES,
   normalizeKnownSiteAlias,
   resolveKnownSiteId,
@@ -883,15 +887,39 @@ export const runPolicyRules = ({
     const linkIcon = toStringOrUndefined(link.icon);
     const linkEnabled = link.enabled !== false;
     const metadata = isRecord(link.metadata) ? link.metadata : undefined;
+    const enrichment = isRecord(link.enrichment) ? link.enrichment : undefined;
     const manualHandle = normalizeHandle(metadata?.handle);
+    const profileSemantics = resolveLinkProfileSemantics(enrichment?.profileSemantics);
     const handleResolution = resolveHandleFromUrl({
       url: linkUrl,
       icon: linkIcon,
     });
 
+    if (linkEnabled && linkUrl && profileSemantics === "profile") {
+      const supportedProfile = resolveSupportedSocialProfile({
+        url: linkUrl,
+        icon: linkIcon,
+        metadataHandle: metadata?.handle,
+        profileSemantics,
+      });
+
+      if (!supportedProfile) {
+        issues.push({
+          level: "warning",
+          strictBlocking: false,
+          source: sources.links,
+          path: `$.links[${index}].enrichment.profileSemantics`,
+          message: `Profile semantics warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': enrichment.profileSemantics='profile' is set, but no supported social profile could be resolved from the URL or metadata.handle.`,
+          remediation:
+            "Use a canonical profile URL for this domain, set links[].metadata.handle manually, or switch links[].enrichment.profileSemantics to 'auto' or 'non_profile'.",
+        });
+      }
+    }
+
     if (
       linkEnabled &&
       linkUrl &&
+      profileSemantics === "auto" &&
       !manualHandle &&
       handleResolution.supported &&
       !handleResolution.handle

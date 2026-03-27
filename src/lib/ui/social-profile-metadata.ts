@@ -1,6 +1,7 @@
 import type { OpenLink } from "../content/load-content";
 import {
   normalizeSupportedSocialProfileMetadata,
+  resolveLinkProfileSemantics,
   resolveSupportedSocialProfile,
 } from "../content/social-profile-fields";
 import type { HandleExtractorId } from "../identity/handle-resolver";
@@ -143,6 +144,7 @@ const pushMetric = (
 
 export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProfileMetadata => {
   const metadata = link.metadata ?? {};
+  const profileSemantics = resolveLinkProfileSemantics(link.enrichment?.profileSemantics);
   const isXCommunity = isXCommunityUrl({
     url: link.url,
     icon: link.icon,
@@ -156,20 +158,25 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     url: link.url,
     icon: link.icon,
     metadataHandle: metadata.handle,
+    profileSemantics,
   });
   const normalizedMetadata =
     normalizeSupportedSocialProfileMetadata(
       metadata as Record<string, unknown> & { image?: string; profileImage?: string },
       supportedProfile,
     ) ?? metadata;
-  const platform = resolvedHandle.resolution.extractorId;
+  const platform =
+    profileSemantics === "non_profile" ? undefined : resolvedHandle.resolution.extractorId;
   const metrics: SocialAudienceMetric[] = [];
   const profileDescription = resolveMetadataText(normalizedMetadata.profileDescription);
-  const profileImageUrl = resolveMetadataText(normalizedMetadata.profileImage);
+  const profileImageUrl =
+    profileSemantics === "non_profile"
+      ? undefined
+      : resolveMetadataText(normalizedMetadata.profileImage);
   const previewImageUrl = resolveMetadataText(normalizedMetadata.image);
   const displayName = resolveDisplayNameFromTitle(
     resolveMetadataText(normalizedMetadata.title),
-    platform,
+    resolvedHandle.resolution.extractorId,
   );
 
   pushMetric(
@@ -205,17 +212,19 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     platform,
     displayName:
       displayName ?? (supportedProfile ? resolvedHandle.displayHandle : undefined) ?? link.label,
-    profileDescription,
-    handle: resolvedHandle.handle,
-    handleDisplay: resolvedHandle.displayHandle,
+    profileDescription: platform ? profileDescription : undefined,
+    handle: platform ? resolvedHandle.handle : undefined,
+    handleDisplay: platform ? resolvedHandle.displayHandle : undefined,
     usesProfileLayout: Boolean(
-      !isXCommunity && (supportedProfile || profileImageUrl || metrics.length > 0),
+      !isXCommunity &&
+        profileSemantics !== "non_profile" &&
+        (supportedProfile || profileImageUrl || metrics.length > 0),
     ),
     hasDistinctPreviewImage: Boolean(
       previewImageUrl && (!profileImageUrl || previewImageUrl !== profileImageUrl),
     ),
     profileImageUrl,
     previewImageUrl,
-    metrics,
+    metrics: profileSemantics === "non_profile" ? [] : metrics,
   };
 };
