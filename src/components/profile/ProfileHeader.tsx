@@ -150,7 +150,11 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
   };
 
   return (
-    <section class="profile-header" aria-label={pageLabel()}>
+    <section
+      class="profile-header"
+      aria-label={pageLabel()}
+      data-has-quick-links={props.quickLinks?.hasAny ? "true" : "false"}
+    >
       <Show when={props.profile.avatar && richness() !== "minimal"}>
         <img class="profile-avatar" src={props.profile.avatar} alt="" loading="lazy" />
       </Show>
