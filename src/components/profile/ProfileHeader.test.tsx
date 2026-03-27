@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { ResolvedProfileQuickLinksState } from "../../lib/ui/profile-quick-links";
 import { ProfileHeader, resolveMobileProfileActionLayout } from "./ProfileHeader";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
@@ -68,6 +69,22 @@ const firstElementWithClass = (
     const classValue = element.props.class;
     return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
   });
+
+const createQuickLinksState = (hasAny: boolean): ResolvedProfileQuickLinksState => ({
+  hasAny,
+  items: hasAny
+    ? [
+        {
+          contentOrder: 0,
+          icon: "github",
+          id: "github",
+          label: "GitHub",
+          platform: "github",
+          url: "https://github.com/pRizz",
+        },
+      ]
+    : [],
+});
 
 test("profile header renders QR, share, and copy desktop actions when QR is available", () => {
   // Arrange
@@ -253,6 +270,48 @@ test("profile header keeps the title row free of action buttons", () => {
   // Assert
   assert.ok(titleRow);
   assert.equal(titleRowButtons.length, 0);
+});
+
+test("profile header marks empty quick-link state without rendering placeholder chrome", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+    quickLinks: createQuickLinksState(false),
+  }) as RenderedNode;
+
+  // Act
+  const section = firstElementWithClass(tree, "profile-header");
+
+  // Assert
+  assert.ok(section);
+  assert.equal(section.props["data-has-quick-links"], "false");
+  assert.equal(firstElementWithClass(tree, "profile-quick-links"), undefined);
+});
+
+test("profile header exposes populated quick-link readiness through the future-facing seam", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+    quickLinks: createQuickLinksState(true),
+  }) as RenderedNode;
+
+  // Act
+  const section = firstElementWithClass(tree, "profile-header");
+
+  // Assert
+  assert.ok(section);
+  assert.equal(section.props["data-has-quick-links"], "true");
+  assert.equal(firstElementWithClass(tree, "profile-quick-links"), undefined);
 });
 
 test("profile header keeps long profile copy and contact values in wrap-safe elements", () => {
