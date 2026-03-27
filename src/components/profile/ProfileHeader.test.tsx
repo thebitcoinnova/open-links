@@ -314,6 +314,30 @@ test("profile header exposes populated quick-link readiness through the future-f
   assert.equal(firstElementWithClass(tree, "profile-quick-links"), undefined);
 });
 
+test("profile header keeps share and copy actions stable when quick-link state is populated", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+    quickLinks: createQuickLinksState(true),
+  }) as RenderedNode;
+
+  // Act
+  const desktopBar = firstElementWithClass(tree, "profile-action-bar-desktop");
+  const buttons = collectElements(desktopBar?.props.children as RenderedNode).filter(
+    (element) => element.type === "button",
+  );
+
+  // Assert
+  assert.equal(buttons.length, 2);
+  assert.equal(buttons[0]?.props["aria-label"], "Share profile");
+  assert.equal(buttons[1]?.props["aria-label"], "Copy profile link");
+});
+
 test("profile header keeps long profile copy and contact values in wrap-safe elements", () => {
   // Arrange
   const longName = "Peter Ryszkiewicz With A Long Display Name That Needs To Wrap On Mobile";
