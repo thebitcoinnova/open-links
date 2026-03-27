@@ -7,6 +7,8 @@ description: Public-first workflow for adding rich metadata support, using authe
 
 Use this skill when OpenLinks is missing rich metadata for a link and you need to decide whether the fix belongs in direct/public enrichment or authenticated extraction.
 
+Do not use this skill for payment/tip-card branding work. Card-shell icons and payment QR badge composition are data-model and shared-icon concerns, not rich-enrichment concerns.
+
 ## Goals
 
 1. Start with the simplest viable metadata source.
@@ -14,6 +16,14 @@ Use this skill when OpenLinks is missing rich metadata for a link and you need t
 3. Keep build/dev fail-fast and non-interactive.
 4. Leave a decision-complete outcome: `public_direct`, `public_augmented`, or `authenticated_required`.
 5. When authenticated extraction is required, enforce explicit transition monitoring and ask-first action confirmation during auth flows.
+
+## Out of Scope
+
+- payment/tip-card card-shell icon wiring
+- payment QR badge composition or `badge.mode` changes
+- adding a new payment platform to the shared known-site registry
+
+For those cases, update the payment-card data/config plus the shared icon pipeline documented in `docs/data-model.md` and the CRUD workflows.
 
 ## Inputs to collect
 

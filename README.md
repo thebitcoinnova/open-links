@@ -145,6 +145,7 @@ bun run studio:web:dev
 ### Recommended CRUD Paths
 
 - Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md), [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed, and [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md) when you want other websites, repos, docs, or services to point back to your deployed OpenLinks fork.
+- For branded payment/tip cards, treat card-shell icon wiring and QR badge wiring as separate checks: shared card chrome follows the known-site icon registry from `links[].icon` / `payment.rails[].icon`, while `badge.items.asset` only affects the QR center badge.
 - Preferred for browser-based CRUD: use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when the self-serve onboarding/editor already covers your workflow.
 - Manual fallback: edit `data/*.json` directly only when you intentionally want the lower-level path or need to work outside the currently supported AI/Studio flows.
 
@@ -154,7 +155,7 @@ The repository currently ships these repo-local skill entrypoints under `skills/
 
 - [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md): help other websites, apps, repos, docs, and service profiles point back to your deployed OpenLinks fork using its canonical URL and brand assets.
 - [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md): persist rich-card images and related metadata into the committed cache after link changes.
-- [`skills/create-new-rich-content-extractor/SKILL.md`](skills/create-new-rich-content-extractor/SKILL.md): public-first workflow for deciding and implementing new rich metadata support when existing enrichment is insufficient.
+- [`skills/create-new-rich-content-extractor/SKILL.md`](skills/create-new-rich-content-extractor/SKILL.md): public-first workflow for deciding and implementing new rich metadata support when existing enrichment is insufficient; not for payment/tip-card logo or QR badge wiring.
 
 ### 1) OpenClaw Bootstrap (Recommended)
 

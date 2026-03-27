@@ -356,6 +356,13 @@ export const KNOWN_SITES = [
     brandColor: "#635BFF",
   },
   {
+    id: "strike",
+    label: "Strike",
+    aliases: ["strike"],
+    domains: ["strike.me"],
+    brandColor: "#111111",
+  },
+  {
     id: "coinbase",
     label: "Coinbase",
     aliases: ["coinbase", "cb"],

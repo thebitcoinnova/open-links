@@ -84,6 +84,15 @@ This is orchestration guidance for agents. It does not replace runtime policy so
 4. Do not silently use `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 5. Use bypass only when the user explicitly asks for an emergency temporary override.
 
+## Payment Card Branding Rule
+
+For branded payment/tip cards, verify card-shell icon resolution and QR badge resolution separately.
+
+- `links[].icon` and `payment.rails[].icon` flow through the shared known-site icon registry and control the card-shell icon.
+- `payment.rails[].qr.badge.mode: "auto"` reuses that shared icon identity for QR badge composition when the platform and rail both resolve.
+- `badge.items.asset` only changes the QR center badge. It does not change the card-shell icon.
+- If a new payment platform should render like an existing first-class brand such as Club Orange, add it to the shared known-site icon pipeline rather than relying on a QR-only asset.
+
 ## Pre-Commit Requirements (Mandatory)
 
 Before creating any commit in this repository:

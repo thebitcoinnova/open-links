@@ -137,6 +137,7 @@ Treat forked `data/profile.json` and `data/links.json` identity values as templa
 - Identity profile fields -> `data/profile.json`.
 - Social/profile endpoints -> `data/links.json` links and optional `profileLinks` in `data/profile.json`.
 - Payment links and crypto addresses -> include only when explicitly requested by the user.
+- For explicitly requested branded payment/tip cards, verify card-shell icon resolution and QR badge resolution separately. `badge.items.asset` only changes the QR center badge; shared card chrome still follows known-site icon resolution from `links[].icon` or `payment.rails[].icon`.
 - Preserve unknown extension fields under `custom`.
 - Never drop existing `custom` keys unless explicitly invalid and replaced with documented remediation.
 

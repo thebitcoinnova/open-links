@@ -148,3 +148,21 @@ test("composite auto-badge fixture keeps the inline and fullscreen badge stable"
     screenshotOptions,
   );
 });
+
+test("strike auto-badge fixture keeps the card icon and QR badge in sync", async ({ page }) => {
+  await openFixturePage(page);
+
+  const card = fixtureCard(page, "strike-auto-badge");
+  await expect(card.locator('.card-icon[data-known-site="strike"] svg')).toHaveCount(1);
+
+  const qr = await waitForRenderedQr(card, "Strike Lightning QR code");
+  await expect(qr.locator("svg image")).toHaveCount(1);
+  await expect(fullscreenQrActivator(card, "Strike Lightning")).toBeVisible();
+
+  await fullscreenButton(card).click();
+
+  const dialog = page.getByRole("dialog", { name: "Strike Lightning QR code" });
+  const fullscreenQr = await waitForRenderedQr(dialog, "Strike Lightning payment QR code");
+
+  await expect(fullscreenQr.locator("svg image")).toHaveCount(1);
+});

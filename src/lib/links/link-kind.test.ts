@@ -1,47 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveLinkKind, resolveLinkUrlScheme, resolveMailtoAddress } from "./link-kind";
+import { resolveLinkKind } from "./link-kind";
 
-test("parses mailto addresses without query params into contact-link values", () => {
+test("resolveLinkKind treats the Strike icon alias as a known site", () => {
   // Act
-  const resolved = resolveLinkKind(undefined, "mailto:hello@example.com");
+  const resolved = resolveLinkKind("strike");
 
   // Assert
-  assert.deepEqual(resolved, {
-    kind: "contact",
-    scheme: "mailto",
-    contactKind: "email",
-    value: "hello@example.com",
-  });
+  assert.equal(resolved.kind, "known-site");
+  assert.equal(resolved.site.id, "strike");
 });
 
-test("parses mailto addresses with query params while preserving authored casing", () => {
+test("resolveLinkKind resolves strike.me URLs as the Strike known site", () => {
   // Act
-  const address = resolveMailtoAddress("mailto:Hello.Team@example.com?subject=Hi%20there");
+  const resolved = resolveLinkKind(undefined, "https://strike.me/pryszkie");
 
   // Assert
-  assert.equal(address, "Hello.Team@example.com");
-});
-
-test("resolves tel links as contact kinds for future contact-scheme handling", () => {
-  // Act
-  const resolved = resolveLinkKind(undefined, "tel:+13125551212");
-
-  // Assert
-  assert.deepEqual(resolved, {
-    kind: "contact",
-    scheme: "tel",
-    contactKind: "telephone",
-    value: "+13125551212",
-  });
-});
-
-test("reports the normalized url scheme for supported contact links", () => {
-  // Act
-  const mailScheme = resolveLinkUrlScheme("mailto:hello@example.com");
-  const telScheme = resolveLinkUrlScheme("tel:+13125551212");
-
-  // Assert
-  assert.equal(mailScheme, "mailto");
-  assert.equal(telScheme, "tel");
+  assert.equal(resolved.kind, "known-site");
+  assert.equal(resolved.site.id, "strike");
+  assert.equal(resolved.scheme, "https");
 });

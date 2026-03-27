@@ -71,6 +71,7 @@ for (const siteId of [
   "paypal",
   "cashapp",
   "stripe",
+  "strike",
   "coinbase",
   "bitcoin",
   "lightning",

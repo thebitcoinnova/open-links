@@ -158,6 +158,7 @@ When `identity_research=off`:
 - Do not infer or add payment/crypto endpoints unless explicitly requested.
 - Skip low-confidence inferred candidates.
 - Record skipped items in `Not Applied` with reason code.
+- For explicitly requested branded payment/tip cards, verify card-shell icon resolution and QR badge resolution separately. `badge.items.asset` only changes the QR center badge; shared card chrome still follows known-site icon resolution from `links[].icon` or `payment.rails[].icon`.
 
 ## Update/CRUD Execution Sequence
 

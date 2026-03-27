@@ -230,6 +230,32 @@
         ]
       },
       "custom": {}
+    },
+    {
+      "id": "strike-lightning-tips",
+      "label": "Strike Tips",
+      "type": "payment",
+      "icon": "strike",
+      "description": "Tip me over Lightning via Strike",
+      "group": "support",
+      "enabled": true,
+      "payment": {
+        "primaryRailId": "lightning",
+        "rails": [
+          {
+            "id": "lightning",
+            "rail": "lightning",
+            "label": "Strike Lightning",
+            "address": "pryszkie@strike.me",
+            "qr": {
+              "badge": {
+                "mode": "auto"
+              }
+            }
+          }
+        ]
+      },
+      "custom": {}
     }
   ],
   "groups": [
@@ -268,7 +294,8 @@
     "instagram",
     "youtube",
     "medium",
-    "cluborange-lightning-tips"
+    "cluborange-lightning-tips",
+    "strike-lightning-tips"
   ],
   "custom": {}
 }

@@ -27,6 +27,23 @@ test("auto QR badges compose Club Orange and Lightning when both resolve", () =>
   assert.match(svg, /#F2A900/u);
 });
 
+test("auto QR badges compose Strike and Lightning when both resolve", () => {
+  // Act
+  const logoUrl = resolvePaymentQrLogoUrl({
+    badge: {
+      mode: "auto",
+    },
+    linkIcon: "strike",
+    railType: "lightning",
+  });
+
+  // Assert
+  assert.ok(logoUrl);
+  const svg = decodeSvgDataUrl(logoUrl);
+  assert.match(svg, /#111111/u);
+  assert.match(svg, /#F2A900/u);
+});
+
 test("auto QR badges fall back to the legacy rail logo when no platform resolves", () => {
   // Act
   const resolved = resolvePaymentQrLogoUrl({

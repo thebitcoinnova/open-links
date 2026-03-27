@@ -193,6 +193,39 @@ const fixtureCards: FixtureCard[] = [
       },
     },
   },
+  {
+    id: "strike-auto-badge",
+    title: "Strike auto badge",
+    description: "A Strike + Lightning payment QR badge resolved from the shared known-site icon.",
+    link: {
+      id: "strike-lightning-tips",
+      label: "Strike Tips",
+      description: "The card icon and QR badge should both resolve from the shared Strike brand.",
+      icon: "strike",
+      type: "payment",
+      payment: {
+        qrDisplay: "always",
+        primaryRailId: "lightning",
+        rails: [
+          {
+            id: "lightning",
+            rail: "lightning",
+            label: "Strike Lightning",
+            address: "pryszkie@strike.me",
+            qr: {
+              style: "dots",
+              logoMode: "none",
+              foregroundColor: "#f59e0b",
+              backgroundColor: "#111827",
+              badge: {
+                mode: "auto",
+              },
+            },
+          },
+        ],
+      },
+    },
+  },
 ];
 
 const themeSelection = resolveThemeSelection(fixtureSite);
