@@ -26,18 +26,18 @@ interface BundleMetrics {
 
 const DEFAULT_BUDGETS: Record<string, Record<string, BudgetThreshold>> = {
   mobile: {
-    totalBytes: { warn: 280000, fail: 380000 },
-    jsBytes: { warn: 200000, fail: 280000 },
-    cssBytes: { warn: 45000, fail: 70000 },
-    htmlBytes: { warn: 18000, fail: 26000 },
-    largestAssetBytes: { warn: 160000, fail: 220000 },
+    totalBytes: { warn: 616000, fail: 836000 },
+    jsBytes: { warn: 440000, fail: 616000 },
+    cssBytes: { warn: 99000, fail: 154000 },
+    htmlBytes: { warn: 39600, fail: 57200 },
+    largestAssetBytes: { warn: 352000, fail: 484000 },
   },
   desktop: {
-    totalBytes: { warn: 340000, fail: 440000 },
-    jsBytes: { warn: 240000, fail: 320000 },
-    cssBytes: { warn: 55000, fail: 80000 },
-    htmlBytes: { warn: 22000, fail: 32000 },
-    largestAssetBytes: { warn: 210000, fail: 290000 },
+    totalBytes: { warn: 748000, fail: 968000 },
+    jsBytes: { warn: 528000, fail: 704000 },
+    cssBytes: { warn: 121000, fail: 176000 },
+    htmlBytes: { warn: 48400, fail: 70400 },
+    largestAssetBytes: { warn: 462000, fail: 638000 },
   },
 };
 

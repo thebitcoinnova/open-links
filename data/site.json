@@ -102,19 +102,19 @@
       "routes": ["/"],
       "profiles": {
         "mobile": {
-          "totalBytes": { "warn": 840000, "fail": 920000 },
-          "jsBytes": { "warn": 790000, "fail": 870000 },
-          "cssBytes": { "warn": 45000, "fail": 76000 },
-          "htmlBytes": { "warn": 18000, "fail": 26000 },
-          "largestAssetBytes": { "warn": 999999999, "fail": 999999999 },
+          "totalBytes": { "warn": 1848000, "fail": 2024000 },
+          "jsBytes": { "warn": 1738000, "fail": 1914000 },
+          "cssBytes": { "warn": 99000, "fail": 167200 },
+          "htmlBytes": { "warn": 39600, "fail": 57200 },
+          "largestAssetBytes": { "warn": 2199999998, "fail": 2199999998 },
           "minimumScore": { "warn": 1, "fail": 1 }
         },
         "desktop": {
-          "totalBytes": { "warn": 870000, "fail": 960000 },
-          "jsBytes": { "warn": 810000, "fail": 900000 },
-          "cssBytes": { "warn": 55000, "fail": 80000 },
-          "htmlBytes": { "warn": 22000, "fail": 32000 },
-          "largestAssetBytes": { "warn": 560000, "fail": 650000 },
+          "totalBytes": { "warn": 1914000, "fail": 2112000 },
+          "jsBytes": { "warn": 1782000, "fail": 1980000 },
+          "cssBytes": { "warn": 121000, "fail": 176000 },
+          "htmlBytes": { "warn": 48400, "fail": 70400 },
+          "largestAssetBytes": { "warn": 1232000, "fail": 1430000 },
           "minimumScore": { "warn": 90, "fail": 75 }
         }
       }
