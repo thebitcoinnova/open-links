@@ -93,6 +93,8 @@ the site, including a person or an organization.
 - `contact` (object, supports `email`, `website`, plus extensions)
 - `custom` (extension namespace)
 
+`profileLinks` remains an optional profile-level field for lightweight identity links, but it is **not** the source of truth for the shipped Quick Links header strip. Quick Links derive from eligible top-level entries in `data/links.json`.
+
 ### Starter profile preset
 
 If you are using the recommended AI or Studio paths, treat the JSON examples below as reference shapes the tools should produce, not as proof that hand-editing is the preferred workflow.
@@ -170,6 +172,29 @@ Every item in `links` must include:
 - `enrichment` (build-time enrichment policy)
 - `payment` (tips/payment rails + QR settings)
 - `custom`
+
+### Quick Links behavior
+
+The profile header Quick Links strip is derived behavior from existing eligible `links[]` entries. It is not backed by `profileLinks` and does not use a separate manual registry.
+
+Current shipped behavior:
+
+- derives from enabled top-level social/profile links in `data/links.json`
+- only considers supported social/profile-style destinations
+- keeps one winner per platform
+- uses a locked platform-priority order first, then existing content order
+- renders as an icon-first strip above the profile action bar when eligible links exist
+- disappears entirely when no eligible Quick Links exist
+
+The current tie-break path for duplicate same-platform links is `links[].custom.quickLinks.canonical=true`, which only resolves conflicts inside the same platform and does not force inclusion outside the default eligibility rules.
+
+Quick Links are intentionally constrained by default in the current release:
+
+- there is no dedicated Quick Links registry
+- there is no separate global Quick Links config surface yet
+- deeper ordering, visibility, or color-mode controls are future work
+
+This is a renderer-level behavior only. It does not change the upstream `open-links-sites` data/schema contract because it consumes the existing `links[]` shape rather than introducing a new shared data surface. For broader downstream compatibility notes, see `docs/downstream-open-links-sites.md`.
 
 #### Icon resolution behavior
 
