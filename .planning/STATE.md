@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Plan Phase 17 using the captured Quick Links docs and regression-hardening context
+**Current focus:** Execute the Phase 17 Quick Links docs and regression-hardening plans
 
 ## Current Position
 
 Phase: 17
-Plan: —
-Status: Phase 17 context gathered; ready for `$gsd-plan-phase 17`
+Plan: 17-01, 17-02
+Status: Phase 17 planned across 2 waves; ready for `$gsd-execute-phase 17`
 Next Phase: 17 - Docs + Regression Hardening for Quick Links
 Active Milestone: v1.2-profile-quick-links-header-usability-polish
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-28 - Captured Phase 17 context for Quick Links documentation framing and light regression hardening.
+Last activity: 2026-03-28 - Planned Phase 17 across two waves for Quick Links docs refresh and light regression hardening.
 
 Progress: [######....] 67%
 
@@ -78,7 +78,7 @@ Progress: [######....] 67%
 
 ### Pending Todos
 
-- Start Phase 17 planning with `$gsd-plan-phase 17`.
+- Execute Phase 17 with `$gsd-execute-phase 17`.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -92,5 +92,5 @@ Progress: [######....] 67%
 ## Session Continuity
 
 Last session: 2026-03-28 06:42
-Stopped at: Phase 17 context gathered.
-Resume file: .planning/phases/17-docs-regression-hardening-for-quick-links/17-CONTEXT.md
+Stopped at: Phase 17 planned and ready for execution.
+Resume file: .planning/phases/17-docs-regression-hardening-for-quick-links/17-01-PLAN.md
