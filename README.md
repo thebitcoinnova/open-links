@@ -18,6 +18,8 @@ This project is developer-first, but that does not mean raw JSON should be your 
 2. Use the Studio webapp when the browser-based self-serve editor fits your workflow.
 3. Drop to direct JSON edits only when you need lower-level control or a manual fallback.
 
+Quick Links are now a shipped renderer behavior: when your top-level `data/links.json` contains eligible social/profile destinations, OpenLinks automatically derives an icon-first strip above the profile action bar. There is no separate Quick Links registry or authoring workflow yet; see [docs/data-model.md](docs/data-model.md) for the canonical behavior contract and [docs/customization-catalog.md](docs/customization-catalog.md) for the current knob inventory.
+
 OpenLinks is also an active upstream dependency for
 [`open-links-sites`](https://github.com/pRizz/open-links-sites), a downstream
 control repo that builds many individual sites on top of this renderer and data
