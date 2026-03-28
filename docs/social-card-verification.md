@@ -3,6 +3,7 @@
 Use this guide after changing any of the profile-oriented card surfaces:
 
 - social profile metadata capture or merge behavior
+- Quick Links derivation or the visible Quick Links strip in the profile header
 - `profileDescription` or description-source precedence
 - rich-card description-image-row policy
 - follower-history artifacts or analytics UI
@@ -15,6 +16,8 @@ If this guide surfaces a docs or behavior issue, prefer fixing it through the re
 
 ## Quick Checklist
 
+- [ ] Desktop: when eligible social/profile links exist, the profile header shows the Quick Links strip above the action bar with icon-only outbound shortcuts and no visible heading.
+- [ ] Desktop: when no eligible Quick Links exist, the strip disappears completely and the share/copy/QR action row stays intact beneath the profile copy.
 - [ ] Desktop: supported social profile cards still render avatar-first identity rows, handles, and audience metrics where available.
 - [ ] Desktop: non-profile fallback cards still use preview/icon-led presentation instead of accidentally switching onto the profile layout.
 - [ ] Desktop: banner-shaped rich profile preview images render as compact top banners when the current policy allows it.
@@ -34,10 +37,12 @@ If this guide surfaces a docs or behavior issue, prefer fixing it through the re
 
 | State | Automated Coverage |
 |------|--------------------|
+| Quick Links derivation, priority ordering, canonical tie-breaking, empty-result behavior | `src/lib/ui/profile-quick-links.test.ts` |
+| Visible Quick Links strip semantics, heading-free render, outbound labels/titles, placement above action bar | `src/components/profile/ProfileQuickLinks.test.tsx` |
+| Profile-header quick-link empty/populated state and action-row preservation | `src/components/profile/ProfileHeader.test.tsx` |
 | Profile-card rendering, audience metrics, fallback rich/simple presentation | `src/components/cards/social-profile-card-rendering.test.tsx` |
 | `profileDescription` precedence, manual/fetched description rules, description-image-row policy | `src/lib/ui/rich-card-description-sourcing.test.ts` |
 | Card action-row semantics, top-banner/bottom-row/compact-end accessibility ordering, share-only cards | `src/components/cards/non-payment-card-accessibility.test.tsx` |
-| Profile-header analytics/share button order and share-only fallback | `src/components/profile/ProfileHeader.test.tsx` |
 | Clean URL share payload and clipboard fallback behavior | `src/lib/share/share-link.test.ts` |
 | Follower-history CSV parsing, range filtering, raw/growth point generation | `src/lib/analytics/follower-history.test.ts` |
 | Append-only CSV/index writing behavior | `scripts/follower-history/append-history.test.ts` |
@@ -74,15 +79,22 @@ Confirm:
 - `compact-end` fallback only appears when the preview misses the banner ratio cutoff and that fallback is enabled
 - simple cards do not grow extra profile preview media even if preview media is distinct
 
-### 3. Profile-header actions
+### 3. Quick Links strip and profile-header actions
 
 Check the profile header in both states:
 
+- eligible Quick Links exist
+- no eligible Quick Links exist
 - analytics available
 - analytics unavailable
 
 Confirm:
 
+- when eligible links exist, the Quick Links strip renders above the action row
+- the strip stays icon-only, with no visible `Quick Links` heading
+- each Quick Link exposes an explicit outbound label/title (`Open GitHub`, etc.)
+- no active/current selected state appears on the Quick Links shortcuts
+- when no eligible links exist, the strip disappears completely instead of leaving placeholder chrome
 - analytics appears immediately to the left of share when history data exists
 - share remains present even without analytics
 - share feedback is short-lived and does not break header layout
@@ -133,7 +145,7 @@ Before closing a change, compare runtime behavior against:
 - `docs/customization-catalog.md`
 - `docs/authenticated-rich-extractors.md`
 
-Treat stale examples, incorrect platform-support claims, or missing verification notes as real regressions.
+Treat stale examples, incorrect platform-support claims, misleading `profileLinks` wording, or missing Quick Links verification notes as real regressions.
 
 ### 8. SEO/social preview verification
 
@@ -151,6 +163,8 @@ After social-card changes, the normal focused command set is:
 
 ```bash
 bun test src/components/cards/social-profile-card-rendering.test.tsx \
+  src/lib/ui/profile-quick-links.test.ts \
+  src/components/profile/ProfileQuickLinks.test.tsx \
   src/lib/ui/rich-card-description-sourcing.test.ts \
   src/components/cards/non-payment-card-accessibility.test.tsx \
   src/components/profile/ProfileHeader.test.tsx \
