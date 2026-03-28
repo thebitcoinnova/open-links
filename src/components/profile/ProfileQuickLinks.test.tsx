@@ -92,12 +92,16 @@ test("profile quick links render icon-only outbound links with no heading", () =
 
   // Act
   const nav = firstElementWithClass(tree, "profile-quick-links");
+  const scroll = firstElementWithClass(tree, "profile-quick-links-scroll");
+  const list = firstElementWithClass(tree, "profile-quick-links-list");
   const links = collectElements(nav?.props.children as RenderedNode).filter(
     (element) => element.type === "a",
   );
 
   // Assert
   assert.ok(nav);
+  assert.ok(scroll);
+  assert.ok(list);
   assert.equal(nav?.props["aria-label"], "Social quick links");
   assert.equal(links.length, 1);
   assert.equal(links[0]?.props["aria-label"], "GitHub");
