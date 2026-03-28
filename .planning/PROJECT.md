@@ -8,25 +8,16 @@ OpenLinks is a developer-first, free, open source, version-controlled static web
 
 A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
 
-## Current Milestone: v1.2 Profile Quick Links + Header Usability Polish
-
-**Goal:** Add a compact Quick Links strip above the top-level profile action bar by deriving major-platform social shortcuts from existing top-level links, while tightening the profile header's usability on mobile and desktop.
-
-**Target features:**
-- Quick Links section above the profile action bar for popular, recognizable social platforms such as X, YouTube, GitHub, LinkedIn, and Instagram when matching links exist.
-- Auto-derived eligibility and ordering from enabled `data/links.json` entries so maintainers do not manage a second shortcut list.
-- Header-level responsive, accessibility, and spacing polish needed to fit the new shortcut strip cleanly without weakening the current share/copy/QR action bar.
-
 ## Current State
 
-- **Shipped version:** v1.1 (2026-03-10)
-- **Active milestone:** v1.2 (requirements definition in progress)
-- **Latest delivered scope:** v1.1 shipped phases 7-12 plus inserted Phase 08.1 across 22 plans and 66 summarized tasks, followed by the Phase 13-14 post-v1.1 toast and dialog follow-up
+- **Shipped version:** v1.2 (2026-03-28)
+- **Active milestone:** none
+- **Latest delivered scope:** v1.2 shipped phases 15-17 across 8 plans and 24 summarized tasks, adding derived profile-header Quick Links, visible strip polish, and maintainer docs/verification coverage
 - **Primary stack:** SolidJS + TypeScript + JSON schema validation + GitHub Actions + GitHub Pages
 - **Quality posture:** SEO/a11y/performance checks remain integrated and CI-gated, with known remaining debt around `/` performance budgets and fallback social-image warnings
 - **Extensibility posture:** documented theme/layout/deployment extension pathways plus AI-guided and Studio-assisted CRUD paths for maintainers
 - **Maintainer workflow posture:** prefer repo AI workflows/skills or Studio for routine CRUD; use direct JSON editing as the lower-level fallback
-- **Planning focus:** define and roadmap the v1.2 Quick Links and header-usability milestone without reopening the broader static-site architecture
+- **Planning focus:** between milestones; the next planning step is `$gsd-new-milestone`
 
 ## Validated
 
@@ -37,12 +28,14 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 - ✓ OpenLinks now publishes append-only public follower-history artifacts plus a lazy-loaded analytics surface.
 - ✓ Profile-level and card-level sharing now use a shared clean-URL Web Share flow.
 - ✓ Maintainer docs, Studio guidance, and verification flows now cover the expanded social-card system and explicitly route routine CRUD toward AI workflows or Studio.
+- ✓ OpenLinks now derives profile-header Quick Links from eligible top-level social/profile links instead of a second registry.
+- ✓ The profile header now ships a visible, responsive, icon-first Quick Links strip with explicit outbound accessibility semantics and clean empty-state behavior.
+- ✓ Maintainer docs and the verification guide now accurately explain and verify the shipped Quick Links behavior.
 
 ## Next Milestone Goals
 
-- Deliver a compact profile-header Quick Links strip that makes major social destinations faster to scan and tap.
-- Keep `data/links.json` as the single source of truth for both the full card list and the new header shortcut surface.
-- Limit v1.2 to Quick Links plus closely related header polish; defer larger editor/config and broader product-surface expansion work.
+- Define the next versioned milestone with `$gsd-new-milestone`.
+- Decide whether the next milestone should prioritize accepted repo debt, deeper Quick Links configurability, or broader product-surface expansion.
 - Keep the current static-build and additive-metadata architecture unless a future milestone intentionally reopens those constraints.
 
 ## Known Debt Carrying Forward
@@ -59,6 +52,42 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 - First-class non-GitHub hosting adapter implementation - remains future work while product and workflow polish are prioritized.
 
 ## Archived Planning Context
+
+<details>
+<summary>v1.2 Profile Quick Links + Header Usability Polish planning context</summary>
+
+### Goal
+
+Add a compact Quick Links strip above the top-level profile action bar by deriving major-platform social shortcuts from existing top-level links, then tighten that strip's responsive, accessible, and maintainer-facing behavior.
+
+### Target Features
+
+- Derive eligible Quick Links from existing top-level `data/links.json` entries rather than a separate shortcut registry.
+- Render a visible, icon-first Quick Links strip above the profile action bar.
+- Keep the strip responsive, accessible, and visually lighter than the action row.
+- Document the behavior and verification path clearly for maintainers.
+
+### Context
+
+The existing profile header already had share/copy/QR actions and the repo already had strong known-site/icon resolution, but there was no fast path for visitors to jump directly to the most recognizable social destinations. v1.2 built on the existing static data model and header seam rather than reopening the broader architecture.
+
+### Constraints
+
+- **Source of truth:** Quick Links must derive from existing top-level links instead of a second registry.
+- **Runtime data:** No client-side platform API fetching or dynamic eligibility lookups.
+- **Compatibility:** The action row beneath the strip must remain intact and readable across mobile and desktop.
+- **Scope:** Keep the milestone intentionally narrow; defer broader configurability and Studio-specific controls.
+
+### Key Decisions
+
+| Decision | Rationale | Outcome |
+|----------|-----------|---------|
+| Quick Links derive from `links[]` | Avoid drift and second authoring path | ✓ Good |
+| One winner per platform with canonical tie-break support | Keep the strip compact and deterministic | ✓ Good |
+| Visible strip remains icon-first, heading-free, and lighter than the action bar | Preserve scanability and avoid a second action-bar feel | ✓ Good |
+| Docs frame the feature as renderer-level only | Clarifies downstream compatibility and current scope | ✓ Good |
+
+</details>
 
 <details>
 <summary>v1.1 Social Profile Metadata + Card Refresh planning context</summary>
@@ -102,4 +131,4 @@ Recent UI polish work exposed a gap: social profile links still read more like g
 </details>
 
 ---
-*Last updated: 2026-03-27 after starting milestone v1.2*
+*Last updated: 2026-03-28 after archiving v1.2 milestone*

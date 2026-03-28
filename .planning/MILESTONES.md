@@ -1,5 +1,26 @@
 # Milestones
 
+## v1.2 - Profile Quick Links + Header Usability Polish
+
+**Status:** ✅ Shipped (2026-03-28)  
+**Tag:** `v1.2`  
+**Scope:** Phases 15-17, 8 plans, 24 tasks
+
+### Delivered
+
+- Quick Links now derive from eligible top-level social/profile links instead of a second registry or `profileLinks`.
+- The profile header now renders a visible, responsive, icon-first Quick Links strip above the action bar.
+- The strip ships with explicit outbound accessibility semantics and clean empty-state behavior.
+- Maintainer docs and the verification guide now document the shipped Quick Links behavior and verification path.
+
+### Artifacts
+
+- Roadmap archive: `.planning/milestones/v1.2-ROADMAP.md`
+- Requirements archive: `.planning/milestones/v1.2-REQUIREMENTS.md`
+- Audit report: `.planning/v1.2-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.1 - Social Profile Metadata + Card Refresh
 
 **Status:** ✅ Shipped (2026-03-10)  
@@ -44,4 +65,4 @@
 
 ---
 
-Use `$gsd-new-milestone` to begin v1.2 planning.
+Use `$gsd-new-milestone` to begin v1.3 planning.
