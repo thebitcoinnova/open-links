@@ -104,10 +104,11 @@ test("profile quick links render icon-only outbound links with no heading", () =
   assert.ok(list);
   assert.equal(nav?.props["aria-label"], "Social quick links");
   assert.equal(links.length, 1);
-  assert.equal(links[0]?.props["aria-label"], "GitHub");
-  assert.equal(links[0]?.props.title, "GitHub");
+  assert.equal(links[0]?.props["aria-label"], "Open GitHub");
+  assert.equal(links[0]?.props.title, "Open GitHub");
   assert.equal(links[0]?.props.target, "_blank");
   assert.equal(links[0]?.props.rel, "noopener noreferrer");
+  assert.equal(links[0]?.props["aria-current"], undefined);
   assert.equal(firstElementWithClass(tree, "profile-quick-links-heading"), undefined);
 });
 
@@ -153,4 +154,28 @@ test("profile header renders quick links above the existing action bar", () => {
   assert.notEqual(quickLinksIndex, -1);
   assert.notEqual(desktopActionBarIndex, -1);
   assert.ok(quickLinksIndex < desktopActionBarIndex);
+});
+
+test("profile header keeps the action bar present when quick links are empty", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+    quickLinks: createQuickLinksState(false),
+  }) as RenderedNode;
+
+  // Act
+  const desktopBar = firstElementWithClass(tree, "profile-action-bar-desktop");
+  const buttons = collectElements(desktopBar?.props.children as RenderedNode).filter(
+    (element) => element.type === "button",
+  );
+
+  // Assert
+  assert.ok(desktopBar);
+  assert.equal(buttons.length, 2);
+  assert.equal(firstElementWithClass(tree, "profile-quick-links"), undefined);
 });

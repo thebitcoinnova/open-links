@@ -389,6 +389,10 @@ a:focus-visible {
   text-decoration: none;
 }
 
+.profile-quick-links-link:focus-visible {
+  outline: none;
+}
+
 .profile-quick-links-icon {
   width: var(--profile-quick-link-box-size);
   height: var(--profile-quick-link-box-size);
@@ -400,6 +404,22 @@ a:focus-visible {
   box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 8%, transparent);
   transition: transform var(--motion-fast), box-shadow var(--motion-fast), background-color
     var(--motion-fast), color var(--motion-fast);
+}
+
+.profile-quick-links-link:hover .profile-quick-links-icon {
+  transform: translateY(-1px) scale(1.02);
+  background: color-mix(in srgb, var(--surface-pill) 76%, var(--accent) 24%);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.profile-quick-links-link:active .profile-quick-links-icon {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.profile-quick-links-link:focus-visible .profile-quick-links-icon {
+  background: color-mix(in srgb, var(--surface-pill) 72%, var(--accent) 28%);
+  box-shadow: var(--shadow-focus);
 }
 
 .profile-quick-links-glyph {

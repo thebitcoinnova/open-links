@@ -7,6 +7,8 @@ export interface ProfileQuickLinksProps {
   quickLinks?: ResolvedProfileQuickLinksState;
 }
 
+const resolveQuickLinkLabel = (label: string): string => `Open ${label}`;
+
 const resolveQuickLinkIcon = (platform: SupportedSocialProfilePlatform) => {
   if (platform === "rumble") {
     return undefined;
@@ -31,10 +33,10 @@ export const ProfileQuickLinks = (props: ProfileQuickLinksProps) => (
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={item.label}
-                    title={item.label}
+                    aria-label={resolveQuickLinkLabel(item.label)}
+                    title={resolveQuickLinkLabel(item.label)}
                   >
-                    <span class="sr-only">{item.label}</span>
+                    <span class="sr-only">{resolveQuickLinkLabel(item.label)}</span>
                     <span class="profile-quick-links-icon" aria-hidden="true">
                       {IconComponent ? (
                         <IconComponent class="profile-quick-links-glyph" />

@@ -286,9 +286,11 @@ test("profile header marks empty quick-link state without rendering placeholder 
 
   // Act
   const section = firstElementWithClass(tree, "profile-header");
+  const desktopBar = firstElementWithClass(tree, "profile-action-bar-desktop");
 
   // Assert
   assert.ok(section);
+  assert.ok(desktopBar);
   assert.equal(section.props["data-has-quick-links"], "false");
   assert.equal(firstElementWithClass(tree, "profile-quick-links"), undefined);
 });
