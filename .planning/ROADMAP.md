@@ -76,13 +76,14 @@ Plans:
 ### Phase 17: Docs + Regression Hardening for Quick Links
 
 **Goal:** Document the new header behavior and lock in automated/manual verification for derivation, accessibility, and responsive rendering.
+**Status:** ✅ Complete (2026-03-28)
 **Depends on:** Phase 16
 **Requirements:** QUAL-07, DOC-08
 **Plans:** 2 plans
 
 Plans:
-- [ ] 17-01: Update maintainer-facing docs for Quick Links derivation and any material profile-header behavior changes.
-- [ ] 17-02: Add milestone-level regression coverage and verification notes for eligibility, ordering, accessibility, and empty-state behavior.
+- [x] 17-01: Update maintainer-facing docs for Quick Links derivation and any material profile-header behavior changes.
+- [x] 17-02: Add milestone-level regression coverage and verification notes for eligibility, ordering, accessibility, and empty-state behavior.
 
 **Details:**
 - Keep docs aligned with the repo's preferred AI/Studio-first maintainer workflow and avoid introducing a parallel manual config path.
@@ -93,6 +94,12 @@ Plans:
 - Automated coverage verifies derivation, ordering, accessibility labels, and empty-state suppression.
 - Verification notes cover the responsive header behavior needed for mobile and desktop confidence.
 - Downstream contract impact is reviewed and documented as renderer-only unless scope changes during implementation.
+
+**Success Criteria Met:**
+- Maintainer docs now explain the shipped Quick Links behavior as automatic derivation from top-level `links[]`, not `profileLinks` or a second registry.
+- `docs/social-card-verification.md` now explicitly includes Quick Links in the checklist, automated coverage map, and narrative walkthrough.
+- The focused Quick Links helper/header test bundle, `bun run biome:check`, `bun run typecheck`, and `bun run build` all passed.
+- The downstream note now clearly states that Quick Links are renderer-level only and do not change the `open-links-sites` contract.
 
 ## Milestones
 
