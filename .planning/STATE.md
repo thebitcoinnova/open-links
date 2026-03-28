@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Start Phase 16 discussion for the visible Quick Links UI and responsive polish
+**Current focus:** Plan Phase 16 using the captured Quick Links UI and responsive-polish context
 
 ## Current Position
 
-Phase: 15 (complete)
-Plan: 15-01, 15-02, 15-03
-Status: Phase 15 complete; ready for `$gsd-discuss-phase 16`
+Phase: 16
+Plan: —
+Status: Phase 16 context gathered; ready for `$gsd-plan-phase 16`
 Next Phase: 16 - Profile Header Quick Links UI + Responsive Polish
 Active Milestone: v1.2-profile-quick-links-header-usability-polish
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-27 - Verified Phase 15 after completing the resolver, route-to-header seam, and focused foundation regression bundle.
+Last activity: 2026-03-28 - Captured Phase 16 context for the visible Quick Links strip anatomy, density, and interaction defaults.
 
 Progress: [###.......] 33%
 
@@ -78,7 +78,7 @@ Progress: [###.......] 33%
 
 ### Pending Todos
 
-- Start Phase 16 with `$gsd-discuss-phase 16` or `$gsd-plan-phase 16`.
+- Start Phase 16 planning with `$gsd-plan-phase 16`.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -91,6 +91,6 @@ Progress: [###.......] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-27 07:40
-Stopped at: Phase 15 complete and verified.
-Resume file: .planning/ROADMAP.md
+Last session: 2026-03-28 03:23
+Stopped at: Phase 16 context gathered.
+Resume file: .planning/phases/16-profile-header-quick-links-ui-responsive-polish/16-CONTEXT.md
