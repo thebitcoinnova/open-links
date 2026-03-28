@@ -118,6 +118,13 @@ export const KNOWN_SITES = [
     brandColor: "#3861E4",
   },
   {
+    id: "rumble",
+    label: "Rumble",
+    aliases: ["rumble"],
+    domains: ["rumble.com"],
+    brandColor: "#85C742",
+  },
+  {
     id: "twitch",
     label: "Twitch",
     aliases: ["twitch"],

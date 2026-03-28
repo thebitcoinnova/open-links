@@ -137,6 +137,24 @@ const primalRichLink = {
   },
 } as const satisfies OpenLink;
 
+const rumbleImageOnlyRichLink = {
+  id: "rumble",
+  label: "Rumble",
+  url: "https://rumble.com/c/InTheLitterBox",
+  type: "rich",
+  icon: "rumble",
+  description: "Channel videos and livestreams",
+  metadata: {
+    title: "In The Litter Box w/ Jewels & Catturd",
+    description:
+      'Browse the most recent videos from channel "In The Litter Box w/ Jewels & Catturd" uploaded to Rumble.com',
+    sourceLabel: "rumble.com",
+    image: "/cache/content-images/rumble-avatar.jpg",
+    followersCount: 112000,
+    followersCountRaw: "112K Followers",
+  },
+} as const satisfies OpenLink;
+
 const linkedinRichLink = {
   id: "linkedin",
   label: "LinkedIn",
@@ -414,6 +432,25 @@ test("primal rich cards surface public audience metrics in the shared profile he
     viewModel.socialProfile.metrics.map((metric) => metric.displayText),
     ["15 followers", "90 following"],
   );
+});
+
+test("rumble rich cards backfill image-only metadata into avatar leads instead of empty placeholders", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, rumbleImageOnlyRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "avatar");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/rumble-avatar.jpg");
+  assert.equal(viewModel.title, "In The Litter Box w/ Jewels & Catturd");
+  assert.deepEqual(
+    viewModel.headerMetaItems.map((item) => `${item.kind}:${item.text}`),
+    ["handle:@inthelitterbox", "metric:112K Followers"],
+  );
+  assert.equal(viewModel.profilePreview.enabled, false);
+  assert.equal(viewModel.profilePreview.imageUrl, undefined);
+  assert.equal(viewModel.socialProfile.profileImageUrl, "/cache/content-images/rumble-avatar.jpg");
+  assert.equal(viewModel.socialProfile.previewImageUrl, "/cache/content-images/rumble-avatar.jpg");
+  assert.equal(viewModel.socialProfile.hasDistinctPreviewImage, false);
 });
 
 test("linkedin rich cards use avatar leads from authenticated metadata without duplicate preview media", () => {

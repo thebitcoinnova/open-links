@@ -54,6 +54,29 @@ test("augments supported profile metadata by backfilling profile image for avata
   assert.equal(augmented.profileImage, "/cache/content-images/x-avatar.jpg");
 });
 
+test("keeps excluded platforms from backfilling preview media into profile images", () => {
+  // Arrange
+  const metadata = {
+    title: "Peter Ryszkiewicz | Substack",
+    image: "/cache/content-images/substack-preview.jpg",
+  };
+
+  // Act
+  const augmented = augmentSupportedSocialProfileMetadata({
+    html: "<html></html>",
+    metadata,
+    supportedProfile: {
+      platform: "substack",
+      handle: "peterryszkiewicz",
+      expectedFields: ["profileImage", "subscribersCount"],
+    },
+  });
+
+  // Assert
+  assert.equal(augmented.image, "/cache/content-images/substack-preview.jpg");
+  assert.equal(augmented.profileImage, undefined);
+});
+
 test("reconciles LinkedIn public and authenticated descriptions into separate fields", () => {
   // Arrange
   const metadata = {

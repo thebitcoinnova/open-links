@@ -173,6 +173,21 @@
       "custom": {}
     },
     {
+      "id": "rumble",
+      "label": "Rumble",
+      "url": "https://rumble.com/user/taxationwithoutrepresentation",
+      "type": "rich",
+      "icon": "rumble",
+      "description": "Rumble videos and channel updates",
+      "group": "social",
+      "order": 14,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
+    },
+    {
       "id": "medium",
       "label": "Medium",
       "url": "https://medium.com/@peterryszkiewicz",

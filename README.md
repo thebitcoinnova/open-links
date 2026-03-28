@@ -155,7 +155,7 @@ The repository currently ships these repo-local skill entrypoints under `skills/
 
 - [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md): help other websites, apps, repos, docs, and service profiles point back to your deployed OpenLinks fork using its canonical URL and brand assets.
 - [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md): persist rich-card images and related metadata into the committed cache after link changes.
-- [`skills/create-new-rich-content-extractor/SKILL.md`](skills/create-new-rich-content-extractor/SKILL.md): public-first workflow for deciding and implementing new rich metadata support when existing enrichment is insufficient; not for payment/tip-card logo or QR badge wiring.
+- [`skills/create-new-rich-content-extractor/SKILL.md`](skills/create-new-rich-content-extractor/SKILL.md): public-first workflow for deciding and implementing new rich metadata support when existing enrichment is insufficient, including when avatar-first social-profile support should rely on explicit `profileImage` capture versus the shared default `image -> profileImage` backfill; not for payment/tip-card logo or QR badge wiring.
 
 ### 1) OpenClaw Bootstrap (Recommended)
 

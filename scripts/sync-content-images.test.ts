@@ -158,7 +158,7 @@ test("collects effective link and site image slots using current metadata preced
   ]);
 });
 
-test("backfills supported social profileImage slots from image when needed", () => {
+test("backfills social profileImage slots by default for non-excluded supported platforms", () => {
   // Arrange
   const linksPayload = {
     links: [
@@ -189,6 +189,39 @@ test("backfills supported social profileImage slots from image when needed", () 
     {
       slotId: getLinkContentImageSlotId("x", "profileImage"),
       sourceUrl: "https://example.com/x-avatar.jpg",
+    },
+  ]);
+});
+
+test("does not synthesize social profileImage slots for excluded platforms", () => {
+  // Arrange
+  const linksPayload = {
+    links: [
+      {
+        id: "substack",
+        type: "rich",
+        url: "https://peter.ryszkiewicz.us/",
+        icon: "substack",
+        metadata: {
+          handle: "peterryszkiewicz",
+          image: "https://example.com/substack-preview.jpg",
+        },
+      },
+    ],
+  };
+
+  // Act
+  const slots = collectContentImageSlots({
+    linksPayload,
+    generatedRichMetadata: null,
+    sitePayload: {},
+  });
+
+  // Assert
+  assert.deepEqual(slots, [
+    {
+      slotId: getLinkContentImageSlotId("substack", "image"),
+      sourceUrl: "https://example.com/substack-preview.jpg",
     },
   ]);
 });

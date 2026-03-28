@@ -89,6 +89,8 @@ npm run build
    - Extend existing public enrichment/parsing/normalization paths instead of authenticated cache infrastructure.
    - Gather only fields from the current OpenLinks metadata model that are actually needed.
    - When a platform exposes both a generic page description and a profile-authored bio, persist them separately as `description` and `profileDescription`.
+   - For supported social-profile platforms, runtime backfills `image -> profileImage` by default when `profileImage` is missing unless the platform is explicitly excluded because `image` commonly represents preview/banner media.
+   - Even when default backfill exists, capture a distinct `profileImage` whenever the public source exposes a true avatar separate from preview media.
    - Prefer keeping generic parsers generic and adding targeted augmentation/normalization after parsing when platform-specific logic is required.
    - Current in-repo `public_augmented` examples: Medium (RSS/feed), Substack (canonical public profile + custom-domain source preservation), X (oEmbed + avatar), Instagram (public page metadata), YouTube (public page metadata).
    - Preserve `ogImage` and `twitterImage` separately when they are discoverable, even if `image` intentionally chooses only one render candidate.
@@ -131,6 +133,7 @@ npm run auth:extractor:new -- --id <extractor-id> --domains <domain1,domain2> --
    - Implement `ensureSession` with transition monitoring + ask-first action confirmation.
    - Implement `extract` with metadata quality checks and local asset download.
    - When available, capture image roles distinctly: `image`, `profileImage`, `ogImage`, `twitterImage`.
+   - Do not rely on default runtime backfill when the authenticated page exposes a distinct avatar: emit `profileImage` explicitly so preview and avatar roles stay unambiguous.
    - When multiple roles share the same source, reuse the same committed local asset path, but still emit per-role metadata fields and `assets.*` entries.
    - Add any authenticated asset host domains used by the extractor to `data/policy/remote-cache-policy.json` under `authenticated_asset_images`.
 

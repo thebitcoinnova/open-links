@@ -45,6 +45,7 @@ for (const siteId of [
   "mastodon",
   "cluborange",
   "primal",
+  "rumble",
   "twitch",
   "snapchat",
   "pinterest",

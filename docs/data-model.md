@@ -486,6 +486,8 @@ Image-role rules:
 - Generic metadata parsing defaults `image` to `ogImage ?? twitterImage`.
 - Platform-specific augmentation may keep low-value placeholders in `ogImage`/`twitterImage` for completeness while choosing a different `image` for rendering.
 - `profileImage` is independent from all preview/social image roles and may equal `image`.
+- For supported social-profile links, runtime now backfills `image -> profileImage` by default when `profileImage` is missing, unless the platform is explicitly excluded because its `image` commonly represents preview/banner media instead of an avatar.
+- Exclusion reasons live in shared code, currently `src/lib/content/social-profile-fields.ts`, rather than a user-edited JSON policy file.
 
 Minimal manual override example:
 

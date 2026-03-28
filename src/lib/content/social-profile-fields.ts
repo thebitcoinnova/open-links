@@ -77,6 +77,17 @@ export interface ResolveSupportedSocialProfileInput {
   profileSemantics?: unknown;
 }
 
+export type ProfileImageBackfillExclusionReason = "image_is_preview_media";
+
+export interface ProfileImageBackfillExclusion {
+  reason: ProfileImageBackfillExclusionReason;
+  note: string;
+}
+
+export type ProfileImageBackfillExclusionMap = Partial<
+  Record<SupportedSocialProfilePlatform, ProfileImageBackfillExclusion>
+>;
+
 const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
   cluborange: ["profileImage"],
   facebook: ["profileImage"],
@@ -91,17 +102,17 @@ const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
   youtube: ["profileImage", "subscribersCount"],
 } as const satisfies Record<SupportedSocialProfilePlatform, readonly ExpectedSocialProfileField[]>;
 
-const PROFILE_IMAGE_BACKFILL_PLATFORMS = new Set<SupportedSocialProfilePlatform>([
-  "cluborange",
-  "facebook",
-  "github",
-  "instagram",
-  "linkedin",
-  "medium",
-  "primal",
-  "x",
-  "youtube",
-]);
+export const PROFILE_IMAGE_BACKFILL_EXCLUSIONS: ProfileImageBackfillExclusionMap = {
+  // Substack's image often points at subscribe-card/banner media rather than the author avatar.
+  substack: {
+    reason: "image_is_preview_media",
+    note: "Substack image commonly points at subscribe-card or banner preview media instead of an avatar.",
+  },
+};
+
+export const resolveProfileImageBackfillExclusion = (
+  platform: SupportedSocialProfilePlatform,
+): ProfileImageBackfillExclusion | undefined => PROFILE_IMAGE_BACKFILL_EXCLUSIONS[platform];
 
 export const isSupportedSocialProfilePlatform = (
   value: unknown,
@@ -194,7 +205,7 @@ export const normalizeSupportedSocialProfileMetadata = <T extends SocialProfileM
     return metadata;
   }
 
-  if (!PROFILE_IMAGE_BACKFILL_PLATFORMS.has(target.platform)) {
+  if (resolveProfileImageBackfillExclusion(target.platform)) {
     return metadata;
   }
 

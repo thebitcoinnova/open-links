@@ -106,7 +106,9 @@ When the chosen branch is `public_augmented`:
 1. Extend existing public enrichment/parsing/normalization paths instead of authenticated cache infrastructure.
 2. Gather only the fields needed by the current metadata model.
 3. Prefer keeping generic parsers generic and adding targeted augmentation/normalization after parsing when platform-specific logic is required.
-4. Ensure the public path uses the public-cache pipeline correctly:
+4. For supported social-profile platforms, runtime backfills `image -> profileImage` by default when `profileImage` is missing unless the platform is explicitly excluded because `image` commonly represents preview/banner media.
+5. Even when default backfill exists, capture a distinct `profileImage` whenever the public source exposes a true avatar separate from preview media.
+6. Ensure the public path uses the public-cache pipeline correctly:
    - `data/cache/rich-public-cache.json`
    - `schema/rich-public-cache.schema.json`
    - local runtime overlay: `data/cache/rich-public-cache.runtime.json`
@@ -117,18 +119,18 @@ When the chosen branch is `public_augmented`:
   - current in-repo examples: Club Orange referral signup (canonical public signup page), Medium (RSS/feed), Rumble (public about-page fetch with banner/avatar separation), Substack (canonical public profile + custom-domain source preservation), X profiles (oEmbed + avatar), X communities (public OG community metadata + optional member-count browser refresh), Instagram (public page metadata), YouTube (public page metadata)
    - public homepage example: `https://bitcoinblacksheep.com/` exposes `title` and `description` in public OG metadata and a stable logo image in public Yoast/JSON-LD schema, so the correct fix is a public parser fallback rather than an authenticated extractor
    - preserve `ogImage` and `twitterImage` separately when the source exposes them, even if `image` intentionally chooses only one render candidate
-5. A `public_augmented` implementation may use a separate operator-invoked public browser refresh when a public page exposes extra metadata that direct HTTP fetch cannot reliably reach. That browser step may update the committed public cache for material metadata changes and the local runtime overlay for volatile revalidation state, but it must stay explicit and must not run during normal `build` / `dev` enrichment.
-6. Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
-7. A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
-8. Count-only gaps do not justify authenticated extraction when the platform already has a stable public path for the rest of the metadata.
-9. Update handle coverage when applicable:
+7. A `public_augmented` implementation may use a separate operator-invoked public browser refresh when a public page exposes extra metadata that direct HTTP fetch cannot reliably reach. That browser step may update the committed public cache for material metadata changes and the local runtime overlay for volatile revalidation state, but it must stay explicit and must not run during normal `build` / `dev` enrichment.
+8. Canonical public profile fetches are allowed for custom-domain links when the canonical platform surface is still public and exposes better metadata. Preserve the original link URL identity in `sourceLabel` and UI copy even when the fetch target host differs.
+9. A platform may remain `public_augmented` even when a requested count metric is still unsupported. Do not escalate count-only gaps to authenticated extraction unless public sources were conclusively checked and rejected.
+10. Count-only gaps do not justify authenticated extraction when the platform already has a stable public path for the rest of the metadata.
+11. Update handle coverage when applicable:
    - `src/lib/identity/handle-resolver.ts`
    - `src/lib/identity/handle-resolver.test.ts`
-10. Do not touch:
+12. Do not touch:
    - `data/policy/rich-authenticated-extractors.json`
    - `data/cache/rich-authenticated-cache.json`
    - `public/cache/rich-authenticated/*`
-11. Validate:
+13. Validate:
  
 ```bash
 bun run validate:data
@@ -237,6 +239,7 @@ When state is `unknown`:
 - load authenticated page
 - extract usable `title`, `description`, `image`
 - capture `profileImage`, `ogImage`, and `twitterImage` distinctly when the authenticated page exposes them
+- do not rely on default runtime backfill when the authenticated page exposes a distinct avatar; return `profileImage` explicitly in that case
 - reject placeholder/authwall outputs
 - download each distinct image role to `public/cache/rich-authenticated/`
 - reuse the same local asset path when multiple roles share the same source URL

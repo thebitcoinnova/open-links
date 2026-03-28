@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  PROFILE_IMAGE_BACKFILL_EXCLUSIONS,
   mergeMetadataWithManualSocialProfileOverrides,
   normalizeSupportedSocialProfileMetadata,
   resolveLinkProfileSemantics,
   resolveMissingSupportedSocialProfileFields,
+  resolveProfileImageBackfillExclusion,
   resolveSupportedSocialProfile,
 } from "./social-profile-fields";
 
@@ -256,7 +258,7 @@ test("substack subscriber raw text satisfies supported-profile warning checks", 
   assert.deepEqual(missingFields, []);
 });
 
-test("supported profile normalization backfills profile image from preview image", () => {
+test("supported profile normalization backfills profile image by default for non-excluded platforms", () => {
   // Arrange
   const githubProfile = resolveSupportedSocialProfile({
     url: "https://github.com/pRizz",
@@ -351,7 +353,35 @@ test("medium profile normalization backfills the feed image as the profile avata
   assert.deepEqual(missingFields, []);
 });
 
-test("substack profile normalization does not treat preview images as profile avatars", () => {
+test("rumble profile normalization backfills image-only metadata into profile avatars", () => {
+  // Arrange
+  const rumbleProfile = resolveSupportedSocialProfile({
+    url: "https://rumble.com/c/InTheLitterBox",
+  });
+  assert.ok(rumbleProfile);
+
+  // Act
+  const normalized = normalizeSupportedSocialProfileMetadata(
+    {
+      image: "https://example.com/rumble-avatar.jpg",
+      followersCount: 112000,
+      followersCountRaw: "112K Followers",
+    },
+    rumbleProfile,
+  );
+  const missingFields = resolveMissingSupportedSocialProfileFields(normalized, rumbleProfile);
+
+  // Assert
+  assert.deepEqual(normalized, {
+    image: "https://example.com/rumble-avatar.jpg",
+    profileImage: "https://example.com/rumble-avatar.jpg",
+    followersCount: 112000,
+    followersCountRaw: "112K Followers",
+  });
+  assert.deepEqual(missingFields, []);
+});
+
+test("substack profile normalization opts out of avatar backfill with a documented exclusion reason", () => {
   // Arrange
   const substackProfile = resolveSupportedSocialProfile({
     url: "https://peter.ryszkiewicz.us/",
@@ -359,6 +389,7 @@ test("substack profile normalization does not treat preview images as profile av
     metadataHandle: "@peterryszkiewicz",
   });
   assert.ok(substackProfile);
+  const exclusion = resolveProfileImageBackfillExclusion(substackProfile.platform);
 
   // Act
   const normalized = normalizeSupportedSocialProfileMetadata(
@@ -370,6 +401,8 @@ test("substack profile normalization does not treat preview images as profile av
   const missingFields = resolveMissingSupportedSocialProfileFields(normalized, substackProfile);
 
   // Assert
+  assert.deepEqual(exclusion, PROFILE_IMAGE_BACKFILL_EXCLUSIONS.substack);
+  assert.equal(exclusion?.reason, "image_is_preview_media");
   assert.deepEqual(normalized, {
     image: "https://substackcdn.com/image/fetch/subscribe-card.jpg",
   });
