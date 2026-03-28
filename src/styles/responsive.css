@@ -22,6 +22,27 @@
     grid-template-columns: 1fr;
   }
 
+  body .profile-quick-links {
+    width: min(100%, 18rem);
+    margin-top: 0;
+  }
+
+  body .profile-quick-links-scroll::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1.6rem;
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, transparent 100%, var(--surface-bg) 0%) 0%,
+      color-mix(in srgb, var(--surface-bg) 88%, transparent 12%) 100%
+    );
+    opacity: 0.55;
+  }
+
   body .profile-avatar {
     --profile-avatar-base: 72px;
   }

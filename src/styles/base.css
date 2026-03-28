@@ -353,6 +353,61 @@ a:focus-visible {
   min-width: 0;
 }
 
+.profile-quick-links {
+  justify-self: center;
+  width: min(100%, 23rem);
+  margin-top: calc(var(--space-1) * 0.55);
+  margin-bottom: calc(var(--space-1) * 0.25);
+}
+
+.profile-quick-links-scroll {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.profile-quick-links-list {
+  --profile-quick-link-box-size: 2.35rem;
+  --profile-quick-link-glyph-size: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-quick-links-link {
+  display: inline-grid;
+  width: var(--profile-quick-link-box-size);
+  height: var(--profile-quick-link-box-size);
+  place-items: center;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.profile-quick-links-icon {
+  width: var(--profile-quick-link-box-size);
+  height: var(--profile-quick-link-box-size);
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-pill) 82%, transparent 18%);
+  color: color-mix(in srgb, var(--text-primary) 88%, var(--accent) 12%);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 8%, transparent);
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast), background-color
+    var(--motion-fast), color var(--motion-fast);
+}
+
+.profile-quick-links-glyph {
+  width: var(--profile-quick-link-glyph-size);
+  height: var(--profile-quick-link-glyph-size);
+  display: block;
+}
+
 .profile-title-row {
   display: flex;
   align-items: flex-start;
