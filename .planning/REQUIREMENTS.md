@@ -60,8 +60,8 @@
 | HEAD-02 | Phase 16 | Complete |
 | HEAD-03 | Phase 16 | Complete |
 | MAINT-01 | Phase 15 | Complete |
-| QUAL-07 | Phase 17 | Pending |
-| DOC-08 | Phase 17 | Pending |
+| QUAL-07 | Phase 17 | Complete |
+| DOC-08 | Phase 17 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 11 total
