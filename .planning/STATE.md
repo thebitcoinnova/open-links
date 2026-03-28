@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Review the v1.2 audit and choose between milestone completion or cleanup planning
+**Current focus:** Start the next milestone now that v1.2 is archived
 
 ## Current Position
 
-Phase: 17 (complete)
-Plan: 17-01, 17-02
-Status: Milestone audited with no blockers and some accepted tech debt; ready for `$gsd-complete-milestone v1.2` or `$gsd-plan-milestone-gaps`
-Next Phase: Milestone completion or cleanup planning
-Active Milestone: v1.2-profile-quick-links-header-usability-polish
-Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-28 - Audited milestone v1.2 and confirmed all requirements are met with non-blocking tech debt remaining.
+Phase: Milestone complete
+Plan: —
+Status: v1.2 archived; ready for `$gsd-new-milestone`
+Next Phase: Next milestone definition
+Active Milestone: none
+Completed Milestone: v1.2-profile-quick-links-header-usability-polish
+Last activity: 2026-03-28 - Archived milestone v1.2 and prepared the planning workspace for the next milestone.
 
 Progress: [##########] 100%
 
@@ -78,7 +78,7 @@ Progress: [##########] 100%
 
 ### Pending Todos
 
-- Review the v1.2 audit and choose `$gsd-complete-milestone v1.2` or `$gsd-plan-milestone-gaps`.
+- Start the next milestone with `$gsd-new-milestone`.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -92,5 +92,5 @@ Progress: [##########] 100%
 ## Session Continuity
 
 Last session: 2026-03-28 07:35
-Stopped at: Milestone v1.2 audited with tech debt review.
-Resume file: .planning/v1.2-MILESTONE-AUDIT.md
+Stopped at: Milestone v1.2 archived; next step is `$gsd-new-milestone`.
+Resume file: .planning/MILESTONES.md
