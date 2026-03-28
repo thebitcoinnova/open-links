@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { ResolvedProfileQuickLinksState } from "../../lib/ui/profile-quick-links";
+import ProfileHeader from "./ProfileHeader";
 import { ProfileQuickLinks } from "./ProfileQuickLinks";
 
 type RenderedNode = string | number | boolean | null | undefined | RenderedElement | RenderedNode[];
@@ -114,4 +115,38 @@ test("profile quick links render nothing when no eligible links exist", () => {
 
   // Assert
   assert.ok(tree === undefined || tree === "");
+});
+
+test("profile header renders quick links above the existing action bar", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+    quickLinks: createQuickLinksState(true),
+  }) as RenderedNode;
+
+  // Act
+  const elements = collectElements(tree);
+  const quickLinksIndex = elements.findIndex((element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" && classValue.split(/\s+/u).includes("profile-quick-links")
+    );
+  });
+  const desktopActionBarIndex = elements.findIndex((element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" &&
+      classValue.split(/\s+/u).includes("profile-action-bar-desktop")
+    );
+  });
+
+  // Assert
+  assert.notEqual(quickLinksIndex, -1);
+  assert.notEqual(desktopActionBarIndex, -1);
+  assert.ok(quickLinksIndex < desktopActionBarIndex);
 });
