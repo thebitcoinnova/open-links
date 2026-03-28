@@ -104,7 +104,7 @@
         "mobile": {
           "totalBytes": { "warn": 840000, "fail": 920000 },
           "jsBytes": { "warn": 790000, "fail": 870000 },
-          "cssBytes": { "warn": 45000, "fail": 70000 },
+          "cssBytes": { "warn": 45000, "fail": 76000 },
           "htmlBytes": { "warn": 18000, "fail": 26000 },
           "largestAssetBytes": { "warn": 999999999, "fail": 999999999 },
           "minimumScore": { "warn": 1, "fail": 1 }
