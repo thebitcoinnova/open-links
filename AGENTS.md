@@ -98,7 +98,10 @@ For branded payment/tip cards, verify card-shell icon resolution and QR badge re
 Before starting substantive work in this repository, agents must sync local code and dependencies first:
 
 1. Run `git fetch origin --prune`.
-2. Pull the latest code for the current branch using a safe fast-forward path (`git pull --ff-only`) before continuing.
+2. Pull the latest code for the active sync target using a safe fast-forward path before continuing.
+   - If the user specified a branch for the work, use that branch.
+   - Otherwise, if the worktree is attached to a branch, use the current branch with `git pull --ff-only`.
+   - Otherwise, if the worktree is detached, assume `main` by default and fast-forward explicitly against `origin/main` without creating a merge commit.
 3. Run `bun install` from the repo root before analysis, edits, or verification.
 
 Exceptions:

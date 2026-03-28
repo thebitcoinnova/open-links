@@ -91,3 +91,13 @@ Before substantive work in `open-links`, first run `git fetch origin --prune`, t
 
 ### Trigger signal to catch it earlier
 Any new coding task that starts on a local branch without a same-turn fetch/pull check and dependency sync should be treated as out of policy before implementation begins.
+
+## lesson-assume-main-when-detached | 2026-03-28 03:16 CDT
+### What went wrong
+I treated a detached worktree with no user-specified branch as a hard blocker for startup sync, even though this repo should default to syncing against `main` when no other branch target was requested.
+
+### Preventive rule
+When `open-links` work starts from a detached worktree and the user has not specified a branch, assume `main` as the default sync target and use an explicit fast-forward path against `origin/main` instead of stopping just because `git pull --ff-only` cannot infer a current branch.
+
+### Trigger signal to catch it earlier
+`git status --branch` shows `HEAD (no branch)` during startup sync, and the user has not named a different branch to work against.
