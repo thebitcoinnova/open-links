@@ -45,6 +45,9 @@ Coverage:
 - `contact`
 - `custom`
 
+Notes:
+`profileLinks[]` remains an optional profile-level identity list, but it does not drive the shipped Quick Links header strip. For the current Quick Links behavior contract, use `docs/data-model.md`.
+
 ## 2) `data/links.json` root (`links-root`)
 
 Coverage:
@@ -71,6 +74,15 @@ Coverage for each `links[]` item:
 - `metadata`
 - `enrichment`
 - `custom`
+
+Notes:
+The shipped Quick Links strip is derived from eligible top-level `links[]` items. There is no separate Quick Links registry or global config surface yet.
+
+Current Quick Links-specific authoring note:
+
+- optional same-platform tie-breaker: `links[].custom.quickLinks.canonical=true`
+
+For the behavior rules and current defaults, use `docs/data-model.md`.
 
 ## 4) `links[].metadata` (`links-metadata`)
 
