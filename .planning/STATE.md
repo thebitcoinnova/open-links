@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Execute the Phase 16 Quick Links UI and responsive-polish plans
+**Current focus:** Start Phase 17 discussion for Quick Links docs and regression hardening
 
 ## Current Position
 
-Phase: 16
+Phase: 16 (complete)
 Plan: 16-01, 16-02, 16-03
-Status: Phase 16 planned across 3 waves; ready for `$gsd-execute-phase 16`
-Next Phase: 16 - Profile Header Quick Links UI + Responsive Polish
+Status: Phase 16 complete; ready for `$gsd-discuss-phase 17`
+Next Phase: 17 - Docs + Regression Hardening for Quick Links
 Active Milestone: v1.2-profile-quick-links-header-usability-polish
 Completed Milestone: v1.1-social-profile-metadata-card-refresh
-Last activity: 2026-03-28 - Planned Phase 16 across three waves for visible Quick Links UI, responsive behavior, and interaction polish.
+Last activity: 2026-03-28 - Verified Phase 16 after shipping the visible Quick Links strip, responsive layout, and accessibility polish.
 
-Progress: [###.......] 33%
+Progress: [######....] 67%
 
 ## Performance Metrics
 
@@ -78,7 +78,7 @@ Progress: [###.......] 33%
 
 ### Pending Todos
 
-- Execute Phase 16 with `$gsd-execute-phase 16`.
+- Start Phase 17 with `$gsd-discuss-phase 17` or `$gsd-plan-phase 17`.
 - Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -91,6 +91,6 @@ Progress: [###.......] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-28 03:23
-Stopped at: Phase 16 planned and ready for execution.
-Resume file: .planning/phases/16-profile-header-quick-links-ui-responsive-polish/16-01-PLAN.md
+Last session: 2026-03-28 05:43
+Stopped at: Phase 16 complete and verified.
+Resume file: .planning/ROADMAP.md

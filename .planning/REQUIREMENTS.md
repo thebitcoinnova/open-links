@@ -51,14 +51,14 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| QLINK-01 | Phase 16 | Pending |
+| QLINK-01 | Phase 16 | Complete |
 | QLINK-02 | Phase 15 | Complete |
 | QLINK-03 | Phase 15 | Complete |
 | QLINK-04 | Phase 15 | Complete |
-| QLINK-05 | Phase 16 | Pending |
-| HEAD-01 | Phase 16 | Pending |
-| HEAD-02 | Phase 16 | Pending |
-| HEAD-03 | Phase 16 | Pending |
+| QLINK-05 | Phase 16 | Complete |
+| HEAD-01 | Phase 16 | Complete |
+| HEAD-02 | Phase 16 | Complete |
+| HEAD-03 | Phase 16 | Complete |
 | MAINT-01 | Phase 15 | Complete |
 | QUAL-07 | Phase 17 | Pending |
 | DOC-08 | Phase 17 | Pending |

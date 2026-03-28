@@ -46,14 +46,15 @@ Plans:
 ### Phase 16: Profile Header Quick Links UI + Responsive Polish
 
 **Goal:** Render a compact, icon-first Quick Links strip above the profile action bar with accessible labels and resilient mobile/desktop layout behavior.
+**Status:** ✅ Complete (2026-03-28)
 **Depends on:** Phase 15
 **Requirements:** QLINK-01, QLINK-05, HEAD-01, HEAD-02, HEAD-03
 **Plans:** 3 plans
 
 Plans:
-- [ ] 16-01: Build a dedicated Quick Links header component and insert it above the existing profile action bar.
-- [ ] 16-02: Add responsive spacing, wrapping, and visual-hierarchy polish so the header remains clean on mobile and desktop.
-- [ ] 16-03: Finish focus states, link titles, and empty-state spacing polish without weakening the current share/copy/QR action row.
+- [x] 16-01: Build a dedicated Quick Links header component and insert it above the existing profile action bar.
+- [x] 16-02: Add responsive spacing, wrapping, and visual-hierarchy polish so the header remains clean on mobile and desktop.
+- [x] 16-03: Finish focus states, link titles, and empty-state spacing polish without weakening the current share/copy/QR action row.
 
 **Details:**
 - Quick Links should feel like shortcuts into the existing link set, not a second action bar or a replacement for the cards.
@@ -65,6 +66,12 @@ Plans:
 - Each quick link is keyboard-accessible and exposes a descriptive accessible name and title.
 - The header remains usable on narrow mobile widths without clipping, crowding, or losing hierarchy.
 - If no eligible links exist, the profile header omits the strip without leaving placeholder chrome.
+
+**Success Criteria Met:**
+- The profile header now renders a dedicated visible Quick Links strip above the action bar when eligible links exist and hides it completely when empty.
+- The strip stays icon-first and heading-free, with explicit outbound labels/titles and no active/current state.
+- Responsive styling keeps the strip centered, multi-line by default, and lighter than the action bar while providing a subtle overflow hint on mobile.
+- Focused Quick Links/header tests, `bun run typecheck`, and `bun run build` all passed for the visible-strip contract.
 
 ### Phase 17: Docs + Regression Hardening for Quick Links
 
