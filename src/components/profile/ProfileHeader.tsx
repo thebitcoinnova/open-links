@@ -14,6 +14,7 @@ import BottomActionBar, {
   type BottomActionKind,
 } from "../actions/BottomActionBar";
 import MobileOverflowMenu, { type MobileOverflowMenuAction } from "../actions/MobileOverflowMenu";
+import ProfileQuickLinks from "./ProfileQuickLinks";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
@@ -198,6 +199,7 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
           </ul>
         </Show>
 
+        <ProfileQuickLinks quickLinks={props.quickLinks} />
         <BottomActionBar
           class="profile-action-bar profile-action-bar-desktop"
           items={actionItems()}

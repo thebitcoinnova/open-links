@@ -307,11 +307,12 @@ test("profile header exposes populated quick-link readiness through the future-f
 
   // Act
   const section = firstElementWithClass(tree, "profile-header");
+  const quickLinks = firstElementWithClass(tree, "profile-quick-links");
 
   // Assert
   assert.ok(section);
   assert.equal(section.props["data-has-quick-links"], "true");
-  assert.equal(firstElementWithClass(tree, "profile-quick-links"), undefined);
+  assert.ok(quickLinks);
 });
 
 test("profile header keeps share and copy actions stable when quick-link state is populated", () => {
