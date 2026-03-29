@@ -1,4 +1,8 @@
 import {
+  hasMeaningfulReferralContent,
+  normalizeReferralConfig,
+} from "../../src/lib/content/referral-fields";
+import {
   resolveLinkProfileSemantics,
   resolveSupportedSocialProfile,
 } from "../../src/lib/content/social-profile-fields";
@@ -66,6 +70,7 @@ const LINK_KEYS = new Set([
   "enabled",
   "metadata",
   "enrichment",
+  "referral",
   "payment",
   "custom",
 ]);
@@ -899,12 +904,47 @@ export const runPolicyRules = ({
     const linkEnabled = link.enabled !== false;
     const metadata = isRecord(link.metadata) ? link.metadata : undefined;
     const enrichment = isRecord(link.enrichment) ? link.enrichment : undefined;
+    const referral = normalizeReferralConfig(isRecord(link.referral) ? link.referral : undefined);
     const manualHandle = normalizeHandle(metadata?.handle);
     const profileSemantics = resolveLinkProfileSemantics(enrichment?.profileSemantics);
     const handleResolution = resolveHandleFromUrl({
       url: linkUrl,
       icon: linkIcon,
     });
+
+    if (linkEnabled && referral && !hasMeaningfulReferralContent(referral)) {
+      issues.push({
+        level: "warning",
+        strictBlocking: false,
+        source: sources.links,
+        path: `$.links[${index}].referral`,
+        message: `Referral disclosure warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': referral is marked, but no meaningful disclosure fields are present.`,
+        remediation:
+          "Add one or more of links[].referral.visitorBenefit, ownerBenefit, offerSummary, " +
+          "termsSummary, termsUrl, or code. `kind` alone classifies the link but does not disclose the offer.",
+      });
+    }
+
+    if (linkEnabled && referral && linkUrl) {
+      const supportedReferralProfile = resolveSupportedSocialProfile({
+        url: linkUrl,
+        icon: linkIcon,
+        metadataHandle: metadata?.handle,
+        profileSemantics: "auto",
+      });
+
+      if (supportedReferralProfile && profileSemantics !== "non_profile") {
+        issues.push({
+          level: "warning",
+          strictBlocking: false,
+          source: sources.links,
+          path: `$.links[${index}].enrichment.profileSemantics`,
+          message: `Referral semantics warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': supported ${supportedReferralProfile.platform} profile-family URLs used as referral links should usually set enrichment.profileSemantics='non_profile' to avoid profile-style rendering.`,
+          remediation:
+            "Set links[].enrichment.profileSemantics to 'non_profile' for referral/promo links on supported profile-family URLs unless you intentionally want profile-style semantics.",
+        });
+      }
+    }
 
     if (linkEnabled && linkUrl && profileSemantics === "profile") {
       const supportedProfile = resolveSupportedSocialProfile({
