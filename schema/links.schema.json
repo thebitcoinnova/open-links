@@ -238,6 +238,27 @@
       },
       "additionalProperties": true
     },
+    "linkReferralKind": {
+      "type": "string",
+      "enum": ["referral", "affiliate", "promo", "invite"]
+    },
+    "linkReferralConfig": {
+      "type": "object",
+      "properties": {
+        "kind": { "$ref": "#/$defs/linkReferralKind" },
+        "visitorBenefit": { "type": "string" },
+        "ownerBenefit": { "type": "string" },
+        "offerSummary": { "type": "string" },
+        "termsSummary": { "type": "string" },
+        "termsUrl": { "type": "string", "format": "uri" },
+        "code": { "type": "string", "minLength": 1 },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "linkItem": {
       "type": "object",
       "required": ["id", "label", "type"],
@@ -328,6 +349,7 @@
           },
           "additionalProperties": true
         },
+        "referral": { "$ref": "#/$defs/linkReferralConfig" },
         "payment": { "$ref": "#/$defs/linkPaymentConfig" },
         "custom": {
           "type": "object",

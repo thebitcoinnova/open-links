@@ -174,6 +174,20 @@ export interface LinkEnrichmentPolicy {
   [key: string]: unknown;
 }
 
+export type ReferralKind = "referral" | "affiliate" | "promo" | "invite";
+
+export interface LinkReferralConfig {
+  kind?: ReferralKind;
+  visitorBenefit?: string;
+  ownerBenefit?: string;
+  offerSummary?: string;
+  termsSummary?: string;
+  termsUrl?: string;
+  code?: string;
+  custom?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export interface LinkQuickLinksCustomConfig {
   canonical?: boolean;
 }
@@ -195,6 +209,7 @@ export interface OpenLink {
   enabled?: boolean;
   metadata?: RichLinkMetadata;
   enrichment?: LinkEnrichmentPolicy;
+  referral?: LinkReferralConfig;
   payment?: LinkPaymentConfig;
   custom?: LinkCustomConfig;
 }
