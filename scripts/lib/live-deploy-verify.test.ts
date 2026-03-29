@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { getCanonicalUrl, getRobotsMetaContent } from "../../src/lib/deployment-config";
 import {
   assertLiveTargetSnapshot,
   buildLiveTargetExpectation,
@@ -16,9 +17,9 @@ test("buildLiveTargetExpectation supports explicit provider origins", () => {
   // Assert
   assert.deepEqual(expectation, {
     buildInfoUrl: "https://open-links.onrender.com/build-info.json",
-    expectedCanonicalUrl: "https://openlinks.us/",
+    expectedCanonicalUrl: getCanonicalUrl("/"),
     expectedCommitSha: "0123456789abcdef0123456789abcdef01234567",
-    expectedRobotsMeta: "noindex, nofollow",
+    expectedRobotsMeta: getRobotsMetaContent("render"),
     publicUrl: "https://open-links.onrender.com/",
     target: "render",
   });
@@ -47,8 +48,8 @@ test("assertLiveTargetSnapshot accepts matching canonical, robots, and build-inf
       },
       html: [
         "<!doctype html>",
-        '<link rel="canonical" href="https://openlinks.us/">',
-        '<meta name="robots" content="noindex, nofollow">',
+        `<link rel="canonical" href="${getCanonicalUrl("/")}">`,
+        `<meta name="robots" content="${getRobotsMetaContent("railway")}">`,
       ].join(""),
     }),
   );
@@ -72,8 +73,12 @@ test("assertLiveTargetSnapshot rejects commit drift and robots mismatches", () =
         },
         html: [
           "<!doctype html>",
-          '<link rel="canonical" href="https://openlinks.us/">',
-          '<meta name="robots" content="index, follow">',
+          `<link rel="canonical" href="${getCanonicalUrl("/")}">`,
+          `<meta name="robots" content="${
+            getRobotsMetaContent("github-pages") === "index, follow"
+              ? "noindex, nofollow"
+              : "index, follow"
+          }">`,
         ].join(""),
       }),
     /robots 'noindex, nofollow'|commit/u,
