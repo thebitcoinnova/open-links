@@ -30,6 +30,9 @@ Out of scope:
   - a single fork-workflow-enable prompt when GitHub has not enabled Actions runs for the new fork,
   - a single identity-confirmation prompt when confidence is low.
 
+Bootstrap must normalize a fresh fork to a clean starter baseline before personalization begins.
+Do not personalize on top of inherited upstream identity, cached rich metadata, badges, or README deploy URLs.
+
 ## Required Execution Policy
 
 - Git flow: commit and push directly to `main`.
@@ -40,6 +43,10 @@ Out of scope:
 - Retry policy: bounded deployment verification retries only.
 - Source trust policy: high-confidence social discovery from authoritative-chain sources only.
 - Payment/crypto policy: do not infer or add payment links or crypto addresses unless the user explicitly requests them.
+- Fork reset policy:
+  - for first-time fork bootstrap, run `bun run fork:reset` after clone/install and before any identity/link/site personalization,
+  - treat `bun run fork:reset --check` as the dry-run diagnostic when you need to explain what inherited seed state will be cleared,
+  - do not skip the reset step just because the repo validates or builds before personalization.
 
 If auth/permission or environment blockers occur, fail fast with remediation instructions in final output.
 
@@ -59,28 +66,29 @@ Execute in this exact order.
    - after the user enables workflows, create or request one fresh push event on `main` before continuing CI/deploy verification.
 6. Clone user fork and enter repository root.
 7. Install dependencies (`bun install` or `bun install --frozen-lockfile`).
-8. Resolve user identity using the precedence rules in this document.
-9. If the user explicitly provided a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted profile/avatar/social/content links as bootstrap candidates before asking for manual link entry.
-10. Personalize data files:
+8. Run `bun run fork:reset`.
+9. Resolve user identity using the precedence rules in this document.
+10. If the user explicitly provided a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted profile/avatar/social/content links as bootstrap candidates before asking for manual link entry.
+11. Personalize data files:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-11. Validate and build:
+12. Validate and build:
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
-12. Commit and push directly to `main`.
-13. Resolve deployment target selection and primary host:
+13. Commit and push directly to `main`.
+14. Resolve deployment target selection and primary host:
    - upstream default: `aws` primary + `github-pages` mirror
    - fork default: `github-pages` primary
    - optional fork additions: `render`, `railway`
-14. Verify GitHub Pages source is set to **GitHub Actions**.
-15. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
-16. Poll CI and all relevant deploy surfaces for the pushed SHA.
-17. On success, collect deployment URLs.
-18. Post structured URL summary in chat using the schema in this file.
-19. Update the README deploy URL marker block only if normalized URL/status values changed.
-20. Commit/push README update if and only if step 19 changed file content.
+15. Verify GitHub Pages source is set to **GitHub Actions**.
+16. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
+17. Poll CI and all relevant deploy surfaces for the pushed SHA.
+18. On success, collect deployment URLs.
+19. Post structured URL summary in chat using the schema in this file.
+20. Update the README deploy URL marker block only if normalized URL/status values changed.
+21. Commit/push README update if and only if step 20 changed file content.
 
 ## Automation and Identity Confirmation Rule
 
@@ -126,9 +134,11 @@ If these are discovered incidentally, place them in `Not Applied` with reason `e
 This repository may contain starter identity data from the upstream author, including `Peter Ryszkiewicz` and associated links.
 
 Treat forked `data/profile.json` and `data/links.json` identity values as template defaults, not user truth.
+Treat inherited badges, generated rich metadata, follower history, cached avatars/images, and README deploy URLs the same way.
 
 - Do not assume the OpenClaw user is `Peter Ryszkiewicz` unless explicitly confirmed by the user.
 - Prefer the fork owner's GitHub identity and explicitly user-provided identity over seeded file content.
+- Run `bun run fork:reset` before discovery/personalization so those inherited seed values are cleared instead of selectively patched.
 - If seeded identity conflicts with higher-authority identity signals, replace seeded identity fields and personal links.
 - If confidence remains low after authoritative checks, run the single identity-confirmation prompt described above.
 

@@ -155,6 +155,8 @@ When `identity_research=off`:
 ### Shared discovery guardrails
 
 - Treat upstream seed identity (for example `Peter Ryszkiewicz`) as template data, not user truth.
+- If the repo still looks like inherited starter state and the user is effectively doing first personalization cleanup, run `bun run fork:reset` before other CRUD writes.
+- Do not silently reset an already personalized repo; if starter-state signals are gone, use `bun run fork:reset --check` for evidence and require an explicit user request before using `--force`.
 - Do not infer or add payment/crypto endpoints unless explicitly requested.
 - Skip low-confidence inferred candidates.
 - Record skipped items in `Not Applied` with reason code.
@@ -168,15 +170,16 @@ Execute in this exact order:
 2. If `customization_path=customization-audit`, run conditional selectors (`audit_scope`, `focus_areas`).
 3. Resolve repository target using deterministic order above.
 4. Handle dirty working tree according to one user choice.
-5. Branch flow by `customization_path`:
+5. If current repo data still reflects inherited upstream starter state and the requested work is first-time cleanup/personalization, run `bun run fork:reset` before building the CRUD plan.
+6. Branch flow by `customization_path`:
    - `targeted-crud`: build CRUD change plan from user request, mode, research setting, and seeds.
    - `customization-audit`: build category checklist and change plan from `docs/customization-catalog.md`, selected scope, and focus areas.
-6. Confirm change plan according to selected interaction mode.
-7. Apply approved changes to:
+7. Confirm change plan according to selected interaction mode.
+8. Apply approved changes to:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-8. Refresh caches, validate, and build:
+9. Refresh caches, validate, and build:
    - `bun run enrich:rich:strict`
    - ensure any newly introduced remote fetch domains are covered by `data/policy/remote-cache-policy.json`
    - `bun run images:sync`
@@ -190,14 +193,14 @@ Execute in this exact order:
      - `public/cache/content-images/*`
      - `data/cache/rich-authenticated-cache.json`
      - `public/cache/rich-authenticated/*`
-9. Commit and push directly to `main`.
-10. If deployment verification is in scope for a fork, ensure GitHub is actually running workflows for that fork:
+10. Commit and push directly to `main`.
+11. If deployment verification is in scope for a fork, ensure GitHub is actually running workflows for that fork:
    - if the fork’s Actions tab shows "Workflows aren’t being run on this forked repository", tell the user to click **Enable workflows**,
    - after that one-time enablement, create or request one fresh push on `main` before checking CI/deploy results.
-11. Verify CI plus the relevant selected deployment targets for the pushed SHA.
-12. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
-13. Update README deployment URL marker block only when normalized URL/status values changed.
-14. Commit and push README URL update only if step 13 changed file content.
+12. Verify CI plus the relevant selected deployment targets for the pushed SHA.
+13. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
+14. Update README deployment URL marker block only when normalized URL/status values changed.
+15. Commit and push README URL update only if step 14 changed file content.
 
 ## Final Output Contract (Chat)
 

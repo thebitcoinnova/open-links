@@ -83,6 +83,21 @@ Mandatory contributor guardrails for those changes:
    - `bun run test:deploy`
    - any narrower deployment/SEO test command needed to cover the edited files
 
+## Fork Reset Hygiene Rule
+
+Fresh forks inherit upstream starter identity and generated artifacts. When work
+is first-time fork bootstrap or "clean up stale upstream profile data" style
+maintenance, agents must normalize the repo before personalization:
+
+1. Run `bun run fork:reset` after clone/install and before writing user identity
+   into `data/profile.json`, `data/links.json`, or `data/site.json`.
+2. Use `bun run fork:reset --check` when you need to show what stale seed data
+   will be cleared without mutating files yet.
+3. Do not personalize on top of inherited upstream badges, cached rich
+   metadata, README deploy URLs, follower history, or profile/avatar caches.
+4. Do not use `bun run fork:reset --force` unless the user explicitly wants to
+   wipe an already customized repo that no longer looks like starter state.
+
 ## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.

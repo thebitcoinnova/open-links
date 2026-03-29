@@ -53,14 +53,15 @@ If you are running OpenClaw bootstrap flow in this repository, use `docs/opencla
 2. Do not pause for user confirmation mid-run, except:
    - one route-confirmation when existing setup is detected (bootstrap vs day-2 update),
    - one identity confirmation when confidence is low.
-3. Treat fork prefilled identity (for example Peter Ryszkiewicz) as starter data, not user truth.
-4. Resolve identity from fork owner GitHub profile and explicit user-provided identity first.
-5. If identity confidence is low, ask one identity confirmation question before writing identity fields.
-6. Skip low-confidence social inferences and report them under `Not Applied`.
-7. Do not infer or add payment links or crypto addresses unless explicitly requested by the user.
-8. Verify CI plus the relevant selected deployment targets for the pushed SHA and collect deployment URLs.
-9. Report deployment URLs as a structured table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
-10. Update the `README.md` `OPENCLAW_DEPLOY_URLS` marker block only when normalized URL/status values changed.
+3. Run `bun run fork:reset` after clone/install and before any personalization so inherited seed identity, caches, badges, follower history, and README deploy URLs are cleared first.
+4. Treat fork prefilled identity (for example Peter Ryszkiewicz) as starter data, not user truth.
+5. Resolve identity from fork owner GitHub profile and explicit user-provided identity first.
+6. If identity confidence is low, ask one identity confirmation question before writing identity fields.
+7. Skip low-confidence social inferences and report them under `Not Applied`.
+8. Do not infer or add payment links or crypto addresses unless explicitly requested by the user.
+9. Verify CI plus the relevant selected deployment targets for the pushed SHA and collect deployment URLs.
+10. Report deployment URLs as a structured table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
+11. Update the `README.md` `OPENCLAW_DEPLOY_URLS` marker block only when normalized URL/status values changed.
 
 If a blocker occurs (auth, permissions, failing checks after retries), stop and return a terminal remediation summary instead of asking interactive questions.
 
