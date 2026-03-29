@@ -218,11 +218,13 @@ git push
 #### GitHub Pages (default fork-safe primary)
 
 1. In repository settings, open **Pages**.
-2. Set **Build and deployment source** to **GitHub Actions**.
-3. Verify:
+2. Open the fork’s **Actions** tab. If GitHub shows **Workflows aren’t being run on this forked repository**, click **Enable workflows** once.
+3. If you clicked **Enable workflows** after your first bootstrap push, push again on `main` so the newly enabled workflows receive a fresh event.
+4. Set **Build and deployment source** to **GitHub Actions**.
+5. Verify:
    - `.github/workflows/ci.yml` succeeded
    - `.github/workflows/deploy-pages.yml` (`Deploy Production`) published the Pages site
-4. Open the Pages URL from the workflow summary.
+6. Open the Pages URL from the workflow summary.
 
 #### Render (provider-native)
 

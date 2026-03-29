@@ -101,10 +101,12 @@ Use the provider-specific guides for full first-run steps:
 ### Fork default: GitHub Pages primary
 
 1. Push to `main`.
-2. In GitHub repository settings, set Pages source to **GitHub Actions**.
-3. Verify `.github/workflows/ci.yml` succeeded.
-4. Verify `.github/workflows/deploy-pages.yml` published the Pages site.
-5. Confirm the live Pages URL serves the current build.
+2. Open the fork’s **Actions** tab. If GitHub shows **Workflows aren’t being run on this forked repository**, click **Enable workflows** once.
+3. If you enabled workflows after the first setup push, push again (an empty commit is fine) so GitHub has a fresh `main` push event to run.
+4. In GitHub repository settings, set Pages source to **GitHub Actions**.
+5. Verify `.github/workflows/ci.yml` succeeded.
+6. Verify `.github/workflows/deploy-pages.yml` published the Pages site.
+7. Confirm the live Pages URL serves the current build.
 
 ### Fork optional: Render or Railway
 
@@ -160,6 +162,7 @@ Forks should report:
 | Pages job skips as a no-op | live mirror manifest already matches the built artifact | no action needed |
 | Render or Railway stays `noindex` after promotion | tracked primary canonical origin still points at GitHub Pages or another host | rerun the matching setup script with `--apply --public-origin=<live-url> --promote-primary`, commit, and let the provider redeploy |
 | Render or Railway row is missing from README | provider URL was not registered after first deploy | run `bun run deploy:setup:render -- --apply --public-origin=<live-url>` or `bun run deploy:setup:railway -- --apply --public-origin=<live-url>` |
+| Fresh fork shows zero workflow runs and Pages stays on GitHub 404 | GitHub has not enabled workflows for the fork yet | open the fork’s **Actions** tab, click **Enable workflows**, then push again on `main` |
 | `deploy:verify` blocks on DNS readiness | apex alias record has not propagated yet | wait for Route 53 + CloudFront propagation, then rerun |
 | Deploy workflow does not trigger | CI did not succeed on `main` | fix CI first, then push or manually dispatch `Deploy Production` |
 | Deploy artifact is missing | CI did not build/upload the deploy artifacts | rerun CI on `main` or manually dispatch `Deploy Production` |
