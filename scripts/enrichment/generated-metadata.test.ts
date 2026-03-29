@@ -94,3 +94,77 @@ test("preserves manifest generatedAt when stabilized generated metadata is uncha
   assert.equal(manifest.generatedAt, "2026-03-16T20:00:00.000Z");
   assert.equal(areGeneratedRichMetadataEqual(previous, manifest), true);
 });
+
+test("stabilizes optional generated referral entries alongside metadata", () => {
+  // Arrange
+  const previous = {
+    metadata: {
+      title: "Club Orange",
+      description: "Join Club Orange",
+      image: "https://example.com/cluborange.jpg",
+      enrichmentStatus: "fetched",
+      enrichmentReason: "metadata_complete",
+      enrichedAt: "2026-03-16T20:00:00.000Z",
+    },
+    referral: {
+      kind: "referral",
+      offerSummary: "Save on your first year",
+      provenance: {
+        kind: "generated",
+        offerSummary: "generated",
+      },
+    },
+  } satisfies GeneratedRichMetadata["links"][string];
+
+  // Act
+  const stabilized = stabilizeGeneratedRichMetadataEntry(previous, {
+    metadata: {
+      ...previous.metadata,
+      enrichedAt: "2026-03-16T21:00:00.000Z",
+    },
+    referral: {
+      ...previous.referral,
+      offerSummary: "Save on your first year",
+    },
+  });
+
+  // Assert
+  assert.equal(stabilized.metadata.enrichedAt, "2026-03-16T20:00:00.000Z");
+  assert.deepEqual(stabilized.referral, previous.referral);
+});
+
+test("treats metadata-only manifests as equal even when referral is absent", () => {
+  // Arrange
+  const previous: GeneratedRichMetadata = {
+    generatedAt: "2026-03-16T20:00:00.000Z",
+    links: {
+      github: {
+        metadata: {
+          title: "GitHub",
+          description: "Code hosting",
+          image: "https://example.com/github.jpg",
+          enrichmentStatus: "fetched",
+          enrichmentReason: "metadata_complete",
+          enrichedAt: "2026-03-16T20:00:00.000Z",
+        },
+      },
+    },
+  };
+
+  // Act
+  const manifest = buildStableGeneratedRichMetadata({
+    previousManifest: previous,
+    links: {
+      github: {
+        metadata: {
+          ...previous.links.github.metadata,
+          enrichedAt: "2026-03-16T21:00:00.000Z",
+        },
+      },
+    },
+    generatedAt: "2026-03-16T21:00:00.000Z",
+  });
+
+  // Assert
+  assert.equal(areGeneratedRichMetadataEqual(previous, manifest), true);
+});

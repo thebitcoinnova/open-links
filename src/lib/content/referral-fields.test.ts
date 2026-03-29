@@ -6,6 +6,7 @@ import {
   isReferralKind,
   mergeReferralWithManualOverrides,
   normalizeReferralConfig,
+  normalizeReferralProvenance,
 } from "./referral-fields";
 
 test("referral kinds are limited to the approved umbrella values", () => {
@@ -67,6 +68,13 @@ test("manual referral fields override generated values while blank manual fields
     ownerBenefit: "Creator receives store credit",
     offerSummary: "Save on your first order",
     termsSummary: "New users only",
+    provenance: {
+      kind: "generated",
+      visitorBenefit: "manual",
+      ownerBenefit: "generated",
+      offerSummary: "generated",
+      termsSummary: "manual",
+    },
   });
 });
 
@@ -80,5 +88,24 @@ test("soft markers stay additive and blank text does not create fake disclosure 
 
   assert.deepEqual(normalized, { kind: "promo" });
   assert.equal(hasMeaningfulReferralContent(normalized), false);
-  assert.deepEqual(merged, { kind: "invite" });
+  assert.deepEqual(merged, {
+    kind: "invite",
+    provenance: {
+      kind: "generated",
+    },
+  });
+});
+
+test("generated provenance maps are normalized to supported referral fields only", () => {
+  const provenance = normalizeReferralProvenance({
+    offerSummary: "generated",
+    code: "manual",
+    custom: "generated",
+    unsupported: "manual",
+  });
+
+  assert.deepEqual(provenance, {
+    offerSummary: "generated",
+    code: "manual",
+  });
 });

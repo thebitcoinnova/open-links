@@ -13,7 +13,13 @@ import {
   resolveContentImageResolvedPathForSlot,
 } from "./content-image-slots";
 import { type EntityType, resolveEntityType } from "./entity-type";
-import type { LinkReferralConfig, ReferralKind } from "./referral-fields";
+import {
+  type GeneratedLinkReferralConfig,
+  type LinkReferralConfig,
+  type ReferralKind,
+  type ResolvedLinkReferralConfig,
+  mergeReferralWithManualOverrides,
+} from "./referral-fields";
 import {
   type LinkProfileSemantics,
   type SocialProfileMetadataFields,
@@ -175,7 +181,12 @@ export interface LinkEnrichmentPolicy {
   [key: string]: unknown;
 }
 
-export type { LinkReferralConfig, ReferralKind } from "./referral-fields";
+export type {
+  GeneratedLinkReferralConfig,
+  LinkReferralConfig,
+  ReferralKind,
+  ResolvedLinkReferralConfig,
+} from "./referral-fields";
 
 export interface LinkQuickLinksCustomConfig {
   canonical?: boolean;
@@ -198,7 +209,7 @@ export interface OpenLink {
   enabled?: boolean;
   metadata?: RichLinkMetadata;
   enrichment?: LinkEnrichmentPolicy;
-  referral?: LinkReferralConfig;
+  referral?: ResolvedLinkReferralConfig;
   payment?: LinkPaymentConfig;
   custom?: LinkCustomConfig;
 }
@@ -355,7 +366,7 @@ export interface LinksData {
 
 interface GeneratedRichMetadataPayload {
   generatedAt?: string;
-  links?: Record<string, { metadata?: RichLinkMetadata }>;
+  links?: Record<string, { metadata?: RichLinkMetadata; referral?: GeneratedLinkReferralConfig }>;
 }
 
 interface GeneratedProfileAvatarPayload {
@@ -457,7 +468,12 @@ const ensureSupportGroup = (groups: LinkGroup[], links: OpenLink[]): LinkGroup[]
   return [...groups, PAYMENT_SUPPORT_GROUP];
 };
 
-const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
+interface GeneratedLinkAugmentation {
+  metadata?: RichLinkMetadata;
+  referral?: GeneratedLinkReferralConfig;
+}
+
+const resolveGeneratedMetadata = (): Record<string, GeneratedLinkAugmentation> => {
   const module = Object.values(generatedMetadataModules)[0];
   const payload = module?.default;
 
@@ -465,13 +481,24 @@ const resolveGeneratedMetadata = (): Record<string, RichLinkMetadata> => {
     return {};
   }
 
-  const mapped: Record<string, RichLinkMetadata> = {};
+  const mapped: Record<string, GeneratedLinkAugmentation> = {};
 
   for (const [linkId, value] of Object.entries(payload.links)) {
-    if (!isRecord(value) || !isRecord(value.metadata)) {
+    if (!isRecord(value)) {
       continue;
     }
-    mapped[linkId] = value.metadata as RichLinkMetadata;
+
+    const entry: GeneratedLinkAugmentation = {};
+    if (isRecord(value.metadata)) {
+      entry.metadata = value.metadata as RichLinkMetadata;
+    }
+    if (isRecord(value.referral)) {
+      entry.referral = value.referral as GeneratedLinkReferralConfig;
+    }
+
+    if (entry.metadata || entry.referral) {
+      mapped[linkId] = entry;
+    }
   }
 
   return mapped;
@@ -588,7 +615,7 @@ const localizeRichMetadataImages = (
 
 const mergeGeneratedMetadata = (
   links: OpenLink[],
-  generatedByLink: Record<string, RichLinkMetadata>,
+  generatedByLink: Record<string, GeneratedLinkAugmentation>,
 ): OpenLink[] =>
   links.map((link) => {
     const generated = generatedByLink[link.id];
@@ -596,11 +623,15 @@ const mergeGeneratedMetadata = (
       return link;
     }
 
-    const metadata = mergeMetadataWithManualSocialProfileOverrides(link.metadata, generated);
+    const metadata = generated.metadata
+      ? mergeMetadataWithManualSocialProfileOverrides(link.metadata, generated.metadata)
+      : link.metadata;
+    const referral = mergeReferralWithManualOverrides(link.referral, generated.referral);
 
     return {
       ...link,
       metadata,
+      referral,
     };
   });
 

@@ -1,11 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import {
+  type GeneratedLinkReferralConfig,
+  normalizeReferralConfig,
+  normalizeReferralProvenance,
+} from "../../src/lib/content/referral-fields";
 import { SOCIAL_PROFILE_METADATA_FIELDS } from "../../src/lib/content/social-profile-fields";
 import type { EnrichmentMetadata, GeneratedRichMetadata } from "./types";
 
 interface GeneratedRichMetadataEntry {
   metadata: EnrichmentMetadata;
+  referral?: GeneratedLinkReferralConfig;
 }
 
 const ROOT = process.cwd();
@@ -87,9 +93,19 @@ const normalizeMetadata = (
 const normalizeEntry = (
   entry: GeneratedRichMetadataEntry,
   options?: { includeEnrichedAt?: boolean },
-): GeneratedRichMetadataEntry => ({
-  metadata: normalizeMetadata(entry.metadata, options),
-});
+): GeneratedRichMetadataEntry => {
+  const normalized: GeneratedRichMetadataEntry = {
+    metadata: normalizeMetadata(entry.metadata, options),
+  };
+  const referral = normalizeReferralConfig(entry.referral);
+  const provenance = normalizeReferralProvenance(referral?.provenance);
+
+  if (referral) {
+    normalized.referral = provenance ? { ...referral, provenance } : referral;
+  }
+
+  return normalized;
+};
 
 const areEntriesEqual = (
   left: GeneratedRichMetadataEntry | undefined,
@@ -138,6 +154,7 @@ export const stabilizeGeneratedRichMetadataEntry = (
       enrichedAt:
         trimToUndefined(previousEntry.metadata.enrichedAt) ?? normalizedNext.metadata.enrichedAt,
     },
+    referral: normalizedNext.referral ?? previousEntry.referral,
   });
 };
 
@@ -200,6 +217,9 @@ export const readGeneratedRichMetadata = (manifestPath: string): GeneratedRichMe
 
       links[linkId] = normalizeEntry({
         metadata: value.metadata as EnrichmentMetadata,
+        referral: isRecord(value.referral)
+          ? (value.referral as GeneratedLinkReferralConfig)
+          : undefined,
       });
     }
 
