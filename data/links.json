@@ -1,316 +1,329 @@
 {
   "links": [
     {
-      "id": "primal",
-      "label": "Primal",
-      "url": "https://primal.net/peterryszkiewicz",
+      "id": "the-bitcoin-nova",
+      "label": "The Bitcoin Nova",
+      "url": "https://bitcoinnova.store/",
       "type": "rich",
-      "icon": "primal",
-      "description": "Nostr profile and notes",
-      "group": "favorites",
-      "order": 1,
+      "group": "projects-brands",
       "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "custom": {}
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
     },
     {
-      "id": "github",
-      "label": "GitHub",
-      "url": "https://github.com/pRizz",
+      "id": "home-bitcoin-black-sheep",
+      "label": "Home - Bitcoin Black Sheep",
+      "url": "https://bitcoinblacksheep.com/",
       "type": "rich",
-      "icon": "github",
-      "description": "Code, experiments, and open-source projects",
-      "group": "favorites",
-      "order": 2,
+      "group": "projects-brands",
       "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "live-with-the-hive-podcast",
+      "label": "Live with the Hive Podcast",
+      "url": "https://youtube.com/@livewiththehive?si=tQizrqZ7AVqSBimH&sub_confirmation=1",
+      "type": "rich",
+      "group": "watch-listen",
+      "enabled": true,
+      "metadata": {
+        "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
+        "subscribersCount": 131,
+        "subscribersCountRaw": "131 subscribers"
+      },
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "paranoid-bitcoin-anarchists",
+      "label": "Paranoid Bitcoin Anarchists",
+      "url": "https://x.com/i/communities/1871996451812769951",
+      "type": "rich",
+      "group": "community-partners",
+      "enabled": true,
+      "icon": "x",
+      "metadata": {
+        "title": "Paranoid Bitcoin Anarchists",
+        "description": "Bitcoin community for people who question everything, run nodes, hold their own keys, and build outside the fiat system.",
+        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "sourceLabel": "x.com"
+      },
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "satoshoes",
+      "label": "Satoshoes",
+      "url": "https://satoshoes.co.uk/?ref=xstac1",
+      "type": "rich",
+      "group": "community-partners",
+      "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
+      "label": "XSTACI Sweet Biddi Beats by @thebitcoinnova | Suno",
+      "url": "https://suno.com/playlist/2c53c4e4-e7c0-4772-b2c2-bb1d16c4d2ab",
+      "type": "rich",
+      "group": "watch-listen",
+      "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "the-bitcoin-adviser-the-bitcoin-nova",
+      "label": "The Bitcoin Adviser - The Bitcoin Nova",
+      "url": "https://content.thebitcoinadviser.com/the-bitcoin-nova",
+      "type": "rich",
+      "group": "projects-brands",
+      "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "home-microseed",
+      "label": "Home - MicroSeed",
+      "url": "https://microseed.io/?ref=XSTACI",
+      "type": "rich",
+      "group": "community-partners",
+      "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "club-orange",
+      "label": "Club Orange",
+      "url": "https://signup.cluborange.org/co/bitcoinnova",
+      "type": "rich",
+      "group": "community-partners",
+      "enabled": true,
+      "metadata": {
+        "title": "STACI",
+        "description": "Chicago hairstylist. https://www.angieshairstudio.us/ Accepting Bitcoin for payment.",
+        "profileDescription": "Chicago hairstylist. https://www.angieshairstudio.us/ Accepting Bitcoin for payment.",
+        "image": "https://orange-pill-app-dev.s3.amazonaws.com/avatars/b5d546cd-01af-4c37-bd52-a3d64953606c",
+        "profileImage": "https://orange-pill-app-dev.s3.amazonaws.com/avatars/b5d546cd-01af-4c37-bd52-a3d64953606c",
+        "handle": "bitcoinnova",
+        "sourceLabel": "app.cluborange.org"
+      },
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "audible-the-bitcoin-nova-podcast",
+      "label": "Audible: The Bitcoin Nova Podcast",
+      "url": "https://www.audible.com/pd/B0DZJV461D?source_code=ASSORAP0511160006&share_location=podcast_show_detail",
+      "type": "rich",
+      "group": "watch-listen",
+      "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "the-bitcoin-nova-podcast-on-amazon-music",
+      "label": "The Bitcoin Nova Podcast on Amazon Music",
+      "url": "https://music.amazon.com/podcasts/9d4d6b00-3b5f-4bfa-93d6-b40bf4e12a69/the-bitcoin-nova-podcast",
+      "type": "rich",
+      "group": "watch-listen",
+      "enabled": true,
+      "metadata": {
+        "title": "The Bitcoin Nova Podcast",
+        "description": "Staci hosts grounded conversations about Bitcoin, communities, culture, and the people building a better future.",
+        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "sourceLabel": "music.amazon.com"
+      },
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "rumble",
+      "label": "RUMBLE",
+      "url": "https://rumble.com/c/c-7752998",
+      "type": "rich",
+      "group": "watch-listen",
+      "enabled": true,
+      "metadata": {
+        "title": "The Bitcoin Nova Podcast",
+        "description": "Video home for The Bitcoin Nova Podcast with interviews, live conversations, and Bitcoin-focused episodes from Staci.",
+        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "profileImage": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "sourceLabel": "rumble.com",
+        "followersCount": 23,
+        "followersCountRaw": "23 Followers"
+      },
       "enrichment": {
         "enabled": true
       },
-      "custom": {}
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "tip-staci",
+      "label": "Tip Staci",
+      "url": "lightning:xstac1@strike.me",
+      "type": "payment",
+      "group": "support-contact",
+      "enabled": true,
+      "payment": {
+        "effects": {
+          "enabled": false
+        },
+        "rails": [
+          {
+            "id": "strike",
+            "rail": "lightning",
+            "label": "Strike",
+            "address": "xstac1@strike.me"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bookings-thebitcoinnova-gmail-com",
+      "label": "bookings.thebitcoinnova@gmail.com",
+      "url": "mailto:TheBitcoinNova@gmail.com",
+      "type": "simple",
+      "group": "support-contact",
+      "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "linktree",
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      }
+    },
+    {
+      "id": "youtube",
+      "label": "The Bitcoin Nova YouTube",
+      "url": "https://www.youtube.com/@TheBitcoinNova",
+      "type": "rich",
+      "group": "watch-listen",
+      "enabled": true,
+      "custom": {
+        "import": {
+          "kind": "links-list",
+          "importedAt": "2026-03-27T09:25:36.837Z"
+        }
+      }
     },
     {
       "id": "x",
       "label": "X",
-      "url": "https://x.com/pryszkie",
+      "url": "https://x.com/XSTAC1",
       "type": "rich",
+      "group": "watch-listen",
+      "enabled": true,
       "icon": "x",
-      "description": "Short updates and project notes",
-      "group": "favorites",
-      "order": 3,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "custom": {}
-    },
-    {
-      "id": "linkedin",
-      "label": "LinkedIn",
-      "url": "https://www.linkedin.com/in/peter-ryszkiewicz/",
-      "type": "rich",
-      "icon": "linkedin",
-      "description": "Professional profile and recent work",
-      "group": "work",
-      "order": 4,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true,
-        "authenticatedExtractor": "linkedin-auth-browser"
-      },
-      "custom": {}
-    },
-    {
-      "id": "openlinks-home",
-      "label": "OpenLinks",
-      "url": "https://openlinks.us",
-      "type": "simple",
-      "icon": "github",
-      "description": "Project homepage preview card with fallback defaults",
-      "group": "work",
-      "order": 5,
-      "enabled": true,
-      "custom": {}
-    },
-    {
-      "id": "bright-builds-facebook",
-      "label": "Bright Builds LLC",
-      "url": "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/",
-      "type": "rich",
-      "icon": "facebook",
-      "description": "Chicago software engineering, open-source work, and business updates.",
-      "group": "work",
-      "order": 6,
-      "enabled": true,
-      "metadata": {
-        "title": "Bright Builds LLC",
-        "profileDescription": "Chicago software engineering, open-source work, and business updates from Bright Builds LLC.",
-        "image": "https://scontent-ord5-3.xx.fbcdn.net/v/t39.30808-1/643894562_122103916773268128_8808752703618343559_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=107&ccb=1-7&_nc_sid=f907e8&_nc_ohc=loMHlyUSihUQ7kNvwEm9TfM&_nc_oc=Adn_L2k7TaOiRKCU65IsZcDColJR147_JDjDtLAu7BeFgTqd_3_ntE5oclTDS6Y0WCw&_nc_zt=24&_nc_ht=scontent-ord5-3.xx&_nc_gid=2UrEZISz6Y915Sw2y_Kbhw&_nc_ss=8&oh=00_AfxuxRMPjlmAwf2iCW3AYCvMShgZ5YsyrHMy81JEjkfiSg&oe=69BC7C54",
-        "sourceLabel": "facebook.com"
-      },
-      "enrichment": {
-        "enabled": false,
-        "authenticatedExtractor": "facebook-auth-browser"
-      },
-      "custom": {}
-    },
-    {
-      "id": "facebook",
-      "label": "Facebook",
-      "url": "https://www.facebook.com/peter.ryszkiewicz",
-      "type": "rich",
-      "icon": "facebook",
-      "description": "Personal Facebook profile",
-      "group": "social",
-      "order": 7,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true,
-        "authenticatedExtractor": "facebook-auth-browser"
-      },
-      "custom": {}
-    },
-    {
-      "id": "cluborange",
-      "label": "Club Orange",
-      "url": "https://app.cluborange.org/pryszkie",
-      "type": "rich",
-      "icon": "cluborange",
-      "description": "Club Orange profile and Bitcoin-space projects",
-      "group": "favorites",
-      "order": 8,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "custom": {}
-    },
-    {
-      "id": "cluborange-referral",
-      "label": "Join Club Orange",
-      "url": "https://signup.cluborange.org/co/pryszkie",
-      "type": "rich",
-      "icon": "cluborange",
-      "description": "Club Orange signup and referral landing page",
-      "group": "favorites",
-      "order": 13,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true,
-        "profileSemantics": "non_profile"
-      },
-      "custom": {}
-    },
-    {
-      "id": "instagram",
-      "label": "Instagram",
-      "url": "https://www.instagram.com/peterryszkiewicz/",
-      "type": "rich",
-      "icon": "instagram",
-      "description": "Photos and stories",
-      "group": "social",
-      "order": 9,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "custom": {}
-    },
-    {
-      "id": "youtube",
-      "label": "YouTube",
-      "url": "https://www.youtube.com/@peterryszkiewicz4354",
-      "type": "rich",
-      "icon": "youtube",
-      "description": "Videos and channel updates",
-      "group": "social",
-      "order": 10,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "custom": {}
-    },
-    {
-      "id": "rumble",
-      "label": "Rumble",
-      "url": "https://rumble.com/user/taxationwithoutrepresentation",
-      "type": "rich",
-      "icon": "rumble",
-      "description": "Rumble videos and channel updates",
-      "group": "social",
-      "order": 14,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "custom": {}
-    },
-    {
-      "id": "medium",
-      "label": "Medium",
-      "url": "https://medium.com/@peterryszkiewicz",
-      "type": "rich",
-      "icon": "medium",
-      "description": "Articles and blog posts",
-      "group": "content",
-      "order": 11,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "custom": {}
-    },
-    {
-      "id": "substack",
-      "label": "Substack",
-      "url": "https://peter.ryszkiewicz.us/",
-      "type": "rich",
-      "icon": "substack",
-      "description": "Newsletter and long-form writing",
-      "group": "favorites",
-      "order": 12,
-      "enabled": true,
-      "enrichment": {
-        "enabled": true
-      },
-      "metadata": {
-        "handle": "peterryszkiewicz"
-      },
-      "custom": {}
-    },
-    {
-      "id": "cluborange-lightning-tips",
-      "label": "Club Orange Tips",
-      "type": "payment",
-      "icon": "cluborange",
-      "description": "Tip me over Lightning via Club Orange",
-      "group": "support",
-      "enabled": true,
-      "payment": {
-        "primaryRailId": "lightning",
-        "rails": [
-          {
-            "id": "lightning",
-            "rail": "lightning",
-            "label": "Lightning",
-            "address": "peterryszkiewicz@cluborange.org",
-            "qr": {
-              "badge": {
-                "mode": "auto"
-              }
-            }
-          }
-        ]
-      },
-      "custom": {}
-    },
-    {
-      "id": "strike-lightning-tips",
-      "label": "Strike Tips",
-      "type": "payment",
-      "icon": "strike",
-      "description": "Tip me over Lightning via Strike",
-      "group": "support",
-      "enabled": true,
-      "payment": {
-        "primaryRailId": "lightning",
-        "rails": [
-          {
-            "id": "lightning",
-            "rail": "lightning",
-            "label": "Strike Lightning",
-            "address": "pryszkie@strike.me",
-            "qr": {
-              "badge": {
-                "mode": "auto"
-              }
-            }
-          }
-        ]
-      },
-      "custom": {}
+      "custom": {
+        "import": {
+          "kind": "links-list",
+          "importedAt": "2026-03-27T09:33:52.429Z"
+        }
+      }
     }
   ],
   "groups": [
     {
-      "id": "favorites",
-      "label": "Favorites",
+      "id": "watch-listen",
+      "label": "Watch, Listen, and Follow",
+      "order": 0
+    },
+    {
+      "id": "community-partners",
+      "label": "Community & Partners",
       "order": 1
     },
     {
-      "id": "social",
-      "label": "Social",
+      "id": "projects-brands",
+      "label": "Projects & Brands",
       "order": 2
     },
     {
-      "id": "work",
-      "label": "Work",
+      "id": "support-contact",
+      "label": "Support & Contact",
       "order": 3
-    },
-    {
-      "id": "content",
-      "label": "Content",
-      "order": 4
     }
   ],
   "order": [
-    "cluborange",
-    "cluborange-referral",
-    "primal",
-    "github",
-    "substack",
-    "x",
-    "linkedin",
-    "openlinks-home",
-    "bright-builds-facebook",
-    "facebook",
-    "instagram",
+    "the-bitcoin-nova",
+    "home-bitcoin-black-sheep",
+    "the-bitcoin-adviser-the-bitcoin-nova",
     "youtube",
-    "medium",
-    "cluborange-lightning-tips",
-    "strike-lightning-tips"
+    "x",
+    "live-with-the-hive-podcast",
+    "rumble",
+    "audible-the-bitcoin-nova-podcast",
+    "the-bitcoin-nova-podcast-on-amazon-music",
+    "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
+    "paranoid-bitcoin-anarchists",
+    "club-orange",
+    "home-microseed",
+    "satoshoes",
+    "tip-staci",
+    "bookings-thebitcoinnova-gmail-com"
   ],
   "custom": {}
 }

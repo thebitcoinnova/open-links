@@ -1,86 +1,29 @@
 {
-  "title": "OpenLinks",
-  "description": "Personal, free, open source, version-controlled social links website.",
+  "title": "Staci Costopoulos | OpenLinks",
+  "description": "Host of Bitcoin Nova Podcast | X Community Leader",
+  "baseUrl": "/",
   "theme": {
     "active": "sleek",
-    "available": [
-      "sleek",
-      "sleek-emerald",
-      "sleek-mono",
-      "midnight",
-      "daybreak",
-      "neutral",
-      "editorial",
-      "futuristic",
-      "humanist"
-    ]
+    "available": ["sleek", "daybreak", "sleek-emerald", "sleek-mono"]
   },
   "ui": {
     "compositionMode": "balanced",
     "groupingStyle": "subtle",
-    "profileRichness": "standard",
+    "profileRichness": "rich",
     "density": "medium",
     "modePolicy": "dark-toggle",
     "linkTarget": "new-tab-external",
     "desktopColumns": "one",
     "typographyScale": "fixed",
-    "targetSize": "comfortable",
-    "profileAvatarScale": 1.68,
-    "brandIcons": {
-      "colorMode": "brand",
-      "contrastMode": "auto",
-      "minContrastRatio": 3,
-      "sizeMode": "large"
-    },
-    "richCards": {
-      "renderMode": "auto",
-      "sourceLabelDefault": "show",
-      "imageTreatment": "off",
-      "imageFit": "contain",
-      "mobile": {
-        "imageLayout": "inline"
-      },
-      "enrichment": {
-        "enabledByDefault": true,
-        "timeoutMs": 4000,
-        "retries": 1,
-        "metadataPath": "data/generated/rich-metadata.json",
-        "reportPath": "data/generated/rich-enrichment-report.json",
-        "publicCachePath": "data/cache/rich-public-cache.json"
-      }
-    },
-    "payments": {
-      "qr": {
-        "displayDefault": "always",
-        "styleDefault": "dots",
-        "foregroundColorDefault": "#f8fafc",
-        "backgroundColorDefault": "#101625",
-        "logoModeDefault": "rail-default",
-        "logoSizeDefault": 0.24,
-        "fullscreenDefault": "enabled"
-      }
-    },
-    "footer": {
-      "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
-      "ctaLabel": "Create Your OpenLinks",
-      "showBuildInfo": true,
-      "prompt": {
-        "enabled": true,
-        "title": "Create your own OpenLinks site",
-        "explanation": "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository."
-      }
-    }
+    "targetSize": "comfortable"
   },
   "quality": {
-    "reportPath": "data/generated/quality-report.json",
-    "summaryPath": "data/generated/quality-report.md",
-    "blockingDomains": ["seo", "accessibility", "performance"],
     "seo": {
-      "canonicalBaseUrl": "https://openlinks.us/",
+      "canonicalBaseUrl": "https://thebitcoinnova.github.io/open-links/",
       "socialImageFallback": "/generated/seo/social-preview.png",
       "defaults": {
-        "title": "OpenLinks",
-        "description": "Personal, free, open source, version-controlled social links website.",
+        "title": "Staci Costopoulos | OpenLinks",
+        "description": "Host of Bitcoin Nova Podcast | X Community Leader",
         "twitterCard": "summary_large_image"
       },
       "overrides": {
@@ -88,40 +31,9 @@
           "ogType": "website"
         }
       }
-    },
-    "accessibility": {
-      "focusContrastStrict": true,
-      "manualSmokeChecks": [
-        "Keyboard navigation reaches utility controls, profile, and links in expected order.",
-        "Theme toggle announces current mode change clearly for screen readers.",
-        "Simple cards expose explicit action labels and are keyboard activatable.",
-        "Rich cards expose explicit action labels and are keyboard activatable."
-      ]
-    },
-    "performance": {
-      "routes": ["/"],
-      "profiles": {
-        "mobile": {
-          "totalBytes": { "warn": 1848000, "fail": 2024000 },
-          "jsBytes": { "warn": 1738000, "fail": 1914000 },
-          "cssBytes": { "warn": 99000, "fail": 167200 },
-          "htmlBytes": { "warn": 39600, "fail": 57200 },
-          "largestAssetBytes": { "warn": 2199999998, "fail": 2199999998 },
-          "minimumScore": { "warn": 1, "fail": 1 }
-        },
-        "desktop": {
-          "totalBytes": { "warn": 1914000, "fail": 2112000 },
-          "jsBytes": { "warn": 1782000, "fail": 1980000 },
-          "cssBytes": { "warn": 121000, "fail": 176000 },
-          "htmlBytes": { "warn": 48400, "fail": 70400 },
-          "largestAssetBytes": { "warn": 1232000, "fail": 1430000 },
-          "minimumScore": { "warn": 90, "fail": 75 }
-        }
-      }
     }
   },
-  "baseUrl": "/",
   "custom": {
-    "heroStyle": "sleek-cards"
+    "preset": "default"
   }
 }
