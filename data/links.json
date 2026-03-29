@@ -64,6 +64,9 @@
         "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
         "sourceLabel": "x.com"
       },
+      "enrichment": {
+        "enabled": false
+      },
       "custom": {
         "import": {
           "kind": "linktree",
@@ -124,6 +127,15 @@
       "type": "rich",
       "group": "community-partners",
       "enabled": true,
+      "metadata": {
+        "title": "Home - MicroSeed",
+        "description": "Premium Seed Phrase Backup MicroSeed engraves your entire Bitcoin seed phrase on fireproof, waterproof steel or titanium the size of a coin Unlock Security",
+        "image": "https://microseed.io/wp-content/uploads/2025/08/IMG_1276-2-rotated.jpg",
+        "sourceLabel": "microseed.io"
+      },
+      "enrichment": {
+        "enabled": false
+      },
       "custom": {
         "import": {
           "kind": "linktree",

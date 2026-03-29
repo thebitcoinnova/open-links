@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-29T19:53:49.373Z",
+  "generatedAt": "2026-03-29T21:20:39.287Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/df9325785d065ff73729756c9bf5dad9d8b8305fda657bfc9da3d8bf841028da.png",
@@ -50,16 +50,10 @@
       "bytes": 94045
     },
     "link:paranoid-bitcoin-anarchists:image": {
-      "resolvedPath": "cache/content-images/5939a2b45a8a4d13f2e67b9d23d0b5a5ca27b1412f82f8d6be226e749b126611.jpg",
-      "updatedAt": "2026-03-29T19:53:46.072Z",
+      "resolvedPath": "cache/content-images/3b92db79aab8c5c5ccc195d6b5305927bcc7a8709b72fdce03c8d4c44f83a529.jpg",
+      "updatedAt": "2026-03-29T21:20:37.246Z",
       "contentType": "image/jpeg",
-      "bytes": 230566
-    },
-    "link:paranoid-bitcoin-anarchists:ogImage": {
-      "resolvedPath": "cache/content-images/5939a2b45a8a4d13f2e67b9d23d0b5a5ca27b1412f82f8d6be226e749b126611.jpg",
-      "updatedAt": "2026-03-29T19:53:46.295Z",
-      "contentType": "image/jpeg",
-      "bytes": 230566
+      "bytes": 77824
     },
     "link:satoshoes:image": {
       "resolvedPath": "cache/content-images/59438cb01dab7479c93dcfc6316e7c5e8dfad6f99d5cf248e261e9e3ac696c1a.png",
@@ -112,18 +106,6 @@
     "link:home-microseed:image": {
       "resolvedPath": "cache/content-images/481d4fb1a2bcd6dbce9991f9a6c42c0b384fe34b3fbb09f200fadc30e494797f.jpg",
       "updatedAt": "2026-03-29T19:53:47.220Z",
-      "contentType": "image/jpeg",
-      "bytes": 950370
-    },
-    "link:home-microseed:ogImage": {
-      "resolvedPath": "cache/content-images/481d4fb1a2bcd6dbce9991f9a6c42c0b384fe34b3fbb09f200fadc30e494797f.jpg",
-      "updatedAt": "2026-03-29T19:53:47.394Z",
-      "contentType": "image/jpeg",
-      "bytes": 950370
-    },
-    "link:home-microseed:twitterImage": {
-      "resolvedPath": "cache/content-images/481d4fb1a2bcd6dbce9991f9a6c42c0b384fe34b3fbb09f200fadc30e494797f.jpg",
-      "updatedAt": "2026-03-29T19:53:47.455Z",
       "contentType": "image/jpeg",
       "bytes": 950370
     },
