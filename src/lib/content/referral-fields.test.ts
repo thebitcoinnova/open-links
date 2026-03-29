@@ -69,3 +69,16 @@ test("manual referral fields override generated values while blank manual fields
     termsSummary: "New users only",
   });
 });
+
+test("soft markers stay additive and blank text does not create fake disclosure content", () => {
+  const normalized = normalizeReferralConfig({
+    kind: "promo",
+    visitorBenefit: "   ",
+    ownerBenefit: "\n",
+  });
+  const merged = mergeReferralWithManualOverrides({}, { kind: "invite" });
+
+  assert.deepEqual(normalized, { kind: "promo" });
+  assert.equal(hasMeaningfulReferralContent(normalized), false);
+  assert.deepEqual(merged, { kind: "invite" });
+});
