@@ -63,6 +63,41 @@ When changes here touch those surfaces, explicitly consider downstream impact
 and mention that impact in the final summary, even when no downstream changes
 are required.
 
+## Fork-Safety Change Rule
+
+Forks are a first-class operating mode for this repository, not an edge case.
+When work touches deployment behavior, SEO/canonical logic, GitHub Pages,
+README deploy URL reporting, OpenClaw bootstrap/update flows, or tests that
+cover those systems, agents must evaluate both:
+
+- upstream `pRizz/open-links`, where `https://openlinks.us/` is the canonical host and GitHub Pages is usually a mirror
+- fork repositories, where GitHub Pages is the default primary host until the owner explicitly promotes another origin
+
+Mandatory contributor guardrails for those changes:
+
+1. Do not hardcode upstream-only canonical URLs, robots directives, or Pages mirror assumptions in generic code, docs, or tests unless the path is explicitly upstream-only.
+2. Prefer deriving expectations from shared deployment helpers instead of repeating raw strings like `https://openlinks.us/`, `index, follow`, or `noindex, nofollow`.
+3. When adding or changing deploy verification/tests, include at least one upstream scenario and one fork scenario.
+4. When changing operator docs or AI contracts, state whether the step is upstream-only, fork-only, or applies to both.
+5. Before commit, rerun the deployment-focused verification path when these surfaces changed:
+   - `bun run test:deploy`
+   - any narrower deployment/SEO test command needed to cover the edited files
+
+## Fork Reset Hygiene Rule
+
+Fresh forks inherit upstream starter identity and generated artifacts. When work
+is first-time fork bootstrap or "clean up stale upstream profile data" style
+maintenance, agents must normalize the repo before personalization:
+
+1. Run `bun run fork:reset` after clone/install and before writing user identity
+   into `data/profile.json`, `data/links.json`, or `data/site.json`.
+2. Use `bun run fork:reset --check` when you need to show what stale seed data
+   will be cleared without mutating files yet.
+3. Do not personalize on top of inherited upstream badges, cached rich
+   metadata, README deploy URLs, follower history, or profile/avatar caches.
+4. Do not use `bun run fork:reset --force` unless the user explicitly wants to
+   wipe an already customized repo that no longer looks like starter state.
+
 ## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.

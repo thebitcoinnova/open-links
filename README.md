@@ -195,6 +195,15 @@ Use this approach:
 git clone <your-repo-url>
 cd open-links
 bun install
+bun run fork:reset
+```
+
+`bun run fork:reset` rewrites the repo to the minimal starter profile, clears inherited upstream identity/caches/badges/history, and empties the README deployment URL rows before you personalize anything.
+
+If you want to inspect what would be cleared first, run:
+
+```bash
+bun run fork:reset --check
 ```
 
 If you have a Linktree and want a bootstrap seed for profile/avatar/social/content links before editing `data/*.json`, run:
@@ -241,6 +250,12 @@ Manual fallback:
 Linktree-assisted bootstrap:
 
 - use `bun run bootstrap:linktree -- --url https://linktr.ee/<handle>` to generate reviewable entity/link candidates before editing `data/profile.json` and `data/links.json`
+
+Starter-state cleanup:
+
+- on a new fork, run `bun run fork:reset` before editing `data/profile.json`, `data/links.json`, or `data/site.json`
+- use `bun run fork:reset --check` to preview inherited files/artifacts that will be cleared
+- if a stale fork is no longer obviously template-like, require `bun run fork:reset --force` only when you intentionally want to wipe current customized data
 
 Starter presets:
 
@@ -492,6 +507,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 ### Pages deploy fails
 
 - Confirm CI passed on `main`.
+- On a fresh fork, open the **Actions** tab and click **Enable workflows** if GitHub says workflows are not being run on the fork. Then push again on `main`.
 - Confirm Pages source is GitHub Actions.
 - Check deploy workflow summary for remediation notes.
 - Verify base-path settings if publishing from a project page.

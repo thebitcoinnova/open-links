@@ -56,6 +56,15 @@ After repo creation:
 git clone <your-repo-url>
 cd open-links
 bun install
+bun run fork:reset
+```
+
+`bun run fork:reset` rewrites the repo to the minimal starter profile, clears inherited upstream badges/caches/history, and empties the README deploy URL rows before you personalize the fork.
+
+Dry-run the cleanup first when you want to inspect the reset surface:
+
+```bash
+bun run fork:reset --check
 ```
 
 ## Cursor Remote Environment
@@ -71,6 +80,7 @@ Bun is the primary runtime in the managed workspace. The Node.js 22 prerequisite
 Recommended first commands after the workspace opens:
 
 ```bash
+bun run fork:reset
 bun run validate:data
 bun run typecheck
 bun run dev
@@ -218,11 +228,13 @@ git push
 #### GitHub Pages (default fork-safe primary)
 
 1. In repository settings, open **Pages**.
-2. Set **Build and deployment source** to **GitHub Actions**.
-3. Verify:
+2. Open the fork’s **Actions** tab. If GitHub shows **Workflows aren’t being run on this forked repository**, click **Enable workflows** once.
+3. If you clicked **Enable workflows** after your first bootstrap push, push again on `main` so the newly enabled workflows receive a fresh event.
+4. Set **Build and deployment source** to **GitHub Actions**.
+5. Verify:
    - `.github/workflows/ci.yml` succeeded
    - `.github/workflows/deploy-pages.yml` (`Deploy Production`) published the Pages site
-4. Open the Pages URL from the workflow summary.
+6. Open the Pages URL from the workflow summary.
 
 #### Render (provider-native)
 
@@ -430,6 +442,53 @@ Fix:
 
 1. Verify CI succeeded on `main` and uploaded `deploy-aws-site` plus `deploy-pages-site`.
 2. Re-run `Deploy Production` manually on `main`; it can rebuild artifacts as fallback.
+
+### Problem: deployment tests fail because a change assumed upstream-only hosting
+
+Symptoms:
+
+- `bun run test:deploy` fails on a fork after a change to canonical, robots, Pages, or deploy verification logic.
+- Assertions assume `https://openlinks.us/` or `noindex, nofollow` in code paths that should also support GitHub Pages-primary forks.
+
+Fix:
+
+1. Replace hardcoded upstream expectations with shared deployment helpers from `src/lib/deployment-config.ts` or `scripts/lib/live-deploy-verify.ts`.
+2. Cover both cases in tests:
+   - upstream repo: AWS/openlinks.us primary, Pages mirror by default
+   - fork repo: GitHub Pages primary by default until another host is promoted
+3. Re-run:
+
+```bash
+bun run test:deploy
+```
+
+### Problem: a fork still contains upstream profile, link, badge, or deploy URL data
+
+Symptoms:
+
+- `data/profile.json`, `data/links.json`, or `data/site.json` still look like upstream starter content.
+- README deploy rows still point at `openlinks.us` or `prizz.github.io/open-links`.
+- badges, follower history, avatar cache, or rich metadata still reference the upstream seed identity.
+
+Fix:
+
+1. Preview the cleanup:
+
+```bash
+bun run fork:reset --check
+```
+
+2. Reset the fork to the minimal starter baseline:
+
+```bash
+bun run fork:reset
+```
+
+3. If the repo is no longer obviously starter state but you intentionally want a full wipe, rerun with:
+
+```bash
+bun run fork:reset --force
+```
 
 ### Problem: Render or Railway still canonicalizes to the wrong host
 

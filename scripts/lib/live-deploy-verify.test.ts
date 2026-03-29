@@ -29,6 +29,25 @@ test("buildLiveTargetExpectation supports explicit provider origins", () => {
   );
 });
 
+test("buildLiveTargetExpectation supports fork-primary pages expectations", () => {
+  // Arrange / Act
+  const expectation = buildLiveTargetExpectation("github-pages", {
+    expectedCommitSha: "0123456789abcdef0123456789abcdef01234567",
+    primaryCanonicalOrigin: "https://someone.github.io/open-links-fork",
+    publicOrigin: "https://someone.github.io/open-links-fork",
+  });
+
+  // Assert
+  assert.deepEqual(expectation, {
+    buildInfoUrl: "https://someone.github.io/open-links-fork/build-info.json",
+    expectedCanonicalUrl: "https://someone.github.io/open-links-fork/",
+    expectedCommitSha: "0123456789abcdef0123456789abcdef01234567",
+    expectedRobotsMeta: "index, follow",
+    publicUrl: "https://someone.github.io/open-links-fork/",
+    target: "github-pages",
+  });
+});
+
 test("assertLiveTargetSnapshot accepts matching canonical, robots, and build-info", () => {
   // Arrange
   const expectation = buildLiveTargetExpectation("railway", {

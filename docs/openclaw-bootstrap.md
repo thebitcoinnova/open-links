@@ -27,17 +27,26 @@ Out of scope:
 - New CI/CD workflows.
 - Interactive checkpoints or approval pauses other than:
   - a single route-confirmation prompt when an existing setup is detected,
+  - a single fork-workflow-enable prompt when GitHub has not enabled Actions runs for the new fork,
   - a single identity-confirmation prompt when confidence is low.
+
+Bootstrap must normalize a fresh fork to a clean starter baseline before personalization begins.
+Do not personalize on top of inherited upstream identity, cached rich metadata, badges, or README deploy URLs.
 
 ## Required Execution Policy
 
 - Git flow: commit and push directly to `main`.
 - Pause policy: no pauses by default; allow:
   - one route-confirmation prompt if existing fork/local setup is detected,
+  - one fork-workflow-enable prompt only when GitHub shows the disabled-fork Actions gate,
   - one identity-confirmation prompt only when identity confidence is low.
 - Retry policy: bounded deployment verification retries only.
 - Source trust policy: high-confidence social discovery from authoritative-chain sources only.
 - Payment/crypto policy: do not infer or add payment links or crypto addresses unless the user explicitly requests them.
+- Fork reset policy:
+  - for first-time fork bootstrap, run `bun run fork:reset` after clone/install and before any identity/link/site personalization,
+  - treat `bun run fork:reset --check` as the dry-run diagnostic when you need to explain what inherited seed state will be cleared,
+  - do not skip the reset step just because the repo validates or builds before personalization.
 
 If auth/permission or environment blockers occur, fail fast with remediation instructions in final output.
 
@@ -51,30 +60,35 @@ Execute in this exact order.
    - switch to `docs/openclaw-update-crud.md` for day-2 maintenance.
 3. If user selects day-2 maintenance, stop bootstrap and hand off to `docs/openclaw-update-crud.md`.
 4. Ensure user fork exists.
-5. Clone user fork and enter repository root.
-6. Install dependencies (`bun install` or `bun install --frozen-lockfile`).
-7. Resolve user identity using the precedence rules in this document.
-8. If the user explicitly provided a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted profile/avatar/social/content links as bootstrap candidates before asking for manual link entry.
-9. Personalize data files:
+5. Ensure fork workflows are enabled when bootstrap is targeting a fork:
+   - detect the disabled-fork Actions gate before deployment verification,
+   - if GitHub shows "Workflows aren’t being run on this forked repository", ask the user to click **Enable workflows** in the fork’s **Actions** tab,
+   - after the user enables workflows, create or request one fresh push event on `main` before continuing CI/deploy verification.
+6. Clone user fork and enter repository root.
+7. Install dependencies (`bun install` or `bun install --frozen-lockfile`).
+8. Run `bun run fork:reset`.
+9. Resolve user identity using the precedence rules in this document.
+10. If the user explicitly provided a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted profile/avatar/social/content links as bootstrap candidates before asking for manual link entry.
+11. Personalize data files:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-10. Validate and build:
+12. Validate and build:
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
-11. Commit and push directly to `main`.
-12. Resolve deployment target selection and primary host:
+13. Commit and push directly to `main`.
+14. Resolve deployment target selection and primary host:
    - upstream default: `aws` primary + `github-pages` mirror
    - fork default: `github-pages` primary
    - optional fork additions: `render`, `railway`
-13. Verify GitHub Pages source is set to **GitHub Actions**.
-14. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
-15. Poll CI and all relevant deploy surfaces for the pushed SHA.
-16. On success, collect deployment URLs.
-17. Post structured URL summary in chat using the schema in this file.
-18. Update the README deploy URL marker block only if normalized URL/status values changed.
-19. Commit/push README update if and only if step 18 changed file content.
+15. Verify GitHub Pages source is set to **GitHub Actions**.
+16. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
+17. Poll CI and all relevant deploy surfaces for the pushed SHA.
+18. On success, collect deployment URLs.
+19. Post structured URL summary in chat using the schema in this file.
+20. Update the README deploy URL marker block only if normalized URL/status values changed.
+21. Commit/push README update if and only if step 20 changed file content.
 
 ## Automation and Identity Confirmation Rule
 
@@ -84,6 +98,7 @@ OpenClaw should not request user confirmation mid-run except for setup routing a
 - Missing credentials/permissions: stop run, report blocker, provide concrete remediation.
 - Validation/build/deploy failures: follow retry policy where applicable, then exit with terminal summary.
 - If an existing fork/local repo is detected during bootstrap, ask one route-confirmation question about switching to `docs/openclaw-update-crud.md`.
+- If a fork exists but GitHub still shows the disabled-fork Actions banner, ask one explicit prompt telling the user to click **Enable workflows** in the fork’s **Actions** tab, then resume only after a fresh push event exists for verification.
 - If identity confidence is low, ask one explicit identity confirmation question before writing identity fields.
 - If identity cannot be confirmed (no response channel), stop with a blocker summary instead of assuming.
 
@@ -119,9 +134,11 @@ If these are discovered incidentally, place them in `Not Applied` with reason `e
 This repository may contain starter identity data from the upstream author, including `Peter Ryszkiewicz` and associated links.
 
 Treat forked `data/profile.json` and `data/links.json` identity values as template defaults, not user truth.
+Treat inherited badges, generated rich metadata, follower history, cached avatars/images, and README deploy URLs the same way.
 
 - Do not assume the OpenClaw user is `Peter Ryszkiewicz` unless explicitly confirmed by the user.
 - Prefer the fork owner's GitHub identity and explicitly user-provided identity over seeded file content.
+- Run `bun run fork:reset` before discovery/personalization so those inherited seed values are cleared instead of selectively patched.
 - If seeded identity conflicts with higher-authority identity signals, replace seeded identity fields and personal links.
 - If confidence remains low after authoritative checks, run the single identity-confirmation prompt described above.
 
@@ -170,6 +187,23 @@ Never let step 4 override steps 1-3.
 - Render deployment evidence: live `build-info.json` at the deployed public URL plus the Render deploy logs/dashboard.
 - Railway deployment evidence: live `build-info.json` at the deployed public URL plus the Railway deploy logs/dashboard.
 
+### Fork workflow activation gate
+
+For first-time fork bootstrap, GitHub may block all Actions runs until the fork owner clicks **Enable workflows** in the fork’s **Actions** tab.
+
+Treat the following as positive evidence that the gate is still active:
+
+1. workflow definitions exist and are `active`,
+2. repository Actions permissions are enabled,
+3. repeated fresh pushes to `main` still produce zero workflow runs, and
+4. the Pages URL continues serving GitHub’s default 404 placeholder.
+
+When this state is detected:
+
+1. tell the user to click **Enable workflows**,
+2. create or ask for one fresh push on `main`,
+3. restart CI/deploy verification from that new SHA.
+
 ### Required success checks for pushed SHA
 
 1. CI `required-checks` succeeded on the relevant commit lineage.
@@ -192,6 +226,8 @@ After final unsuccessful attempt, terminate with:
 - failing check,
 - evidence inspected,
 - remediation commands/actions.
+
+If the final unsuccessful attempt still shows the fork workflow activation gate symptoms above, report that specific gate as the blocker instead of a generic CI failure.
 
 ## Structured URL Reporting Schema
 
