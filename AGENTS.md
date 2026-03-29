@@ -98,6 +98,24 @@ maintenance, agents must normalize the repo before personalization:
 4. Do not use `bun run fork:reset --force` unless the user explicitly wants to
    wipe an already customized repo that no longer looks like starter state.
 
+## Fork-Owned Path Rule
+
+Forks own their personalized identity-bearing content, generated previews, and
+tracked cache artifacts. Shared code/docs/tooling changes should sync from
+upstream; fork-owned content should not.
+
+1. Treat the fork-owned path contract in `config/fork-owned-paths.json` as the
+   source of truth for data/assets that belong to the fork.
+2. When editing bootstrap, deploy, reset, Studio sync, or merge-alignment
+   flows, update that contract and any dependent tests/helpers together.
+3. Do not make upstream code or docs depend on fork-owned file contents.
+4. When manually aligning a fork with upstream, preserve fork-owned paths and
+   take upstream on shared files unless the user explicitly asks to overwrite
+   personalized content.
+5. When adding new tracked personalized caches or generated artifacts, extend
+   `config/fork-owned-paths.json` in the same change so scheduled sync behavior
+   stays correct.
+
 ## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.

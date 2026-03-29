@@ -10,6 +10,8 @@ export const syncRepo = async (repo: RepoRecord): Promise<SyncResult> => {
     owner: repo.owner,
     repo: repo.name,
     branch: repo.default_branch,
+    upstreamOwner: repo.upstream_owner,
+    upstreamRepo: repo.upstream_name,
   });
 
   await db.createSyncJob({

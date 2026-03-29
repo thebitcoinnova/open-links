@@ -197,7 +197,9 @@ Required app permissions:
 - Production onboarding requires a valid Cloudflare Turnstile token before starting GitHub OAuth.
 - GitHub webhook verification validates `x-hub-signature-256` against exact raw payload bytes.
 - Content saves commit directly to fork default branch (`main` by default).
-- Upstream sync conflicts disable auto-sync for the affected repo and require manual intervention.
+- Studio sync first attempts GitHub's normal `merge-upstream` path.
+- If GitHub reports conflicts and every overlapping path is declared fork-owned in `config/fork-owned-paths.json`, Studio creates a merge commit that preserves the fork's current personalized files while still syncing shared upstream code/docs/tooling.
+- If any overlapping conflict touches a shared path outside that contract, Studio still disables auto-sync and requires manual intervention.
 - Use `docs/studio-security-review.md` before production launch and after any auth/session/webhook security change.
 - Use `docs/studio-launch-playbook.md` for go-live sequencing, smoke tests, rollback, and non-security production incidents.
 - Update `docs/studio-phase-checklist.md` whenever Studio scope/status changes.

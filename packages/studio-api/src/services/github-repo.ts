@@ -1,6 +1,13 @@
 import { Buffer } from "node:buffer";
 import { Octokit } from "@octokit/rest";
 import type { CommitResult, RepoContentPayload, SyncResult } from "@openlinks/studio-shared";
+import {
+  type ForkSyncTreeEntry,
+  type ForkSyncTreeMode,
+  type ForkSyncTreeType,
+  buildForkOwnedPreservationTree,
+  summarizeForkSyncConflicts,
+} from "./fork-sync.js";
 
 const OPENLINKS_FILES = {
   profile: "data/profile.json",
@@ -21,6 +28,11 @@ export interface DeployStatus {
   pagesUrl: string | null;
 }
 
+interface BranchHeadSnapshot {
+  commitSha: string;
+  treeSha: string;
+}
+
 const octokitFor = (accessToken: string): Octokit => new Octokit({ auth: accessToken });
 
 const decodeFileContent = (content: string): string =>
@@ -28,6 +40,34 @@ const decodeFileContent = (content: string): string =>
 
 const toEncodedJson = (value: unknown): string =>
   Buffer.from(`${JSON.stringify(value, null, 2)}\n`, "utf8").toString("base64");
+
+const listChangedPathsFromCompare = (compareData: unknown): string[] => {
+  if (typeof compareData !== "object" || compareData === null || !("files" in compareData)) {
+    return [];
+  }
+
+  const files = compareData.files;
+  if (!Array.isArray(files)) {
+    return [];
+  }
+
+  return files
+    .flatMap((file) =>
+      typeof file === "object" &&
+      file !== null &&
+      "filename" in file &&
+      typeof file.filename === "string"
+        ? [file.filename]
+        : [],
+    )
+    .sort();
+};
+
+const describeSharedConflicts = (sharedConflicts: readonly string[]): string => {
+  const visiblePaths = sharedConflicts.slice(0, 3).join(", ");
+  const remainder = sharedConflicts.length > 3 ? ` (+${sharedConflicts.length - 3} more)` : "";
+  return `Fork has shared-file conflicts with upstream; manual resolution required (${visiblePaths}${remainder}).`;
+};
 
 export class GitHubRepoService {
   async createFork(input: {
@@ -197,6 +237,8 @@ export class GitHubRepoService {
     owner: string;
     repo: string;
     branch: string;
+    upstreamOwner: string;
+    upstreamRepo: string;
   }): Promise<SyncResult> {
     const octokit = octokitFor(input.accessToken);
 
@@ -234,12 +276,7 @@ export class GitHubRepoService {
           : null;
 
       if (status === 409) {
-        return {
-          status: "conflict",
-          upstreamSha: null,
-          forkSha: null,
-          message: "Fork has conflicts with upstream; manual resolution required.",
-        };
+        return this.syncForkPreservingForkOwnedPaths({ ...input, octokit });
       }
 
       return {
@@ -249,6 +286,197 @@ export class GitHubRepoService {
         message: error instanceof Error ? error.message : "Unknown sync error",
       };
     }
+  }
+
+  private async getBranchHeadSnapshot(input: {
+    octokit: Octokit;
+    owner: string;
+    repo: string;
+    branch: string;
+  }): Promise<BranchHeadSnapshot> {
+    const branchResponse = await input.octokit.repos.getBranch({
+      owner: input.owner,
+      repo: input.repo,
+      branch: input.branch,
+    });
+    const commitSha = branchResponse.data.commit.sha;
+    const commitResponse = await input.octokit.git.getCommit({
+      owner: input.owner,
+      repo: input.repo,
+      commit_sha: commitSha,
+    });
+
+    return {
+      commitSha,
+      treeSha: commitResponse.data.tree.sha,
+    };
+  }
+
+  private async getRecursiveTree(input: {
+    octokit: Octokit;
+    owner: string;
+    repo: string;
+    treeSha: string;
+  }): Promise<ForkSyncTreeEntry[]> {
+    const response = await input.octokit.git.getTree({
+      owner: input.owner,
+      repo: input.repo,
+      tree_sha: input.treeSha,
+      recursive: "1",
+    });
+
+    return response.data.tree.flatMap((entry) => {
+      if (!entry.path || !entry.mode || !entry.type) {
+        return [];
+      }
+
+      return [
+        {
+          mode: entry.mode as ForkSyncTreeMode,
+          path: entry.path,
+          sha: entry.sha ?? null,
+          type: entry.type as ForkSyncTreeType,
+        },
+      ];
+    });
+  }
+
+  private async syncForkPreservingForkOwnedPaths(input: {
+    accessToken: string;
+    owner: string;
+    repo: string;
+    branch: string;
+    upstreamOwner: string;
+    upstreamRepo: string;
+    octokit: Octokit;
+  }): Promise<SyncResult> {
+    const upstreamRepoResponse = await input.octokit.repos.get({
+      owner: input.upstreamOwner,
+      repo: input.upstreamRepo,
+    });
+    const upstreamBranch = upstreamRepoResponse.data.default_branch;
+
+    const networkCompare = await input.octokit.request(
+      "GET /repos/{owner}/{repo}/compare/{basehead}",
+      {
+        owner: input.upstreamOwner,
+        repo: input.upstreamRepo,
+        basehead: `${upstreamBranch}...${input.owner}:${input.branch}`,
+      },
+    );
+
+    const mergeBaseSha =
+      typeof networkCompare.data === "object" &&
+      networkCompare.data !== null &&
+      "merge_base_commit" in networkCompare.data &&
+      typeof networkCompare.data.merge_base_commit === "object" &&
+      networkCompare.data.merge_base_commit !== null &&
+      "sha" in networkCompare.data.merge_base_commit &&
+      typeof networkCompare.data.merge_base_commit.sha === "string"
+        ? networkCompare.data.merge_base_commit.sha
+        : null;
+
+    if (!mergeBaseSha) {
+      return {
+        status: "conflict",
+        upstreamSha: null,
+        forkSha: null,
+        message: "Fork has conflicts with upstream; manual resolution required.",
+      };
+    }
+
+    const [upstreamChanged, forkChanged, upstreamHead, forkHead] = await Promise.all([
+      input.octokit.request("GET /repos/{owner}/{repo}/compare/{basehead}", {
+        owner: input.upstreamOwner,
+        repo: input.upstreamRepo,
+        basehead: `${mergeBaseSha}...${upstreamBranch}`,
+      }),
+      input.octokit.request("GET /repos/{owner}/{repo}/compare/{basehead}", {
+        owner: input.upstreamOwner,
+        repo: input.upstreamRepo,
+        basehead: `${mergeBaseSha}...${input.owner}:${input.branch}`,
+      }),
+      this.getBranchHeadSnapshot({
+        octokit: input.octokit,
+        owner: input.upstreamOwner,
+        repo: input.upstreamRepo,
+        branch: upstreamBranch,
+      }),
+      this.getBranchHeadSnapshot({
+        octokit: input.octokit,
+        owner: input.owner,
+        repo: input.repo,
+        branch: input.branch,
+      }),
+    ]);
+
+    const conflictSummary = summarizeForkSyncConflicts({
+      forkChangedPaths: listChangedPathsFromCompare(forkChanged.data),
+      upstreamChangedPaths: listChangedPathsFromCompare(upstreamChanged.data),
+    });
+
+    if (conflictSummary.sharedConflicts.length > 0) {
+      return {
+        status: "conflict",
+        upstreamSha: upstreamHead.commitSha,
+        forkSha: forkHead.commitSha,
+        message: describeSharedConflicts(conflictSummary.sharedConflicts),
+      };
+    }
+
+    const [upstreamTree, forkTree] = await Promise.all([
+      this.getRecursiveTree({
+        octokit: input.octokit,
+        owner: input.upstreamOwner,
+        repo: input.upstreamRepo,
+        treeSha: upstreamHead.treeSha,
+      }),
+      this.getRecursiveTree({
+        octokit: input.octokit,
+        owner: input.owner,
+        repo: input.repo,
+        treeSha: forkHead.treeSha,
+      }),
+    ]);
+
+    const tree = buildForkOwnedPreservationTree({
+      forkTree,
+      upstreamTree,
+    }).map((entry) => ({
+      mode: entry.mode,
+      path: entry.path,
+      sha: entry.sha,
+      type: entry.type,
+    }));
+
+    const createdTree = await input.octokit.git.createTree({
+      owner: input.owner,
+      repo: input.repo,
+      base_tree: upstreamHead.treeSha,
+      tree,
+    });
+
+    const createdCommit = await input.octokit.git.createCommit({
+      owner: input.owner,
+      repo: input.repo,
+      message: "chore(studio): sync upstream while preserving fork-owned paths",
+      tree: createdTree.data.sha,
+      parents: [forkHead.commitSha, upstreamHead.commitSha],
+    });
+
+    await input.octokit.git.updateRef({
+      owner: input.owner,
+      repo: input.repo,
+      ref: `heads/${input.branch}`,
+      sha: createdCommit.data.sha,
+    });
+
+    return {
+      status: "synced",
+      upstreamSha: upstreamHead.commitSha,
+      forkSha: createdCommit.data.sha,
+      message: "Fork synchronized while preserving fork-owned paths.",
+    };
   }
 }
 
