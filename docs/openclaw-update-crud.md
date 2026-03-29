@@ -191,10 +191,13 @@ Execute in this exact order:
      - `data/cache/rich-authenticated-cache.json`
      - `public/cache/rich-authenticated/*`
 9. Commit and push directly to `main`.
-10. Verify CI plus the relevant selected deployment targets for the pushed SHA.
-11. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
-12. Update README deployment URL marker block only when normalized URL/status values changed.
-13. Commit and push README URL update only if step 12 changed file content.
+10. If deployment verification is in scope for a fork, ensure GitHub is actually running workflows for that fork:
+   - if the fork’s Actions tab shows "Workflows aren’t being run on this forked repository", tell the user to click **Enable workflows**,
+   - after that one-time enablement, create or request one fresh push on `main` before checking CI/deploy results.
+11. Verify CI plus the relevant selected deployment targets for the pushed SHA.
+12. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
+13. Update README deployment URL marker block only when normalized URL/status values changed.
+14. Commit and push README URL update only if step 13 changed file content.
 
 ## Final Output Contract (Chat)
 

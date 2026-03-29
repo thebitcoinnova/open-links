@@ -492,6 +492,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 ### Pages deploy fails
 
 - Confirm CI passed on `main`.
+- On a fresh fork, open the **Actions** tab and click **Enable workflows** if GitHub says workflows are not being run on the fork. Then push again on `main`.
 - Confirm Pages source is GitHub Actions.
 - Check deploy workflow summary for remediation notes.
 - Verify base-path settings if publishing from a project page.
