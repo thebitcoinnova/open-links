@@ -114,8 +114,7 @@ function buildDeployTargetConfig(
   return {
     ...input,
     publicOrigin,
-    shouldIndex:
-      normalizeOrigin(deploymentConfig.primaryCanonicalOrigin) === normalizeOrigin(publicOrigin),
+    shouldIndex: shouldIndexPublicOrigin(publicOrigin),
   };
 }
 
@@ -206,15 +205,42 @@ export function getPublicUrl(target: DeployTarget, route: string) {
 }
 
 export function getRobotsMetaContent(target: DeployTarget) {
-  return getDeployTargetConfig(target).shouldIndex ? "index, follow" : "noindex, nofollow";
+  return getRobotsMetaContentForPublicOrigin(getDeployTargetConfig(target).publicOrigin);
 }
 
 export function getRobotsTxt(target: DeployTarget) {
-  const directives = getDeployTargetConfig(target).shouldIndex ? ["Allow: /"] : ["Disallow: /"];
+  const directives = getRobotsTxtDirectivesForPublicOrigin(
+    getDeployTargetConfig(target).publicOrigin,
+  );
 
   return ["User-agent: *", ...directives, `Sitemap: ${getCanonicalUrl("/sitemap.xml")}`, ""].join(
     "\n",
   );
+}
+
+export function shouldIndexPublicOrigin(
+  publicOrigin: string,
+  primaryCanonicalOrigin = deploymentConfig.primaryCanonicalOrigin,
+) {
+  return normalizeOrigin(primaryCanonicalOrigin) === normalizeOrigin(publicOrigin);
+}
+
+export function getRobotsMetaContentForPublicOrigin(
+  publicOrigin: string,
+  primaryCanonicalOrigin = deploymentConfig.primaryCanonicalOrigin,
+) {
+  return shouldIndexPublicOrigin(publicOrigin, primaryCanonicalOrigin)
+    ? "index, follow"
+    : "noindex, nofollow";
+}
+
+export function getRobotsTxtDirectivesForPublicOrigin(
+  publicOrigin: string,
+  primaryCanonicalOrigin = deploymentConfig.primaryCanonicalOrigin,
+) {
+  return shouldIndexPublicOrigin(publicOrigin, primaryCanonicalOrigin)
+    ? ["Allow: /"]
+    : ["Disallow: /"];
 }
 
 export function getExpectedAssetPrefix(target: DeployTarget) {

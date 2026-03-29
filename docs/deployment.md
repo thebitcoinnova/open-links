@@ -15,6 +15,15 @@ Fork-safe default:
 
 - GitHub Pages remains the primary host until the fork owner explicitly promotes Render, Railway, or a custom domain.
 
+## Contributor Guardrails
+
+Treat fork behavior as a supported deployment contract, not a fallback.
+
+- Generic deployment code and tests must model both upstream and fork behavior.
+- Only upstream-only paths may hardcode `https://openlinks.us/` or assume GitHub Pages is always a mirror.
+- Prefer shared helpers from `src/lib/deployment-config.ts` and `scripts/lib/live-deploy-verify.ts` over duplicated canonical or robots expectations.
+- When deployment logic changes, rerun `bun run test:deploy` before commit.
+
 ## Deployment Architecture
 
 OpenLinks now uses two deployment models:

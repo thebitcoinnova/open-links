@@ -7,6 +7,7 @@ import {
   getDeployTargetConfig,
   getPublicUrl,
   getRobotsMetaContent,
+  getRobotsMetaContentForPublicOrigin,
   getRobotsTxt,
   isUpstreamRepository,
   normalizeBasePath,
@@ -15,6 +16,7 @@ import {
   resolvePrimaryCanonicalOrigin,
   resolveRailwayPublicOrigin,
   resolveRenderPublicOrigin,
+  shouldIndexPublicOrigin,
 } from "./deployment-config";
 
 test("canonical urls follow the resolved primary origin for the active repository", () => {
@@ -84,6 +86,52 @@ test("fork repositories default canonical origin to their pages url until aws is
     "https://someone.github.io/open-links-fork",
   );
   assert.equal(getCanonicalUrl("/"), `${deploymentConfig.primaryCanonicalOrigin}/`);
+});
+
+test("indexability helpers stay correct for both upstream and fork repository origins", () => {
+  // Arrange
+  const scenarios = [
+    {
+      expectedGithubPagesRobots: "noindex, nofollow",
+      expectedGithubPagesShouldIndex: false,
+      repositorySlug: "prizz/open-links",
+    },
+    {
+      expectedGithubPagesRobots: "index, follow",
+      expectedGithubPagesShouldIndex: true,
+      repositorySlug: "someone/open-links-fork",
+    },
+  ] as const;
+
+  for (const scenario of scenarios) {
+    // Act
+    const primaryCanonicalOrigin = resolvePrimaryCanonicalOrigin(scenario.repositorySlug);
+    const githubPagesOrigin = buildGitHubPagesUrl(scenario.repositorySlug);
+
+    // Assert
+    assert.equal(
+      shouldIndexPublicOrigin(githubPagesOrigin, primaryCanonicalOrigin),
+      scenario.expectedGithubPagesShouldIndex,
+    );
+    assert.equal(
+      getRobotsMetaContentForPublicOrigin(githubPagesOrigin, primaryCanonicalOrigin),
+      scenario.expectedGithubPagesRobots,
+    );
+    assert.equal(
+      getRobotsMetaContentForPublicOrigin(
+        "https://open-links.onrender.com",
+        primaryCanonicalOrigin,
+      ),
+      "noindex, nofollow",
+    );
+    assert.equal(
+      getRobotsMetaContentForPublicOrigin(
+        "https://open-links-production.up.railway.app",
+        primaryCanonicalOrigin,
+      ),
+      "noindex, nofollow",
+    );
+  }
 });
 
 test("provider public-origin helpers normalize overrides and provider variables", () => {
