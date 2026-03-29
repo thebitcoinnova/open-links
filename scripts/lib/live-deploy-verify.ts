@@ -3,8 +3,9 @@ import {
   type DeployTarget,
   getCanonicalUrl,
   getPublicUrl,
-  getRobotsMetaContent,
+  getRobotsMetaContentForPublicOrigin,
   joinOriginAndRoute,
+  normalizeOrigin,
 } from "../../src/lib/deployment-config";
 
 export interface LiveTargetExpectation {
@@ -20,16 +21,20 @@ export function buildLiveTargetExpectation(
   target: DeployTarget,
   options: {
     expectedCommitSha?: string;
+    primaryCanonicalOrigin?: string;
     publicOrigin?: string;
   } = {},
 ): LiveTargetExpectation {
   const publicOrigin = normalizePublicBaseUrl(options.publicOrigin) ?? getPublicUrl(target, "/");
+  const primaryCanonicalOrigin = normalizeOrigin(
+    options.primaryCanonicalOrigin ?? getCanonicalUrl("/"),
+  );
 
   return {
     buildInfoUrl: joinOriginAndRoute(publicOrigin, "/build-info.json"),
-    expectedCanonicalUrl: getCanonicalUrl("/"),
+    expectedCanonicalUrl: joinOriginAndRoute(primaryCanonicalOrigin, "/"),
     expectedCommitSha: options.expectedCommitSha?.trim() || undefined,
-    expectedRobotsMeta: getRobotsMetaContent(target),
+    expectedRobotsMeta: getRobotsMetaContentForPublicOrigin(publicOrigin, primaryCanonicalOrigin),
     publicUrl: joinOriginAndRoute(publicOrigin, "/"),
     target,
   };
