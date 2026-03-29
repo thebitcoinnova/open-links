@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Initialize v1.3 referral links + offer transparency and discuss Phase 18
+**Current focus:** Phase 18 context is captured; ready to plan the referral contract
 
 ## Current Position
 
 Phase: 18-referral-contract-link-plumbing
 Plan: —
-Status: v1.3 initialized; ready for `$gsd-discuss-phase 18`
+Status: Phase 18 context captured; ready for `$gsd-plan-phase 18`
 Next Phase: Phase 18 - Referral Contract + Link Plumbing
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-29 - Started milestone v1.3 and created the referral-link requirements and roadmap.
+Last activity: 2026-03-29 - Gathered Phase 18 context for the referral contract and validation surface.
 
 Progress: [----------] 0%
 
@@ -83,7 +83,7 @@ Progress: [----------] 0%
 
 ### Pending Todos
 
-- Start Phase 18 with `$gsd-discuss-phase 18` or jump straight to `$gsd-plan-phase 18`.
+- Plan Phase 18 with `$gsd-plan-phase 18`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -97,6 +97,6 @@ Progress: [----------] 0%
 
 ## Session Continuity
 
-Last session: 2026-03-29 12:00
-Stopped at: Milestone v1.3 initialized; next step is `$gsd-discuss-phase 18`.
-Resume file: .planning/ROADMAP.md
+Last session: 2026-03-29 12:25
+Stopped at: Phase 18 context gathered; next step is `$gsd-plan-phase 18`.
+Resume file: .planning/phases/18-referral-contract-link-plumbing/18-CONTEXT.md
