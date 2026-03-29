@@ -32,8 +32,20 @@
         "title": "Example Project"
       },
       "custom": {}
+    },
+    {
+      "id": "starter-deal",
+      "label": "Starter Deal",
+      "url": "https://example.com/deal",
+      "type": "simple",
+      "order": 4,
+      "enabled": true,
+      "referral": {
+        "kind": "promo"
+      },
+      "custom": {}
     }
   ],
-  "order": ["github", "x", "website"],
+  "order": ["github", "x", "website", "starter-deal"],
   "custom": {}
 }

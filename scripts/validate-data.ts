@@ -17,6 +17,12 @@ import {
 } from "../src/lib/content/content-image-slots";
 import type { OpenLink, SiteData } from "../src/lib/content/load-content";
 import {
+  type GeneratedLinkReferralConfig,
+  type LinkReferralConfig,
+  REFERRAL_PROVENANCE_FIELDS,
+  normalizeReferralConfig,
+} from "../src/lib/content/referral-fields";
+import {
   mergeMetadataWithManualSocialProfileOverrides,
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
@@ -126,7 +132,13 @@ export interface HookRichArtifactCheckDecision {
 }
 
 interface GeneratedRichMetadataPayload {
-  links?: Record<string, { metadata?: Record<string, unknown> }>;
+  links?: Record<
+    string,
+    {
+      metadata?: Record<string, unknown>;
+      referral?: GeneratedLinkReferralConfig;
+    }
+  >;
 }
 
 interface GeneratedContentImagesPayload {
@@ -500,6 +512,26 @@ const resolveGeneratedMetadataByLink = (
     if (isRecord(value) && isRecord(value.metadata)) {
       byLink[linkId] = value.metadata;
     }
+  }
+
+  return byLink;
+};
+
+const resolveGeneratedReferralByLink = (
+  payload: GeneratedRichMetadataPayload,
+): Record<string, GeneratedLinkReferralConfig> => {
+  if (!isRecord(payload) || !isRecord(payload.links)) {
+    return {};
+  }
+
+  const byLink: Record<string, GeneratedLinkReferralConfig> = {};
+
+  for (const [linkId, value] of Object.entries(payload.links)) {
+    if (!isRecord(value) || !isRecord(value.referral)) {
+      continue;
+    }
+
+    byLink[linkId] = value.referral as GeneratedLinkReferralConfig;
   }
 
   return byLink;
@@ -1105,6 +1137,62 @@ const supportedSocialProfileMetadataIssues = (
   return issues;
 };
 
+const referralGeneratedConflictIssues = (
+  linksSource: string,
+  linksData: Record<string, unknown>,
+  generatedReferralByLink: Record<string, GeneratedLinkReferralConfig>,
+): ValidationIssue[] => {
+  const links = Array.isArray(linksData.links) ? linksData.links : [];
+  const issues: ValidationIssue[] = [];
+
+  links.forEach((rawLink, index) => {
+    if (!isRecord(rawLink) || rawLink.enabled === false) {
+      return;
+    }
+
+    const linkId = toStringOrUndefined(rawLink.id) ?? `links[${index}]`;
+    const manualReferral = normalizeReferralConfig(
+      isRecord(rawLink.referral) ? (rawLink.referral as LinkReferralConfig) : undefined,
+    );
+    const generatedReferral = normalizeReferralConfig(generatedReferralByLink[linkId]);
+
+    if (!manualReferral || !generatedReferral) {
+      return;
+    }
+
+    const mismatchedFields = REFERRAL_PROVENANCE_FIELDS.filter((field) => {
+      const manualValue =
+        typeof manualReferral[field] === "string" ? manualReferral[field] : undefined;
+      const generatedValue =
+        typeof generatedReferral[field] === "string" ? generatedReferral[field] : undefined;
+
+      return (
+        typeof manualValue === "string" &&
+        typeof generatedValue === "string" &&
+        manualValue !== generatedValue
+      );
+    });
+
+    if (mismatchedFields.length === 0) {
+      return;
+    }
+
+    issues.push({
+      level: "warning",
+      strictBlocking: false,
+      source: linksSource,
+      path: `$.links[${index}].referral`,
+      message:
+        `Referral drift warning for link '${linkId}': manual referral fields disagree with generated referral data for ` +
+        `${mismatchedFields.join(", ")}.`,
+      remediation:
+        "Keep manual referral values authoritative, or refresh generated referral data so the saved disclosure and generated output agree.",
+    });
+  });
+
+  return issues;
+};
+
 interface AuthenticatedExtractorTarget {
   index: number;
   linkId: string;
@@ -1605,6 +1693,9 @@ export const run = () => {
     const generatedMetadataByLink = metadataRead.value
       ? resolveGeneratedMetadataByLink(metadataRead.value)
       : {};
+    const generatedReferralByLink = metadataRead.value
+      ? resolveGeneratedReferralByLink(metadataRead.value)
+      : {};
     const needsPreviewValidation = hasRichPreviewValidationCandidates(
       linksData,
       siteData,
@@ -1653,6 +1744,12 @@ export const run = () => {
           siteData,
           generatedMetadataByLink,
         ),
+      );
+    }
+
+    if (metadataRead.value) {
+      issues.push(
+        ...referralGeneratedConflictIssues(args.linksPath, linksData, generatedReferralByLink),
       );
     }
   }

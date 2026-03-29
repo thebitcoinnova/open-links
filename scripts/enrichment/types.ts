@@ -1,4 +1,9 @@
 import type {
+  GeneratedLinkReferralConfig,
+  ReferralFieldProvenance,
+  ReferralFieldProvenanceMap,
+} from "../../src/lib/content/referral-fields";
+import type {
   ExpectedSocialProfileField,
   SocialProfileMetadataFields,
   SupportedSocialProfilePlatform,
@@ -9,6 +14,11 @@ export type {
   SocialProfileMetadataFields,
   SupportedSocialProfilePlatform,
 } from "../../src/lib/content/social-profile-fields";
+export type {
+  GeneratedLinkReferralConfig,
+  ReferralFieldProvenance,
+  ReferralFieldProvenanceMap,
+} from "../../src/lib/content/referral-fields";
 
 export type EnrichmentStatus = "fetched" | "partial" | "failed" | "skipped";
 
@@ -43,7 +53,7 @@ export interface EnrichmentMetadata extends SocialProfileMetadataFields {
 
 export interface GeneratedRichMetadata {
   generatedAt: string;
-  links: Record<string, { metadata: EnrichmentMetadata }>;
+  links: Record<string, { metadata: EnrichmentMetadata; referral?: GeneratedLinkReferralConfig }>;
 }
 
 export interface EnrichmentRunEntry {

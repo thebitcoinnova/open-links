@@ -54,9 +54,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REF-01 | Phase 18 | Pending |
-| REF-02 | Phase 18 | Pending |
-| REF-03 | Phase 18 | Pending |
+| REF-01 | Phase 18 | Complete |
+| REF-02 | Phase 18 | Complete |
+| REF-03 | Phase 18 | Complete |
 | ENR-01 | Phase 19 | Pending |
 | ENR-02 | Phase 19 | Pending |
 | ENR-03 | Phase 19 | Pending |

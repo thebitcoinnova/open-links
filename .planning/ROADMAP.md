@@ -17,9 +17,9 @@ v1.3 turns referral links into a first-class OpenLinks concept. The milestone ad
 **Plans:** 3 plans
 
 Plans:
-- [ ] 18-01: Define the referral schema, TypeScript types, and load-content surfaces with manual-first semantics and a `custom` escape hatch.
-- [ ] 18-02: Add generated referral augmentation merge plumbing so build-time findings can enrich links without overwriting explicit manual disclosures.
-- [ ] 18-03: Add validation rules, example data, and regression coverage for disclosure fields, `profileSemantics: "non_profile"`, and downstream-safe defaults.
+- [x] 18-01: Define the referral schema, TypeScript types, and load-content surfaces with manual-first semantics and a `custom` escape hatch.
+- [x] 18-02: Add generated referral augmentation merge plumbing so build-time findings can enrich links without overwriting explicit manual disclosures.
+- [x] 18-03: Add validation rules, example data, and regression coverage for disclosure fields, `profileSemantics: "non_profile"`, and downstream-safe defaults.
 
 **Details:**
 - Do not introduce a fourth link type; referral should remain additive to the current URL-based link model.

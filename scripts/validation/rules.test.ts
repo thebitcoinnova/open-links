@@ -120,6 +120,59 @@ test("supported-family links still emit handle coverage warnings in auto mode", 
   );
 });
 
+test("referral markers warn when no meaningful disclosure fields are present", () => {
+  const issues = runPolicyRules({
+    profile,
+    links: {
+      links: [
+        {
+          id: "starter-deal",
+          label: "Starter Deal",
+          url: "https://example.com/deal",
+          type: "simple",
+          enabled: true,
+          referral: {},
+        },
+      ],
+    },
+    site,
+  });
+
+  assert.ok(
+    issues.some(
+      (issue) =>
+        issue.path === "$.links[0].referral" &&
+        issue.message.includes("Referral disclosure warning for link 'starter-deal'"),
+    ),
+  );
+});
+
+test("one-sided referral disclosures do not warn just because the other side is absent", () => {
+  const issues = runPolicyRules({
+    profile,
+    links: {
+      links: [
+        {
+          id: "starter-deal",
+          label: "Starter Deal",
+          url: "https://example.com/deal",
+          type: "simple",
+          enabled: true,
+          referral: {
+            ownerBenefit: "Supports the project",
+          },
+        },
+      ],
+    },
+    site,
+  });
+
+  assert.equal(
+    issues.some((issue) => issue.path === "$.links[0].referral"),
+    false,
+  );
+});
+
 test("non-profile rich links suppress supported-family handle coverage warnings", () => {
   const issues = runPolicyRules({
     profile,
@@ -144,6 +197,68 @@ test("non-profile rich links suppress supported-family handle coverage warnings"
 
   assert.equal(
     issues.some((issue) => issue.path === "$.links[0].metadata.handle"),
+    false,
+  );
+});
+
+test("supported profile-family referral links warn unless profile semantics is explicitly non_profile", () => {
+  const issues = runPolicyRules({
+    profile,
+    links: {
+      links: [
+        {
+          id: "cluborange-referral",
+          label: "Join Club Orange",
+          url: "https://app.cluborange.org/pryszkie",
+          type: "rich",
+          icon: "cluborange",
+          enabled: true,
+          referral: {
+            kind: "referral",
+            ownerBenefit: "Supports the project",
+          },
+        },
+      ],
+    },
+    site,
+  });
+
+  assert.ok(
+    issues.some(
+      (issue) =>
+        issue.path === "$.links[0].enrichment.profileSemantics" &&
+        issue.message.includes("Referral semantics warning for link 'cluborange-referral'"),
+    ),
+  );
+});
+
+test("supported profile-family referral links do not warn when non_profile is set", () => {
+  const issues = runPolicyRules({
+    profile,
+    links: {
+      links: [
+        {
+          id: "cluborange-referral",
+          label: "Join Club Orange",
+          url: "https://app.cluborange.org/pryszkie",
+          type: "rich",
+          icon: "cluborange",
+          enabled: true,
+          enrichment: {
+            profileSemantics: "non_profile",
+          },
+          referral: {
+            kind: "referral",
+            ownerBenefit: "Supports the project",
+          },
+        },
+      ],
+    },
+    site,
+  });
+
+  assert.equal(
+    issues.some((issue) => issue.path === "$.links[0].enrichment.profileSemantics"),
     false,
   );
 });

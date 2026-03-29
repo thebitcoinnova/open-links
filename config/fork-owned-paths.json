@@ -1,0 +1,29 @@
+{
+  "exactPaths": [
+    "data/profile.json",
+    "data/links.json",
+    "data/site.json",
+    "data/cache/content-images.json",
+    "data/cache/content-images.runtime.json",
+    "data/cache/profile-avatar.json",
+    "data/cache/profile-avatar.runtime.json",
+    "data/cache/rich-public-cache.json",
+    "data/cache/rich-public-cache.runtime.json",
+    "data/cache/rich-authenticated-cache.json",
+    "data/generated/rich-metadata.json",
+    "data/generated/rich-enrichment-report.json",
+    "data/generated/quality-report.json",
+    "data/generated/quality-report.md",
+    "docs/assets/openlinks-preview.png",
+    "public/badges/openlinks.svg",
+    "public/cache/profile-avatar/profile-avatar.jpg",
+    "public/generated/seo/social-preview.png",
+    "public/generated/seo/social-preview.svg",
+    "public/history/followers/index.json"
+  ],
+  "directoryPrefixes": [
+    "public/cache/content-images/",
+    "public/cache/rich-authenticated/",
+    "public/history/followers/"
+  ]
+}
