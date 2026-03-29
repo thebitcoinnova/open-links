@@ -60,6 +60,10 @@ test("assertLiveTargetSnapshot rejects commit drift and robots mismatches", () =
   const expectation = buildLiveTargetExpectation("github-pages", {
     expectedCommitSha: "0123456789abcdef0123456789abcdef01234567",
   });
+  const mismatchedRobots =
+    getRobotsMetaContent("github-pages") === "index, follow"
+      ? "noindex, nofollow"
+      : "index, follow";
 
   // Act / Assert
   assert.throws(
@@ -74,13 +78,9 @@ test("assertLiveTargetSnapshot rejects commit drift and robots mismatches", () =
         html: [
           "<!doctype html>",
           `<link rel="canonical" href="${getCanonicalUrl("/")}">`,
-          `<meta name="robots" content="${
-            getRobotsMetaContent("github-pages") === "index, follow"
-              ? "noindex, nofollow"
-              : "index, follow"
-          }">`,
+          `<meta name="robots" content="${mismatchedRobots}">`,
         ].join(""),
       }),
-    /robots 'noindex, nofollow'|commit/u,
+    new RegExp(`robots '${expectation.expectedRobotsMeta}'|commit`, "u"),
   );
 });
