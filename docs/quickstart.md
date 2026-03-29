@@ -433,6 +433,25 @@ Fix:
 1. Verify CI succeeded on `main` and uploaded `deploy-aws-site` plus `deploy-pages-site`.
 2. Re-run `Deploy Production` manually on `main`; it can rebuild artifacts as fallback.
 
+### Problem: deployment tests fail because a change assumed upstream-only hosting
+
+Symptoms:
+
+- `bun run test:deploy` fails on a fork after a change to canonical, robots, Pages, or deploy verification logic.
+- Assertions assume `https://openlinks.us/` or `noindex, nofollow` in code paths that should also support GitHub Pages-primary forks.
+
+Fix:
+
+1. Replace hardcoded upstream expectations with shared deployment helpers from `src/lib/deployment-config.ts` or `scripts/lib/live-deploy-verify.ts`.
+2. Cover both cases in tests:
+   - upstream repo: AWS/openlinks.us primary, Pages mirror by default
+   - fork repo: GitHub Pages primary by default until another host is promoted
+3. Re-run:
+
+```bash
+bun run test:deploy
+```
+
 ### Problem: Render or Railway still canonicalizes to the wrong host
 
 Symptoms:
