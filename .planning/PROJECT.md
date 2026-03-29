@@ -11,13 +11,31 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 ## Current State
 
 - **Shipped version:** v1.2 (2026-03-28)
-- **Active milestone:** none
+- **Active milestone:** v1.3 Referral Links + Offer Transparency
 - **Latest delivered scope:** v1.2 shipped phases 15-17 across 8 plans and 24 summarized tasks, adding derived profile-header Quick Links, visible strip polish, and maintainer docs/verification coverage
 - **Primary stack:** SolidJS + TypeScript + JSON schema validation + GitHub Actions + GitHub Pages
 - **Quality posture:** SEO/a11y/performance checks remain integrated and CI-gated, with known remaining debt around `/` performance budgets and fallback social-image warnings
 - **Extensibility posture:** documented theme/layout/deployment extension pathways plus AI-guided and Studio-assisted CRUD paths for maintainers
 - **Maintainer workflow posture:** prefer repo AI workflows/skills or Studio for routine CRUD; use direct JSON editing as the lower-level fallback
-- **Planning focus:** between milestones; the next planning step is `$gsd-new-milestone`
+- **Planning focus:** v1.3 planning is active around referral links, offer transparency, and flexible enrichment; the next execution step is `$gsd-discuss-phase 18`
+
+## Current Milestone: v1.3 Referral Links + Offer Transparency
+
+**Goal:** Add first-class referral-link support with explicit visitor/owner benefit disclosure, optional build-time offer-term enrichment, and rich-card-ready presentation without introducing a new link type.
+
+**Target features:**
+
+- Add a dedicated `links[].referral` contract with transparent fields for what the visitor gets, what the site owner gets, offer/terms summary, terms/source URLs, and a `custom` escape hatch.
+- Keep referral links additive to existing `simple` and `rich` cards so maintainers can author arbitrary referral destinations through the normal AI CRUD/manual JSON paths without waiting on a bespoke extractor.
+- Extend build-time enrichment/public augmentation so common public referral destinations can follow canonical landing pages and capture promo metadata plus obvious terms when available.
+- Reuse the existing rich-card image and brand-icon pipelines so referral links can show promo imagery, source branding, and disclosure details together.
+- Update maintainer docs and README surfaces so referral authoring, extraction limits, and downstream contract impact stay explicit.
+
+**Scope guardrails:**
+
+- Manual referral disclosures remain authoritative; extracted terms are assistive and must not silently overwrite explicit author copy.
+- The milestone should generalize the existing one-off Club Orange referral behavior instead of growing more domain-specific referral patches.
+- First-class Studio referral controls can stay deferred if AI CRUD plus the existing Advanced JSON path already cover the authoring workflow cleanly.
 
 ## Validated
 
@@ -31,12 +49,6 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 - ✓ OpenLinks now derives profile-header Quick Links from eligible top-level social/profile links instead of a second registry.
 - ✓ The profile header now ships a visible, responsive, icon-first Quick Links strip with explicit outbound accessibility semantics and clean empty-state behavior.
 - ✓ Maintainer docs and the verification guide now accurately explain and verify the shipped Quick Links behavior.
-
-## Next Milestone Goals
-
-- Define the next versioned milestone with `$gsd-new-milestone`.
-- Decide whether the next milestone should prioritize accepted repo debt, deeper Quick Links configurability, or broader product-surface expansion.
-- Keep the current static-build and additive-metadata architecture unless a future milestone intentionally reopens those constraints.
 
 ## Known Debt Carrying Forward
 
@@ -131,4 +143,4 @@ Recent UI polish work exposed a gap: social profile links still read more like g
 </details>
 
 ---
-*Last updated: 2026-03-28 after archiving v1.2 milestone*
+*Last updated: 2026-03-29 after starting the v1.3 referral milestone*

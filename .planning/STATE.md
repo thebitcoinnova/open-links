@@ -2,22 +2,22 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-27)
+See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Start the next milestone now that v1.2 is archived
+**Current focus:** Initialize v1.3 referral links + offer transparency and discuss Phase 18
 
 ## Current Position
 
-Phase: Milestone complete
+Phase: 18-referral-contract-link-plumbing
 Plan: —
-Status: v1.2 archived; ready for `$gsd-new-milestone`
-Next Phase: Next milestone definition
-Active Milestone: none
+Status: v1.3 initialized; ready for `$gsd-discuss-phase 18`
+Next Phase: Phase 18 - Referral Contract + Link Plumbing
+Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-28 - Archived milestone v1.2 and prepared the planning workspace for the next milestone.
+Last activity: 2026-03-29 - Started milestone v1.3 and created the referral-link requirements and roadmap.
 
-Progress: [##########] 100%
+Progress: [----------] 0%
 
 ## Performance Metrics
 
@@ -51,6 +51,9 @@ Progress: [##########] 100%
 
 ### Decisions
 
+- Keep referral support additive to existing `simple` and `rich` links rather than introducing a dedicated referral link type.
+- Treat manual referral disclosure fields as authoritative; extracted offer terms are assistive hints, not legal guarantees.
+- Prefer generic public referral augmentation plus manual fallback before reaching for program-specific authenticated extractors.
 - Preserve the v1.0 static architecture and add social profile metadata as an optional extension to the existing link model.
 - Keep follower and following data build-time only; do not introduce live runtime platform API dependencies.
 - Keep profile avatars separate from preview images through cache, runtime localization, and card-facing helpers.
@@ -64,6 +67,8 @@ Progress: [##########] 100%
 
 ### Roadmap Evolution
 
+- 2026-03-29: Milestone v1.3 started for referral links + offer transparency.
+- 2026-03-29: Phases 18-21 added for referral contract plumbing, public referral enrichment, referral card UX, and maintainer docs/verification.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -78,12 +83,13 @@ Progress: [##########] 100%
 
 ### Pending Todos
 
-- Start the next milestone with `$gsd-new-milestone`.
-- Track the accepted v1.1 tech debt around `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
+- Start Phase 18 with `$gsd-discuss-phase 18` or jump straight to `$gsd-plan-phase 18`.
+- Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
 ### Blockers/Concerns
 
+- `links[].referral` is a compatibility-sensitive schema addition for `open-links-sites`, so contract docs and downstream notes need to stay explicit.
 - `bun run quality:check` still fails the `/` performance budgets for both mobile and desktop.
 - SEO still warns that social preview metadata is using the deterministic fallback image.
 - Broader social audience extraction coverage remains future work, and new extractors still need parsed counts plus raw text to stay aligned.
@@ -91,6 +97,6 @@ Progress: [##########] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-28 07:35
-Stopped at: Milestone v1.2 archived; next step is `$gsd-new-milestone`.
-Resume file: .planning/MILESTONES.md
+Last session: 2026-03-29 12:00
+Stopped at: Milestone v1.3 initialized; next step is `$gsd-discuss-phase 18`.
+Resume file: .planning/ROADMAP.md
