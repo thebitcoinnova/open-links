@@ -175,6 +175,9 @@
       "type": "rich",
       "group": "watch-listen",
       "enabled": true,
+      "enrichment": {
+        "enabled": false
+      },
       "custom": {
         "import": {
           "kind": "linktree",
