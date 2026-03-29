@@ -13,6 +13,7 @@ import {
   resolveContentImageResolvedPathForSlot,
 } from "./content-image-slots";
 import { type EntityType, resolveEntityType } from "./entity-type";
+import type { LinkReferralConfig, ReferralKind } from "./referral-fields";
 import {
   type LinkProfileSemantics,
   type SocialProfileMetadataFields,
@@ -174,19 +175,7 @@ export interface LinkEnrichmentPolicy {
   [key: string]: unknown;
 }
 
-export type ReferralKind = "referral" | "affiliate" | "promo" | "invite";
-
-export interface LinkReferralConfig {
-  kind?: ReferralKind;
-  visitorBenefit?: string;
-  ownerBenefit?: string;
-  offerSummary?: string;
-  termsSummary?: string;
-  termsUrl?: string;
-  code?: string;
-  custom?: Record<string, unknown>;
-  [key: string]: unknown;
-}
+export type { LinkReferralConfig, ReferralKind } from "./referral-fields";
 
 export interface LinkQuickLinksCustomConfig {
   canonical?: boolean;
