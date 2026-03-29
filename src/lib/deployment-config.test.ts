@@ -17,14 +17,14 @@ import {
   resolveRenderPublicOrigin,
 } from "./deployment-config";
 
-test("canonical urls always point at the primary openlinks.us host", () => {
+test("canonical urls follow the resolved primary origin for the active repository", () => {
   // Arrange / Act
   const homeUrl = getCanonicalUrl("/");
   const aboutUrl = getCanonicalUrl("/about");
 
   // Assert
-  assert.equal(homeUrl, "https://openlinks.us/");
-  assert.equal(aboutUrl, "https://openlinks.us/about");
+  assert.equal(homeUrl, `${deploymentConfig.primaryCanonicalOrigin}/`);
+  assert.equal(aboutUrl, `${deploymentConfig.primaryCanonicalOrigin}/about`);
 });
 
 test("github pages public urls include the repository base path", () => {
@@ -46,9 +46,17 @@ test("github pages public urls include the repository base path", () => {
 test("robots helpers distinguish the indexable canonical site from the pages mirror", () => {
   // Arrange / Act / Assert
   assert.match(getRobotsTxt("aws"), /Allow: \//u);
-  assert.match(getRobotsTxt("github-pages"), /Disallow: \//u);
   assert.equal(getRobotsMetaContent("aws"), "index, follow");
-  assert.equal(getRobotsMetaContent("github-pages"), "noindex, nofollow");
+
+  const githubPagesShouldIndex = getDeployTargetConfig("github-pages").shouldIndex;
+  assert.match(
+    getRobotsTxt("github-pages"),
+    githubPagesShouldIndex ? /Allow: \//u : /Disallow: \//u,
+  );
+  assert.equal(
+    getRobotsMetaContent("github-pages"),
+    githubPagesShouldIndex ? "index, follow" : "noindex, nofollow",
+  );
 });
 
 test("base path normalization and target parsing stay stable for deploy scripts", () => {
@@ -70,10 +78,12 @@ test("fork repositories default canonical origin to their pages url until aws is
     buildGitHubPagesUrl("someone/open-links-fork"),
     "https://someone.github.io/open-links-fork/",
   );
+  assert.equal(resolvePrimaryCanonicalOrigin("prizz/open-links"), "https://openlinks.us");
   assert.equal(
     resolvePrimaryCanonicalOrigin("someone/open-links-fork"),
     "https://someone.github.io/open-links-fork",
   );
+  assert.equal(getCanonicalUrl("/"), `${deploymentConfig.primaryCanonicalOrigin}/`);
 });
 
 test("provider public-origin helpers normalize overrides and provider variables", () => {
