@@ -4,6 +4,12 @@ This document describes the new multi-service control plane for non-technical Op
 
 Prefer Studio when you want the browser-based CRUD path and the current self-serve onboarding/editor covers your workflow. For repo-native changes or workflows not yet exposed in Studio, prefer the checked-in AI workflows/skills and automation docs first, then fall back to manual JSON edits only when you need lower-level control.
 
+Current referral status:
+
+- Studio can edit referral links today through the Advanced JSON editor for `data/links.json`.
+- First-class referral/disclosure form controls and referral-specific previews are not shipped yet.
+- When you want guided referral authoring, field examples, or warning interpretation, prefer `docs/openclaw-update-crud.md`, `docs/ai-guided-customization.md`, and `docs/data-model.md` first.
+
 Phase tracking lives in:
 
 - `docs/studio-phase-checklist.md` (canonical implementation checklist)

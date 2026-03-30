@@ -17,7 +17,7 @@ Treat this document as the canonical contract/reference layer, not the default f
 Recommended order:
 
 1. Prefer the repo's AI workflows/skills and automation docs for routine CRUD.
-2. Prefer the Studio webapp when the browser-based self-serve editor covers your workflow.
+2. Prefer the Studio webapp when the browser-based self-serve editor covers your workflow. For referral editing today, Studio still relies on Advanced JSON rather than first-class referral controls.
 3. Edit `data/*.json` directly only when you want lower-level control or need the manual fallback path.
 
 Supporting docs:
@@ -168,10 +168,143 @@ Every item in `links` must include:
 - `group`
 - `order`
 - `enabled`
+- `referral` (referral/affiliate/promo disclosure data)
 - `metadata` (rich card metadata)
 - `enrichment` (build-time enrichment policy)
 - `payment` (tips/payment rails + QR settings)
 - `custom`
+
+### Referral disclosures (`links[].referral`)
+
+Referral support is additive to ordinary URL-based links. Keep `type` as `simple` or `rich`; do not introduce a separate referral link type in your data.
+
+Recommended maintainer path for referral authoring:
+
+1. Prefer the repo-native AI CRUD docs (`docs/openclaw-update-crud.md`, `docs/ai-guided-customization.md`).
+2. Use Studio only when the browser-based path fits and Advanced JSON is acceptable for the change.
+3. Edit `data/links.json` directly only when you intentionally want the lower-level fallback path.
+
+Canonical stable fields:
+
+| Field | Meaning | Notes |
+|------|---------|-------|
+| `kind` | Disclosure umbrella value | Allowed values: `referral`, `affiliate`, `promo`, `invite` |
+| `visitorBenefit` | What the visitor gets | Optional; either side may be absent |
+| `ownerBenefit` | What the site owner/project gets | Optional; broad enough for cash, credit, support, or indirect benefit |
+| `offerSummary` | Short public-facing offer summary | Card-friendly summary of the deal |
+| `termsSummary` | Short conditions/caveats summary | Keep this factual and condition-oriented |
+| `termsUrl` | Canonical public terms/landing URL | Optional quiet verification/source link |
+| `code` | Referral/promo/invite code | Optional structured code field |
+| `custom` | Extension namespace | Use for link-local extras that should not become shared schema fields |
+
+Notes:
+
+- `referral: {}` is valid as a soft marker, but `bun run validate:data` will warn until you add one or more meaningful disclosure fields.
+- `kind` alone classifies the link but does not count as sufficient disclosure by itself.
+- One-sided disclosures are valid. You do not need to invent both sides of the offer.
+- For supported profile-family URLs that are acting as referral/promo destinations, use `links[].enrichment.profileSemantics: "non_profile"` unless you intentionally want profile-style rendering.
+
+### Minimal referral marker example
+
+Use this when you want to mark a link as promotional first and fill in fuller disclosures after review:
+
+```json
+{
+  "id": "support-offer",
+  "label": "Supporter Offer",
+  "url": "https://example.com/support",
+  "type": "simple",
+  "icon": "globe",
+  "description": "Support offer landing page",
+  "referral": {}
+}
+```
+
+This is valid, but it intentionally triggers a warning until you add real disclosure content.
+
+### Two-sided referral example
+
+```json
+{
+  "id": "coffee-club",
+  "label": "Coffee Club",
+  "url": "https://example.com/coffee?ref=openlinks",
+  "type": "simple",
+  "icon": "globe",
+  "description": "Subscription coffee delivery",
+  "referral": {
+    "kind": "promo",
+    "visitorBenefit": "Get 20% off your first order",
+    "ownerBenefit": "Supports the project",
+    "offerSummary": "Save on your first bag of coffee.",
+    "termsSummary": "New customers only. Cannot be combined with other offers.",
+    "termsUrl": "https://example.com/referral-terms",
+    "code": "OPENLINKS"
+  }
+}
+```
+
+### Supported-family non-profile referral example
+
+```json
+{
+  "id": "cluborange-referral",
+  "label": "Join Club Orange",
+  "url": "https://app.cluborange.org/pryszkie",
+  "type": "rich",
+  "icon": "cluborange",
+  "description": "Bitcoin social club",
+  "enrichment": {
+    "enabled": true,
+    "profileSemantics": "non_profile"
+  },
+  "referral": {
+    "kind": "referral",
+    "ownerBenefit": "Supports the project",
+    "offerSummary": "Use this signup link to support OpenLinks while joining Club Orange."
+  }
+}
+```
+
+### Manual vs generated referral precedence
+
+Short rule:
+
+- Manual `links[].referral` fields win.
+- Generated referral data only fills blanks.
+
+Deeper behavior:
+
+- Manual and generated values merge field-by-field rather than replacing the whole referral object.
+- Generated data is allowed to fill empty `visitorBenefit`, `ownerBenefit`, `offerSummary`, `termsSummary`, `termsUrl`, or `code` fields when public enrichment found something useful.
+- Generated data is assistive, not authoritative. Maintain the saved manual disclosure whenever a generated phrase is incomplete, stale, jurisdiction-specific, or simply worse than the human-authored text.
+- If manual and generated referral fields disagree, validation surfaces a drift warning instead of silently picking the generated text.
+
+### Generated referral fields maintainers may see
+
+Generated referral output and reports can include a few extra fields beyond the authoring contract:
+
+- `completeness`: `full`, `partial`, or `none`
+- `provenance`: which referral fields were manual vs generated
+- `originalUrl`
+- `resolvedUrl`
+- `strategyId`
+- `termsSourceUrl`
+
+You usually do not need to author these by hand. They exist to make enrichment/debug output transparent and auditable.
+
+Treat public extraction as assistive:
+
+- headline-like public promo copy may populate `offerSummary`
+- `termsSummary` is intentionally stricter and may stay blank
+- public extraction should help you author faster, not replace your judgment
+
+For script-backed verification and warning interpretation after changing a referral link, use `docs/social-card-verification.md`.
+
+Downstream note:
+
+- `links[].referral` is an additive shared contract change mirrored by `open-links-sites`, so downstream maintainers should review the referral contract notes when bumping upstream pins.
+- Later referral card UI-only changes are lower-risk for downstream than contract/schema, policy, or script-entrypoint changes.
 
 ### Quick Links behavior
 
