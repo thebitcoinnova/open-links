@@ -136,6 +136,11 @@
       "group": "favorites",
       "order": 13,
       "enabled": true,
+      "referral": {
+        "kind": "referral",
+        "ownerBenefit": "Supports the project",
+        "termsUrl": "https://www.cluborange.org/signup?referral=pryszkie"
+      },
       "enrichment": {
         "enabled": true,
         "profileSemantics": "non_profile"

@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Milestone audit found a referral proof gap; Phase 22 is ready to plan
+**Current focus:** Phase 22 is planned; ready to execute the source-authored referral proof gap closure
 
 ## Current Position
 
 Phase: 22-source-authored-referral-flow-proof
-Plan: —
-Status: Gap-closure phase defined; ready for `$gsd-plan-phase 22`
+Plan: 22-01
+Status: Phase 22 planned; ready for `$gsd-execute-phase 22`
 Next Phase: Phase 22 - Source-Authored Referral Flow Proof
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Milestone audit found the missing source-authored referral proof gap and Phase 22 was added to close it.
+Last activity: 2026-03-30 - Planned Phase 22 to add a real source-authored referral object, refresh artifacts, and lock the load/merge proof.
 
 Progress: [#########-] 90%
 
@@ -91,7 +91,7 @@ Progress: [#########-] 90%
 
 ### Pending Todos
 
-- Plan Phase 22 with `$gsd-plan-phase 22`.
+- Execute Phase 22 with `$gsd-execute-phase 22`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -106,5 +106,5 @@ Progress: [#########-] 90%
 ## Session Continuity
 
 Last session: 2026-03-30 00:55
-Stopped at: Phase 22 gap closure was added; next step is `$gsd-plan-phase 22`.
-Resume file: .planning/v1.3-MILESTONE-AUDIT.md
+Stopped at: Phase 22 planned; next step is `$gsd-execute-phase 22`.
+Resume file: .planning/phases/22-source-authored-referral-flow-proof/22-01-PLAN.md
