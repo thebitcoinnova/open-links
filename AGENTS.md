@@ -116,6 +116,23 @@ upstream; fork-owned content should not.
    `config/fork-owned-paths.json` in the same change so scheduled sync behavior
    stays correct.
 
+## Upstream PR Hygiene Rule
+
+When the target repository for a pull request is upstream `pRizz/open-links`,
+agents must treat fork-owned content as excluded from the PR by default.
+
+1. Build upstream PR branches from `upstream/main` or another common ancestor
+   with upstream, not from a fork-customized branch tip.
+2. Cherry-pick or reapply only the shared code/docs/test commits that belong in
+   upstream. Do not carry fork personalization history into the PR branch.
+3. Before opening or updating the PR, inspect `git diff --stat upstream/main...HEAD`.
+4. If that diff includes any path from `config/fork-owned-paths.json`, stop and
+   rebuild the branch so the upstream PR excludes those paths.
+5. When a local task changes both shared surfaces and fork-owned files, split
+   the work: upstream PR for shared changes, fork branch for personalized data.
+6. In the PR summary, state that the branch was rebuilt from upstream and that
+   fork-owned paths were excluded from the diff.
+
 ## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.
