@@ -33,6 +33,15 @@ interface BranchHeadSnapshot {
   treeSha: string;
 }
 
+const normalizeRepositoryHomepage = (homepageUrl: string | null | undefined): string | null => {
+  if (typeof homepageUrl !== "string") {
+    return null;
+  }
+
+  const trimmed = homepageUrl.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 const octokitFor = (accessToken: string): Octokit => new Octokit({ auth: accessToken });
 
 const decodeFileContent = (content: string): string =>
@@ -88,6 +97,44 @@ export class GitHubRepoService {
       name: data.name,
       defaultBranch: data.default_branch,
       visibility: data.private ? "private" : "public",
+    };
+  }
+
+  async updateRepositoryMetadata(input: {
+    accessToken: string;
+    owner: string;
+    repo: string;
+    homepageUrl?: string | null;
+    description?: string | null;
+  }): Promise<void> {
+    const octokit = octokitFor(input.accessToken);
+    const homepage = normalizeRepositoryHomepage(input.homepageUrl);
+
+    await octokit.repos.update({
+      owner: input.owner,
+      repo: input.repo,
+      description: input.description ?? undefined,
+      homepage: homepage ?? "",
+    });
+  }
+
+  async getRepositoryMetadata(input: {
+    accessToken: string;
+    owner: string;
+    repo: string;
+  }): Promise<{
+    description: string | null;
+    homepageUrl: string | null;
+  }> {
+    const octokit = octokitFor(input.accessToken);
+    const { data } = await octokit.repos.get({
+      owner: input.owner,
+      repo: input.repo,
+    });
+
+    return {
+      description: data.description ?? null,
+      homepageUrl: normalizeRepositoryHomepage(data.homepage),
     };
   }
 
