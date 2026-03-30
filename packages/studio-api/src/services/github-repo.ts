@@ -6,6 +6,7 @@ import {
   type ForkSyncTreeMode,
   type ForkSyncTreeType,
   buildForkOwnedPreservationTree,
+  describeSharedForkSyncConflicts,
   summarizeForkSyncConflicts,
 } from "./fork-sync.js";
 
@@ -70,12 +71,6 @@ const listChangedPathsFromCompare = (compareData: unknown): string[] => {
         : [],
     )
     .sort();
-};
-
-const describeSharedConflicts = (sharedConflicts: readonly string[]): string => {
-  const visiblePaths = sharedConflicts.slice(0, 3).join(", ");
-  const remainder = sharedConflicts.length > 3 ? ` (+${sharedConflicts.length - 3} more)` : "";
-  return `Fork has shared-file conflicts with upstream; manual resolution required (${visiblePaths}${remainder}).`;
 };
 
 export class GitHubRepoService {
@@ -467,7 +462,7 @@ export class GitHubRepoService {
         status: "conflict",
         upstreamSha: upstreamHead.commitSha,
         forkSha: forkHead.commitSha,
-        message: describeSharedConflicts(conflictSummary.sharedConflicts),
+        message: describeSharedForkSyncConflicts(conflictSummary.sharedConflicts),
       };
     }
 

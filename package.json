@@ -78,6 +78,7 @@
     "auth:rich:sync": "bun scripts/sync-authenticated-rich-cache.ts",
     "auth:rich:clear": "bun scripts/clear-authenticated-rich-cache.ts",
     "setup:rich-auth": "bun scripts/sync-authenticated-rich-cache.ts --only-missing",
+    "sync:upstream": "bun scripts/sync-upstream.ts",
     "auth:extractor:new": "bun scripts/authenticated-extractors/scaffold-extractor.ts",
     "quality:check": "bun scripts/quality/run-quality-checks.ts",
     "quality:required": "bun run quality:check",
