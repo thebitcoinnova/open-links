@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 22 is planned; ready to execute the source-authored referral proof gap closure
+**Current focus:** Phase 23 is next: plan automatic public referral benefit extraction after Phase 22 closed the manual-first proof gap
 
 ## Current Position
 
-Phase: 22-source-authored-referral-flow-proof
-Plan: 22-01
-Status: Phase 22 planned; ready for `$gsd-execute-phase 22`
-Next Phase: Phase 22 - Source-Authored Referral Flow Proof
+Phase: 23-automatic-referral-benefit-extraction
+Plan: none yet
+Status: Phase 22 complete; Phase 23 added and ready for `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`
+Next Phase: Phase 23 - Automatic Referral Benefit Extraction
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Planned Phase 22 to add a real source-authored referral object, refresh artifacts, and lock the load/merge proof.
+Last activity: 2026-03-30 - Completed Phase 22 proof, refreshed the milestone audit, and queued Phase 23 for public-first automatic referral benefit extraction.
 
 Progress: [#########-] 90%
 
@@ -77,6 +77,8 @@ Progress: [#########-] 90%
 - 2026-03-30: Phase 20 completed with visible referral disclosure badges, benefit rows, sibling terms links, and focused non-referral/accessibility regression coverage in the shared card shell.
 - 2026-03-30: Phase 21 completed with canonical referral authoring docs, top-level verification guidance, and explicit downstream review breadcrumbs for the additive referral contract.
 - 2026-03-30: Milestone audit found the missing source-authored referral flow proof gap; Phase 22 was added to close it before archiving v1.3.
+- 2026-03-30: Phase 22 completed with live source-authored Club Orange referral proof, focused real-data regressions, and refreshed audit evidence that the manual-first gap is closed.
+- 2026-03-30: Phase 23 added for public-first, explicit-only automatic visitor/owner benefit extraction with static parsing first, browser fallback second, and manual precedence preserved.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -91,13 +93,14 @@ Progress: [#########-] 90%
 
 ### Pending Todos
 
-- Execute Phase 22 with `$gsd-execute-phase 22`.
+- Discuss or plan Phase 23 with `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
 ### Blockers/Concerns
 
 - `links[].referral` is a compatibility-sensitive schema addition for `open-links-sites`, so contract docs and downstream notes need to stay explicit.
+- Phase 23 must stay generic/public-first and avoid drifting into inference-heavy or bespoke per-program extractor work by default.
 - `bun run quality:check` still fails the `/` performance budgets for both mobile and desktop.
 - SEO still warns that social preview metadata is using the deterministic fallback image.
 - Broader social audience extraction coverage remains future work, and new extractors still need parsed counts plus raw text to stay aligned.
@@ -105,6 +108,6 @@ Progress: [#########-] 90%
 
 ## Session Continuity
 
-Last session: 2026-03-30 00:55
-Stopped at: Phase 22 planned; next step is `$gsd-execute-phase 22`.
-Resume file: .planning/phases/22-source-authored-referral-flow-proof/22-01-PLAN.md
+Last session: 2026-03-30 09:45
+Stopped at: Phase 22 is complete; next step is `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`.
+Resume file: .planning/phases/23-automatic-referral-benefit-extraction/23-CONTEXT.md

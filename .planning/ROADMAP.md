@@ -1,8 +1,8 @@
 # Milestone v1.3: Referral Links + Offer Transparency
 
-**Status:** 🚧 GAP CLOSURE
-**Phases:** 18-22
-**Total Plans:** 12
+**Status:** 🚧 ACTIVE
+**Phases:** 18-23
+**Total Plans:** 12 completed/planned + Phase 23 TBD
 
 ## Overview
 
@@ -106,7 +106,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 22-01: Add a real source-authored `links[].referral` entry, refresh generated artifacts, and harden the source-data merge/verification proof surface.
+- [x] 22-01: Add a real source-authored `links[].referral` entry, refresh generated artifacts, and harden the source-data merge/verification proof surface.
 
 **Details:**
 - Use a real source-authored referral link in `data/links.json`, not only generated referral output.
@@ -119,6 +119,26 @@ Plans:
 - Regression coverage protects the source-authored referral merge/load/render path.
 - The milestone audit gap about the missing manual-first proof is closed.
 
+### Phase 23: Automatic Referral Benefit Extraction
+
+**Goal:** Extend public referral augmentation so explicit public landing-page text can fill `visitorBenefit` and `ownerBenefit` additively without defaulting to bespoke program-specific extractors.
+**Depends on:** Phase 22
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run `$gsd-plan-phase 23` to break down)
+
+**Details:**
+- Stay public-first and explicit-only: static fetch/parsing first, with public browser fallback only when public JS-heavy pages need it.
+- Keep manual referral fields authoritative and generated benefit extraction blank-fill-only.
+- Escalate to bespoke or authenticated extractors only when generic public analysis cannot verify the benefit text.
+
+**Success Criteria:**
+- Generated referral output can fill `visitorBenefit` / `ownerBenefit` only when clear public evidence exists.
+- Static parsing remains the default path, with public browser fallback reserved for JS-heavy public pages.
+- Manual referral data continues to win field-by-field over generated benefit extraction.
+- Regression coverage proves auth-gated or inference-heavy benefit extraction paths do not become defaults accidentally.
+
 ## Milestone Summary
 
 **Key Accomplishments Planned:**
@@ -127,12 +147,14 @@ Plans:
 - Generalize public referral enrichment so common offer links can capture canonical landing metadata and obvious terms without bespoke extractors by default.
 - Render referral transparency directly in cards while reusing the current rich-metadata and icon systems.
 - Update maintainer docs and README guidance so referral support is discoverable through the repo's preferred AI CRUD and manual fallback paths.
+- Queue a public-first, explicit-only follow-on for automatic owner/visitor benefit extraction rather than defaulting to bespoke extractors.
 
 **Key Decisions:**
 
 - Referral support stays additive to `simple` and `rich` links rather than becoming a fourth card type.
 - Manual disclosures remain authoritative; extracted terms are assistive hints with explicit provenance.
 - The milestone should generalize the existing Club Orange referral handling rather than layering more one-off referral patches.
+- Automatic visitor/owner benefit extraction, when added, should stay generic, public-first, and explicit-only before any bespoke extractor path is considered.
 - Studio-specific guided controls are deferred unless the AI CRUD plus Advanced JSON path proves insufficient during implementation.
 
 **Issues To Watch:**
@@ -140,7 +162,7 @@ Plans:
 - `links[].referral` is a compatibility-sensitive schema change for `open-links-sites`.
 - Existing repo debt around `/` performance budgets, fallback social images, and analytics chunk size remains in flight during this milestone.
 - Referral landing pages may expose incomplete or jurisdiction-specific copy, so extraction must surface uncertainty instead of overstating accuracy.
-- The milestone audit found one integration gap: the live repo still needs a real source-authored `links[].referral` entry to prove the intended manual-first flow end to end.
+- Automatic public owner/visitor benefit extraction remains future work and must avoid inference-heavy or bespoke-extractor sprawl by default.
 
 **Deferred / Not in v1.3:**
 
