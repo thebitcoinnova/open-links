@@ -95,6 +95,11 @@ const RESET_SITE = {
   baseUrl: "/",
   custom: {},
   description: "Minimal starter for OpenLinks",
+  quality: {
+    seo: {
+      canonicalBaseUrl: "https://example.com/",
+    },
+  },
   theme: {
     active: "sleek",
     available: ["sleek", "sleek-emerald", "sleek-mono", "daybreak"],

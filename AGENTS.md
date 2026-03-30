@@ -133,6 +133,26 @@ agents must treat fork-owned content as excluded from the PR by default.
 6. In the PR summary, state that the branch was rebuilt from upstream and that
    fork-owned paths were excluded from the diff.
 
+## Upstream-Worthy Fix Prompt Rule
+
+When a task uncovers a bug or missing guardrail in shared code, starter
+templates, tests, docs, or automation that could affect upstream or other
+forks, agents must proactively tell the user that a targeted upstream PR is
+recommended.
+
+1. Trigger this prompt whenever the fix is not specific to the current fork's
+   identity or content and would likely help `pRizz/open-links` itself or other
+   downstream forks.
+2. Include the reason the issue is upstream-worthy and name the shared surfaces
+   involved, for example reset/bootstrap scripts, starter examples, deploy
+   logic, Studio services, tests, or contributor docs.
+3. Recommend a targeted upstream PR that excludes fork-owned paths and follows
+   the upstream PR hygiene rule above.
+4. Do this before closing the task, even if the user only asked for a local
+   fix.
+5. This rule should fire for bugs like a broken `bun run fork:reset` baseline
+   where the shared reset script and starter example produce invalid output.
+
 ## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.
