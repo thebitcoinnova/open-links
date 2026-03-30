@@ -69,6 +69,14 @@ Dry-run the cleanup first when you want to inspect the reset surface:
 bun run fork:reset --check
 ```
 
+When you want to pull new upstream changes into your fork later, use:
+
+```bash
+bun run sync:upstream
+```
+
+This command syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
+
 ## Cursor Remote Environment
 
 If you are opening this repository in a Cursor-managed remote workspace, the repo bootstrap is already checked in:

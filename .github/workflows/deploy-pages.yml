@@ -41,42 +41,25 @@ jobs:
       - name: Resolve source ref and artifact source
         id: context
         shell: bash
-        run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_run" ]]; then
-            {
-              echo "checkout_ref=${{ github.event.workflow_run.head_sha }}"
-              echo "ci_run_id=${{ github.event.workflow_run.id }}"
-              echo "artifact_source=ci"
-            } >>"$GITHUB_OUTPUT"
-          else
-            {
-              echo "checkout_ref=${GITHUB_SHA}"
-              echo "ci_run_id="
-              echo "artifact_source=manual-build"
-            } >>"$GITHUB_OUTPUT"
-          fi
+        env:
+          GITHUB_WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          GITHUB_WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: bash scripts/github-actions/deploy-pages.sh resolve-context
 
       - name: Resolve AWS deploy opt-in
         id: aws
         shell: bash
         env:
           OPENLINKS_ENABLE_AWS_DEPLOY: ${{ vars.OPENLINKS_ENABLE_AWS_DEPLOY }}
-        run: |
-          if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" ]]; then
-            echo "enabled=true" >>"$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >>"$GITHUB_OUTPUT"
-          fi
+        run: bash scripts/github-actions/deploy-pages.sh resolve-aws-opt-in
 
       - name: Publish deploy context summary
         shell: bash
-        run: |
-          {
-            echo "## Deploy Context"
-            echo "- Ref: \`${{ steps.context.outputs.checkout_ref }}\`"
-            echo "- Artifact source: \`${{ steps.context.outputs.artifact_source }}\`"
-            echo "- AWS enabled: \`${{ steps.aws.outputs.enabled }}\`"
-          } >>"$GITHUB_STEP_SUMMARY"
+        env:
+          ARTIFACT_SOURCE: ${{ steps.context.outputs.artifact_source }}
+          AWS_ENABLED: ${{ steps.aws.outputs.enabled }}
+          CHECKOUT_REF: ${{ steps.context.outputs.checkout_ref }}
+        run: bash scripts/github-actions/deploy-pages.sh publish-context-summary
 
   build_artifacts:
     name: Build Deploy Artifacts
@@ -274,12 +257,7 @@ jobs:
       - name: Record Pages no-op summary
         if: steps.pages_plan.outputs.pages_changed != 'true'
         shell: bash
-        run: |
-          {
-            echo "## GitHub Pages Mirror"
-            echo "- Result: \`skipped\`"
-            echo "- Reason: live deploy manifest already matches the built Pages artifact."
-          } >>"$GITHUB_STEP_SUMMARY"
+        run: bash scripts/github-actions/deploy-pages.sh publish-pages-noop-summary
 
       - name: Upload Pages deploy diagnostics on failure
         if: failure()

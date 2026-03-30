@@ -220,6 +220,14 @@ If you have a Linktree and want a bootstrap seed for profile/avatar/social/conte
 bun run bootstrap:linktree -- --url https://linktr.ee/<handle>
 ```
 
+To sync new upstream code/docs/tooling into your fork while preserving fork-owned personalized files, run:
+
+```bash
+bun run sync:upstream
+```
+
+`bun run sync:upstream` fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Shared-file conflicts still stop for manual resolution.
+
 If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
 
 ```bash

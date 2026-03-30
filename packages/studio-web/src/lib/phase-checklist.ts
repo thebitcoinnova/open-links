@@ -120,6 +120,12 @@ export const phaseChecklist: PhaseChecklist[] = [
         status: "in_progress",
         priority: "P1",
       },
+      {
+        id: "p6-4",
+        label: "Shared fork-owned sync helper parity between Studio sync and repo automation",
+        status: "done",
+        priority: "P1",
+      },
     ],
   },
   {

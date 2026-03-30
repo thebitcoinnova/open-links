@@ -206,7 +206,7 @@ Required app permissions:
 - Fork provisioning also reconciles GitHub repository metadata so the fork does not keep the upstream repo homepage in the GitHub **About** sidebar; the default homepage becomes the fork's GitHub Pages URL.
 - Deploy-status refresh should keep the repo homepage aligned with the verified primary host when the default fork Pages path is in use.
 - Studio sync first attempts GitHub's normal `merge-upstream` path.
-- If GitHub reports conflicts and every overlapping path is declared fork-owned in `config/fork-owned-paths.json`, Studio creates a merge commit that preserves the fork's current personalized files while still syncing shared upstream code/docs/tooling.
+- If GitHub reports conflicts and every overlapping path is declared fork-owned in `config/fork-owned-paths.json`, Studio uses the shared fork-sync preservation helper to create a merge commit that keeps the fork's current personalized files while still syncing shared upstream code/docs/tooling.
 - If any overlapping conflict touches a shared path outside that contract, Studio still disables auto-sync and requires manual intervention.
 - Use `docs/studio-security-review.md` before production launch and after any auth/session/webhook security change.
 - Use `docs/studio-launch-playbook.md` for go-live sequencing, smoke tests, rollback, and non-security production incidents.
