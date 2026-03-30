@@ -64,8 +64,8 @@
 | CARD-02 | Phase 20 | Complete |
 | CARD-03 | Phase 20 | Complete |
 | CARD-04 | Phase 20 | Complete |
-| MAINT-01 | Phase 21 | Pending |
-| MAINT-02 | Phase 21 | Pending |
+| MAINT-01 | Phase 21 | Complete |
+| MAINT-02 | Phase 21 | Complete |
 
 **Coverage:**
 - v1.3 requirements: 12 total

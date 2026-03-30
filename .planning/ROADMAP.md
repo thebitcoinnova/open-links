@@ -1,6 +1,6 @@
 # Milestone v1.3: Referral Links + Offer Transparency
 
-**Status:** 🚧 PLANNING
+**Status:** ✅ COMPLETE
 **Phases:** 18-21
 **Total Plans:** 11
 
@@ -83,8 +83,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 21-01: Update the data-model, OpenClaw CRUD, and customization docs so maintainers can author referral links through the recommended repo-native workflows without needing a bespoke extractor.
-- [ ] 21-02: Update README, verification guidance, and downstream compatibility notes for the new referral contract, enrichment limits, and examples.
+- [x] 21-01: Update the data-model, OpenClaw CRUD, and customization docs so maintainers can author referral links through the recommended repo-native workflows without needing a bespoke extractor.
+- [x] 21-02: Update README, verification guidance, and downstream compatibility notes for the new referral contract, enrichment limits, and examples.
 
 **Details:**
 - AI CRUD remains the primary maintainer flow; Studio can rely on Advanced JSON fallback until first-class referral controls become necessary.
