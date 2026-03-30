@@ -182,6 +182,9 @@ Follow https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-upd
 <!-- OPENCLAW_UPDATE_PROMPT:end -->
 
 Use this path for day-2 maintenance when the user likely already has a fork and/or local clone.
+If the user just says "help" or uses similarly vague maintenance wording in an
+existing repo, treat that as a default route into this Update/CRUD contract
+unless they are clearly asking for first-time bootstrap or runtime/code work.
 
 ### 3) Create your own repository (Manual Path)
 
