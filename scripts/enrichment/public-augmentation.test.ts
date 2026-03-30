@@ -6,6 +6,7 @@ import {
   parseInstagramProfileMetadata,
   parseYoutubeProfileMetadata,
   resolvePublicAugmentationTarget,
+  resolvePublicReferralAugmentation,
 } from "./public-augmentation";
 
 test("resolves an X public augmentation target that uses oEmbed instead of direct page fetch", () => {
@@ -124,6 +125,53 @@ test("parses Club Orange referral signup metadata from the canonical public sign
   );
   assert.equal(parsed?.metadata.sourceLabel, "signup.cluborange.org");
   assert.equal(parsed?.metadata.profileImage, undefined);
+});
+
+test("extracts referral offer and terms data from Club Orange public metadata", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://signup.cluborange.org/co/pryszkie",
+    sourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    strategyId: "cluborange-referral-signup",
+    metadata: {
+      title: "Join Club Orange — Connect with 19K+ Bitcoiners",
+      description:
+        "Join 19,000+ Bitcoiners in 71 countries. Get a Club Orange membership starting at $40/year or pay in sats.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "referral",
+    offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
+    termsSummary: "Get a Club Orange membership starting at $40/year or pay in sats.",
+    completeness: "full",
+    originalUrl: "https://signup.cluborange.org/co/pryszkie",
+    resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    strategyId: "cluborange-referral-signup",
+    termsSourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+  });
+});
+
+test("prefers omission over inference for ambiguous direct referral pages", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Example Company",
+      description: "We build tools for teams.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    completeness: "none",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
 });
 
 test("resolves a Primal public augmentation target that fetches the profile page directly", () => {

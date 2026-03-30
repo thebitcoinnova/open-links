@@ -1,6 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import type {
+  GeneratedLinkReferralConfig,
+  LinkReferralConfig,
+} from "../src/lib/content/referral-fields";
 import {
   type LinkProfileSemantics,
   SOCIAL_PROFILE_METADATA_FIELDS,
@@ -36,6 +40,7 @@ import {
   readGeneratedRichMetadata,
 } from "./enrichment/generated-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
+import { resolvePublicReferralAugmentation } from "./enrichment/public-augmentation";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
   applyPublicCachePersistence,
@@ -91,6 +96,7 @@ interface LinkInput {
   type: "simple" | "rich" | "payment";
   icon?: string;
   metadata?: EnrichmentMetadata;
+  referral?: LinkReferralConfig;
   enrichment?: {
     enabled?: boolean;
     profileSemantics?: LinkProfileSemantics;
@@ -539,6 +545,30 @@ const mergeCachedPublicMetadata = (
     supportedProfile,
   );
 
+const toGeneratedLinkEntry = (input: {
+  metadata: EnrichmentMetadata;
+  referral?: GeneratedLinkReferralConfig;
+}): GeneratedRichMetadata["links"][string] =>
+  input.referral
+    ? { metadata: input.metadata, referral: input.referral }
+    : { metadata: input.metadata };
+
+const resolveGeneratedReferral = (input: {
+  link: LinkInput & { type: "rich"; url: string };
+  strategyId: string;
+  sourceUrl: string;
+  metadata: EnrichmentMetadata;
+  finalUrl?: string;
+}): GeneratedLinkReferralConfig | undefined =>
+  resolvePublicReferralAugmentation({
+    originalUrl: input.link.url,
+    sourceUrl: input.sourceUrl,
+    finalUrl: input.finalUrl,
+    strategyId: input.strategyId,
+    metadata: input.metadata,
+    manualReferral: input.link.referral,
+  });
+
 const formatDurationMs = (durationMs: number): string => `${Math.max(0, Math.round(durationMs))}ms`;
 
 const knownBlockerMessageFor = (match: KnownBlockerMatch, detail?: string): string => {
@@ -789,7 +819,6 @@ const run = async () => {
           warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
-
         entries.push({
           linkId: link.id,
           url: link.url,
@@ -1143,6 +1172,12 @@ const run = async () => {
         warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
+      const generatedReferral = resolveGeneratedReferral({
+        link,
+        strategyId: publicStrategy.id,
+        sourceUrl: publicSourceUrl,
+        metadata,
+      });
 
       entries.push({
         linkId: link.id,
@@ -1159,9 +1194,14 @@ const run = async () => {
         missingFields: cachedStatus.missingFields,
         cacheKey: publicCacheKey,
         cacheCapturedAt: cachedPublicEntry.entry.capturedAt,
+        referral: generatedReferral,
+        referralCompleteness: generatedReferral?.completeness,
         ...profileWarningContext,
       });
-      generatedLinks[link.id] = { metadata };
+      generatedLinks[link.id] = toGeneratedLinkEntry({
+        metadata,
+        referral: generatedReferral,
+      });
       continue;
     }
 
@@ -1241,6 +1281,13 @@ const run = async () => {
         warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
+      const generatedReferral = resolveGeneratedReferral({
+        link,
+        strategyId: publicStrategy.id,
+        sourceUrl: publicSourceUrl,
+        finalUrl: fetched.finalUrl,
+        metadata,
+      });
 
       entries.push({
         linkId: link.id,
@@ -1258,9 +1305,14 @@ const run = async () => {
         missingFields: cachedStatus.missingFields,
         cacheKey: publicCacheKey,
         cacheCapturedAt: refreshedEntry.capturedAt,
+        referral: generatedReferral,
+        referralCompleteness: generatedReferral?.completeness,
         ...profileWarningContext,
       });
-      generatedLinks[link.id] = { metadata };
+      generatedLinks[link.id] = toGeneratedLinkEntry({
+        metadata,
+        referral: generatedReferral,
+      });
       continue;
     }
 
@@ -1300,6 +1352,12 @@ const run = async () => {
           warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
+        const generatedReferral = resolveGeneratedReferral({
+          link,
+          strategyId: publicStrategy.id,
+          sourceUrl: publicSourceUrl,
+          metadata,
+        });
 
         entries.push({
           linkId: link.id,
@@ -1318,9 +1376,14 @@ const run = async () => {
           cacheKey: publicCacheKey,
           cacheCapturedAt: cachedPublicEntry.entry.capturedAt,
           staleCache: true,
+          referral: generatedReferral,
+          referralCompleteness: generatedReferral?.completeness,
           ...profileWarningContext,
         });
-        generatedLinks[link.id] = { metadata };
+        generatedLinks[link.id] = toGeneratedLinkEntry({
+          metadata,
+          referral: generatedReferral,
+        });
         continue;
       }
 
@@ -1434,6 +1497,13 @@ const run = async () => {
           warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
+        const generatedReferral = resolveGeneratedReferral({
+          link,
+          strategyId: publicStrategy.id,
+          sourceUrl: publicSourceUrl,
+          finalUrl: fetched.finalUrl,
+          metadata,
+        });
 
         entries.push({
           linkId: link.id,
@@ -1452,9 +1522,14 @@ const run = async () => {
           cacheKey: publicCacheKey,
           cacheCapturedAt: cachedPublicEntry.entry.capturedAt,
           staleCache: true,
+          referral: generatedReferral,
+          referralCompleteness: generatedReferral?.completeness,
           ...profileWarningContext,
         });
-        generatedLinks[link.id] = { metadata };
+        generatedLinks[link.id] = toGeneratedLinkEntry({
+          metadata,
+          referral: generatedReferral,
+        });
         continue;
       }
 
@@ -1614,6 +1689,13 @@ const run = async () => {
       warningSupportedProfile,
       profileWarningContext.missingProfileFields,
     );
+    const generatedReferral = resolveGeneratedReferral({
+      link,
+      strategyId: publicStrategy.id,
+      sourceUrl: publicSourceUrl,
+      finalUrl: fetched.finalUrl,
+      metadata,
+    });
 
     entries.push({
       linkId: link.id,
@@ -1629,10 +1711,15 @@ const run = async () => {
       blocking,
       manualFallbackUsed: manualFallbackUsed || undefined,
       missingFields: reason === "metadata_missing" ? parsed.missing : undefined,
+      referral: generatedReferral,
+      referralCompleteness: generatedReferral?.completeness,
       ...profileWarningContext,
     });
 
-    generatedLinks[link.id] = { metadata };
+    generatedLinks[link.id] = toGeneratedLinkEntry({
+      metadata,
+      referral: generatedReferral,
+    });
 
     if (enforceStrictBlocking && config.failureMode === "immediate" && blocking) {
       abortedEarly = true;

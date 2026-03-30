@@ -2,6 +2,8 @@ export const REFERRAL_KIND_VALUES = ["referral", "affiliate", "promo", "invite"]
 
 export type ReferralKind = (typeof REFERRAL_KIND_VALUES)[number];
 export type ReferralFieldProvenance = "manual" | "generated";
+export type ReferralCompleteness = "full" | "partial" | "none";
+export const REFERRAL_COMPLETENESS_VALUES = ["full", "partial", "none"] as const;
 
 export interface LinkReferralConfig {
   kind?: ReferralKind;
@@ -30,10 +32,20 @@ export type ReferralFieldProvenanceMap = Partial<
 
 export interface GeneratedLinkReferralConfig extends LinkReferralConfig {
   provenance?: ReferralFieldProvenanceMap;
+  completeness?: ReferralCompleteness;
+  originalUrl?: string;
+  resolvedUrl?: string;
+  strategyId?: string;
+  termsSourceUrl?: string;
 }
 
 export interface ResolvedLinkReferralConfig extends LinkReferralConfig {
   provenance?: ReferralFieldProvenanceMap;
+  completeness?: ReferralCompleteness;
+  originalUrl?: string;
+  resolvedUrl?: string;
+  strategyId?: string;
+  termsSourceUrl?: string;
 }
 const REFERRAL_TEXT_FIELD_SET = new Set<string>(REFERRAL_TEXT_FIELDS);
 export const REFERRAL_PROVENANCE_FIELDS = ["kind", ...REFERRAL_TEXT_FIELDS] as const;
@@ -55,6 +67,9 @@ const trimToUndefined = (value: unknown): string | undefined => {
 
 export const isReferralKind = (value: unknown): value is ReferralKind =>
   typeof value === "string" && REFERRAL_KIND_VALUES.includes(value as ReferralKind);
+
+export const isReferralCompleteness = (value: unknown): value is ReferralCompleteness =>
+  typeof value === "string" && REFERRAL_COMPLETENESS_VALUES.includes(value as ReferralCompleteness);
 
 export const normalizeReferralProvenance = (
   value: unknown,
@@ -118,6 +133,26 @@ export const normalizeReferralConfig = <T extends LinkReferralConfig>(
       continue;
     }
 
+    if (key === "completeness") {
+      if (isReferralCompleteness(value)) {
+        normalized.completeness = value;
+      }
+      continue;
+    }
+
+    if (
+      key === "originalUrl" ||
+      key === "resolvedUrl" ||
+      key === "strategyId" ||
+      key === "termsSourceUrl"
+    ) {
+      const normalizedValue = trimToUndefined(value);
+      if (normalizedValue) {
+        normalized[key] = normalizedValue;
+      }
+      continue;
+    }
+
     normalized[key] = value;
   }
 
@@ -174,4 +209,22 @@ export const mergeReferralWithManualOverrides = (
   }
 
   return merged;
+};
+
+export const resolveReferralCompleteness = (
+  referral: LinkReferralConfig | undefined,
+): ReferralCompleteness => {
+  const normalized = normalizeReferralConfig(referral);
+  const hasOfferSummary = trimToUndefined(normalized?.offerSummary) !== undefined;
+  const hasTermsSummary = trimToUndefined(normalized?.termsSummary) !== undefined;
+
+  if (hasOfferSummary && hasTermsSummary) {
+    return "full";
+  }
+
+  if (hasOfferSummary || hasTermsSummary) {
+    return "partial";
+  }
+
+  return "none";
 };

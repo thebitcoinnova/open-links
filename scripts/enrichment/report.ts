@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import {
+  type GeneratedLinkReferralConfig,
+  isReferralCompleteness,
+  normalizeReferralConfig,
+} from "../../src/lib/content/referral-fields";
 import type {
   EnrichmentFailureMode,
   EnrichmentFailureReason,
@@ -188,6 +193,13 @@ const toEntry = (value: unknown): EnrichmentRunEntry | null => {
       ? value.supportedProfilePlatform
       : undefined,
     missingProfileFields: toMissingProfileFields(value.missingProfileFields),
+    referral: isRecord(value.referral)
+      ? (normalizeReferralConfig(value.referral as GeneratedLinkReferralConfig) ??
+        (value.referral as GeneratedLinkReferralConfig))
+      : undefined,
+    referralCompleteness: isReferralCompleteness(value.referralCompleteness)
+      ? value.referralCompleteness
+      : undefined,
   };
 };
 

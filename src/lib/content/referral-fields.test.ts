@@ -3,10 +3,12 @@ import test from "node:test";
 import {
   REFERRAL_MEANINGFUL_FIELDS,
   hasMeaningfulReferralContent,
+  isReferralCompleteness,
   isReferralKind,
   mergeReferralWithManualOverrides,
   normalizeReferralConfig,
   normalizeReferralProvenance,
+  resolveReferralCompleteness,
 } from "./referral-fields";
 
 test("referral kinds are limited to the approved umbrella values", () => {
@@ -108,4 +110,31 @@ test("generated provenance maps are normalized to supported referral fields only
     offerSummary: "generated",
     code: "manual",
   });
+});
+
+test("generated referral fields normalize completeness and structured provenance urls", () => {
+  const normalized = normalizeReferralConfig({
+    offerSummary: "Save on your first year",
+    termsSummary: "New users only",
+    completeness: "full",
+    originalUrl: " https://bit.ly/openlinks ",
+    resolvedUrl: " https://example.com/signup?ref=alice ",
+    strategyId: "public-direct-html",
+    termsSourceUrl: " https://example.com/signup?ref=alice#terms ",
+  });
+
+  assert.equal(isReferralCompleteness("full"), true);
+  assert.equal(isReferralCompleteness("mystery"), false);
+  assert.deepEqual(normalized, {
+    offerSummary: "Save on your first year",
+    termsSummary: "New users only",
+    completeness: "full",
+    originalUrl: "https://bit.ly/openlinks",
+    resolvedUrl: "https://example.com/signup?ref=alice",
+    strategyId: "public-direct-html",
+    termsSourceUrl: "https://example.com/signup?ref=alice#terms",
+  });
+  assert.equal(resolveReferralCompleteness(normalized), "full");
+  assert.equal(resolveReferralCompleteness({ offerSummary: "Save now" }), "partial");
+  assert.equal(resolveReferralCompleteness({ kind: "referral" }), "none");
 });

@@ -1,5 +1,6 @@
 import type {
   GeneratedLinkReferralConfig,
+  ReferralCompleteness,
   ReferralFieldProvenance,
   ReferralFieldProvenanceMap,
 } from "../../src/lib/content/referral-fields";
@@ -16,6 +17,7 @@ export type {
 } from "../../src/lib/content/social-profile-fields";
 export type {
   GeneratedLinkReferralConfig,
+  ReferralCompleteness,
   ReferralFieldProvenance,
   ReferralFieldProvenanceMap,
 } from "../../src/lib/content/referral-fields";
@@ -76,6 +78,8 @@ export interface EnrichmentRunEntry {
   staleCache?: boolean;
   supportedProfilePlatform?: SupportedSocialProfilePlatform;
   missingProfileFields?: ExpectedSocialProfileField[];
+  referral?: GeneratedLinkReferralConfig;
+  referralCompleteness?: ReferralCompleteness;
 }
 
 export interface EnrichmentRunSummary {

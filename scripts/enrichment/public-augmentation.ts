@@ -1,3 +1,9 @@
+import {
+  type GeneratedLinkReferralConfig,
+  type LinkReferralConfig,
+  normalizeReferralConfig,
+  resolveReferralCompleteness,
+} from "../../src/lib/content/referral-fields";
 import { resolveSupportedSocialProfile } from "../../src/lib/content/social-profile-fields";
 import {
   isXCommunityUrl,
@@ -30,6 +36,7 @@ import type {
   ResolveEnrichmentStrategyInput,
   ResolvedPublicEnrichmentStrategy,
 } from "./strategy-types";
+import type { EnrichmentMetadata } from "./types";
 
 export const PUBLIC_BROWSER_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -42,6 +49,10 @@ const YOUTUBE_THUMBNAIL_URL_PATTERN =
 const YOUTUBE_ABOUT_CHANNEL_MARKER = '"aboutChannelViewModel":{';
 const YOUTUBE_METADATA_ROWS_MARKER = '"metadataRows":[';
 const YOUTUBE_SUBSCRIBER_SEGMENT_LENGTH = 5_000;
+const REFERRAL_HEADLINE_HINT_PATTERN =
+  /\b(join|save|get|bonus|discount|deal|offer|membership|invite|credit|free)\b/i;
+const REFERRAL_TERMS_PATTERN =
+  /\b(new users only|limited time|subject to approval|terms apply|starting at\b|first year|first order|while supplies last|minimum purchase)\b/i;
 
 type PublicAugmentationOutcome = NormalizedEnrichmentResult;
 
@@ -114,6 +125,15 @@ interface ResolvePublicAugmentationTargetInput {
   url: string;
   icon?: string;
   metadataHandle?: unknown;
+}
+
+interface ResolvePublicReferralAugmentationInput {
+  originalUrl: string;
+  sourceUrl: string;
+  finalUrl?: string;
+  strategyId: string;
+  metadata: EnrichmentMetadata;
+  manualReferral?: LinkReferralConfig;
 }
 
 const SUBSTACK_PRELOADS_PATTERN = /window\._preloads\s*=\s*JSON\.parse\(("(?:(?:\\.)|[^"\\])*")\)/s;
@@ -658,6 +678,76 @@ const parseClubOrangeReferralSignupPage = (
     ogImage: safeTrim(parsed.metadata.ogImage),
     twitterImage: safeTrim(parsed.metadata.twitterImage),
     sourceLabel: toSourceLabel(input.originalUrl) ?? parsed.metadata.sourceLabel,
+  });
+};
+
+const splitIntoSentences = (value: string | undefined): string[] => {
+  const normalized = safeTrim(value);
+  if (!normalized) {
+    return [];
+  }
+
+  return normalized
+    .split(/(?<=[.!?])\s+/u)
+    .map((sentence) => safeTrim(sentence))
+    .filter((sentence): sentence is string => Boolean(sentence));
+};
+
+const resolveReferralOfferSummary = (metadata: EnrichmentMetadata): string | undefined => {
+  const title = safeTrim(metadata.title);
+  if (title && REFERRAL_HEADLINE_HINT_PATTERN.test(title)) {
+    return title;
+  }
+
+  const firstSentence = splitIntoSentences(metadata.description)[0];
+  return firstSentence && REFERRAL_HEADLINE_HINT_PATTERN.test(firstSentence)
+    ? firstSentence
+    : undefined;
+};
+
+const resolveReferralTermsSummary = (metadata: EnrichmentMetadata): string | undefined => {
+  const matchingSentences = splitIntoSentences(metadata.description).filter((sentence) =>
+    REFERRAL_TERMS_PATTERN.test(sentence),
+  );
+  return matchingSentences.length > 0 ? matchingSentences.join(" ") : undefined;
+};
+
+export const resolvePublicReferralAugmentation = (
+  input: ResolvePublicReferralAugmentationInput,
+): GeneratedLinkReferralConfig | undefined => {
+  const normalizedManual = normalizeReferralConfig(input.manualReferral);
+  const target = resolveReferralTarget({
+    url: input.originalUrl,
+    finalUrl: input.finalUrl ?? input.sourceUrl,
+  });
+  const shouldAttemptReferral =
+    Boolean(normalizedManual) ||
+    Boolean(target && target.pattern !== "direct") ||
+    input.strategyId === "cluborange-referral-signup";
+
+  if (!shouldAttemptReferral) {
+    return undefined;
+  }
+
+  const offerSummary = resolveReferralOfferSummary(input.metadata);
+  const termsSummary = resolveReferralTermsSummary(input.metadata);
+  const resolvedUrl = target?.sourceUrl ?? input.finalUrl ?? input.sourceUrl;
+  const generatedKind =
+    normalizedManual?.kind ??
+    (input.strategyId === "cluborange-referral-signup" ? "referral" : undefined);
+
+  return normalizeReferralConfig({
+    kind: generatedKind,
+    offerSummary,
+    termsSummary,
+    completeness: resolveReferralCompleteness({
+      offerSummary,
+      termsSummary,
+    }),
+    originalUrl: input.originalUrl,
+    resolvedUrl,
+    strategyId: input.strategyId,
+    termsSourceUrl: termsSummary ? resolvedUrl : undefined,
   });
 };
 
