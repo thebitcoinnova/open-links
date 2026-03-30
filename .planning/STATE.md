@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 20 is planned; ready to execute referral card transparency UX
+**Current focus:** Phase 20 is complete; ready to start maintainer CRUD/docs follow-through
 
 ## Current Position
 
-Phase: 20-referral-card-presentation-transparency-ux
-Plan: 20-01, 20-02, 20-03
-Status: Phase 20 planned; ready for `$gsd-execute-phase 20`
-Next Phase: Phase 20 - Referral Card Presentation + Transparency UX
+Phase: 21-maintainer-crud-guidance-docs-verification
+Plan: —
+Status: Phase 20 complete; ready for `$gsd-discuss-phase 21`
+Next Phase: Phase 21 - Maintainer CRUD Guidance + Docs + Verification
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Planned Phase 20 into disclosure/view-model, rendering, and regression-hardening waves for referral cards.
+Last activity: 2026-03-30 - Completed Phase 20 with shared-shell referral disclosure UI, sibling terms links, and regression hardening.
 
-Progress: [######----] 60%
+Progress: [########--] 75%
 
 ## Performance Metrics
 
@@ -51,6 +51,9 @@ Progress: [######----] 60%
 
 ### Decisions
 
+- Keep referral presentation additive to the shared non-payment card model instead of creating a separate card family.
+- Keep referral `offerSummary` precedence at the card view-model layer rather than changing the base description resolver.
+- Keep `termsUrl` as a quiet sibling interaction outside the main card anchor to avoid nested-link behavior.
 - Keep referral support additive to existing `simple` and `rich` links rather than introducing a dedicated referral link type.
 - Treat manual referral disclosure fields as authoritative; extracted offer terms are assistive hints, not legal guarantees.
 - Prefer generic public referral augmentation plus manual fallback before reaching for program-specific authenticated extractors.
@@ -71,6 +74,7 @@ Progress: [######----] 60%
 - 2026-03-29: Phases 18-21 added for referral contract plumbing, public referral enrichment, referral card UX, and maintainer docs/verification.
 - 2026-03-29: Phase 18 completed with an additive `links[].referral` contract, generated `{ metadata, referral }` manifest support, referral warning policy, and example datasets.
 - 2026-03-30: Phase 19 completed with generalized public referral target normalization, generated referral completeness/provenance output, and explicit regression/report coverage.
+- 2026-03-30: Phase 20 completed with visible referral disclosure badges, benefit rows, sibling terms links, and focused non-referral/accessibility regression coverage in the shared card shell.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -85,7 +89,7 @@ Progress: [######----] 60%
 
 ### Pending Todos
 
-- Execute Phase 20 with `$gsd-execute-phase 20`.
+- Discuss Phase 21 with `$gsd-discuss-phase 21`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -100,5 +104,5 @@ Progress: [######----] 60%
 ## Session Continuity
 
 Last session: 2026-03-30 00:55
-Stopped at: Phase 20 planned; next step is `$gsd-execute-phase 20`.
-Resume file: .planning/phases/20-referral-card-presentation-transparency-ux/20-01-PLAN.md
+Stopped at: Phase 20 complete; next step is `$gsd-discuss-phase 21`.
+Resume file: .planning/phases/20-referral-card-presentation-transparency-ux/20-VERIFICATION.md

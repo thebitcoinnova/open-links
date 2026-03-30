@@ -61,9 +61,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 20-01: Add referral-aware card view models and visible disclosure treatment across simple and rich non-payment cards.
-- [ ] 20-02: Render visitor/owner benefits, terms summary or terms-link context, and source cues while reusing the existing rich image and known-site icon pipelines.
-- [ ] 20-03: Add focused accessibility and regression coverage for referral disclosure copy, rich imagery, and non-referral fallback behavior.
+- [x] 20-01: Add referral-aware card view models and visible disclosure treatment across simple and rich non-payment cards.
+- [x] 20-02: Render visitor/owner benefits, terms summary or terms-link context, and source cues while reusing the existing rich image and known-site icon pipelines.
+- [x] 20-03: Add focused accessibility and regression coverage for referral disclosure copy, rich imagery, and non-referral fallback behavior.
 
 **Details:**
 - Transparency should be visible in the UI, not only encoded in JSON or hidden in generic descriptions.

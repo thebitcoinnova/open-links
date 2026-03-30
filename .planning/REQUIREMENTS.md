@@ -60,10 +60,10 @@
 | ENR-01 | Phase 19 | Complete |
 | ENR-02 | Phase 19 | Complete |
 | ENR-03 | Phase 19 | Complete |
-| CARD-01 | Phase 20 | Pending |
-| CARD-02 | Phase 20 | Pending |
-| CARD-03 | Phase 20 | Pending |
-| CARD-04 | Phase 20 | Pending |
+| CARD-01 | Phase 20 | Complete |
+| CARD-02 | Phase 20 | Complete |
+| CARD-03 | Phase 20 | Complete |
+| CARD-04 | Phase 20 | Complete |
 | MAINT-01 | Phase 21 | Pending |
 | MAINT-02 | Phase 21 | Pending |
 
