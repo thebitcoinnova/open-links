@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 19 is complete; Phase 20 now needs referral card context
+**Current focus:** Phase 20 context is captured; ready to plan referral card UX
 
 ## Current Position
 
 Phase: 20-referral-card-presentation-transparency-ux
 Plan: —
-Status: Phase 19 complete; ready for `$gsd-discuss-phase 20`
+Status: Phase 20 context captured; ready for `$gsd-plan-phase 20`
 Next Phase: Phase 20 - Referral Card Presentation + Transparency UX
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Completed Phase 19 with public referral target normalization, generated offer extraction, and regression/report coverage.
+Last activity: 2026-03-30 - Gathered Phase 20 context for referral card disclosure, benefits, terms, and media cues.
 
 Progress: [#####-----] 50%
 
@@ -85,7 +85,7 @@ Progress: [#####-----] 50%
 
 ### Pending Todos
 
-- Gather Phase 20 context with `$gsd-discuss-phase 20`.
+- Plan Phase 20 with `$gsd-plan-phase 20`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -99,6 +99,6 @@ Progress: [#####-----] 50%
 
 ## Session Continuity
 
-Last session: 2026-03-30 00:35
-Stopped at: Phase 19 complete; next step is `$gsd-discuss-phase 20`.
-Resume file: .planning/phases/19-public-referral-enrichment-offer-capture/19-VERIFICATION.md
+Last session: 2026-03-30 00:55
+Stopped at: Phase 20 context gathered; next step is `$gsd-plan-phase 20`.
+Resume file: .planning/phases/20-referral-card-presentation-transparency-ux/20-CONTEXT.md
