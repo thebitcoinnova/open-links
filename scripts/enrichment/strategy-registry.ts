@@ -7,6 +7,7 @@ import {
   listPublicAugmentationStrategies,
   resolvePublicAugmentedStrategy,
 } from "./public-augmentation";
+import { resolveReferralTarget } from "./referral-targets";
 import type {
   EnrichmentStrategy,
   ResolveEnrichmentStrategyInput,
@@ -16,15 +17,23 @@ import type {
 
 const resolveDefaultPublicDirectStrategy = (
   input: ResolveEnrichmentStrategyInput,
-): ResolvedPublicEnrichmentStrategy => ({
-  id: "public-direct-html",
-  branch: "public_direct",
-  sourceKind: "html",
-  source: {
-    sourceUrl: input.url,
-  },
-  normalize: (body) => parseMetadata(body, input.url),
-});
+): ResolvedPublicEnrichmentStrategy => {
+  const referralTarget = resolveReferralTarget({
+    url: input.url,
+  });
+  const sourceUrl = referralTarget?.sourceUrl ?? input.url;
+
+  return {
+    id: "public-direct-html",
+    branch: "public_direct",
+    sourceKind: "html",
+    source: {
+      sourceUrl,
+      originalUrl: referralTarget ? input.url : undefined,
+    },
+    normalize: (body) => parseMetadata(body, sourceUrl),
+  };
+};
 
 const DEFAULT_PUBLIC_DIRECT_STRATEGY: EnrichmentStrategy<ResolvedPublicEnrichmentStrategy> = {
   id: "public-direct-html",

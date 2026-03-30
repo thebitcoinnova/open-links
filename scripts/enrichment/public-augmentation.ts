@@ -17,6 +17,11 @@ import {
   toSourceLabel,
 } from "./document-primitives";
 import { parseMetadata } from "./parse-metadata";
+import {
+  buildClubOrangeReferralSignupUrl,
+  extractClubOrangeReferralCode,
+  resolveReferralTarget,
+} from "./referral-targets";
 import { parseRumblePublicProfile, resolveRumbleAboutUrl } from "./rumble-public-profile";
 import { parseAudienceCount } from "./social-profile-counts";
 import type {
@@ -54,6 +59,7 @@ export type PublicAugmentationStrategyId =
 export interface PublicAugmentationTarget {
   id: PublicAugmentationStrategyId;
   sourceUrl: string;
+  originalUrl?: string;
   acceptHeader?: string;
   headers?: Record<string, string>;
   parse: (body: string) => PublicAugmentationOutcome;
@@ -495,70 +501,8 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
 const buildGenericXDescription = (displayHandle: string): string =>
   `Posts and updates from @${displayHandle} on X.`;
 
-const decodeOpaqueUrlPathSegment = (segment: string): string => {
-  try {
-    return decodeURIComponent(segment);
-  } catch {
-    return segment;
-  }
-};
-
-const extractClubOrangeReferralCode = (sourceUrl: string): string | null => {
-  let parsed: URL;
-  try {
-    parsed = new URL(sourceUrl);
-  } catch {
-    return null;
-  }
-
-  const host = parsed.hostname.toLowerCase();
-  const normalizedHost = host.replace(/^www\./, "");
-  const segments = parsed.pathname
-    .split("/")
-    .map((segment) => segment.trim())
-    .filter((segment) => segment.length > 0);
-
-  if (host === "signup.cluborange.org") {
-    if (segments.length !== 2 || segments[0] !== "co") {
-      return null;
-    }
-
-    const rawReferral = segments[1];
-    if (!rawReferral) {
-      return null;
-    }
-
-    const decodedReferral = decodeOpaqueUrlPathSegment(rawReferral);
-    return decodedReferral.length > 0 ? decodedReferral : null;
-  }
-
-  if (normalizedHost !== "cluborange.org") {
-    return null;
-  }
-
-  if (segments.length !== 1 || segments[0] !== "signup") {
-    return null;
-  }
-
-  const referral = parsed.searchParams.get("referral");
-  return typeof referral === "string" && referral.length > 0 ? referral : null;
-};
-
 const isClubOrangeReferralSignupUrl = (sourceUrl: string): boolean =>
   extractClubOrangeReferralCode(sourceUrl) !== null;
-
-const buildClubOrangeReferralSignupUrl = (sourceUrl: string): string => {
-  const referral = extractClubOrangeReferralCode(sourceUrl);
-  if (!referral) {
-    throw new Error(
-      `Club Orange referral signup augmentation only supports referral URLs. Got '${sourceUrl}'.`,
-    );
-  }
-
-  const targetUrl = new URL("https://www.cluborange.org/signup");
-  targetUrl.searchParams.set("referral", referral);
-  return targetUrl.toString();
-};
 
 export const parseInstagramProfileMetadata = (
   description: string | undefined,
@@ -913,25 +857,34 @@ const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
     branch: "public_augmented",
     sourceKind: "html",
     matches: (input) => isClubOrangeReferralSignupUrl(input.url),
-    resolve: (input) =>
-      isClubOrangeReferralSignupUrl(input.url)
-        ? {
-            id: "cluborange-referral-signup",
-            branch: "public_augmented",
-            sourceKind: "html",
-            source: {
-              sourceUrl: buildClubOrangeReferralSignupUrl(input.url),
+    resolve: (input) => {
+      if (!isClubOrangeReferralSignupUrl(input.url)) {
+        return null;
+      }
+
+      const referralTarget = resolveReferralTarget({
+        url: input.url,
+      });
+      const sourceUrl = referralTarget?.sourceUrl ?? buildClubOrangeReferralSignupUrl(input.url);
+
+      return {
+        id: "cluborange-referral-signup",
+        branch: "public_augmented",
+        sourceKind: "html",
+        source: {
+          sourceUrl,
+          originalUrl: input.url,
+        },
+        normalize: (body) =>
+          parseClubOrangeReferralSignupPage(
+            {
+              originalUrl: input.url,
+              fetchUrl: sourceUrl,
             },
-            normalize: (body) =>
-              parseClubOrangeReferralSignupPage(
-                {
-                  originalUrl: input.url,
-                  fetchUrl: buildClubOrangeReferralSignupUrl(input.url),
-                },
-                body,
-              ),
-          }
-        : null,
+            body,
+          ),
+      };
+    },
   },
   {
     id: "instagram-public-profile",
@@ -1150,6 +1103,7 @@ const toPublicAugmentationTarget = (
 ): PublicAugmentationTarget => ({
   id: strategy.id as PublicAugmentationStrategyId,
   sourceUrl: strategy.source.sourceUrl,
+  originalUrl: strategy.source.originalUrl,
   acceptHeader: strategy.source.acceptHeader,
   headers: strategy.source.headers,
   parse: strategy.normalize,

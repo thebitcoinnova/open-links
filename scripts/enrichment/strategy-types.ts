@@ -10,6 +10,7 @@ export type EnrichmentSourceKind = "html" | "json" | "xml" | "oembed" | "authent
 
 export interface EnrichmentSourceRequest {
   sourceUrl: string;
+  originalUrl?: string;
   acceptHeader?: string;
   headers?: Record<string, string>;
 }

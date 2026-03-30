@@ -21,6 +21,21 @@ test("resolves the default public-direct strategy for generic rich links", () =>
   assert.equal(strategy.source.sourceUrl, "https://bitcoinblacksheep.com/");
 });
 
+test("default public-direct strategy preserves original referral urls while stripping pure analytics params", () => {
+  // Arrange
+  const strategy = resolvePublicEnrichmentStrategy({
+    url: "https://example.com/signup?ref=alice&utm_source=newsletter",
+  });
+
+  // Assert
+  assert.equal(strategy.id, "public-direct-html");
+  assert.equal(
+    strategy.source.originalUrl,
+    "https://example.com/signup?ref=alice&utm_source=newsletter",
+  );
+  assert.equal(strategy.source.sourceUrl, "https://example.com/signup?ref=alice");
+});
+
 test("resolves the x public strategy and keeps the legacy adapter aligned", () => {
   // Arrange
   const strategy = resolvePublicEnrichmentStrategy({
@@ -127,6 +142,7 @@ test("lists the current public, authenticated, and default direct strategies", (
 
   // Assert
   assert.deepEqual(strategyIds, [
+    "cluborange-referral-signup",
     "facebook-auth-browser",
     "instagram-public-profile",
     "linkedin-auth-browser",

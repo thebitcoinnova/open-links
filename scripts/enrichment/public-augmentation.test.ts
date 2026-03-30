@@ -46,6 +46,7 @@ test("resolves a Club Orange referral-host augmentation target to the canonical 
   // Assert
   assert.ok(target);
   assert.equal(target.id, "cluborange-referral-signup");
+  assert.equal(target.originalUrl, "https://signup.cluborange.org/co/PrySzkie-42");
   assert.equal(target.sourceUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
 });
 
@@ -59,6 +60,7 @@ test("resolves a canonical Club Orange signup referral URL through the same augm
   // Assert
   assert.ok(target);
   assert.equal(target.id, "cluborange-referral-signup");
+  assert.equal(target.originalUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
   assert.equal(target.sourceUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
 });
 

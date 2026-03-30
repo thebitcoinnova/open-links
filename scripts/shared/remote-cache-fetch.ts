@@ -63,6 +63,7 @@ interface SuccessfulRequestResult {
   response: Response;
   statusCode: number;
   headers: RemoteCacheResponseHeaders;
+  finalUrl?: string;
 }
 
 interface FailedRequestResult {
@@ -70,12 +71,14 @@ interface FailedRequestResult {
   statusCode?: number;
   error?: string;
   headers?: RemoteCacheResponseHeaders;
+  finalUrl?: string;
 }
 
 type RequestAttemptResult = SuccessfulRequestResult | FailedRequestResult;
 
 interface RemoteCacheResultBase {
   url: string;
+  finalUrl?: string;
   pipeline: RemoteCachePipeline;
   policy: ResolvedRemoteCachePolicyRule;
   checkMode: RemoteCacheCheckMode;
@@ -216,6 +219,7 @@ const requestWithRetries = async (input: {
 
       const headers = toResponseHeaders(response);
       lastHeaders = headers;
+      const finalUrl = trimToUndefined(response.url ?? undefined);
 
       if (response.ok || response.status === 304) {
         return {
@@ -223,6 +227,7 @@ const requestWithRetries = async (input: {
           response,
           statusCode: response.status,
           headers,
+          finalUrl,
         };
       }
 
@@ -244,6 +249,7 @@ const requestWithRetries = async (input: {
     statusCode: lastStatusCode,
     error: lastError,
     headers: lastHeaders,
+    finalUrl: undefined,
   };
 };
 
@@ -499,6 +505,7 @@ export const fetchWithRemoteCachePolicy = async (
       checkedAt,
       durationMs: performance.now() - startedAt,
       attemptedHead: false,
+      finalUrl: options.url,
       headers: {
         etag: previous.etag,
         lastModified: previous.lastModified,
@@ -540,6 +547,7 @@ export const fetchWithRemoteCachePolicy = async (
           checkedAt,
           durationMs: performance.now() - startedAt,
           attemptedHead,
+          finalUrl: headResult.finalUrl,
           headers: headResult.headers,
           statusCode: headResult.statusCode,
           bytesFetched: 0,
@@ -563,6 +571,7 @@ export const fetchWithRemoteCachePolicy = async (
           checkedAt,
           durationMs: performance.now() - startedAt,
           attemptedHead,
+          finalUrl: headResult.finalUrl,
           headers: headResult.headers,
           statusCode: headResult.statusCode,
           bytesFetched: 0,
@@ -614,6 +623,7 @@ export const fetchWithRemoteCachePolicy = async (
         durationMs: performance.now() - startedAt,
         attemptedHead,
         headFallbackReason,
+        finalUrl: getResult.finalUrl,
         headers: getResult.headers,
         statusCode: getResult.statusCode,
         bytesFetched: 0,
@@ -633,6 +643,7 @@ export const fetchWithRemoteCachePolicy = async (
       durationMs: performance.now() - startedAt,
       attemptedHead,
       headFallbackReason,
+      finalUrl: getResult.finalUrl,
       headers: getResult.headers,
       statusCode: getResult.statusCode,
       bytesFetched: 0,
@@ -654,6 +665,7 @@ export const fetchWithRemoteCachePolicy = async (
       durationMs: performance.now() - startedAt,
       attemptedHead,
       headFallbackReason,
+      finalUrl: getResult.finalUrl,
       headers: getResult.headers ?? {},
       statusCode: getResult.statusCode,
       bytesFetched: 0,
@@ -682,6 +694,7 @@ export const fetchWithRemoteCachePolicy = async (
       durationMs: performance.now() - startedAt,
       attemptedHead,
       headFallbackReason,
+      finalUrl: getResult.finalUrl,
       headers: getResult.headers,
       statusCode: getResult.statusCode,
       bytesFetched: 0,
@@ -702,6 +715,7 @@ export const fetchWithRemoteCachePolicy = async (
     durationMs: performance.now() - startedAt,
     attemptedHead,
     headFallbackReason,
+    finalUrl: getResult.finalUrl,
     headers: getResult.headers,
     statusCode: getResult.statusCode,
     bytesFetched,

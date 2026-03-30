@@ -68,7 +68,7 @@ test("returns response freshness headers on successful fetches", async (t) => {
     const headers = new Headers(init?.headers);
     assert.equal(headers.get("accept"), "application/json");
 
-    return new Response("<html><head><title>Example</title></head></html>", {
+    const response = new Response("<html><head><title>Example</title></head></html>", {
       status: 200,
       headers: {
         etag: '"fresh"',
@@ -77,6 +77,11 @@ test("returns response freshness headers on successful fetches", async (t) => {
         date: "Sat, 07 Mar 2026 10:00:00 GMT",
       },
     });
+    Object.defineProperty(response, "url", {
+      configurable: true,
+      value: "https://www.example.com/referral?code=OPENLINKS",
+    });
+    return response;
   };
   t.after(() => {
     globalThis.fetch = originalFetch;
@@ -93,6 +98,7 @@ test("returns response freshness headers on successful fetches", async (t) => {
   // Assert
   assert.equal(result.ok, true);
   assert.equal(result.statusCode, 200);
+  assert.equal(result.finalUrl, "https://www.example.com/referral?code=OPENLINKS");
   assert.equal(result.etag, '"fresh"');
   assert.equal(result.lastModified, "Sat, 07 Mar 2026 10:00:00 GMT");
   assert.equal(result.cacheControl, "max-age=60");
