@@ -158,6 +158,39 @@ const richReferralLink = {
   },
 } as const satisfies OpenLink;
 
+const softMarkerReferralLink = {
+  id: "soft-referral",
+  label: "OpenLinks Supporter Offer",
+  url: "https://example.com/support",
+  type: "simple",
+  icon: "globe",
+  description: "Fallback support offer copy",
+  metadata: {
+    title: "OpenLinks Supporter Offer",
+    description: "Fallback support offer copy",
+    sourceLabel: "example.com",
+  },
+  referral: {},
+} as const satisfies OpenLink;
+
+const oneSidedReferralLink = {
+  id: "owner-benefit-only",
+  label: "Support OpenLinks",
+  url: "https://example.com/support",
+  type: "simple",
+  icon: "globe",
+  description: "Fallback support offer copy",
+  metadata: {
+    title: "Support OpenLinks",
+    description: "Fallback support offer copy",
+    sourceLabel: "example.com",
+  },
+  referral: {
+    ownerBenefit: "Supports the project",
+    offerSummary: "Use this link if you want to support OpenLinks.",
+  },
+} as const satisfies OpenLink;
+
 const brandIconOptions = resolveBrandIconOptions(site as SiteData);
 
 test("simple referral cards render disclosure, benefit rows, and a sibling terms link", () => {
@@ -257,4 +290,62 @@ test("rich referral cards keep promo-image-led layout while rendering referral c
   );
   assert.ok(termsLink);
   assert.equal(termsLink.props.href, "https://www.cluborange.org/signup?referral=pryszkie");
+});
+
+test("soft referral markers fall back to a generic badge without empty benefit rows", () => {
+  // Arrange
+  const tree = SimpleLinkCard({
+    link: softMarkerReferralLink,
+    site,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const badge = firstElementWithClass(tree, "non-payment-card-referral-badge");
+  const benefitRows = collectElements(tree).filter((element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" &&
+      classValue.split(/\s+/u).includes("non-payment-card-referral-benefit-row")
+    );
+  });
+  const description = firstElementWithClass(tree, "non-payment-card-description");
+
+  // Assert
+  assert.ok(badge);
+  assert.equal(renderedTextContent(badge.props.children as RenderedNode), "Referral");
+  assert.equal(benefitRows.length, 0);
+  assert.ok(description);
+  assert.equal(
+    renderedTextContent(description.props.children as RenderedNode),
+    "Fallback support offer copy",
+  );
+});
+
+test("one-sided referral disclosures render only the populated benefit row", () => {
+  // Arrange
+  const tree = SimpleLinkCard({
+    link: oneSidedReferralLink,
+    site,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const benefitRows = collectElements(tree).filter((element) => {
+    const classValue = element.props.class;
+    return (
+      typeof classValue === "string" &&
+      classValue.split(/\s+/u).includes("non-payment-card-referral-benefit-row")
+    );
+  });
+
+  // Assert
+  assert.equal(benefitRows.length, 1);
+  assert.equal(benefitRows[0]?.props["data-benefit-kind"], "owner");
+  assert.equal(
+    renderedTextContent(benefitRows[0]?.props.children as RenderedNode),
+    "SupportsSupports the project",
+  );
 });
