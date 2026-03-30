@@ -16,6 +16,14 @@ append_history() {
     --summary-json .ci-diagnostics/nightly-follower-history-summary.json
 }
 
+resolve_aws_opt_in() {
+  if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" && -n "${AWS_DEPLOY_ROLE_ARN:-}" ]]; then
+    write_output "enabled" "true"
+  else
+    write_output "enabled" "false"
+  fi
+}
+
 commit_and_push() {
   git config user.name "github-actions[bot]"
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -43,6 +51,7 @@ Usage: bash scripts/github-actions/nightly-follower-history.sh <command>
 Commands:
   append-history
   commit-and-push
+  resolve-aws-opt-in
 EOF
 }
 
@@ -53,6 +62,9 @@ case "$command_name" in
     ;;
   commit-and-push)
     commit_and_push
+    ;;
+  resolve-aws-opt-in)
+    resolve_aws_opt_in
     ;;
   *)
     usage
