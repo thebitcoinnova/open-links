@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 21 context is captured; ready to plan maintainer CRUD/docs guidance
+**Current focus:** Phase 21 is planned; ready to execute maintainer CRUD/docs guidance
 
 ## Current Position
 
 Phase: 21-maintainer-crud-guidance-docs-verification
-Plan: —
-Status: Phase 21 context captured; ready for `$gsd-plan-phase 21`
+Plan: 21-01, 21-02
+Status: Phase 21 planned; ready for `$gsd-execute-phase 21`
 Next Phase: Phase 21 - Maintainer CRUD Guidance + Docs + Verification
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Gathered Phase 21 context for maintainer path hierarchy, referral docs depth, verification messaging, and downstream breadcrumbs.
+Last activity: 2026-03-30 - Planned Phase 21 into canonical CRUD/docs guidance and README/verification/downstream follow-through waves.
 
-Progress: [########--] 75%
+Progress: [#########-] 90%
 
 ## Performance Metrics
 
@@ -89,7 +89,7 @@ Progress: [########--] 75%
 
 ### Pending Todos
 
-- Plan Phase 21 with `$gsd-plan-phase 21`.
+- Execute Phase 21 with `$gsd-execute-phase 21`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -104,5 +104,5 @@ Progress: [########--] 75%
 ## Session Continuity
 
 Last session: 2026-03-30 00:55
-Stopped at: Phase 21 context gathered; next step is `$gsd-plan-phase 21`.
-Resume file: .planning/phases/21-maintainer-crud-guidance-docs-verification/21-CONTEXT.md
+Stopped at: Phase 21 planned; next step is `$gsd-execute-phase 21`.
+Resume file: .planning/phases/21-maintainer-crud-guidance-docs-verification/21-01-PLAN.md
