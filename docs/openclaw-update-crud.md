@@ -10,6 +10,28 @@ Use this contract when the user likely already has:
 
 Use `docs/openclaw-bootstrap.md` for first-time setup when no usable fork/local repo exists.
 
+## When to Invoke This Contract
+
+Default to this contract when the user makes a vague repo-maintenance request in
+an existing OpenLinks repo or fork, including requests like:
+
+- "help"
+- "help me update this repo"
+- "customize this"
+- "change my links"
+- "edit my profile"
+- other broad day-2 CRUD or maintenance phrasing
+
+Use `docs/openclaw-bootstrap.md` instead when the request is clearly first-time
+setup or no usable fork/local repo exists yet.
+
+Do not use this contract for:
+
+- runtime app or website code changes,
+- CI/workflow implementation work,
+- new authenticated extractor development,
+- other named workflows with a more specific contract or skill.
+
 ## Scope and Non-Goals
 
 In scope:
