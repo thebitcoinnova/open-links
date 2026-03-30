@@ -1,4 +1,8 @@
-import { classifyForkOwnedPaths, isForkOwnedPath } from "./fork-owned-paths.js";
+import {
+  type ForkOwnedPathConfig,
+  classifyForkOwnedPaths,
+  isForkOwnedPath,
+} from "./fork-owned-paths.js";
 
 export type ForkSyncTreeMode = "100644" | "100755" | "040000" | "160000" | "120000";
 export type ForkSyncTreeType = "blob" | "tree" | "commit";
@@ -21,6 +25,7 @@ const sortUniquePaths = (repoPaths: Iterable<string>): string[] =>
   Array.from(new Set(repoPaths)).sort();
 
 export const summarizeForkSyncConflicts = (input: {
+  config: ForkOwnedPathConfig;
   forkChangedPaths: Iterable<string>;
   upstreamChangedPaths: Iterable<string>;
 }): ForkSyncConflictSummary => {
@@ -29,7 +34,7 @@ export const summarizeForkSyncConflicts = (input: {
   const conflictingPaths = Array.from(forkChanged).filter((repoPath) =>
     upstreamChanged.has(repoPath),
   );
-  const { forkOwnedPaths, sharedPaths } = classifyForkOwnedPaths(conflictingPaths);
+  const { forkOwnedPaths, sharedPaths } = classifyForkOwnedPaths(input.config, conflictingPaths);
 
   return {
     canAutoResolve: sharedPaths.length === 0,
@@ -43,6 +48,7 @@ const buildTreeMap = (tree: readonly ForkSyncTreeEntry[]): Map<string, ForkSyncT
   new Map(tree.map((entry) => [entry.path, entry]));
 
 export const buildForkOwnedPreservationTree = (input: {
+  config: ForkOwnedPathConfig;
   forkTree: readonly ForkSyncTreeEntry[];
   upstreamTree: readonly ForkSyncTreeEntry[];
 }): ForkSyncTreeEntry[] => {
@@ -50,7 +56,7 @@ export const buildForkOwnedPreservationTree = (input: {
   const upstreamTreeMap = buildTreeMap(input.upstreamTree);
   const candidatePaths = sortUniquePaths(
     [...forkTreeMap.keys(), ...upstreamTreeMap.keys()].filter((repoPath) =>
-      isForkOwnedPath(repoPath),
+      isForkOwnedPath(input.config, repoPath),
     ),
   );
 
