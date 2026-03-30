@@ -34,6 +34,38 @@ precedence when it is more specific.
 - `standards-overrides.md` records explicit local deviations from the canonical standards.
 - OpenLinks-specific operational rules for rich enrichment, Studio delivery tracking, and task hygiene remain mandatory for this repo.
 
+## Repo-Native CRUD Intent Routing
+
+When the user makes a vague maintenance request in this repository, agents
+should default to the OpenLinks Update/CRUD contract instead of inventing an ad
+hoc workflow.
+
+Treat requests like these as Update/CRUD intent unless the user clearly asks
+for something else:
+
+- "help"
+- "help me update this repo"
+- "customize this"
+- "change my links"
+- "edit my profile"
+- "tweak this fork"
+- other broad day-2 maintenance phrasing for `data/profile.json`,
+  `data/links.json`, or `data/site.json`
+
+Routing rules:
+
+1. If the repo already exists locally or the user likely already has a fork,
+   route to `docs/openclaw-update-crud.md`.
+2. If the request is clearly first-time setup or no usable fork/local repo
+   exists, route to `docs/openclaw-bootstrap.md` instead.
+3. Do not route to Update/CRUD when the user is explicitly asking for runtime
+   app code, CI/workflow fixes, deployment-system implementation work, rich
+   extractor authoring, or another named repo workflow that has a more specific
+   contract or skill.
+4. If the request mixes CRUD and runtime/code work, handle the CRUD portion via
+   the Update/CRUD contract and surface the code work as a separate path rather
+   than silently merging them.
+
 ## Downstream Consumer Awareness
 
 `open-links` is also an active upstream dependency for
@@ -115,6 +147,43 @@ upstream; fork-owned content should not.
 5. When adding new tracked personalized caches or generated artifacts, extend
    `config/fork-owned-paths.json` in the same change so scheduled sync behavior
    stays correct.
+
+## Upstream PR Hygiene Rule
+
+When the target repository for a pull request is upstream `pRizz/open-links`,
+agents must treat fork-owned content as excluded from the PR by default.
+
+1. Build upstream PR branches from `upstream/main` or another common ancestor
+   with upstream, not from a fork-customized branch tip.
+2. Cherry-pick or reapply only the shared code/docs/test commits that belong in
+   upstream. Do not carry fork personalization history into the PR branch.
+3. Before opening or updating the PR, inspect `git diff --stat upstream/main...HEAD`.
+4. If that diff includes any path from `config/fork-owned-paths.json`, stop and
+   rebuild the branch so the upstream PR excludes those paths.
+5. When a local task changes both shared surfaces and fork-owned files, split
+   the work: upstream PR for shared changes, fork branch for personalized data.
+6. In the PR summary, state that the branch was rebuilt from upstream and that
+   fork-owned paths were excluded from the diff.
+
+## Upstream-Worthy Fix Prompt Rule
+
+When a task uncovers a bug or missing guardrail in shared code, starter
+templates, tests, docs, or automation that could affect upstream or other
+forks, agents must proactively tell the user that a targeted upstream PR is
+recommended.
+
+1. Trigger this prompt whenever the fix is not specific to the current fork's
+   identity or content and would likely help `pRizz/open-links` itself or other
+   downstream forks.
+2. Include the reason the issue is upstream-worthy and name the shared surfaces
+   involved, for example reset/bootstrap scripts, starter examples, deploy
+   logic, Studio services, tests, or contributor docs.
+3. Recommend a targeted upstream PR that excludes fork-owned paths and follows
+   the upstream PR hygiene rule above.
+4. Do this before closing the task, even if the user only asked for a local
+   fix.
+5. This rule should fire for bugs like a broken `bun run fork:reset` baseline
+   where the shared reset script and starter example produce invalid output.
 
 ## Local Scope
 

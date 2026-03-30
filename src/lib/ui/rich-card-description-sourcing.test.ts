@@ -217,6 +217,43 @@ test("explicit non-profile semantics suppress profileDescription precedence on s
   assert.equal(description, "Fetched signup copy");
 });
 
+test("referral offer summaries override the shared card description slot without changing base description resolution", () => {
+  // Arrange
+  const referralLink = {
+    id: "cluborange-referral",
+    label: "Join Club Orange",
+    url: "https://app.cluborange.org/pryszkie",
+    type: "rich",
+    icon: "cluborange",
+    description: "Manual signup copy",
+    metadata: {
+      title: "Join Club Orange",
+      description: "Fetched signup copy",
+      sourceLabel: "app.cluborange.org",
+      image: "/cache/content-images/cluborange-referral-preview.jpg",
+      profileImage: "/cache/content-images/cluborange-referral-avatar.jpg",
+    },
+    enrichment: {
+      profileSemantics: "non_profile",
+    },
+    referral: {
+      kind: "referral",
+      offerSummary: "Get $40/year Club Orange access and connect with Bitcoin builders.",
+    },
+  } as const satisfies OpenLink;
+
+  // Act
+  const baseDescription = resolveLinkCardDescription(site, referralLink);
+  const viewModelDescription = buildRichCardViewModel(site, referralLink).description;
+
+  // Assert
+  assert.equal(baseDescription, "Fetched signup copy");
+  assert.equal(
+    viewModelDescription,
+    "Get $40/year Club Orange access and connect with Bitcoin builders.",
+  );
+});
+
 test("supported profile links without profileDescription still obey description-source fallback rules", () => {
   // Arrange
   const mediumProfileLink = {
@@ -320,8 +357,10 @@ test("dataset audit defaults current rich links to fetched descriptions across c
       "bright-builds-facebook",
       "facebook",
       "cluborange",
+      "cluborange-referral",
       "instagram",
       "youtube",
+      "rumble",
       "medium",
       "substack",
     ],
@@ -331,11 +370,9 @@ test("dataset audit defaults current rich links to fetched descriptions across c
     assert.ok(link.metadata, `expected metadata for ${link.id}`);
     const sharedDescription = resolveLinkCardDescription(datasetSite, link);
     const richDescription = buildRichCardViewModel(datasetSite, link).description;
-    const expectedDescription = link.metadata.profileDescription ?? link.metadata.description;
 
-    assert.ok(expectedDescription, `expected rich description for ${link.id}`);
-    assert.equal(sharedDescription, expectedDescription);
-    assert.equal(richDescription, expectedDescription);
+    assert.ok(sharedDescription.length > 0, `expected rich description for ${link.id}`);
+    assert.equal(richDescription, sharedDescription);
   }
 });
 

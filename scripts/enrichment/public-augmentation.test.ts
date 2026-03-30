@@ -6,6 +6,7 @@ import {
   parseInstagramProfileMetadata,
   parseYoutubeProfileMetadata,
   resolvePublicAugmentationTarget,
+  resolvePublicReferralAugmentation,
 } from "./public-augmentation";
 
 test("resolves an X public augmentation target that uses oEmbed instead of direct page fetch", () => {
@@ -46,6 +47,7 @@ test("resolves a Club Orange referral-host augmentation target to the canonical 
   // Assert
   assert.ok(target);
   assert.equal(target.id, "cluborange-referral-signup");
+  assert.equal(target.originalUrl, "https://signup.cluborange.org/co/PrySzkie-42");
   assert.equal(target.sourceUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
 });
 
@@ -59,6 +61,7 @@ test("resolves a canonical Club Orange signup referral URL through the same augm
   // Assert
   assert.ok(target);
   assert.equal(target.id, "cluborange-referral-signup");
+  assert.equal(target.originalUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
   assert.equal(target.sourceUrl, "https://www.cluborange.org/signup?referral=PrySzkie-42");
 });
 
@@ -122,6 +125,95 @@ test("parses Club Orange referral signup metadata from the canonical public sign
   );
   assert.equal(parsed?.metadata.sourceLabel, "signup.cluborange.org");
   assert.equal(parsed?.metadata.profileImage, undefined);
+});
+
+test("extracts referral offer and terms data from Club Orange public metadata", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://signup.cluborange.org/co/pryszkie",
+    sourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    strategyId: "cluborange-referral-signup",
+    metadata: {
+      title: "Join Club Orange — Connect with 19K+ Bitcoiners",
+      description:
+        "Join 19,000+ Bitcoiners in 71 countries. Get a Club Orange membership starting at $40/year or pay in sats.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "referral",
+    offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
+    termsSummary: "Get a Club Orange membership starting at $40/year or pay in sats.",
+    completeness: "full",
+    originalUrl: "https://signup.cluborange.org/co/pryszkie",
+    resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    strategyId: "cluborange-referral-signup",
+    termsSourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+  });
+});
+
+test("prefers omission over inference for ambiguous direct referral pages", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Example Company",
+      description: "We build tools for teams.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    completeness: "none",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
+
+test("captures partial referral output when only the promo headline is clear", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Get $20 off your first order",
+      description: "Discover premium widgets.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    offerSummary: "Get $20 off your first order",
+    completeness: "partial",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
+
+test("skips public referral extraction when the resolved url is auth gated", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://bit.ly/private-offer",
+    sourceUrl: "https://bit.ly/private-offer",
+    finalUrl: "https://example.com/login?ref=alice",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "referral",
+    },
+    metadata: {
+      title: "Get $20 off your first order",
+      description: "New users only.",
+    },
+  });
+
+  assert.equal(referral, undefined);
 });
 
 test("resolves a Primal public augmentation target that fetches the profile page directly", () => {

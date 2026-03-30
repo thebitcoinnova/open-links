@@ -60,35 +60,43 @@ Execute in this exact order.
    - switch to `docs/openclaw-update-crud.md` for day-2 maintenance.
 3. If user selects day-2 maintenance, stop bootstrap and hand off to `docs/openclaw-update-crud.md`.
 4. Ensure user fork exists.
-5. Ensure fork workflows are enabled when bootstrap is targeting a fork:
+5. Sanitize GitHub repository metadata for the fork:
+   - do not leave the upstream repo website/homepage in the fork's GitHub **About** sidebar,
+   - default the fork repo homepage to the fork's GitHub Pages URL (`https://<owner>.github.io/<repo>/`) unless the user already selected a different primary host,
+   - if the homepage cannot be updated automatically because of permissions/API failure, stop with a concrete remediation note telling the user to update the repo **About** website manually.
+6. Ensure fork workflows are enabled when bootstrap is targeting a fork:
    - detect the disabled-fork Actions gate before deployment verification,
    - if GitHub shows "Workflows aren’t being run on this forked repository", ask the user to click **Enable workflows** in the fork’s **Actions** tab,
    - after the user enables workflows, create or request one fresh push event on `main` before continuing CI/deploy verification.
-6. Clone user fork and enter repository root.
-7. Install dependencies (`bun install` or `bun install --frozen-lockfile`).
-8. Run `bun run fork:reset`.
-9. Resolve user identity using the precedence rules in this document.
-10. If the user explicitly provided a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted profile/avatar/social/content links as bootstrap candidates before asking for manual link entry.
-11. Personalize data files:
+7. Clone user fork and enter repository root.
+8. Install dependencies (`bun install` or `bun install --frozen-lockfile`).
+9. Run `bun run fork:reset`.
+10. Resolve user identity using the precedence rules in this document.
+11. If the user explicitly provided a Linktree URL, run `bun run bootstrap:linktree -- --url <linktree-url>` and use the extracted profile/avatar/social/content links as bootstrap candidates before asking for manual link entry.
+12. Personalize data files:
    - `data/profile.json`
    - `data/links.json`
    - `data/site.json`
-12. Validate and build:
+13. Validate and build:
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
-13. Commit and push directly to `main`.
-14. Resolve deployment target selection and primary host:
+14. Commit and push directly to `main`.
+15. Resolve deployment target selection and primary host:
    - upstream default: `aws` primary + `github-pages` mirror
    - fork default: `github-pages` primary
    - optional fork additions: `render`, `railway`
-15. Verify GitHub Pages source is set to **GitHub Actions**.
-16. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
-17. Poll CI and all relevant deploy surfaces for the pushed SHA.
-18. On success, collect deployment URLs.
-19. Post structured URL summary in chat using the schema in this file.
-20. Update the README deploy URL marker block only if normalized URL/status values changed.
-21. Commit/push README update if and only if step 20 changed file content.
+16. Verify GitHub Pages source is set to **GitHub Actions**.
+17. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
+18. Poll CI and all relevant deploy surfaces for the pushed SHA.
+19. On success, collect deployment URLs.
+20. Reconcile GitHub repository homepage metadata to the selected primary host:
+   - fork default after first successful deploy: verified GitHub Pages URL,
+   - if `render`, `railway`, `aws`, or a custom domain becomes primary, update the repo homepage to that primary URL,
+   - do not leave the inherited upstream homepage in place.
+21. Post structured URL summary in chat using the schema in this file.
+22. Update the README deploy URL marker block only if normalized URL/status values changed.
+23. Commit/push README update if and only if step 22 changed file content.
 
 ## Automation and Identity Confirmation Rule
 

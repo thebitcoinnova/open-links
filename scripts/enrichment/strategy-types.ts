@@ -1,3 +1,4 @@
+import type { GeneratedLinkReferralConfig } from "../../src/lib/content/referral-fields";
 import type { AuthenticatedExtractorPlugin } from "../authenticated-extractors/types";
 import type { EnrichmentMetadata, EnrichmentMissingField } from "./types";
 
@@ -10,12 +11,14 @@ export type EnrichmentSourceKind = "html" | "json" | "xml" | "oembed" | "authent
 
 export interface EnrichmentSourceRequest {
   sourceUrl: string;
+  originalUrl?: string;
   acceptHeader?: string;
   headers?: Record<string, string>;
 }
 
 export interface NormalizedEnrichmentResult {
   metadata: EnrichmentMetadata;
+  referral?: GeneratedLinkReferralConfig;
   completeness: "full" | "partial" | "none";
   missing: EnrichmentMissingField[];
 }

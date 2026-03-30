@@ -33,6 +33,7 @@ export interface FetchMetadataResult {
   ok: boolean;
   notModified?: boolean;
   html?: string;
+  finalUrl?: string;
   attempts: number;
   durationMs: number;
   statusCode?: number;
@@ -78,6 +79,7 @@ export const fetchMetadata = async (
     return {
       ok: true,
       html: typeof result.body === "string" ? result.body : result.body.toString("utf8"),
+      finalUrl: result.finalUrl,
       attempts: options.retries + 1,
       durationMs: result.durationMs,
       statusCode: result.statusCode,
@@ -100,6 +102,7 @@ export const fetchMetadata = async (
     return {
       ok: false,
       notModified: true,
+      finalUrl: result.finalUrl,
       attempts: options.retries + 1,
       durationMs: result.durationMs,
       statusCode: result.statusCode,
@@ -121,6 +124,7 @@ export const fetchMetadata = async (
   return {
     ok: false,
     attempts: options.retries + 1,
+    finalUrl: result.finalUrl,
     durationMs: result.durationMs,
     statusCode: result.statusCode,
     error: result.error,

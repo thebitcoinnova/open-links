@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 18 is complete; Phase 19 now needs referral extraction context
+**Current focus:** Phase 21 is planned; ready to execute maintainer CRUD/docs guidance
 
 ## Current Position
 
-Phase: 19-public-referral-enrichment-offer-capture
-Plan: —
-Status: Phase 18 complete; ready for `$gsd-discuss-phase 19`
-Next Phase: Phase 19 - Public Referral Enrichment + Offer Capture
+Phase: 21-maintainer-crud-guidance-docs-verification
+Plan: 21-01, 21-02
+Status: Phase 21 planned; ready for `$gsd-execute-phase 21`
+Next Phase: Phase 21 - Maintainer CRUD Guidance + Docs + Verification
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-29 - Completed Phase 18 with referral contract, generated merge plumbing, warnings, and example coverage.
+Last activity: 2026-03-30 - Planned Phase 21 into canonical CRUD/docs guidance and README/verification/downstream follow-through waves.
 
-Progress: [###-------] 25%
+Progress: [#########-] 90%
 
 ## Performance Metrics
 
@@ -51,6 +51,9 @@ Progress: [###-------] 25%
 
 ### Decisions
 
+- Keep referral presentation additive to the shared non-payment card model instead of creating a separate card family.
+- Keep referral `offerSummary` precedence at the card view-model layer rather than changing the base description resolver.
+- Keep `termsUrl` as a quiet sibling interaction outside the main card anchor to avoid nested-link behavior.
 - Keep referral support additive to existing `simple` and `rich` links rather than introducing a dedicated referral link type.
 - Treat manual referral disclosure fields as authoritative; extracted offer terms are assistive hints, not legal guarantees.
 - Prefer generic public referral augmentation plus manual fallback before reaching for program-specific authenticated extractors.
@@ -70,6 +73,8 @@ Progress: [###-------] 25%
 - 2026-03-29: Milestone v1.3 started for referral links + offer transparency.
 - 2026-03-29: Phases 18-21 added for referral contract plumbing, public referral enrichment, referral card UX, and maintainer docs/verification.
 - 2026-03-29: Phase 18 completed with an additive `links[].referral` contract, generated `{ metadata, referral }` manifest support, referral warning policy, and example datasets.
+- 2026-03-30: Phase 19 completed with generalized public referral target normalization, generated referral completeness/provenance output, and explicit regression/report coverage.
+- 2026-03-30: Phase 20 completed with visible referral disclosure badges, benefit rows, sibling terms links, and focused non-referral/accessibility regression coverage in the shared card shell.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -84,7 +89,7 @@ Progress: [###-------] 25%
 
 ### Pending Todos
 
-- Gather Phase 19 context with `$gsd-discuss-phase 19`.
+- Execute Phase 21 with `$gsd-execute-phase 21`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -98,6 +103,6 @@ Progress: [###-------] 25%
 
 ## Session Continuity
 
-Last session: 2026-03-29 22:20
-Stopped at: Phase 18 complete; next step is `$gsd-discuss-phase 19`.
-Resume file: .planning/phases/18-referral-contract-link-plumbing/18-VERIFICATION.md
+Last session: 2026-03-30 00:55
+Stopped at: Phase 21 planned; next step is `$gsd-execute-phase 21`.
+Resume file: .planning/phases/21-maintainer-crud-guidance-docs-verification/21-01-PLAN.md

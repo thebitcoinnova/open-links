@@ -13,6 +13,10 @@ import { resolveKnownSite } from "../icons/known-sites-data";
 import type { ContactLinkKind, ResolvedLinkKind } from "../links/link-kind";
 import { resolveLinkKind } from "../links/link-kind";
 import {
+  type ReferralCardPresentation,
+  resolveReferralCardPresentation,
+} from "./referral-card-presentation";
+import {
   type ResolvedSocialProfileMetadata,
   resolveSocialProfileMetadata,
 } from "./social-profile-metadata";
@@ -40,6 +44,7 @@ export interface NonPaymentCardProfilePreview {
 export interface NonPaymentCardViewModel {
   title: string;
   description: string;
+  referral?: ReferralCardPresentation;
   socialProfile: ResolvedSocialProfileMetadata;
   linkKind: ResolvedLinkKind["kind"];
   linkScheme?: string;
@@ -477,6 +482,7 @@ export const buildNonPaymentCardViewModel = (
       : configuredImageTreatment;
   const imageFit = resolveImageFit(site, link);
   const leadVisual = resolveLeadVisual(variant, socialProfile, imageTreatment);
+  const referral = resolveReferralCardPresentation(link.referral);
   const descriptionImageRowMode = resolveDescriptionImageRowMode(site, link, sourcePresentation);
   const showProfilePreview =
     variant === "rich" &&
@@ -501,10 +507,12 @@ export const buildNonPaymentCardViewModel = (
     variant === "simple" && !socialProfile.usesProfileLayout
       ? link.label
       : (socialProfile.displayName ?? metadata.title ?? link.label);
+  const sharedDescription = resolveLinkCardDescription(site, link, socialProfile, resolvedLinkKind);
 
   return {
     title,
-    description: resolveLinkCardDescription(site, link, socialProfile, resolvedLinkKind),
+    description: referral?.offerSummary ?? sharedDescription,
+    referral,
     socialProfile,
     linkKind: resolvedLinkKind.kind,
     linkScheme: resolvedLinkKind.scheme,

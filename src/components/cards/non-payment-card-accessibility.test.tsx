@@ -259,6 +259,28 @@ const articleRichLink = {
   },
 } as const satisfies OpenLink;
 
+const referralSimpleLink = {
+  id: "coffee-referral",
+  label: "Get Coffee",
+  url: "https://example.com/coffee?ref=openlinks",
+  type: "simple",
+  icon: "globe",
+  description: "Ordinary fallback copy",
+  metadata: {
+    title: "Coffee",
+    description: "Ordinary fallback copy",
+    sourceLabel: "example.com",
+  },
+  referral: {
+    kind: "promo",
+    visitorBenefit: "Get 20% off your first order",
+    ownerBenefit: "Supports the project",
+    offerSummary: "Save on your first bag of coffee.",
+    termsSummary: "New customers only. Cannot be combined with other offers.",
+    termsUrl: "https://example.com/referral-terms",
+  },
+} as const satisfies OpenLink;
+
 const longSimpleLink = {
   id: "openlinks-long",
   label: "OpenLinks With A Remarkably Long Label Built To Stress Narrow Mobile Card Width",
@@ -677,6 +699,64 @@ test("cards without history still render share and copy sibling actions", () => 
   assert.equal(directChildren.length, 2);
   assert.equal(directChildren[0]?.type, "a");
   assert.equal(directChildren[1]?.type, "fieldset");
+});
+
+test("referral cards keep the shared primary anchor semantics while exposing a sibling terms link", () => {
+  // Arrange
+  const tree = SimpleLinkCard({
+    link: referralSimpleLink,
+    site,
+    brandIconOptions,
+    themeFingerprint: "test",
+  }) as RenderedNode;
+
+  // Act
+  const frame = firstElementWithClass(tree, "non-payment-card-frame");
+  const anchor = firstElementOfType(tree, "a");
+  const badgeIndex = elementIndex(
+    tree,
+    (element) =>
+      typeof element.props.class === "string" &&
+      element.props.class.split(/\s+/u).includes("non-payment-card-referral-badge"),
+  );
+  const benefitIndex = elementIndex(
+    tree,
+    (element) =>
+      typeof element.props.class === "string" &&
+      element.props.class.split(/\s+/u).includes("non-payment-card-referral-benefit-row"),
+  );
+  const descriptionIndex = elementIndex(
+    tree,
+    (element) => element.props.id === "simple-link-description-coffee-referral",
+  );
+  const termsSummaryIndex = elementIndex(
+    tree,
+    (element) =>
+      typeof element.props.class === "string" &&
+      element.props.class.split(/\s+/u).includes("non-payment-card-referral-terms"),
+  );
+  const termsLink = firstElementWithClass(tree, "non-payment-card-referral-terms-link");
+
+  // Assert
+  assert.ok(frame);
+  assert.ok(anchor);
+  assert.equal(anchor.props["aria-label"], "Open Get Coffee in a new tab");
+  assert.equal(anchor.props["data-has-referral"], "true");
+  assert.ok(badgeIndex >= 0);
+  assert.ok(benefitIndex > badgeIndex);
+  assert.ok(descriptionIndex > benefitIndex);
+  assert.ok(termsSummaryIndex > descriptionIndex);
+  assert.ok(termsLink);
+  assert.equal(termsLink.props["aria-label"], "Open terms for Get Coffee in a new tab");
+
+  const frameChildren = (
+    Array.isArray(frame.props.children) ? frame.props.children : [frame.props.children]
+  ) as RenderedNode[];
+  const directChildren = frameChildren.filter(isRenderedElement);
+
+  assert.equal(directChildren.length, 2);
+  assert.equal(directChildren[0]?.type, "a");
+  assert.equal(directChildren[1]?.type, "div");
 });
 
 test("card action surfaces no longer render inline action status outputs", () => {

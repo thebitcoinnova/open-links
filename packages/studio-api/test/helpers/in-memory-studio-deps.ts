@@ -32,6 +32,16 @@ export interface InMemoryStudioState {
     deploy: string;
     pagesUrl: string | null;
   };
+  repositoryMetadata: {
+    description: string | null;
+    homepageUrl: string | null;
+  };
+  repoMetadataUpdates: Array<{
+    description: string | null;
+    homepageUrl: string | null;
+    owner: string;
+    repo: string;
+  }>;
   savedPayloads: RepoContentPayload[];
 }
 
@@ -103,6 +113,11 @@ export const createInMemoryStudioDeps = (): {
       deploy: "success",
       pagesUrl: "https://fork-owner.github.io/open-links-fork",
     },
+    repositoryMetadata: {
+      description: null,
+      homepageUrl: "https://openlinks.us/",
+    },
+    repoMetadataUpdates: [],
     savedPayloads: [],
   };
 
@@ -320,6 +335,21 @@ export const createInMemoryStudioDeps = (): {
     },
     async getDeployStatus() {
       return state.deployStatus;
+    },
+    async getRepositoryMetadata() {
+      return state.repositoryMetadata;
+    },
+    async updateRepositoryMetadata(input) {
+      state.repositoryMetadata = {
+        description: input.description ?? state.repositoryMetadata.description,
+        homepageUrl: input.homepageUrl ?? null,
+      };
+      state.repoMetadataUpdates.push({
+        description: input.description ?? null,
+        homepageUrl: input.homepageUrl ?? null,
+        owner: input.owner,
+        repo: input.repo,
+      });
     },
   };
 

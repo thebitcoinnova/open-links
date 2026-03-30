@@ -1,3 +1,9 @@
+import {
+  type GeneratedLinkReferralConfig,
+  type LinkReferralConfig,
+  normalizeReferralConfig,
+  resolveReferralCompleteness,
+} from "../../src/lib/content/referral-fields";
 import { resolveSupportedSocialProfile } from "../../src/lib/content/social-profile-fields";
 import {
   isXCommunityUrl,
@@ -17,6 +23,11 @@ import {
   toSourceLabel,
 } from "./document-primitives";
 import { parseMetadata } from "./parse-metadata";
+import {
+  buildClubOrangeReferralSignupUrl,
+  extractClubOrangeReferralCode,
+  resolveReferralTarget,
+} from "./referral-targets";
 import { parseRumblePublicProfile, resolveRumbleAboutUrl } from "./rumble-public-profile";
 import { parseAudienceCount } from "./social-profile-counts";
 import type {
@@ -25,6 +36,7 @@ import type {
   ResolveEnrichmentStrategyInput,
   ResolvedPublicEnrichmentStrategy,
 } from "./strategy-types";
+import type { EnrichmentMetadata } from "./types";
 
 export const PUBLIC_BROWSER_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -37,6 +49,10 @@ const YOUTUBE_THUMBNAIL_URL_PATTERN =
 const YOUTUBE_ABOUT_CHANNEL_MARKER = '"aboutChannelViewModel":{';
 const YOUTUBE_METADATA_ROWS_MARKER = '"metadataRows":[';
 const YOUTUBE_SUBSCRIBER_SEGMENT_LENGTH = 5_000;
+const REFERRAL_HEADLINE_HINT_PATTERN =
+  /\b(join|save|get|bonus|discount|deal|offer|membership|invite|credit|free)\b/i;
+const REFERRAL_TERMS_PATTERN =
+  /\b(new users only|limited time|subject to approval|terms apply|starting at\b|first year|first order|while supplies last|minimum purchase)\b/i;
 
 type PublicAugmentationOutcome = NormalizedEnrichmentResult;
 
@@ -54,6 +70,7 @@ export type PublicAugmentationStrategyId =
 export interface PublicAugmentationTarget {
   id: PublicAugmentationStrategyId;
   sourceUrl: string;
+  originalUrl?: string;
   acceptHeader?: string;
   headers?: Record<string, string>;
   parse: (body: string) => PublicAugmentationOutcome;
@@ -108,6 +125,15 @@ interface ResolvePublicAugmentationTargetInput {
   url: string;
   icon?: string;
   metadataHandle?: unknown;
+}
+
+interface ResolvePublicReferralAugmentationInput {
+  originalUrl: string;
+  sourceUrl: string;
+  finalUrl?: string;
+  strategyId: string;
+  metadata: EnrichmentMetadata;
+  manualReferral?: LinkReferralConfig;
 }
 
 const SUBSTACK_PRELOADS_PATTERN = /window\._preloads\s*=\s*JSON\.parse\(("(?:(?:\\.)|[^"\\])*")\)/s;
@@ -495,70 +521,8 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
 const buildGenericXDescription = (displayHandle: string): string =>
   `Posts and updates from @${displayHandle} on X.`;
 
-const decodeOpaqueUrlPathSegment = (segment: string): string => {
-  try {
-    return decodeURIComponent(segment);
-  } catch {
-    return segment;
-  }
-};
-
-const extractClubOrangeReferralCode = (sourceUrl: string): string | null => {
-  let parsed: URL;
-  try {
-    parsed = new URL(sourceUrl);
-  } catch {
-    return null;
-  }
-
-  const host = parsed.hostname.toLowerCase();
-  const normalizedHost = host.replace(/^www\./, "");
-  const segments = parsed.pathname
-    .split("/")
-    .map((segment) => segment.trim())
-    .filter((segment) => segment.length > 0);
-
-  if (host === "signup.cluborange.org") {
-    if (segments.length !== 2 || segments[0] !== "co") {
-      return null;
-    }
-
-    const rawReferral = segments[1];
-    if (!rawReferral) {
-      return null;
-    }
-
-    const decodedReferral = decodeOpaqueUrlPathSegment(rawReferral);
-    return decodedReferral.length > 0 ? decodedReferral : null;
-  }
-
-  if (normalizedHost !== "cluborange.org") {
-    return null;
-  }
-
-  if (segments.length !== 1 || segments[0] !== "signup") {
-    return null;
-  }
-
-  const referral = parsed.searchParams.get("referral");
-  return typeof referral === "string" && referral.length > 0 ? referral : null;
-};
-
 const isClubOrangeReferralSignupUrl = (sourceUrl: string): boolean =>
   extractClubOrangeReferralCode(sourceUrl) !== null;
-
-const buildClubOrangeReferralSignupUrl = (sourceUrl: string): string => {
-  const referral = extractClubOrangeReferralCode(sourceUrl);
-  if (!referral) {
-    throw new Error(
-      `Club Orange referral signup augmentation only supports referral URLs. Got '${sourceUrl}'.`,
-    );
-  }
-
-  const targetUrl = new URL("https://www.cluborange.org/signup");
-  targetUrl.searchParams.set("referral", referral);
-  return targetUrl.toString();
-};
 
 export const parseInstagramProfileMetadata = (
   description: string | undefined,
@@ -714,6 +678,93 @@ const parseClubOrangeReferralSignupPage = (
     ogImage: safeTrim(parsed.metadata.ogImage),
     twitterImage: safeTrim(parsed.metadata.twitterImage),
     sourceLabel: toSourceLabel(input.originalUrl) ?? parsed.metadata.sourceLabel,
+  });
+};
+
+const splitIntoSentences = (value: string | undefined): string[] => {
+  const normalized = safeTrim(value);
+  if (!normalized) {
+    return [];
+  }
+
+  return normalized
+    .split(/(?<=[.!?])\s+/u)
+    .map((sentence) => safeTrim(sentence))
+    .filter((sentence): sentence is string => Boolean(sentence));
+};
+
+const resolveReferralOfferSummary = (metadata: EnrichmentMetadata): string | undefined => {
+  const title = safeTrim(metadata.title);
+  if (title && REFERRAL_HEADLINE_HINT_PATTERN.test(title)) {
+    return title;
+  }
+
+  const firstSentence = splitIntoSentences(metadata.description)[0];
+  return firstSentence && REFERRAL_HEADLINE_HINT_PATTERN.test(firstSentence)
+    ? firstSentence
+    : undefined;
+};
+
+const resolveReferralTermsSummary = (metadata: EnrichmentMetadata): string | undefined => {
+  const matchingSentences = splitIntoSentences(metadata.description).filter((sentence) =>
+    REFERRAL_TERMS_PATTERN.test(sentence),
+  );
+  return matchingSentences.length > 0 ? matchingSentences.join(" ") : undefined;
+};
+
+const isLikelyAuthGatedUrl = (value: string): boolean => {
+  const normalized = value.toLowerCase();
+  return (
+    normalized.includes("/login") ||
+    normalized.includes("/signin") ||
+    normalized.includes("/sign-in") ||
+    normalized.includes("/authorize") ||
+    normalized.includes("/oauth") ||
+    normalized.includes("/checkpoint") ||
+    normalized.includes("/challenge") ||
+    normalized.includes("consent.")
+  );
+};
+
+export const resolvePublicReferralAugmentation = (
+  input: ResolvePublicReferralAugmentationInput,
+): GeneratedLinkReferralConfig | undefined => {
+  const normalizedManual = normalizeReferralConfig(input.manualReferral);
+  const target = resolveReferralTarget({
+    url: input.originalUrl,
+    finalUrl: input.finalUrl ?? input.sourceUrl,
+  });
+  const shouldAttemptReferral =
+    Boolean(normalizedManual) ||
+    Boolean(target && target.pattern !== "direct") ||
+    input.strategyId === "cluborange-referral-signup";
+
+  if (!shouldAttemptReferral) {
+    return undefined;
+  }
+  const resolvedUrl = target?.sourceUrl ?? input.finalUrl ?? input.sourceUrl;
+  if (isLikelyAuthGatedUrl(resolvedUrl)) {
+    return undefined;
+  }
+
+  const offerSummary = resolveReferralOfferSummary(input.metadata);
+  const termsSummary = resolveReferralTermsSummary(input.metadata);
+  const generatedKind =
+    normalizedManual?.kind ??
+    (input.strategyId === "cluborange-referral-signup" ? "referral" : undefined);
+
+  return normalizeReferralConfig({
+    kind: generatedKind,
+    offerSummary,
+    termsSummary,
+    completeness: resolveReferralCompleteness({
+      offerSummary,
+      termsSummary,
+    }),
+    originalUrl: input.originalUrl,
+    resolvedUrl,
+    strategyId: input.strategyId,
+    termsSourceUrl: termsSummary ? resolvedUrl : undefined,
   });
 };
 
@@ -913,25 +964,34 @@ const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
     branch: "public_augmented",
     sourceKind: "html",
     matches: (input) => isClubOrangeReferralSignupUrl(input.url),
-    resolve: (input) =>
-      isClubOrangeReferralSignupUrl(input.url)
-        ? {
-            id: "cluborange-referral-signup",
-            branch: "public_augmented",
-            sourceKind: "html",
-            source: {
-              sourceUrl: buildClubOrangeReferralSignupUrl(input.url),
+    resolve: (input) => {
+      if (!isClubOrangeReferralSignupUrl(input.url)) {
+        return null;
+      }
+
+      const referralTarget = resolveReferralTarget({
+        url: input.url,
+      });
+      const sourceUrl = referralTarget?.sourceUrl ?? buildClubOrangeReferralSignupUrl(input.url);
+
+      return {
+        id: "cluborange-referral-signup",
+        branch: "public_augmented",
+        sourceKind: "html",
+        source: {
+          sourceUrl,
+          originalUrl: input.url,
+        },
+        normalize: (body) =>
+          parseClubOrangeReferralSignupPage(
+            {
+              originalUrl: input.url,
+              fetchUrl: sourceUrl,
             },
-            normalize: (body) =>
-              parseClubOrangeReferralSignupPage(
-                {
-                  originalUrl: input.url,
-                  fetchUrl: buildClubOrangeReferralSignupUrl(input.url),
-                },
-                body,
-              ),
-          }
-        : null,
+            body,
+          ),
+      };
+    },
   },
   {
     id: "instagram-public-profile",
@@ -1150,6 +1210,7 @@ const toPublicAugmentationTarget = (
 ): PublicAugmentationTarget => ({
   id: strategy.id as PublicAugmentationStrategyId,
   sourceUrl: strategy.source.sourceUrl,
+  originalUrl: strategy.source.originalUrl,
   acceptHeader: strategy.source.acceptHeader,
   headers: strategy.source.headers,
   parse: strategy.normalize,

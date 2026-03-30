@@ -10,6 +10,28 @@ Use this contract when the user likely already has:
 
 Use `docs/openclaw-bootstrap.md` for first-time setup when no usable fork/local repo exists.
 
+## When to Invoke This Contract
+
+Default to this contract when the user makes a vague repo-maintenance request in
+an existing OpenLinks repo or fork, including requests like:
+
+- "help"
+- "help me update this repo"
+- "customize this"
+- "change my links"
+- "edit my profile"
+- other broad day-2 CRUD or maintenance phrasing
+
+Use `docs/openclaw-bootstrap.md` instead when the request is clearly first-time
+setup or no usable fork/local repo exists yet.
+
+Do not use this contract for:
+
+- runtime app or website code changes,
+- CI/workflow implementation work,
+- new authenticated extractor development,
+- other named workflows with a more specific contract or skill.
+
 ## Scope and Non-Goals
 
 In scope:
@@ -198,9 +220,13 @@ Execute in this exact order:
    - if the fork’s Actions tab shows "Workflows aren’t being run on this forked repository", tell the user to click **Enable workflows**,
    - after that one-time enablement, create or request one fresh push on `main` before checking CI/deploy results.
 12. Verify CI plus the relevant selected deployment targets for the pushed SHA.
-13. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
-14. Update README deployment URL marker block only when normalized URL/status values changed.
-15. Commit and push README URL update only if step 14 changed file content.
+13. Reconcile GitHub repository metadata to the selected primary host:
+   - if the repo homepage/website still points at the upstream site or otherwise mismatches the selected primary host, update it,
+   - when the fork is still on the default hosting path, use the verified GitHub Pages URL as the homepage,
+   - if the homepage cannot be updated automatically, report a manual remediation note.
+14. Report structured deployment URL table (`target`, `status`, `primary_url`, `additional_urls`, `evidence`).
+15. Update README deployment URL marker block only when normalized URL/status values changed.
+16. Commit and push README URL update only if step 15 changed file content.
 
 ## Final Output Contract (Chat)
 

@@ -81,6 +81,20 @@ const clubOrangeLink = {
   },
 } as const satisfies OpenLink;
 
+const clubOrangeReferralLink = {
+  ...clubOrangeLink,
+  id: "cluborange-referral",
+  referral: {
+    kind: "referral",
+    visitorBenefit: "Join Club Orange starting at $40/year",
+    ownerBenefit: "Supports the project",
+    offerSummary: "Get Club Orange access and connect with Bitcoin builders.",
+  },
+  enrichment: {
+    profileSemantics: "non_profile",
+  },
+} as const satisfies OpenLink;
+
 test("keeps canonical known-site footer labels unchanged", () => {
   // Arrange
   const sourcePresentation = resolveLinkSourcePresentation(site, instagramLink);
@@ -120,6 +134,23 @@ test("keeps canonical known-platform subdomain labels unchanged in the footer", 
     sourcePresentation.sourceLabel,
   );
   const richViewModel = buildRichCardViewModel(site, clubOrangeLink);
+
+  // Assert
+  assert.equal(sourcePresentation.sourceLabel, "app.cluborange.org");
+  assert.equal(footerSourceLabel, "app.cluborange.org");
+  assert.equal(richViewModel.footerSourceLabel, "app.cluborange.org");
+});
+
+test("referral-rich cards keep the same canonical footer label behavior", () => {
+  // Arrange
+  const sourcePresentation = resolveLinkSourcePresentation(site, clubOrangeReferralLink);
+
+  // Act
+  const footerSourceLabel = resolveFooterSourceLabel(
+    clubOrangeReferralLink,
+    sourcePresentation.sourceLabel,
+  );
+  const richViewModel = buildRichCardViewModel(site, clubOrangeReferralLink);
 
   // Assert
   assert.equal(sourcePresentation.sourceLabel, "app.cluborange.org");

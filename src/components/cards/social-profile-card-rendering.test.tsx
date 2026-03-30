@@ -238,6 +238,33 @@ const blogRichLink = {
   },
 } as const satisfies OpenLink;
 
+const clubOrangeReferralRichLink = {
+  id: "cluborange-referral",
+  label: "Join Club Orange",
+  url: "https://app.cluborange.org/pryszkie",
+  type: "rich",
+  icon: "cluborange",
+  description: "Manual signup copy",
+  metadata: {
+    title: "Join Club Orange",
+    description: "Fetched signup copy",
+    sourceLabel: "app.cluborange.org",
+    image: "/cache/content-images/cluborange-referral-preview.jpg",
+    profileImage: "/cache/content-images/cluborange-referral-avatar.jpg",
+  },
+  enrichment: {
+    profileSemantics: "non_profile",
+  },
+  referral: {
+    kind: "referral",
+    visitorBenefit: "Join Club Orange starting at $40/year",
+    ownerBenefit: "Supports the project",
+    offerSummary: "Get Club Orange access and connect with Bitcoin builders.",
+    termsSummary: "Pricing varies by plan. Terms apply.",
+    termsUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+  },
+} as const satisfies OpenLink;
+
 const instagramSimpleLink = {
   ...instagramProfileLink,
   id: "instagram-simple",
@@ -706,6 +733,40 @@ test("non-profile rich cards keep preview leads with compact header and footer s
   assert.equal(viewModel.profilePreview.enabled, false);
   assert.equal(viewModel.profilePreview.imageUrl, undefined);
   assert.deepEqual(viewModel.socialProfile.metrics, []);
+});
+
+test("referral-rich cards stay in the shared non-profile layout while adding referral presentation state", () => {
+  // Arrange
+  const viewModel = buildRichCardViewModel(site, clubOrangeReferralRichLink);
+
+  // Assert
+  assert.equal(viewModel.leadKind, "preview");
+  assert.equal(viewModel.leadImageUrl, "/cache/content-images/cluborange-referral-preview.jpg");
+  assert.equal(viewModel.title, "Join Club Orange");
+  assert.equal(viewModel.description, "Get Club Orange access and connect with Bitcoin builders.");
+  assert.deepEqual(viewModel.headerMetaItems, [{ kind: "source", text: "app.cluborange.org" }]);
+  assert.equal(viewModel.footerSourceLabel, "app.cluborange.org");
+  assert.equal(viewModel.showFooterIcon, true);
+  assert.equal(viewModel.socialProfile.usesProfileLayout, false);
+  assert.equal(viewModel.referral?.disclosureLabel, "Referral");
+  assert.deepEqual(viewModel.referral?.benefitRows, [
+    {
+      kind: "visitor",
+      label: "You get",
+      value: "Join Club Orange starting at $40/year",
+    },
+    {
+      kind: "owner",
+      label: "Supports",
+      value: "Supports the project",
+    },
+  ]);
+  assert.deepEqual(viewModel.referral?.terms, {
+    inlineSummary: "Pricing varies by plan. Terms apply.",
+    isTruncated: false,
+    linkLabel: "Terms",
+    url: "https://www.cluborange.org/signup?referral=pryszkie",
+  });
 });
 
 test("non-profile rich cards without preview media fall back to icon-led shared layout", () => {

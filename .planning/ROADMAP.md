@@ -39,9 +39,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 19-01: Generalize public augmentation so common referral URLs resolve to canonical landing pages and reuse the existing fetch/metadata pipeline.
-- [ ] 19-02: Extract obvious referral terms and disclosure hints into generated referral data with explicit provenance and partial-status reporting.
-- [ ] 19-03: Preserve and generalize the existing Club Orange referral flow as a regression case instead of keeping it as an isolated special-case path.
+- [x] 19-01: Generalize public augmentation so common referral URLs resolve to canonical landing pages and reuse the existing fetch/metadata pipeline.
+- [x] 19-02: Extract obvious referral terms and disclosure hints into generated referral data with explicit provenance and partial-status reporting.
+- [x] 19-03: Preserve and generalize the existing Club Orange referral flow as a regression case instead of keeping it as an isolated special-case path.
 
 **Details:**
 - Stay public-first: follow canonical landing pages and ordinary metadata before reaching for authenticated extractors.
@@ -61,9 +61,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 20-01: Add referral-aware card view models and visible disclosure treatment across simple and rich non-payment cards.
-- [ ] 20-02: Render visitor/owner benefits, terms summary or terms-link context, and source cues while reusing the existing rich image and known-site icon pipelines.
-- [ ] 20-03: Add focused accessibility and regression coverage for referral disclosure copy, rich imagery, and non-referral fallback behavior.
+- [x] 20-01: Add referral-aware card view models and visible disclosure treatment across simple and rich non-payment cards.
+- [x] 20-02: Render visitor/owner benefits, terms summary or terms-link context, and source cues while reusing the existing rich image and known-site icon pipelines.
+- [x] 20-03: Add focused accessibility and regression coverage for referral disclosure copy, rich imagery, and non-referral fallback behavior.
 
 **Details:**
 - Transparency should be visible in the UI, not only encoded in JSON or hidden in generic descriptions.
