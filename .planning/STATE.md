@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 19 is planned; ready to execute public referral enrichment
+**Current focus:** Phase 19 is complete; Phase 20 now needs referral card context
 
 ## Current Position
 
-Phase: 19-public-referral-enrichment-offer-capture
+Phase: 20-referral-card-presentation-transparency-ux
 Plan: —
-Status: Phase 19 planned; ready for `$gsd-execute-phase 19`
-Next Phase: Phase 19 - Public Referral Enrichment + Offer Capture
+Status: Phase 19 complete; ready for `$gsd-discuss-phase 20`
+Next Phase: Phase 20 - Referral Card Presentation + Transparency UX
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-29 - Planned Phase 19 into three executable plans with referral-target research and verification.
+Last activity: 2026-03-30 - Completed Phase 19 with public referral target normalization, generated offer extraction, and regression/report coverage.
 
-Progress: [###-------] 25%
+Progress: [#####-----] 50%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [###-------] 25%
 - 2026-03-29: Milestone v1.3 started for referral links + offer transparency.
 - 2026-03-29: Phases 18-21 added for referral contract plumbing, public referral enrichment, referral card UX, and maintainer docs/verification.
 - 2026-03-29: Phase 18 completed with an additive `links[].referral` contract, generated `{ metadata, referral }` manifest support, referral warning policy, and example datasets.
+- 2026-03-30: Phase 19 completed with generalized public referral target normalization, generated referral completeness/provenance output, and explicit regression/report coverage.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -84,7 +85,7 @@ Progress: [###-------] 25%
 
 ### Pending Todos
 
-- Execute Phase 19 with `$gsd-execute-phase 19`.
+- Gather Phase 20 context with `$gsd-discuss-phase 20`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -98,6 +99,6 @@ Progress: [###-------] 25%
 
 ## Session Continuity
 
-Last session: 2026-03-29 22:55
-Stopped at: Phase 19 planned; next step is `$gsd-execute-phase 19`.
-Resume file: .planning/phases/19-public-referral-enrichment-offer-capture/19-01-PLAN.md
+Last session: 2026-03-30 00:35
+Stopped at: Phase 19 complete; next step is `$gsd-discuss-phase 20`.
+Resume file: .planning/phases/19-public-referral-enrichment-offer-capture/19-VERIFICATION.md
