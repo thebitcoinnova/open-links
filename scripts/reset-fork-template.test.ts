@@ -125,6 +125,9 @@ test("runForkReset rewrites starter data, clears generated identity artifacts, a
     assert.deepEqual(profile.name, "Your Name");
     assert.equal(links.links[0]?.url, "https://github.com");
     assert.equal(site.title, "Minimal OpenLinks");
+    assert.deepEqual(site.quality, {
+      seo: { canonicalBaseUrl: "https://example.com/" },
+    });
     assert.deepEqual(followerHistoryIndex.entries, []);
     assert.doesNotMatch(readme, /https:\/\/openlinks\.us/u);
     assert.doesNotMatch(readme, /https:\/\/prizz\.github\.io\/open-links/u);

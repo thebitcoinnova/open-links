@@ -1,39 +1,27 @@
 {
-  "title": "Staci Costopoulos | OpenLinks",
-  "description": "Host of Bitcoin Nova Podcast | X Community Leader",
   "baseUrl": "/",
-  "theme": {
-    "active": "sleek",
-    "available": ["sleek", "daybreak", "sleek-emerald", "sleek-mono"]
-  },
-  "ui": {
-    "compositionMode": "balanced",
-    "groupingStyle": "subtle",
-    "profileRichness": "rich",
-    "density": "medium",
-    "modePolicy": "dark-toggle",
-    "linkTarget": "new-tab-external",
-    "desktopColumns": "one",
-    "typographyScale": "fixed",
-    "targetSize": "comfortable"
-  },
+  "custom": {},
+  "description": "Minimal starter for OpenLinks",
   "quality": {
     "seo": {
-      "canonicalBaseUrl": "https://thebitcoinnova.github.io/open-links/",
-      "socialImageFallback": "/generated/seo/social-preview.png",
-      "defaults": {
-        "title": "Staci Costopoulos | OpenLinks",
-        "description": "Host of Bitcoin Nova Podcast | X Community Leader",
-        "twitterCard": "summary_large_image"
-      },
-      "overrides": {
-        "profile": {
-          "ogType": "website"
-        }
-      }
+      "canonicalBaseUrl": "https://example.com/"
     }
   },
-  "custom": {
-    "preset": "default"
+  "theme": {
+    "active": "sleek",
+    "available": ["sleek", "sleek-emerald", "sleek-mono", "daybreak"]
+  },
+  "title": "Minimal OpenLinks",
+  "ui": {
+    "footer": {
+      "ctaLabel": "Create Your OpenLinks",
+      "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
+      "prompt": {
+        "enabled": true,
+        "explanation": "Paste this bootstrap prompt into OpenClaw, Claude, or Codex to create a new OpenLinks site from this repository.",
+        "title": "Create your own OpenLinks site"
+      },
+      "showBuildInfo": true
+    }
   }
 }

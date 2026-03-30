@@ -288,8 +288,6 @@ OpenClaw should update only the rows between the exact marker lines below:
 OPENCLAW_DEPLOY_URLS_START
 | target | status | primary_url | additional_urls | evidence |
 |--------|--------|-------------|-----------------|----------|
-| aws | active | https://openlinks.us/ | none | Deploy Production -> Deploy AWS Canonical Site |
-| github-pages | active | https://prizz.github.io/open-links/ | canonical=https://openlinks.us/ | Deploy Production -> Deploy GitHub Pages Mirror |
 OPENCLAW_DEPLOY_URLS_END
 
 ## AI-Guided Path (Optional)
