@@ -37,6 +37,7 @@ Do not use this contract for:
 In scope:
 
 - Day-2 CRUD updates for `data/profile.json`, `data/links.json`, and `data/site.json`.
+- Referral authoring through `links[].referral`, including manual disclosures and supported-family `non_profile` referral links.
 - Optional full customization-audit path across all data-driven knobs in `docs/customization-catalog.md`.
 - Deployment target and primary-host changes when the user wants deployment settings or docs updated.
 - Startup interaction-level selection.
@@ -49,6 +50,17 @@ Out of scope:
 - Runtime app code changes.
 - Workflow file changes.
 - New authenticated extractor development (use dedicated authoring workflow).
+
+## Referral Authoring Guidance
+
+When a requested link is a referral, affiliate, promo, or invite destination:
+
+1. Treat `links[].referral` as the canonical authoring surface.
+2. Use `docs/data-model.md` for exact field meaning and examples.
+3. Prefer adding manual disclosure fields first; generated referral data may fill blanks later but is not authoritative.
+4. Do not suggest a new extractor by default just because the referral URL is unfamiliar. Manual referral authoring is a valid first step even when no extractor exists.
+5. For supported profile-family URLs acting as referral/promo links, set or preserve `links[].enrichment.profileSemantics="non_profile"` unless the user explicitly wants profile-style rendering.
+6. If the user prefers Studio for the change, note that referral editing currently relies on Advanced JSON rather than first-class referral controls.
 
 ## Required Startup Handshake (First Step)
 

@@ -31,6 +31,8 @@ Follow https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-upd
 
 Use the manual steps below only when you are not using OpenClaw.
 
+Referral links are supported through the same day-2 CRUD path. Prefer OpenClaw or the AI-guided customization docs first, use Studio only when Advanced JSON is acceptable for the change, and keep direct JSON edits as the manual fallback. The canonical referral contract lives in `docs/data-model.md`.
+
 ## Before You Start
 
 ### Prerequisites
@@ -66,6 +68,14 @@ Dry-run the cleanup first when you want to inspect the reset surface:
 ```bash
 bun run fork:reset --check
 ```
+
+When you want to pull new upstream changes into your fork later, use:
+
+```bash
+bun run sync:upstream
+```
+
+This command syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
 
 ## Cursor Remote Environment
 

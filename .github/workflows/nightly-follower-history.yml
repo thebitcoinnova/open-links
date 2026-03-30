@@ -40,10 +40,7 @@ jobs:
         run: bun run enrich:rich:strict:write-cache
 
       - name: Refresh public audience cache
-        run: >
-          bun run public:rich:sync --
-          --allow-failures
-          --summary-json .ci-diagnostics/public-rich-sync-summary.json
+        run: bun run public:rich:sync -- --allow-failures --summary-json .ci-diagnostics/public-rich-sync-summary.json
 
       - name: Append follower history snapshots
         run: bash scripts/github-actions/nightly-follower-history.sh append-history
@@ -71,12 +68,7 @@ jobs:
         env:
           AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           OPENLINKS_ENABLE_AWS_DEPLOY: ${{ vars.OPENLINKS_ENABLE_AWS_DEPLOY }}
-        run: |
-          if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" && -n "${AWS_DEPLOY_ROLE_ARN:-}" ]]; then
-            echo "enabled=true" >>"$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >>"$GITHUB_OUTPUT"
-          fi
+        run: bash scripts/github-actions/nightly-follower-history.sh resolve-aws-opt-in
 
       - name: Configure AWS credentials
         if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'

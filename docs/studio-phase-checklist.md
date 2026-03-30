@@ -73,6 +73,7 @@ Use this file as the source of truth for implementation status, priorities, and 
 - [x] `P0` Internal sync endpoint and worker trigger
 - [x] `P0` Conflict handling state (`sync_conflict` + disable auto-sync)
 - [/] `P1` Scheduled execution on Railway with observability and alerting
+- [x] `P1` Shared fork-owned sync helper parity between Studio sync and repo automation
 - [ ] `P2` Manual conflict resolution helper workflow
 
 ## Phase 7: Security, Quality, Launch Readiness

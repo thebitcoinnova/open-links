@@ -70,6 +70,7 @@ Coverage for each `links[]` item:
 - `group`
 - `order`
 - `enabled`
+- `referral`
 - `payment`
 - `metadata`
 - `enrichment`
@@ -83,6 +84,25 @@ Current Quick Links-specific authoring note:
 - optional same-platform tie-breaker: `links[].custom.quickLinks.canonical=true`
 
 For the behavior rules and current defaults, use `docs/data-model.md`.
+
+Referral coverage within `links[]` items:
+
+- `referral.kind`
+- `referral.visitorBenefit`
+- `referral.ownerBenefit`
+- `referral.offerSummary`
+- `referral.termsSummary`
+- `referral.termsUrl`
+- `referral.code`
+- `referral.custom`
+
+Referral notes:
+
+- Referral remains additive to `simple` and `rich` links; it is not a separate link type.
+- `referral: {}` is valid as a soft marker, but validation warns until meaningful disclosure fields are present.
+- `kind` alone classifies the link but does not count as sufficient disclosure by itself.
+- Supported profile-family referral links often pair with `links[].enrichment.profileSemantics="non_profile"`.
+- Use `docs/data-model.md` for the canonical contract, curated examples, manual-vs-generated precedence, and generated referral-field explanation.
 
 ## 4) `links[].metadata` (`links-metadata`)
 

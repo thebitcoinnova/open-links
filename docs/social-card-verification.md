@@ -2,6 +2,7 @@
 
 Use this guide after changing any of the profile-oriented card surfaces:
 
+- referral disclosure, benefit, or terms-link behavior
 - social profile metadata capture or merge behavior
 - Quick Links derivation or the visible Quick Links strip in the profile header
 - `profileDescription` or description-source precedence
@@ -16,6 +17,10 @@ If this guide surfaces a docs or behavior issue, prefer fixing it through the re
 
 ## Quick Checklist
 
+- [ ] Desktop: referral cards show a visible disclosure badge near the top/title area rather than hiding referral state only in generic copy.
+- [ ] Desktop: referral cards render the populated visitor/owner benefit rows clearly and do not leave empty placeholder rows for missing sides.
+- [ ] Desktop: referral `termsSummary` stays readable inline and any `termsUrl` renders as a quiet sibling link rather than a nested card interaction.
+- [ ] Desktop/mobile: supported-family referral links that use `enrichment.profileSemantics="non_profile"` stay on the non-profile card path while keeping promo imagery/source cues intact.
 - [ ] Desktop: when eligible social/profile links exist, the profile header shows the Quick Links strip above the action bar with icon-only outbound shortcuts and no visible heading.
 - [ ] Desktop: when no eligible Quick Links exist, the strip disappears completely and the share/copy/QR action row stays intact beneath the profile copy.
 - [ ] Desktop: supported social profile cards still render avatar-first identity rows, handles, and audience metrics where available.
@@ -40,14 +45,38 @@ If this guide surfaces a docs or behavior issue, prefer fixing it through the re
 | Quick Links derivation, priority ordering, canonical tie-breaking, empty-result behavior | `src/lib/ui/profile-quick-links.test.ts` |
 | Visible Quick Links strip semantics, heading-free render, outbound labels/titles, placement above action bar | `src/components/profile/ProfileQuickLinks.test.tsx` |
 | Profile-header quick-link empty/populated state and action-row preservation | `src/components/profile/ProfileHeader.test.tsx` |
+| Referral disclosure/balance/terms rendering, soft markers, and one-sided benefit behavior | `src/components/cards/referral-card-rendering.test.tsx` |
 | Profile-card rendering, audience metrics, fallback rich/simple presentation | `src/components/cards/social-profile-card-rendering.test.tsx` |
-| `profileDescription` precedence, manual/fetched description rules, description-image-row policy | `src/lib/ui/rich-card-description-sourcing.test.ts` |
-| Card action-row semantics, top-banner/bottom-row/compact-end accessibility ordering, share-only cards | `src/components/cards/non-payment-card-accessibility.test.tsx` |
+| `profileDescription` precedence, manual/fetched description rules, description-image-row policy, and referral `offerSummary` precedence | `src/lib/ui/rich-card-description-sourcing.test.ts` |
+| Card action-row semantics, top-banner/bottom-row/compact-end accessibility ordering, referral sibling terms links, and share-only cards | `src/components/cards/non-payment-card-accessibility.test.tsx` |
 | Clean URL share payload and clipboard fallback behavior | `src/lib/share/share-link.test.ts` |
 | Follower-history CSV parsing, range filtering, raw/growth point generation | `src/lib/analytics/follower-history.test.ts` |
 | Append-only CSV/index writing behavior | `scripts/follower-history/append-history.test.ts` |
 
 Manual checks should complement these tests, not replace them. When a manual check fails, update the automated coverage if that state was not already protected.
+
+## Referral-Specific Verification
+
+After adding or editing a referral link, use this script-backed path:
+
+```bash
+bun run validate:data
+bun run enrich:rich:strict
+bun run build
+```
+
+What to look for:
+
+- thin/soft disclosure warnings when a referral is marked but meaningful fields are still missing
+- manual/generated drift warnings when saved disclosures and generated referral data disagree
+- supported-profile `non_profile` nudges when a referral URL belongs to a profile-capable family but should stay on generic card behavior
+- partial extraction or stale-cache warnings when public enrichment did not fully resolve referral details
+
+Interpretation rule:
+
+- Public extraction is assistive, not authoritative.
+- Use generated referral text as a starting point or blank-filler, not as the final legal/commercial source of truth.
+- If the generated output is incomplete, stale, jurisdiction-specific, or simply worse than your manual copy, keep the manual disclosure.
 
 ## Narrative Walkthrough
 
@@ -79,7 +108,20 @@ Confirm:
 - `compact-end` fallback only appears when the preview misses the banner ratio cutoff and that fallback is enabled
 - simple cards do not grow extra profile preview media even if preview media is distinct
 
-### 3. Quick Links strip and profile-header actions
+### 3. Referral cards
+
+Check at least one simple referral card, one rich referral card, and one supported-family referral link that intentionally uses `enrichment.profileSemantics="non_profile"`.
+
+Confirm:
+
+- the disclosure badge is visible early in the reading order
+- `visitorBenefit` and `ownerBenefit` render only when populated
+- soft markers show the generic referral badge without placeholder benefit rows
+- `offerSummary` reads like the primary card summary when present
+- `termsSummary` stays secondary and any `termsUrl` renders as a separate quiet link outside the main card anchor
+- supported-family referral links stay on the generic non-profile card path rather than accidentally switching to profile layout
+
+### 4. Quick Links strip and profile-header actions
 
 Check the profile header in both states:
 
@@ -100,7 +142,7 @@ Confirm:
 - share feedback is short-lived and does not break header layout
 - native share uses a clean URL payload, and copy fallback stays browser-paste-safe
 
-### 4. Card action rows
+### 5. Card action rows
 
 Check both a history-aware card and a no-history card.
 
@@ -111,7 +153,7 @@ Confirm:
 - action buttons remain siblings outside the anchor
 - the row reads as part of the header, not as a separate side column
 
-### 5. Analytics page and analytics modal
+### 6. Analytics page and analytics modal
 
 Use the profile-header analytics button for the page-level view and any history-aware card for the modal view.
 
@@ -122,7 +164,7 @@ Confirm:
 - platform charts remain mostly separate rather than collapsing into a misleading shared-scale chart
 - modal charts still support raw versus growth views and close cleanly back to the originating page
 
-### 6. Public artifact verification
+### 7. Public artifact verification
 
 Open the public assets directly:
 
@@ -136,7 +178,7 @@ Confirm:
 - newer snapshots append rows instead of rewriting the file into a different column layout
 - unchanged counts are still allowed to append a new row
 
-### 7. Docs drift review
+### 8. Docs drift review
 
 Before closing a change, compare runtime behavior against:
 
@@ -145,9 +187,9 @@ Before closing a change, compare runtime behavior against:
 - `docs/customization-catalog.md`
 - `docs/authenticated-rich-extractors.md`
 
-Treat stale examples, incorrect platform-support claims, misleading `profileLinks` wording, or missing Quick Links verification notes as real regressions.
+Treat stale referral examples, incorrect platform-support claims, misleading `profileLinks` wording, missing Quick Links verification notes, or missing referral warning interpretation as real regressions.
 
-### 8. SEO/social preview verification
+### 9. SEO/social preview verification
 
 When the change touches the site preview image or fallback SEO asset, confirm:
 

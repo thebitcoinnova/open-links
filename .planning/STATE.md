@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 21 is planned; ready to execute maintainer CRUD/docs guidance
+**Current focus:** Milestone audit found a referral proof gap; Phase 22 is ready to plan
 
 ## Current Position
 
-Phase: 21-maintainer-crud-guidance-docs-verification
-Plan: 21-01, 21-02
-Status: Phase 21 planned; ready for `$gsd-execute-phase 21`
-Next Phase: Phase 21 - Maintainer CRUD Guidance + Docs + Verification
+Phase: 22-source-authored-referral-flow-proof
+Plan: —
+Status: Gap-closure phase defined; ready for `$gsd-plan-phase 22`
+Next Phase: Phase 22 - Source-Authored Referral Flow Proof
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Planned Phase 21 into canonical CRUD/docs guidance and README/verification/downstream follow-through waves.
+Last activity: 2026-03-30 - Milestone audit found the missing source-authored referral proof gap and Phase 22 was added to close it.
 
 Progress: [#########-] 90%
 
@@ -75,6 +75,8 @@ Progress: [#########-] 90%
 - 2026-03-29: Phase 18 completed with an additive `links[].referral` contract, generated `{ metadata, referral }` manifest support, referral warning policy, and example datasets.
 - 2026-03-30: Phase 19 completed with generalized public referral target normalization, generated referral completeness/provenance output, and explicit regression/report coverage.
 - 2026-03-30: Phase 20 completed with visible referral disclosure badges, benefit rows, sibling terms links, and focused non-referral/accessibility regression coverage in the shared card shell.
+- 2026-03-30: Phase 21 completed with canonical referral authoring docs, top-level verification guidance, and explicit downstream review breadcrumbs for the additive referral contract.
+- 2026-03-30: Milestone audit found the missing source-authored referral flow proof gap; Phase 22 was added to close it before archiving v1.3.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -89,7 +91,7 @@ Progress: [#########-] 90%
 
 ### Pending Todos
 
-- Execute Phase 21 with `$gsd-execute-phase 21`.
+- Plan Phase 22 with `$gsd-plan-phase 22`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -104,5 +106,5 @@ Progress: [#########-] 90%
 ## Session Continuity
 
 Last session: 2026-03-30 00:55
-Stopped at: Phase 21 planned; next step is `$gsd-execute-phase 21`.
-Resume file: .planning/phases/21-maintainer-crud-guidance-docs-verification/21-01-PLAN.md
+Stopped at: Phase 22 gap closure was added; next step is `$gsd-plan-phase 22`.
+Resume file: .planning/v1.3-MILESTONE-AUDIT.md

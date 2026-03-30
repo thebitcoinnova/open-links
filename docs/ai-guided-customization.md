@@ -6,6 +6,12 @@ Use it as a step-by-step checklist. Every step includes an opt-out path so you c
 
 This is the recommended repo-native CRUD path when you want an AI agent to update your OpenLinks data. If you want browser-based CRUD instead, prefer `docs/studio-self-serve.md`. Direct file editing remains the lower-level fallback, not the default workflow.
 
+Referral links follow this same path. For referral authoring today:
+
+1. Prefer this wizard or `docs/openclaw-update-crud.md` first.
+2. Use Studio only when Advanced JSON is acceptable for the change.
+3. Treat direct JSON edits as the lower-level fallback.
+
 For OpenClaw automation-first execution, use:
 
 - `docs/openclaw-bootstrap.md` for first-time setup,
@@ -20,6 +26,8 @@ Use this wizard when you want to:
 - keep changes reviewable through normal git commits.
 
 If you already know you want deterministic day-2 maintenance in an existing repo, prefer `docs/openclaw-update-crud.md`. If you want browser-based CRUD instead of repo-local editing, prefer `docs/studio-self-serve.md`.
+
+If your goal is adding referral links, stay on this wizard or the OpenClaw day-2 CRUD path. You should not need a bespoke extractor by default just to author the referral link.
 
 Do not use this as a replacement for understanding your repository. Keep final review human-owned.
 
@@ -169,7 +177,17 @@ Agent should:
    - fully manual,
    - enrichment-assisted,
    - enrichment-disabled.
-7. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
+7. Ask whether any link should be marked as `referral`, `affiliate`, `promo`, or `invite`.
+8. For each referral link, collect the relevant disclosure fields:
+   - `visitorBenefit`
+   - `ownerBenefit`
+   - `offerSummary`
+   - `termsSummary`
+   - `termsUrl`
+   - `code`
+9. If a referral URL belongs to a supported profile-family site but should stay on generic rich-card behavior, set `enrichment.profileSemantics` to `non_profile`.
+10. If exact referral terms are unclear, it is acceptable to add a soft marker or partial manual disclosure first. Do not block the authoring flow on extractor work by default.
+11. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
 
 ```bash
 bun run images:sync
@@ -193,6 +211,7 @@ Opt-out:
 Reference:
 
 - `docs/data-model.md` (`links.json`, grouping, ordering, rich metadata)
+- `docs/data-model.md` (`links[].referral` section)
 
 ### Step 4: Site behavior pass
 

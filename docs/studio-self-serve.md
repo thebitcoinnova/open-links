@@ -4,6 +4,12 @@ This document describes the new multi-service control plane for non-technical Op
 
 Prefer Studio when you want the browser-based CRUD path and the current self-serve onboarding/editor covers your workflow. For repo-native changes or workflows not yet exposed in Studio, prefer the checked-in AI workflows/skills and automation docs first, then fall back to manual JSON edits only when you need lower-level control.
 
+Current referral status:
+
+- Studio can edit referral links today through the Advanced JSON editor for `data/links.json`.
+- First-class referral/disclosure form controls and referral-specific previews are not shipped yet.
+- When you want guided referral authoring, field examples, or warning interpretation, prefer `docs/openclaw-update-crud.md`, `docs/ai-guided-customization.md`, and `docs/data-model.md` first.
+
 Phase tracking lives in:
 
 - `docs/studio-phase-checklist.md` (canonical implementation checklist)
@@ -200,7 +206,7 @@ Required app permissions:
 - Fork provisioning also reconciles GitHub repository metadata so the fork does not keep the upstream repo homepage in the GitHub **About** sidebar; the default homepage becomes the fork's GitHub Pages URL.
 - Deploy-status refresh should keep the repo homepage aligned with the verified primary host when the default fork Pages path is in use.
 - Studio sync first attempts GitHub's normal `merge-upstream` path.
-- If GitHub reports conflicts and every overlapping path is declared fork-owned in `config/fork-owned-paths.json`, Studio creates a merge commit that preserves the fork's current personalized files while still syncing shared upstream code/docs/tooling.
+- If GitHub reports conflicts and every overlapping path is declared fork-owned in `config/fork-owned-paths.json`, Studio uses the shared fork-sync preservation helper to create a merge commit that keeps the fork's current personalized files while still syncing shared upstream code/docs/tooling.
 - If any overlapping conflict touches a shared path outside that contract, Studio still disables auto-sync and requires manual intervention.
 - Use `docs/studio-security-review.md` before production launch and after any auth/session/webhook security change.
 - Use `docs/studio-launch-playbook.md` for go-live sequencing, smoke tests, rollback, and non-security production incidents.
