@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 20 context is captured; ready to plan referral card UX
+**Current focus:** Phase 20 is planned; ready to execute referral card transparency UX
 
 ## Current Position
 
 Phase: 20-referral-card-presentation-transparency-ux
-Plan: —
-Status: Phase 20 context captured; ready for `$gsd-plan-phase 20`
+Plan: 20-01, 20-02, 20-03
+Status: Phase 20 planned; ready for `$gsd-execute-phase 20`
 Next Phase: Phase 20 - Referral Card Presentation + Transparency UX
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Gathered Phase 20 context for referral card disclosure, benefits, terms, and media cues.
+Last activity: 2026-03-30 - Planned Phase 20 into disclosure/view-model, rendering, and regression-hardening waves for referral cards.
 
-Progress: [#####-----] 50%
+Progress: [######----] 60%
 
 ## Performance Metrics
 
@@ -85,7 +85,7 @@ Progress: [#####-----] 50%
 
 ### Pending Todos
 
-- Plan Phase 20 with `$gsd-plan-phase 20`.
+- Execute Phase 20 with `$gsd-execute-phase 20`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -100,5 +100,5 @@ Progress: [#####-----] 50%
 ## Session Continuity
 
 Last session: 2026-03-30 00:55
-Stopped at: Phase 20 context gathered; next step is `$gsd-plan-phase 20`.
-Resume file: .planning/phases/20-referral-card-presentation-transparency-ux/20-CONTEXT.md
+Stopped at: Phase 20 planned; next step is `$gsd-execute-phase 20`.
+Resume file: .planning/phases/20-referral-card-presentation-transparency-ux/20-01-PLAN.md
