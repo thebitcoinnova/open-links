@@ -1014,6 +1014,15 @@ a:focus-visible {
     var(--motion-fast), box-shadow var(--motion-fast);
 }
 
+.non-payment-card-frame[data-has-referral="true"] {
+  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border-subtle) 72%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 90%, var(--accent) 10%),
+    color-mix(in srgb, var(--surface-card) 96%, var(--surface-bg) 4%)
+  );
+}
+
 .card-action-row {
   margin-top: 0;
 }
@@ -1189,6 +1198,31 @@ a:focus-visible {
   gap: 0.18rem;
 }
 
+.non-payment-card-summary[data-has-referral="true"] {
+  gap: 0.5rem;
+}
+
+.non-payment-card-referral-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.non-payment-card-referral-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.58rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 28%, var(--border-subtle) 72%);
+  background: color-mix(in srgb, var(--surface-pill) 76%, var(--accent) 24%);
+  color: color-mix(in srgb, var(--text-primary) 86%, var(--accent-strong) 14%);
+  font-size: calc(var(--page-type-caption) - 0.02rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-card-source);
+  text-transform: uppercase;
+}
+
 .non-payment-card-title-row {
   display: flex;
   align-items: flex-start;
@@ -1225,6 +1259,37 @@ a:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.non-payment-card-referral-benefits {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.non-payment-card-referral-benefit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 5.25rem) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.non-payment-card-referral-benefit-label {
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--accent) 18%);
+  font-size: calc(var(--page-type-caption) - 0.03rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-card-source);
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.non-payment-card-referral-benefit-value {
+  min-width: 0;
+  color: color-mix(in srgb, var(--text-primary) 88%, var(--accent-strong) 12%);
+  font-size: var(--page-type-caption);
+  line-height: var(--line-height-card-description);
+  overflow-wrap: anywhere;
+}
+
 .non-payment-card-description {
   grid-area: description;
   min-width: 0;
@@ -1244,6 +1309,14 @@ a:focus-visible {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+}
+
+.non-payment-card-referral-terms {
+  min-width: 0;
+  color: color-mix(in srgb, var(--text-muted) 84%, var(--accent) 16%);
+  font-size: calc(var(--page-type-caption) - 0.01rem);
+  line-height: var(--line-height-card-description);
+  overflow-wrap: anywhere;
 }
 
 .non-payment-card-profile-preview {
@@ -1329,6 +1402,39 @@ a:focus-visible {
   font-size: var(--page-type-caption);
   line-height: var(--line-height-card-description);
   letter-spacing: normal;
+}
+
+.non-payment-card-secondary-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.non-payment-card-referral-terms-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--page-target-size) - 0.65rem);
+  padding: 0.28rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent 28%);
+  background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-card) 10%);
+  color: color-mix(in srgb, var(--text-primary) 82%, var(--text-muted) 18%);
+  font-size: var(--page-type-caption);
+  font-weight: 600;
+  letter-spacing: var(--tracking-card-source);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.non-payment-card-referral-terms-link:hover {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--accent-strong) 26%, var(--border-subtle) 74%);
+}
+
+.non-payment-card-referral-terms-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-strong) 42%, transparent);
+  outline-offset: 2px;
 }
 
 .payment-link-card {

@@ -66,6 +66,7 @@ const resolveNaturalAspectRatio = (
 
 export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => {
   const cardActions = createMemo(() => props.resolveCardActions?.() ?? []);
+  const referral = () => props.viewModel.referral;
   const profilePreview = () => props.viewModel.profilePreview;
   const [profilePreviewMeasurementVersion, setProfilePreviewMeasurementVersion] = createSignal(0);
   const target = () => props.target ?? "_blank";
@@ -78,6 +79,10 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
   const sourceId = () => `${props.cardVariant}-link-source-${safeId(props.link.id)}`;
   const hasHeaderMeta = () => props.viewModel.headerMetaItems.length > 0;
   const hasFooterSource = () => Boolean(props.viewModel.footerSourceLabel);
+  const hasReferral = () => Boolean(referral());
+  const hasReferralBenefits = () => (referral()?.benefitRows.length ?? 0) > 0;
+  const hasInlineReferralTerms = () => Boolean(referral()?.terms?.inlineSummary);
+  const hasReferralTermsLink = () => Boolean(referral()?.terms?.url);
   const showFooter = () => props.viewModel.showFooterIcon || hasFooterSource();
   const ariaDescribedBy = () => {
     const ids = [descriptionId()];
@@ -104,6 +109,8 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
     props.viewModel.contactKind === "email"
       ? "non-payment-card-description non-payment-card-description-email"
       : "non-payment-card-description";
+  const referralTermsLinkAriaLabel = () =>
+    `Open terms for ${props.viewModel.title}${target() === "_blank" ? " in a new tab" : ""}`;
 
   const handleCardAction = async (action: CardActionButtonProps) => {
     showActionToast((await action.onClick()) as ShareLinkResult | undefined);
@@ -207,6 +214,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       class="non-payment-card-frame"
       data-card-variant={props.cardVariant}
       data-has-actions={hasActions() ? "true" : "false"}
+      data-has-referral={hasReferral() ? "true" : "false"}
       data-has-profile-layout={hasProfileLayout() ? "true" : "false"}
       data-has-profile-preview-media={profilePreview().enabled ? "true" : "false"}
       data-profile-preview-placement={profilePreview().placement}
@@ -238,6 +246,7 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
         data-profile-preview-placement={profilePreview().placement}
         data-profile-preview-render={profilePreviewRenderKind()}
         data-has-actions={hasActions() ? "true" : "false"}
+        data-has-referral={hasReferral() ? "true" : "false"}
         data-link-kind={props.viewModel.linkKind}
         data-link-scheme={props.viewModel.linkScheme}
         data-contact-kind={props.viewModel.contactKind}
@@ -286,7 +295,16 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
             </Show>
           </span>
 
-          <span class="non-payment-card-summary" data-has-actions={hasActions() ? "true" : "false"}>
+          <span
+            class="non-payment-card-summary"
+            data-has-actions={hasActions() ? "true" : "false"}
+            data-has-referral={hasReferral() ? "true" : "false"}
+          >
+            <Show when={hasReferral()}>
+              <span class="non-payment-card-referral-badge-row">
+                <span class="non-payment-card-referral-badge">{referral()?.disclosureLabel}</span>
+              </span>
+            </Show>
             <span class="non-payment-card-title-row">
               <strong class="non-payment-card-title" id={titleId()}>
                 {props.viewModel.title}
@@ -299,11 +317,30 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
                 </For>
               </span>
             </Show>
+            <Show when={hasReferralBenefits()}>
+              <span class="non-payment-card-referral-benefits">
+                <For each={referral()?.benefitRows ?? []}>
+                  {(benefit) => (
+                    <span
+                      class="non-payment-card-referral-benefit-row"
+                      data-benefit-kind={benefit.kind}
+                    >
+                      <span class="non-payment-card-referral-benefit-label">{benefit.label}</span>
+                      <span class="non-payment-card-referral-benefit-value">{benefit.value}</span>
+                    </span>
+                  )}
+                </For>
+              </span>
+            </Show>
           </span>
 
           <span class={descriptionClassName()} id={descriptionId()}>
             {props.viewModel.description}
           </span>
+
+          <Show when={hasInlineReferralTerms()}>
+            <span class="non-payment-card-referral-terms">{referral()?.terms?.inlineSummary}</span>
+          </Show>
 
           <Show when={profilePreviewRenderKind() === "bottom-row" && profilePreview().imageUrl}>
             <span
@@ -345,6 +382,21 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
           </Show>
         </span>
       </a>
+
+      <Show when={hasReferralTermsLink()}>
+        <div class="non-payment-card-secondary-links">
+          <a
+            class="non-payment-card-referral-terms-link"
+            href={referral()?.terms?.url}
+            target={target()}
+            rel={rel()}
+            aria-label={referralTermsLinkAriaLabel()}
+            title={referralTermsLinkAriaLabel()}
+          >
+            {referral()?.terms?.linkLabel ?? "Terms"}
+          </a>
+        </div>
+      </Show>
 
       <BottomActionBar class="card-action-row" items={actionItems()} label="Card actions" />
     </div>

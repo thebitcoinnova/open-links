@@ -191,6 +191,20 @@
     gap: 0.2rem 0.55rem;
   }
 
+  body .non-payment-card-referral-benefit-row {
+    grid-template-columns: 1fr;
+    gap: 0.12rem;
+  }
+
+  body .non-payment-card-secondary-links {
+    width: 100%;
+  }
+
+  body .non-payment-card-referral-terms-link {
+    width: 100%;
+    justify-content: center;
+  }
+
   body .analytics-page-header,
   body .analytics-card-header,
   body .analytics-modal-header {
