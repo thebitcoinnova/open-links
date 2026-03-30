@@ -57,6 +57,23 @@ they touch:
 - build/render output conventions relied on by downstream smoke checks,
   manifest planning, or site assembly
 
+## Referral-Specific Compatibility Notes
+
+The referral milestone adds one important shared-contract consideration:
+
+- `links[].referral` is an additive schema/data-contract change and should be reviewed when bumping the upstream pin.
+
+Concrete downstream guidance:
+
+1. When you update the upstream `open-links` pin, review the referral contract notes in `docs/data-model.md`.
+2. If your downstream repo mirrors upstream schema or data-model assumptions, verify the additive `links[].referral` object is acceptable before rolling the pin forward.
+3. Treat later referral renderer/UI-only changes, such as badge styling or sibling terms-link layout, as lower-risk than referral schema, policy, or script-entrypoint changes.
+
+UI-only vs shared-contract distinction:
+
+- UI-only referral changes primarily affect rendering and smoke expectations.
+- Shared contract changes affect mirrored schema/data assumptions and deserve an explicit review on sync.
+
 This note is about compatibility awareness, not a promise that every change
 requires cross-repo updates. The intent is to make downstream impact explicit
 when those shared surfaces change.

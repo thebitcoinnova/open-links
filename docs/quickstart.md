@@ -31,6 +31,8 @@ Follow https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-upd
 
 Use the manual steps below only when you are not using OpenClaw.
 
+Referral links are supported through the same day-2 CRUD path. Prefer OpenClaw or the AI-guided customization docs first, use Studio only when Advanced JSON is acceptable for the change, and keep direct JSON edits as the manual fallback. The canonical referral contract lives in `docs/data-model.md`.
+
 ## Before You Start
 
 ### Prerequisites

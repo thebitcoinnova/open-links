@@ -18,6 +18,8 @@ This project is developer-first, but that does not mean raw JSON should be your 
 2. Use the Studio webapp when the browser-based self-serve editor fits your workflow.
 3. Drop to direct JSON edits only when you need lower-level control or a manual fallback.
 
+Referral links are now a supported maintainer surface. Prefer the repo-native AI CRUD docs first, use Studio only when Advanced JSON is acceptable for the change, and keep direct JSON edits as the fallback. The canonical referral contract lives in [docs/data-model.md](docs/data-model.md), and the script-backed referral verification checklist lives in [docs/social-card-verification.md](docs/social-card-verification.md).
+
 Quick Links are now a shipped renderer behavior: when your top-level `data/links.json` contains eligible social/profile destinations, OpenLinks automatically derives an icon-first strip above the profile action bar. There is no separate Quick Links registry or authoring workflow yet; see [docs/data-model.md](docs/data-model.md) for the canonical behavior contract and [docs/customization-catalog.md](docs/customization-catalog.md) for the current knob inventory.
 
 OpenLinks is also an active upstream dependency for
@@ -26,7 +28,9 @@ control repo that builds many individual sites on top of this renderer and data
 contract. Maintainers should treat shared schema, policy, script, and
 build-output changes here as potentially downstream-visible work. See
 [`docs/downstream-open-links-sites.md`](docs/downstream-open-links-sites.md)
-for the current synopsis.
+for the current synopsis. The additive `links[].referral` contract is one of
+those shared surfaces; later referral card UI-only changes are lower-risk than
+schema, policy, or script changes.
 <!-- OPENLINKS_SCREENSHOT_ANCHOR -->
 <!-- OPENLINKS_SCREENSHOT_START -->
 ![OpenLinks preview](docs/assets/openlinks-preview.png)
@@ -147,8 +151,9 @@ bun run studio:web:dev
 ### Recommended CRUD Paths
 
 - Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md), [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed, and [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md) when you want other websites, repos, docs, or services to point back to your deployed OpenLinks fork.
+- For referral links: prefer the repo-native AI CRUD docs first, use Studio only when Advanced JSON fits the change, and use `docs/data-model.md` as the canonical field reference.
 - For branded payment/tip cards, treat card-shell icon wiring and QR badge wiring as separate checks: shared card chrome follows the known-site icon registry from `links[].icon` / `payment.rails[].icon`, while `badge.items.asset` only affects the QR center badge.
-- Preferred for browser-based CRUD: use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when the self-serve onboarding/editor already covers your workflow.
+- Preferred for browser-based CRUD: use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when the self-serve onboarding/editor already covers your workflow. Referral editing there currently relies on Advanced JSON.
 - Manual fallback: edit `data/*.json` directly only when you intentionally want the lower-level path or need to work outside the currently supported AI/Studio flows.
 
 ### Repo Skills
@@ -305,7 +310,7 @@ Recommended flow:
 2. Prefer [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md) or [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md) for routine repo-native CRUD.
 3. Use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when you want the browser-based self-serve path.
 4. Use [Data Model](https://raw.githubusercontent.com/pRizz/open-links/main/docs/data-model.md) and [Customization Catalog](https://raw.githubusercontent.com/pRizz/open-links/main/docs/customization-catalog.md) as the contract/reference layer.
-5. Use [Social Card Verification Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/social-card-verification.md) after changing profile-card metadata, follower history, analytics, or share behavior.
+5. Use [Social Card Verification Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/social-card-verification.md) after changing referral cards, profile-card metadata, follower history, analytics, or share behavior.
 
 ## First Production Deploy (Quick Path)
 
