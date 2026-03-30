@@ -712,6 +712,20 @@ const resolveReferralTermsSummary = (metadata: EnrichmentMetadata): string | und
   return matchingSentences.length > 0 ? matchingSentences.join(" ") : undefined;
 };
 
+const isLikelyAuthGatedUrl = (value: string): boolean => {
+  const normalized = value.toLowerCase();
+  return (
+    normalized.includes("/login") ||
+    normalized.includes("/signin") ||
+    normalized.includes("/sign-in") ||
+    normalized.includes("/authorize") ||
+    normalized.includes("/oauth") ||
+    normalized.includes("/checkpoint") ||
+    normalized.includes("/challenge") ||
+    normalized.includes("consent.")
+  );
+};
+
 export const resolvePublicReferralAugmentation = (
   input: ResolvePublicReferralAugmentationInput,
 ): GeneratedLinkReferralConfig | undefined => {
@@ -728,10 +742,13 @@ export const resolvePublicReferralAugmentation = (
   if (!shouldAttemptReferral) {
     return undefined;
   }
+  const resolvedUrl = target?.sourceUrl ?? input.finalUrl ?? input.sourceUrl;
+  if (isLikelyAuthGatedUrl(resolvedUrl)) {
+    return undefined;
+  }
 
   const offerSummary = resolveReferralOfferSummary(input.metadata);
   const termsSummary = resolveReferralTermsSummary(input.metadata);
-  const resolvedUrl = target?.sourceUrl ?? input.finalUrl ?? input.sourceUrl;
   const generatedKind =
     normalizedManual?.kind ??
     (input.strategyId === "cluborange-referral-signup" ? "referral" : undefined);

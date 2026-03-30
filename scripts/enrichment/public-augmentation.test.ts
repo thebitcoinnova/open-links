@@ -174,6 +174,48 @@ test("prefers omission over inference for ambiguous direct referral pages", () =
   });
 });
 
+test("captures partial referral output when only the promo headline is clear", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Get $20 off your first order",
+      description: "Discover premium widgets.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    offerSummary: "Get $20 off your first order",
+    completeness: "partial",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
+
+test("skips public referral extraction when the resolved url is auth gated", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://bit.ly/private-offer",
+    sourceUrl: "https://bit.ly/private-offer",
+    finalUrl: "https://example.com/login?ref=alice",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "referral",
+    },
+    metadata: {
+      title: "Get $20 off your first order",
+      description: "New users only.",
+    },
+  });
+
+  assert.equal(referral, undefined);
+});
+
 test("resolves a Primal public augmentation target that fetches the profile page directly", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({

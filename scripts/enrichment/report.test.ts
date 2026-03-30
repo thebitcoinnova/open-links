@@ -81,3 +81,48 @@ test("readEnrichmentReport restores referral fields from disk", (t) => {
     strategyId: "cluborange-referral-signup",
   });
 });
+
+test("readEnrichmentReport keeps none completeness explicit without confidence metadata", (t) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "openlinks-report-none-"));
+  const reportPath = path.join(tempDir, "report.json");
+  t.after(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  writeEnrichmentReport({
+    reportPath,
+    generatedAt: "2026-03-30T00:00:00.000Z",
+    strict: true,
+    entries: [
+      {
+        linkId: "starter-deal",
+        url: "https://example.com/deal",
+        status: "partial",
+        reason: "metadata_partial",
+        attempts: 1,
+        durationMs: 90,
+        message: "Referral extraction omitted terms because the page was ambiguous.",
+        remediation: "None.",
+        referralCompleteness: "none",
+        referral: {
+          kind: "promo",
+          completeness: "none",
+          originalUrl: "https://example.com/deal",
+          resolvedUrl: "https://example.com/deal",
+          strategyId: "public-direct-html",
+        },
+      },
+    ],
+  });
+
+  const report = readEnrichmentReport(reportPath);
+
+  assert.equal(report?.entries[0]?.referralCompleteness, "none");
+  assert.deepEqual(report?.entries[0]?.referral, {
+    kind: "promo",
+    completeness: "none",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
