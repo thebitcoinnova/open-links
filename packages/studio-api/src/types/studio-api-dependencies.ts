@@ -101,6 +101,21 @@ export interface StudioGitHubRepoService {
     repo: string;
     branch: string;
   }): Promise<DeployStatus>;
+  getRepositoryMetadata(input: {
+    accessToken: string;
+    owner: string;
+    repo: string;
+  }): Promise<{
+    description: string | null;
+    homepageUrl: string | null;
+  }>;
+  updateRepositoryMetadata(input: {
+    accessToken: string;
+    owner: string;
+    repo: string;
+    homepageUrl?: string | null;
+    description?: string | null;
+  }): Promise<void>;
 }
 
 export interface StudioTurnstileService {

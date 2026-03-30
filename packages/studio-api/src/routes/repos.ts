@@ -6,6 +6,10 @@ import { requireSession } from "../lib/auth.js";
 import { db } from "../services/database.js";
 import { githubAuthService } from "../services/github-auth.js";
 import { githubRepoService } from "../services/github-repo.js";
+import {
+  buildDefaultForkRepositoryHomepage,
+  resolveRepositoryHomepageUpdate,
+} from "../services/repository-metadata.js";
 import { syncRepo } from "../services/sync.js";
 import { validateRepoContent } from "../services/validation.js";
 import type { StudioApiDependencies } from "../types/studio-api-dependencies.js";
@@ -86,6 +90,14 @@ export const createRepoRoutes =
             accessToken: token,
             upstreamOwner: deps.config.upstreamRepo.owner,
             upstreamRepo: deps.config.upstreamRepo.name,
+          });
+
+          const defaultForkHomepageUrl = buildDefaultForkRepositoryHomepage(fork.owner, fork.name);
+          await deps.githubRepoService.updateRepositoryMetadata({
+            accessToken: token,
+            owner: fork.owner,
+            repo: fork.name,
+            homepageUrl: defaultForkHomepageUrl,
           });
 
           const repo = await deps.db.upsertRepo({
@@ -280,6 +292,26 @@ export const createRepoRoutes =
           repo: repo.name,
           branch: repo.default_branch,
         });
+        const repositoryMetadata = await deps.githubRepoService.getRepositoryMetadata({
+          accessToken: token,
+          owner: repo.owner,
+          repo: repo.name,
+        });
+
+        const homepageUpdate = resolveRepositoryHomepageUpdate({
+          currentHomepageUrl: repositoryMetadata.homepageUrl,
+          fallbackForkHomepageUrl: buildDefaultForkRepositoryHomepage(repo.owner, repo.name),
+          preferredPrimaryHomepageUrl: deployStatus.pagesUrl,
+        });
+
+        if (homepageUpdate) {
+          await deps.githubRepoService.updateRepositoryMetadata({
+            accessToken: token,
+            owner: repo.owner,
+            repo: repo.name,
+            homepageUrl: homepageUpdate,
+          });
+        }
 
         await deps.db.updateRepoSyncState(repo.id, {
           pagesUrl: deployStatus.pagesUrl,

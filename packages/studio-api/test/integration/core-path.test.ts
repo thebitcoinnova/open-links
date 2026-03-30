@@ -76,6 +76,12 @@ describe("studio api core integration path", () => {
       });
 
       const repoId = await provisionRepo(app, sessionCookie);
+      expect(state.repoMetadataUpdates).toContainEqual({
+        description: null,
+        homepageUrl: "https://fork-owner.github.io/open-links-fork/",
+        owner: "fork-owner",
+        repo: "open-links-fork",
+      });
 
       const save = await app.inject({
         method: "PUT",
@@ -109,6 +115,7 @@ describe("studio api core integration path", () => {
       });
       expect(deployStatus.statusCode).toBe(200);
       expect(JSON.parse(deployStatus.body)).toEqual(state.deployStatus);
+      expect(state.repoMetadataUpdates).toHaveLength(1);
 
       const sync = await app.inject({
         method: "POST",
@@ -125,6 +132,33 @@ describe("studio api core integration path", () => {
       const repo = state.repos.get(repoId);
       expect(repo?.sync_enabled).toBe(true);
       expect(repo?.sync_conflict).toBe(false);
+    } finally {
+      await app.close();
+    }
+  });
+
+  test("does not overwrite a customized repo homepage during deploy reconciliation", async () => {
+    const { deps, state } = createInMemoryStudioDeps();
+    const app = await buildTestStudioApiApp(deps);
+
+    try {
+      const sessionCookie = await authenticate(app);
+      const repoId = await provisionRepo(app, sessionCookie);
+
+      state.repositoryMetadata.homepageUrl = "https://custom.example.com/profile";
+      state.repoMetadataUpdates.length = 0;
+
+      const deployStatus = await app.inject({
+        method: "GET",
+        url: `/api/v1/repos/${repoId}/deploy-status`,
+        headers: {
+          cookie: `${SESSION_COOKIE}=${sessionCookie}`,
+        },
+      });
+      expect(deployStatus.statusCode).toBe(200);
+      expect(JSON.parse(deployStatus.body)).toEqual(state.deployStatus);
+      expect(state.repoMetadataUpdates).toHaveLength(0);
+      expect(state.repositoryMetadata.homepageUrl).toBe("https://custom.example.com/profile");
     } finally {
       await app.close();
     }
