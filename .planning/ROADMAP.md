@@ -1,8 +1,8 @@
 # Milestone v1.3: Referral Links + Offer Transparency
 
-**Status:** ✅ COMPLETE
-**Phases:** 18-21
-**Total Plans:** 11
+**Status:** 🚧 GAP CLOSURE
+**Phases:** 18-22
+**Total Plans:** 12
 
 ## Overview
 
@@ -97,6 +97,28 @@ Plans:
 - Verification docs include referral-focused checks plus any relevant example or regression references.
 - The roadmap closes with explicit downstream compatibility notes instead of assuming the schema change is renderer-only.
 
+### Phase 22: Source-Authored Referral Flow Proof
+
+**Goal:** Prove the manual-first referral authoring path end to end on real project data by adding at least one source-authored `links[].referral` example, refreshing generated artifacts, and hardening the source-data merge/verification surface.
+**Depends on:** Phase 21
+**Requirements:** MAINT-01, MAINT-02
+**Gap Closure:** Closes the milestone audit gap around the missing source-authored referral flow proof.
+**Plans:** 1 plan
+
+Plans:
+- [ ] 22-01: Add a real source-authored `links[].referral` entry, refresh generated artifacts, and harden the source-data merge/verification proof surface.
+
+**Details:**
+- Use a real source-authored referral link in `data/links.json`, not only generated referral output.
+- Keep the data change additive and downstream-safe; do not reopen schema or UI design.
+- Refresh enrichment/validation artifacts and tighten regression coverage around the source-authored path.
+
+**Success Criteria:**
+- At least one real link in `data/links.json` carries `links[].referral`.
+- `bun run enrich:rich:strict`, `bun run validate:data`, and `bun run build` all prove the source-authored referral path end to end.
+- Regression coverage protects the source-authored referral merge/load/render path.
+- The milestone audit gap about the missing manual-first proof is closed.
+
 ## Milestone Summary
 
 **Key Accomplishments Planned:**
@@ -118,6 +140,7 @@ Plans:
 - `links[].referral` is a compatibility-sensitive schema change for `open-links-sites`.
 - Existing repo debt around `/` performance budgets, fallback social images, and analytics chunk size remains in flight during this milestone.
 - Referral landing pages may expose incomplete or jurisdiction-specific copy, so extraction must surface uncertainty instead of overstating accuracy.
+- The milestone audit found one integration gap: the live repo still needs a real source-authored `links[].referral` entry to prove the intended manual-first flow end to end.
 
 **Deferred / Not in v1.3:**
 
