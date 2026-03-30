@@ -1,8 +1,8 @@
-import { classifyForkOwnedPaths, isForkOwnedPath } from "../../src/lib/fork-owned-paths";
+import { classifyForkOwnedPaths, isForkOwnedPath } from "@openlinks/studio-shared/fork-owned-paths";
 import {
   describeSharedForkSyncConflicts,
   summarizeForkSyncConflicts,
-} from "../../src/lib/fork-sync";
+} from "@openlinks/studio-shared/fork-sync";
 import { runCommand } from "./command";
 
 const DEFAULT_BRANCH = "main";

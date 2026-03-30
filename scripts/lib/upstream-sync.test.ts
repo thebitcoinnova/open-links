@@ -58,10 +58,10 @@ const initializeForkWorkspace = () => {
   git(seedRepo, ["push", "origin", "main"]);
 
   const forkRepo = cloneRepo(originBare, rootDir, "fork");
-  git(forkRepo, ["checkout", "-b", "main", "origin/main"]);
+  git(forkRepo, ["checkout", "-B", "main", "origin/main"]);
   git(forkRepo, ["remote", "add", "upstream", upstreamBare]);
   const upstreamWorktree = cloneRepo(upstreamBare, rootDir, "upstream-worktree");
-  git(upstreamWorktree, ["checkout", "-b", "main", "origin/main"]);
+  git(upstreamWorktree, ["checkout", "-B", "main", "origin/main"]);
 
   return {
     cleanup: () => fs.rmSync(rootDir, { force: true, recursive: true }),

@@ -1,7 +1,7 @@
-export type { ForkOwnedPathConfig } from "../../../../src/lib/fork-owned-paths.js";
+export type { ForkOwnedPathConfig } from "@openlinks/studio-shared/fork-owned-paths";
 export {
   classifyForkOwnedPaths,
   getForkOwnedPathConfig,
   isForkOwnedPath,
   normalizeRepoPath,
-} from "../../../../src/lib/fork-owned-paths.js";
+} from "@openlinks/studio-shared/fork-owned-paths";

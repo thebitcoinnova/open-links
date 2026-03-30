@@ -3,9 +3,9 @@ export type {
   ForkSyncTreeEntry,
   ForkSyncTreeMode,
   ForkSyncTreeType,
-} from "../../../../src/lib/fork-sync.js";
+} from "@openlinks/studio-shared/fork-sync";
 export {
   buildForkOwnedPreservationTree,
   describeSharedForkSyncConflicts,
   summarizeForkSyncConflicts,
-} from "../../../../src/lib/fork-sync.js";
+} from "@openlinks/studio-shared/fork-sync";

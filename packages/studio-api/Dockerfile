@@ -9,6 +9,7 @@ COPY packages/studio-shared/package.json packages/studio-shared/package.json
 
 RUN HUSKY=0 bun install --frozen-lockfile
 
+COPY config ./config
 COPY packages/studio-api ./packages/studio-api
 COPY packages/studio-shared ./packages/studio-shared
 
