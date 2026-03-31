@@ -13,6 +13,7 @@ import {
   resolveContentImageResolvedPathForSlot,
 } from "./content-image-slots";
 import { type EntityType, resolveEntityType } from "./entity-type";
+import { loadReferralCatalog, resolveReferralCatalogForLink } from "./referral-catalog";
 import {
   type GeneratedLinkReferralConfig,
   type LinkReferralConfig,
@@ -388,21 +389,6 @@ interface GeneratedContentImagesPayload {
   bySlot?: Record<string, GeneratedContentImageEntry>;
 }
 
-const generatedMetadataModules = import.meta.glob<{ default: GeneratedRichMetadataPayload }>(
-  "../../../data/generated/rich-metadata.json",
-  { eager: true },
-);
-
-const generatedProfileAvatarModules = import.meta.glob<{ default: GeneratedProfileAvatarPayload }>(
-  "../../../data/cache/profile-avatar.json",
-  { eager: true },
-);
-
-const cachedContentImageModules = import.meta.glob<{ default: GeneratedContentImagesPayload }>(
-  "../../../data/cache/content-images.json",
-  { eager: true },
-);
-
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -420,6 +406,20 @@ const trimToUndefined = (value: string | undefined): string | undefined => {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const readJsonModules = <T>(pattern: string): Record<string, { default: T }> => {
+  const maybeGlob = (
+    import.meta as ImportMeta & {
+      glob?: (pattern: string, options: { eager: true }) => Record<string, { default: T }>;
+    }
+  ).glob;
+
+  if (typeof maybeGlob !== "function") {
+    return {};
+  }
+
+  return maybeGlob(pattern, { eager: true });
 };
 
 const PAYMENT_SUPPORT_GROUP: LinkGroup = {
@@ -474,7 +474,9 @@ interface GeneratedLinkAugmentation {
 }
 
 const resolveGeneratedMetadata = (): Record<string, GeneratedLinkAugmentation> => {
-  const module = Object.values(generatedMetadataModules)[0];
+  const module = Object.values(
+    readJsonModules<GeneratedRichMetadataPayload>("../../../data/generated/rich-metadata.json"),
+  )[0];
   const payload = module?.default;
 
   if (!payload?.links || !isRecord(payload.links)) {
@@ -507,7 +509,9 @@ const resolveGeneratedMetadata = (): Record<string, GeneratedLinkAugmentation> =
 const resolveGeneratedContentImages = (): Record<string, GeneratedContentImageEntry> => {
   const mapped: Record<string, GeneratedContentImageEntry> = {};
 
-  const module = Object.values(cachedContentImageModules)[0];
+  const module = Object.values(
+    readJsonModules<GeneratedContentImagesPayload>("../../../data/cache/content-images.json"),
+  )[0];
   const payload = module?.default;
   if (!payload || !isRecord(payload.bySlot)) {
     return mapped;
@@ -554,7 +558,9 @@ export const resolveGeneratedContentImageUrl = (input: {
 
 const resolveProfileAvatarPath = (): string => {
   const fallbackPath = "profile-avatar-fallback.svg";
-  const module = Object.values(generatedProfileAvatarModules)[0];
+  const module = Object.values(
+    readJsonModules<GeneratedProfileAvatarPayload>("../../../data/cache/profile-avatar.json"),
+  )[0];
   const payload = module?.default;
 
   if (
@@ -613,20 +619,41 @@ const localizeRichMetadataImages = (
     };
   });
 
-const mergeGeneratedMetadata = (
+export const mergeGeneratedMetadata = (
   links: OpenLink[],
   generatedByLink: Record<string, GeneratedLinkAugmentation>,
+  referralCatalog = loadReferralCatalog(),
 ): OpenLink[] =>
   links.map((link) => {
     const generated = generatedByLink[link.id];
+    const catalogResolution = resolveReferralCatalogForLink({
+      catalog: referralCatalog,
+      sourceUrl: trimToUndefined(link.url),
+      referral: link.referral,
+    });
     if (!generated) {
-      return link;
+      if (!catalogResolution) {
+        return link;
+      }
+
+      return {
+        ...link,
+        referral: mergeReferralWithManualOverrides(
+          link.referral,
+          undefined,
+          catalogResolution.referral,
+        ),
+      };
     }
 
     const metadata = generated.metadata
       ? mergeMetadataWithManualSocialProfileOverrides(link.metadata, generated.metadata)
       : link.metadata;
-    const referral = mergeReferralWithManualOverrides(link.referral, generated.referral);
+    const referral = mergeReferralWithManualOverrides(
+      link.referral,
+      generated.referral,
+      catalogResolution?.referral,
+    );
 
     return {
       ...link,
@@ -664,8 +691,13 @@ export const loadContent = () => {
   const linksPayload = linksData as LinksData;
   const generatedMetadata = resolveGeneratedMetadata();
   const generatedContentImages = resolveGeneratedContentImages();
+  const referralCatalog = loadReferralCatalog();
 
-  const mergedLinks = mergeGeneratedMetadata(linksPayload.links, generatedMetadata);
+  const mergedLinks = mergeGeneratedMetadata(
+    linksPayload.links,
+    generatedMetadata,
+    referralCatalog,
+  );
   const localizedLinks = localizeRichMetadataImages(mergedLinks, generatedContentImages);
   const paymentReadyLinks = applyPaymentDefaults(localizedLinks);
   const enabledLinks = paymentReadyLinks.filter((link) => link.enabled !== false);
