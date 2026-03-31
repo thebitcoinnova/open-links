@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 23 is next: plan automatic public referral benefit extraction after Phase 22 closed the manual-first proof gap
+**Current focus:** Phase 23 remains next, with Phase 24 now added behind it for referral catalog and skill-driven management
 
 ## Current Position
 
@@ -79,6 +79,7 @@ Progress: [#########-] 90%
 - 2026-03-30: Milestone audit found the missing source-authored referral flow proof gap; Phase 22 was added to close it before archiving v1.3.
 - 2026-03-30: Phase 22 completed with live source-authored Club Orange referral proof, focused real-data regressions, and refreshed audit evidence that the manual-first gap is closed.
 - 2026-03-30: Phase 23 added for public-first, explicit-only automatic visitor/owner benefit extraction with static parsing first, browser fallback second, and manual precedence preserved.
+- 2026-03-31: Phase 24 added for a shared upstream referral catalog, optional link-level catalog references plus overrides, and a sibling referral-management skill with upstream-PR prompting for generic additions.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -94,6 +95,7 @@ Progress: [#########-] 90%
 ### Pending Todos
 
 - Discuss or plan Phase 23 with `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`.
+- Plan Phase 24 after Phase 23 if referral catalog and skill-driven management remain the next infrastructure step.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 - Fix referral card content layout so referral disclosure content stays in the same column as normal card content.
@@ -102,6 +104,7 @@ Progress: [#########-] 90%
 
 - `links[].referral` is a compatibility-sensitive schema addition for `open-links-sites`, so contract docs and downstream notes need to stay explicit.
 - Phase 23 must stay generic/public-first and avoid drifting into inference-heavy or bespoke per-program extractor work by default.
+- Phase 24 should preserve `links[].referral` as the runtime contract while introducing shared catalog data, optional references, and fork-aware upstream contribution flow.
 - `bun run quality:check` still fails the `/` performance budgets for both mobile and desktop.
 - SEO still warns that social preview metadata is using the deterministic fallback image.
 - Broader social audience extraction coverage remains future work, and new extractors still need parsed counts plus raw text to stay aligned.

@@ -1,8 +1,8 @@
 # Milestone v1.3: Referral Links + Offer Transparency
 
 **Status:** 🚧 ACTIVE
-**Phases:** 18-23
-**Total Plans:** 12 completed/planned + Phase 23 TBD
+**Phases:** 18-24
+**Total Plans:** 12 completed/planned + Phases 23-24 TBD
 
 ## Overview
 
@@ -139,6 +139,28 @@ Plans:
 - Manual referral data continues to win field-by-field over generated benefit extraction.
 - Regression coverage proves auth-gated or inference-heavy benefit extraction paths do not become defaults accidentally.
 
+### Phase 24: Referral Catalog + Skill-Driven Management
+
+**Goal:** Add a shared upstream referral catalog plus a sibling referral-management skill so known referral programs, offers, and link shapes can be authored, reused, interviewed, and persisted at a higher level than ad hoc matcher scripts.
+**Depends on:** Phase 23
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run `$gsd-plan-phase 24` to break down)
+
+**Details:**
+- Keep `links[].referral` as the runtime/render contract, but let links optionally reference a shared catalog entry and override fields locally.
+- Model the catalog in three layers: program/family, offer variant, and matcher/link-shape so a domain can support multiple referral types and instances.
+- Keep the catalog as shared upstream data by default, allow fork-local overlays, and have the referral-management skill prompt for a clean upstream PR when a fork adds a generic catalog item that would help others.
+- Build a sibling referral-management skill rather than overloading the existing extractor-authoring skill, and keep runtime integration in scope so enrichment can consult the catalog/matchers directly.
+- Prefer higher-level extractor/interview flows over hard-coded keyword scripts when adding or maintaining known referral deals.
+
+**Success Criteria:**
+- The repo has a first-class referral catalog model that can represent multiple offers and link shapes per site/program.
+- Links can reference catalog entries while preserving local `links[].referral` overrides and manual precedence.
+- A sibling referral-management skill can interview maintainers for referral properties, CRUD catalog entries, and suggest an upstream PR for generic additions from forks.
+- Runtime enrichment can consult the catalog/matcher layer instead of relying only on low-level special-case code paths.
+
 ## Milestone Summary
 
 **Key Accomplishments Planned:**
@@ -148,6 +170,7 @@ Plans:
 - Render referral transparency directly in cards while reusing the current rich-metadata and icon systems.
 - Update maintainer docs and README guidance so referral support is discoverable through the repo's preferred AI CRUD and manual fallback paths.
 - Queue a public-first, explicit-only follow-on for automatic owner/visitor benefit extraction rather than defaulting to bespoke extractors.
+- Add a shared upstream referral catalog and sibling referral-management skill so known deals and link shapes can be reused across forks without depending on ad hoc script-only logic.
 
 **Key Decisions:**
 
@@ -155,6 +178,7 @@ Plans:
 - Manual disclosures remain authoritative; extracted terms are assistive hints with explicit provenance.
 - The milestone should generalize the existing Club Orange referral handling rather than layering more one-off referral patches.
 - Automatic visitor/owner benefit extraction, when added, should stay generic, public-first, and explicit-only before any bespoke extractor path is considered.
+- Shared referral knowledge should live in upstream data plus a high-level management skill, while links keep optional catalog references and local overrides.
 - Studio-specific guided controls are deferred unless the AI CRUD plus Advanced JSON path proves insufficient during implementation.
 
 **Issues To Watch:**
@@ -163,6 +187,7 @@ Plans:
 - Existing repo debt around `/` performance budgets, fallback social images, and analytics chunk size remains in flight during this milestone.
 - Referral landing pages may expose incomplete or jurisdiction-specific copy, so extraction must surface uncertainty instead of overstating accuracy.
 - Automatic public owner/visitor benefit extraction remains future work and must avoid inference-heavy or bespoke-extractor sprawl by default.
+- Referral catalog and skill management must stay flexible enough to support multiple offers/link shapes per domain without collapsing into brittle keyword matching.
 
 **Deferred / Not in v1.3:**
 
