@@ -335,7 +335,8 @@ Deeper behavior:
 Generated referral output and reports can include a few extra fields beyond the authoring contract:
 
 - `completeness`: `full`, `partial`, or `none`
-- `provenance`: which referral fields were manual vs generated
+- `provenance`: which referral fields came from `manual`, `catalog`, or `generated` sources
+- `catalog`: resolved catalog contribution details such as family, offer, matcher, and whether the match came from an explicit ref or matcher lookup
 - `originalUrl`
 - `resolvedUrl`
 - `strategyId`
