@@ -37,8 +37,8 @@ This synopsis reflects the downstream repo state inspected on 2026-03-25.
 ## Current Integration Shape
 
 - Upstream pinning lives in `config/upstream-open-links.json`.
-- Scheduled automation runs `bun run sync:upstream` and compares the pinned
-  commit with `pRizz/open-links` `main`.
+- Scheduled downstream automation runs `bun run sync:upstream` and compares the pinned
+  commit with `pRizz/open-links` `main`. This sync flow is meant for downstream/fork repos, not the canonical `pRizz/open-links` repo itself.
 - Its GitHub workflows clone this repo during upstream-sync and deploy flows.
 - Release verification in the downstream repo builds against the pinned
   `open-links` commit and runs smoke checks over the generated site output.

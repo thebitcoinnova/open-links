@@ -75,7 +75,7 @@ When you want to pull new upstream changes into your fork later, use:
 bun run sync:upstream
 ```
 
-This command syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
+This command is for forks and downstream repos, not the canonical `pRizz/open-links` repo. `upstream` must point at a different repository than `origin`. It syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
 
 ## Cursor Remote Environment
 

@@ -184,6 +184,34 @@ test("runUpstreamSync fails fast when the upstream remote is missing", () => {
   }
 });
 
+test("runUpstreamSync fails fast when origin and upstream point at the same repository", () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "open-links-sync-upstream-same-remote-"));
+
+  try {
+    const originBare = createBareRepo(rootDir, "origin.git");
+    const seedRepo = path.join(rootDir, "seed");
+
+    git(rootDir, ["init", seedRepo]);
+    configureGitIdentity(seedRepo);
+    git(seedRepo, ["checkout", "-b", "main"]);
+    writeText(path.join(seedRepo, "README.md"), "# Repo\n");
+    commitAll(seedRepo, "base");
+    git(seedRepo, ["remote", "add", "origin", originBare]);
+    git(seedRepo, ["push", "origin", "main"]);
+
+    const repoDir = cloneRepo(originBare, rootDir, "repo");
+    git(repoDir, ["checkout", "-B", "main", "origin/main"]);
+    git(repoDir, ["remote", "add", "upstream", originBare]);
+
+    assert.throws(
+      () => runUpstreamSync({ cwd: repoDir }),
+      /same repository as 'origin'.*forks and downstream repos/u,
+    );
+  } finally {
+    fs.rmSync(rootDir, { force: true, recursive: true });
+  }
+});
+
 test("runUpstreamSync fails fast on a dirty worktree", () => {
   const workspace = initializeForkWorkspace();
 

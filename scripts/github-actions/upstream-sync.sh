@@ -25,14 +25,17 @@ configure_git_identity() {
 }
 
 run_sync() {
-  mkdir -p .ci-diagnostics
+  local temp_root="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
+  mkdir -p "$temp_root"
+  local result_path
+  result_path="$(mktemp "${temp_root%/}/openlinks-upstream-sync-XXXXXX.json")"
 
   local before_sha
   before_sha="$(git rev-parse HEAD)"
   write_output "before_sha" "$before_sha"
 
   set +e
-  bun run sync:upstream --json > .ci-diagnostics/upstream-sync.json
+  bun run sync:upstream --json > "$result_path"
   local command_status=$?
   set -e
 
@@ -40,6 +43,7 @@ run_sync() {
   after_sha="$(git rev-parse HEAD)"
   write_output "after_sha" "$after_sha"
   write_output "command_status" "$command_status"
+  write_output "result_path" "$result_path"
 
   return 0
 }

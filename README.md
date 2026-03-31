@@ -226,7 +226,7 @@ To sync new upstream code/docs/tooling into your fork while preserving fork-owne
 bun run sync:upstream
 ```
 
-`bun run sync:upstream` fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Shared-file conflicts still stop for manual resolution.
+`bun run sync:upstream` is for forks and downstream repos only. `upstream` must point at a different repository than `origin`, typically `pRizz/open-links` for a fork. It fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Shared-file conflicts still stop for manual resolution. The scheduled `Upstream Sync` GitHub workflow should not run in the canonical `pRizz/open-links` repo itself.
 
 If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
 
