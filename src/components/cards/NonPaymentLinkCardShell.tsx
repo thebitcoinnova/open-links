@@ -332,15 +332,15 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
                 </For>
               </span>
             </Show>
+            <span class={descriptionClassName()} id={descriptionId()}>
+              {props.viewModel.description}
+            </span>
+            <Show when={hasInlineReferralTerms()}>
+              <span class="non-payment-card-referral-terms">
+                {referral()?.terms?.inlineSummary}
+              </span>
+            </Show>
           </span>
-
-          <span class={descriptionClassName()} id={descriptionId()}>
-            {props.viewModel.description}
-          </span>
-
-          <Show when={hasInlineReferralTerms()}>
-            <span class="non-payment-card-referral-terms">{referral()?.terms?.inlineSummary}</span>
-          </Show>
 
           <Show when={profilePreviewRenderKind() === "bottom-row" && profilePreview().imageUrl}>
             <span
