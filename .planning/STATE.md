@@ -96,6 +96,7 @@ Progress: [#########-] 90%
 - Discuss or plan Phase 23 with `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
+- Fix referral card content layout so referral disclosure content stays in the same column as normal card content.
 
 ### Blockers/Concerns
 
