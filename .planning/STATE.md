@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 23 is now planned and ready for execution; Phase 24 remains queued behind it for referral catalog and skill-driven management
+**Current focus:** Phase 24 is planned and ready for execution for referral catalog and skill-driven management
 
 ## Current Position
 
-Phase: 23-automatic-referral-benefit-extraction
-Plan: 23-01, 23-02, 23-03
-Status: Phase 23 planned; ready for `$gsd-execute-phase 23`
-Next Phase: Phase 23 - Automatic Referral Benefit Extraction
+Phase: 24-referral-catalog-skill-management
+Plan: 24-01 through 24-04 planned
+Status: Phase 23 complete; Phase 24 planned and ready for execution
+Next Phase: Phase 24 - Referral Catalog + Skill-Driven Management
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-31 - Planned Phase 23 into three waves covering static benefit extraction, public browser fallback, and report/artifact hardening.
+Last activity: 2026-03-31 - Planned Phase 24 into four waves covering shared catalog contract, runtime lookup/provenance, enrichment migration, and referral-management skill/docs work.
 
-Progress: [#########-] 90%
+Progress: [#########-] 95%
 
 ## Performance Metrics
 
@@ -56,6 +56,11 @@ Progress: [#########-] 90%
 - Keep `termsUrl` as a quiet sibling interaction outside the main card anchor to avoid nested-link behavior.
 - Keep referral support additive to existing `simple` and `rich` links rather than introducing a dedicated referral link type.
 - Treat manual referral disclosure fields as authoritative; extracted offer terms are assistive hints, not legal guarantees.
+- Keep the shared referral catalog under `data/policy/` with an optional fork-local overlay seam rather than inventing a separate sync surface.
+- Keep catalog refs nested inside `links[].referral` so the higher-level authoring pointer stays attached to the runtime referral contract it seeds.
+- Treat the catalog lookup order as manual fields first, then explicit catalog refs, then matcher-resolved catalog data, then generated/public fill-ins.
+- Use Club Orange as the first catalog-backed migration canary so Phase 24 removes special-case drift through a real proving case.
+- Build a sibling `skills/referral-management` workflow for catalog CRUD and upstream-PR prompting instead of overloading extractor-authoring flows.
 - Prefer generic public referral augmentation plus manual fallback before reaching for program-specific authenticated extractors.
 - Preserve the v1.0 static architecture and add social profile metadata as an optional extension to the existing link model.
 - Keep follower and following data build-time only; do not introduce live runtime platform API dependencies.
@@ -81,6 +86,8 @@ Progress: [#########-] 90%
 - 2026-03-30: Phase 23 added for public-first, explicit-only automatic visitor/owner benefit extraction with static parsing first, browser fallback second, and manual precedence preserved.
 - 2026-03-31: Phase 23 planned into three waves: static explicit-only benefit extraction, conditional public browser fallback for JS-heavy public pages, and report/artifact hardening with real generated output.
 - 2026-03-31: Phase 24 added for a shared upstream referral catalog, optional link-level catalog references plus overrides, and a sibling referral-management skill with upstream-PR prompting for generic additions.
+- 2026-03-31: Phase 23 completed with explicit-only visitor/owner benefit extraction, generic public browser fallback for unresolved HTML referral pages, live Club Orange artifact proof, and deploy-time regression coverage for the new enrichment paths.
+- 2026-03-31: Phase 24 planned into four waves: shared catalog schema/overlay contract, runtime catalog resolution with provenance, enrichment migration plus Club Orange proof, and sibling referral-management skill/docs coverage.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -95,16 +102,13 @@ Progress: [#########-] 90%
 
 ### Pending Todos
 
-- Execute Phase 23 with `$gsd-execute-phase 23`.
-- Plan Phase 24 after Phase 23 if referral catalog and skill-driven management remain the next infrastructure step.
+- Execute Phase 24 with `$gsd-execute-phase 24`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
-- Fix referral card content layout so referral disclosure content stays in the same column as normal card content.
 
 ### Blockers/Concerns
 
 - `links[].referral` is a compatibility-sensitive schema addition for `open-links-sites`, so contract docs and downstream notes need to stay explicit.
-- Phase 23 must stay generic/public-first and avoid drifting into inference-heavy or bespoke per-program extractor work by default.
 - Phase 24 should preserve `links[].referral` as the runtime contract while introducing shared catalog data, optional references, and fork-aware upstream contribution flow.
 - `bun run quality:check` still fails the `/` performance budgets for both mobile and desktop.
 - SEO still warns that social preview metadata is using the deterministic fallback image.
@@ -113,6 +117,6 @@ Progress: [#########-] 90%
 
 ## Session Continuity
 
-Last session: 2026-03-30 09:45
-Stopped at: Phase 22 is complete; next step is `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`.
-Resume file: .planning/phases/23-automatic-referral-benefit-extraction/23-CONTEXT.md
+Last session: 2026-03-31 10:00
+Stopped at: Phase 24 is planned; next step is `$gsd-execute-phase 24`.
+Resume file: .planning/ROADMAP.md

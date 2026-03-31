@@ -2,7 +2,7 @@
 
 **Status:** 🚧 ACTIVE
 **Phases:** 18-24
-**Total Plans:** 15 completed/planned + Phase 24 TBD
+**Total Plans:** 19 completed/planned
 
 ## Overview
 
@@ -126,9 +126,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 23-01: Add static explicit-only visitor/owner benefit extraction to public referral augmentation.
-- [ ] 23-02: Add a generic public browser fallback for JS-heavy public referral pages after static extraction misses benefit fields.
-- [ ] 23-03: Refresh generated artifacts and harden report/manual-precedence regressions for automatic benefit extraction.
+- [x] 23-01: Add static explicit-only visitor/owner benefit extraction to public referral augmentation.
+- [x] 23-02: Add a generic public browser fallback for JS-heavy public referral pages after static extraction misses benefit fields.
+- [x] 23-03: Refresh generated artifacts and harden report/manual-precedence regressions for automatic benefit extraction.
 
 **Details:**
 - Stay public-first and explicit-only: static fetch/parsing first, with public browser fallback only when public JS-heavy pages need it.
@@ -145,10 +145,13 @@ Plans:
 
 **Goal:** Add a shared upstream referral catalog plus a sibling referral-management skill so known referral programs, offers, and link shapes can be authored, reused, interviewed, and persisted at a higher level than ad hoc matcher scripts.
 **Depends on:** Phase 23
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run `$gsd-plan-phase 24` to break down)
+- [ ] 24-01: Define the shared referral catalog schema, seeded upstream data, explicit link catalog refs, and optional fork-local overlay seam.
+- [ ] 24-02: Resolve catalog-backed referral data at runtime with deterministic matcher lookup, widened provenance, and manual-over-generated precedence.
+- [ ] 24-03: Integrate catalog matchers into enrichment/report generation and migrate Club Orange onto the catalog-backed path with refreshed artifacts.
+- [ ] 24-04: Add a sibling referral-management skill plus maintainer/downstream docs for catalog CRUD, fork-local overlays, and upstream PR prompting.
 
 **Details:**
 - Keep `links[].referral` as the runtime/render contract, but let links optionally reference a shared catalog entry and override fields locally.
@@ -171,7 +174,7 @@ Plans:
 - Generalize public referral enrichment so common offer links can capture canonical landing metadata and obvious terms without bespoke extractors by default.
 - Render referral transparency directly in cards while reusing the current rich-metadata and icon systems.
 - Update maintainer docs and README guidance so referral support is discoverable through the repo's preferred AI CRUD and manual fallback paths.
-- Queue a public-first, explicit-only follow-on for automatic owner/visitor benefit extraction rather than defaulting to bespoke extractors.
+- Implement a public-first, explicit-only automatic owner/visitor benefit extraction path with static parsing first and browser fallback second.
 - Add a shared upstream referral catalog and sibling referral-management skill so known deals and link shapes can be reused across forks without depending on ad hoc script-only logic.
 
 **Key Decisions:**
