@@ -49,6 +49,10 @@ const initializeForkWorkspace = () => {
 
   writeText(path.join(seedRepo, "README.md"), "# OpenLinks\n");
   writeText(path.join(seedRepo, "data/profile.json"), '{ "name": "Starter" }\n');
+  writeText(
+    path.join(seedRepo, "data/policy/referral-catalog.local.json"),
+    '{ "families": [], "offers": [], "matchers": [] }\n',
+  );
   writeText(path.join(seedRepo, "public/history/followers/github.csv"), "date,count\n");
 
   commitAll(seedRepo, "base");
@@ -106,6 +110,41 @@ test("runUpstreamSync auto-resolves fork-owned file conflicts by preserving fork
     assert.equal(result.mergeCommitCreated, true);
     assert.match(result.message, /preserving fork-owned paths/u);
     assert.equal(profile, '{ "name": "Fork" }\n');
+    assert.deepEqual(result.sharedConflicts, []);
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync preserves fork-local referral catalog overlays during conflicts", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    writeText(
+      path.join(workspace.forkRepo, "data/policy/referral-catalog.local.json"),
+      '{ "families": [{ "familyId": "fork-offer" }], "offers": [], "matchers": [] }\n',
+    );
+    commitAll(workspace.forkRepo, "fork referral overlay update");
+
+    writeText(
+      path.join(workspace.upstreamWorktree, "data/policy/referral-catalog.local.json"),
+      '{ "families": [{ "familyId": "upstream-offer" }], "offers": [], "matchers": [] }\n',
+    );
+    commitAll(workspace.upstreamWorktree, "upstream referral overlay update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+    const overlay = fs.readFileSync(
+      path.join(workspace.forkRepo, "data/policy/referral-catalog.local.json"),
+      "utf8",
+    );
+
+    assert.equal(result.status, "merged");
+    assert.equal(result.mergeCommitCreated, true);
+    assert.equal(
+      overlay,
+      '{ "families": [{ "familyId": "fork-offer" }], "offers": [], "matchers": [] }\n',
+    );
     assert.deepEqual(result.sharedConflicts, []);
   } finally {
     workspace.cleanup();

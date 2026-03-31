@@ -6,6 +6,7 @@ import {
   isReferralCompleteness,
   isReferralKind,
   mergeReferralWithManualOverrides,
+  normalizeReferralCatalogRef,
   normalizeReferralConfig,
   normalizeReferralProvenance,
   resolveReferralCompleteness,
@@ -109,6 +110,33 @@ test("generated provenance maps are normalized to supported referral fields only
   assert.deepEqual(provenance, {
     offerSummary: "generated",
     code: "manual",
+  });
+});
+
+test("catalog references are optional, trimmed, and preserved in normalized referral config", () => {
+  const catalogRef = normalizeReferralCatalogRef({
+    familyId: " club-orange ",
+    offerId: "club-orange-signup",
+    matcherId: " ",
+  });
+  const normalized = normalizeReferralConfig({
+    catalogRef: {
+      familyId: " club-orange ",
+      offerId: " club-orange-signup ",
+    },
+    ownerBenefit: " Supports the project ",
+  });
+
+  assert.deepEqual(catalogRef, {
+    familyId: "club-orange",
+    offerId: "club-orange-signup",
+  });
+  assert.deepEqual(normalized, {
+    catalogRef: {
+      familyId: "club-orange",
+      offerId: "club-orange-signup",
+    },
+    ownerBenefit: "Supports the project",
   });
 });
 

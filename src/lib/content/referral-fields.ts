@@ -5,8 +5,15 @@ export type ReferralFieldProvenance = "manual" | "generated";
 export type ReferralCompleteness = "full" | "partial" | "none";
 export const REFERRAL_COMPLETENESS_VALUES = ["full", "partial", "none"] as const;
 
+export interface LinkReferralCatalogRef {
+  familyId?: string;
+  offerId?: string;
+  matcherId?: string;
+}
+
 export interface LinkReferralConfig {
   kind?: ReferralKind;
+  catalogRef?: LinkReferralCatalogRef;
   visitorBenefit?: string;
   ownerBenefit?: string;
   offerSummary?: string;
@@ -93,6 +100,31 @@ export const normalizeReferralProvenance = (
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 };
 
+export const normalizeReferralCatalogRef = (value: unknown): LinkReferralCatalogRef | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const normalized: LinkReferralCatalogRef = {};
+  const familyId = trimToUndefined(value.familyId);
+  const offerId = trimToUndefined(value.offerId);
+  const matcherId = trimToUndefined(value.matcherId);
+
+  if (familyId) {
+    normalized.familyId = familyId;
+  }
+
+  if (offerId) {
+    normalized.offerId = offerId;
+  }
+
+  if (matcherId) {
+    normalized.matcherId = matcherId;
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+};
+
 export const normalizeReferralConfig = <T extends LinkReferralConfig>(
   referral: T | undefined,
 ): T | undefined => {
@@ -106,6 +138,14 @@ export const normalizeReferralConfig = <T extends LinkReferralConfig>(
     if (key === "kind") {
       if (isReferralKind(value)) {
         normalized.kind = value;
+      }
+      continue;
+    }
+
+    if (key === "catalogRef") {
+      const catalogRef = normalizeReferralCatalogRef(value);
+      if (catalogRef) {
+        normalized.catalogRef = catalogRef;
       }
       continue;
     }

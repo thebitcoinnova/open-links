@@ -7,6 +7,7 @@ import {
 import forkOwnedPathConfig from "../../config/fork-owned-paths.json" with { type: "json" };
 
 const config = forkOwnedPathConfig as ForkOwnedPathConfig;
+export const REFERRAL_CATALOG_LOCAL_OVERLAY_PATH = "data/policy/referral-catalog.local.json";
 
 export type { ForkOwnedPathConfig } from "@openlinks/studio-shared/fork-owned-paths";
 export { normalizeRepoPath } from "@openlinks/studio-shared/fork-owned-paths";
