@@ -1,6 +1,6 @@
 # Milestone v1.3: Referral Links + Offer Transparency
 
-**Status:** 🚧 ACTIVE
+**Status:** ✅ COMPLETE (awaiting audit)
 **Phases:** 18-24
 **Total Plans:** 19 completed/planned
 
@@ -148,10 +148,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 24-01: Define the shared referral catalog schema, seeded upstream data, explicit link catalog refs, and optional fork-local overlay seam.
-- [ ] 24-02: Resolve catalog-backed referral data at runtime with deterministic matcher lookup, widened provenance, and manual-over-generated precedence.
-- [ ] 24-03: Integrate catalog matchers into enrichment/report generation and migrate Club Orange onto the catalog-backed path with refreshed artifacts.
-- [ ] 24-04: Add a sibling referral-management skill plus maintainer/downstream docs for catalog CRUD, fork-local overlays, and upstream PR prompting.
+- [x] 24-01: Define the shared referral catalog schema, seeded upstream data, explicit link catalog refs, and optional fork-local overlay seam.
+- [x] 24-02: Resolve catalog-backed referral data at runtime with deterministic matcher lookup, widened provenance, and manual-over-generated precedence.
+- [x] 24-03: Integrate catalog matchers into enrichment/report generation and migrate Club Orange onto the catalog-backed path with refreshed artifacts.
+- [x] 24-04: Add a sibling referral-management skill plus maintainer/downstream docs for catalog CRUD, fork-local overlays, and upstream PR prompting.
 
 **Details:**
 - Keep `links[].referral` as the runtime/render contract, but let links optionally reference a shared catalog entry and override fields locally.
