@@ -14,6 +14,18 @@ interface GeneratedRichMetadataEntry {
   referral?: GeneratedLinkReferralConfig;
 }
 
+interface NormalizedReferralCatalogContribution {
+  source?: "explicit" | "matcher";
+  familyId?: string;
+  familyLabel?: string;
+  offerId?: string;
+  offerLabel?: string;
+  matcherId?: string;
+  matcherLabel?: string;
+  matcherExplanation?: string;
+  canonicalProgramUrl?: string;
+}
+
 const ROOT = process.cwd();
 
 const absolutePath = (value: string): string =>
@@ -29,6 +41,38 @@ const trimToUndefined = (value: string | undefined): string | undefined => {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const normalizeReferralCatalogContribution = (
+  value: unknown,
+): NormalizedReferralCatalogContribution | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const normalized: NormalizedReferralCatalogContribution = {};
+
+  if (value.source === "explicit" || value.source === "matcher") {
+    normalized.source = value.source;
+  }
+
+  for (const field of [
+    "familyId",
+    "familyLabel",
+    "offerId",
+    "offerLabel",
+    "matcherId",
+    "matcherLabel",
+    "matcherExplanation",
+    "canonicalProgramUrl",
+  ] as const) {
+    const candidate = trimToUndefined(typeof value[field] === "string" ? value[field] : undefined);
+    if (candidate) {
+      normalized[field] = candidate;
+    }
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
 };
 
 const normalizeMetadata = (
@@ -99,9 +143,14 @@ const normalizeEntry = (
   };
   const referral = normalizeReferralConfig(entry.referral);
   const provenance = normalizeReferralProvenance(referral?.provenance);
+  const catalog = normalizeReferralCatalogContribution(referral?.catalog);
 
   if (referral) {
-    normalized.referral = provenance ? { ...referral, provenance } : referral;
+    const normalizedReferral = provenance ? { ...referral, provenance } : { ...referral };
+    if (catalog) {
+      normalizedReferral.catalog = catalog;
+    }
+    normalized.referral = normalizedReferral;
   }
 
   return normalized;

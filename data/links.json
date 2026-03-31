@@ -137,7 +137,11 @@
       "order": 13,
       "enabled": true,
       "referral": {
-        "kind": "referral",
+        "catalogRef": {
+          "familyId": "club-orange",
+          "offerId": "club-orange-signup",
+          "matcherId": "club-orange-signup-co-path"
+        },
         "ownerBenefit": "Supports the project",
         "termsUrl": "https://www.cluborange.org/signup?referral=pryszkie"
       },
