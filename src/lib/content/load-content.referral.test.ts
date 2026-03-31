@@ -19,7 +19,7 @@ const generatedMetadata = readJson<GeneratedRichMetadataPayload>(
   "../../../data/generated/rich-metadata.json",
 );
 
-test("real cluborange-referral data merges source-authored referral fields with generated blank-fill output", () => {
+test("real cluborange-referral data keeps manual owner terms while generated visitor and summary fields fill blanks", () => {
   // Arrange
   const sourceLink = linksData.links.find((entry) => entry.id === "cluborange-referral");
   const generatedReferral = generatedMetadata.links?.["cluborange-referral"]?.referral;
@@ -34,8 +34,13 @@ test("real cluborange-referral data merges source-authored referral fields with 
     ownerBenefit: "Supports the project",
     termsUrl: "https://www.cluborange.org/signup?referral=pryszkie",
   });
+  assert.equal(
+    generatedReferral?.visitorBenefit,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
   assert.deepEqual(mergedReferral, {
     kind: "referral",
+    visitorBenefit: "Get a Club Orange membership starting at $40/year or pay in sats.",
     ownerBenefit: "Supports the project",
     offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
     termsSummary: "Get a Club Orange membership starting at $40/year or pay in sats.",
@@ -47,6 +52,7 @@ test("real cluborange-referral data merges source-authored referral fields with 
     termsSourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
     provenance: {
       kind: "manual",
+      visitorBenefit: "generated",
       ownerBenefit: "manual",
       offerSummary: "generated",
       termsSummary: "generated",

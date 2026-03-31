@@ -22,6 +22,8 @@ test("createEnrichmentReport preserves referral completeness and provenance on e
         referralCompleteness: "full",
         referral: {
           kind: "referral",
+          visitorBenefit: "Get a Club Orange membership starting at $40/year or pay in sats.",
+          ownerBenefit: "Supports the project",
           offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
           termsSummary: "Get a Club Orange membership starting at $40/year or pay in sats.",
           originalUrl: "https://signup.cluborange.org/co/pryszkie",
@@ -35,9 +37,14 @@ test("createEnrichmentReport preserves referral completeness and provenance on e
 
   assert.equal(report.entries[0]?.referralCompleteness, "full");
   assert.equal(report.entries[0]?.referral?.strategyId, "cluborange-referral-signup");
+  assert.equal(
+    report.entries[0]?.referral?.visitorBenefit,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.equal(report.entries[0]?.referral?.ownerBenefit, "Supports the project");
 });
 
-test("readEnrichmentReport restores referral fields from disk", (t) => {
+test("readEnrichmentReport restores generated referral benefit fields from disk", (t) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "openlinks-report-"));
   const reportPath = path.join(tempDir, "report.json");
   t.after(() => {
@@ -61,6 +68,7 @@ test("readEnrichmentReport restores referral fields from disk", (t) => {
         referralCompleteness: "partial",
         referral: {
           kind: "referral",
+          visitorBenefit: "Get $20 off your first year",
           offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
           originalUrl: "https://signup.cluborange.org/co/pryszkie",
           resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
@@ -75,6 +83,7 @@ test("readEnrichmentReport restores referral fields from disk", (t) => {
   assert.equal(report?.entries[0]?.referralCompleteness, "partial");
   assert.deepEqual(report?.entries[0]?.referral, {
     kind: "referral",
+    visitorBenefit: "Get $20 off your first year",
     offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
     originalUrl: "https://signup.cluborange.org/co/pryszkie",
     resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
@@ -82,7 +91,7 @@ test("readEnrichmentReport restores referral fields from disk", (t) => {
   });
 });
 
-test("readEnrichmentReport keeps none completeness explicit without confidence metadata", (t) => {
+test("readEnrichmentReport keeps none completeness explicit without inventing unresolved benefit fields", (t) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "openlinks-report-none-"));
   const reportPath = path.join(tempDir, "report.json");
   t.after(() => {
@@ -125,4 +134,6 @@ test("readEnrichmentReport keeps none completeness explicit without confidence m
     resolvedUrl: "https://example.com/deal",
     strategyId: "public-direct-html",
   });
+  assert.equal(report?.entries[0]?.referral?.visitorBenefit, undefined);
+  assert.equal(report?.entries[0]?.referral?.ownerBenefit, undefined);
 });

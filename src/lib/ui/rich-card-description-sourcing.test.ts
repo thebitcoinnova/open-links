@@ -288,7 +288,7 @@ test("referral offer summaries override the shared card description slot without
   );
 });
 
-test("live cluborange-referral data keeps manual referral fields while generated offer text still drives the card summary", () => {
+test("live cluborange-referral data keeps manual referral fields while generated visitor benefit and offer text drive the card presentation", () => {
   // Arrange
   const referralLink = buildMergedDatasetLink("cluborange-referral");
 
@@ -303,6 +303,10 @@ test("live cluborange-referral data keeps manual referral fields while generated
     "https://www.cluborange.org/signup?referral=pryszkie",
   );
   assert.equal(
+    referralLink.referral?.visitorBenefit,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.equal(
     referralLink.referral?.offerSummary,
     "Join Club Orange — Connect with 19K+ Bitcoiners",
   );
@@ -313,6 +317,11 @@ test("live cluborange-referral data keeps manual referral fields while generated
   assert.ok(viewModel);
   assert.equal(viewModel.description, "Join Club Orange — Connect with 19K+ Bitcoiners");
   assert.deepEqual(viewModel.referral?.benefitRows, [
+    {
+      kind: "visitor",
+      label: "You get",
+      value: "Get a Club Orange membership starting at $40/year or pay in sats.",
+    },
     {
       kind: "owner",
       label: "Supports",

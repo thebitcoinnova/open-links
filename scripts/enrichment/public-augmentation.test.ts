@@ -141,6 +141,7 @@ test("extracts referral offer and terms data from Club Orange public metadata", 
 
   assert.deepEqual(referral, {
     kind: "referral",
+    visitorBenefit: "Get a Club Orange membership starting at $40/year or pay in sats.",
     offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
     termsSummary: "Get a Club Orange membership starting at $40/year or pay in sats.",
     completeness: "full",
@@ -190,8 +191,110 @@ test("captures partial referral output when only the promo headline is clear", (
 
   assert.deepEqual(referral, {
     kind: "promo",
+    visitorBenefit: "Get $20 off your first order",
     offerSummary: "Get $20 off your first order",
     completeness: "partial",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
+
+test("captures an explicit visitor benefit from static public copy", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Premium Widgets",
+      description: "Get $20 off your first order.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    visitorBenefit: "Get $20 off your first order.",
+    offerSummary: "Get $20 off your first order.",
+    completeness: "partial",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
+
+test("captures an explicit owner benefit from static public copy", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "referral",
+    },
+    metadata: {
+      title: "Example Company",
+      description: "Supports the project.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "referral",
+    ownerBenefit: "Supports the project.",
+    completeness: "none",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
+
+test("captures both visitor and owner benefits when static public copy states both sides directly", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Premium Widgets",
+      description: "Get $20 off your first order. Supports the project.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    visitorBenefit: "Get $20 off your first order.",
+    ownerBenefit: "Supports the project.",
+    offerSummary: "Get $20 off your first order.",
+    completeness: "partial",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
+});
+
+test("captures visitor and owner benefits from browser-supplied candidate text using the same explicit-only rules", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Example Company",
+      description: "Discover premium widgets.",
+    },
+    benefitTextCandidates: ["Get $20 off your first order.", "Supports the project."],
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    visitorBenefit: "Get $20 off your first order.",
+    ownerBenefit: "Supports the project.",
+    completeness: "none",
     originalUrl: "https://example.com/deal",
     resolvedUrl: "https://example.com/deal",
     strategyId: "public-direct-html",
@@ -214,6 +317,29 @@ test("skips public referral extraction when the resolved url is auth gated", () 
   });
 
   assert.equal(referral, undefined);
+});
+
+test("omits visitor and owner benefits when the public copy is too ambiguous", () => {
+  const referral = resolvePublicReferralAugmentation({
+    originalUrl: "https://example.com/deal",
+    sourceUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+    manualReferral: {
+      kind: "promo",
+    },
+    metadata: {
+      title: "Example Company",
+      description: "Discover premium widgets and member perks.",
+    },
+  });
+
+  assert.deepEqual(referral, {
+    kind: "promo",
+    completeness: "none",
+    originalUrl: "https://example.com/deal",
+    resolvedUrl: "https://example.com/deal",
+    strategyId: "public-direct-html",
+  });
 });
 
 test("resolves a Primal public augmentation target that fetches the profile page directly", () => {

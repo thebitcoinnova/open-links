@@ -52,7 +52,11 @@ const YOUTUBE_SUBSCRIBER_SEGMENT_LENGTH = 5_000;
 const REFERRAL_HEADLINE_HINT_PATTERN =
   /\b(join|save|get|bonus|discount|deal|offer|membership|invite|credit|free)\b/i;
 const REFERRAL_TERMS_PATTERN =
-  /\b(new users only|limited time|subject to approval|terms apply|starting at\b|first year|first order|while supplies last|minimum purchase)\b/i;
+  /\b(new users only|limited time|subject to approval|terms apply|starting at\b|while supplies last|minimum purchase|cannot be combined)\b/i;
+const REFERRAL_VISITOR_BENEFIT_PATTERN =
+  /\b(save|discount|bonus|credit|free|cash\s*back|cashback|off your|starting at\b|pay in sats|trial)\b/i;
+const REFERRAL_OWNER_BENEFIT_PATTERN =
+  /\b(supports?\s+(?:the\s+)?(?:project|creator|site|author)|commission|store credit|referral reward|creator receives|we (?:earn|receive|get)|i (?:earn|receive|get))\b/i;
 
 type PublicAugmentationOutcome = NormalizedEnrichmentResult;
 
@@ -134,6 +138,7 @@ interface ResolvePublicReferralAugmentationInput {
   strategyId: string;
   metadata: EnrichmentMetadata;
   manualReferral?: LinkReferralConfig;
+  benefitTextCandidates?: string[];
 }
 
 const SUBSTACK_PRELOADS_PATTERN = /window\._preloads\s*=\s*JSON\.parse\(("(?:(?:\\.)|[^"\\])*")\)/s;
@@ -712,6 +717,52 @@ const resolveReferralTermsSummary = (metadata: EnrichmentMetadata): string | und
   return matchingSentences.length > 0 ? matchingSentences.join(" ") : undefined;
 };
 
+const buildReferralBenefitTextCandidates = (input: {
+  metadata: EnrichmentMetadata;
+  benefitTextCandidates?: string[];
+}): string[] => {
+  const candidates: string[] = [];
+  const seen = new Set<string>();
+
+  const push = (value: string | undefined) => {
+    const trimmed = safeTrim(value);
+    if (!trimmed || seen.has(trimmed)) {
+      return;
+    }
+    seen.add(trimmed);
+    candidates.push(trimmed);
+  };
+
+  push(input.metadata.title);
+  for (const sentence of splitIntoSentences(input.metadata.description)) {
+    push(sentence);
+  }
+  for (const candidate of input.benefitTextCandidates ?? []) {
+    push(candidate);
+  }
+
+  return candidates;
+};
+
+const resolveExplicitReferralBenefit = (
+  input: {
+    metadata: EnrichmentMetadata;
+    benefitTextCandidates?: string[];
+  },
+  pattern: RegExp,
+): string | undefined =>
+  buildReferralBenefitTextCandidates(input).find((candidate) => pattern.test(candidate));
+
+const resolveReferralVisitorBenefit = (input: {
+  metadata: EnrichmentMetadata;
+  benefitTextCandidates?: string[];
+}): string | undefined => resolveExplicitReferralBenefit(input, REFERRAL_VISITOR_BENEFIT_PATTERN);
+
+const resolveReferralOwnerBenefit = (input: {
+  metadata: EnrichmentMetadata;
+  benefitTextCandidates?: string[];
+}): string | undefined => resolveExplicitReferralBenefit(input, REFERRAL_OWNER_BENEFIT_PATTERN);
+
 const isLikelyAuthGatedUrl = (value: string): boolean => {
   const normalized = value.toLowerCase();
   return (
@@ -747,6 +798,8 @@ export const resolvePublicReferralAugmentation = (
     return undefined;
   }
 
+  const visitorBenefit = resolveReferralVisitorBenefit(input);
+  const ownerBenefit = resolveReferralOwnerBenefit(input);
   const offerSummary = resolveReferralOfferSummary(input.metadata);
   const termsSummary = resolveReferralTermsSummary(input.metadata);
   const generatedKind =
@@ -755,6 +808,8 @@ export const resolvePublicReferralAugmentation = (
 
   return normalizeReferralConfig({
     kind: generatedKind,
+    visitorBenefit,
+    ownerBenefit,
     offerSummary,
     termsSummary,
     completeness: resolveReferralCompleteness({
