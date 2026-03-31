@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-links.dev/schema/referral-catalog.schema.json",
+  "title": "OpenLinks Referral Catalog",
+  "type": "object",
+  "required": ["version", "updatedAt", "families", "offers", "matchers"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "families": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/family" }
+    },
+    "offers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/offer" }
+    },
+    "matchers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/matcher" }
+    }
+  },
+  "$defs": {
+    "catalogId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "hostname": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "referralKind": {
+      "type": "string",
+      "enum": ["referral", "affiliate", "promo", "invite"]
+    },
+    "family": {
+      "type": "object",
+      "required": ["familyId", "label", "kind", "canonicalProgramUrl"],
+      "properties": {
+        "familyId": { "$ref": "#/$defs/catalogId" },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "kind": { "$ref": "#/$defs/referralKind" },
+        "description": { "$ref": "#/$defs/nonEmptyString" },
+        "canonicalProgramUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "canonicalHosts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/hostname" }
+        },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "offer": {
+      "type": "object",
+      "required": ["offerId", "familyId", "label"],
+      "properties": {
+        "offerId": { "$ref": "#/$defs/catalogId" },
+        "familyId": { "$ref": "#/$defs/catalogId" },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "kind": { "$ref": "#/$defs/referralKind" },
+        "visitorBenefit": { "$ref": "#/$defs/nonEmptyString" },
+        "ownerBenefit": { "$ref": "#/$defs/nonEmptyString" },
+        "offerSummary": { "$ref": "#/$defs/nonEmptyString" },
+        "termsSummary": { "$ref": "#/$defs/nonEmptyString" },
+        "termsUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "code": { "$ref": "#/$defs/nonEmptyString" },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "matcher": {
+      "type": "object",
+      "required": ["matcherId", "familyId", "offerId", "label", "explanation", "hosts"],
+      "properties": {
+        "matcherId": { "$ref": "#/$defs/catalogId" },
+        "familyId": { "$ref": "#/$defs/catalogId" },
+        "offerId": { "$ref": "#/$defs/catalogId" },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "explanation": { "$ref": "#/$defs/nonEmptyString" },
+        "hosts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/hostname" }
+        },
+        "canonicalSourceHosts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/hostname" }
+        },
+        "pathExact": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "pathPrefix": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "requiredQueryKeys": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "requiredQueryValues": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/nonEmptyString" },
+          "additionalProperties": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "linkShapeTags": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["signup", "invite", "path-code", "query-code", "shortener", "wrapper"]
+          }
+        },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

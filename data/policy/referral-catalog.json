@@ -1,0 +1,50 @@
+{
+  "$schema": "../../schema/referral-catalog.schema.json",
+  "version": 1,
+  "updatedAt": "2026-03-31T10:00:00.000Z",
+  "families": [
+    {
+      "familyId": "club-orange",
+      "label": "Club Orange",
+      "kind": "referral",
+      "description": "Club Orange membership and community referral program.",
+      "canonicalProgramUrl": "https://www.cluborange.org/signup",
+      "canonicalHosts": ["cluborange.org", "signup.cluborange.org", "www.cluborange.org"]
+    }
+  ],
+  "offers": [
+    {
+      "offerId": "club-orange-signup",
+      "familyId": "club-orange",
+      "label": "Club Orange signup referral",
+      "kind": "referral",
+      "ownerBenefit": "Supports the project",
+      "offerSummary": "Join Club Orange through a referral-aware signup link.",
+      "termsSummary": "See the current Club Orange signup page for the latest referral terms and eligibility details.",
+      "termsUrl": "https://www.cluborange.org/signup"
+    }
+  ],
+  "matchers": [
+    {
+      "matcherId": "club-orange-signup-co-path",
+      "familyId": "club-orange",
+      "offerId": "club-orange-signup",
+      "label": "Hosted signup path code",
+      "explanation": "Club Orange hosted signup links encode the referral token in the /co/<code> path.",
+      "hosts": ["signup.cluborange.org"],
+      "pathPrefix": "/co/",
+      "linkShapeTags": ["signup", "path-code"]
+    },
+    {
+      "matcherId": "club-orange-signup-query-referral",
+      "familyId": "club-orange",
+      "offerId": "club-orange-signup",
+      "label": "Canonical signup referral query",
+      "explanation": "The canonical Club Orange signup page uses the referral query parameter to carry the token.",
+      "hosts": ["cluborange.org", "www.cluborange.org"],
+      "pathExact": "/signup",
+      "requiredQueryKeys": ["referral"],
+      "linkShapeTags": ["signup", "query-code"]
+    }
+  ]
+}
