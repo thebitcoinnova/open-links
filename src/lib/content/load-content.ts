@@ -389,6 +389,42 @@ interface GeneratedContentImagesPayload {
   bySlot?: Record<string, GeneratedContentImageEntry>;
 }
 
+// Keep these as literal import.meta.glob(...) callsites so Vite can statically
+// inline the manifest JSON into the browser bundle. Dynamic helper wrappers
+// around glob leave runtime with empty manifest maps in production builds.
+const generatedMetadataModules = (() => {
+  try {
+    return import.meta.glob<{ default: GeneratedRichMetadataPayload }>(
+      "../../../data/generated/rich-metadata.json",
+      { eager: true },
+    );
+  } catch {
+    return {};
+  }
+})();
+
+const cachedContentImageModules = (() => {
+  try {
+    return import.meta.glob<{ default: GeneratedContentImagesPayload }>(
+      "../../../data/cache/content-images.json",
+      { eager: true },
+    );
+  } catch {
+    return {};
+  }
+})();
+
+const generatedProfileAvatarModules = (() => {
+  try {
+    return import.meta.glob<{ default: GeneratedProfileAvatarPayload }>(
+      "../../../data/cache/profile-avatar.json",
+      { eager: true },
+    );
+  } catch {
+    return {};
+  }
+})();
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -406,20 +442,6 @@ const trimToUndefined = (value: string | undefined): string | undefined => {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
-};
-
-const readJsonModules = <T>(pattern: string): Record<string, { default: T }> => {
-  const maybeGlob = (
-    import.meta as ImportMeta & {
-      glob?: (pattern: string, options: { eager: true }) => Record<string, { default: T }>;
-    }
-  ).glob;
-
-  if (typeof maybeGlob !== "function") {
-    return {};
-  }
-
-  return maybeGlob(pattern, { eager: true });
 };
 
 const PAYMENT_SUPPORT_GROUP: LinkGroup = {
@@ -474,9 +496,7 @@ interface GeneratedLinkAugmentation {
 }
 
 const resolveGeneratedMetadata = (): Record<string, GeneratedLinkAugmentation> => {
-  const module = Object.values(
-    readJsonModules<GeneratedRichMetadataPayload>("../../../data/generated/rich-metadata.json"),
-  )[0];
+  const module = Object.values(generatedMetadataModules)[0];
   const payload = module?.default;
 
   if (!payload?.links || !isRecord(payload.links)) {
@@ -509,9 +529,7 @@ const resolveGeneratedMetadata = (): Record<string, GeneratedLinkAugmentation> =
 const resolveGeneratedContentImages = (): Record<string, GeneratedContentImageEntry> => {
   const mapped: Record<string, GeneratedContentImageEntry> = {};
 
-  const module = Object.values(
-    readJsonModules<GeneratedContentImagesPayload>("../../../data/cache/content-images.json"),
-  )[0];
+  const module = Object.values(cachedContentImageModules)[0];
   const payload = module?.default;
   if (!payload || !isRecord(payload.bySlot)) {
     return mapped;
@@ -558,9 +576,7 @@ export const resolveGeneratedContentImageUrl = (input: {
 
 const resolveProfileAvatarPath = (): string => {
   const fallbackPath = "profile-avatar-fallback.svg";
-  const module = Object.values(
-    readJsonModules<GeneratedProfileAvatarPayload>("../../../data/cache/profile-avatar.json"),
-  )[0];
+  const module = Object.values(generatedProfileAvatarModules)[0];
   const payload = module?.default;
 
   if (

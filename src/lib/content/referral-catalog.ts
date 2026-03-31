@@ -69,6 +69,30 @@ interface ReferralCatalogMatcherCandidate {
   specificity: number;
 }
 
+// Keep these as literal import.meta.glob(...) callsites so Vite inlines both
+// the shared and local catalog JSON into the browser bundle.
+const sharedReferralCatalogModules = (() => {
+  try {
+    return import.meta.glob<{ default: ReferralCatalogPayload }>(
+      "../../../data/policy/referral-catalog.json",
+      { eager: true },
+    );
+  } catch {
+    return {};
+  }
+})();
+
+const localReferralCatalogModules = (() => {
+  try {
+    return import.meta.glob<{ default: ReferralCatalogPayload }>(
+      "../../../data/policy/referral-catalog.local.json",
+      { eager: true },
+    );
+  } catch {
+    return {};
+  }
+})();
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -472,26 +496,8 @@ export const resolveReferralCatalogForLink = (input: {
   return resolveReferralCatalogMatcher(input.catalog, input.sourceUrl);
 };
 
-const readJsonModules = <T>(pattern: string): Record<string, { default: T }> => {
-  const maybeGlob = (
-    import.meta as ImportMeta & {
-      glob?: (pattern: string, options: { eager: true }) => Record<string, { default: T }>;
-    }
-  ).glob;
-
-  if (typeof maybeGlob !== "function") {
-    return {};
-  }
-
-  return maybeGlob(pattern, { eager: true });
-};
-
 export const loadReferralCatalog = (): ReferralCatalog => {
-  const sharedPayload = Object.values(
-    readJsonModules<ReferralCatalogPayload>("../../../data/policy/referral-catalog.json"),
-  )[0]?.default;
-  const localPayload = Object.values(
-    readJsonModules<ReferralCatalogPayload>("../../../data/policy/referral-catalog.local.json"),
-  )[0]?.default;
+  const sharedPayload = Object.values(sharedReferralCatalogModules)[0]?.default;
+  const localPayload = Object.values(localReferralCatalogModules)[0]?.default;
   return mergeReferralCatalogPayloads(sharedPayload, localPayload);
 };

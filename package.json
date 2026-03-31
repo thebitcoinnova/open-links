@@ -8,7 +8,7 @@
   "scripts": {
     "ci:required:typecheck": "bun run typecheck",
     "ci:required:deploy": "bun run test:deploy",
-    "ci:required:build": "bun run build",
+    "ci:required:build": "bun run build && bun test scripts/lib/build-runtime-assets.test.ts",
     "ci:required:quality": "bun run quality:check",
     "ci:required:studio-integration": "bun run studio:test:integration",
     "ci:required": "bun run ci:required:typecheck && bun run ci:required:deploy && bun run ci:required:build && bun run ci:required:quality && bun run ci:required:studio-integration",
