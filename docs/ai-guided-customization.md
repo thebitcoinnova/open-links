@@ -9,8 +9,9 @@ This is the recommended repo-native CRUD path when you want an AI agent to updat
 Referral links follow this same path. For referral authoring today:
 
 1. Prefer this wizard or `docs/openclaw-update-crud.md` first.
-2. Use Studio only when Advanced JSON is acceptable for the change.
-3. Treat direct JSON edits as the lower-level fallback.
+2. Use `skills/referral-management/SKILL.md` when the work involves new reusable families, offers, matcher/link shapes, or a shared-vs-fork catalog decision.
+3. Use Studio only when Advanced JSON is acceptable for the change.
+4. Treat direct JSON edits as the lower-level fallback.
 
 For OpenClaw automation-first execution, use:
 
@@ -28,6 +29,12 @@ Use this wizard when you want to:
 If you already know you want deterministic day-2 maintenance in an existing repo, prefer `docs/openclaw-update-crud.md`. If you want browser-based CRUD instead of repo-local editing, prefer `docs/studio-self-serve.md`.
 
 If your goal is adding referral links, stay on this wizard or the OpenClaw day-2 CRUD path. You should not need a bespoke extractor by default just to author the referral link.
+
+If your goal is creating or changing shared referral catalog items, or deciding
+whether the change belongs in `data/policy/referral-catalog.json` versus the
+fork-owned `data/policy/referral-catalog.local.json` overlay, also use:
+
+- `skills/referral-management/SKILL.md`
 
 Do not use this as a replacement for understanding your repository. Keep final review human-owned.
 
@@ -179,15 +186,18 @@ Agent should:
    - enrichment-disabled.
 7. Ask whether any link should be marked as `referral`, `affiliate`, `promo`, or `invite`.
 8. For each referral link, collect the relevant disclosure fields:
+   - `catalogRef` when the link should reuse shared catalog data
    - `visitorBenefit`
    - `ownerBenefit`
    - `offerSummary`
    - `termsSummary`
    - `termsUrl`
    - `code`
-9. If a referral URL belongs to a supported profile-family site but should stay on generic rich-card behavior, set `enrichment.profileSemantics` to `non_profile`.
-10. If exact referral terms are unclear, it is acceptable to add a soft marker or partial manual disclosure first. Do not block the authoring flow on extractor work by default.
-11. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
+9. If the referral work requires a new family, offer, matcher, or shared-vs-fork scope decision, switch to the `skills/referral-management/SKILL.md` interview before finalizing the edit plan.
+10. If a referral URL belongs to a supported profile-family site but should stay on generic rich-card behavior, set `enrichment.profileSemantics` to `non_profile`.
+11. If exact referral terms are unclear, it is acceptable to add a soft marker or partial manual disclosure first. Do not block the authoring flow on extractor work by default.
+12. If a fork adds a generic shared catalog item that would help other forks, recommend a clean upstream PR for the shared catalog/docs change and keep `data/policy/referral-catalog.local.json` out of that PR scope.
+13. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
 
 ```bash
 bun run images:sync

@@ -59,20 +59,72 @@ they touch:
 
 ## Referral-Specific Compatibility Notes
 
-The referral milestone adds one important shared-contract consideration:
+The referral milestone now has two distinct downstream surfaces:
 
-- `links[].referral` is an additive schema/data-contract change and should be reviewed when bumping the upstream pin.
+- `links[].referral` remains the additive runtime/render contract.
+- `data/policy/referral-catalog.json` is the shared higher-level authoring layer that seeds that runtime contract.
+
+The most important compatibility rule is to keep those layers distinct when you
+review an upstream pin bump.
+
+### Shared Surfaces To Review
+
+Review downstream impact whenever the upstream change touches any of these:
+
+- `schema/links.schema.json`
+- `schema/referral-catalog.schema.json`
+- `data/policy/referral-catalog.json`
+- `src/lib/content/referral-fields.ts`
+- `src/lib/content/referral-catalog.ts`
+- scripts that validate, enrich, or report referral data
+- docs that redefine referral authoring or shared-vs-fork workflow
 
 Concrete downstream guidance:
 
 1. When you update the upstream `open-links` pin, review the referral contract notes in `docs/data-model.md`.
-2. If your downstream repo mirrors upstream schema or data-model assumptions, verify the additive `links[].referral` object is acceptable before rolling the pin forward.
-3. Treat later referral renderer/UI-only changes, such as badge styling or sibling terms-link layout, as lower-risk than referral schema, policy, or script-entrypoint changes.
+2. Verify that `links[].referral` still reads as the runtime/render contract your downstream repo expects to mirror.
+3. Verify that any shared catalog changes under `data/policy/referral-catalog.json` are acceptable for your downstream materialization flow.
+4. Recheck any downstream tooling that mirrors or validates shared policy files when the catalog schema changes.
 
-UI-only vs shared-contract distinction:
+### Fork-Local Overlay Handling
 
-- UI-only referral changes primarily affect rendering and smoke expectations.
-- Shared contract changes affect mirrored schema/data assumptions and deserve an explicit review on sync.
+`data/policy/referral-catalog.local.json` is the fork-owned overlay side of the
+referral model. Treat it differently from the shared catalog.
+
+Rules:
+
+1. Do not treat `data/policy/referral-catalog.local.json` as upstream-shared contract data.
+2. Do not include `data/policy/referral-catalog.local.json` in upstream PR diffs.
+3. If a downstream repo wants local-only referral catalog additions, keep them on that repo's fork-owned side instead of assuming they came from upstream.
+4. If a fork discovers a generic family, offer, or matcher that would help other forks, upstream the shared portion in `data/policy/referral-catalog.json` and keep any local overlay-only data separate.
+
+### Runtime Contract Reminder
+
+Downstream repos should continue to think in this order:
+
+1. `links[].referral` is what runtime/render consumers read.
+2. `catalogRef` is a higher-level pointer nested inside that runtime object.
+3. Manual link-level fields still override catalog defaults.
+4. Generated/public enrichment remains assistive rather than authoritative.
+
+That means a downstream repo can adopt shared catalog improvements without
+treating the catalog file itself as a replacement for the existing runtime link
+shape.
+
+### UI-Only Versus Shared-Contract Changes
+
+Treat these as lower-risk downstream changes:
+
+- referral badge styling
+- sibling terms-link layout
+- other card-presentation-only tweaks
+
+Treat these as higher-risk and worthy of explicit review:
+
+- schema changes
+- shared policy changes
+- runtime merge/preference changes
+- script entrypoint or validation behavior changes
 
 This note is about compatibility awareness, not a promise that every change
 requires cross-repo updates. The intent is to make downstream impact explicit
