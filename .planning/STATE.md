@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Milestone v1.3 implementation is complete; next step is audit
+**Current focus:** No active milestone. Next step is `$gsd-new-milestone`.
 
 ## Current Position
 
-Phase: 24-referral-catalog-skill-management
-Plan: 24-01 through 24-04 complete
-Status: Phase 24 complete; milestone ready for audit
-Next Phase: None (implementation complete)
-Active Milestone: v1.3-referral-links-offer-transparency
-Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-31 - Completed Phase 24 with shared referral catalog data, runtime/enrichment catalog integration, Club Orange migration, and a sibling referral-management skill.
+Phase: none
+Plan: none
+Status: v1.3 archived; ready to define the next milestone
+Next Phase: none
+Active Milestone: none
+Completed Milestone: v1.3-referral-links-offer-transparency
+Last activity: 2026-03-31 - Archived v1.3 and prepared planning files for the next milestone.
 
-Progress: [##########] 100%
+Progress: [----------] 0%
 
 ## Performance Metrics
 
@@ -89,6 +89,7 @@ Progress: [##########] 100%
 - 2026-03-31: Phase 23 completed with explicit-only visitor/owner benefit extraction, generic public browser fallback for unresolved HTML referral pages, live Club Orange artifact proof, and deploy-time regression coverage for the new enrichment paths.
 - 2026-03-31: Phase 24 planned into four waves: shared catalog schema/overlay contract, runtime catalog resolution with provenance, enrichment migration plus Club Orange proof, and sibling referral-management skill/docs coverage.
 - 2026-03-31: Phase 24 completed with shared referral catalog data, catalog-aware runtime precedence, catalog-backed Club Orange enrichment/reporting, and a dedicated referral-management skill plus downstream-safe docs.
+- 2026-03-31: Milestone v1.3 archived after audit with status `tech_debt`; next milestone remains to be defined.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -103,7 +104,7 @@ Progress: [##########] 100%
 
 ### Pending Todos
 
-- Run `$gsd-audit-milestone` for v1.3 before archiving.
+- Run `$gsd-new-milestone` to define the next milestone and create a fresh `REQUIREMENTS.md`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
@@ -118,6 +119,6 @@ Progress: [##########] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-31 11:55
-Stopped at: Phase 24 is complete; next step is `$gsd-audit-milestone`.
-Resume file: .planning/phases/24-referral-catalog-skill-management/24-VERIFICATION.md
+Last session: 2026-03-31 12:35
+Stopped at: v1.3 archived; next step is `$gsd-new-milestone`.
+Resume file: .planning/MILESTONES.md

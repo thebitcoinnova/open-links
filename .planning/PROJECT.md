@@ -10,32 +10,23 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 
 ## Current State
 
-- **Shipped version:** v1.2 (2026-03-28)
-- **Active milestone:** v1.3 Referral Links + Offer Transparency
-- **Latest delivered scope:** v1.2 shipped phases 15-17 across 8 plans and 24 summarized tasks, adding derived profile-header Quick Links, visible strip polish, and maintainer docs/verification coverage
+- **Shipped version:** v1.3 (2026-03-31)
+- **Active milestone:** none — run `$gsd-new-milestone` to define the next milestone
+- **Latest delivered scope:** v1.3 shipped phases 18-24 across 19 plans, adding first-class referral disclosure, public referral enrichment, live source-authored referral proof, a shared referral catalog, and a sibling referral-management skill
 - **Primary stack:** SolidJS + TypeScript + JSON schema validation + GitHub Actions + GitHub Pages
 - **Quality posture:** SEO/a11y/performance checks remain integrated and CI-gated, with known remaining debt around `/` performance budgets and fallback social-image warnings
 - **Extensibility posture:** documented theme/layout/deployment extension pathways plus AI-guided and Studio-assisted CRUD paths for maintainers
 - **Maintainer workflow posture:** prefer repo AI workflows/skills or Studio for routine CRUD; use direct JSON editing as the lower-level fallback
-- **Planning focus:** v1.3 planning is active around referral links, offer transparency, and flexible enrichment; the next execution step is `$gsd-discuss-phase 18`
+- **Planning focus:** no active milestone is defined yet; the next planning step is `$gsd-new-milestone`
 
-## Current Milestone: v1.3 Referral Links + Offer Transparency
+## Next Milestone Goals
 
-**Goal:** Add first-class referral-link support with explicit visitor/owner benefit disclosure, optional build-time offer-term enrichment, and rich-card-ready presentation without introducing a new link type.
-
-**Target features:**
-
-- Add a dedicated `links[].referral` contract with transparent fields for what the visitor gets, what the site owner gets, offer/terms summary, terms/source URLs, and a `custom` escape hatch.
-- Keep referral links additive to existing `simple` and `rich` cards so maintainers can author arbitrary referral destinations through the normal AI CRUD/manual JSON paths without waiting on a bespoke extractor.
-- Extend build-time enrichment/public augmentation so common public referral destinations can follow canonical landing pages and capture promo metadata plus obvious terms when available.
-- Reuse the existing rich-card image and brand-icon pipelines so referral links can show promo imagery, source branding, and disclosure details together.
-- Update maintainer docs and README surfaces so referral authoring, extraction limits, and downstream contract impact stay explicit.
-
-**Scope guardrails:**
-
-- Manual referral disclosures remain authoritative; extracted terms are assistive and must not silently overwrite explicit author copy.
-- The milestone should generalize the existing one-off Club Orange referral behavior instead of growing more domain-specific referral patches.
-- First-class Studio referral controls can stay deferred if AI CRUD plus the existing Advanced JSON path already cover the authoring workflow cleanly.
+- Decide whether the next milestone should prioritize:
+  - CI/runtime regression hardening for referral and card flows,
+  - repo-quality debt cleanup (cache freshness, fallback SEO image, bundle/chunk warnings),
+  - or a new user-facing feature area.
+- Create a fresh milestone-scoped `REQUIREMENTS.md` via `$gsd-new-milestone`.
+- Keep the accepted v1.3 debt visible when choosing the next milestone scope.
 
 ## Validated
 
@@ -49,12 +40,16 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 - ✓ OpenLinks now derives profile-header Quick Links from eligible top-level social/profile links instead of a second registry.
 - ✓ The profile header now ships a visible, responsive, icon-first Quick Links strip with explicit outbound accessibility semantics and clean empty-state behavior.
 - ✓ Maintainer docs and the verification guide now accurately explain and verify the shipped Quick Links behavior.
+- ✓ Referral links now ship as a first-class additive contract with public enrichment, visible card disclosure UI, a live source-authored proof case, and a shared referral catalog plus sibling referral-management skill.
 
 ## Known Debt Carrying Forward
 
-- `bun run quality:check` still fails the `/` total bundle-byte budgets for both mobile and desktop.
+- Default CI still does not cover the full referral runtime/render regression surface.
+- LinkedIn authenticated cache remains stale.
+- Rumble follower metadata remains partial.
 - SEO still warns that social preview metadata is using the deterministic fallback image.
 - The analytics chart chunk remains large and should stay code-split or be reduced in a future cleanup pass.
+- Content-image sync still relies on cached Facebook imagery after remote `403` responses.
 - Broader social coverage, richer platform-specific metrics, and deeper Studio onboarding/editor flows remain future work.
 
 ## Out of Scope (Still True)
@@ -64,6 +59,29 @@ A developer can fork/template the repo, edit structured link data, and reliably 
 - First-class non-GitHub hosting adapter implementation - remains future work while product and workflow polish are prioritized.
 
 ## Archived Planning Context
+
+<details>
+<summary>v1.3 Referral Links + Offer Transparency planning context</summary>
+
+### Goal
+
+Add first-class referral-link support with explicit visitor/owner benefit disclosure, optional build-time offer-term enrichment, and rich-card-ready presentation without introducing a new link type.
+
+### Target Features
+
+- Add a dedicated `links[].referral` contract with transparent fields for what the visitor gets, what the site owner gets, offer/terms summary, terms/source URLs, and a `custom` escape hatch.
+- Keep referral links additive to existing `simple` and `rich` cards so maintainers can author arbitrary referral destinations through the normal AI CRUD/manual JSON paths without waiting on a bespoke extractor.
+- Extend build-time enrichment/public augmentation so common public referral destinations can follow canonical landing pages and capture promo metadata plus obvious terms when available.
+- Reuse the existing rich-card image and brand-icon pipelines so referral links can show promo imagery, source branding, and disclosure details together.
+- Update maintainer docs and README surfaces so referral authoring, extraction limits, and downstream contract impact stay explicit.
+
+### Constraints
+
+- Manual referral disclosures remain authoritative; extracted terms are assistive and must not silently overwrite explicit author copy.
+- The milestone should generalize the existing one-off Club Orange referral behavior instead of growing more domain-specific referral patches.
+- First-class Studio referral controls could stay deferred if AI CRUD plus the existing Advanced JSON path already covered the authoring workflow cleanly.
+
+</details>
 
 <details>
 <summary>v1.2 Profile Quick Links + Header Usability Polish planning context</summary>
@@ -143,4 +161,4 @@ Recent UI polish work exposed a gap: social profile links still read more like g
 </details>
 
 ---
-*Last updated: 2026-03-29 after starting the v1.3 referral milestone*
+*Last updated: 2026-03-31 after archiving the v1.3 milestone*
