@@ -2,7 +2,7 @@
 
 **Status:** 🚧 ACTIVE
 **Phases:** 18-24
-**Total Plans:** 12 completed/planned + Phases 23-24 TBD
+**Total Plans:** 15 completed/planned + Phase 24 TBD
 
 ## Overview
 
@@ -123,10 +123,12 @@ Plans:
 
 **Goal:** Extend public referral augmentation so explicit public landing-page text can fill `visitorBenefit` and `ownerBenefit` additively without defaulting to bespoke program-specific extractors.
 **Depends on:** Phase 22
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run `$gsd-plan-phase 23` to break down)
+- [ ] 23-01: Add static explicit-only visitor/owner benefit extraction to public referral augmentation.
+- [ ] 23-02: Add a generic public browser fallback for JS-heavy public referral pages after static extraction misses benefit fields.
+- [ ] 23-03: Refresh generated artifacts and harden report/manual-precedence regressions for automatic benefit extraction.
 
 **Details:**
 - Stay public-first and explicit-only: static fetch/parsing first, with public browser fallback only when public JS-heavy pages need it.

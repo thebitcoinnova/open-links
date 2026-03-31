@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Phase 23 remains next, with Phase 24 now added behind it for referral catalog and skill-driven management
+**Current focus:** Phase 23 is now planned and ready for execution; Phase 24 remains queued behind it for referral catalog and skill-driven management
 
 ## Current Position
 
 Phase: 23-automatic-referral-benefit-extraction
-Plan: none yet
-Status: Phase 22 complete; Phase 23 added and ready for `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`
+Plan: 23-01, 23-02, 23-03
+Status: Phase 23 planned; ready for `$gsd-execute-phase 23`
 Next Phase: Phase 23 - Automatic Referral Benefit Extraction
 Active Milestone: v1.3-referral-links-offer-transparency
 Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Completed Phase 22 proof, refreshed the milestone audit, and queued Phase 23 for public-first automatic referral benefit extraction.
+Last activity: 2026-03-31 - Planned Phase 23 into three waves covering static benefit extraction, public browser fallback, and report/artifact hardening.
 
 Progress: [#########-] 90%
 
@@ -79,6 +79,7 @@ Progress: [#########-] 90%
 - 2026-03-30: Milestone audit found the missing source-authored referral flow proof gap; Phase 22 was added to close it before archiving v1.3.
 - 2026-03-30: Phase 22 completed with live source-authored Club Orange referral proof, focused real-data regressions, and refreshed audit evidence that the manual-first gap is closed.
 - 2026-03-30: Phase 23 added for public-first, explicit-only automatic visitor/owner benefit extraction with static parsing first, browser fallback second, and manual precedence preserved.
+- 2026-03-31: Phase 23 planned into three waves: static explicit-only benefit extraction, conditional public browser fallback for JS-heavy public pages, and report/artifact hardening with real generated output.
 - 2026-03-31: Phase 24 added for a shared upstream referral catalog, optional link-level catalog references plus overrides, and a sibling referral-management skill with upstream-PR prompting for generic additions.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
@@ -94,7 +95,7 @@ Progress: [#########-] 90%
 
 ### Pending Todos
 
-- Discuss or plan Phase 23 with `$gsd-discuss-phase 23` or `$gsd-plan-phase 23`.
+- Execute Phase 23 with `$gsd-execute-phase 23`.
 - Plan Phase 24 after Phase 23 if referral catalog and skill-driven management remain the next infrastructure step.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
