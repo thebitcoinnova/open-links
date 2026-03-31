@@ -1,6 +1,9 @@
 import {
   type GeneratedLinkReferralConfig,
   type LinkReferralConfig,
+  REFERRAL_PROVENANCE_FIELDS,
+  type ReferralFieldName,
+  mergeReferralWithManualOverrides,
   normalizeReferralConfig,
   resolveReferralCompleteness,
 } from "../../src/lib/content/referral-fields";
@@ -23,11 +26,7 @@ import {
   toSourceLabel,
 } from "./document-primitives";
 import { parseMetadata } from "./parse-metadata";
-import {
-  buildClubOrangeReferralSignupUrl,
-  extractClubOrangeReferralCode,
-  resolveReferralTarget,
-} from "./referral-targets";
+import { type ReferralTargetCatalogContribution, resolveReferralTarget } from "./referral-targets";
 import { parseRumblePublicProfile, resolveRumbleAboutUrl } from "./rumble-public-profile";
 import { parseAudienceCount } from "./social-profile-counts";
 import type {
@@ -526,8 +525,19 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
 const buildGenericXDescription = (displayHandle: string): string =>
   `Posts and updates from @${displayHandle} on X.`;
 
-const isClubOrangeReferralSignupUrl = (sourceUrl: string): boolean =>
-  extractClubOrangeReferralCode(sourceUrl) !== null;
+const resolveClubOrangeReferralSignupTarget = (
+  sourceUrl: string,
+): ReturnType<typeof resolveReferralTarget> => {
+  const target = resolveReferralTarget({
+    url: sourceUrl,
+  });
+
+  if (target?.catalog?.offerId !== "club-orange-signup") {
+    return null;
+  }
+
+  return target;
+};
 
 export const parseInstagramProfileMetadata = (
   description: string | undefined,
@@ -763,6 +773,49 @@ const resolveReferralOwnerBenefit = (input: {
   benefitTextCandidates?: string[];
 }): string | undefined => resolveExplicitReferralBenefit(input, REFERRAL_OWNER_BENEFIT_PATTERN);
 
+const hasReferralFieldValue = (
+  referral: LinkReferralConfig | undefined,
+  field: ReferralFieldName,
+): boolean => {
+  const value = referral?.[field];
+  return typeof value === "string" && value.trim().length > 0;
+};
+
+const mergeCatalogSeedWithGeneratedReferral = (input: {
+  catalogReferral: LinkReferralConfig;
+  generatedReferral: GeneratedLinkReferralConfig;
+  catalogContribution?: ReferralTargetCatalogContribution;
+}): GeneratedLinkReferralConfig => {
+  const normalizedCatalog = normalizeReferralConfig(input.catalogReferral);
+  const normalizedGenerated = normalizeReferralConfig(input.generatedReferral);
+  const merged = {
+    ...normalizedCatalog,
+    ...normalizedGenerated,
+  } as GeneratedLinkReferralConfig;
+  const provenance: Partial<Record<ReferralFieldName, "catalog" | "generated">> = {};
+
+  for (const field of REFERRAL_PROVENANCE_FIELDS) {
+    if (hasReferralFieldValue(normalizedGenerated, field)) {
+      provenance[field] = "generated";
+      continue;
+    }
+
+    if (hasReferralFieldValue(normalizedCatalog, field)) {
+      provenance[field] = "catalog";
+    }
+  }
+
+  if (Object.keys(provenance).length > 0) {
+    merged.provenance = provenance;
+  }
+
+  if (input.catalogContribution) {
+    merged.catalog = input.catalogContribution;
+  }
+
+  return merged;
+};
+
 const isLikelyAuthGatedUrl = (value: string): boolean => {
   const normalized = value.toLowerCase();
   return (
@@ -784,10 +837,13 @@ export const resolvePublicReferralAugmentation = (
   const target = resolveReferralTarget({
     url: input.originalUrl,
     finalUrl: input.finalUrl ?? input.sourceUrl,
+    referral: normalizedManual,
   });
+  const catalogReferral = target?.catalogReferral;
   const shouldAttemptReferral =
     Boolean(normalizedManual) ||
     Boolean(target && target.pattern !== "direct") ||
+    Boolean(target?.catalog) ||
     input.strategyId === "cluborange-referral-signup";
 
   if (!shouldAttemptReferral) {
@@ -804,22 +860,47 @@ export const resolvePublicReferralAugmentation = (
   const termsSummary = resolveReferralTermsSummary(input.metadata);
   const generatedKind =
     normalizedManual?.kind ??
-    (input.strategyId === "cluborange-referral-signup" ? "referral" : undefined);
+    (catalogReferral?.kind
+      ? undefined
+      : input.strategyId === "cluborange-referral-signup"
+        ? "referral"
+        : undefined);
 
-  return normalizeReferralConfig({
+  const generatedReferral = normalizeReferralConfig({
     kind: generatedKind,
     visitorBenefit,
     ownerBenefit,
     offerSummary,
     termsSummary,
-    completeness: resolveReferralCompleteness({
-      offerSummary,
-      termsSummary,
-    }),
     originalUrl: input.originalUrl,
     resolvedUrl,
     strategyId: input.strategyId,
     termsSourceUrl: termsSummary ? resolvedUrl : undefined,
+    ...(target?.catalog ? { catalog: target.catalog } : {}),
+  });
+
+  if (!catalogReferral || !generatedReferral) {
+    return generatedReferral
+      ? normalizeReferralConfig({
+          ...generatedReferral,
+          completeness: resolveReferralCompleteness(generatedReferral),
+        })
+      : undefined;
+  }
+
+  const catalogBackedReferral = mergeCatalogSeedWithGeneratedReferral({
+    catalogReferral,
+    generatedReferral,
+    catalogContribution: target?.catalog,
+  });
+  const mergedReferral = normalizedManual
+    ? (mergeReferralWithManualOverrides(normalizedManual, catalogBackedReferral, undefined) ??
+      catalogBackedReferral)
+    : catalogBackedReferral;
+
+  return normalizeReferralConfig({
+    ...mergedReferral,
+    completeness: resolveReferralCompleteness(mergedReferral),
   });
 };
 
@@ -1018,16 +1099,13 @@ const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
     id: "cluborange-referral-signup",
     branch: "public_augmented",
     sourceKind: "html",
-    matches: (input) => isClubOrangeReferralSignupUrl(input.url),
+    matches: (input) => Boolean(resolveClubOrangeReferralSignupTarget(input.url)),
     resolve: (input) => {
-      if (!isClubOrangeReferralSignupUrl(input.url)) {
+      const referralTarget = resolveClubOrangeReferralSignupTarget(input.url);
+      if (!referralTarget) {
         return null;
       }
-
-      const referralTarget = resolveReferralTarget({
-        url: input.url,
-      });
-      const sourceUrl = referralTarget?.sourceUrl ?? buildClubOrangeReferralSignupUrl(input.url);
+      const sourceUrl = referralTarget.sourceUrl;
 
       return {
         id: "cluborange-referral-signup",

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { mergeReferralWithManualOverrides } from "../../src/lib/content/referral-fields";
 import {
   extractYoutubeProfileImageUrl,
   extractYoutubeSubscriberCountRaw,
@@ -140,15 +141,84 @@ test("extracts referral offer and terms data from Club Orange public metadata", 
   });
 
   assert.deepEqual(referral, {
+    catalogRef: {
+      familyId: "club-orange",
+      offerId: "club-orange-signup",
+      matcherId: "club-orange-signup-query-referral",
+    },
+    catalog: {
+      source: "matcher",
+      familyId: "club-orange",
+      familyLabel: "Club Orange",
+      offerId: "club-orange-signup",
+      offerLabel: "Club Orange signup referral",
+      matcherId: "club-orange-signup-query-referral",
+      matcherLabel: "Canonical signup referral query",
+      matcherExplanation:
+        "The canonical Club Orange signup page uses the referral query parameter to carry the token.",
+      canonicalProgramUrl: "https://www.cluborange.org/signup",
+    },
     kind: "referral",
     visitorBenefit: "Get a Club Orange membership starting at $40/year or pay in sats.",
+    ownerBenefit: "Supports the project",
     offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
     termsSummary: "Get a Club Orange membership starting at $40/year or pay in sats.",
+    termsUrl: "https://www.cluborange.org/signup",
     completeness: "full",
     originalUrl: "https://signup.cluborange.org/co/pryszkie",
     resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
     strategyId: "cluborange-referral-signup",
     termsSourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    provenance: {
+      kind: "catalog",
+      visitorBenefit: "generated",
+      ownerBenefit: "catalog",
+      offerSummary: "generated",
+      termsSummary: "generated",
+      termsUrl: "catalog",
+    },
+  });
+});
+
+test("keeps manual Club Orange overrides authoritative over catalog-backed generated output", () => {
+  const generatedReferral = resolvePublicReferralAugmentation({
+    originalUrl: "https://signup.cluborange.org/co/pryszkie",
+    sourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    strategyId: "cluborange-referral-signup",
+    metadata: {
+      title: "Join Club Orange — Connect with 19K+ Bitcoiners",
+      description:
+        "Join 19,000+ Bitcoiners in 71 countries. Get a Club Orange membership starting at $40/year or pay in sats.",
+    },
+  });
+
+  const merged = mergeReferralWithManualOverrides(
+    {
+      catalogRef: {
+        familyId: "club-orange",
+        offerId: "club-orange-signup",
+        matcherId: "club-orange-signup-co-path",
+      },
+      ownerBenefit: "Supports the project",
+      termsUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    },
+    generatedReferral,
+    undefined,
+  );
+
+  assert.equal(merged?.ownerBenefit, "Supports the project");
+  assert.equal(merged?.termsUrl, "https://www.cluborange.org/signup?referral=pryszkie");
+  assert.equal(
+    merged?.visitorBenefit,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.deepEqual(merged?.provenance, {
+    kind: "catalog",
+    visitorBenefit: "generated",
+    ownerBenefit: "manual",
+    offerSummary: "generated",
+    termsSummary: "generated",
+    termsUrl: "manual",
   });
 });
 
