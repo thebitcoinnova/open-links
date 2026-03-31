@@ -46,7 +46,11 @@ test("real cluborange-referral data keeps manual owner terms while generated vis
   assert.ok(sourceLink);
   assert.ok(resolvedLink);
   assert.deepEqual(sourceLink.referral, {
-    kind: "referral",
+    catalogRef: {
+      familyId: "club-orange",
+      offerId: "club-orange-signup",
+      matcherId: "club-orange-signup-co-path",
+    },
     ownerBenefit: "Supports the project",
     termsUrl: "https://www.cluborange.org/signup?referral=pryszkie",
   });
@@ -67,13 +71,25 @@ test("real cluborange-referral data keeps manual owner terms while generated vis
     termsSummary:
       "See the current Club Orange signup page for the latest referral terms and eligibility details.",
     termsUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+    catalog: {
+      source: "explicit",
+      familyId: "club-orange",
+      familyLabel: "Club Orange",
+      offerId: "club-orange-signup",
+      offerLabel: "Club Orange signup referral",
+      matcherId: "club-orange-signup-co-path",
+      matcherLabel: "Hosted signup path code",
+      matcherExplanation:
+        "Club Orange hosted signup links encode the referral token in the /co/<code> path.",
+      canonicalProgramUrl: "https://www.cluborange.org/signup",
+    },
     completeness: "full",
     originalUrl: "https://signup.cluborange.org/co/pryszkie",
     resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
     strategyId: "cluborange-referral-signup",
     termsSourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
     provenance: {
-      kind: "manual",
+      kind: "catalog",
       visitorBenefit: "generated",
       ownerBenefit: "manual",
       offerSummary: "catalog",
