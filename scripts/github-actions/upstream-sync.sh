@@ -24,6 +24,24 @@ configure_git_identity() {
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 }
 
+dispatch_deploy() {
+  local repository="${DEPLOY_WORKFLOW_REPOSITORY:?missing DEPLOY_WORKFLOW_REPOSITORY}"
+  local ref="${DEPLOY_WORKFLOW_REF:?missing DEPLOY_WORKFLOW_REF}"
+  local token="${DEPLOY_WORKFLOW_TOKEN:?missing DEPLOY_WORKFLOW_TOKEN}"
+  local workflow_file="${DEPLOY_WORKFLOW_FILE:-deploy-pages.yml}"
+
+  curl \
+    --fail \
+    --silent \
+    --show-error \
+    -X POST \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer ${token}" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/repos/${repository}/actions/workflows/${workflow_file}/dispatches" \
+    -d "{\"ref\":\"${ref}\"}"
+}
+
 run_sync() {
   local temp_root="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
   mkdir -p "$temp_root"
@@ -55,6 +73,7 @@ Usage: bash scripts/github-actions/upstream-sync.sh <command>
 Commands:
   configure-upstream-remote
   configure-git-identity
+  dispatch-deploy
   run-sync
 EOF
 }
@@ -66,6 +85,9 @@ case "$command_name" in
     ;;
   configure-git-identity)
     configure_git_identity
+    ;;
+  dispatch-deploy)
+    dispatch_deploy
     ;;
   run-sync)
     run_sync

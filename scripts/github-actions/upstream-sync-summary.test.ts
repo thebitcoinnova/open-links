@@ -37,6 +37,8 @@ const runSummaryScript = (
     env: {
       ...process.env,
       SYNC_COMMAND_STATUS: input.status ?? "1",
+      UPSTREAM_SYNC_DEPLOY_DISPATCH_STATUS:
+        input.kind === "valid" ? "requested" : process.env.UPSTREAM_SYNC_DEPLOY_DISPATCH_STATUS,
       UPSTREAM_SYNC_RESULT_PATH: resultPath,
     },
   });
@@ -82,4 +84,5 @@ test("upstream sync summary renders the structured result when valid JSON is pre
   assert.match(result.stdout, /Status: `up_to_date`/u);
   assert.match(result.stdout, /Message: Already up to date with upstream\/main\./u);
   assert.match(result.stdout, /Branch changed: `false`/u);
+  assert.match(result.stdout, /Deploy handoff: `requested`/u);
 });
