@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can fork/template the repo, edit structured link data, and reliably publish a polished personal links site with minimal friction.
-**Current focus:** Milestone audit found a referral proof gap; Phase 22 is ready to plan
+**Current focus:** No active milestone. Next step is `$gsd-new-milestone`.
 
 ## Current Position
 
-Phase: 22-source-authored-referral-flow-proof
-Plan: —
-Status: Gap-closure phase defined; ready for `$gsd-plan-phase 22`
-Next Phase: Phase 22 - Source-Authored Referral Flow Proof
-Active Milestone: v1.3-referral-links-offer-transparency
-Completed Milestone: v1.2-profile-quick-links-header-usability-polish
-Last activity: 2026-03-30 - Milestone audit found the missing source-authored referral proof gap and Phase 22 was added to close it.
+Phase: none
+Plan: none
+Status: v1.3 archived; ready to define the next milestone
+Next Phase: none
+Active Milestone: none
+Completed Milestone: v1.3-referral-links-offer-transparency
+Last activity: 2026-03-31 - Archived v1.3 and prepared planning files for the next milestone.
 
-Progress: [#########-] 90%
+Progress: [----------] 0%
 
 ## Performance Metrics
 
@@ -56,6 +56,11 @@ Progress: [#########-] 90%
 - Keep `termsUrl` as a quiet sibling interaction outside the main card anchor to avoid nested-link behavior.
 - Keep referral support additive to existing `simple` and `rich` links rather than introducing a dedicated referral link type.
 - Treat manual referral disclosure fields as authoritative; extracted offer terms are assistive hints, not legal guarantees.
+- Keep the shared referral catalog under `data/policy/` with an optional fork-local overlay seam rather than inventing a separate sync surface.
+- Keep catalog refs nested inside `links[].referral` so the higher-level authoring pointer stays attached to the runtime referral contract it seeds.
+- Treat the catalog lookup order as manual fields first, then explicit catalog refs, then matcher-resolved catalog data, then generated/public fill-ins.
+- Use Club Orange as the first catalog-backed migration canary so Phase 24 removes special-case drift through a real proving case.
+- Build a sibling `skills/referral-management` workflow for catalog CRUD and upstream-PR prompting instead of overloading extractor-authoring flows.
 - Prefer generic public referral augmentation plus manual fallback before reaching for program-specific authenticated extractors.
 - Preserve the v1.0 static architecture and add social profile metadata as an optional extension to the existing link model.
 - Keep follower and following data build-time only; do not introduce live runtime platform API dependencies.
@@ -77,6 +82,14 @@ Progress: [#########-] 90%
 - 2026-03-30: Phase 20 completed with visible referral disclosure badges, benefit rows, sibling terms links, and focused non-referral/accessibility regression coverage in the shared card shell.
 - 2026-03-30: Phase 21 completed with canonical referral authoring docs, top-level verification guidance, and explicit downstream review breadcrumbs for the additive referral contract.
 - 2026-03-30: Milestone audit found the missing source-authored referral flow proof gap; Phase 22 was added to close it before archiving v1.3.
+- 2026-03-30: Phase 22 completed with live source-authored Club Orange referral proof, focused real-data regressions, and refreshed audit evidence that the manual-first gap is closed.
+- 2026-03-30: Phase 23 added for public-first, explicit-only automatic visitor/owner benefit extraction with static parsing first, browser fallback second, and manual precedence preserved.
+- 2026-03-31: Phase 23 planned into three waves: static explicit-only benefit extraction, conditional public browser fallback for JS-heavy public pages, and report/artifact hardening with real generated output.
+- 2026-03-31: Phase 24 added for a shared upstream referral catalog, optional link-level catalog references plus overrides, and a sibling referral-management skill with upstream-PR prompting for generic additions.
+- 2026-03-31: Phase 23 completed with explicit-only visitor/owner benefit extraction, generic public browser fallback for unresolved HTML referral pages, live Club Orange artifact proof, and deploy-time regression coverage for the new enrichment paths.
+- 2026-03-31: Phase 24 planned into four waves: shared catalog schema/overlay contract, runtime catalog resolution with provenance, enrichment migration plus Club Orange proof, and sibling referral-management skill/docs coverage.
+- 2026-03-31: Phase 24 completed with shared referral catalog data, catalog-aware runtime precedence, catalog-backed Club Orange enrichment/reporting, and a dedicated referral-management skill plus downstream-safe docs.
+- 2026-03-31: Milestone v1.3 archived after audit with status `tech_debt`; next milestone remains to be defined.
 - Phase 08.1 inserted after Phase 8: custom profile descriptions need dedicated contract, capture, UI, and Studio work before the broader docs/regression pass in Phase 9.
 - 2026-03-08: Phase 10 added for configurable rich-card description image rows when profile and preview imagery should render separately.
 - 2026-03-09: Phase 10 completed ahead of the original dependency order; rich profile cards now support a configurable full-width description-image row with Substack as the seeded distinct-image example.
@@ -91,13 +104,14 @@ Progress: [#########-] 90%
 
 ### Pending Todos
 
-- Plan Phase 22 with `$gsd-plan-phase 22`.
+- Run `$gsd-new-milestone` to define the next milestone and create a fresh `REQUIREMENTS.md`.
 - Keep the accepted v1.x tech debt visible during referral work: `/` bundle budgets, fallback social-image warnings, and analytics chunk size.
 - Fix first-render theme initialization so saved light/dark mode is applied before mount and does not flash the wrong theme on first paint.
 
 ### Blockers/Concerns
 
 - `links[].referral` is a compatibility-sensitive schema addition for `open-links-sites`, so contract docs and downstream notes need to stay explicit.
+- Phase 24 should preserve `links[].referral` as the runtime contract while introducing shared catalog data, optional references, and fork-aware upstream contribution flow.
 - `bun run quality:check` still fails the `/` performance budgets for both mobile and desktop.
 - SEO still warns that social preview metadata is using the deterministic fallback image.
 - Broader social audience extraction coverage remains future work, and new extractors still need parsed counts plus raw text to stay aligned.
@@ -105,6 +119,6 @@ Progress: [#########-] 90%
 
 ## Session Continuity
 
-Last session: 2026-03-30 00:55
-Stopped at: Phase 22 gap closure was added; next step is `$gsd-plan-phase 22`.
-Resume file: .planning/v1.3-MILESTONE-AUDIT.md
+Last session: 2026-03-31 12:35
+Stopped at: v1.3 archived; next step is `$gsd-new-milestone`.
+Resume file: .planning/MILESTONES.md

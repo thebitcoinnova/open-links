@@ -49,6 +49,10 @@ const initializeForkWorkspace = () => {
 
   writeText(path.join(seedRepo, "README.md"), "# OpenLinks\n");
   writeText(path.join(seedRepo, "data/profile.json"), '{ "name": "Starter" }\n');
+  writeText(
+    path.join(seedRepo, "data/policy/referral-catalog.local.json"),
+    '{ "families": [], "offers": [], "matchers": [] }\n',
+  );
   writeText(path.join(seedRepo, "public/history/followers/github.csv"), "date,count\n");
 
   commitAll(seedRepo, "base");
@@ -58,10 +62,10 @@ const initializeForkWorkspace = () => {
   git(seedRepo, ["push", "origin", "main"]);
 
   const forkRepo = cloneRepo(originBare, rootDir, "fork");
-  git(forkRepo, ["checkout", "-b", "main", "origin/main"]);
+  git(forkRepo, ["checkout", "-B", "main", "origin/main"]);
   git(forkRepo, ["remote", "add", "upstream", upstreamBare]);
   const upstreamWorktree = cloneRepo(upstreamBare, rootDir, "upstream-worktree");
-  git(upstreamWorktree, ["checkout", "-b", "main", "origin/main"]);
+  git(upstreamWorktree, ["checkout", "-B", "main", "origin/main"]);
 
   return {
     cleanup: () => fs.rmSync(rootDir, { force: true, recursive: true }),
@@ -106,6 +110,41 @@ test("runUpstreamSync auto-resolves fork-owned file conflicts by preserving fork
     assert.equal(result.mergeCommitCreated, true);
     assert.match(result.message, /preserving fork-owned paths/u);
     assert.equal(profile, '{ "name": "Fork" }\n');
+    assert.deepEqual(result.sharedConflicts, []);
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync preserves fork-local referral catalog overlays during conflicts", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    writeText(
+      path.join(workspace.forkRepo, "data/policy/referral-catalog.local.json"),
+      '{ "families": [{ "familyId": "fork-offer" }], "offers": [], "matchers": [] }\n',
+    );
+    commitAll(workspace.forkRepo, "fork referral overlay update");
+
+    writeText(
+      path.join(workspace.upstreamWorktree, "data/policy/referral-catalog.local.json"),
+      '{ "families": [{ "familyId": "upstream-offer" }], "offers": [], "matchers": [] }\n',
+    );
+    commitAll(workspace.upstreamWorktree, "upstream referral overlay update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+    const overlay = fs.readFileSync(
+      path.join(workspace.forkRepo, "data/policy/referral-catalog.local.json"),
+      "utf8",
+    );
+
+    assert.equal(result.status, "merged");
+    assert.equal(result.mergeCommitCreated, true);
+    assert.equal(
+      overlay,
+      '{ "families": [{ "familyId": "fork-offer" }], "offers": [], "matchers": [] }\n',
+    );
     assert.deepEqual(result.sharedConflicts, []);
   } finally {
     workspace.cleanup();
@@ -178,6 +217,34 @@ test("runUpstreamSync fails fast when the upstream remote is missing", () => {
     assert.throws(
       () => runUpstreamSync({ cwd: repoDir }),
       /Git remote 'upstream' is not configured/u,
+    );
+  } finally {
+    fs.rmSync(rootDir, { force: true, recursive: true });
+  }
+});
+
+test("runUpstreamSync fails fast when origin and upstream point at the same repository", () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "open-links-sync-upstream-same-remote-"));
+
+  try {
+    const originBare = createBareRepo(rootDir, "origin.git");
+    const seedRepo = path.join(rootDir, "seed");
+
+    git(rootDir, ["init", seedRepo]);
+    configureGitIdentity(seedRepo);
+    git(seedRepo, ["checkout", "-b", "main"]);
+    writeText(path.join(seedRepo, "README.md"), "# Repo\n");
+    commitAll(seedRepo, "base");
+    git(seedRepo, ["remote", "add", "origin", originBare]);
+    git(seedRepo, ["push", "origin", "main"]);
+
+    const repoDir = cloneRepo(originBare, rootDir, "repo");
+    git(repoDir, ["checkout", "-B", "main", "origin/main"]);
+    git(repoDir, ["remote", "add", "upstream", originBare]);
+
+    assert.throws(
+      () => runUpstreamSync({ cwd: repoDir }),
+      /same repository as 'origin'.*forks and downstream repos/u,
     );
   } finally {
     fs.rmSync(rootDir, { force: true, recursive: true });

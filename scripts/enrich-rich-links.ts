@@ -41,6 +41,7 @@ import {
 } from "./enrichment/generated-metadata";
 import { parseMetadata } from "./enrichment/parse-metadata";
 import { resolvePublicReferralAugmentation } from "./enrichment/public-augmentation";
+import { capturePublicReferralTextFromBrowser } from "./enrichment/public-browser";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
   applyPublicCachePersistence,
@@ -559,6 +560,7 @@ const resolveGeneratedReferral = (input: {
   sourceUrl: string;
   metadata: EnrichmentMetadata;
   finalUrl?: string;
+  benefitTextCandidates?: string[];
 }): GeneratedLinkReferralConfig | undefined =>
   resolvePublicReferralAugmentation({
     originalUrl: input.link.url,
@@ -567,7 +569,75 @@ const resolveGeneratedReferral = (input: {
     strategyId: input.strategyId,
     metadata: input.metadata,
     manualReferral: input.link.referral,
+    benefitTextCandidates: input.benefitTextCandidates,
   });
+
+const hasGeneratedReferralBenefits = (referral: GeneratedLinkReferralConfig | undefined): boolean =>
+  Boolean(referral?.visitorBenefit || referral?.ownerBenefit);
+
+const resolveGeneratedReferralWithBrowserFallback = async (input: {
+  link: LinkInput & { type: "rich"; url: string };
+  publicStrategy: ReturnType<typeof resolvePublicEnrichmentStrategy>;
+  sourceUrl: string;
+  metadata: EnrichmentMetadata;
+  generatedAt: string;
+  finalUrl?: string;
+}): Promise<GeneratedLinkReferralConfig | undefined> => {
+  const generatedReferral = resolveGeneratedReferral({
+    link: input.link,
+    strategyId: input.publicStrategy.id,
+    sourceUrl: input.sourceUrl,
+    finalUrl: input.finalUrl,
+    metadata: input.metadata,
+  });
+
+  const needsVisitorBenefit =
+    !input.link.referral?.visitorBenefit && !generatedReferral?.visitorBenefit;
+  const needsOwnerBenefit = !input.link.referral?.ownerBenefit && !generatedReferral?.ownerBenefit;
+
+  if (
+    !generatedReferral ||
+    hasGeneratedReferralBenefits(generatedReferral) ||
+    (!needsVisitorBenefit && !needsOwnerBenefit) ||
+    input.publicStrategy.sourceKind !== "html"
+  ) {
+    return generatedReferral;
+  }
+
+  const browserCapture = capturePublicReferralTextFromBrowser({
+    linkId: input.link.id,
+    sourceUrl: input.sourceUrl,
+    generatedAt: input.generatedAt,
+    browserWaitMs: 8_000,
+    userAgent: input.publicStrategy.source.headers?.["user-agent"],
+  });
+
+  if (!browserCapture.snapshot) {
+    return generatedReferral;
+  }
+
+  const browserReferral = resolveGeneratedReferral({
+    link: input.link,
+    strategyId: input.publicStrategy.id,
+    sourceUrl: input.sourceUrl,
+    finalUrl: input.finalUrl,
+    metadata: input.metadata,
+    benefitTextCandidates: [
+      ...(browserCapture.snapshot.candidateTexts ?? []),
+      browserCapture.snapshot.bodyText ?? "",
+    ].filter((candidate) => candidate.length > 0),
+  });
+
+  if (!browserReferral) {
+    return generatedReferral;
+  }
+
+  return {
+    ...generatedReferral,
+    visitorBenefit: browserReferral.visitorBenefit ?? generatedReferral.visitorBenefit,
+    ownerBenefit: browserReferral.ownerBenefit ?? generatedReferral.ownerBenefit,
+  };
+};
 
 const formatDurationMs = (durationMs: number): string => `${Math.max(0, Math.round(durationMs))}ms`;
 
@@ -1172,11 +1242,12 @@ const run = async () => {
         warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
-      const generatedReferral = resolveGeneratedReferral({
+      const generatedReferral = await resolveGeneratedReferralWithBrowserFallback({
         link,
-        strategyId: publicStrategy.id,
+        publicStrategy,
         sourceUrl: publicSourceUrl,
         metadata,
+        generatedAt,
       });
 
       entries.push({
@@ -1281,12 +1352,13 @@ const run = async () => {
         warningSupportedProfile,
         profileWarningContext.missingProfileFields,
       );
-      const generatedReferral = resolveGeneratedReferral({
+      const generatedReferral = await resolveGeneratedReferralWithBrowserFallback({
         link,
-        strategyId: publicStrategy.id,
+        publicStrategy,
         sourceUrl: publicSourceUrl,
         finalUrl: fetched.finalUrl,
         metadata,
+        generatedAt,
       });
 
       entries.push({
@@ -1352,11 +1424,12 @@ const run = async () => {
           warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
-        const generatedReferral = resolveGeneratedReferral({
+        const generatedReferral = await resolveGeneratedReferralWithBrowserFallback({
           link,
-          strategyId: publicStrategy.id,
+          publicStrategy,
           sourceUrl: publicSourceUrl,
           metadata,
+          generatedAt,
         });
 
         entries.push({
@@ -1497,12 +1570,13 @@ const run = async () => {
           warningSupportedProfile,
           profileWarningContext.missingProfileFields,
         );
-        const generatedReferral = resolveGeneratedReferral({
+        const generatedReferral = await resolveGeneratedReferralWithBrowserFallback({
           link,
-          strategyId: publicStrategy.id,
+          publicStrategy,
           sourceUrl: publicSourceUrl,
           finalUrl: fetched.finalUrl,
           metadata,
+          generatedAt,
         });
 
         entries.push({
@@ -1689,12 +1763,13 @@ const run = async () => {
       warningSupportedProfile,
       profileWarningContext.missingProfileFields,
     );
-    const generatedReferral = resolveGeneratedReferral({
+    const generatedReferral = await resolveGeneratedReferralWithBrowserFallback({
       link,
-      strategyId: publicStrategy.id,
+      publicStrategy,
       sourceUrl: publicSourceUrl,
       finalUrl: fetched.finalUrl,
       metadata,
+      generatedAt,
     });
 
     entries.push({

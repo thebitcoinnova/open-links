@@ -20,7 +20,59 @@ test("normalizes Club Orange referral wrappers to the canonical signup target", 
     referralParams: {
       referral: "PrySzkie-42",
     },
-    knownFamilyId: "cluborange-referral-signup",
+    knownFamilyId: "club-orange",
+    catalog: {
+      source: "matcher",
+      familyId: "club-orange",
+      familyLabel: "Club Orange",
+      offerId: "club-orange-signup",
+      offerLabel: "Club Orange signup referral",
+      matcherId: "club-orange-signup-co-path",
+      matcherLabel: "Hosted signup path code",
+      matcherExplanation:
+        "Club Orange hosted signup links encode the referral token in the /co/<code> path.",
+      canonicalProgramUrl: "https://www.cluborange.org/signup",
+    },
+    catalogReferral: {
+      catalogRef: {
+        familyId: "club-orange",
+        offerId: "club-orange-signup",
+        matcherId: "club-orange-signup-co-path",
+      },
+      kind: "referral",
+      ownerBenefit: "Supports the project",
+      offerSummary: "Join Club Orange through a referral-aware signup link.",
+      termsSummary:
+        "See the current Club Orange signup page for the latest referral terms and eligibility details.",
+      termsUrl: "https://www.cluborange.org/signup",
+    },
+  });
+});
+
+test("prefers an explicit catalog ref over matcher inference when one is provided", () => {
+  const resolved = resolveReferralTarget({
+    url: "https://www.cluborange.org/signup",
+    referral: {
+      catalogRef: {
+        familyId: "club-orange",
+        offerId: "club-orange-signup",
+        matcherId: "club-orange-signup-co-path",
+      },
+    },
+  });
+
+  assert.equal(resolved?.pattern, "direct");
+  assert.deepEqual(resolved?.catalog, {
+    source: "explicit",
+    familyId: "club-orange",
+    familyLabel: "Club Orange",
+    offerId: "club-orange-signup",
+    offerLabel: "Club Orange signup referral",
+    matcherId: "club-orange-signup-co-path",
+    matcherLabel: "Hosted signup path code",
+    matcherExplanation:
+      "Club Orange hosted signup links encode the referral token in the /co/<code> path.",
+    canonicalProgramUrl: "https://www.cluborange.org/signup",
   });
 });
 
@@ -91,6 +143,16 @@ test("returns a direct target when no referral signal is present", () => {
     referralParams: {},
     knownFamilyId: undefined,
   });
+});
+
+test("does not guess a catalog-backed target from a weak Club Orange signup match", () => {
+  const resolved = resolveReferralTarget({
+    url: "https://www.cluborange.org/signup",
+  });
+
+  assert.equal(resolved?.pattern, "direct");
+  assert.equal(resolved?.catalog, undefined);
+  assert.equal(resolved?.catalogReferral, undefined);
 });
 
 test("extracts and rebuilds Club Orange referral codes consistently", () => {

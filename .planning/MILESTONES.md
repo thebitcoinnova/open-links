@@ -1,5 +1,27 @@
 # Milestones
 
+## v1.3 - Referral Links + Offer Transparency
+
+**Status:** ✅ Shipped (2026-03-31)  
+**Tag:** `v1.3`  
+**Scope:** Phases 18-24, 19 plans, 38 tracked tasks
+
+### Delivered
+
+- Referral links now ship as a first-class additive `links[].referral` contract with manual-first precedence.
+- Public referral enrichment now resolves canonical landing pages, captures offer/terms details, and can fill explicit visitor/owner benefits conservatively.
+- Referral transparency now renders directly in cards through visible disclosure, benefit rows, and sibling terms-link treatment.
+- The repo now proves the live manual-first Club Orange flow and also supports a shared referral catalog plus fork-local overlay.
+- Maintainers now have a dedicated sibling `skills/referral-management` workflow and aligned downstream-safe docs for referral catalog CRUD.
+
+### Artifacts
+
+- Roadmap archive: `.planning/milestones/v1.3-ROADMAP.md`
+- Requirements archive: `.planning/milestones/v1.3-REQUIREMENTS.md`
+- Audit report: `.planning/v1.3-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.2 - Profile Quick Links + Header Usability Polish
 
 **Status:** ✅ Shipped (2026-03-28)  
@@ -65,4 +87,4 @@
 
 ---
 
-Use `$gsd-new-milestone` to begin v1.3 planning.
+Use `$gsd-new-milestone` to begin v1.4 planning.

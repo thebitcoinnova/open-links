@@ -181,14 +181,33 @@ Referral support is additive to ordinary URL-based links. Keep `type` as `simple
 Recommended maintainer path for referral authoring:
 
 1. Prefer the repo-native AI CRUD docs (`docs/openclaw-update-crud.md`, `docs/ai-guided-customization.md`).
-2. Use Studio only when the browser-based path fits and Advanced JSON is acceptable for the change.
-3. Edit `data/links.json` directly only when you intentionally want the lower-level fallback path.
+2. Use `skills/referral-management/SKILL.md` when the work involves reusable families, offer variants, matcher/link shapes, or a shared-vs-fork scope decision.
+3. Use Studio only when the browser-based path fits and Advanced JSON is acceptable for the change.
+4. Edit `data/links.json` directly only when you intentionally want the lower-level fallback path.
+
+### Catalog-backed referral authoring
+
+Treat referral authoring as a layered model:
+
+1. Shared higher-level catalog: `data/policy/referral-catalog.json`
+2. Optional fork-owned overlay: `data/policy/referral-catalog.local.json`
+3. Runtime/render contract: `links[].referral`
+
+The catalog files are for reusable family, offer, and matcher knowledge. The
+saved link still resolves to `links[].referral` at runtime, and manual link
+fields remain authoritative when they intentionally differ from catalog-backed
+defaults.
+
+Use the shared catalog when the family or matcher is generic enough to help
+other forks. Use `data/policy/referral-catalog.local.json` for fork-specific
+offers, overrides, or experiments that should stay out of upstream PRs.
 
 Canonical stable fields:
 
 | Field | Meaning | Notes |
 |------|---------|-------|
 | `kind` | Disclosure umbrella value | Allowed values: `referral`, `affiliate`, `promo`, `invite` |
+| `catalogRef` | Optional pointer to shared catalog data | Nested ids may include `familyId`, `offerId`, and/or `matcherId` |
 | `visitorBenefit` | What the visitor gets | Optional; either side may be absent |
 | `ownerBenefit` | What the site owner/project gets | Optional; broad enough for cash, credit, support, or indirect benefit |
 | `offerSummary` | Short public-facing offer summary | Card-friendly summary of the deal |
@@ -201,6 +220,7 @@ Notes:
 
 - `referral: {}` is valid as a soft marker, but `bun run validate:data` will warn until you add one or more meaningful disclosure fields.
 - `kind` alone classifies the link but does not count as sufficient disclosure by itself.
+- `catalogRef` is the higher-level authoring pointer. It does not replace the runtime referral object; it seeds it.
 - One-sided disclosures are valid. You do not need to invent both sides of the offer.
 - For supported profile-family URLs that are acting as referral/promo destinations, use `links[].enrichment.profileSemantics: "non_profile"` unless you intentionally want profile-style rendering.
 
@@ -266,26 +286,57 @@ This is valid, but it intentionally triggers a warning until you add real disclo
 }
 ```
 
-### Manual vs generated referral precedence
+### Catalog-backed referral example
+
+Use this when a saved link should inherit shared family/offer defaults while
+keeping one or two manual link-level disclosures authoritative:
+
+```json
+{
+  "id": "cluborange-referral",
+  "label": "Join Club Orange",
+  "url": "https://signup.cluborange.org/co/pryszkie",
+  "type": "rich",
+  "icon": "cluborange",
+  "description": "Bitcoin social club",
+  "enrichment": {
+    "enabled": true,
+    "profileSemantics": "non_profile"
+  },
+  "referral": {
+    "catalogRef": {
+      "offerId": "club-orange-signup"
+    },
+    "ownerBenefit": "Supports the project",
+    "termsUrl": "https://www.cluborange.org/signup"
+  }
+}
+```
+
+### Manual, catalog, and generated referral precedence
 
 Short rule:
 
 - Manual `links[].referral` fields win.
-- Generated referral data only fills blanks.
+- Catalog data seeds the runtime referral object.
+- Generated referral data only fills remaining blanks.
 
 Deeper behavior:
 
-- Manual and generated values merge field-by-field rather than replacing the whole referral object.
-- Generated data is allowed to fill empty `visitorBenefit`, `ownerBenefit`, `offerSummary`, `termsSummary`, `termsUrl`, or `code` fields when public enrichment found something useful.
+- Manual, catalog, and generated values merge field-by-field rather than replacing the whole referral object.
+- Catalog data may come from an explicit `catalogRef` or a deterministic matcher hit when the link does not point at a catalog entry directly.
+- Generated data is allowed to fill empty `visitorBenefit`, `ownerBenefit`, `offerSummary`, `termsSummary`, `termsUrl`, or `code` fields when public enrichment found something useful and neither manual data nor the catalog already supplied them.
 - Generated data is assistive, not authoritative. Maintain the saved manual disclosure whenever a generated phrase is incomplete, stale, jurisdiction-specific, or simply worse than the human-authored text.
 - If manual and generated referral fields disagree, validation surfaces a drift warning instead of silently picking the generated text.
+- If you need a fork-only catalog override, prefer `data/policy/referral-catalog.local.json` over turning the shared upstream catalog into a personalized file.
 
 ### Generated referral fields maintainers may see
 
 Generated referral output and reports can include a few extra fields beyond the authoring contract:
 
 - `completeness`: `full`, `partial`, or `none`
-- `provenance`: which referral fields were manual vs generated
+- `provenance`: which referral fields came from `manual`, `catalog`, or `generated` sources
+- `catalog`: resolved catalog contribution details such as family, offer, matcher, and whether the match came from an explicit ref or matcher lookup
 - `originalUrl`
 - `resolvedUrl`
 - `strategyId`
@@ -303,7 +354,9 @@ For script-backed verification and warning interpretation after changing a refer
 
 Downstream note:
 
-- `links[].referral` is an additive shared contract change mirrored by `open-links-sites`, so downstream maintainers should review the referral contract notes when bumping upstream pins.
+- `links[].referral` remains the additive runtime/render contract mirrored by `open-links-sites`, so downstream maintainers should review the referral contract notes when bumping upstream pins.
+- `data/policy/referral-catalog.json` is also downstream-visible because it lives on the shared policy path; changes there deserve the same compatibility review as other shared policy data.
+- `data/policy/referral-catalog.local.json` is the fork-owned overlay side of the model and should not be treated as shared upstream contract data.
 - Later referral card UI-only changes are lower-risk for downstream than contract/schema, policy, or script-entrypoint changes.
 
 ### Quick Links behavior

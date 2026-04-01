@@ -21,13 +21,41 @@ test("createEnrichmentReport preserves referral completeness and provenance on e
         remediation: "None.",
         referralCompleteness: "full",
         referral: {
+          catalog: {
+            source: "explicit",
+            familyId: "club-orange",
+            familyLabel: "Club Orange",
+            offerId: "club-orange-signup",
+            offerLabel: "Club Orange signup referral",
+            matcherId: "club-orange-signup-co-path",
+            matcherLabel: "Hosted signup path code",
+            matcherExplanation:
+              "Club Orange hosted signup links encode the referral token in the /co/<code> path.",
+            canonicalProgramUrl: "https://www.cluborange.org/signup",
+          },
+          catalogRef: {
+            familyId: "club-orange",
+            offerId: "club-orange-signup",
+            matcherId: "club-orange-signup-co-path",
+          },
           kind: "referral",
+          visitorBenefit: "Get a Club Orange membership starting at $40/year or pay in sats.",
+          ownerBenefit: "Supports the project",
           offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
           termsSummary: "Get a Club Orange membership starting at $40/year or pay in sats.",
+          termsUrl: "https://www.cluborange.org/signup",
           originalUrl: "https://signup.cluborange.org/co/pryszkie",
           resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
           strategyId: "cluborange-referral-signup",
           termsSourceUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+          provenance: {
+            kind: "catalog",
+            visitorBenefit: "generated",
+            ownerBenefit: "catalog",
+            offerSummary: "generated",
+            termsSummary: "generated",
+            termsUrl: "catalog",
+          },
         },
       },
     ],
@@ -35,9 +63,15 @@ test("createEnrichmentReport preserves referral completeness and provenance on e
 
   assert.equal(report.entries[0]?.referralCompleteness, "full");
   assert.equal(report.entries[0]?.referral?.strategyId, "cluborange-referral-signup");
+  assert.equal(report.entries[0]?.referral?.catalogRef?.offerId, "club-orange-signup");
+  assert.equal(
+    report.entries[0]?.referral?.visitorBenefit,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.equal(report.entries[0]?.referral?.ownerBenefit, "Supports the project");
 });
 
-test("readEnrichmentReport restores referral fields from disk", (t) => {
+test("readEnrichmentReport restores generated referral benefit fields from disk", (t) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "openlinks-report-"));
   const reportPath = path.join(tempDir, "report.json");
   t.after(() => {
@@ -60,8 +94,28 @@ test("readEnrichmentReport restores referral fields from disk", (t) => {
         remediation: "None.",
         referralCompleteness: "partial",
         referral: {
+          catalog: {
+            source: "matcher",
+            familyId: "club-orange",
+            familyLabel: "Club Orange",
+            offerId: "club-orange-signup",
+            offerLabel: "Club Orange signup referral",
+            matcherId: "club-orange-signup-query-referral",
+            matcherLabel: "Canonical signup referral query",
+            matcherExplanation:
+              "The canonical Club Orange signup page uses the referral query parameter to carry the token.",
+            canonicalProgramUrl: "https://www.cluborange.org/signup",
+          },
+          catalogRef: {
+            familyId: "club-orange",
+            offerId: "club-orange-signup",
+            matcherId: "club-orange-signup-query-referral",
+          },
           kind: "referral",
+          ownerBenefit: "Supports the project",
+          visitorBenefit: "Get $20 off your first year",
           offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
+          termsUrl: "https://www.cluborange.org/signup",
           originalUrl: "https://signup.cluborange.org/co/pryszkie",
           resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
           strategyId: "cluborange-referral-signup",
@@ -74,15 +128,35 @@ test("readEnrichmentReport restores referral fields from disk", (t) => {
 
   assert.equal(report?.entries[0]?.referralCompleteness, "partial");
   assert.deepEqual(report?.entries[0]?.referral, {
+    catalog: {
+      source: "matcher",
+      familyId: "club-orange",
+      familyLabel: "Club Orange",
+      offerId: "club-orange-signup",
+      offerLabel: "Club Orange signup referral",
+      matcherId: "club-orange-signup-query-referral",
+      matcherLabel: "Canonical signup referral query",
+      matcherExplanation:
+        "The canonical Club Orange signup page uses the referral query parameter to carry the token.",
+      canonicalProgramUrl: "https://www.cluborange.org/signup",
+    },
+    catalogRef: {
+      familyId: "club-orange",
+      offerId: "club-orange-signup",
+      matcherId: "club-orange-signup-query-referral",
+    },
     kind: "referral",
+    ownerBenefit: "Supports the project",
+    visitorBenefit: "Get $20 off your first year",
     offerSummary: "Join Club Orange — Connect with 19K+ Bitcoiners",
+    termsUrl: "https://www.cluborange.org/signup",
     originalUrl: "https://signup.cluborange.org/co/pryszkie",
     resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
     strategyId: "cluborange-referral-signup",
   });
 });
 
-test("readEnrichmentReport keeps none completeness explicit without confidence metadata", (t) => {
+test("readEnrichmentReport keeps none completeness explicit without inventing unresolved benefit fields", (t) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "openlinks-report-none-"));
   const reportPath = path.join(tempDir, "report.json");
   t.after(() => {
@@ -125,4 +199,6 @@ test("readEnrichmentReport keeps none completeness explicit without confidence m
     resolvedUrl: "https://example.com/deal",
     strategyId: "public-direct-html",
   });
+  assert.equal(report?.entries[0]?.referral?.visitorBenefit, undefined);
+  assert.equal(report?.entries[0]?.referral?.ownerBenefit, undefined);
 });

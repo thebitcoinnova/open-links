@@ -1,12 +1,19 @@
 export const REFERRAL_KIND_VALUES = ["referral", "affiliate", "promo", "invite"] as const;
 
 export type ReferralKind = (typeof REFERRAL_KIND_VALUES)[number];
-export type ReferralFieldProvenance = "manual" | "generated";
+export type ReferralFieldProvenance = "manual" | "catalog" | "generated";
 export type ReferralCompleteness = "full" | "partial" | "none";
 export const REFERRAL_COMPLETENESS_VALUES = ["full", "partial", "none"] as const;
 
+export interface LinkReferralCatalogRef {
+  familyId?: string;
+  offerId?: string;
+  matcherId?: string;
+}
+
 export interface LinkReferralConfig {
   kind?: ReferralKind;
+  catalogRef?: LinkReferralCatalogRef;
   visitorBenefit?: string;
   ownerBenefit?: string;
   offerSummary?: string;
@@ -85,9 +92,34 @@ export const normalizeReferralProvenance = (
       continue;
     }
 
-    if (candidate === "manual" || candidate === "generated") {
+    if (candidate === "manual" || candidate === "catalog" || candidate === "generated") {
       normalized[key as ReferralFieldName] = candidate;
     }
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+};
+
+export const normalizeReferralCatalogRef = (value: unknown): LinkReferralCatalogRef | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const normalized: LinkReferralCatalogRef = {};
+  const familyId = trimToUndefined(value.familyId);
+  const offerId = trimToUndefined(value.offerId);
+  const matcherId = trimToUndefined(value.matcherId);
+
+  if (familyId) {
+    normalized.familyId = familyId;
+  }
+
+  if (offerId) {
+    normalized.offerId = offerId;
+  }
+
+  if (matcherId) {
+    normalized.matcherId = matcherId;
   }
 
   return Object.keys(normalized).length > 0 ? normalized : undefined;
@@ -106,6 +138,14 @@ export const normalizeReferralConfig = <T extends LinkReferralConfig>(
     if (key === "kind") {
       if (isReferralKind(value)) {
         normalized.kind = value;
+      }
+      continue;
+    }
+
+    if (key === "catalogRef") {
+      const catalogRef = normalizeReferralCatalogRef(value);
+      if (catalogRef) {
+        normalized.catalogRef = catalogRef;
       }
       continue;
     }
@@ -173,15 +213,22 @@ export const hasMeaningfulReferralContent = (referral: LinkReferralConfig | unde
 export const mergeReferralWithManualOverrides = (
   manual: LinkReferralConfig | undefined,
   generated: GeneratedLinkReferralConfig | undefined,
+  catalog?: LinkReferralConfig | undefined,
 ): ResolvedLinkReferralConfig | undefined => {
-  if (!manual && !generated) {
+  if (!manual && !generated && !catalog) {
     return undefined;
   }
 
   const normalizedManual = normalizeReferralConfig(manual);
+  const normalizedCatalog = normalizeReferralConfig(catalog);
   const normalizedGenerated = normalizeReferralConfig(generated);
+  const catalogProvenance = normalizeReferralProvenance(normalizedCatalog?.provenance);
   const generatedProvenance = normalizeReferralProvenance(normalizedGenerated?.provenance);
   const { provenance: _manualProvenance, ...manualFields } = (normalizedManual ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const { provenance: _catalogProvenance, ...catalogFields } = (normalizedCatalog ?? {}) as Record<
     string,
     unknown
   >;
@@ -189,6 +236,7 @@ export const mergeReferralWithManualOverrides = (
     {}) as Record<string, unknown>;
   const merged: ResolvedLinkReferralConfig = {
     ...generatedFields,
+    ...catalogFields,
     ...manualFields,
   };
   const provenance: ReferralFieldProvenanceMap = {};
@@ -196,6 +244,11 @@ export const mergeReferralWithManualOverrides = (
   for (const field of REFERRAL_PROVENANCE_FIELDS) {
     if (trimToUndefined(normalizedManual?.[field]) !== undefined) {
       provenance[field] = "manual";
+      continue;
+    }
+
+    if (trimToUndefined(normalizedCatalog?.[field]) !== undefined) {
+      provenance[field] = catalogProvenance?.[field] ?? "catalog";
       continue;
     }
 

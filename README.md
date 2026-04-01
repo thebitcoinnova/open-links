@@ -18,7 +18,7 @@ This project is developer-first, but that does not mean raw JSON should be your 
 2. Use the Studio webapp when the browser-based self-serve editor fits your workflow.
 3. Drop to direct JSON edits only when you need lower-level control or a manual fallback.
 
-Referral links are now a supported maintainer surface. Prefer the repo-native AI CRUD docs first, use Studio only when Advanced JSON is acceptable for the change, and keep direct JSON edits as the fallback. The canonical referral contract lives in [docs/data-model.md](docs/data-model.md), and the script-backed referral verification checklist lives in [docs/social-card-verification.md](docs/social-card-verification.md).
+Referral links are now a supported maintainer surface. Prefer the repo-native AI CRUD docs first, and use [`skills/referral-management/SKILL.md`](skills/referral-management/SKILL.md) when the work involves reusable referral families, offers, matcher/link shapes, or a shared-vs-fork scope decision. The shared catalog in `data/policy/referral-catalog.json` is the higher-level authoring layer, the optional `data/policy/referral-catalog.local.json` file is the fork-owned overlay for local-only additions, and `links[].referral` remains the runtime/render contract with manual overrides. Studio is still a fallback for referral edits only when Advanced JSON is acceptable, and direct JSON edits stay as the lower-level path. The canonical referral contract lives in [docs/data-model.md](docs/data-model.md), and the script-backed referral verification checklist lives in [docs/social-card-verification.md](docs/social-card-verification.md).
 
 Quick Links are now a shipped renderer behavior: when your top-level `data/links.json` contains eligible social/profile destinations, OpenLinks automatically derives an icon-first strip above the profile action bar. There is no separate Quick Links registry or authoring workflow yet; see [docs/data-model.md](docs/data-model.md) for the canonical behavior contract and [docs/customization-catalog.md](docs/customization-catalog.md) for the current knob inventory.
 
@@ -28,9 +28,10 @@ control repo that builds many individual sites on top of this renderer and data
 contract. Maintainers should treat shared schema, policy, script, and
 build-output changes here as potentially downstream-visible work. See
 [`docs/downstream-open-links-sites.md`](docs/downstream-open-links-sites.md)
-for the current synopsis. The additive `links[].referral` contract is one of
-those shared surfaces; later referral card UI-only changes are lower-risk than
-schema, policy, or script changes.
+for the current synopsis. The additive `links[].referral` contract and the
+shared `data/policy/referral-catalog.json` file are both downstream-visible
+surfaces; `data/policy/referral-catalog.local.json` is the fork-owned overlay
+side of that split and should stay out of upstream PRs.
 <!-- OPENLINKS_SCREENSHOT_ANCHOR -->
 <!-- OPENLINKS_SCREENSHOT_START -->
 ![OpenLinks preview](docs/assets/openlinks-preview.png)
@@ -150,8 +151,8 @@ bun run studio:web:dev
 
 ### Recommended CRUD Paths
 
-- Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md), [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed, and [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md) when you want other websites, repos, docs, or services to point back to your deployed OpenLinks fork.
-- For referral links: prefer the repo-native AI CRUD docs first, use Studio only when Advanced JSON fits the change, and use `docs/data-model.md` as the canonical field reference.
+- Preferred for repo-native maintenance: use the repo's AI workflows/skills through [OpenClaw Update/CRUD Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-update-crud.md), [OpenClaw Bootstrap Contract](https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-bootstrap.md), [AI-Guided Customization Wizard](https://raw.githubusercontent.com/pRizz/open-links/main/docs/ai-guided-customization.md), [Linktree Bootstrap Extractor](https://raw.githubusercontent.com/pRizz/open-links/main/docs/linktree-bootstrap.md), [`skills/referral-management/SKILL.md`](skills/referral-management/SKILL.md) when referral catalog families/offers/matchers or fork-vs-upstream catalog scope need an interview-driven workflow, [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md) when rich-link image assets need to be committed, and [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md) when you want other websites, repos, docs, or services to point back to your deployed OpenLinks fork.
+- For referral links: prefer the repo-native AI CRUD docs and the referral-management skill first, use Studio only when Advanced JSON fits the change, treat `data/policy/referral-catalog.local.json` as fork-owned overlay data, and use `docs/data-model.md` as the canonical runtime field reference.
 - For branded payment/tip cards, treat card-shell icon wiring and QR badge wiring as separate checks: shared card chrome follows the known-site icon registry from `links[].icon` / `payment.rails[].icon`, while `badge.items.asset` only affects the QR center badge.
 - Preferred for browser-based CRUD: use [OpenLinks Studio](https://raw.githubusercontent.com/pRizz/open-links/main/docs/studio-self-serve.md) when the self-serve onboarding/editor already covers your workflow. Referral editing there currently relies on Advanced JSON.
 - Manual fallback: edit `data/*.json` directly only when you intentionally want the lower-level path or need to work outside the currently supported AI/Studio flows.
@@ -161,6 +162,7 @@ bun run studio:web:dev
 The repository currently ships these repo-local skill entrypoints under `skills/`:
 
 - [`skills/openlinks-fork-identity-presence/SKILL.md`](skills/openlinks-fork-identity-presence/SKILL.md): help other websites, apps, repos, docs, and service profiles point back to your deployed OpenLinks fork using its canonical URL and brand assets.
+- [`skills/referral-management/SKILL.md`](skills/referral-management/SKILL.md): interview-driven referral catalog CRUD for shared families/offers/matchers, link-level `catalogRef` adoption, fork-local overlay decisions, and upstream-PR hygiene that keeps `data/policy/referral-catalog.local.json` out of shared diffs.
 - [`skills/cache-rich-link-assets/SKILL.md`](skills/cache-rich-link-assets/SKILL.md): persist rich-card images and related metadata into the committed cache after link changes.
 - [`skills/create-new-rich-content-extractor/SKILL.md`](skills/create-new-rich-content-extractor/SKILL.md): public-first workflow for deciding and implementing new rich metadata support when existing enrichment is insufficient, including when avatar-first social-profile support should rely on explicit `profileImage` capture versus the shared default `image -> profileImage` backfill; not for payment/tip-card logo or QR badge wiring.
 
@@ -226,7 +228,7 @@ To sync new upstream code/docs/tooling into your fork while preserving fork-owne
 bun run sync:upstream
 ```
 
-`bun run sync:upstream` fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Shared-file conflicts still stop for manual resolution.
+`bun run sync:upstream` is for forks and downstream repos only. `upstream` must point at a different repository than `origin`, typically `pRizz/open-links` for a fork. It fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Shared-file conflicts still stop for manual resolution. The scheduled `Upstream Sync` GitHub workflow should not run in the canonical `pRizz/open-links` repo itself.
 
 If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
 

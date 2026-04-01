@@ -6,6 +6,7 @@ import {
   isReferralCompleteness,
   isReferralKind,
   mergeReferralWithManualOverrides,
+  normalizeReferralCatalogRef,
   normalizeReferralConfig,
   normalizeReferralProvenance,
   resolveReferralCompleteness,
@@ -56,26 +57,33 @@ test("manual referral fields override generated values while blank manual fields
       termsSummary: "New users only",
     },
     {
-      kind: "referral",
       visitorBenefit: "Generated visitor benefit",
       ownerBenefit: "Creator receives store credit",
-      offerSummary: "Save on your first order",
+      offerSummary: "Generated offer summary",
       termsSummary: "Generated terms",
+    },
+    {
+      kind: "referral",
+      ownerBenefit: "Catalog owner benefit",
+      offerSummary: "Catalog offer summary",
+      termsUrl: "https://example.com/catalog-terms",
     },
   );
 
   assert.deepEqual(merged, {
     kind: "referral",
     visitorBenefit: "Get 20% off",
-    ownerBenefit: "Creator receives store credit",
-    offerSummary: "Save on your first order",
+    ownerBenefit: "Catalog owner benefit",
+    offerSummary: "Catalog offer summary",
     termsSummary: "New users only",
+    termsUrl: "https://example.com/catalog-terms",
     provenance: {
-      kind: "generated",
+      kind: "catalog",
       visitorBenefit: "manual",
-      ownerBenefit: "generated",
-      offerSummary: "generated",
+      ownerBenefit: "catalog",
+      offerSummary: "catalog",
       termsSummary: "manual",
+      termsUrl: "catalog",
     },
   });
 });
@@ -100,6 +108,7 @@ test("soft markers stay additive and blank text does not create fake disclosure 
 
 test("generated provenance maps are normalized to supported referral fields only", () => {
   const provenance = normalizeReferralProvenance({
+    kind: "catalog",
     offerSummary: "generated",
     code: "manual",
     custom: "generated",
@@ -107,8 +116,36 @@ test("generated provenance maps are normalized to supported referral fields only
   });
 
   assert.deepEqual(provenance, {
+    kind: "catalog",
     offerSummary: "generated",
     code: "manual",
+  });
+});
+
+test("catalog references are optional, trimmed, and preserved in normalized referral config", () => {
+  const catalogRef = normalizeReferralCatalogRef({
+    familyId: " club-orange ",
+    offerId: "club-orange-signup",
+    matcherId: " ",
+  });
+  const normalized = normalizeReferralConfig({
+    catalogRef: {
+      familyId: " club-orange ",
+      offerId: " club-orange-signup ",
+    },
+    ownerBenefit: " Supports the project ",
+  });
+
+  assert.deepEqual(catalogRef, {
+    familyId: "club-orange",
+    offerId: "club-orange-signup",
+  });
+  assert.deepEqual(normalized, {
+    catalogRef: {
+      familyId: "club-orange",
+      offerId: "club-orange-signup",
+    },
+    ownerBenefit: "Supports the project",
   });
 });
 
@@ -137,4 +174,52 @@ test("generated referral fields normalize completeness and structured provenance
   assert.equal(resolveReferralCompleteness(normalized), "full");
   assert.equal(resolveReferralCompleteness({ offerSummary: "Save now" }), "partial");
   assert.equal(resolveReferralCompleteness({ kind: "referral" }), "none");
+});
+
+test("manual refs stay on the outward contract while catalog provenance stays explainable", () => {
+  const merged = mergeReferralWithManualOverrides(
+    {
+      catalogRef: {
+        familyId: "club-orange",
+        offerId: "club-orange-signup",
+      },
+      ownerBenefit: "Supports the project",
+    },
+    {
+      visitorBenefit: "Generated visitor benefit",
+      termsSummary: "Generated terms summary",
+    },
+    {
+      kind: "referral",
+      catalogRef: {
+        familyId: "club-orange",
+        offerId: "club-orange-signup",
+        matcherId: "club-orange-signup-query-referral",
+      },
+      offerSummary: "Catalog offer summary",
+      termsSummary: "Catalog terms summary",
+      termsUrl: "https://www.cluborange.org/signup",
+    },
+  );
+
+  assert.deepEqual(merged, {
+    kind: "referral",
+    catalogRef: {
+      familyId: "club-orange",
+      offerId: "club-orange-signup",
+    },
+    visitorBenefit: "Generated visitor benefit",
+    ownerBenefit: "Supports the project",
+    offerSummary: "Catalog offer summary",
+    termsSummary: "Catalog terms summary",
+    termsUrl: "https://www.cluborange.org/signup",
+    provenance: {
+      kind: "catalog",
+      visitorBenefit: "generated",
+      ownerBenefit: "manual",
+      offerSummary: "catalog",
+      termsSummary: "catalog",
+      termsUrl: "catalog",
+    },
+  });
 });

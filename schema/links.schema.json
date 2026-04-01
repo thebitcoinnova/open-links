@@ -242,10 +242,25 @@
       "type": "string",
       "enum": ["referral", "affiliate", "promo", "invite"]
     },
+    "linkReferralCatalogId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "linkReferralCatalogRef": {
+      "type": "object",
+      "properties": {
+        "familyId": { "$ref": "#/$defs/linkReferralCatalogId" },
+        "offerId": { "$ref": "#/$defs/linkReferralCatalogId" },
+        "matcherId": { "$ref": "#/$defs/linkReferralCatalogId" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
     "linkReferralConfig": {
       "type": "object",
       "properties": {
         "kind": { "$ref": "#/$defs/linkReferralKind" },
+        "catalogRef": { "$ref": "#/$defs/linkReferralCatalogRef" },
         "visitorBenefit": { "type": "string" },
         "ownerBenefit": { "type": "string" },
         "offerSummary": { "type": "string" },

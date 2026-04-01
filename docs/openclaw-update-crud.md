@@ -37,7 +37,7 @@ Do not use this contract for:
 In scope:
 
 - Day-2 CRUD updates for `data/profile.json`, `data/links.json`, and `data/site.json`.
-- Referral authoring through `links[].referral`, including manual disclosures and supported-family `non_profile` referral links.
+- Referral authoring through `links[].referral`, including manual disclosures, `catalogRef` adoption, supported-family `non_profile` referral links, and catalog-backed shared-vs-fork decisions.
 - Optional full customization-audit path across all data-driven knobs in `docs/customization-catalog.md`.
 - Deployment target and primary-host changes when the user wants deployment settings or docs updated.
 - Startup interaction-level selection.
@@ -55,12 +55,17 @@ Out of scope:
 
 When a requested link is a referral, affiliate, promo, or invite destination:
 
-1. Treat `links[].referral` as the canonical authoring surface.
-2. Use `docs/data-model.md` for exact field meaning and examples.
-3. Prefer adding manual disclosure fields first; generated referral data may fill blanks later but is not authoritative.
-4. Do not suggest a new extractor by default just because the referral URL is unfamiliar. Manual referral authoring is a valid first step even when no extractor exists.
-5. For supported profile-family URLs acting as referral/promo links, set or preserve `links[].enrichment.profileSemantics="non_profile"` unless the user explicitly wants profile-style rendering.
-6. If the user prefers Studio for the change, note that referral editing currently relies on Advanced JSON rather than first-class referral controls.
+1. If the request includes a new reusable family, offer variant, matcher/link shape, or a shared-vs-fork decision, start with `skills/referral-management/SKILL.md` before editing files.
+2. Treat the catalog as the higher-level authoring layer:
+   - shared catalog: `data/policy/referral-catalog.json`
+   - fork-owned overlay: `data/policy/referral-catalog.local.json`
+3. Keep `links[].referral` as the canonical runtime/render surface, including any manual disclosures and `catalogRef`.
+4. Use `docs/data-model.md` for exact field meaning, precedence, and examples.
+5. Prefer adding manual disclosure fields first; generated referral data may fill blanks later but is not authoritative.
+6. Do not suggest a new extractor by default just because the referral URL is unfamiliar. Manual or catalog-backed referral authoring is a valid first step even when no extractor exists.
+7. For supported profile-family URLs acting as referral/promo links, set or preserve `links[].enrichment.profileSemantics="non_profile"` unless the user explicitly wants profile-style rendering.
+8. If a fork adds a generic shared catalog item that would help other forks, prompt for a clean upstream PR and keep `data/policy/referral-catalog.local.json` out of that PR scope.
+9. If the user prefers Studio for the change, note that referral editing currently relies on Advanced JSON rather than first-class referral controls.
 
 ## Required Startup Handshake (First Step)
 
@@ -290,4 +295,5 @@ Follow https://raw.githubusercontent.com/pRizz/open-links/main/docs/openclaw-upd
 - `docs/data-model.md`
 - `docs/theming-and-layouts.md`
 - `docs/create-new-rich-content-extractor.md`
+- `skills/referral-management/SKILL.md`
 - `skills/create-new-rich-content-extractor/SKILL.md`

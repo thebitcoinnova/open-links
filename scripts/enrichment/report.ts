@@ -58,6 +58,18 @@ const PROFILE_PLATFORMS: SupportedSocialProfilePlatform[] = [
   "youtube",
 ];
 
+interface NormalizedReferralCatalogContribution {
+  source?: "explicit" | "matcher";
+  familyId?: string;
+  familyLabel?: string;
+  offerId?: string;
+  offerLabel?: string;
+  matcherId?: string;
+  matcherLabel?: string;
+  matcherExplanation?: string;
+  canonicalProgramUrl?: string;
+}
+
 const isFailureReason = (value: unknown): value is EnrichmentFailureReason =>
   typeof value === "string" && FAILURE_REASONS.includes(value as EnrichmentFailureReason);
 
@@ -104,6 +116,47 @@ const toMissingProfileFields = (value: unknown): ExpectedSocialProfileField[] | 
 
   const fields = value.filter(isProfileField);
   return fields.length > 0 ? fields : undefined;
+};
+
+const trimToUndefined = (value: unknown): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const normalizeReferralCatalogContribution = (
+  value: unknown,
+): NormalizedReferralCatalogContribution | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const normalized: NormalizedReferralCatalogContribution = {};
+
+  if (value.source === "explicit" || value.source === "matcher") {
+    normalized.source = value.source;
+  }
+
+  for (const field of [
+    "familyId",
+    "familyLabel",
+    "offerId",
+    "offerLabel",
+    "matcherId",
+    "matcherLabel",
+    "matcherExplanation",
+    "canonicalProgramUrl",
+  ] as const) {
+    const candidate = trimToUndefined(value[field]);
+    if (candidate) {
+      normalized[field] = candidate;
+    }
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
 };
 
 export const summarizeEntries = (entries: EnrichmentRunEntry[]): EnrichmentRunSummary => {
@@ -194,8 +247,14 @@ const toEntry = (value: unknown): EnrichmentRunEntry | null => {
       : undefined,
     missingProfileFields: toMissingProfileFields(value.missingProfileFields),
     referral: isRecord(value.referral)
-      ? (normalizeReferralConfig(value.referral as GeneratedLinkReferralConfig) ??
-        (value.referral as GeneratedLinkReferralConfig))
+      ? (() => {
+          const normalizedReferral =
+            normalizeReferralConfig(value.referral as GeneratedLinkReferralConfig) ??
+            (value.referral as GeneratedLinkReferralConfig);
+          const catalog = normalizeReferralCatalogContribution(normalizedReferral.catalog);
+
+          return catalog ? { ...normalizedReferral, catalog } : normalizedReferral;
+        })()
       : undefined,
     referralCompleteness: isReferralCompleteness(value.referralCompleteness)
       ? value.referralCompleteness

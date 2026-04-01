@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import type { LinksData, OpenLink, RichLinkMetadata, SiteData } from "../content/load-content";
+import {
+  type GeneratedLinkReferralConfig,
+  mergeReferralWithManualOverrides,
+} from "../content/referral-fields";
 import { mergeMetadataWithManualSocialProfileOverrides } from "../content/social-profile-fields";
 import { buildRichCardViewModel, resolveLinkCardDescription } from "./rich-card-policy";
 
@@ -51,6 +55,36 @@ const distinctPreviewProfileLink = {
 
 const readJson = <T>(relativePath: string): T =>
   JSON.parse(readFileSync(new URL(relativePath, import.meta.url), "utf8")) as T;
+
+interface GeneratedRichMetadataPayload {
+  links?: Record<string, { metadata?: RichLinkMetadata; referral?: GeneratedLinkReferralConfig }>;
+}
+
+const datasetSite = readJson<SiteData>("../../../data/site.json");
+const datasetLinksData = readJson<LinksData>("../../../data/links.json");
+const generatedRichMetadata = readJson<GeneratedRichMetadataPayload>(
+  "../../../data/generated/rich-metadata.json",
+);
+
+const buildMergedDatasetLink = (linkId: string): OpenLink | undefined => {
+  const sourceLink = datasetLinksData.links.find((entry) => entry.id === linkId);
+  if (!sourceLink) {
+    return undefined;
+  }
+
+  const generatedEntry = generatedRichMetadata.links?.[linkId];
+  const metadata = mergeMetadataWithManualSocialProfileOverrides(
+    sourceLink.metadata,
+    generatedEntry?.metadata,
+  );
+  const referral = mergeReferralWithManualOverrides(sourceLink.referral, generatedEntry?.referral);
+
+  return {
+    ...sourceLink,
+    ...(metadata ? { metadata } : {}),
+    ...(referral ? { referral } : {}),
+  };
+};
 
 test("defaults rich-link descriptions to fetched metadata over manual copy", () => {
   // Act
@@ -254,6 +288,56 @@ test("referral offer summaries override the shared card description slot without
   );
 });
 
+test("live cluborange-referral data keeps manual referral fields while generated visitor benefit and offer text drive the card presentation", () => {
+  // Arrange
+  const referralLink = buildMergedDatasetLink("cluborange-referral");
+
+  // Act
+  const viewModel = referralLink ? buildRichCardViewModel(datasetSite, referralLink) : undefined;
+
+  // Assert
+  assert.ok(referralLink);
+  assert.equal(referralLink.referral?.ownerBenefit, "Supports the project");
+  assert.equal(
+    referralLink.referral?.termsUrl,
+    "https://www.cluborange.org/signup?referral=pryszkie",
+  );
+  assert.equal(
+    referralLink.referral?.visitorBenefit,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.equal(
+    referralLink.referral?.offerSummary,
+    "Join Club Orange — Connect with 19K+ Bitcoiners",
+  );
+  assert.equal(
+    referralLink.referral?.termsSummary,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.ok(viewModel);
+  assert.equal(viewModel.description, "Join Club Orange — Connect with 19K+ Bitcoiners");
+  assert.deepEqual(viewModel.referral?.benefitRows, [
+    {
+      kind: "visitor",
+      label: "You get",
+      value: "Get a Club Orange membership starting at $40/year or pay in sats.",
+    },
+    {
+      kind: "owner",
+      label: "Supports",
+      value: "Supports the project",
+    },
+  ]);
+  assert.equal(
+    viewModel.referral?.terms?.inlineSummary,
+    "Get a Club Orange membership starting at $40/year or pay in sats.",
+  );
+  assert.equal(
+    viewModel.referral?.terms?.url,
+    "https://www.cluborange.org/signup?referral=pryszkie",
+  );
+});
+
 test("supported profile links without profileDescription still obey description-source fallback rules", () => {
   // Arrange
   const mediumProfileLink = {
@@ -310,8 +394,7 @@ test("non-profile links ignore profileDescription and keep existing description 
 
 test("dataset audit defaults current rich links to fetched descriptions across card paths", () => {
   // Arrange
-  const datasetSite = readJson<SiteData>("../../../data/site.json");
-  const linksData = readJson<LinksData>("../../../data/links.json");
+  const linksData = datasetLinksData;
   const publicCache = readJson<{
     entries?: Record<string, { linkId?: string; metadata?: RichLinkMetadata }>;
   }>("../../../data/cache/rich-public-cache.json");

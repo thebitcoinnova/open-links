@@ -484,7 +484,7 @@ export class GitHubRepoService {
     const tree = buildForkOwnedPreservationTree({
       forkTree,
       upstreamTree,
-    }).map((entry) => ({
+    }).map((entry: ForkSyncTreeEntry) => ({
       mode: entry.mode,
       path: entry.path,
       sha: entry.sha,

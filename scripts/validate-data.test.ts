@@ -5,6 +5,7 @@ import process from "node:process";
 import test from "node:test";
 import type { EnrichmentRunReport } from "./enrichment/types";
 import {
+  collectReferralCatalogIssues,
   enrichmentIssues,
   followerHistoryArtifactIssues,
   pathTouchesHookRichArtifactInputs,
@@ -18,6 +19,13 @@ const writeChangedPathsFile = (relativePath: string, entries: string[]): string 
   const absolutePath = path.join(ROOT, relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, `${entries.join("\n")}\n`, "utf8");
+  return relativePath;
+};
+
+const writeJsonFile = (relativePath: string, payload: unknown): string => {
+  const absolutePath = path.join(ROOT, relativePath);
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(absolutePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   return relativePath;
 };
 
@@ -128,6 +136,188 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   assert.equal(socialPreviewTriggered, true);
   assert.equal(policyTriggered, true);
   assert.equal(unrelatedTriggered, false);
+});
+
+test("referral catalog validation allows a missing optional local overlay file", (t) => {
+  const baseDir = "tmp/tests/referral-catalog-no-overlay";
+  const catalogPath = writeJsonFile(`${baseDir}/referral-catalog.json`, {
+    $schema: "../../schema/referral-catalog.schema.json",
+    version: 1,
+    updatedAt: "2026-03-31T10:00:00.000Z",
+    families: [
+      {
+        familyId: "club-orange",
+        label: "Club Orange",
+        kind: "referral",
+        canonicalProgramUrl: "https://www.cluborange.org/signup",
+      },
+    ],
+    offers: [
+      {
+        offerId: "club-orange-signup",
+        familyId: "club-orange",
+        label: "Club Orange signup referral",
+      },
+    ],
+    matchers: [
+      {
+        matcherId: "club-orange-signup-co-path",
+        familyId: "club-orange",
+        offerId: "club-orange-signup",
+        label: "Hosted signup path code",
+        explanation: "Uses /co/<code> links.",
+        hosts: ["signup.cluborange.org"],
+        pathPrefix: "/co/",
+      },
+    ],
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  const issues = collectReferralCatalogIssues({
+    catalogPath,
+    linksData: { links: [] },
+    linksSource: "data/links.json",
+    localCatalogPath: `${baseDir}/referral-catalog.local.json`,
+  });
+
+  assert.deepEqual(issues, []);
+});
+
+test("referral catalog validation reports malformed local overlay payloads", (t) => {
+  const baseDir = "tmp/tests/referral-catalog-bad-overlay";
+  const catalogPath = writeJsonFile(`${baseDir}/referral-catalog.json`, {
+    $schema: "../../schema/referral-catalog.schema.json",
+    version: 1,
+    updatedAt: "2026-03-31T10:00:00.000Z",
+    families: [],
+    offers: [],
+    matchers: [],
+  });
+  const localCatalogPath = writeJsonFile(`${baseDir}/referral-catalog.local.json`, {
+    $schema: "../../schema/referral-catalog.schema.json",
+    version: 1,
+    updatedAt: "2026-03-31T10:00:00.000Z",
+    families: {},
+    offers: [],
+    matchers: [],
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  const issues = collectReferralCatalogIssues({
+    catalogPath,
+    linksData: { links: [] },
+    linksSource: "data/links.json",
+    localCatalogPath,
+  });
+
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.source, localCatalogPath);
+  assert.match(issues[0]?.path ?? "", /\$\.families/u);
+  assert.match(issues[0]?.message ?? "", /must be array/u);
+});
+
+test("referral catalog validation reports duplicate ids and broken link references", (t) => {
+  const baseDir = "tmp/tests/referral-catalog-bad-refs";
+  const catalogPath = writeJsonFile(`${baseDir}/referral-catalog.json`, {
+    $schema: "../../schema/referral-catalog.schema.json",
+    version: 1,
+    updatedAt: "2026-03-31T10:00:00.000Z",
+    families: [
+      {
+        familyId: "club-orange",
+        label: "Club Orange",
+        kind: "referral",
+        canonicalProgramUrl: "https://www.cluborange.org/signup",
+      },
+    ],
+    offers: [
+      {
+        offerId: "club-orange-signup",
+        familyId: "missing-family",
+        label: "Club Orange signup referral",
+      },
+    ],
+    matchers: [
+      {
+        matcherId: "club-orange-signup-query-referral",
+        familyId: "club-orange",
+        offerId: "club-orange-signup",
+        label: "Canonical signup referral query",
+        explanation: "Uses ?referral=<code> on /signup.",
+        hosts: ["www.cluborange.org"],
+        pathExact: "/signup",
+        requiredQueryKeys: ["referral"],
+      },
+    ],
+  });
+  const localCatalogPath = writeJsonFile(`${baseDir}/referral-catalog.local.json`, {
+    $schema: "../../schema/referral-catalog.schema.json",
+    version: 1,
+    updatedAt: "2026-03-31T10:00:00.000Z",
+    families: [
+      {
+        familyId: "club-orange",
+        label: "Club Orange override",
+        kind: "referral",
+        canonicalProgramUrl: "https://fork.example.com/club-orange",
+      },
+      {
+        familyId: "club-orange",
+        label: "Club Orange duplicate override",
+        kind: "referral",
+        canonicalProgramUrl: "https://fork.example.com/club-orange-duplicate",
+      },
+    ],
+    offers: [],
+    matchers: [],
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  const issues = collectReferralCatalogIssues({
+    catalogPath,
+    linksData: {
+      links: [
+        {
+          id: "cluborange-referral",
+          referral: {
+            catalogRef: {
+              familyId: "club-orange",
+              offerId: "club-orange-signup",
+              matcherId: "missing-matcher",
+            },
+          },
+        },
+      ],
+    },
+    linksSource: "data/links.json",
+    localCatalogPath,
+  });
+
+  assert.match(
+    issues.map((issue) => `${issue.source} ${issue.path} ${issue.message}`).join("\n"),
+    /Duplicate referral catalog family id 'club-orange'/u,
+  );
+  assert.match(
+    issues.map((issue) => `${issue.source} ${issue.path} ${issue.message}`).join("\n"),
+    /offer 'club-orange-signup' references unknown familyId 'missing-family'/u,
+  );
+  assert.match(
+    issues.map((issue) => `${issue.source} ${issue.path} ${issue.message}`).join("\n"),
+    /references unknown referral catalog matcherId 'missing-matcher'/u,
+  );
+  assert.match(
+    issues.map((issue) => `${issue.source} ${issue.path} ${issue.message}`).join("\n"),
+    /mixes familyId 'club-orange' with offerId 'club-orange-signup' from family 'missing-family'/u,
+  );
 });
 
 test("preview-image availability accepts localized remote slots", () => {

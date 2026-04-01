@@ -4,6 +4,7 @@ import {
   summarizeForkSyncConflicts,
 } from "../../src/lib/fork-sync";
 import { runCommand } from "./command";
+import { parseGitHubRepositorySlug } from "./github-repository";
 
 const DEFAULT_BRANCH = "main";
 const DEFAULT_REMOTE = "upstream";
@@ -93,6 +94,22 @@ const resolveHeadSha = (cwd: string, ref = "HEAD"): string =>
 const remoteExists = (cwd: string, remote: string): boolean =>
   git(cwd, ["remote", "get-url", remote], { allowFailure: true }).status === 0;
 
+const normalizeRemoteIdentity = (cwd: string, remote: string): string | undefined => {
+  const remoteUrl = trimStdout(git(cwd, ["remote", "get-url", remote]).stdout);
+  if (remoteUrl.length === 0) {
+    return undefined;
+  }
+
+  try {
+    return `github:${parseGitHubRepositorySlug(remoteUrl).toLowerCase()}`;
+  } catch {
+    return remoteUrl
+      .replace(/\.git$/u, "")
+      .replace(/\/+$/u, "")
+      .toLowerCase();
+  }
+};
+
 const refExists = (cwd: string, ref: string): boolean =>
   git(cwd, ["rev-parse", "--verify", ref], { allowFailure: true }).status === 0;
 
@@ -169,6 +186,20 @@ export const runUpstreamSync = (options: UpstreamSyncOptions = {}): UpstreamSync
 
   if (!remoteExists(cwd, remote)) {
     throw new Error(`Git remote '${remote}' is not configured in this repository.`);
+  }
+
+  if (remoteExists(cwd, "origin")) {
+    const maybeOriginIdentity = normalizeRemoteIdentity(cwd, "origin");
+    const maybeUpstreamIdentity = normalizeRemoteIdentity(cwd, remote);
+    if (
+      maybeOriginIdentity !== undefined &&
+      maybeUpstreamIdentity !== undefined &&
+      maybeOriginIdentity === maybeUpstreamIdentity
+    ) {
+      throw new Error(
+        `Cannot sync upstream when '${remote}' points to the same repository as 'origin'. This command is intended for forks and downstream repos.`,
+      );
+    }
   }
 
   git(cwd, ["fetch", remote, "--prune"]);

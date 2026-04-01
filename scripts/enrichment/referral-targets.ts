@@ -1,3 +1,12 @@
+import sharedReferralCatalog from "../../data/policy/referral-catalog.json";
+import localReferralCatalog from "../../data/policy/referral-catalog.local.json";
+import {
+  type ReferralCatalogPayload,
+  mergeReferralCatalogPayloads,
+  resolveReferralCatalogForLink,
+} from "../../src/lib/content/referral-catalog";
+import type { LinkReferralConfig } from "../../src/lib/content/referral-fields";
+
 const REFERRAL_PARAM_KEYS = new Set(["ref", "referral", "invite", "code", "coupon"]);
 const ANALYTICS_PARAM_KEYS = new Set(["fbclid", "gclid", "mc_cid", "mc_eid"]);
 const ANALYTICS_PARAM_PREFIXES = ["utm_"] as const;
@@ -36,7 +45,26 @@ export interface ReferralTargetResolution {
   strippedParams: string[];
   referralParams: Record<string, string>;
   knownFamilyId?: string;
+  catalog?: ReferralTargetCatalogContribution;
+  catalogReferral?: LinkReferralConfig;
 }
+
+export interface ReferralTargetCatalogContribution {
+  source: "explicit" | "matcher";
+  familyId: string;
+  familyLabel: string;
+  offerId: string;
+  offerLabel: string;
+  matcherId?: string;
+  matcherLabel?: string;
+  matcherExplanation?: string;
+  canonicalProgramUrl?: string;
+}
+
+const REFERRAL_CATALOG = mergeReferralCatalogPayloads(
+  sharedReferralCatalog as ReferralCatalogPayload,
+  localReferralCatalog as ReferralCatalogPayload,
+);
 
 const trimToUndefined = (value: string | undefined): string | undefined => {
   const trimmed = value?.trim();
@@ -175,23 +203,59 @@ export const buildClubOrangeReferralSignupUrl = (sourceUrl: string): string => {
   return targetUrl.toString();
 };
 
-const resolveKnownFamilyTarget = (input: {
-  originalUrl: string;
+const describeReferralCatalogContribution = (
+  input: ReturnType<typeof resolveReferralCatalogForLink>,
+): ReferralTargetCatalogContribution | undefined => {
+  if (!input) {
+    return undefined;
+  }
+
+  return {
+    source: input.source,
+    familyId: input.family.familyId,
+    familyLabel: input.family.label,
+    offerId: input.offer.offerId,
+    offerLabel: input.offer.label,
+    matcherId: input.matcher?.matcherId,
+    matcherLabel: input.matcher?.label,
+    matcherExplanation: input.matcher?.explanation,
+    canonicalProgramUrl: input.family.canonicalProgramUrl,
+  };
+};
+
+const resolveCatalogTargetUrl = (input: {
   candidateUrl: string;
+  referral?: LinkReferralConfig;
 }): {
-  sourceUrl: string;
-  pattern: ReferralTargetPattern;
-  knownFamilyId: string;
-} | null => {
-  if (extractClubOrangeReferralCode(input.candidateUrl)) {
+  sourceUrl?: string;
+  catalog?: ReferralTargetCatalogContribution;
+  catalogReferral?: LinkReferralConfig;
+} => {
+  const catalogResolution = resolveReferralCatalogForLink({
+    catalog: REFERRAL_CATALOG,
+    sourceUrl: input.candidateUrl,
+    referral: input.referral,
+  });
+
+  if (!catalogResolution) {
+    return {};
+  }
+
+  if (catalogResolution.family.familyId === "club-orange") {
+    const maybeReferralCode = extractClubOrangeReferralCode(input.candidateUrl);
     return {
-      sourceUrl: buildClubOrangeReferralSignupUrl(input.candidateUrl),
-      pattern: "known_family",
-      knownFamilyId: "cluborange-referral-signup",
+      sourceUrl: maybeReferralCode
+        ? buildClubOrangeReferralSignupUrl(input.candidateUrl)
+        : undefined,
+      catalog: describeReferralCatalogContribution(catalogResolution),
+      catalogReferral: catalogResolution.referral,
     };
   }
 
-  return null;
+  return {
+    catalog: describeReferralCatalogContribution(catalogResolution),
+    catalogReferral: catalogResolution.referral,
+  };
 };
 
 const isShortenerHost = (url: URL): boolean => SHORTENER_HOSTS.has(normalizeHost(url.hostname));
@@ -199,6 +263,7 @@ const isShortenerHost = (url: URL): boolean => SHORTENER_HOSTS.has(normalizeHost
 export const resolveReferralTarget = (input: {
   url: string;
   finalUrl?: string;
+  referral?: LinkReferralConfig;
 }): ReferralTargetResolution | null => {
   const originalUrl = trimToUndefined(input.url);
   if (!originalUrl || !isHttpUrl(originalUrl)) {
@@ -213,11 +278,11 @@ export const resolveReferralTarget = (input: {
   const candidateUrl =
     trimToUndefined(input.finalUrl) && isHttpUrl(input.finalUrl) ? input.finalUrl : originalUrl;
 
-  const knownFamilyTarget = resolveKnownFamilyTarget({
-    originalUrl,
+  const catalogTarget = resolveCatalogTargetUrl({
     candidateUrl,
+    referral: input.referral,
   });
-  const parsed = parseUrl(knownFamilyTarget?.sourceUrl ?? candidateUrl);
+  const parsed = parseUrl(catalogTarget.sourceUrl ?? candidateUrl);
   if (!parsed) {
     return null;
   }
@@ -226,8 +291,8 @@ export const resolveReferralTarget = (input: {
   const referralParams = collectReferralParams(parsed);
 
   let pattern: ReferralTargetPattern = "direct";
-  if (knownFamilyTarget) {
-    pattern = knownFamilyTarget.pattern;
+  if (catalogTarget.catalogReferral && catalogTarget.sourceUrl) {
+    pattern = "known_family";
   } else if (candidateUrl !== originalUrl && isShortenerHost(originalParsed)) {
     pattern = "shortener";
   } else if (Object.keys(referralParams).length > 0) {
@@ -243,6 +308,8 @@ export const resolveReferralTarget = (input: {
     preservedParams,
     strippedParams,
     referralParams,
-    knownFamilyId: knownFamilyTarget?.knownFamilyId,
+    knownFamilyId: catalogTarget.catalog?.familyId,
+    ...(catalogTarget.catalog ? { catalog: catalogTarget.catalog } : {}),
+    ...(catalogTarget.catalogReferral ? { catalogReferral: catalogTarget.catalogReferral } : {}),
   };
 };

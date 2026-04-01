@@ -1,6 +1,9 @@
 import {
   type GeneratedLinkReferralConfig,
   type LinkReferralConfig,
+  REFERRAL_PROVENANCE_FIELDS,
+  type ReferralFieldName,
+  mergeReferralWithManualOverrides,
   normalizeReferralConfig,
   resolveReferralCompleteness,
 } from "../../src/lib/content/referral-fields";
@@ -23,11 +26,7 @@ import {
   toSourceLabel,
 } from "./document-primitives";
 import { parseMetadata } from "./parse-metadata";
-import {
-  buildClubOrangeReferralSignupUrl,
-  extractClubOrangeReferralCode,
-  resolveReferralTarget,
-} from "./referral-targets";
+import { type ReferralTargetCatalogContribution, resolveReferralTarget } from "./referral-targets";
 import { parseRumblePublicProfile, resolveRumbleAboutUrl } from "./rumble-public-profile";
 import { parseAudienceCount } from "./social-profile-counts";
 import type {
@@ -52,7 +51,11 @@ const YOUTUBE_SUBSCRIBER_SEGMENT_LENGTH = 5_000;
 const REFERRAL_HEADLINE_HINT_PATTERN =
   /\b(join|save|get|bonus|discount|deal|offer|membership|invite|credit|free)\b/i;
 const REFERRAL_TERMS_PATTERN =
-  /\b(new users only|limited time|subject to approval|terms apply|starting at\b|first year|first order|while supplies last|minimum purchase)\b/i;
+  /\b(new users only|limited time|subject to approval|terms apply|starting at\b|while supplies last|minimum purchase|cannot be combined)\b/i;
+const REFERRAL_VISITOR_BENEFIT_PATTERN =
+  /\b(save|discount|bonus|credit|free|cash\s*back|cashback|off your|starting at\b|pay in sats|trial)\b/i;
+const REFERRAL_OWNER_BENEFIT_PATTERN =
+  /\b(supports?\s+(?:the\s+)?(?:project|creator|site|author)|commission|store credit|referral reward|creator receives|we (?:earn|receive|get)|i (?:earn|receive|get))\b/i;
 
 type PublicAugmentationOutcome = NormalizedEnrichmentResult;
 
@@ -134,6 +137,7 @@ interface ResolvePublicReferralAugmentationInput {
   strategyId: string;
   metadata: EnrichmentMetadata;
   manualReferral?: LinkReferralConfig;
+  benefitTextCandidates?: string[];
 }
 
 const SUBSTACK_PRELOADS_PATTERN = /window\._preloads\s*=\s*JSON\.parse\(("(?:(?:\\.)|[^"\\])*")\)/s;
@@ -521,8 +525,19 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
 const buildGenericXDescription = (displayHandle: string): string =>
   `Posts and updates from @${displayHandle} on X.`;
 
-const isClubOrangeReferralSignupUrl = (sourceUrl: string): boolean =>
-  extractClubOrangeReferralCode(sourceUrl) !== null;
+const resolveClubOrangeReferralSignupTarget = (
+  sourceUrl: string,
+): ReturnType<typeof resolveReferralTarget> => {
+  const target = resolveReferralTarget({
+    url: sourceUrl,
+  });
+
+  if (target?.catalog?.offerId !== "club-orange-signup") {
+    return null;
+  }
+
+  return target;
+};
 
 export const parseInstagramProfileMetadata = (
   description: string | undefined,
@@ -712,6 +727,95 @@ const resolveReferralTermsSummary = (metadata: EnrichmentMetadata): string | und
   return matchingSentences.length > 0 ? matchingSentences.join(" ") : undefined;
 };
 
+const buildReferralBenefitTextCandidates = (input: {
+  metadata: EnrichmentMetadata;
+  benefitTextCandidates?: string[];
+}): string[] => {
+  const candidates: string[] = [];
+  const seen = new Set<string>();
+
+  const push = (value: string | undefined) => {
+    const trimmed = safeTrim(value);
+    if (!trimmed || seen.has(trimmed)) {
+      return;
+    }
+    seen.add(trimmed);
+    candidates.push(trimmed);
+  };
+
+  push(input.metadata.title);
+  for (const sentence of splitIntoSentences(input.metadata.description)) {
+    push(sentence);
+  }
+  for (const candidate of input.benefitTextCandidates ?? []) {
+    push(candidate);
+  }
+
+  return candidates;
+};
+
+const resolveExplicitReferralBenefit = (
+  input: {
+    metadata: EnrichmentMetadata;
+    benefitTextCandidates?: string[];
+  },
+  pattern: RegExp,
+): string | undefined =>
+  buildReferralBenefitTextCandidates(input).find((candidate) => pattern.test(candidate));
+
+const resolveReferralVisitorBenefit = (input: {
+  metadata: EnrichmentMetadata;
+  benefitTextCandidates?: string[];
+}): string | undefined => resolveExplicitReferralBenefit(input, REFERRAL_VISITOR_BENEFIT_PATTERN);
+
+const resolveReferralOwnerBenefit = (input: {
+  metadata: EnrichmentMetadata;
+  benefitTextCandidates?: string[];
+}): string | undefined => resolveExplicitReferralBenefit(input, REFERRAL_OWNER_BENEFIT_PATTERN);
+
+const hasReferralFieldValue = (
+  referral: LinkReferralConfig | undefined,
+  field: ReferralFieldName,
+): boolean => {
+  const value = referral?.[field];
+  return typeof value === "string" && value.trim().length > 0;
+};
+
+const mergeCatalogSeedWithGeneratedReferral = (input: {
+  catalogReferral: LinkReferralConfig;
+  generatedReferral: GeneratedLinkReferralConfig;
+  catalogContribution?: ReferralTargetCatalogContribution;
+}): GeneratedLinkReferralConfig => {
+  const normalizedCatalog = normalizeReferralConfig(input.catalogReferral);
+  const normalizedGenerated = normalizeReferralConfig(input.generatedReferral);
+  const merged = {
+    ...normalizedCatalog,
+    ...normalizedGenerated,
+  } as GeneratedLinkReferralConfig;
+  const provenance: Partial<Record<ReferralFieldName, "catalog" | "generated">> = {};
+
+  for (const field of REFERRAL_PROVENANCE_FIELDS) {
+    if (hasReferralFieldValue(normalizedGenerated, field)) {
+      provenance[field] = "generated";
+      continue;
+    }
+
+    if (hasReferralFieldValue(normalizedCatalog, field)) {
+      provenance[field] = "catalog";
+    }
+  }
+
+  if (Object.keys(provenance).length > 0) {
+    merged.provenance = provenance;
+  }
+
+  if (input.catalogContribution) {
+    merged.catalog = input.catalogContribution;
+  }
+
+  return merged;
+};
+
 const isLikelyAuthGatedUrl = (value: string): boolean => {
   const normalized = value.toLowerCase();
   return (
@@ -733,10 +837,13 @@ export const resolvePublicReferralAugmentation = (
   const target = resolveReferralTarget({
     url: input.originalUrl,
     finalUrl: input.finalUrl ?? input.sourceUrl,
+    referral: normalizedManual,
   });
+  const catalogReferral = target?.catalogReferral;
   const shouldAttemptReferral =
     Boolean(normalizedManual) ||
     Boolean(target && target.pattern !== "direct") ||
+    Boolean(target?.catalog) ||
     input.strategyId === "cluborange-referral-signup";
 
   if (!shouldAttemptReferral) {
@@ -747,24 +854,53 @@ export const resolvePublicReferralAugmentation = (
     return undefined;
   }
 
+  const visitorBenefit = resolveReferralVisitorBenefit(input);
+  const ownerBenefit = resolveReferralOwnerBenefit(input);
   const offerSummary = resolveReferralOfferSummary(input.metadata);
   const termsSummary = resolveReferralTermsSummary(input.metadata);
   const generatedKind =
     normalizedManual?.kind ??
-    (input.strategyId === "cluborange-referral-signup" ? "referral" : undefined);
+    (catalogReferral?.kind
+      ? undefined
+      : input.strategyId === "cluborange-referral-signup"
+        ? "referral"
+        : undefined);
 
-  return normalizeReferralConfig({
+  const generatedReferral = normalizeReferralConfig({
     kind: generatedKind,
+    visitorBenefit,
+    ownerBenefit,
     offerSummary,
     termsSummary,
-    completeness: resolveReferralCompleteness({
-      offerSummary,
-      termsSummary,
-    }),
     originalUrl: input.originalUrl,
     resolvedUrl,
     strategyId: input.strategyId,
     termsSourceUrl: termsSummary ? resolvedUrl : undefined,
+    ...(target?.catalog ? { catalog: target.catalog } : {}),
+  });
+
+  if (!catalogReferral || !generatedReferral) {
+    return generatedReferral
+      ? normalizeReferralConfig({
+          ...generatedReferral,
+          completeness: resolveReferralCompleteness(generatedReferral),
+        })
+      : undefined;
+  }
+
+  const catalogBackedReferral = mergeCatalogSeedWithGeneratedReferral({
+    catalogReferral,
+    generatedReferral,
+    catalogContribution: target?.catalog,
+  });
+  const mergedReferral = normalizedManual
+    ? (mergeReferralWithManualOverrides(normalizedManual, catalogBackedReferral, undefined) ??
+      catalogBackedReferral)
+    : catalogBackedReferral;
+
+  return normalizeReferralConfig({
+    ...mergedReferral,
+    completeness: resolveReferralCompleteness(mergedReferral),
   });
 };
 
@@ -963,16 +1099,13 @@ const PUBLIC_AUGMENTATION_STRATEGIES: PublicAugmentationStrategy[] = [
     id: "cluborange-referral-signup",
     branch: "public_augmented",
     sourceKind: "html",
-    matches: (input) => isClubOrangeReferralSignupUrl(input.url),
+    matches: (input) => Boolean(resolveClubOrangeReferralSignupTarget(input.url)),
     resolve: (input) => {
-      if (!isClubOrangeReferralSignupUrl(input.url)) {
+      const referralTarget = resolveClubOrangeReferralSignupTarget(input.url);
+      if (!referralTarget) {
         return null;
       }
-
-      const referralTarget = resolveReferralTarget({
-        url: input.url,
-      });
-      const sourceUrl = referralTarget?.sourceUrl ?? buildClubOrangeReferralSignupUrl(input.url);
+      const sourceUrl = referralTarget.sourceUrl;
 
       return {
         id: "cluborange-referral-signup",

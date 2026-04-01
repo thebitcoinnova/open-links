@@ -55,6 +55,21 @@ const seedWorkspace = () => {
     },
     title: "OpenLinks",
   });
+  writeJson(path.join(rootDir, "data/policy/referral-catalog.local.json"), {
+    $schema: "../../schema/referral-catalog.schema.json",
+    version: 1,
+    updatedAt: "2026-03-31T10:00:00.000Z",
+    families: [
+      {
+        familyId: "fork-club-orange",
+        label: "Fork Club Orange",
+        kind: "referral",
+        canonicalProgramUrl: "https://fork.example.com/club-orange",
+      },
+    ],
+    offers: [],
+    matchers: [],
+  });
   writeText(
     path.join(rootDir, "README.md"),
     [
@@ -116,6 +131,9 @@ test("runForkReset rewrites starter data, clears generated identity artifacts, a
     const profile = JSON.parse(fs.readFileSync(path.join(rootDir, "data/profile.json"), "utf8"));
     const links = JSON.parse(fs.readFileSync(path.join(rootDir, "data/links.json"), "utf8"));
     const site = JSON.parse(fs.readFileSync(path.join(rootDir, "data/site.json"), "utf8"));
+    const referralCatalogOverlay = JSON.parse(
+      fs.readFileSync(path.join(rootDir, "data/policy/referral-catalog.local.json"), "utf8"),
+    );
     const followerHistoryIndex = JSON.parse(
       fs.readFileSync(path.join(rootDir, "public/history/followers/index.json"), "utf8"),
     );
@@ -128,6 +146,14 @@ test("runForkReset rewrites starter data, clears generated identity artifacts, a
     assert.deepEqual(site.quality, {
       seo: { canonicalBaseUrl: "https://example.com/" },
     });
+    assert.deepEqual(referralCatalogOverlay.families, [
+      {
+        familyId: "fork-club-orange",
+        label: "Fork Club Orange",
+        kind: "referral",
+        canonicalProgramUrl: "https://fork.example.com/club-orange",
+      },
+    ]);
     assert.deepEqual(followerHistoryIndex.entries, []);
     assert.doesNotMatch(readme, /https:\/\/openlinks\.us/u);
     assert.doesNotMatch(readme, /https:\/\/prizz\.github\.io\/open-links/u);

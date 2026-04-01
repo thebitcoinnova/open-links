@@ -1113,7 +1113,6 @@ a:focus-visible {
   grid-template-columns: var(--non-payment-card-lead-size) minmax(0, 1fr);
   grid-template-areas:
     "lead summary"
-    "lead description"
     "lead footer";
   column-gap: var(--space-3);
   row-gap: var(--space-2);
@@ -1124,14 +1123,12 @@ a:focus-visible {
   grid-template-areas:
     "banner banner"
     "lead summary"
-    "lead description"
     "lead footer";
 }
 
 .rich-link-card[data-profile-preview-render="bottom-row"] .non-payment-card-shell {
   grid-template-areas:
     "lead summary"
-    "lead description"
     "media media"
     "footer footer";
 }
@@ -1139,7 +1136,6 @@ a:focus-visible {
 .rich-link-card[data-profile-preview-render="compact-end"] .non-payment-card-shell {
   grid-template-areas:
     "lead summary"
-    "lead description"
     "lead footer"
     "lead end-media";
 }
@@ -1291,7 +1287,6 @@ a:focus-visible {
 }
 
 .non-payment-card-description {
-  grid-area: description;
   min-width: 0;
   max-width: 100%;
   color: color-mix(in srgb, var(--text-primary) 74%, var(--text-muted) 26%);

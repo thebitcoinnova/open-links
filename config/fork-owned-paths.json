@@ -3,6 +3,7 @@
     "data/profile.json",
     "data/links.json",
     "data/site.json",
+    "data/policy/referral-catalog.local.json",
     "data/cache/content-images.json",
     "data/cache/content-images.runtime.json",
     "data/cache/profile-avatar.json",

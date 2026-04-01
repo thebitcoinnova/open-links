@@ -290,6 +290,18 @@ test("rich referral cards keep promo-image-led layout while rendering referral c
   );
   assert.ok(termsLink);
   assert.equal(termsLink.props.href, "https://www.cluborange.org/signup?referral=pryszkie");
+
+  const summary = firstElementWithClass(tree, "non-payment-card-summary");
+  const termsSummary = firstElementWithClass(tree, "non-payment-card-referral-terms");
+  const summaryChildren = Array.isArray(summary?.props.children)
+    ? summary?.props.children
+    : [summary?.props.children];
+
+  assert.ok(summary);
+  assert.ok(description);
+  assert.ok(termsSummary);
+  assert.equal(summaryChildren.includes(description), true);
+  assert.equal(summaryChildren.includes(termsSummary), true);
 });
 
 test("soft referral markers fall back to a generic badge without empty benefit rows", () => {

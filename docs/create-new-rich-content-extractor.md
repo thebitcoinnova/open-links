@@ -10,6 +10,13 @@ Use this when existing direct enrichment is missing data and you need to decide 
 
 This playbook is not for payment/tip-card branding issues. If the problem is a payment card icon, QR badge composition, or a new payment brand that should render like an existing known site, use the shared icon and payment-card workflow in `docs/data-model.md` and the CRUD guidance instead of extractor work.
 
+This playbook is also not for referral catalog CRUD. If the work is adding or
+updating reusable referral families, offer variants, matcher/link shapes, or
+fork-local referral overlay data under `data/policy/referral-catalog*.json`,
+use `skills/referral-management/SKILL.md` and the maintainer CRUD docs instead.
+`links[].referral` remains the runtime/render contract; extractor work only
+starts when the real gap is missing rich metadata capture.
+
 ## Outcome Contract
 
 A new support workflow is complete only when all of these are true:

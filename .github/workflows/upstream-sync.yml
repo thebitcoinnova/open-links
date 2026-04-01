@@ -13,9 +13,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Fork/downstream automation only; the canonical upstream repo should not sync from itself.
   sync-upstream:
     name: Sync Upstream
     runs-on: ubuntu-latest
+    if: github.repository != 'pRizz/open-links'
 
     steps:
       - name: Checkout repository
@@ -48,6 +50,7 @@ jobs:
         if: always()
         env:
           SYNC_COMMAND_STATUS: ${{ steps.sync.outputs.command_status }}
+          UPSTREAM_SYNC_RESULT_PATH: ${{ steps.sync.outputs.result_path }}
         run: node scripts/github-actions/upstream-sync-summary.mjs >> "$GITHUB_STEP_SUMMARY"
 
       - name: Push synced branch

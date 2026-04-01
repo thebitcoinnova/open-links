@@ -87,6 +87,9 @@ For the behavior rules and current defaults, use `docs/data-model.md`.
 
 Referral coverage within `links[]` items:
 
+- `referral.catalogRef.familyId`
+- `referral.catalogRef.offerId`
+- `referral.catalogRef.matcherId`
 - `referral.kind`
 - `referral.visitorBenefit`
 - `referral.ownerBenefit`
@@ -99,10 +102,20 @@ Referral coverage within `links[]` items:
 Referral notes:
 
 - Referral remains additive to `simple` and `rich` links; it is not a separate link type.
+- `links[].referral` remains the runtime/render contract even when the link is catalog-backed.
 - `referral: {}` is valid as a soft marker, but validation warns until meaningful disclosure fields are present.
 - `kind` alone classifies the link but does not count as sufficient disclosure by itself.
+- `referral.catalogRef` is the higher-level pointer into shared catalog data, not a replacement for manual disclosure fields.
 - Supported profile-family referral links often pair with `links[].enrichment.profileSemantics="non_profile"`.
 - Use `docs/data-model.md` for the canonical contract, curated examples, manual-vs-generated precedence, and generated referral-field explanation.
+
+Referral catalog authoring layer:
+
+- Shared catalog file: `data/policy/referral-catalog.json`
+- Optional fork-owned overlay: `data/policy/referral-catalog.local.json`
+- Preferred interview workflow for new families/offers/matchers and shared-vs-fork scope decisions: `skills/referral-management/SKILL.md`
+- If a fork adds a generic shared catalog item, prefer a clean upstream PR for the shared file/docs change and keep `data/policy/referral-catalog.local.json` out of that PR scope.
+- Review `docs/downstream-open-links-sites.md` when shared catalog, schema, runtime, or script surfaces change because `open-links-sites` mirrors those shared paths.
 
 ## 4) `links[].metadata` (`links-metadata`)
 

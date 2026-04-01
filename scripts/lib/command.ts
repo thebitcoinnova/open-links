@@ -16,13 +16,25 @@ export interface CommandResult {
 }
 
 export function runCommand(command: string, args: string[], options: CommandOptions = {}) {
+  const mergedEnv: Record<string, string | undefined> = {
+    ...process.env,
+    ...options.env,
+  };
+
+  if (command === "git") {
+    mergedEnv.GIT_ALTERNATE_OBJECT_DIRECTORIES = undefined;
+    mergedEnv.GIT_COMMON_DIR = undefined;
+    mergedEnv.GIT_DIR = undefined;
+    mergedEnv.GIT_INDEX_FILE = undefined;
+    mergedEnv.GIT_OBJECT_DIRECTORY = undefined;
+    mergedEnv.GIT_PREFIX = undefined;
+    mergedEnv.GIT_WORK_TREE = undefined;
+  }
+
   const result = spawnSync(command, args, {
     cwd: options.cwd,
     encoding: "utf8",
-    env: {
-      ...process.env,
-      ...options.env,
-    },
+    env: mergedEnv,
     input: options.stdin,
   });
 
