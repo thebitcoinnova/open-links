@@ -518,6 +518,40 @@ bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.rai
 ```
 
 2. Commit and push the resulting `data/site.json` and `README.md` changes.
+
+### Problem: `quality:check` warns that SEO title or description is using fallback content
+
+Symptoms:
+
+- `bun run quality:check` reports `SEO_TITLE_FALLBACK` or `SEO_DESCRIPTION_FALLBACK`.
+- The site resolves SEO metadata from `profile.name`, `profile.bio`, or `site.title`/`site.description` instead of explicit SEO config.
+
+Fix:
+
+1. Add explicit defaults under `data/site.json`:
+
+```json
+{
+  "quality": {
+    "seo": {
+      "canonicalBaseUrl": "https://<owner>.github.io/<repo>/",
+      "socialImageFallback": "/generated/seo/social-preview.png",
+      "defaults": {
+        "title": "Your Name | short SEO title",
+        "description": "Short search and social summary for the site."
+      }
+    }
+  }
+}
+```
+
+2. If the fork has promoted Render, Railway, AWS, or a custom domain, replace `canonicalBaseUrl` with that primary HTTPS origin.
+3. Re-run:
+
+```bash
+bun run quality:check
+bun run build
+```
 3. Let the provider redeploy the new commit.
 4. Re-run:
 
