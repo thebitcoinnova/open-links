@@ -3,7 +3,12 @@
   "description": "Minimal starter for OpenLinks",
   "quality": {
     "seo": {
-      "canonicalBaseUrl": "https://example.com/"
+      "canonicalBaseUrl": "https://example.com/",
+      "defaults": {
+        "description": "Minimal starter for OpenLinks",
+        "title": "Minimal OpenLinks"
+      },
+      "socialImageFallback": "/generated/seo/social-preview.png"
     }
   },
   "theme": {
