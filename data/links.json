@@ -1,35 +1,339 @@
 {
+  "$schema": "https://open-links.dev/schema/links.schema.json",
   "custom": {},
-  "links": [
+  "groups": [
     {
-      "custom": {},
-      "enabled": true,
-      "icon": "github",
-      "id": "github",
-      "label": "GitHub",
-      "order": 1,
-      "type": "simple",
-      "url": "https://github.com"
+      "id": "watch-listen",
+      "label": "Watch, Listen, and Follow",
+      "order": 0
     },
     {
-      "custom": {},
+      "id": "community-partners",
+      "label": "Community & Partners",
+      "order": 1
+    },
+    {
+      "id": "projects-brands",
+      "label": "Projects & Brands",
+      "order": 2
+    },
+    {
+      "id": "support-contact",
+      "label": "Support & Contact",
+      "order": 3
+    }
+  ],
+  "links": [
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
       "enabled": true,
+      "group": "projects-brands",
+      "id": "the-bitcoin-nova",
+      "label": "The Bitcoin Nova",
+      "type": "rich",
+      "url": "https://bitcoinnova.store/"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "projects-brands",
+      "id": "home-bitcoin-black-sheep",
+      "label": "Home - Bitcoin Black Sheep",
+      "type": "rich",
+      "url": "https://bitcoinblacksheep.com/"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "watch-listen",
+      "id": "live-with-the-hive-podcast",
+      "label": "Live with the Hive Podcast",
+      "metadata": {
+        "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
+        "subscribersCount": 131,
+        "subscribersCountRaw": "131 subscribers"
+      },
+      "type": "rich",
+      "url": "https://youtube.com/@livewiththehive?si=tQizrqZ7AVqSBimH&sub_confirmation=1"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "community-partners",
+      "icon": "x",
+      "id": "paranoid-bitcoin-anarchists",
+      "label": "Paranoid Bitcoin Anarchists",
+      "metadata": {
+        "description": "Bitcoin community for people who question everything, run nodes, hold their own keys, and build outside the fiat system.",
+        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "sourceLabel": "x.com",
+        "title": "Paranoid Bitcoin Anarchists"
+      },
+      "type": "rich",
+      "url": "https://x.com/i/communities/1871996451812769951"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "community-partners",
+      "id": "satoshoes",
+      "label": "Satoshoes",
+      "type": "rich",
+      "url": "https://satoshoes.co.uk/?ref=xstac1"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "watch-listen",
+      "id": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
+      "label": "XSTACI Sweet Biddi Beats by @thebitcoinnova | Suno",
+      "type": "rich",
+      "url": "https://suno.com/playlist/2c53c4e4-e7c0-4772-b2c2-bb1d16c4d2ab"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "projects-brands",
+      "id": "the-bitcoin-adviser-the-bitcoin-nova",
+      "label": "The Bitcoin Adviser - The Bitcoin Nova",
+      "type": "rich",
+      "url": "https://content.thebitcoinadviser.com/the-bitcoin-nova"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "community-partners",
+      "id": "home-microseed",
+      "label": "Home - MicroSeed",
+      "type": "rich",
+      "url": "https://microseed.io/?ref=XSTACI"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "community-partners",
+      "id": "club-orange",
+      "label": "Club Orange",
+      "metadata": {
+        "description": "Chicago hairstylist. https://www.angieshairstudio.us/ Accepting Bitcoin for payment.",
+        "handle": "bitcoinnova",
+        "image": "https://orange-pill-app-dev.s3.amazonaws.com/avatars/b5d546cd-01af-4c37-bd52-a3d64953606c",
+        "profileDescription": "Chicago hairstylist. https://www.angieshairstudio.us/ Accepting Bitcoin for payment.",
+        "profileImage": "https://orange-pill-app-dev.s3.amazonaws.com/avatars/b5d546cd-01af-4c37-bd52-a3d64953606c",
+        "sourceLabel": "app.cluborange.org",
+        "title": "STACI"
+      },
+      "type": "rich",
+      "url": "https://signup.cluborange.org/co/bitcoinnova"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "enrichment": {
+        "enabled": false
+      },
+      "group": "watch-listen",
+      "id": "audible-the-bitcoin-nova-podcast",
+      "label": "Audible: The Bitcoin Nova Podcast",
+      "metadata": {
+        "description": "Staci hosts grounded conversations about Bitcoin, communities, culture, and the people building a better future.",
+        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "sourceLabel": "www.audible.com",
+        "title": "The Bitcoin Nova Podcast"
+      },
+      "type": "rich",
+      "url": "https://www.audible.com/pd/B0DZJV461D?source_code=ASSORAP0511160006&share_location=podcast_show_detail"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "watch-listen",
+      "id": "the-bitcoin-nova-podcast-on-amazon-music",
+      "label": "The Bitcoin Nova Podcast on Amazon Music",
+      "metadata": {
+        "description": "Staci hosts grounded conversations about Bitcoin, communities, culture, and the people building a better future.",
+        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "sourceLabel": "music.amazon.com",
+        "title": "The Bitcoin Nova Podcast"
+      },
+      "type": "rich",
+      "url": "https://music.amazon.com/podcasts/9d4d6b00-3b5f-4bfa-93d6-b40bf4e12a69/the-bitcoin-nova-podcast"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "group": "watch-listen",
+      "id": "rumble",
+      "label": "RUMBLE",
+      "metadata": {
+        "description": "Video home for The Bitcoin Nova Podcast with interviews, live conversations, and Bitcoin-focused episodes from Staci.",
+        "followersCount": 23,
+        "followersCountRaw": "23 Followers",
+        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "profileImage": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
+        "sourceLabel": "rumble.com",
+        "title": "The Bitcoin Nova Podcast"
+      },
+      "type": "rich",
+      "url": "https://rumble.com/c/c-7752998"
+    },
+    {
+      "enabled": true,
+      "group": "support-contact",
+      "id": "tip-staci",
+      "label": "Tip Staci",
+      "payment": {
+        "effects": {
+          "enabled": false
+        },
+        "rails": [
+          {
+            "address": "xstac1@strike.me",
+            "id": "strike",
+            "label": "Strike",
+            "rail": "lightning"
+          }
+        ]
+      },
+      "type": "payment",
+      "url": "lightning:xstac1@strike.me"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-18T11:24:40.180Z",
+          "kind": "linktree",
+          "sourceUrl": "https://linktr.ee/XSTACI"
+        }
+      },
+      "enabled": true,
+      "group": "support-contact",
+      "id": "bookings-thebitcoinnova-gmail-com",
+      "label": "bookings.thebitcoinnova@gmail.com",
+      "type": "simple",
+      "url": "mailto:TheBitcoinNova@gmail.com"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-27T09:25:36.837Z",
+          "kind": "links-list"
+        }
+      },
+      "enabled": true,
+      "group": "watch-listen",
+      "id": "youtube",
+      "label": "The Bitcoin Nova YouTube",
+      "type": "rich",
+      "url": "https://www.youtube.com/@TheBitcoinNova"
+    },
+    {
+      "custom": {
+        "import": {
+          "importedAt": "2026-03-27T09:33:52.429Z",
+          "kind": "links-list"
+        }
+      },
+      "enabled": true,
+      "group": "watch-listen",
       "icon": "x",
       "id": "x",
       "label": "X",
-      "order": 2,
-      "type": "simple",
-      "url": "https://x.com"
-    },
-    {
-      "custom": {},
-      "enabled": true,
-      "id": "website",
-      "label": "Website",
-      "order": 3,
-      "type": "simple",
-      "url": "https://example.com"
+      "type": "rich",
+      "url": "https://x.com/XSTAC1"
     }
   ],
-  "order": ["github", "x", "website"]
+  "order": [
+    "the-bitcoin-nova",
+    "home-bitcoin-black-sheep",
+    "the-bitcoin-adviser-the-bitcoin-nova",
+    "youtube",
+    "x",
+    "live-with-the-hive-podcast",
+    "rumble",
+    "audible-the-bitcoin-nova-podcast",
+    "the-bitcoin-nova-podcast-on-amazon-music",
+    "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
+    "paranoid-bitcoin-anarchists",
+    "club-orange",
+    "home-microseed",
+    "satoshoes",
+    "tip-staci",
+    "bookings-thebitcoinnova-gmail-com"
+  ]
 }

@@ -1,7 +1,10 @@
 {
+  "$schema": "https://open-links.dev/schema/site.schema.json",
   "baseUrl": "/",
-  "custom": {},
-  "description": "Minimal starter for OpenLinks",
+  "custom": {
+    "preset": "default"
+  },
+  "description": "Host of Bitcoin Nova Podcast | X Community Leader",
   "quality": {
     "seo": {
       "canonicalBaseUrl": "https://example.com/"
@@ -9,10 +12,13 @@
   },
   "theme": {
     "active": "sleek",
-    "available": ["sleek", "sleek-emerald", "sleek-mono", "daybreak"]
+    "available": ["sleek", "daybreak", "sleek-emerald", "sleek-mono"]
   },
-  "title": "Minimal OpenLinks",
+  "title": "Staci Costopoulos | OpenLinks",
   "ui": {
+    "compositionMode": "balanced",
+    "density": "medium",
+    "desktopColumns": "one",
     "footer": {
       "ctaLabel": "Create Your OpenLinks",
       "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
@@ -22,6 +28,12 @@
         "title": "Create your own OpenLinks site"
       },
       "showBuildInfo": true
-    }
+    },
+    "groupingStyle": "subtle",
+    "linkTarget": "new-tab-external",
+    "modePolicy": "dark-toggle",
+    "profileRichness": "rich",
+    "targetSize": "comfortable",
+    "typographyScale": "fixed"
   }
 }

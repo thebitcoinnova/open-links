@@ -1,7 +1,39 @@
 {
-  "avatar": "https://avatars.githubusercontent.com/u/583231?v=4",
-  "bio": "A clean OpenLinks starter profile.",
+  "$schema": "https://open-links.dev/schema/profile.schema.json",
+  "avatar": "https://ugc.production.linktr.ee/cb51ef8a-75f5-45d0-b5ee-84930a9a6116_IMG-0031.jpeg?io=true&size=avatar-v3_0",
+  "bio": "Host of Bitcoin Nova Podcast | X Community Leader",
   "custom": {},
-  "headline": "Customize this fork",
-  "name": "Your Name"
+  "headline": "Bitcoin educator, podcast host, and community builder",
+  "location": "Chicago",
+  "name": "Staci Costopoulos",
+  "profileLinks": [
+    {
+      "label": "Website",
+      "url": "https://bitcoinnova.store/"
+    },
+    {
+      "label": "YouTube",
+      "url": "https://youtube.com/@thebitcoinnovapodcast?si=bJDvNhG8zklJMv8Q"
+    },
+    {
+      "label": "X",
+      "url": "https://x.com/XSTAC1"
+    },
+    {
+      "label": "Spotify",
+      "url": "https://open.spotify.com/show/TheBitcoinNova"
+    },
+    {
+      "label": "TikTok",
+      "url": "https://tiktok.com/@bitcoinnova"
+    },
+    {
+      "label": "Apple Podcasts",
+      "url": "https://podcasts.apple.com/us/podcast/the-bitcoin-nova-podcast/id1800522855"
+    },
+    {
+      "label": "The Bitcoin Nova YouTube",
+      "url": "https://www.youtube.com/@TheBitcoinNova"
+    }
+  ]
 }
