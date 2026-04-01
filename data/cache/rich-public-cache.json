@@ -49,7 +49,7 @@
         "followingCount": 95,
         "followingCountRaw": "95 following"
       },
-      "etag": "W/\"a4c31dfa7679674a7e6ed6134a5aa34f\""
+      "etag": "W/\"28ac936bebb8c52185c17ae9f6517ccf\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -89,7 +89,7 @@
       "linkId": "primal",
       "sourceUrl": "https://primal.net/peterryszkiewicz",
       "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-03-19T07:20:38.693Z",
+      "updatedAt": "2026-04-01T07:31:06.620Z",
       "metadata": {
         "title": "Peter No Taxation Without Representation Ryszkiewicz",
         "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
@@ -99,8 +99,8 @@
         "handle": "peterryszkiewicz",
         "sourceLabel": "primal.net",
         "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
-        "followersCount": 14,
-        "followersCountRaw": "14 followers",
+        "followersCount": 15,
+        "followersCountRaw": "15 followers",
         "followingCount": 90,
         "followingCountRaw": "90 following"
       }
@@ -141,7 +141,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-03-31T07:30:33.029Z",
+      "updatedAt": "2026-04-01T07:31:27.374Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -149,12 +149,12 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1351,
-        "followersCountRaw": "1,351 Followers",
-        "followingCount": 670,
-        "followingCountRaw": "670 Following"
+        "followersCount": 1353,
+        "followersCountRaw": "1,353 Followers",
+        "followingCount": 671,
+        "followingCountRaw": "671 Following"
       },
-      "lastModified": "Tue, 31 Mar 2026 07:30:10 GMT"
+      "lastModified": "Wed, 01 Apr 2026 07:31:03 GMT"
     },
     "youtube": {
       "linkId": "youtube",
