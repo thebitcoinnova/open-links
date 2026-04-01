@@ -5,6 +5,7 @@ import process from "node:process";
 import test from "node:test";
 import type { EnrichmentRunReport } from "./enrichment/types";
 import {
+  analyticsHistorySetupIssues,
   collectReferralCatalogIssues,
   enrichmentIssues,
   followerHistoryArtifactIssues,
@@ -675,6 +676,146 @@ test("public augmentation coverage accepts committed stable public-cache entries
       },
     },
     publicCachePath,
+  });
+
+  assert.deepEqual(issues, []);
+});
+
+test("analytics history setup warns when x is eligible but no follower-history entry exists", (t) => {
+  const baseDir = "tmp/tests/analytics-history-warning";
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { recursive: true, force: true });
+  });
+
+  const issues = analyticsHistorySetupIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "x",
+          label: "X",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/XSTAC1",
+        },
+      ],
+    },
+    siteData: {
+      title: "Site",
+      description: "Desc",
+      theme: { active: "sleek", available: ["sleek"] },
+      ui: {},
+    },
+    indexPath: writeJsonFile(`${baseDir}/index.json`, {
+      version: 1,
+      updatedAt: "2026-04-01T10:00:00.000Z",
+      entries: [],
+    }),
+  });
+
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "warning");
+  assert.match(
+    issues[0]?.message ?? "",
+    /analytics-capable links are missing follower-history entries: x/u,
+  );
+  assert.match(issues[0]?.remediation ?? "", /public:rich:sync -- --only-link x/u);
+});
+
+test("analytics history setup stays quiet when x already has a follower-history entry", (t) => {
+  const baseDir = "tmp/tests/analytics-history-ok";
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { recursive: true, force: true });
+  });
+
+  const issues = analyticsHistorySetupIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "x",
+          label: "X",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/XSTAC1",
+        },
+      ],
+    },
+    siteData: {
+      title: "Site",
+      description: "Desc",
+      theme: { active: "sleek", available: ["sleek"] },
+      ui: {},
+    },
+    indexPath: writeJsonFile(`${baseDir}/index.json`, {
+      version: 1,
+      updatedAt: "2026-04-01T10:00:00.000Z",
+      entries: [
+        {
+          linkId: "x",
+          label: "X",
+          platform: "x",
+          handle: "xstac1",
+          canonicalUrl: "https://x.com/XSTAC1",
+          audienceKind: "followers",
+          csvPath: "history/followers/x.csv",
+          latestAudienceCount: 5581,
+          latestAudienceCountRaw: "5,581 Followers",
+          latestObservedAt: "2026-04-01T10:00:00.000Z",
+        },
+      ],
+    }),
+  });
+
+  assert.deepEqual(issues, []);
+});
+
+test("analytics history setup treats x community coverage as satisfied by existing x platform history", (t) => {
+  const baseDir = "tmp/tests/analytics-history-platform-coverage";
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { recursive: true, force: true });
+  });
+
+  const issues = analyticsHistorySetupIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "paranoid-bitcoin-anarchists",
+          label: "Paranoid Bitcoin Anarchists",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/i/communities/1871996451812769951",
+        },
+      ],
+    },
+    siteData: {
+      title: "Site",
+      description: "Desc",
+      theme: { active: "sleek", available: ["sleek"] },
+      ui: {},
+    },
+    indexPath: writeJsonFile(`${baseDir}/index.json`, {
+      version: 1,
+      updatedAt: "2026-04-01T10:00:00.000Z",
+      entries: [
+        {
+          linkId: "x",
+          label: "X",
+          platform: "x",
+          handle: "xstac1",
+          canonicalUrl: "https://x.com/XSTAC1",
+          audienceKind: "followers",
+          csvPath: "history/followers/x.csv",
+          latestAudienceCount: 5581,
+          latestAudienceCountRaw: "5,581 Followers",
+          latestObservedAt: "2026-04-01T10:00:00.000Z",
+        },
+      ],
+    }),
   });
 
   assert.deepEqual(issues, []);

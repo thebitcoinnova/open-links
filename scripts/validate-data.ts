@@ -28,6 +28,7 @@ import {
   resolveMissingSupportedSocialProfileFields,
   resolveSupportedSocialProfile,
 } from "../src/lib/content/social-profile-fields";
+import { resolveAnalyticsPageEnabled } from "../src/lib/ui/analytics-page-preferences";
 import { buildRichCardViewModel } from "../src/lib/ui/rich-card-policy";
 import {
   DEFAULT_AUTH_CACHE_PATH,
@@ -148,6 +149,12 @@ interface GeneratedRichMetadataPayload {
 
 interface GeneratedContentImagesPayload {
   bySlot?: Record<string, { resolvedPath?: string }>;
+}
+
+interface FollowerHistoryIndexSummaryPayload {
+  entries?: Array<{
+    linkId?: string;
+  }>;
 }
 
 interface ReferralCatalogFamilyRecord extends Record<string, unknown> {
@@ -1540,6 +1547,95 @@ export const followerHistoryArtifactIssues = (input?: {
   return issues;
 };
 
+const ANALYTICS_HISTORY_PUBLIC_TARGET_IDS = new Set([
+  "medium-public-feed",
+  "primal-public-profile",
+  "x-public-community",
+  "x-public-oembed",
+]);
+
+export const analyticsHistorySetupIssues = (input: {
+  linksSource: string;
+  linksData: Record<string, unknown>;
+  siteData: SiteData;
+  indexPath?: string;
+}): ValidationIssue[] => {
+  if (!resolveAnalyticsPageEnabled(input.siteData)) {
+    return [];
+  }
+
+  const links = Array.isArray(input.linksData.links) ? input.linksData.links : [];
+  const analyticsCapableTargets: Array<{ linkId: string; platform: string }> = [];
+
+  for (const rawLink of links) {
+    if (!isRecord(rawLink) || rawLink.enabled === false || rawLink.type !== "rich") {
+      continue;
+    }
+
+    const linkId = toStringOrUndefined(rawLink.id);
+    const url = toStringOrUndefined(rawLink.url);
+    const platform = toStringOrUndefined(rawLink.icon) ?? linkId;
+    if (!linkId || !url || !platform) {
+      continue;
+    }
+
+    const metadataHandle =
+      isRecord(rawLink.metadata) && typeof rawLink.metadata.handle === "string"
+        ? rawLink.metadata.handle
+        : undefined;
+    const strategy = resolvePublicEnrichmentStrategy({
+      url,
+      icon: toStringOrUndefined(rawLink.icon),
+      metadataHandle,
+    });
+    if (!ANALYTICS_HISTORY_PUBLIC_TARGET_IDS.has(strategy.id)) {
+      continue;
+    }
+
+    analyticsCapableTargets.push({ linkId, platform });
+  }
+
+  if (analyticsCapableTargets.length === 0) {
+    return [];
+  }
+
+  const indexPath = input.indexPath ?? DEFAULT_FOLLOWER_HISTORY_INDEX_PATH;
+  const indexRead = tryReadJsonFile<FollowerHistoryIndexSummaryPayload>(indexPath);
+  if (!indexRead.value) {
+    return [];
+  }
+
+  let index: ReturnType<typeof parseFollowerHistoryIndex>;
+  try {
+    index = parseFollowerHistoryIndex(indexRead.value);
+  } catch {
+    return [];
+  }
+
+  const indexedPlatforms = new Set(index.entries.map((entry) => entry.platform));
+  const missingTargets = analyticsCapableTargets.filter(
+    (target) => !indexedPlatforms.has(target.platform),
+  );
+  if (missingTargets.length === 0) {
+    return [];
+  }
+
+  const missingLinkIds = [...new Set(missingTargets.map((target) => target.linkId))];
+  const syncCommands = missingLinkIds
+    .map((linkId) => `bun run public:rich:sync -- --only-link ${linkId}`)
+    .join("` then `");
+
+  return [
+    {
+      level: "warning",
+      source: indexPath,
+      path: "$.entries",
+      message: `Built-in analytics is enabled by default, but analytics-capable links are missing follower-history entries: ${missingLinkIds.join(", ")}.`,
+      remediation: `Run \`${syncCommands}\`, then run \`bun run followers:history:sync\` and commit the updated files under public/history/followers/.`,
+    },
+  ];
+};
+
 export const resolvePreviewImageAvailability = (
   imageCandidate: string | undefined,
   slotId: string,
@@ -2378,6 +2474,13 @@ export const run = () => {
   }
 
   issues.push(...followerHistoryArtifactIssues());
+  issues.push(
+    ...analyticsHistorySetupIssues({
+      linksSource: args.linksPath,
+      linksData,
+      siteData: siteData as SiteData,
+    }),
+  );
 
   const errors = sortIssues(issues.filter((issue) => issue.level === "error"));
   const warnings = sortIssues(issues.filter((issue) => issue.level === "warning"));
