@@ -466,6 +466,62 @@ test("follower-history validation reports index drift against the latest CSV row
   assert.match(issues[0]?.message ?? "", /does not match the latest row/u);
 });
 
+test("follower-history validation rejects CSVs that mix multiple link ids", (t) => {
+  const historyRepoRoot = "public/history/test-follower-history-mixed-links";
+  const indexPath = `${historyRepoRoot}/index.json`;
+  const csvPath = `${historyRepoRoot}/x.csv`;
+  const absoluteDir = path.join(ROOT, historyRepoRoot);
+  fs.mkdirSync(absoluteDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(ROOT, csvPath),
+    `${[
+      "observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audienceCountRaw,source",
+      '"2026-04-01T10:04:05.034Z",x,x,xstac1,https://x.com/XSTAC1,followers,5581,"5,581 Followers",public-cache',
+      "2026-04-01T10:06:37.551Z,paranoid-bitcoin-anarchists,x,1871996451812769951,https://x.com/i/communities/1871996451812769951,members,787,787 Members,public-cache",
+    ].join("\n")}\n`,
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(ROOT, indexPath),
+    `${JSON.stringify(
+      {
+        version: 1,
+        updatedAt: "2026-04-01T10:06:37.551Z",
+        entries: [
+          {
+            linkId: "x",
+            label: "X",
+            platform: "x",
+            handle: "xstac1",
+            canonicalUrl: "https://x.com/XSTAC1",
+            audienceKind: "followers",
+            csvPath: "history/test-follower-history-mixed-links/x.csv",
+            latestAudienceCount: 5581,
+            latestAudienceCountRaw: "5,581 Followers",
+            latestObservedAt: "2026-04-01T10:04:05.034Z",
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  t.after(() => {
+    fs.rmSync(absoluteDir, { recursive: true, force: true });
+  });
+
+  const issues = followerHistoryArtifactIssues({
+    historyRepoRoot,
+    indexPath,
+    publicRoot: "history/test-follower-history-mixed-links",
+  });
+
+  assert.equal(issues.length, 1);
+  assert.match(issues[0]?.message ?? "", /mixes rows from outside the indexed link 'x'/u);
+});
+
 const createEnrichmentReport = (
   overrides: Partial<EnrichmentRunReport["entries"][number]>,
 ): EnrichmentRunReport => ({

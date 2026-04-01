@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T08:40:27.813Z",
+  "generatedAt": "2026-04-01T10:36:33.154Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/df9325785d065ff73729756c9bf5dad9d8b8305fda657bfc9da3d8bf841028da.png",
@@ -50,10 +50,10 @@
       "bytes": 94045
     },
     "link:paranoid-bitcoin-anarchists:image": {
-      "resolvedPath": "cache/content-images/3b92db79aab8c5c5ccc195d6b5305927bcc7a8709b72fdce03c8d4c44f83a529.jpg",
-      "updatedAt": "2026-04-01T08:36:35.402Z",
+      "resolvedPath": "cache/content-images/5939a2b45a8a4d13f2e67b9d23d0b5a5ca27b1412f82f8d6be226e749b126611.jpg",
+      "updatedAt": "2026-04-01T10:36:30.074Z",
       "contentType": "image/jpeg",
-      "bytes": 77824
+      "bytes": 230566
     },
     "link:paranoid-bitcoin-anarchists:ogImage": {
       "resolvedPath": "cache/content-images/5939a2b45a8a4d13f2e67b9d23d0b5a5ca27b1412f82f8d6be226e749b126611.jpg",

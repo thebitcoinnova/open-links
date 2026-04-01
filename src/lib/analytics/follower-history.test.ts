@@ -7,6 +7,7 @@ import {
   buildFollowerHistoryPoints,
   describeFollowerHistoryRange,
   filterFollowerHistoryRows,
+  filterFollowerHistoryRowsByLinkId,
   parseCompactAudienceCount,
   parseFollowerHistoryCsv,
   parseFollowerHistoryIndex,
@@ -160,6 +161,35 @@ test("index parsing and availability maps stay keyed by link id", () => {
   const availability = buildFollowerHistoryAvailabilityMap(index);
   assert.equal(availability.get("github")?.platform, "github");
   assert.equal(availability.get("github")?.csvPath, "history/followers/github.csv");
+});
+
+test("link-specific filtering removes foreign rows from mixed history files", () => {
+  const rows = [
+    {
+      observedAt: "2026-04-01T10:04:05.034Z",
+      linkId: "x",
+      platform: "x",
+      handle: "xstac1",
+      canonicalUrl: "https://x.com/XSTAC1",
+      audienceKind: "followers",
+      audienceCount: 5581,
+      audienceCountRaw: "5,581 Followers",
+      source: "public-cache",
+    },
+    {
+      observedAt: "2026-04-01T10:06:37.551Z",
+      linkId: "paranoid-bitcoin-anarchists",
+      platform: "x",
+      handle: "1871996451812769951",
+      canonicalUrl: "https://x.com/i/communities/1871996451812769951",
+      audienceKind: "members",
+      audienceCount: 787,
+      audienceCountRaw: "787 Members",
+      source: "public-cache",
+    },
+  ] as const;
+
+  assert.deepEqual(filterFollowerHistoryRowsByLinkId(rows, "x"), [rows[0]]);
 });
 
 test("range descriptions use friendly copy for analytics summaries", () => {

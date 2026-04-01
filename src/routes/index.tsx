@@ -42,6 +42,7 @@ import {
   type FollowerHistoryRow,
   buildFollowerHistoryAvailabilityMap,
   describeFollowerHistoryRange,
+  filterFollowerHistoryRowsByLinkId,
   parseFollowerHistoryCsv,
   parseFollowerHistoryIndex,
 } from "../lib/analytics/follower-history";
@@ -307,7 +308,17 @@ export default function RouteIndex() {
 
       const resolved = await Promise.all(
         entries.map(
-          async (entry) => [entry.linkId, await fetchFollowerHistoryRows(entry.csvPath)] as const,
+          async (entry) =>
+            [
+              entry.linkId,
+              await fetchFollowerHistoryRows(entry.csvPath).then((state) =>
+                state.status === "available"
+                  ? buildAvailableOfflineResource(
+                      filterFollowerHistoryRowsByLinkId(state.value, entry.linkId),
+                    )
+                  : state,
+              ),
+            ] as const,
         ),
       );
       return new Map<string, OfflineResourceState<FollowerHistoryRow[]>>(resolved);
@@ -326,10 +337,16 @@ export default function RouteIndex() {
   });
 
   const [selectedHistoryRowState] = createResource(
-    () => selectedHistoryEntry()?.csvPath ?? null,
-    async (csvPath) =>
-      csvPath
-        ? fetchFollowerHistoryRows(csvPath)
+    () => selectedHistoryEntry() ?? null,
+    async (entry) =>
+      entry
+        ? fetchFollowerHistoryRows(entry.csvPath).then((state) =>
+            state.status === "available"
+              ? buildAvailableOfflineResource(
+                  filterFollowerHistoryRowsByLinkId(state.value, entry.linkId),
+                )
+              : state,
+          )
         : buildAvailableOfflineResource<FollowerHistoryRow[]>([]),
   );
   const selectedHistoryRows = createMemo(() => {

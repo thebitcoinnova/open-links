@@ -15,7 +15,7 @@ const ROOT = process.cwd();
 
 test("appendFollowerHistoryRows creates and appends rows without rewriting columns", (t) => {
   const historyRepoRoot = "tmp/tests/follower-history";
-  const csvPath = buildFollowerHistoryCsvRepoPath("tmp-platform", {
+  const csvPath = buildFollowerHistoryCsvRepoPath("tmp-link", {
     historyRepoRoot,
   });
   const absoluteCsvPath = path.join(ROOT, csvPath);
@@ -27,11 +27,11 @@ test("appendFollowerHistoryRows creates and appends rows without rewriting colum
 
   const first = appendFollowerHistoryRows({
     historyRepoRoot,
-    platform: "tmp-platform",
+    linkId: "tmp-link",
     rows: [
       {
         observedAt: "2026-03-10T07:00:00.000Z",
-        linkId: "tmp-platform",
+        linkId: "tmp-link",
         platform: "tmp-platform",
         handle: "tmp",
         canonicalUrl: "https://example.com/tmp",
@@ -45,11 +45,11 @@ test("appendFollowerHistoryRows creates and appends rows without rewriting colum
 
   const second = appendFollowerHistoryRows({
     historyRepoRoot,
-    platform: "tmp-platform",
+    linkId: "tmp-link",
     rows: [
       {
         observedAt: "2026-03-11T07:00:00.000Z",
-        linkId: "tmp-platform",
+        linkId: "tmp-link",
         platform: "tmp-platform",
         handle: "tmp",
         canonicalUrl: "https://example.com/tmp",
@@ -63,7 +63,7 @@ test("appendFollowerHistoryRows creates and appends rows without rewriting colum
 
   assert.equal(first.changed, true);
   assert.equal(second.changed, true);
-  assert.equal(csvPath, "tmp/tests/follower-history/tmp-platform.csv");
+  assert.equal(csvPath, "tmp/tests/follower-history/tmp-link.csv");
   assert.equal(readFollowerHistoryCsvFile(csvPath).length, 2);
   assert.equal(second.rows[1]?.observedAt, "2026-03-11T07:00:00.000Z");
   assert.equal(

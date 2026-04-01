@@ -23,6 +23,7 @@ import {
   buildFollowerHistoryCsvRepoPath,
   readFollowerHistoryCsvFile,
   writeFollowerHistoryIndex,
+  writeFollowerHistoryRows,
 } from "./follower-history/append-history";
 import type { PublicRichSyncSummary } from "./public-rich-sync";
 
@@ -93,6 +94,32 @@ const trimToUndefined = (value: unknown): string | undefined => {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const dedupeFollowerHistoryRows = (rows: readonly FollowerHistoryRow[]): FollowerHistoryRow[] => {
+  const seen = new Set<string>();
+  const deduped: FollowerHistoryRow[] = [];
+
+  for (const row of normalizeFollowerHistoryRows(rows)) {
+    const key = [
+      row.observedAt,
+      row.linkId,
+      row.platform,
+      row.handle,
+      row.canonicalUrl,
+      row.audienceKind,
+      row.audienceCount,
+      row.audienceCountRaw,
+      row.source,
+    ].join("\u0000");
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(row);
+  }
+
+  return deduped;
 };
 
 const readOptionalAuthenticatedCache = (cachePath: string) => {
@@ -268,23 +295,76 @@ const resolveSnapshots = (
     ];
   });
 
-const resolveTrackedFollowerHistoryPlatforms = (links: readonly OpenLink[]): string[] => [
-  ...new Set(
-    links.flatMap((link) => {
-      if (link.enabled === false || link.type === "payment") {
-        return [];
+const resolveTrackedFollowerHistoryLinkIds = (links: readonly OpenLink[]): string[] =>
+  links.flatMap((link) => {
+    if (link.enabled === false || link.type === "payment") {
+      return [];
+    }
+
+    const platform = trimToUndefined(link.icon) ?? trimToUndefined(link.id);
+    const canonicalUrl = trimToUndefined(link.url);
+    if (!platform || !canonicalUrl) {
+      return [];
+    }
+
+    return [link.id];
+  });
+
+export const migrateFollowerHistoryCsvLayout = (
+  links: readonly OpenLink[],
+  options?: {
+    historyRepoRoot?: string;
+  },
+): boolean => {
+  const historyRepoRoot =
+    options?.historyRepoRoot?.replaceAll("\\", "/") ?? "public/history/followers";
+  const historyRootAbsolute = absolutePath(historyRepoRoot);
+  if (!fs.existsSync(historyRootAbsolute)) {
+    return false;
+  }
+
+  const trackedLinkIds = new Set(resolveTrackedFollowerHistoryLinkIds(links));
+  const rowsByLinkId = new Map<string, FollowerHistoryRow[]>();
+  const existingCsvPaths = fs
+    .readdirSync(historyRootAbsolute, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".csv"))
+    .map((entry) => path.join(historyRepoRoot, entry.name).replaceAll("\\", "/"));
+
+  for (const csvPath of existingCsvPaths) {
+    for (const row of readFollowerHistoryCsvFile(csvPath)) {
+      if (!trackedLinkIds.has(row.linkId)) {
+        continue;
       }
 
-      const platform = trimToUndefined(link.icon) ?? trimToUndefined(link.id);
-      const canonicalUrl = trimToUndefined(link.url);
-      if (!platform || !canonicalUrl) {
-        return [];
-      }
+      const existingRows = rowsByLinkId.get(row.linkId) ?? [];
+      existingRows.push(row);
+      rowsByLinkId.set(row.linkId, existingRows);
+    }
+  }
 
-      return [platform];
-    }),
-  ),
-];
+  let changed = false;
+  const targetPaths = new Set<string>();
+
+  for (const [linkId, rows] of rowsByLinkId) {
+    const targetPath = buildFollowerHistoryCsvRepoPath(linkId, { historyRepoRoot });
+    targetPaths.add(targetPath);
+    const writeResult = writeFollowerHistoryRows({
+      csvPath: targetPath,
+      rows: dedupeFollowerHistoryRows(rows),
+    });
+    changed ||= writeResult.changed;
+  }
+
+  for (const csvPath of existingCsvPaths) {
+    if (targetPaths.has(csvPath)) {
+      continue;
+    }
+    fs.rmSync(absolutePath(csvPath), { force: true });
+    changed = true;
+  }
+
+  return changed;
+};
 
 export const buildFollowerHistoryIndexEntries = (
   links: readonly OpenLink[],
@@ -292,16 +372,17 @@ export const buildFollowerHistoryIndexEntries = (
     historyRepoRoot?: string;
   },
 ): FollowerHistoryIndexEntry[] =>
-  resolveTrackedFollowerHistoryPlatforms(links)
-    .map((platform) => {
+  resolveTrackedFollowerHistoryLinkIds(links)
+    .map((linkId) => {
       const rows = normalizeFollowerHistoryRows(
         readFollowerHistoryCsvFile(
-          buildFollowerHistoryCsvRepoPath(platform, {
+          buildFollowerHistoryCsvRepoPath(linkId, {
             historyRepoRoot: options?.historyRepoRoot,
           }),
         ),
       );
-      const latest = rows[rows.length - 1];
+      const matchingRows = rows.filter((row) => row.linkId === linkId);
+      const latest = matchingRows[matchingRows.length - 1];
       if (!latest) {
         return null;
       }
@@ -314,14 +395,17 @@ export const buildFollowerHistoryIndexEntries = (
         handle: latest.handle,
         canonicalUrl: latest.canonicalUrl,
         audienceKind: latest.audienceKind,
-        csvPath: buildFollowerHistoryCsvPublicPath(latest.platform),
+        csvPath: buildFollowerHistoryCsvPublicPath(latest.linkId),
         latestAudienceCount: latest.audienceCount,
         latestAudienceCountRaw: latest.audienceCountRaw,
         latestObservedAt: latest.observedAt,
       } satisfies FollowerHistoryIndexEntry;
     })
     .filter((entry): entry is FollowerHistoryIndexEntry => entry !== null)
-    .sort((left, right) => left.platform.localeCompare(right.platform));
+    .sort(
+      (left, right) =>
+        left.platform.localeCompare(right.platform) || left.linkId.localeCompare(right.linkId),
+    );
 
 export const createHistoryRunSummary = (input: {
   dryRun: boolean;
@@ -356,7 +440,7 @@ const buildSnapshotSummary = (
   audienceCountRaw: snapshot.row.audienceCountRaw,
   audienceKind: snapshot.row.audienceKind,
   csvChanged: options?.csvChanged,
-  csvPath: options?.csvPath ?? buildFollowerHistoryCsvRepoPath(snapshot.platform),
+  csvPath: options?.csvPath ?? buildFollowerHistoryCsvRepoPath(snapshot.row.linkId),
   handle: snapshot.row.handle,
   label: snapshot.label,
   linkId: snapshot.row.linkId,
@@ -376,6 +460,7 @@ export const run = (args = resolveArgs()): HistoryRunSummary => {
   const authenticatedRegistry = readOptionalAuthenticatedCache(args.authCachePath);
   const publicRichSyncSummary = readOptionalPublicRichSyncSummary(args.publicRichSyncSummaryPath);
   const failedPublicRichSyncLinkIds = resolvePublicRichSyncFailedLinkIds(publicRichSyncSummary);
+  const migratedLegacyLayout = migrateFollowerHistoryCsvLayout(linksPayload.links);
   const snapshots = resolveSnapshots(
     linksPayload.links,
     publicRegistry,
@@ -436,7 +521,7 @@ export const run = (args = resolveArgs()): HistoryRunSummary => {
 
   const writtenSnapshots = snapshots.map((snapshot) => {
     const appendResult = appendFollowerHistoryRows({
-      platform: snapshot.platform,
+      linkId: snapshot.row.linkId,
       rows: [snapshot.row],
     });
     return {
@@ -449,7 +534,7 @@ export const run = (args = resolveArgs()): HistoryRunSummary => {
   const indexChanged = writeFollowerHistoryIndex(indexEntries, observedAt);
   const summary = createHistoryRunSummary({
     dryRun: false,
-    indexChanged,
+    indexChanged: migratedLegacyLayout || indexChanged,
     indexEntryCount: indexEntries.length,
     observedAt,
     snapshots: writtenSnapshots.map(({ appendResult, snapshot }) =>
