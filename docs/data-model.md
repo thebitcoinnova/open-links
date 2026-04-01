@@ -834,7 +834,7 @@ OpenLinks can publish append-only follower/subscriber snapshots for the profile-
 Canonical public outputs:
 
 - `public/history/followers/index.json`
-- `public/history/followers/<platform>.csv`
+- `public/history/followers/<link-id>.csv`
 
 Update command:
 
@@ -880,6 +880,8 @@ observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audien
 ```
 
 The follower-history sync reads the normalized audience metadata that runtime also uses for profile-card header metrics. That means both public-augmented and authenticated-cache-backed profiles can contribute history when they expose a primary audience field.
+
+History files are link-scoped rather than platform-scoped. This avoids blending separate entities that share a platform, such as an `x` profile plus an `x` community.
 
 #### Analytics and share surfaces
 
