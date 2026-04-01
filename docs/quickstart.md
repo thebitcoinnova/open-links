@@ -206,6 +206,14 @@ bun run public:rich:sync -- --only-link x
 bun run public:rich:sync -- --only-link primal
 ```
 
+The built-in audience analytics page is already enabled by default. It becomes visible once follower-history artifacts exist, so after refreshing audience-capable links you should also run:
+
+```bash
+bun run followers:history:sync
+```
+
+Then commit the updated files under `public/history/followers/`.
+
 ### Start dev server
 
 ```bash
