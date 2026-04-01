@@ -7,7 +7,12 @@
   "description": "Host of Bitcoin Nova Podcast | X Community Leader",
   "quality": {
     "seo": {
-      "canonicalBaseUrl": "https://example.com/"
+      "canonicalBaseUrl": "https://thebitcoinnova.github.io/open-links/",
+      "defaults": {
+        "description": "Host of Bitcoin Nova Podcast, Bitcoin educator, and community leader sharing shows, links, and projects.",
+        "title": "Staci Costopoulos | Bitcoin educator, podcast host, and community builder"
+      },
+      "socialImageFallback": "/generated/seo/social-preview.png"
     }
   },
   "theme": {
