@@ -9,6 +9,7 @@ import {
   enrichmentIssues,
   followerHistoryArtifactIssues,
   pathTouchesHookRichArtifactInputs,
+  publicAugmentedStableCacheCoverageIssues,
   resolveHookRichArtifactCheckDecision,
   resolvePreviewImageAvailability,
 } from "./validate-data";
@@ -586,4 +587,95 @@ test("blocking enrichment failures remain strict-failing in strict mode", () => 
   assert.equal(issues.length, 1);
   assert.equal(issues[0]?.level, "error");
   assert.equal(issues[0]?.strictBlocking, undefined);
+});
+
+test("public augmentation coverage reports missing stable public-cache entries", (t) => {
+  const baseDir = "tmp/tests/public-cache-coverage-missing";
+  const publicCachePath = writeJsonFile(`${baseDir}/rich-public-cache.json`, {
+    $schema: "../../schema/rich-public-cache.schema.json",
+    version: 1,
+    entries: {},
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  const issues = publicAugmentedStableCacheCoverageIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "rumble",
+          type: "rich",
+          enabled: true,
+          url: "https://rumble.com/c/c-7752998",
+        },
+      ],
+    },
+    siteData: {},
+    generatedMetadataByLink: {
+      rumble: {
+        title: "The Bitcoin Nova Podcast",
+        description: "A complete generated description.",
+        image: "https://example.com/rumble.jpg",
+      },
+    },
+    publicCachePath,
+  });
+
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.source, publicCachePath);
+  assert.match(issues[0]?.message ?? "", /no committed stable public-cache entry/u);
+  assert.match(issues[0]?.remediation ?? "", /enrich:rich:strict:write-cache/u);
+});
+
+test("public augmentation coverage accepts committed stable public-cache entries", (t) => {
+  const baseDir = "tmp/tests/public-cache-coverage-present";
+  const publicCachePath = writeJsonFile(`${baseDir}/rich-public-cache.json`, {
+    $schema: "../../schema/rich-public-cache.schema.json",
+    version: 1,
+    entries: {
+      rumble: {
+        linkId: "rumble",
+        sourceUrl: "https://rumble.com/c/c-7752998/about",
+        capturedAt: "2026-04-01T09:24:36.440Z",
+        updatedAt: "2026-04-01T09:24:36.440Z",
+        metadata: {
+          title: "The Bitcoin Nova Podcast",
+          description: "A complete generated description.",
+          image: "https://example.com/rumble.jpg",
+        },
+      },
+    },
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  const issues = publicAugmentedStableCacheCoverageIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "rumble",
+          type: "rich",
+          enabled: true,
+          url: "https://rumble.com/c/c-7752998",
+        },
+      ],
+    },
+    siteData: {},
+    generatedMetadataByLink: {
+      rumble: {
+        title: "The Bitcoin Nova Podcast",
+        description: "A complete generated description.",
+        image: "https://example.com/rumble.jpg",
+      },
+    },
+    publicCachePath,
+  });
+
+  assert.deepEqual(issues, []);
 });

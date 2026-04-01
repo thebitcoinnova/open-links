@@ -47,6 +47,7 @@ import {
   loadRichEnrichmentBlockersRegistry,
   resolveKnownBlockerMatch,
 } from "./enrichment/blockers-registry";
+import { DEFAULT_PUBLIC_CACHE_PATH } from "./enrichment/public-cache";
 import { readEnrichmentReport } from "./enrichment/report";
 import { resolvePublicEnrichmentStrategy } from "./enrichment/strategy-registry";
 import type {
@@ -331,6 +332,18 @@ const resolveEnrichmentMetadataPath = (site: Record<string, unknown>): string =>
     enrichment && typeof enrichment.metadataPath === "string" ? enrichment.metadataPath.trim() : "";
 
   return metadataPath.length > 0 ? metadataPath : DEFAULT_ENRICHMENT_METADATA_PATH;
+};
+
+const resolvePublicCachePath = (site: Record<string, unknown>): string => {
+  const ui = isRecord(site.ui) ? site.ui : undefined;
+  const richCards = ui && isRecord(ui.richCards) ? ui.richCards : undefined;
+  const enrichment = richCards && isRecord(richCards.enrichment) ? richCards.enrichment : undefined;
+  const cachePath =
+    enrichment && typeof enrichment.publicCachePath === "string"
+      ? enrichment.publicCachePath.trim()
+      : "";
+
+  return cachePath.length > 0 ? cachePath : DEFAULT_PUBLIC_CACHE_PATH;
 };
 
 const tryReadJsonFile = <T>(relativePath: string): { value: T | null; errorMessage?: string } => {
@@ -1056,6 +1069,86 @@ const resolveGeneratedContentImagesBySlot = (
   }
 
   return bySlot;
+};
+
+interface PublicCacheStablePayload {
+  entries?: Record<string, unknown>;
+}
+
+const hasRequiredRichPreviewFields = (metadata: Record<string, unknown> | undefined): boolean =>
+  !!(
+    metadata &&
+    toStringOrUndefined(metadata.title) &&
+    toStringOrUndefined(metadata.description) &&
+    toStringOrUndefined(metadata.image)
+  );
+
+export const publicAugmentedStableCacheCoverageIssues = (input: {
+  linksSource: string;
+  linksData: Record<string, unknown>;
+  siteData: Record<string, unknown>;
+  generatedMetadataByLink: Record<string, Record<string, unknown>>;
+  publicCachePath?: string;
+}): ValidationIssue[] => {
+  const issues: ValidationIssue[] = [];
+  const links = Array.isArray(input.linksData.links) ? input.linksData.links : [];
+  const publicCachePath = input.publicCachePath ?? resolvePublicCachePath(input.siteData);
+  const publicCacheRead = tryReadJsonFile<PublicCacheStablePayload>(publicCachePath);
+
+  if (!publicCacheRead.value) {
+    issues.push({
+      level: "error",
+      source: publicCachePath,
+      path: "$",
+      message:
+        "Committed stable public-cache metadata is required to validate cold-run deploy fallback coverage, but it could not be loaded.",
+      remediation: `Restore or regenerate ${publicCachePath}. ${`Then rerun npm run validate:data. ${publicCacheRead.errorMessage ?? ""}`.trim()}`,
+    });
+    return issues;
+  }
+
+  const stableEntries = isRecord(publicCacheRead.value.entries)
+    ? publicCacheRead.value.entries
+    : {};
+
+  for (const [index, rawLink] of links.entries()) {
+    if (!isRecord(rawLink) || rawLink.enabled === false) {
+      continue;
+    }
+
+    const linkId = toStringOrUndefined(rawLink.id);
+    const url = toStringOrUndefined(rawLink.url);
+    if (!linkId || !url || rawLink.type !== "rich") {
+      continue;
+    }
+
+    const strategy = resolvePublicEnrichmentStrategy({
+      url,
+      icon: toStringOrUndefined(rawLink.icon),
+    });
+    if (strategy.branch !== "public_augmented") {
+      continue;
+    }
+
+    const generatedMetadata = input.generatedMetadataByLink[linkId];
+    if (!hasRequiredRichPreviewFields(generatedMetadata)) {
+      continue;
+    }
+
+    if (isRecord(stableEntries[linkId])) {
+      continue;
+    }
+
+    issues.push({
+      level: "error",
+      source: publicCachePath,
+      path: `$.entries.${linkId}`,
+      message: `Rich link '${linkId}' uses public augmentation and has generated metadata, but no committed stable public-cache entry. Cold-run deploys can fail if the next remote fetch is blocked or transiently unavailable.`,
+      remediation: `Run \`npm run enrich:rich:strict:write-cache\` to persist the public cache for '${linkId}', commit ${publicCachePath}, then rerun validation/build.`,
+    });
+  }
+
+  return issues;
 };
 
 const remoteCachePolicyCoverageIssues = (input: {
@@ -2131,6 +2224,15 @@ export const run = () => {
     ...remoteCachePolicyCoverageIssues({
       profileSource: args.profilePath,
       profileData,
+      linksSource: args.linksPath,
+      linksData,
+      siteData,
+      generatedMetadataByLink: generatedMetadataByLinkForCoverage,
+    }),
+  );
+
+  issues.push(
+    ...publicAugmentedStableCacheCoverageIssues({
       linksSource: args.linksPath,
       linksData,
       siteData,
