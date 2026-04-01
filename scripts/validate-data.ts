@@ -1482,7 +1482,18 @@ export const followerHistoryArtifactIssues = (input?: {
         source: repoCsvPath,
         path: "$.platform",
         message: `Follower-history CSV '${repoCsvPath}' mixes rows from outside the '${entry.platform}' platform.`,
-        remediation: "Keep one CSV per platform and move mismatched rows into the correct file.",
+        remediation: "Keep one CSV per link id and move mismatched rows into the correct file.",
+      });
+    }
+
+    if (rows.some((row) => row.linkId !== entry.linkId)) {
+      issues.push({
+        level: "error",
+        source: repoCsvPath,
+        path: "$.linkId",
+        message: `Follower-history CSV '${repoCsvPath}' mixes rows from outside the indexed link '${entry.linkId}'.`,
+        remediation:
+          "Keep one CSV per link id and regenerate follower-history artifacts so each file contains only its own series.",
       });
     }
 

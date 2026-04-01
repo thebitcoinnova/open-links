@@ -299,7 +299,7 @@ Related policy source:
 Related public artifact surface:
 
 - `public/history/followers/index.json`
-- `public/history/followers/*.csv`
+- `public/history/followers/<link-id>.csv`
 
 Operational commands tied to this category:
 

@@ -48,7 +48,7 @@ const toRepoPathFromPublicPath = (publicPath: string): string =>
   path.join(PUBLIC_ROOT, publicPath).replaceAll("\\", "/");
 
 export const buildFollowerHistoryCsvRepoPath = (
-  platform: string,
+  linkId: string,
   options?: {
     historyRepoRoot?: string;
   },
@@ -57,10 +57,10 @@ export const buildFollowerHistoryCsvRepoPath = (
     options?.historyRepoRoot?.replaceAll("\\", "/") ?? DEFAULT_FOLLOWER_HISTORY_REPO_ROOT;
 
   if (historyRepoRoot !== DEFAULT_FOLLOWER_HISTORY_REPO_ROOT) {
-    return `${historyRepoRoot.replace(/\/+$/u, "")}/${platform}.csv`;
+    return `${historyRepoRoot.replace(/\/+$/u, "")}/${linkId}.csv`;
   }
 
-  return toRepoPathFromPublicPath(buildFollowerHistoryCsvPublicPath(platform));
+  return toRepoPathFromPublicPath(buildFollowerHistoryCsvPublicPath(linkId));
 };
 
 export const readFollowerHistoryCsvFile = (relativePath: string): FollowerHistoryRow[] => {
@@ -74,10 +74,10 @@ export const readFollowerHistoryCsvFile = (relativePath: string): FollowerHistor
 
 export const appendFollowerHistoryRows = (input: {
   historyRepoRoot?: string;
-  platform: string;
+  linkId: string;
   rows: readonly FollowerHistoryRow[];
 }): AppendFollowerHistoryResult => {
-  const csvPath = buildFollowerHistoryCsvRepoPath(input.platform, {
+  const csvPath = buildFollowerHistoryCsvRepoPath(input.linkId, {
     historyRepoRoot: input.historyRepoRoot,
   });
   const existingRows = readFollowerHistoryCsvFile(csvPath);
@@ -94,6 +94,27 @@ export const appendFollowerHistoryRows = (input: {
   return {
     changed,
     csvPath,
+    rows: nextRows,
+  };
+};
+
+export const writeFollowerHistoryRows = (input: {
+  csvPath: string;
+  rows: readonly FollowerHistoryRow[];
+}): AppendFollowerHistoryResult => {
+  const nextRows = normalizeFollowerHistoryRows(input.rows);
+  const nextContents = serializeFollowerHistoryCsv(nextRows);
+  const previousContents = readTextIfPresent(input.csvPath);
+  const changed = previousContents !== nextContents;
+
+  if (changed) {
+    ensureDirectory(input.csvPath);
+    fs.writeFileSync(absolutePath(input.csvPath), nextContents, "utf8");
+  }
+
+  return {
+    changed,
+    csvPath: input.csvPath,
     rows: nextRows,
   };
 };

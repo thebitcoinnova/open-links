@@ -178,8 +178,8 @@ const parseNonNegativeInteger = (value: string): number => {
   return parsed;
 };
 
-export const buildFollowerHistoryCsvPublicPath = (platform: string): string =>
-  `${FOLLOWER_HISTORY_PUBLIC_ROOT}/${platform}.csv`;
+export const buildFollowerHistoryCsvPublicPath = (linkId: string): string =>
+  `${FOLLOWER_HISTORY_PUBLIC_ROOT}/${linkId}.csv`;
 
 export const normalizeFollowerHistoryRows = (
   rows: readonly FollowerHistoryRow[],
@@ -478,6 +478,11 @@ export const filterFollowerHistoryRows = (
 
   return normalizedRows.filter((row) => Date.parse(row.observedAt) >= cutoff);
 };
+
+export const filterFollowerHistoryRowsByLinkId = (
+  rows: readonly FollowerHistoryRow[],
+  linkId: string,
+): FollowerHistoryRow[] => rows.filter((row) => row.linkId === linkId);
 
 export const buildFollowerHistoryPoints = (
   rows: readonly FollowerHistoryRow[],
