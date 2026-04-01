@@ -1,5 +1,54 @@
 {
-  "entries": [],
-  "updatedAt": "1970-01-01T00:00:00.000Z",
-  "version": 1
+  "version": 1,
+  "updatedAt": "2026-04-01T10:06:37.551Z",
+  "entries": [
+    {
+      "linkId": "live-with-the-hive-podcast",
+      "label": "Live with the Hive Podcast",
+      "platform": "live-with-the-hive-podcast",
+      "handle": "livewiththehive",
+      "canonicalUrl": "https://youtube.com/@livewiththehive?si=tQizrqZ7AVqSBimH&sub_confirmation=1",
+      "audienceKind": "subscribers",
+      "csvPath": "history/followers/live-with-the-hive-podcast.csv",
+      "latestAudienceCount": 131,
+      "latestAudienceCountRaw": "131 subscribers",
+      "latestObservedAt": "2026-04-01T10:06:37.551Z"
+    },
+    {
+      "linkId": "rumble",
+      "label": "RUMBLE",
+      "platform": "rumble",
+      "handle": "c-7752998",
+      "canonicalUrl": "https://rumble.com/c/c-7752998",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/rumble.csv",
+      "latestAudienceCount": 23,
+      "latestAudienceCountRaw": "23 Followers",
+      "latestObservedAt": "2026-04-01T10:06:37.551Z"
+    },
+    {
+      "linkId": "x",
+      "label": "X",
+      "platform": "x",
+      "handle": "xstac1",
+      "canonicalUrl": "https://x.com/XSTAC1",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/x.csv",
+      "latestAudienceCount": 5581,
+      "latestAudienceCountRaw": "5,581 Followers",
+      "latestObservedAt": "2026-04-01T10:06:37.551Z"
+    },
+    {
+      "linkId": "youtube",
+      "label": "The Bitcoin Nova YouTube",
+      "platform": "youtube",
+      "handle": "thebitcoinnova",
+      "canonicalUrl": "https://www.youtube.com/@TheBitcoinNova",
+      "audienceKind": "subscribers",
+      "csvPath": "history/followers/youtube.csv",
+      "latestAudienceCount": 6870,
+      "latestAudienceCountRaw": "6.87K subscribers",
+      "latestObservedAt": "2026-04-01T10:06:37.551Z"
+    }
+  ]
 }
