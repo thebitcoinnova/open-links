@@ -171,3 +171,41 @@ test("defaults organization pages to neutral page phrasing when no description f
   // Assert
   assert.equal(resolved.metadata.description, "OpenLinks page");
 });
+
+test("prefers explicit SEO defaults over title and bio fallbacks", () => {
+  // Arrange
+  const site = {
+    title: "Staci Costopoulos | OpenLinks",
+    description: "Host of Bitcoin Nova Podcast | X Community Leader",
+    quality: {
+      seo: {
+        defaults: {
+          title: "Staci Costopoulos | Bitcoin educator, podcast host, and community builder",
+          description:
+            "Host of Bitcoin Nova Podcast, Bitcoin educator, and community leader sharing shows, links, and projects.",
+        },
+      },
+    },
+  };
+  const profile = {
+    name: "Staci Costopoulos",
+    bio: "Host of Bitcoin Nova Podcast | X Community Leader",
+  };
+
+  // Act
+  const resolved = resolveSeoMetadata(site, profile, {
+    fallbackOrigin: "https://thebitcoinnova.github.io/open-links/",
+  });
+
+  // Assert
+  assert.equal(
+    resolved.metadata.title,
+    "Staci Costopoulos | Bitcoin educator, podcast host, and community builder",
+  );
+  assert.equal(
+    resolved.metadata.description,
+    "Host of Bitcoin Nova Podcast, Bitcoin educator, and community leader sharing shows, links, and projects.",
+  );
+  assert.equal(resolved.trace.titleSource, "seo.defaults.title");
+  assert.equal(resolved.trace.descriptionSource, "seo.defaults.description");
+});
