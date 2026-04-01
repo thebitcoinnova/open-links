@@ -110,6 +110,42 @@ test("parses a Rumble channel about page while preserving banner and avatar sepa
   assert.equal(parsed.metadata.followersCountRaw, "112K Followers");
 });
 
+test("keeps banner imagery out of profileImage when a Rumble page lacks an avatar node", () => {
+  // Arrange
+  const html = `
+    <html>
+      <head>
+        <title>The Bitcoin Nova Podcast</title>
+        <meta
+          property="og:description"
+          content='Browse the most recent videos from channel "The Bitcoin Nova Podcast" uploaded to Rumble.com'
+        />
+        <meta property="og:image" content="https://1a-1791.com/video/banner.jpeg" />
+      </head>
+      <body>
+        <div class="channel-header--title">
+          <h1>The Bitcoin Nova Podcast</h1>
+          <span class="text-fjord"><span>23 Followers</span></span>
+        </div>
+        <div class="channel-about--description">
+          <h1 class="channel-about--title">Description</h1>
+          <p>Bitcoin talk, interviews, and live conversations.</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  // Act
+  const parsed = parseRumblePublicProfile("https://rumble.com/c/c-7752998/about", html);
+
+  // Assert
+  assert.equal(parsed.completeness, "full");
+  assert.equal(parsed.metadata.image, "https://1a-1791.com/video/banner.jpeg");
+  assert.equal(parsed.metadata.profileImage, undefined);
+  assert.equal(parsed.metadata.followersCount, 23);
+  assert.equal(parsed.metadata.followersCountRaw, "23 Followers");
+});
+
 test("rejects Rumble placeholder pages instead of caching error html", () => {
   // Arrange
   const html = "<html><head><title>410 Gone</title></head><body>410 Gone</body></html>";

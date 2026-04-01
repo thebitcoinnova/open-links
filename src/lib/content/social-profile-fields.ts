@@ -103,6 +103,11 @@ const EXPECTED_SOCIAL_PROFILE_FIELDS_BY_PLATFORM = {
 } as const satisfies Record<SupportedSocialProfilePlatform, readonly ExpectedSocialProfileField[]>;
 
 export const PROFILE_IMAGE_BACKFILL_EXCLUSIONS: ProfileImageBackfillExclusionMap = {
+  // Rumble's generic page image often points at channel banner or preview media instead of an avatar.
+  rumble: {
+    reason: "image_is_preview_media",
+    note: "Rumble image commonly points at channel banner or preview media instead of an avatar.",
+  },
   // Substack's image often points at subscribe-card/banner media rather than the author avatar.
   substack: {
     reason: "image_is_preview_media",
