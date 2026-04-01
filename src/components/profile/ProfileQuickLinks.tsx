@@ -1,5 +1,4 @@
 import { For, Show } from "solid-js";
-import type { SupportedSocialProfilePlatform } from "../../lib/content/social-profile-fields";
 import { resolveKnownSiteIcon } from "../../lib/icons/known-site-icons";
 import type { ResolvedProfileQuickLinksState } from "../../lib/ui/profile-quick-links";
 
@@ -9,14 +8,6 @@ export interface ProfileQuickLinksProps {
 
 const resolveQuickLinkLabel = (label: string): string => `Open ${label}`;
 
-const resolveQuickLinkIcon = (platform: SupportedSocialProfilePlatform) => {
-  if (platform === "rumble") {
-    return undefined;
-  }
-
-  return resolveKnownSiteIcon(platform);
-};
-
 export const ProfileQuickLinks = (props: ProfileQuickLinksProps) => (
   <Show when={props.quickLinks?.hasAny && (props.quickLinks?.items.length ?? 0) > 0}>
     <nav class="profile-quick-links" aria-label="Social quick links">
@@ -24,7 +15,7 @@ export const ProfileQuickLinks = (props: ProfileQuickLinksProps) => (
         <ul class="profile-quick-links-list">
           <For each={props.quickLinks?.items ?? []}>
             {(item) => {
-              const IconComponent = resolveQuickLinkIcon(item.platform);
+              const IconComponent = resolveKnownSiteIcon(item.platform);
 
               return (
                 <li class="profile-quick-links-item">

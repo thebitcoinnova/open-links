@@ -68,17 +68,22 @@ const firstElementWithClass = (
     return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
   });
 
-const createQuickLinksState = (hasAny: boolean): ResolvedProfileQuickLinksState => ({
+type QuickLinkItem = ResolvedProfileQuickLinksState["items"][number];
+
+const createQuickLinksState = (
+  hasAny: boolean,
+  itemOverrides?: Partial<QuickLinkItem>,
+): ResolvedProfileQuickLinksState => ({
   hasAny,
   items: hasAny
     ? [
         {
-          contentOrder: 0,
-          icon: "github",
-          id: "github",
-          label: "GitHub",
-          platform: "github",
-          url: "https://github.com/pRizz",
+          contentOrder: itemOverrides?.contentOrder ?? 0,
+          icon: itemOverrides?.icon ?? "github",
+          id: itemOverrides?.id ?? "github",
+          label: itemOverrides?.label ?? "GitHub",
+          platform: itemOverrides?.platform ?? "github",
+          url: itemOverrides?.url ?? "https://github.com/pRizz",
         },
       ]
     : [],
@@ -110,6 +115,27 @@ test("profile quick links render icon-only outbound links with no heading", () =
   assert.equal(links[0]?.props.rel, "noopener noreferrer");
   assert.equal(links[0]?.props["aria-current"], undefined);
   assert.equal(firstElementWithClass(tree, "profile-quick-links-heading"), undefined);
+});
+
+test("profile quick links use the shared Rumble icon instead of a text fallback", () => {
+  // Arrange
+  const tree = ProfileQuickLinks({
+    quickLinks: createQuickLinksState(true, {
+      contentOrder: 0,
+      icon: "rumble",
+      id: "rumble",
+      label: "Rumble",
+      platform: "rumble",
+      url: "https://rumble.com/c/InTheLitterBox",
+    }),
+  }) as RenderedNode;
+
+  // Act
+  const rumbleGlyph = firstElementWithClass(tree, "profile-quick-links-glyph");
+
+  // Assert
+  assert.ok(rumbleGlyph);
+  assert.equal(rumbleGlyph?.type, "svg");
 });
 
 test("profile quick links render nothing when no eligible links exist", () => {
