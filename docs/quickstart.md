@@ -243,22 +243,30 @@ git push
 
 ### 2) Choose your target
 
+Upstream ships `config/deployment.defaults.json` with the shared baseline. In a fork, create or update `config/deployment.json` to override that baseline for your site.
+
 #### GitHub Pages (default fork-safe primary)
 
 1. In repository settings, open **Pages**.
 2. Open the fork’s **Actions** tab. If GitHub shows **Workflows aren’t being run on this forked repository**, click **Enable workflows** once.
 3. If you clicked **Enable workflows** after your first bootstrap push, push again on `main` so the newly enabled workflows receive a fresh event.
 4. Set **Build and deployment source** to **GitHub Actions**.
-5. Verify:
+5. Sync tracked deployment outputs:
+
+```bash
+bun run deploy:setup -- --apply
+```
+
+6. Verify:
    - `.github/workflows/ci.yml` succeeded
-   - `.github/workflows/deploy-pages.yml` (`Deploy Production`) published the Pages site
-6. Open the Pages URL from the workflow summary.
+   - `.github/workflows/deploy-production.yml` (`Deploy Production`) published the Pages site
+7. Open the Pages URL from the workflow summary.
 
 #### Render (provider-native)
 
 1. Follow `docs/deployment-render.md`.
 2. Build command is already checked in through `render.yaml`.
-3. After the first provider deploy, register the live URL:
+3. After the first provider deploy, either update the fork overlay `config/deployment.json` directly or use the compatibility wrapper to register the live URL:
 
 ```bash
 bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrender.com
@@ -270,7 +278,7 @@ bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrende
 
 1. Follow `docs/deployment-railway.md`.
 2. Build and deploy commands are already checked in through `railway.toml`.
-3. After the first provider deploy and public-domain generation, register the live URL:
+3. After the first provider deploy and public-domain generation, either update the fork overlay `config/deployment.json` directly or use the compatibility wrapper to register the live URL:
 
 ```bash
 bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.railway.app
@@ -278,11 +286,12 @@ bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.rai
 
 4. Add `--promote-primary` only if Railway should become the canonical host.
 
-#### AWS upstream-only flow
+#### AWS flow
 
-Run the deploy setup flow in check mode first:
+In a fork overlay, set `aws` enabled, keep `github-pages` enabled if you want a mirror, and set `primaryTarget` to `aws`. Then run:
 
 ```bash
+bun run deploy:plan
 bun run deploy:setup
 ```
 
@@ -314,7 +323,7 @@ Recommended Markdown embed:
 
 ## Optional Manual Deploy Dispatch
 
-`Deploy Production` still supports manual dispatch for the AWS + GitHub Pages workflow, but it is now config-driven:
+`Deploy Production` still supports manual dispatch for the enabled GitHub-hosted targets, and it is now config-driven:
 
 - dispatch it on `main`,
 - the workflow builds fresh deploy artifacts when it cannot reuse CI outputs,
@@ -438,13 +447,14 @@ OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build
 
 Symptoms:
 
-- Verification reports that `openlinks.us` does not resolve publicly yet.
+- Verification reports that the configured AWS domain does not resolve publicly yet.
 
 Fix:
 
-1. Confirm the Route 53 hosted zone exists and the CloudFormation stack has created alias records.
-2. Wait for propagation.
-3. Rerun:
+1. Confirm the effective AWS public origin from `config/deployment.defaults.json` plus optional `config/deployment.json` is correct.
+2. Confirm the Route 53 hosted zone exists and the CloudFormation stack has created alias records.
+3. Wait for propagation.
+4. Rerun:
 
 ```bash
 bun run deploy:verify
@@ -466,14 +476,14 @@ Fix:
 Symptoms:
 
 - `bun run test:deploy` fails on a fork after a change to canonical, robots, Pages, or deploy verification logic.
-- Assertions assume `https://openlinks.us/` or `noindex, nofollow` in code paths that should also support GitHub Pages-primary forks.
+- Assertions assume one hardcoded host instead of the config-driven topology.
 
 Fix:
 
 1. Replace hardcoded upstream expectations with shared deployment helpers from `src/lib/deployment-config.ts` or `scripts/lib/live-deploy-verify.ts`.
 2. Cover both cases in tests:
-   - upstream repo: AWS/openlinks.us primary, Pages mirror by default
-   - fork repo: GitHub Pages primary by default until another host is promoted
+   - default Pages-primary topology
+   - explicit AWS-primary topology with GitHub Pages as a mirror
 3. Re-run:
 
 ```bash
@@ -485,7 +495,8 @@ bun run test:deploy
 Symptoms:
 
 - `data/profile.json`, `data/links.json`, or `data/site.json` still look like upstream starter content.
-- README deploy rows still point at `openlinks.us` or `prizz.github.io/open-links`.
+- the fork deployment overlay still reflects an old topology.
+- README deploy rows still point at previous hosts.
 - badges, follower history, avatar cache, or rich metadata still reference the upstream seed identity.
 
 Fix:
@@ -517,7 +528,7 @@ Symptoms:
 
 Fix:
 
-1. Register the live provider URL in tracked config:
+1. Update the fork deployment overlay so the provider has the correct `publicOrigin` and is the `primaryTarget`, or use the compatibility wrapper:
 
 ```bash
 bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrender.com --promote-primary
@@ -525,7 +536,7 @@ bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrende
 bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.railway.app --promote-primary
 ```
 
-2. Commit and push the resulting `data/site.json` and `README.md` changes.
+2. Commit and push the resulting `config/deployment.json`, `data/site.json`, and `README.md` changes.
 
 ### Problem: `quality:check` warns that SEO title or description is using fallback content
 
@@ -560,8 +571,8 @@ Fix:
 bun run quality:check
 bun run build
 ```
-3. Let the provider redeploy the new commit.
-4. Re-run:
+4. Let the provider redeploy the new commit.
+5. Re-run:
 
 ```bash
 bun run deploy:verify:live -- --target=<render|railway> --public-origin=https://<live-url>
