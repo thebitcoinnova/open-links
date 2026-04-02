@@ -3,10 +3,10 @@ import path from "node:path";
 import {
   type DeployTarget,
   type DeploymentResolutionState,
-  getDeploymentState,
   isPlaceholderDeployPublicOrigin,
   normalizeOrigin,
 } from "../../src/lib/deployment-config";
+import { getDeploymentState } from "./effective-deployment-config";
 import { type DeployUrlRow, replaceReadmeDeployUrlBlock } from "./readme-deploy-urls";
 
 export interface SyncDeploymentTrackedFilesOptions {
@@ -58,7 +58,9 @@ export async function syncDeploymentTrackedFiles(
 
   if (nextReadme !== originalReadme) {
     changedPaths.push(readmePath);
-    plannedChanges.push("Sync README deployment URL rows from config/deployment.json.");
+    plannedChanges.push(
+      "Sync README deployment URL rows from deployment defaults plus optional overlay.",
+    );
     if (options.mode === "apply") {
       await writeFile(readmePath, nextReadme, "utf8");
     }

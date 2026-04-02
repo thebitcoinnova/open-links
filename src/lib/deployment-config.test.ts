@@ -47,12 +47,12 @@ test("github pages public urls include the repository base path in the default t
   );
 });
 
-test("robots helpers follow the default pages-first topology", () => {
+test("robots helpers follow the shared upstream defaults topology", () => {
   // Arrange / Act / Assert
-  assert.match(getRobotsTxt("github-pages"), /Allow: \//u);
-  assert.equal(getRobotsMetaContent("github-pages"), "index, follow");
-  assert.match(getRobotsTxt("aws"), /Disallow: \//u);
-  assert.equal(getRobotsMetaContent("aws"), "noindex, nofollow");
+  assert.match(getRobotsTxt("aws"), /Allow: \//u);
+  assert.equal(getRobotsMetaContent("aws"), "index, follow");
+  assert.match(getRobotsTxt("github-pages"), /Disallow: \//u);
+  assert.equal(getRobotsMetaContent("github-pages"), "noindex, nofollow");
 });
 
 test("base path normalization and target parsing stay stable for deploy scripts", () => {
@@ -66,7 +66,7 @@ test("base path normalization and target parsing stay stable for deploy scripts"
   assert.equal(parseDeployTarget("unexpected"), "aws");
 });
 
-test("generic tracked topology defaults both upstream and forks to pages-first until a target is promoted", () => {
+test("shared upstream defaults stay AWS-primary, while forks can still resolve Pages-primary via overlay", () => {
   // Arrange / Act / Assert
   assert.equal(isUpstreamRepository("prizz/open-links"), true);
   assert.equal(isUpstreamRepository("someone/open-links-fork"), false);
@@ -74,12 +74,16 @@ test("generic tracked topology defaults both upstream and forks to pages-first u
     buildGitHubPagesUrl("someone/open-links-fork"),
     "https://someone.github.io/open-links-fork/",
   );
+  assert.equal(resolvePrimaryCanonicalOrigin("prizz/open-links"), "https://openlinks.us");
   assert.equal(
-    resolvePrimaryCanonicalOrigin("prizz/open-links"),
-    "https://prizz.github.io/open-links",
-  );
-  assert.equal(
-    resolvePrimaryCanonicalOrigin("someone/open-links-fork"),
+    resolvePrimaryCanonicalOrigin(
+      "someone/open-links-fork",
+      undefined,
+      parseTrackedDeploymentConfig({
+        enabledTargets: ["github-pages"],
+        primaryTarget: "github-pages",
+      }),
+    ),
     "https://someone.github.io/open-links-fork",
   );
 });
@@ -175,8 +179,18 @@ test("indexability helpers stay correct for the default and explicit topologies"
       },
     },
   });
-  const pagesPrimaryOrigin = resolvePrimaryCanonicalOrigin("someone/open-links-fork");
-  const pagesPrimaryPagesOrigin = buildGitHubPagesUrl("someone/open-links-fork");
+  const pagesPrimaryConfig = parseTrackedDeploymentConfig({
+    enabledTargets: ["github-pages"],
+    primaryTarget: "github-pages",
+  });
+  const pagesPrimaryOrigin = resolvePrimaryCanonicalOrigin(
+    "someone/open-links-fork",
+    undefined,
+    pagesPrimaryConfig,
+  );
+  const pagesPrimaryPagesOrigin = buildGitHubPagesUrl("someone/open-links-fork", {
+    trackedConfig: pagesPrimaryConfig,
+  });
   const awsPrimaryState = resolveDeploymentState({
     repositorySlug: "someone/open-links-fork",
     trackedConfig: explicitAwsPrimary,

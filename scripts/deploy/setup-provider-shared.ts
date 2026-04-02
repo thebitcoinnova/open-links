@@ -1,11 +1,11 @@
-import { resolveDeploymentState } from "../../src/lib/deployment-config";
 import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
 import { syncDeploymentTrackedFiles } from "../lib/deployment-tracked-files";
+import { resolveDeploymentState } from "../lib/effective-deployment-config";
 import type { ProviderDeployTarget } from "../lib/provider-deploy";
 import {
-  readTrackedDeploymentConfig,
+  readEffectiveTrackedDeploymentConfig,
   updateTrackedDeploymentConfigForTarget,
-  writeTrackedDeploymentConfig,
+  writeDeploymentOverlayConfig,
 } from "../lib/tracked-deployment-config";
 import { parseArgs } from "./shared";
 
@@ -24,7 +24,7 @@ export async function runProviderSetup(options: RunProviderSetupOptions) {
     mode,
     target: options.target,
   });
-  const trackedConfig = await readTrackedDeploymentConfig();
+  const trackedConfig = await readEffectiveTrackedDeploymentConfig();
   const configUpdate = updateTrackedDeploymentConfigForTarget(trackedConfig, options.target, {
     enableTarget: true,
     mode,
@@ -47,7 +47,7 @@ export async function runProviderSetup(options: RunProviderSetupOptions) {
   });
 
   if (mode === "apply" && configUpdate.changed) {
-    await writeTrackedDeploymentConfig(configUpdate.config);
+    await writeDeploymentOverlayConfig(configUpdate.config);
   }
 
   const syncedTrackedFiles = await syncDeploymentTrackedFiles({

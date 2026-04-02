@@ -1,4 +1,3 @@
-import { enabledDeployTargets } from "../../src/lib/deployment-config";
 import { runCommand } from "../lib/command";
 import {
   type DeployVerificationResult,
@@ -7,6 +6,7 @@ import {
 } from "../lib/deploy-log";
 import { buildSetupChildCommands, resolveRequestedTargets } from "../lib/deployment-command-plan";
 import { syncDeploymentTrackedFiles } from "../lib/deployment-tracked-files";
+import { enabledDeployTargets } from "../lib/effective-deployment-config";
 import { parseArgs } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
@@ -124,7 +124,7 @@ verificationResults.push({
   detail:
     syncedTrackedFiles.changedPaths.length > 0
       ? `Synchronized ${syncedTrackedFiles.changedPaths.length} tracked deployment file(s).`
-      : "Tracked deployment files already matched config/deployment.json.",
+      : "Tracked deployment files already matched the effective deployment topology.",
   name: "tracked deployment files",
   status: "passed",
 });

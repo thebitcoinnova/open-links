@@ -1,5 +1,4 @@
 import path from "node:path";
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   assessOrphanedReviewStack,
   deleteStack,
@@ -28,6 +27,7 @@ import {
   createDeployRun,
   writeDeploySummary,
 } from "../lib/deploy-log";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { parseArgs, recordTimedAction } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));

@@ -38,9 +38,41 @@ resolve_targets() {
   outputs="$(node --input-type=module <<'EOF'
 import fs from "node:fs";
 
-const rawConfig = JSON.parse(fs.readFileSync("config/deployment.json", "utf8"));
-const enabledTargets = new Set(Array.isArray(rawConfig.enabledTargets) ? rawConfig.enabledTargets : []);
-const primaryTarget = typeof rawConfig.primaryTarget === "string" ? rawConfig.primaryTarget : "github-pages";
+const defaultsConfig = JSON.parse(fs.readFileSync("config/deployment.defaults.json", "utf8"));
+const overlayConfig = fs.existsSync("config/deployment.json")
+  ? JSON.parse(fs.readFileSync("config/deployment.json", "utf8"))
+  : null;
+const mergedConfig = overlayConfig
+  ? {
+      ...defaultsConfig,
+      ...overlayConfig,
+      targets: {
+        ...(defaultsConfig.targets ?? {}),
+        ...(overlayConfig.targets ?? {}),
+        aws: {
+          ...(defaultsConfig.targets?.aws ?? {}),
+          ...(overlayConfig.targets?.aws ?? {}),
+        },
+        "github-pages": {
+          ...(defaultsConfig.targets?.["github-pages"] ?? {}),
+          ...(overlayConfig.targets?.["github-pages"] ?? {}),
+        },
+        render: {
+          ...(defaultsConfig.targets?.render ?? {}),
+          ...(overlayConfig.targets?.render ?? {}),
+        },
+        railway: {
+          ...(defaultsConfig.targets?.railway ?? {}),
+          ...(overlayConfig.targets?.railway ?? {}),
+        },
+      },
+    }
+  : defaultsConfig;
+const enabledTargets = new Set(
+  Array.isArray(mergedConfig.enabledTargets) ? mergedConfig.enabledTargets : [],
+);
+const primaryTarget =
+  typeof mergedConfig.primaryTarget === "string" ? mergedConfig.primaryTarget : "github-pages";
 
 console.log(`aws_target_enabled=${enabledTargets.has("aws")}`);
 console.log(`github_pages_enabled=${enabledTargets.has("github-pages")}`);

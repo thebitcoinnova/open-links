@@ -2,6 +2,9 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { BuildInfo } from "../../src/lib/build-info";
+import { resolveBuildInfo } from "../lib/build-info";
+import { runCommand } from "../lib/command";
+import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
 import {
   type DeployTarget,
   deploymentConfig,
@@ -9,10 +12,7 @@ import {
   getDeployTargetConfig,
   isPlaceholderDeployPublicOrigin,
   parseDeployTarget,
-} from "../../src/lib/deployment-config";
-import { resolveBuildInfo } from "../lib/build-info";
-import { runCommand } from "../lib/command";
-import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
+} from "../lib/effective-deployment-config";
 import {
   assertLiveTargetSnapshot,
   buildLiveTargetExpectation,

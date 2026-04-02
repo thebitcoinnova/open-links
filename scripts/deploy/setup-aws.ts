@@ -1,7 +1,6 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   assessAwsDomainReadiness,
   buildSiteBucketName,
@@ -22,6 +21,7 @@ import {
   githubOidcThumbprint,
   normalizePolicyDocument,
 } from "../lib/deploy-setup";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { resolveGitHubRepositorySlug } from "../lib/github-repository";
 import { parseArgs } from "./shared";
 

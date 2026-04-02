@@ -4,7 +4,10 @@ This guide covers the config-driven deployment system for OpenLinks.
 
 ## Source Of Truth
 
-Deployment topology now lives in `config/deployment.json`.
+Deployment topology is now resolved from:
+
+- shared upstream baseline: `config/deployment.defaults.json`
+- optional fork overlay: `config/deployment.json`
 
 It controls:
 
@@ -13,7 +16,7 @@ It controls:
 - per-target `publicOrigin`
 - optional target settings such as AWS `priceClass`
 
-`deploy:setup -- --apply` is the sync point that updates the site-facing outputs from that topology:
+`deploy:setup -- --apply` is the sync point that updates the site-facing outputs from the effective merged topology:
 
 - `data/site.json` `quality.seo.canonicalBaseUrl`
 - README deploy URL rows
@@ -68,18 +71,18 @@ Target-specific setup wrappers remain available while the old flow is phased out
   - builds artifacts only for enabled targets
   - uploads only the artifacts that exist
 - `.github/workflows/deploy-production.yml`
-  - resolves enabled targets from `config/deployment.json`
+  - resolves enabled targets from deployment defaults plus optional overlay
   - publishes AWS only when the target is enabled and GitHub AWS opt-in is set
   - publishes GitHub Pages only when that target is enabled
   - verifies the enabled topology after publish
 
-Provider-native targets remain externally published by their hosting platforms, but their canonical/README behavior still flows from `config/deployment.json`.
+Provider-native targets remain externally published by their hosting platforms, but their canonical/README behavior still flows from the effective merged topology.
 
 ## Standard Flows
 
 ### Pages-Primary Fork
 
-1. Keep `config/deployment.json` on the default Pages-first topology.
+1. In a fork, create or update `config/deployment.json` so the effective topology is Pages-primary.
 2. Run `bun run deploy:setup -- --apply`.
 3. Push to `main`.
 4. Verify `.github/workflows/ci.yml` and `.github/workflows/deploy-production.yml`.
@@ -87,7 +90,7 @@ Provider-native targets remain externally published by their hosting platforms, 
 
 ### AWS Primary + Pages Mirror
 
-1. Edit `config/deployment.json` to:
+1. In a fork overlay, edit `config/deployment.json` to:
    - enable `aws` and `github-pages`
    - set `primaryTarget` to `aws`
    - set `targets.aws.publicOrigin` to the intended canonical HTTPS origin
@@ -103,7 +106,7 @@ Provider-native targets remain externally published by their hosting platforms, 
 
 ### Provider-Native Primary
 
-1. Set the provider target `publicOrigin` in `config/deployment.json`.
+1. Set the provider target `publicOrigin` in `config/deployment.json` or use the provider setup wrapper to write the overlay.
 2. Set `primaryTarget` to that provider.
 3. Run `bun run deploy:setup -- --apply`.
 4. Push to `main` and let the provider redeploy.
@@ -140,11 +143,11 @@ Local diagnostics:
 
 | Symptom | Likely Cause | Fix |
 |--------|--------------|-----|
-| `deploy:setup` updates `data/site.json` or README unexpectedly | `config/deployment.json` changed or was stale | review `bun run deploy:plan`, then rerun `bun run deploy:setup -- --apply` |
-| AWS job is skipped | AWS target disabled in config or GitHub AWS opt-in is missing | enable `aws` in `config/deployment.json`, then set `OPENLINKS_ENABLE_AWS_DEPLOY` and `AWS_DEPLOY_ROLE_ARN` |
-| Pages job is skipped | GitHub Pages target is disabled in config | enable `github-pages` in `config/deployment.json` |
+| `deploy:setup` updates `data/site.json` or README unexpectedly | deployment defaults or overlay changed, or the overlay is stale | review `bun run deploy:plan`, then rerun `bun run deploy:setup -- --apply` |
+| AWS job is skipped | AWS target is disabled in the effective topology or GitHub AWS opt-in is missing | enable `aws` in the effective topology, then set `OPENLINKS_ENABLE_AWS_DEPLOY` and `AWS_DEPLOY_ROLE_ARN` |
+| Pages job is skipped | GitHub Pages is disabled in the effective topology | enable `github-pages` in the effective topology |
 | `deploy:verify` blocks on DNS readiness | the configured AWS domain does not resolve publicly yet | wait for Route 53 + CloudFront propagation, then rerun `bun run deploy:verify` |
-| Provider target canonicalizes to the wrong host | `primaryTarget` or provider `publicOrigin` is wrong in config | update `config/deployment.json`, rerun `bun run deploy:setup -- --apply`, then redeploy |
+| Provider target canonicalizes to the wrong host | `primaryTarget` or provider `publicOrigin` is wrong in the effective topology | update the overlay, rerun `bun run deploy:setup -- --apply`, then redeploy |
 | README deploy rows are stale | topology changed but setup was not rerun | rerun `bun run deploy:setup -- --apply` |
 
 ## Related Docs

@@ -1,4 +1,6 @@
-import trackedDeploymentConfigJson from "../../config/deployment.json" with { type: "json" };
+import deploymentDefaultsConfigJson from "../../config/deployment.defaults.json" with {
+  type: "json",
+};
 import {
   DEFAULT_GITHUB_REPOSITORY_NAME,
   DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
@@ -78,41 +80,45 @@ const DEFAULT_PRIMARY_TARGET: DeployTarget = "github-pages";
 const DEFAULT_DEPLOYMENT_RESOURCE_PREFIX = "open-links";
 const MAX_AWS_RESOURCE_PREFIX_LENGTH = 48;
 
-const trackedDeploymentConfig = parseTrackedDeploymentConfig(trackedDeploymentConfigJson);
+const trackedDeploymentConfig = parseTrackedDeploymentConfig(deploymentDefaultsConfigJson);
 const deploymentState = resolveDeploymentState();
 
-export const deploymentConfig = {
-  awsDeployPolicyName: `${deploymentState.awsResourcePrefix}-github-deploy`,
-  awsDeployRoleName: `${deploymentState.awsResourcePrefix}-github-deploy`,
-  awsGithubOidcAudience: "sts.amazonaws.com",
-  awsGithubOidcProviderUrl: "https://token.actions.githubusercontent.com",
-  awsPriceClass: deploymentState.awsPriceClass,
-  awsRegion: "us-east-1",
-  awsResourcePrefix: deploymentState.awsResourcePrefix,
-  awsStackName: `${deploymentState.awsResourcePrefix}-site`,
-  bucketNamePrefix: deploymentState.awsResourcePrefix,
-  enabledTargets: [...deploymentState.enabledTargets],
-  githubApiVersion: "2022-11-28",
-  githubAwsDeployEnabledVariableName: "OPENLINKS_ENABLE_AWS_DEPLOY",
-  githubPagesBasePath: deploymentState.githubPagesBasePath,
-  githubPagesDefaultBasePath: deploymentState.githubPagesDefaultBasePath,
-  githubPagesDefaultUrl: deploymentState.githubPagesDefaultUrl,
-  githubPagesEnvironmentName: "github-pages",
-  githubPagesOrigin: deploymentState.githubPagesOrigin,
-  githubProductionEnvironmentName: "production",
-  githubRoleArnDigestVariableName: "AWS_DEPLOY_ROLE_ARN_SHA256",
-  githubRoleArnSecretName: "AWS_DEPLOY_ROLE_ARN",
-  githubWorkflowFileName: "deploy-production.yml",
-  htmlCacheControl: "no-cache, no-store, must-revalidate",
-  immutableCacheControl: "public, max-age=31536000, immutable",
-  metadataCacheControl: "no-cache",
-  mutableAssetCacheControl: "public, max-age=300",
-  primaryCanonicalDomain: deploymentState.primaryCanonicalDomain,
-  primaryCanonicalOrigin: deploymentState.primaryCanonicalOrigin,
-  primaryTarget: deploymentState.primaryTarget,
-  repositorySlug: deploymentState.repositorySlug,
-  upstreamRepository: deploymentState.upstreamRepository,
-} as const;
+export function buildDeploymentConfig(state: DeploymentResolutionState) {
+  return {
+    awsDeployPolicyName: `${state.awsResourcePrefix}-github-deploy`,
+    awsDeployRoleName: `${state.awsResourcePrefix}-github-deploy`,
+    awsGithubOidcAudience: "sts.amazonaws.com",
+    awsGithubOidcProviderUrl: "https://token.actions.githubusercontent.com",
+    awsPriceClass: state.awsPriceClass,
+    awsRegion: "us-east-1",
+    awsResourcePrefix: state.awsResourcePrefix,
+    awsStackName: `${state.awsResourcePrefix}-site`,
+    bucketNamePrefix: state.awsResourcePrefix,
+    enabledTargets: [...state.enabledTargets],
+    githubApiVersion: "2022-11-28",
+    githubAwsDeployEnabledVariableName: "OPENLINKS_ENABLE_AWS_DEPLOY",
+    githubPagesBasePath: state.githubPagesBasePath,
+    githubPagesDefaultBasePath: state.githubPagesDefaultBasePath,
+    githubPagesDefaultUrl: state.githubPagesDefaultUrl,
+    githubPagesEnvironmentName: "github-pages",
+    githubPagesOrigin: state.githubPagesOrigin,
+    githubProductionEnvironmentName: "production",
+    githubRoleArnDigestVariableName: "AWS_DEPLOY_ROLE_ARN_SHA256",
+    githubRoleArnSecretName: "AWS_DEPLOY_ROLE_ARN",
+    githubWorkflowFileName: "deploy-production.yml",
+    htmlCacheControl: "no-cache, no-store, must-revalidate",
+    immutableCacheControl: "public, max-age=31536000, immutable",
+    metadataCacheControl: "no-cache",
+    mutableAssetCacheControl: "public, max-age=300",
+    primaryCanonicalDomain: state.primaryCanonicalDomain,
+    primaryCanonicalOrigin: state.primaryCanonicalOrigin,
+    primaryTarget: state.primaryTarget,
+    repositorySlug: state.repositorySlug,
+    upstreamRepository: state.upstreamRepository,
+  } as const;
+}
+
+export const deploymentConfig = buildDeploymentConfig(deploymentState);
 
 export const deployTargets: Record<DeployTarget, DeployTargetConfig> = deploymentState.targets;
 export const enabledDeployTargets: DeployTarget[] = [...deploymentState.enabledTargets];

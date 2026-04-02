@@ -1,9 +1,9 @@
+import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
 import {
   enabledDeployTargets,
   getDeploymentState,
   isPlaceholderDeployPublicOrigin,
-} from "../../src/lib/deployment-config";
-import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
+} from "../lib/effective-deployment-config";
 
 const state = getDeploymentState();
 const commandName = "deploy:plan";
@@ -19,7 +19,7 @@ await run.addBreadcrumb({
     primaryTarget: state.primaryTarget,
     repositorySlug: state.repositorySlug,
   },
-  detail: "Resolved deployment topology from config/deployment.json.",
+  detail: "Resolved deployment topology from deployment defaults plus optional fork overlay.",
   status: "planned",
   step: "topology",
 });
@@ -51,7 +51,7 @@ const { runDirectory } = await writeDeploySummary(
     },
     mode: "check",
     plannedChanges: {
-      configPath: "config/deployment.json",
+      configPath: "config/deployment.defaults.json + optional config/deployment.json",
       enabledTargets: state.enabledTargets,
       primaryTarget: state.primaryTarget,
     },
@@ -66,7 +66,7 @@ const { runDirectory } = await writeDeploySummary(
 console.log(
   JSON.stringify(
     {
-      configPath: "config/deployment.json",
+      configPath: "config/deployment.defaults.json + optional config/deployment.json",
       enabledTargets: state.enabledTargets,
       primaryCanonicalOrigin: state.primaryCanonicalOrigin,
       primaryTarget: state.primaryTarget,

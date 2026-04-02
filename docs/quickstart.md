@@ -243,7 +243,7 @@ git push
 
 ### 2) Choose your target
 
-Edit `config/deployment.json` first. The default checked-in topology is GitHub Pages primary for forks.
+Upstream ships `config/deployment.defaults.json` with the shared baseline. In a fork, create or update `config/deployment.json` to override that baseline for your site.
 
 #### GitHub Pages (default fork-safe primary)
 
@@ -266,7 +266,7 @@ bun run deploy:setup -- --apply
 
 1. Follow `docs/deployment-render.md`.
 2. Build command is already checked in through `render.yaml`.
-3. After the first provider deploy, either edit `config/deployment.json` directly or use the compatibility wrapper to register the live URL:
+3. After the first provider deploy, either update the fork overlay `config/deployment.json` directly or use the compatibility wrapper to register the live URL:
 
 ```bash
 bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrender.com
@@ -278,7 +278,7 @@ bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrende
 
 1. Follow `docs/deployment-railway.md`.
 2. Build and deploy commands are already checked in through `railway.toml`.
-3. After the first provider deploy and public-domain generation, either edit `config/deployment.json` directly or use the compatibility wrapper to register the live URL:
+3. After the first provider deploy and public-domain generation, either update the fork overlay `config/deployment.json` directly or use the compatibility wrapper to register the live URL:
 
 ```bash
 bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.railway.app
@@ -288,7 +288,7 @@ bun run deploy:setup:railway -- --apply --public-origin=https://<service>.up.rai
 
 #### AWS flow
 
-Update `config/deployment.json` so `aws` is enabled, `github-pages` stays enabled if you want a mirror, and `primaryTarget` is `aws`. Then run:
+In a fork overlay, set `aws` enabled, keep `github-pages` enabled if you want a mirror, and set `primaryTarget` to `aws`. Then run:
 
 ```bash
 bun run deploy:plan
@@ -451,7 +451,7 @@ Symptoms:
 
 Fix:
 
-1. Confirm the configured AWS public origin in `config/deployment.json` is correct.
+1. Confirm the effective AWS public origin from `config/deployment.defaults.json` plus optional `config/deployment.json` is correct.
 2. Confirm the Route 53 hosted zone exists and the CloudFormation stack has created alias records.
 3. Wait for propagation.
 4. Rerun:
@@ -495,7 +495,7 @@ bun run test:deploy
 Symptoms:
 
 - `data/profile.json`, `data/links.json`, or `data/site.json` still look like upstream starter content.
-- `config/deployment.json` still reflects an old topology.
+- the fork deployment overlay still reflects an old topology.
 - README deploy rows still point at previous hosts.
 - badges, follower history, avatar cache, or rich metadata still reference the upstream seed identity.
 
@@ -528,7 +528,7 @@ Symptoms:
 
 Fix:
 
-1. Update `config/deployment.json` so the provider has the correct `publicOrigin` and is the `primaryTarget`, or use the compatibility wrapper:
+1. Update the fork deployment overlay so the provider has the correct `publicOrigin` and is the `primaryTarget`, or use the compatibility wrapper:
 
 ```bash
 bun run deploy:setup:render -- --apply --public-origin=https://<service>.onrender.com --promote-primary

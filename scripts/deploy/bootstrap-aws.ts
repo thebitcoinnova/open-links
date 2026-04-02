@@ -1,4 +1,3 @@
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   assessAwsDomainReadiness,
   assessOrphanedReviewStack,
@@ -26,6 +25,7 @@ import {
   createDeployRun,
   writeDeploySummary,
 } from "../lib/deploy-log";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { parseArgs, recordTimedAction } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));

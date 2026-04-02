@@ -190,7 +190,7 @@ Never let step 4 override steps 1-3.
 
 - CI workflow: `.github/workflows/ci.yml`
 - Deploy workflow: `.github/workflows/deploy-production.yml`
-- Deployment topology source: `config/deployment.json`
+- Deployment topology source: `config/deployment.defaults.json` plus optional `config/deployment.json`
 - AWS deployment evidence: `Deploy AWS Site` job summary and `deploy:publish -- --target=aws` step summary.
 - Pages deployment URL source: `steps.deployment.outputs.page_url` in `Deploy GitHub Pages`.
 - Render deployment evidence: live `build-info.json` at the deployed public URL plus the Render deploy logs/dashboard.

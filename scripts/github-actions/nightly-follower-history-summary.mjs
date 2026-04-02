@@ -13,7 +13,8 @@ const publicRichSyncSummary = fs.existsSync(publicRichSyncSummaryPath)
   : null;
 const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
-const deploymentConfigPath = "config/deployment.json";
+const deploymentDefaultsPath = "config/deployment.defaults.json";
+const deploymentOverlayPath = "config/deployment.json";
 
 const readCacheRevalidationSummaries = () => {
   if (!fs.existsSync(cacheRevalidationDir)) {
@@ -30,13 +31,30 @@ const readCacheRevalidationSummaries = () => {
 };
 
 const readAwsDeploymentUrl = () => {
-  if (!fs.existsSync(deploymentConfigPath)) {
+  if (!fs.existsSync(deploymentDefaultsPath)) {
     return null;
   }
 
   try {
-    const deploymentConfig = JSON.parse(fs.readFileSync(deploymentConfigPath, "utf8"));
-    return deploymentConfig?.targets?.aws?.publicOrigin ?? null;
+    const defaultsConfig = JSON.parse(fs.readFileSync(deploymentDefaultsPath, "utf8"));
+    const overlayConfig = fs.existsSync(deploymentOverlayPath)
+      ? JSON.parse(fs.readFileSync(deploymentOverlayPath, "utf8"))
+      : null;
+    const mergedConfig = overlayConfig
+      ? {
+          ...defaultsConfig,
+          ...overlayConfig,
+          targets: {
+            ...(defaultsConfig.targets ?? {}),
+            ...(overlayConfig.targets ?? {}),
+            aws: {
+              ...(defaultsConfig.targets?.aws ?? {}),
+              ...(overlayConfig.targets?.aws ?? {}),
+            },
+          },
+        }
+      : defaultsConfig;
+    return mergedConfig?.targets?.aws?.publicOrigin ?? null;
   } catch {
     return null;
   }

@@ -1,6 +1,6 @@
 import path from "node:path";
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import { runCommand, runJsonCommand } from "./command";
+import { deploymentConfig } from "./effective-deployment-config";
 
 interface AwsCallerIdentity {
   Account: string;

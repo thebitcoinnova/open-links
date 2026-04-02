@@ -1,4 +1,3 @@
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import { ensureAwsCliAvailable, loadAwsCallerIdentity } from "../lib/aws-deploy";
 import { runCommand, runJsonCommand } from "../lib/command";
 import {
@@ -7,6 +6,7 @@ import {
   writeDeploySummary,
 } from "../lib/deploy-log";
 import { type GitHubPagesSiteState, computeDigest, planGitHubPagesSite } from "../lib/deploy-setup";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { resolveGitHubRepositorySlug } from "../lib/github-repository";
 import { parseArgs } from "./shared";
 
@@ -301,7 +301,7 @@ function buildSecretPlan(input: {
     return {
       action: "none",
       reason:
-        "AWS deploy is disabled by config/deployment.json, so no production secret is required.",
+        "AWS deploy is disabled by the effective deployment topology, so no production secret is required.",
     };
   }
 
@@ -329,7 +329,7 @@ function buildAwsDeployVariablePlan(input: {
     return {
       action: "none",
       reason:
-        "AWS deploy is disabled by config/deployment.json, so no repository variable is required.",
+        "AWS deploy is disabled by the effective deployment topology, so no repository variable is required.",
     };
   }
 
@@ -357,19 +357,19 @@ function buildAwsVerificationResults(input: {
   if (!input.awsEnabled) {
     return [
       {
-        detail: "AWS deploy is disabled by config/deployment.json.",
+        detail: "AWS deploy is disabled by the effective deployment topology.",
         name: "production environment",
         status: "skipped" as const,
       },
       {
         detail:
-          "AWS deploy is disabled by config/deployment.json, so no deploy role secret is required.",
+          "AWS deploy is disabled by the effective deployment topology, so no deploy role secret is required.",
         name: "deploy role secret digest",
         status: "skipped" as const,
       },
       {
         detail:
-          "AWS deploy is disabled by config/deployment.json, so no opt-in variable is required.",
+          "AWS deploy is disabled by the effective deployment topology, so no opt-in variable is required.",
         name: "AWS deploy opt-in variable",
         status: "skipped" as const,
       },

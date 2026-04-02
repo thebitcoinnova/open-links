@@ -1,16 +1,15 @@
 import { createHash } from "node:crypto";
 import { access, copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { type DeployTarget, normalizeBasePath } from "../../src/lib/deployment-config";
 import {
-  type DeployTarget,
   deploymentConfig,
   getCanonicalUrl,
   getDeployTargetConfig,
   getExpectedAssetPrefix,
   getRobotsTxt,
-  normalizeBasePath,
   parseDeployTarget,
-} from "../../src/lib/deployment-config";
+} from "./effective-deployment-config";
 
 const indexableRoutes = ["/"] as const;
 

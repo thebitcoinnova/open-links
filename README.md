@@ -306,6 +306,8 @@ OpenClaw should update only the rows between the exact marker lines below:
 OPENCLAW_DEPLOY_URLS_START
 | target | status | primary_url | additional_urls | evidence |
 |--------|--------|-------------|-----------------|----------|
+| aws | active | https://openlinks.us/ | none | Deploy Production -> Deploy AWS Canonical Site |
+| github-pages | active | https://prizz.github.io/open-links/ | canonical=https://openlinks.us/ | Deploy Production -> Deploy GitHub Pages Mirror |
 OPENCLAW_DEPLOY_URLS_END
 
 ## AI-Guided Path (Optional)
@@ -322,7 +324,7 @@ Recommended flow:
 
 ## First Production Deploy (Quick Path)
 
-1. Configure `config/deployment.json` for your intended topology.
+1. Keep the shared upstream baseline in `config/deployment.defaults.json`, and use `config/deployment.json` only for fork-specific overrides.
 2. Run setup in apply mode so tracked site metadata and README deploy rows match the topology:
 
 ```bash
@@ -379,8 +381,8 @@ Studio workspace tooling is Bun-first:
 High-signal deployment checks:
 
 1. `required-checks` job in `.github/workflows/ci.yml` is green.
-2. `Deploy AWS Site` job in `.github/workflows/deploy-production.yml` is green when AWS is enabled in `config/deployment.json` and opted in via GitHub settings.
-3. `Deploy GitHub Pages` job in `.github/workflows/deploy-production.yml` is green when GitHub Pages is enabled in `config/deployment.json`, or intentionally skipped when that target is disabled.
+2. `Deploy AWS Site` job in `.github/workflows/deploy-production.yml` is green when AWS is enabled in the effective deployment topology and opted in via GitHub settings.
+3. `Deploy GitHub Pages` job in `.github/workflows/deploy-production.yml` is green when GitHub Pages is enabled in the effective deployment topology, or intentionally skipped when that target is disabled.
 4. `Verify Production Deployment` is green for the currently enabled targets.
 5. If deploy fails, review workflow summaries and diagnostics artifacts.
 
