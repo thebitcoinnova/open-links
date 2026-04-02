@@ -47,6 +47,25 @@ test("github pages public urls include the repository base path in the default t
   );
 });
 
+test("github pages public urls normalize mixed-case owners to lowercase hosts", () => {
+  // Arrange / Act
+  const mixedCasePagesUrl = buildGitHubPagesUrl("pRizz/open-links");
+  const mixedCasePagesState = resolveDeploymentState({
+    repositorySlug: "pRizz/open-links",
+    trackedConfig: parseTrackedDeploymentConfig({
+      enabledTargets: ["github-pages"],
+      primaryTarget: "github-pages",
+    }),
+  });
+
+  // Assert
+  assert.equal(mixedCasePagesUrl, "https://prizz.github.io/open-links/");
+  assert.equal(
+    mixedCasePagesState.targets["github-pages"].publicOrigin,
+    "https://prizz.github.io/open-links",
+  );
+});
+
 test("robots helpers follow the shared upstream defaults topology", () => {
   // Arrange / Act / Assert
   assert.match(getRobotsTxt("aws"), /Allow: \//u);

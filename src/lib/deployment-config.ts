@@ -605,7 +605,9 @@ function buildDefaultGitHubPagesUrl(
     options.env ?? process.env,
     maybeRepositorySlug,
   );
-  return `https://${repositoryContext.githubPagesOwner}.github.io${normalizeBasePath(
+  const githubPagesHostOwner = repositoryContext.githubPagesOwner.toLowerCase();
+
+  return `https://${githubPagesHostOwner}.github.io${normalizeBasePath(
     repositoryContext.githubPagesRepository,
   )}`;
 }
