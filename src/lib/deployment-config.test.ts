@@ -13,6 +13,8 @@ import {
   normalizeBasePath,
   normalizeDeployPublicOrigin,
   parseDeployTarget,
+  parseTrackedDeploymentConfig,
+  resolveDeploymentState,
   resolvePrimaryCanonicalOrigin,
   resolveRailwayPublicOrigin,
   resolveRenderPublicOrigin,
@@ -29,7 +31,7 @@ test("canonical urls follow the resolved primary origin for the active repositor
   assert.equal(aboutUrl, `${deploymentConfig.primaryCanonicalOrigin}/about`);
 });
 
-test("github pages public urls include the repository base path", () => {
+test("github pages public urls include the repository base path in the default topology", () => {
   // Arrange / Act
   const homeUrl = getPublicUrl("github-pages", "/");
   const routeUrl = getPublicUrl("github-pages", "/links");
@@ -45,20 +47,12 @@ test("github pages public urls include the repository base path", () => {
   );
 });
 
-test("robots helpers distinguish the indexable canonical site from the pages mirror", () => {
+test("robots helpers follow the shared upstream defaults topology", () => {
   // Arrange / Act / Assert
   assert.match(getRobotsTxt("aws"), /Allow: \//u);
   assert.equal(getRobotsMetaContent("aws"), "index, follow");
-
-  const githubPagesShouldIndex = getDeployTargetConfig("github-pages").shouldIndex;
-  assert.match(
-    getRobotsTxt("github-pages"),
-    githubPagesShouldIndex ? /Allow: \//u : /Disallow: \//u,
-  );
-  assert.equal(
-    getRobotsMetaContent("github-pages"),
-    githubPagesShouldIndex ? "index, follow" : "noindex, nofollow",
-  );
+  assert.match(getRobotsTxt("github-pages"), /Disallow: \//u);
+  assert.equal(getRobotsMetaContent("github-pages"), "noindex, nofollow");
 });
 
 test("base path normalization and target parsing stay stable for deploy scripts", () => {
@@ -72,7 +66,7 @@ test("base path normalization and target parsing stay stable for deploy scripts"
   assert.equal(parseDeployTarget("unexpected"), "aws");
 });
 
-test("fork repositories default canonical origin to their pages url until aws is configured", () => {
+test("shared upstream defaults stay AWS-primary, while forks can still resolve Pages-primary via overlay", () => {
   // Arrange / Act / Assert
   assert.equal(isUpstreamRepository("prizz/open-links"), true);
   assert.equal(isUpstreamRepository("someone/open-links-fork"), false);
@@ -82,56 +76,153 @@ test("fork repositories default canonical origin to their pages url until aws is
   );
   assert.equal(resolvePrimaryCanonicalOrigin("prizz/open-links"), "https://openlinks.us");
   assert.equal(
-    resolvePrimaryCanonicalOrigin("someone/open-links-fork"),
+    resolvePrimaryCanonicalOrigin(
+      "someone/open-links-fork",
+      undefined,
+      parseTrackedDeploymentConfig({
+        enabledTargets: ["github-pages"],
+        primaryTarget: "github-pages",
+      }),
+    ),
     "https://someone.github.io/open-links-fork",
   );
-  assert.equal(getCanonicalUrl("/"), `${deploymentConfig.primaryCanonicalOrigin}/`);
 });
 
-test("indexability helpers stay correct for both upstream and fork repository origins", () => {
+test("explicit AWS-primary topologies drive indexing and mirrors for upstream and forks", () => {
   // Arrange
-  const scenarios = [
-    {
-      expectedGithubPagesRobots: "noindex, nofollow",
-      expectedGithubPagesShouldIndex: false,
-      repositorySlug: "prizz/open-links",
+  const upstreamAwsPrimary = parseTrackedDeploymentConfig({
+    enabledTargets: ["aws", "github-pages"],
+    primaryTarget: "aws",
+    targets: {
+      aws: {
+        publicOrigin: "https://openlinks.us",
+      },
     },
-    {
-      expectedGithubPagesRobots: "index, follow",
-      expectedGithubPagesShouldIndex: true,
-      repositorySlug: "someone/open-links-fork",
+  });
+  const forkAwsPrimary = parseTrackedDeploymentConfig({
+    enabledTargets: ["aws", "github-pages"],
+    primaryTarget: "aws",
+    targets: {
+      aws: {
+        publicOrigin: "https://links.example.com",
+      },
     },
-  ] as const;
+  });
 
-  for (const scenario of scenarios) {
-    // Act
-    const primaryCanonicalOrigin = resolvePrimaryCanonicalOrigin(scenario.repositorySlug);
-    const githubPagesOrigin = buildGitHubPagesUrl(scenario.repositorySlug);
+  // Act
+  const upstreamState = resolveDeploymentState({
+    repositorySlug: "prizz/open-links",
+    trackedConfig: upstreamAwsPrimary,
+  });
+  const forkState = resolveDeploymentState({
+    repositorySlug: "someone/open-links-fork",
+    trackedConfig: forkAwsPrimary,
+  });
 
-    // Assert
-    assert.equal(
-      shouldIndexPublicOrigin(githubPagesOrigin, primaryCanonicalOrigin),
-      scenario.expectedGithubPagesShouldIndex,
-    );
-    assert.equal(
-      getRobotsMetaContentForPublicOrigin(githubPagesOrigin, primaryCanonicalOrigin),
-      scenario.expectedGithubPagesRobots,
-    );
-    assert.equal(
-      getRobotsMetaContentForPublicOrigin(
-        "https://open-links.onrender.com",
-        primaryCanonicalOrigin,
-      ),
-      "noindex, nofollow",
-    );
-    assert.equal(
-      getRobotsMetaContentForPublicOrigin(
-        "https://open-links-production.up.railway.app",
-        primaryCanonicalOrigin,
-      ),
-      "noindex, nofollow",
-    );
-  }
+  // Assert
+  assert.equal(upstreamState.primaryCanonicalOrigin, "https://openlinks.us");
+  assert.equal(upstreamState.targets.aws.shouldIndex, true);
+  assert.equal(upstreamState.targets["github-pages"].shouldIndex, false);
+  assert.equal(
+    upstreamState.targets["github-pages"].publicOrigin,
+    "https://prizz.github.io/open-links",
+  );
+  assert.equal(forkState.primaryCanonicalOrigin, "https://links.example.com");
+  assert.equal(forkState.targets.aws.shouldIndex, true);
+  assert.equal(forkState.targets["github-pages"].shouldIndex, false);
+  assert.equal(
+    forkState.targets["github-pages"].publicOrigin,
+    "https://someone.github.io/open-links-fork",
+  );
+});
+
+test("pages custom-domain overrides keep github pages on the root path without changing app code", () => {
+  // Arrange
+  const customDomainPages = parseTrackedDeploymentConfig({
+    enabledTargets: ["github-pages"],
+    primaryTarget: "github-pages",
+    targets: {
+      "github-pages": {
+        publicOrigin: "https://links.example.com",
+      },
+    },
+  });
+
+  // Act
+  const state = resolveDeploymentState({
+    repositorySlug: "someone/open-links-fork",
+    trackedConfig: customDomainPages,
+  });
+
+  // Assert
+  assert.equal(state.primaryCanonicalOrigin, "https://links.example.com");
+  assert.equal(state.targets["github-pages"].publicOrigin, "https://links.example.com");
+  assert.equal(state.targets["github-pages"].basePath, "/");
+  assert.equal(state.targets["github-pages"].shouldIndex, true);
+  assert.equal(state.targets.aws.shouldIndex, false);
+  assert.equal(
+    buildGitHubPagesUrl("someone/open-links-fork", {
+      trackedConfig: customDomainPages,
+    }),
+    "https://links.example.com/",
+  );
+});
+
+test("indexability helpers stay correct for the default and explicit topologies", () => {
+  // Arrange
+  const explicitAwsPrimary = parseTrackedDeploymentConfig({
+    enabledTargets: ["aws", "github-pages"],
+    primaryTarget: "aws",
+    targets: {
+      aws: {
+        publicOrigin: "https://links.example.com",
+      },
+    },
+  });
+  const pagesPrimaryConfig = parseTrackedDeploymentConfig({
+    enabledTargets: ["github-pages"],
+    primaryTarget: "github-pages",
+  });
+  const pagesPrimaryOrigin = resolvePrimaryCanonicalOrigin(
+    "someone/open-links-fork",
+    undefined,
+    pagesPrimaryConfig,
+  );
+  const pagesPrimaryPagesOrigin = buildGitHubPagesUrl("someone/open-links-fork", {
+    trackedConfig: pagesPrimaryConfig,
+  });
+  const awsPrimaryState = resolveDeploymentState({
+    repositorySlug: "someone/open-links-fork",
+    trackedConfig: explicitAwsPrimary,
+  });
+
+  // Act / Assert
+  assert.equal(shouldIndexPublicOrigin(pagesPrimaryPagesOrigin, pagesPrimaryOrigin), true);
+  assert.equal(
+    getRobotsMetaContentForPublicOrigin(pagesPrimaryPagesOrigin, pagesPrimaryOrigin),
+    "index, follow",
+  );
+  assert.equal(
+    shouldIndexPublicOrigin(
+      awsPrimaryState.targets["github-pages"].publicOrigin,
+      awsPrimaryState.primaryCanonicalOrigin,
+    ),
+    false,
+  );
+  assert.equal(
+    getRobotsMetaContentForPublicOrigin(
+      awsPrimaryState.targets["github-pages"].publicOrigin,
+      awsPrimaryState.primaryCanonicalOrigin,
+    ),
+    "noindex, nofollow",
+  );
+  assert.equal(
+    getRobotsMetaContentForPublicOrigin(
+      awsPrimaryState.targets.aws.publicOrigin,
+      awsPrimaryState.primaryCanonicalOrigin,
+    ),
+    "index, follow",
+  );
 });
 
 test("provider public-origin helpers normalize overrides and provider variables", () => {

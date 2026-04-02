@@ -12,5 +12,5 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js"
   },
-  "include": ["src", "scripts", "vite.config.ts", "data", "schema"]
+  "include": ["src", "scripts", "vite.config.ts", "config", "data", "schema"]
 }

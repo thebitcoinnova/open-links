@@ -10,7 +10,7 @@ import {
   getDeployTargetConfig,
   getRobotsMetaContent,
   parseDeployTarget,
-} from "./src/lib/deployment-config";
+} from "./scripts/lib/effective-deployment-config";
 import {
   DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
   normalizeGitHubRepositorySlug,

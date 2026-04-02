@@ -1,4 +1,3 @@
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   assessAwsDomainReadiness,
   assessOrphanedReviewStack,
@@ -26,6 +25,7 @@ import {
   createDeployRun,
   writeDeploySummary,
 } from "../lib/deploy-log";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { parseArgs, recordTimedAction } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
@@ -133,7 +133,7 @@ if (!domainReadiness.ready) {
   skippedReasons.push(
     mode === "check"
       ? blockerDetail
-      : "Apply mode stopped before CloudFormation mutations because openlinks.us is not fully ready in Route 53 yet.",
+      : `Apply mode stopped before CloudFormation mutations because ${deploymentConfig.primaryCanonicalDomain} is not fully ready in Route 53 yet.`,
   );
 
   await run.addBreadcrumb({
@@ -171,7 +171,9 @@ if (!domainReadiness.ready) {
     process.exit(0);
   }
 
-  throw new Error(`AWS bootstrap apply blocked until openlinks.us is ready. See ${runDirectory}.`);
+  throw new Error(
+    `AWS bootstrap apply blocked until ${deploymentConfig.primaryCanonicalDomain} is ready. See ${runDirectory}.`,
+  );
 }
 
 let mutableStackState = initialStackState;

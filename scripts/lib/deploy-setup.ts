@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import { type ResolvedHostedZones, buildSiteBucketName } from "./aws-deploy";
+import { deploymentConfig } from "./effective-deployment-config";
 
 export interface GitHubPagesSiteState {
   buildType: string | null;

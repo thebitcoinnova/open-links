@@ -1,153 +1,131 @@
 # Deployment Operations Guide
 
-This guide covers OpenLinks public-site deployment behavior, diagnostics, and operator flows across all supported targets.
+This guide covers the config-driven deployment system for OpenLinks.
+
+## Source Of Truth
+
+Deployment topology is now resolved from:
+
+- shared upstream baseline: `config/deployment.defaults.json`
+- optional fork overlay: `config/deployment.json`
+
+It controls:
+
+- `primaryTarget`
+- `enabledTargets`
+- per-target `publicOrigin`
+- optional target settings such as AWS `priceClass`
+
+`deploy:setup -- --apply` is the sync point that updates the site-facing outputs from the effective merged topology:
+
+- `data/site.json` `quality.seo.canonicalBaseUrl`
+- README deploy URL rows
+
+Compatibility wrappers such as `deploy:setup:render -- --public-origin=... --promote-primary` still exist for one migration cycle, but the primary operator flow is now:
+
+```bash
+bun run deploy:plan
+bun run deploy:setup -- --apply
+git push origin main
+```
 
 ## Supported Targets
 
-- `aws`: canonical upstream production site at `https://openlinks.us/`
-- `github-pages`: default fork-safe public site or mirror at `https://<owner>.github.io/<repo>/`
-- `render`: provider-native static-site target driven by `render.yaml`
-- `railway`: provider-native GitHub deploy target driven by `railway.toml`
+- `github-pages`: default fork-safe target
+- `aws`: CloudFront + S3 + Route 53 target
+- `render`: provider-native static host
+- `railway`: provider-native static host via the checked-in Bun server
 
-Only one public host should be primary at a time. The primary host is indexable. Every other host must noindex and canonicalize to the primary host.
+Only one public host should be primary at a time. The primary host is indexable. Every other enabled host must emit `noindex, nofollow` and canonicalize to the primary host.
 
-Fork-safe default:
+## Command Surface
 
-- GitHub Pages remains the primary host until the fork owner explicitly promotes Render, Railway, or a custom domain.
-
-## Contributor Guardrails
-
-Treat fork behavior as a supported deployment contract, not a fallback.
-
-- Generic deployment code and tests must model both upstream and fork behavior.
-- Only upstream-only paths may hardcode `https://openlinks.us/` or assume GitHub Pages is always a mirror.
-- Prefer shared helpers from `src/lib/deployment-config.ts` and `scripts/lib/live-deploy-verify.ts` over duplicated canonical or robots expectations.
-- When deployment logic changes, rerun `bun run test:deploy` before commit.
-
-## Deployment Architecture
-
-OpenLinks now uses two deployment models:
-
-1. GitHub Actions-managed upstream deploys for AWS + GitHub Pages:
-   - `.github/workflows/ci.yml` runs required checks and builds target-aware deploy artifacts on successful pushes.
-   - `.github/workflows/deploy-pages.yml` (`Deploy Production`) consumes those artifacts, deploys AWS when enabled, deploys the GitHub Pages mirror when needed, and runs post-deploy verification when AWS is enabled.
-2. Provider-native fork deploys for Render + Railway:
-   - Render reads `render.yaml`, builds `.artifacts/deploy/render`, and publishes it as a static site.
-   - Railway reads `railway.toml`, builds `.artifacts/deploy/railway`, and serves that artifact through the checked-in Bun static server.
-   - Both provider-native targets should be configured to wait for GitHub CI before deploying.
-
-## Primary-Host Contract
-
-Primary-host selection is controlled by:
-
-- `OPENLINKS_PRIMARY_CANONICAL_ORIGIN` at build time, and
-- tracked `data/site.json` `quality.seo.canonicalBaseUrl` once a host has been promoted.
-
-Target behavior is dynamic:
-
-- if a target's public URL matches the primary canonical origin, it is indexable;
-- otherwise it is treated as a mirror and emits `noindex, nofollow`.
-
-## Artifact Contract
-
-Target-aware artifacts are built under `.artifacts/deploy/<target>` and include:
-
-- `deploy-manifest.json`
-- `.nojekyll`
-- target-aware `robots.txt`
-- target-aware `build-info.json`
-- target-aware asset-path assertions
-
-The provider-native targets publish those checked artifacts directly:
-
-- Render publishes `.artifacts/deploy/render`
-- Railway serves `.artifacts/deploy/railway`
-
-## Operator Commands
-
-All mutating setup commands default to check mode. Add `--apply` to write tracked changes.
-
-### Existing AWS + Pages flow
+Topology-first commands:
 
 ```bash
+bun run deploy:plan
+bun run deploy:setup -- --apply
 bun run deploy:build
-bun run deploy:setup
-bun run deploy:aws:bootstrap
-bun run deploy:aws:publish --artifact=.artifacts/deploy/aws
-bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages
+bun run deploy:publish -- --target=<aws|github-pages>
 bun run deploy:verify
 ```
 
-### Provider-native fork targets
+Live-target verification:
 
 ```bash
-bun run deploy:build:render
-bun run deploy:build:railway
-bun run deploy:setup:render
-bun run deploy:setup:railway
 bun run deploy:verify:live -- --target=render --public-origin=https://<service>.onrender.com
 bun run deploy:verify:live -- --target=railway --public-origin=https://<service>.up.railway.app
-bun run deploy:readme:urls:update -- --target=render --primary-url=https://<service>.onrender.com --additional-urls=canonical=https://<primary-host> --evidence="Render -> live /build-info.json"
 ```
 
-Use the provider-specific guides for full first-run steps:
+Target-specific setup wrappers remain available while the old flow is phased out:
 
-- `docs/deployment-render.md`
-- `docs/deployment-railway.md`
+- `bun run deploy:setup:render -- --public-origin=...`
+- `bun run deploy:setup:railway -- --public-origin=...`
+- `bun run deploy:setup:aws`
+- `bun run deploy:setup:github`
+
+## Workflow Architecture
+
+- `.github/workflows/ci.yml`
+  - runs required checks
+  - builds artifacts only for enabled targets
+  - uploads only the artifacts that exist
+- `.github/workflows/deploy-production.yml`
+  - resolves enabled targets from deployment defaults plus optional overlay
+  - publishes AWS only when the target is enabled and GitHub AWS opt-in is set
+  - publishes GitHub Pages only when that target is enabled
+  - verifies the enabled topology after publish
+
+Provider-native targets remain externally published by their hosting platforms, but their canonical/README behavior still flows from the effective merged topology.
 
 ## Standard Flows
 
-### Upstream `openlinks.us`
+### Pages-Primary Fork
 
-1. Push to `main`.
-2. Verify `.github/workflows/ci.yml` succeeded and uploaded `deploy-aws-site` plus `deploy-pages-site`.
-3. Verify `.github/workflows/deploy-pages.yml` (`Deploy Production`) succeeded.
-4. Confirm:
-   - `Deploy AWS Canonical Site` succeeded when AWS deploy is enabled.
-   - `Deploy GitHub Pages Mirror` succeeded or intentionally skipped as a no-op.
-   - `Verify Production Deployment` succeeded when AWS deploy is enabled.
+1. In a fork, create or update `config/deployment.json` so the effective topology is Pages-primary.
+2. Run `bun run deploy:setup -- --apply`.
+3. Push to `main`.
+4. Verify `.github/workflows/ci.yml` and `.github/workflows/deploy-production.yml`.
+5. Confirm the Pages URL serves the current build.
 
-### Fork default: GitHub Pages primary
+### AWS Primary + Pages Mirror
 
-1. Push to `main`.
-2. Open the fork’s **Actions** tab. If GitHub shows **Workflows aren’t being run on this forked repository**, click **Enable workflows** once.
-3. If you enabled workflows after the first setup push, push again (an empty commit is fine) so GitHub has a fresh `main` push event to run.
-4. In GitHub repository settings, set Pages source to **GitHub Actions**.
-5. Verify `.github/workflows/ci.yml` succeeded.
-6. Verify `.github/workflows/deploy-pages.yml` published the Pages site.
-7. Confirm the live Pages URL serves the current build.
+1. In a fork overlay, edit `config/deployment.json` to:
+   - enable `aws` and `github-pages`
+   - set `primaryTarget` to `aws`
+   - set `targets.aws.publicOrigin` to the intended canonical HTTPS origin
+2. Run `bun run deploy:setup -- --apply`.
+3. Ensure GitHub repo settings include:
+   - `OPENLINKS_ENABLE_AWS_DEPLOY=true`
+   - `AWS_DEPLOY_ROLE_ARN`
+4. Push to `main`.
+5. Verify:
+   - `Deploy AWS Site`
+   - `Deploy GitHub Pages`
+   - `Verify Production Deployment`
 
-### Fork optional: Render or Railway
+### Provider-Native Primary
 
-1. Keep GitHub Actions CI enabled on `main`.
-2. Connect the repo to the provider using the checked-in config file.
-3. Enable the provider's "wait for CI" / equivalent gate.
-4. Generate the provider public URL.
-5. Run the matching setup script in apply mode with `--public-origin=...`.
-6. Add `--promote-primary` only when you want that provider URL to become the canonical host.
-7. Verify the live provider URL with `bun run deploy:verify:live`.
+1. Set the provider target `publicOrigin` in `config/deployment.json` or use the provider setup wrapper to write the overlay.
+2. Set `primaryTarget` to that provider.
+3. Run `bun run deploy:setup -- --apply`.
+4. Push to `main` and let the provider redeploy.
+5. Verify with `bun run deploy:verify:live`.
 
-## URL Reporting Contract (OpenClaw)
+## URL Reporting Contract
 
-Use the same stable schema across all targets:
+Use this stable schema in chat and README rows:
 
 | target | status | primary_url | additional_urls | evidence |
 |--------|--------|-------------|-----------------|----------|
-| aws | success/warning/failed | `https://openlinks.us/` | `none` | `deploy-pages.yml -> Deploy AWS Canonical Site` |
-| github-pages | success/warning/failed | `<pages-url>` | `none` or `canonical=<primary-host>` | `deploy-pages.yml -> Deploy GitHub Pages Mirror` |
+| aws | success/warning/failed | `<aws-url>` | `none` or `canonical=<primary-host>` | `deploy-production.yml -> Deploy AWS Site` |
+| github-pages | success/warning/failed | `<pages-url>` | `none` or `canonical=<primary-host>` | `deploy-production.yml -> Deploy GitHub Pages` |
 | render | success/warning/failed | `<render-url>` | `none` or `canonical=<primary-host>` | `Render -> live /build-info.json` |
 | railway | success/warning/failed | `<railway-url>` | `none` or `canonical=<primary-host>` | `Railway -> live /build-info.json` |
 
-Forks should report:
-
-- `github-pages` by default
-- `render` when configured
-- `railway` when configured
-- `aws` only when the fork explicitly opted into the upstream AWS flow
-
 ## Diagnostics
 
-### GitHub Actions artifacts
+GitHub Actions artifacts:
 
 - `ci-diagnostics-required`
 - `ci-diagnostics-strict`
@@ -155,26 +133,22 @@ Forks should report:
 - `deploy-production-pages-diagnostics`
 - `deploy-production-verify-diagnostics`
 
-### Provider-native diagnostics
+Local diagnostics:
 
-- Render deploy logs in the Render dashboard
-- Railway deploy logs in the Railway dashboard
-- live `build-info.json` at the deployed public URL
-- local `.codex/logs/deploy/` summaries for `deploy:setup:*`, `deploy:build:*`, and `deploy:verify*`
+- `.codex/logs/deploy/`
+- `output/cache-revalidation/`
+- live `/build-info.json`
 
 ## Symptom -> Fix Matrix
 
 | Symptom | Likely Cause | Fix |
 |--------|--------------|-----|
-| `deploy:setup:aws` blocks in check mode | Route 53 hosted zone for `openlinks.us` is not ready | finish hosted-zone/delegation setup, then rerun check mode |
-| AWS job is skipped in GitHub Actions | `OPENLINKS_ENABLE_AWS_DEPLOY` or `AWS_DEPLOY_ROLE_ARN` is missing | run `bun run deploy:setup:github --apply` or set the repo variable/secret manually |
-| Pages job skips as a no-op | live mirror manifest already matches the built artifact | no action needed |
-| Render or Railway stays `noindex` after promotion | tracked primary canonical origin still points at GitHub Pages or another host | rerun the matching setup script with `--apply --public-origin=<live-url> --promote-primary`, commit, and let the provider redeploy |
-| Render or Railway row is missing from README | provider URL was not registered after first deploy | run `bun run deploy:setup:render -- --apply --public-origin=<live-url>` or `bun run deploy:setup:railway -- --apply --public-origin=<live-url>` |
-| Fresh fork shows zero workflow runs and Pages stays on GitHub 404 | GitHub has not enabled workflows for the fork yet | open the fork’s **Actions** tab, click **Enable workflows**, then push again on `main` |
-| `deploy:verify` blocks on DNS readiness | apex alias record has not propagated yet | wait for Route 53 + CloudFront propagation, then rerun |
-| Deploy workflow does not trigger | CI did not succeed on `main` | fix CI first, then push or manually dispatch `Deploy Production` |
-| Deploy artifact is missing | CI did not build/upload the deploy artifacts | rerun CI on `main` or manually dispatch `Deploy Production` |
+| `deploy:setup` updates `data/site.json` or README unexpectedly | deployment defaults or overlay changed, or the overlay is stale | review `bun run deploy:plan`, then rerun `bun run deploy:setup -- --apply` |
+| AWS job is skipped | AWS target is disabled in the effective topology or GitHub AWS opt-in is missing | enable `aws` in the effective topology, then set `OPENLINKS_ENABLE_AWS_DEPLOY` and `AWS_DEPLOY_ROLE_ARN` |
+| Pages job is skipped | GitHub Pages is disabled in the effective topology | enable `github-pages` in the effective topology |
+| `deploy:verify` blocks on DNS readiness | the configured AWS domain does not resolve publicly yet | wait for Route 53 + CloudFront propagation, then rerun `bun run deploy:verify` |
+| Provider target canonicalizes to the wrong host | `primaryTarget` or provider `publicOrigin` is wrong in the effective topology | update the overlay, rerun `bun run deploy:setup -- --apply`, then redeploy |
+| README deploy rows are stale | topology changed but setup was not rerun | rerun `bun run deploy:setup -- --apply` |
 
 ## Related Docs
 

@@ -1,4 +1,3 @@
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import { ensureAwsCliAvailable, loadAwsCallerIdentity } from "../lib/aws-deploy";
 import { runCommand, runJsonCommand } from "../lib/command";
 import {
@@ -7,6 +6,7 @@ import {
   writeDeploySummary,
 } from "../lib/deploy-log";
 import { type GitHubPagesSiteState, computeDigest, planGitHubPagesSite } from "../lib/deploy-setup";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { resolveGitHubRepositorySlug } from "../lib/github-repository";
 import { parseArgs } from "./shared";
 
@@ -25,6 +25,11 @@ interface GitHubPagesResponse {
   } | null;
 }
 
+interface PlanDecision {
+  action: "create" | "none" | "set";
+  reason: string;
+}
+
 const args = parseArgs(process.argv.slice(2));
 const mode: "apply" | "check" = args.apply === "true" ? "apply" : "check";
 const commandName = "deploy:setup:github";
@@ -33,6 +38,7 @@ const run = await createDeployRun({
   mode,
   target: "github-setup",
 });
+const awsEnabled = deploymentConfig.enabledTargets.includes("aws");
 
 await run.addBreadcrumb({
   detail: "Validating GitHub CLI access and loading repository configuration.",
@@ -46,70 +52,72 @@ ensureGitHubAuthentication();
 const repositorySlug = resolveGitHubRepositorySlug(args.repo);
 const productionEnvironment = deploymentConfig.githubProductionEnvironmentName;
 const pagesEnvironment = deploymentConfig.githubPagesEnvironmentName;
-const roleArn = resolveRoleArn(args["role-arn"]);
-const roleArnDigest = computeDigest(roleArn);
+const maybeRoleArn = awsEnabled ? resolveRoleArn(args["role-arn"]) : null;
+const maybeRoleArnDigest = maybeRoleArn ? computeDigest(maybeRoleArn) : null;
 const awsDeployVariable = deploymentConfig.githubAwsDeployEnabledVariableName;
 const settingsUrls = [
   `https://github.com/${repositorySlug}/settings/environments`,
   `https://github.com/${repositorySlug}/settings/pages`,
-  `https://github.com/${repositorySlug}/settings/secrets/actions`,
-  `https://github.com/${repositorySlug}/settings/variables/actions`,
+  ...(awsEnabled
+    ? [
+        `https://github.com/${repositorySlug}/settings/secrets/actions`,
+        `https://github.com/${repositorySlug}/settings/variables/actions`,
+      ]
+    : []),
 ];
 
 await run.addBreadcrumb({
   data: {
+    awsEnabled,
+    maybeRoleArn,
+    maybeRoleArnDigest,
     repositorySlug,
-    roleArn,
-    roleArnDigest,
   },
-  detail: "Resolved repository slug and deploy role ARN.",
+  detail: "Resolved repository slug and deployment topology requirements.",
   status: "passed",
   step: "context",
 });
 
-const currentProductionEnvironment = loadEnvironmentState(repositorySlug, productionEnvironment);
+const currentProductionEnvironment = awsEnabled
+  ? loadEnvironmentState(repositorySlug, productionEnvironment)
+  : null;
 const currentPagesEnvironment = loadEnvironmentState(repositorySlug, pagesEnvironment);
 const currentPagesSite = loadPagesSiteState(repositorySlug);
-const currentDigest = currentProductionEnvironment
-  ? loadEnvironmentVariable(
-      repositorySlug,
-      productionEnvironment,
-      deploymentConfig.githubRoleArnDigestVariableName,
-    )
+const currentDigest =
+  awsEnabled && currentProductionEnvironment
+    ? loadEnvironmentVariable(
+        repositorySlug,
+        productionEnvironment,
+        deploymentConfig.githubRoleArnDigestVariableName,
+      )
+    : null;
+const currentAwsDeployEnabled = awsEnabled
+  ? loadRepoVariable(repositorySlug, awsDeployVariable)
   : null;
-const currentAwsDeployEnabled = loadRepoVariable(repositorySlug, awsDeployVariable);
 
 const environmentPlans = {
-  [productionEnvironment]: currentProductionEnvironment
-    ? { action: "none" as const }
-    : { action: "create" as const },
-  [pagesEnvironment]: currentPagesEnvironment
-    ? { action: "none" as const }
-    : { action: "create" as const },
+  [pagesEnvironment]: buildEnvironmentPlan(currentPagesEnvironment, pagesEnvironment),
+  ...(awsEnabled
+    ? {
+        [productionEnvironment]: buildEnvironmentPlan(
+          currentProductionEnvironment,
+          productionEnvironment,
+        ),
+      }
+    : {}),
 };
 const pagesPlan = planGitHubPagesSite(currentPagesSite);
-const secretPlan =
-  currentDigest === roleArnDigest
-    ? {
-        action: "none" as const,
-        reason: "The GitHub environment digest already matches the desired AWS deploy role ARN.",
-      }
-    : {
-        action: "set" as const,
-        reason: currentDigest
-          ? `The stored digest ${currentDigest} does not match the desired digest ${roleArnDigest}.`
-          : "The production environment digest variable is missing.",
-      };
-const awsDeployVariablePlan =
-  currentAwsDeployEnabled === "true"
-    ? {
-        action: "none" as const,
-        reason: `${awsDeployVariable} already enables the AWS deploy job.`,
-      }
-    : {
-        action: "set" as const,
-        reason: `${awsDeployVariable} is missing or not set to true.`,
-      };
+const secretPlan = buildSecretPlan({
+  awsEnabled,
+  currentDigest,
+  maybeRoleArnDigest,
+  productionEnvironment,
+});
+const awsDeployVariablePlan = buildAwsDeployVariablePlan({
+  awsEnabled,
+  awsDeployVariable,
+  currentAwsDeployEnabled,
+});
 
 await run.addBreadcrumb({
   data: {
@@ -135,7 +143,9 @@ const verificationResults: DeployVerificationResult[] = [
 
 if (allPlansAreNoOps(environmentPlans, pagesPlan, secretPlan, awsDeployVariablePlan)) {
   skippedReasons.push(
-    "The production environment, github-pages environment, Pages workflow mode, deploy role secret, and AWS opt-in variable already match the desired state.",
+    awsEnabled
+      ? "The required GitHub environments, Pages workflow mode, deploy role secret, and AWS opt-in variable already match the desired state."
+      : "The github-pages environment and Pages workflow mode already match the desired state.",
   );
   await run.addBreadcrumb({
     detail: "Remote GitHub repository settings already match the desired state.",
@@ -150,14 +160,11 @@ if (allPlansAreNoOps(environmentPlans, pagesPlan, secretPlan, awsDeployVariableP
     step: "apply",
   });
 } else {
-  if (environmentPlans[productionEnvironment].action === "create") {
-    createEnvironment(repositorySlug, productionEnvironment);
-    appliedChanges.push(`Created GitHub environment ${productionEnvironment}.`);
-  }
-
-  if (environmentPlans[pagesEnvironment].action === "create") {
-    createEnvironment(repositorySlug, pagesEnvironment);
-    appliedChanges.push(`Created GitHub environment ${pagesEnvironment}.`);
+  for (const [environmentName, plan] of Object.entries(environmentPlans)) {
+    if (plan.action === "create") {
+      createEnvironment(repositorySlug, environmentName);
+      appliedChanges.push(`Created GitHub environment ${environmentName}.`);
+    }
   }
 
   if (pagesPlan.action === "create") {
@@ -168,18 +175,18 @@ if (allPlansAreNoOps(environmentPlans, pagesPlan, secretPlan, awsDeployVariableP
     appliedChanges.push("Updated GitHub Pages to use GitHub Actions workflow deployments.");
   }
 
-  if (secretPlan.action === "set") {
+  if (secretPlan.action === "set" && maybeRoleArnDigest && maybeRoleArn) {
     setEnvironmentVariable(
       repositorySlug,
       productionEnvironment,
       deploymentConfig.githubRoleArnDigestVariableName,
-      roleArnDigest,
+      maybeRoleArnDigest,
     );
     setEnvironmentSecret(
       repositorySlug,
       productionEnvironment,
       deploymentConfig.githubRoleArnSecretName,
-      roleArn,
+      maybeRoleArn,
     );
     appliedChanges.push(
       `Updated ${productionEnvironment} environment variable ${deploymentConfig.githubRoleArnDigestVariableName}.`,
@@ -195,25 +202,24 @@ if (allPlansAreNoOps(environmentPlans, pagesPlan, secretPlan, awsDeployVariableP
   }
 }
 
-const finalProductionEnvironment = loadEnvironmentState(repositorySlug, productionEnvironment);
+const finalProductionEnvironment = awsEnabled
+  ? loadEnvironmentState(repositorySlug, productionEnvironment)
+  : null;
 const finalPagesEnvironment = loadEnvironmentState(repositorySlug, pagesEnvironment);
 const finalPagesSite = loadPagesSiteState(repositorySlug);
-const finalDigest = finalProductionEnvironment
-  ? loadEnvironmentVariable(
-      repositorySlug,
-      productionEnvironment,
-      deploymentConfig.githubRoleArnDigestVariableName,
-    )
+const finalDigest =
+  awsEnabled && finalProductionEnvironment
+    ? loadEnvironmentVariable(
+        repositorySlug,
+        productionEnvironment,
+        deploymentConfig.githubRoleArnDigestVariableName,
+      )
+    : null;
+const finalAwsDeployEnabled = awsEnabled
+  ? loadRepoVariable(repositorySlug, awsDeployVariable)
   : null;
-const finalAwsDeployEnabled = loadRepoVariable(repositorySlug, awsDeployVariable);
 
 verificationResults.push(
-  buildEnvironmentVerificationResult(
-    "production environment",
-    productionEnvironment,
-    finalProductionEnvironment !== null,
-    mode,
-  ),
   buildEnvironmentVerificationResult(
     "github-pages environment",
     pagesEnvironment,
@@ -221,22 +227,16 @@ verificationResults.push(
     mode,
   ),
   buildPagesVerificationResult(finalPagesSite, mode),
-  {
-    detail:
-      finalDigest === roleArnDigest
-        ? `${productionEnvironment} environment digest ${finalDigest} matches the desired deploy role ARN.`
-        : `${productionEnvironment} environment digest did not match the desired deploy role ARN.`,
-    name: "deploy role secret digest",
-    status: finalDigest === roleArnDigest ? "passed" : mode === "check" ? "skipped" : "failed",
-  },
-  {
-    detail:
-      finalAwsDeployEnabled === "true"
-        ? `${awsDeployVariable} is set to true.`
-        : `${awsDeployVariable} is not set to true.`,
-    name: "AWS deploy opt-in variable",
-    status: finalAwsDeployEnabled === "true" ? "passed" : mode === "check" ? "skipped" : "failed",
-  },
+  ...buildAwsVerificationResults({
+    awsDeployVariable,
+    awsEnabled,
+    finalAwsDeployEnabled,
+    finalDigest,
+    finalProductionEnvironment,
+    maybeRoleArnDigest,
+    mode,
+    productionEnvironment,
+  }),
 );
 
 const summary = {
@@ -245,6 +245,7 @@ const summary = {
   artifactHash: undefined,
   command: commandName,
   discoveredRemoteState: {
+    awsEnabled,
     currentAwsDeployEnabled,
     currentDigest,
     currentPagesEnvironment,
@@ -255,9 +256,9 @@ const summary = {
     finalPagesEnvironment,
     finalPagesSite,
     finalProductionEnvironment,
+    maybeRoleArn,
+    maybeRoleArnDigest,
     repositorySlug,
-    roleArn,
-    roleArnDigest,
   },
   mode,
   plannedChanges: {
@@ -281,11 +282,141 @@ if (maybeFailure) {
 
 console.log(`GitHub setup ${mode} complete. Summary: ${runDirectory}`);
 
+function buildEnvironmentPlan(
+  currentEnvironment: GitHubEnvironmentResponse | null,
+  environmentName: string,
+): PlanDecision {
+  return currentEnvironment
+    ? { action: "none", reason: `${environmentName} already exists.` }
+    : { action: "create", reason: `${environmentName} does not exist yet.` };
+}
+
+function buildSecretPlan(input: {
+  awsEnabled: boolean;
+  currentDigest: string | null;
+  maybeRoleArnDigest: string | null;
+  productionEnvironment: string;
+}): PlanDecision {
+  if (!input.awsEnabled || !input.maybeRoleArnDigest) {
+    return {
+      action: "none",
+      reason:
+        "AWS deploy is disabled by the effective deployment topology, so no production secret is required.",
+    };
+  }
+
+  if (input.currentDigest === input.maybeRoleArnDigest) {
+    return {
+      action: "none",
+      reason: "The GitHub environment digest already matches the desired AWS deploy role ARN.",
+    };
+  }
+
+  return {
+    action: "set",
+    reason: input.currentDigest
+      ? `The stored digest ${input.currentDigest} does not match the desired digest ${input.maybeRoleArnDigest}.`
+      : `The ${input.productionEnvironment} environment digest variable is missing.`,
+  };
+}
+
+function buildAwsDeployVariablePlan(input: {
+  awsDeployVariable: string;
+  awsEnabled: boolean;
+  currentAwsDeployEnabled: string | null;
+}): PlanDecision {
+  if (!input.awsEnabled) {
+    return {
+      action: "none",
+      reason:
+        "AWS deploy is disabled by the effective deployment topology, so no repository variable is required.",
+    };
+  }
+
+  return input.currentAwsDeployEnabled === "true"
+    ? {
+        action: "none",
+        reason: `${input.awsDeployVariable} already enables the AWS deploy job.`,
+      }
+    : {
+        action: "set",
+        reason: `${input.awsDeployVariable} is missing or not set to true.`,
+      };
+}
+
+function buildAwsVerificationResults(input: {
+  awsDeployVariable: string;
+  awsEnabled: boolean;
+  finalAwsDeployEnabled: string | null;
+  finalDigest: string | null;
+  finalProductionEnvironment: GitHubEnvironmentResponse | null;
+  maybeRoleArnDigest: string | null;
+  mode: "apply" | "check";
+  productionEnvironment: string;
+}) {
+  if (!input.awsEnabled) {
+    return [
+      {
+        detail: "AWS deploy is disabled by the effective deployment topology.",
+        name: "production environment",
+        status: "skipped" as const,
+      },
+      {
+        detail:
+          "AWS deploy is disabled by the effective deployment topology, so no deploy role secret is required.",
+        name: "deploy role secret digest",
+        status: "skipped" as const,
+      },
+      {
+        detail:
+          "AWS deploy is disabled by the effective deployment topology, so no opt-in variable is required.",
+        name: "AWS deploy opt-in variable",
+        status: "skipped" as const,
+      },
+    ] satisfies DeployVerificationResult[];
+  }
+
+  return [
+    buildEnvironmentVerificationResult(
+      "production environment",
+      input.productionEnvironment,
+      input.finalProductionEnvironment !== null,
+      input.mode,
+    ),
+    {
+      detail:
+        input.finalDigest === input.maybeRoleArnDigest
+          ? `${input.productionEnvironment} environment digest ${input.finalDigest} matches the desired deploy role ARN.`
+          : `${input.productionEnvironment} environment digest did not match the desired deploy role ARN.`,
+      name: "deploy role secret digest",
+      status:
+        input.finalDigest === input.maybeRoleArnDigest
+          ? "passed"
+          : input.mode === "check"
+            ? "skipped"
+            : "failed",
+    },
+    {
+      detail:
+        input.finalAwsDeployEnabled === "true"
+          ? `${input.awsDeployVariable} is set to true.`
+          : `${input.awsDeployVariable} is not set to true.`,
+      name: "AWS deploy opt-in variable",
+      status:
+        input.finalAwsDeployEnabled === "true"
+          ? "passed"
+          : input.mode === "check"
+            ? "skipped"
+            : "failed",
+    },
+  ] satisfies DeployVerificationResult[];
+}
+
 function allPlansAreNoOps(
-  environmentPlans: Record<string, { action: "create" | "none" }>,
+  environmentPlans: Record<string, PlanDecision>,
   pagesPlan: ReturnType<typeof planGitHubPagesSite>,
-  secretPlan: { action: "none" | "set"; reason: string },
-  awsDeployVariablePlan: { action: "none" | "set"; reason: string },
+  secretPlan: PlanDecision,
+  awsDeployVariablePlan: PlanDecision,
 ) {
   return (
     Object.values(environmentPlans).every((plan) => plan.action === "none") &&

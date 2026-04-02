@@ -1,11 +1,11 @@
 import path from "node:path";
+import { runCommand } from "./command";
 import {
   type DeployTarget,
   normalizeOrigin,
   resolveRailwayPublicOrigin,
   resolveRenderPublicOrigin,
-} from "../../src/lib/deployment-config";
-import { runCommand } from "./command";
+} from "./effective-deployment-config";
 import { resolveGitHubRepositorySlug } from "./github-repository";
 
 export type ProviderDeployTarget = Extract<DeployTarget, "railway" | "render">;

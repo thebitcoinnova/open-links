@@ -6,7 +6,7 @@ import {
   getRobotsMetaContentForPublicOrigin,
   joinOriginAndRoute,
   normalizeOrigin,
-} from "../../src/lib/deployment-config";
+} from "./effective-deployment-config";
 
 export interface LiveTargetExpectation {
   buildInfoUrl: string;

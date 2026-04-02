@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { deploymentConfig } from "../../src/lib/deployment-config";
 import { buildDomainReadinessAssessment, formatDomainReadinessMessage } from "./aws-deploy";
 import {
   buildAwsDeployPolicy,
@@ -82,7 +83,10 @@ test("buildAwsDeployPolicy scopes route53 and s3 resources to the deployment acc
 
   // Assert
   assert.deepEqual(route53Statement?.Resource, ["arn:aws:route53:::hostedzone/ZOPENLINKS"]);
-  assert.equal(s3Statement?.Resource, "arn:aws:s3:::open-links-site-123456789012/*");
+  assert.equal(
+    s3Statement?.Resource,
+    `arn:aws:s3:::${deploymentConfig.bucketNamePrefix}-123456789012/*`,
+  );
 });
 
 test("domain readiness messaging explains missing route53 blockers for pending hosts", () => {
@@ -102,7 +106,7 @@ test("domain readiness messaging explains missing route53 blockers for pending h
   assert.equal(assessment.blockers.length, 1);
   assert.match(
     formatDomainReadinessMessage(assessment),
-    /AWS domain readiness is still pending for the openlinks\.us rollout\./u,
+    /AWS domain readiness is still pending for openlinks\.us\./u,
   );
   assert.match(
     formatDomainReadinessMessage(assessment),

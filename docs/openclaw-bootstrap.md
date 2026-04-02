@@ -189,9 +189,10 @@ Never let step 4 override steps 1-3.
 ### Workflow evidence sources
 
 - CI workflow: `.github/workflows/ci.yml`
-- Deploy workflow: `.github/workflows/deploy-pages.yml`
-- AWS deployment evidence: `Deploy AWS Canonical Site` job summary and `deploy:aws:publish` step summary.
-- Pages deployment URL source: `steps.deployment.outputs.page_url` in `Deploy GitHub Pages Mirror`.
+- Deploy workflow: `.github/workflows/deploy-production.yml`
+- Deployment topology source: `config/deployment.defaults.json` plus optional `config/deployment.json`
+- AWS deployment evidence: `Deploy AWS Site` job summary and `deploy:publish -- --target=aws` step summary.
+- Pages deployment URL source: `steps.deployment.outputs.page_url` in `Deploy GitHub Pages`.
 - Render deployment evidence: live `build-info.json` at the deployed public URL plus the Render deploy logs/dashboard.
 - Railway deployment evidence: live `build-info.json` at the deployed public URL plus the Railway deploy logs/dashboard.
 
@@ -259,8 +260,8 @@ Example format:
 
 | target | status | primary_url | additional_urls | evidence |
 |--------|--------|-------------|-----------------|----------|
-| aws | success | https://openlinks.us/ | none | deploy-pages.yml -> Deploy AWS Canonical Site |
-| github-pages | success | https://<owner>.github.io/<repo>/ | canonical=https://openlinks.us/ | deploy-pages.yml -> Deploy GitHub Pages Mirror -> `steps.deployment.outputs.page_url` |
+| aws | success | https://<aws-host>/ | none | deploy-production.yml -> Deploy AWS Site |
+| github-pages | success | https://<owner>.github.io/<repo>/ | canonical=https://<primary-host>/ | deploy-production.yml -> Deploy GitHub Pages -> `steps.deployment.outputs.page_url` |
 | render | success | https://<service>.onrender.com/ | canonical=https://<primary-host>/ | Render -> live /build-info.json |
 | railway | success | https://<service>.up.railway.app/ | canonical=https://<primary-host>/ | Railway -> live /build-info.json |
 

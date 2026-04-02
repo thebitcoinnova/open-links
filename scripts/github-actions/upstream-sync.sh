@@ -28,7 +28,7 @@ dispatch_deploy() {
   local repository="${DEPLOY_WORKFLOW_REPOSITORY:?missing DEPLOY_WORKFLOW_REPOSITORY}"
   local ref="${DEPLOY_WORKFLOW_REF:?missing DEPLOY_WORKFLOW_REF}"
   local token="${DEPLOY_WORKFLOW_TOKEN:?missing DEPLOY_WORKFLOW_TOKEN}"
-  local workflow_file="${DEPLOY_WORKFLOW_FILE:-deploy-pages.yml}"
+  local workflow_file="${DEPLOY_WORKFLOW_FILE:-deploy-production.yml}"
 
   curl \
     --fail \

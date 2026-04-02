@@ -34,8 +34,11 @@ jobs:
     outputs:
       artifact_source: ${{ steps.context.outputs.artifact_source }}
       aws_enabled: ${{ steps.aws.outputs.enabled }}
+      aws_target_enabled: ${{ steps.topology.outputs.aws_target_enabled }}
       checkout_ref: ${{ steps.context.outputs.checkout_ref }}
       ci_run_id: ${{ steps.context.outputs.ci_run_id }}
+      github_pages_enabled: ${{ steps.topology.outputs.github_pages_enabled }}
+      primary_target: ${{ steps.topology.outputs.primary_target }}
 
     steps:
       - name: Checkout repository helpers
@@ -52,10 +55,16 @@ jobs:
           GITHUB_WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
         run: bash scripts/github-actions/deploy-pages.sh resolve-context
 
+      - name: Resolve enabled deployment targets
+        id: topology
+        shell: bash
+        run: bash scripts/github-actions/deploy-pages.sh resolve-targets
+
       - name: Resolve AWS deploy opt-in
         id: aws
         shell: bash
         env:
+          AWS_TARGET_ENABLED: ${{ steps.topology.outputs.aws_target_enabled }}
           OPENLINKS_ENABLE_AWS_DEPLOY: ${{ vars.OPENLINKS_ENABLE_AWS_DEPLOY }}
         run: bash scripts/github-actions/deploy-pages.sh resolve-aws-opt-in
 
@@ -64,7 +73,10 @@ jobs:
         env:
           ARTIFACT_SOURCE: ${{ steps.context.outputs.artifact_source }}
           AWS_ENABLED: ${{ steps.aws.outputs.enabled }}
+          AWS_TARGET_ENABLED: ${{ steps.topology.outputs.aws_target_enabled }}
           CHECKOUT_REF: ${{ steps.context.outputs.checkout_ref }}
+          GITHUB_PAGES_ENABLED: ${{ steps.topology.outputs.github_pages_enabled }}
+          PRIMARY_TARGET: ${{ steps.topology.outputs.primary_target }}
         run: bash scripts/github-actions/deploy-pages.sh publish-context-summary
 
   build_artifacts:
@@ -97,7 +109,7 @@ jobs:
           name: deploy-aws-site
           path: .artifacts/deploy/aws
           include-hidden-files: true
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 1
 
       - name: Upload Pages deployment artifact
@@ -106,11 +118,11 @@ jobs:
           name: deploy-pages-site
           path: .artifacts/deploy/github-pages
           include-hidden-files: true
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 1
 
   aws:
-    name: Deploy AWS Canonical Site
+    name: Deploy AWS Site
     runs-on: ubuntu-latest
     needs:
       - prepare
@@ -118,6 +130,7 @@ jobs:
     if: |
       always() &&
       needs.prepare.result == 'success' &&
+      needs.prepare.outputs.aws_target_enabled == 'true' &&
       needs.prepare.outputs.aws_enabled == 'true' &&
       (
         needs.prepare.outputs.artifact_source == 'ci' ||
@@ -169,7 +182,7 @@ jobs:
         run: bun run deploy:aws:bootstrap --apply
 
       - name: Publish AWS artifact
-        run: bun run deploy:aws:publish --artifact=.artifacts/deploy/aws --apply
+        run: bun run deploy:publish -- --target=aws --artifact=.artifacts/deploy/aws --apply
 
       - name: Upload AWS deploy diagnostics on failure
         if: failure()
@@ -181,7 +194,7 @@ jobs:
           retention-days: 7
 
   pages:
-    name: Deploy GitHub Pages Mirror
+    name: Deploy GitHub Pages
     runs-on: ubuntu-latest
     needs:
       - prepare
@@ -189,6 +202,7 @@ jobs:
     if: |
       always() &&
       needs.prepare.result == 'success' &&
+      needs.prepare.outputs.github_pages_enabled == 'true' &&
       (
         needs.prepare.outputs.artifact_source == 'ci' ||
         needs.build_artifacts.result == 'success'
@@ -227,9 +241,9 @@ jobs:
           name: deploy-pages-site
           path: .artifacts/deploy/github-pages
 
-      - name: Plan Pages deployment
+      - name: Prepare Pages deployment
         id: pages_plan
-        run: bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages
+        run: bun run deploy:publish -- --target=github-pages --artifact=.artifacts/deploy/github-pages
 
       - name: Archive Pages artifact
         if: steps.pages_plan.outputs.pages_changed == 'true'
@@ -284,9 +298,20 @@ jobs:
     if: |
       always() &&
       needs.prepare.result == 'success' &&
-      needs.prepare.outputs.aws_enabled == 'true' &&
-      needs.aws.result == 'success' &&
-      needs.pages.result == 'success'
+      (
+        needs.prepare.outputs.aws_target_enabled != 'true' ||
+        needs.aws.result == 'success' ||
+        needs.aws.result == 'skipped'
+      ) &&
+      (
+        needs.prepare.outputs.github_pages_enabled != 'true' ||
+        needs.pages.result == 'success' ||
+        needs.pages.result == 'skipped'
+      ) &&
+      (
+        needs.prepare.outputs.aws_enabled == 'true' ||
+        needs.prepare.outputs.github_pages_enabled == 'true'
+      )
 
     steps:
       - name: Checkout repository
@@ -302,7 +327,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Verify canonical AWS site and Pages mirror
+      - name: Verify enabled deployment targets
         run: bun run deploy:verify
 
       - name: Upload verification diagnostics on failure

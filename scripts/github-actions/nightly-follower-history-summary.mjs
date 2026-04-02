@@ -13,6 +13,8 @@ const publicRichSyncSummary = fs.existsSync(publicRichSyncSummaryPath)
   : null;
 const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
+const deploymentDefaultsPath = "config/deployment.defaults.json";
+const deploymentOverlayPath = "config/deployment.json";
 
 const readCacheRevalidationSummaries = () => {
   if (!fs.existsSync(cacheRevalidationDir)) {
@@ -26,6 +28,36 @@ const readCacheRevalidationSummaries = () => {
       const absolute = path.join(cacheRevalidationDir, entry);
       return JSON.parse(fs.readFileSync(absolute, "utf8"));
     });
+};
+
+const readAwsDeploymentUrl = () => {
+  if (!fs.existsSync(deploymentDefaultsPath)) {
+    return null;
+  }
+
+  try {
+    const defaultsConfig = JSON.parse(fs.readFileSync(deploymentDefaultsPath, "utf8"));
+    const overlayConfig = fs.existsSync(deploymentOverlayPath)
+      ? JSON.parse(fs.readFileSync(deploymentOverlayPath, "utf8"))
+      : null;
+    const mergedConfig = overlayConfig
+      ? {
+          ...defaultsConfig,
+          ...overlayConfig,
+          targets: {
+            ...(defaultsConfig.targets ?? {}),
+            ...(overlayConfig.targets ?? {}),
+            aws: {
+              ...(defaultsConfig.targets?.aws ?? {}),
+              ...(overlayConfig.targets?.aws ?? {}),
+            },
+          },
+        }
+      : defaultsConfig;
+    return mergedConfig?.targets?.aws?.publicOrigin ?? null;
+  } catch {
+    return null;
+  }
 };
 
 lines.push("## Nightly Follower History");
@@ -86,10 +118,10 @@ if (historySummary) {
 
 if (process.env.AWS_DEPLOY_ENABLED === "true") {
   lines.push(
-    `- AWS canonical deployment: ${process.env.AWS_DEPLOYMENT_URL || "https://openlinks.us/"}`,
+    `- AWS deployment: ${process.env.AWS_DEPLOYMENT_URL || readAwsDeploymentUrl() || "configured target"}`,
   );
 } else {
-  lines.push("- AWS canonical deployment: skipped");
+  lines.push("- AWS deployment: skipped");
 }
 
 if (process.env.PAGES_DEPLOYMENT_CHANGED === "true" && process.env.PAGES_DEPLOYMENT_URL) {
@@ -106,7 +138,7 @@ lines.push("- `bun run public:rich:sync`");
 lines.push("- `bun run followers:history:sync`");
 lines.push("- `bun run deploy:build`");
 lines.push(
-  "- Direct AWS and Pages deploys stay in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",
+  "- Direct AWS and GitHub Pages deploys stay in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",
 );
 
 const cacheSummaries = readCacheRevalidationSummaries();

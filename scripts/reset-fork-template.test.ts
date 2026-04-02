@@ -55,6 +55,19 @@ const seedWorkspace = () => {
     },
     title: "OpenLinks",
   });
+  writeJson(path.join(rootDir, "config/deployment.json"), {
+    enabledTargets: ["aws", "github-pages"],
+    primaryTarget: "aws",
+    targets: {
+      aws: {
+        publicOrigin: "https://openlinks.us",
+        priceClass: "PriceClass_100",
+      },
+      "github-pages": {},
+      render: {},
+      railway: {},
+    },
+  });
   writeJson(path.join(rootDir, "data/policy/referral-catalog.local.json"), {
     $schema: "../../schema/referral-catalog.schema.json",
     version: 1,
@@ -131,6 +144,9 @@ test("runForkReset rewrites starter data, clears generated identity artifacts, a
     const profile = JSON.parse(fs.readFileSync(path.join(rootDir, "data/profile.json"), "utf8"));
     const links = JSON.parse(fs.readFileSync(path.join(rootDir, "data/links.json"), "utf8"));
     const site = JSON.parse(fs.readFileSync(path.join(rootDir, "data/site.json"), "utf8"));
+    const deploymentOverlay = JSON.parse(
+      fs.readFileSync(path.join(rootDir, "config/deployment.json"), "utf8"),
+    );
     const referralCatalogOverlay = JSON.parse(
       fs.readFileSync(path.join(rootDir, "data/policy/referral-catalog.local.json"), "utf8"),
     );
@@ -145,6 +161,19 @@ test("runForkReset rewrites starter data, clears generated identity artifacts, a
     assert.equal(site.title, "Minimal OpenLinks");
     assert.deepEqual(site.quality, {
       seo: { canonicalBaseUrl: "https://example.com/" },
+    });
+    assert.deepEqual(deploymentOverlay, {
+      $schema: "../schema/deployment.schema.json",
+      enabledTargets: ["github-pages"],
+      primaryTarget: "github-pages",
+      targets: {
+        aws: {
+          priceClass: "PriceClass_100",
+        },
+        "github-pages": {},
+        render: {},
+        railway: {},
+      },
     });
     assert.deepEqual(referralCatalogOverlay.families, [
       {

@@ -38,6 +38,7 @@ test("buildAwsStackParameters maps the canonical domain and hosted zone", () => 
     "ParameterKey=SiteBucketName,ParameterValue=open-links-site-123456789012",
     "ParameterKey=PrimaryDomain,ParameterValue=openlinks.us",
     "ParameterKey=PrimaryHostedZoneId,ParameterValue=ZOPENLINKS",
+    "ParameterKey=PriceClass,ParameterValue=PriceClass_100",
   ]);
 });
 

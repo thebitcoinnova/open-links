@@ -1,6 +1,6 @@
 import path from "node:path";
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import { runCommand, runJsonCommand } from "./command";
+import { deploymentConfig } from "./effective-deployment-config";
 
 interface AwsCallerIdentity {
   Account: string;
@@ -289,9 +289,10 @@ export function assessAwsDomainReadiness() {
 
 export function formatDomainReadinessMessage(assessment: DomainReadinessAssessment) {
   const blockerLines = assessment.blockers.map((blocker) => `- ${blocker}`);
+  const domain = assessment.canonical.domain;
 
   return [
-    "AWS domain readiness is still pending for the openlinks.us rollout.",
+    `AWS domain readiness is still pending for ${domain}.`,
     ...blockerLines,
     "Check mode can still report the pending state, but apply mode must wait until the missing hosted zone exists.",
   ].join("\n");
@@ -674,6 +675,7 @@ export function buildAwsStackParameters(hostedZones: ResolvedHostedZones, bucket
     formatCloudFormationParameter("SiteBucketName", bucketName),
     formatCloudFormationParameter("PrimaryDomain", hostedZones.canonical.domain),
     formatCloudFormationParameter("PrimaryHostedZoneId", hostedZones.canonical.zoneId),
+    formatCloudFormationParameter("PriceClass", deploymentConfig.awsPriceClass),
   ];
 }
 
