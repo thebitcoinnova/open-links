@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T10:36:33.154Z",
+  "generatedAt": "2026-04-02T07:27:42.854Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/df9325785d065ff73729756c9bf5dad9d8b8305fda657bfc9da3d8bf841028da.png",
@@ -164,20 +164,20 @@
       "bytes": 77824
     },
     "link:rumble:image": {
-      "resolvedPath": "cache/content-images/3b92db79aab8c5c5ccc195d6b5305927bcc7a8709b72fdce03c8d4c44f83a529.jpg",
-      "updatedAt": "2026-04-01T08:36:36.249Z",
+      "resolvedPath": "cache/content-images/0a1c23169a2aa426138b20ec24e2115c30e58845cedf80a7d33a768c793af547.jpg",
+      "updatedAt": "2026-04-02T07:27:41.344Z",
       "contentType": "image/jpeg",
-      "bytes": 77824
+      "bytes": 73958
     },
     "link:rumble:profileImage": {
-      "resolvedPath": "cache/content-images/3b92db79aab8c5c5ccc195d6b5305927bcc7a8709b72fdce03c8d4c44f83a529.jpg",
-      "updatedAt": "2026-04-01T08:36:36.290Z",
+      "resolvedPath": "cache/content-images/351f3944bc4a48a01abf0c95fa57c51dcd649522514fdec7533ff0dacc8cd587.jpg",
+      "updatedAt": "2026-04-02T07:27:41.674Z",
       "contentType": "image/jpeg",
-      "bytes": 77824
+      "bytes": 5606
     },
     "link:rumble:ogImage": {
       "resolvedPath": "cache/content-images/0a1c23169a2aa426138b20ec24e2115c30e58845cedf80a7d33a768c793af547.jpg",
-      "updatedAt": "2026-04-01T08:40:27.356Z",
+      "updatedAt": "2026-04-02T07:27:41.711Z",
       "contentType": "image/jpeg",
       "bytes": 73958
     },

@@ -475,19 +475,36 @@ export const buildStableContentImagesManifest = (input: {
   bySlot: input.bySlot,
 });
 
-const createPreviousState = (
+const normalizeSourceUrl = (value: string | undefined): string | undefined => {
+  const trimmed = trimToUndefined(value);
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return toCanonicalHttpUrl(trimmed) ?? trimmed;
+};
+
+export const createPreviousState = (
+  currentSourceUrl: string,
   stableEntry: StableGeneratedContentImageEntry | undefined,
   runtimeEntry: RuntimeGeneratedContentImageEntry | undefined,
 ): RemoteCachePreviousState | undefined => {
-  if (!stableEntry && !runtimeEntry) {
+  const normalizedCurrentSourceUrl = normalizeSourceUrl(currentSourceUrl);
+  const normalizedPreviousSourceUrl = normalizeSourceUrl(runtimeEntry?.sourceUrl);
+  const matchingRuntimeEntry =
+    normalizedCurrentSourceUrl && normalizedPreviousSourceUrl === normalizedCurrentSourceUrl
+      ? runtimeEntry
+      : undefined;
+
+  if (!stableEntry && !matchingRuntimeEntry) {
     return undefined;
   }
 
   return {
-    etag: runtimeEntry?.etag,
-    lastModified: runtimeEntry?.lastModified,
-    cacheControl: runtimeEntry?.cacheControl,
-    expiresAt: runtimeEntry?.expiresAt,
+    etag: matchingRuntimeEntry?.etag,
+    lastModified: matchingRuntimeEntry?.lastModified,
+    cacheControl: matchingRuntimeEntry?.cacheControl,
+    expiresAt: matchingRuntimeEntry?.expiresAt,
     bytes: stableEntry?.bytes,
   };
 };
@@ -653,7 +670,7 @@ const run = async () => {
       },
       userAgent: "open-links-content-image-sync/0.1",
       bodyType: "buffer",
-      previous: createPreviousState(previousStableEntry, previousRuntimeEntry),
+      previous: createPreviousState(httpUrl, previousStableEntry, previousRuntimeEntry),
       cacheValueAvailable: cachedAssetExists,
       force: args.force,
       statsCollector: remoteCacheStats,

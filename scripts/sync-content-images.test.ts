@@ -6,8 +6,10 @@ import {
   getSiteSeoContentImageSlotId,
 } from "../src/lib/content/content-image-slots";
 import {
+  type RuntimeGeneratedContentImageEntry,
   type StableGeneratedContentImageEntry,
   buildStableContentImagesManifest,
+  createPreviousState,
   stabilizeContentImageEntry,
 } from "./sync-content-images";
 
@@ -76,6 +78,68 @@ test("preserves content-image manifest generatedAt when stabilized slots are unc
 
   // Assert
   assert.equal(manifest.generatedAt, "2026-03-08T11:00:00.000Z");
+});
+
+test("reuses prior validators when a slot keeps the same source url", () => {
+  // Arrange
+  const stableEntry: StableGeneratedContentImageEntry = {
+    resolvedPath: "cache/content-images/example.jpg",
+    contentType: "image/jpeg",
+    bytes: 1234,
+    updatedAt: "2026-03-08T10:00:00.000Z",
+  };
+  const runtimeEntry: RuntimeGeneratedContentImageEntry = {
+    sourceUrl: "https://example.com/avatar.jpg",
+    etag: '"avatar-etag"',
+    lastModified: "Tue, 08 Mar 2026 10:00:00 GMT",
+    cacheControl: "max-age=3600",
+    expiresAt: "2026-03-08T11:00:00.000Z",
+  };
+
+  // Act
+  const previousState = createPreviousState(
+    "https://example.com/avatar.jpg",
+    stableEntry,
+    runtimeEntry,
+  );
+
+  // Assert
+  assert.equal(previousState?.etag, '"avatar-etag"');
+  assert.equal(previousState?.lastModified, "Tue, 08 Mar 2026 10:00:00 GMT");
+  assert.equal(previousState?.cacheControl, "max-age=3600");
+  assert.equal(previousState?.expiresAt, "2026-03-08T11:00:00.000Z");
+  assert.equal(previousState?.bytes, 1234);
+});
+
+test("drops prior validators when a slot source url changes", () => {
+  // Arrange
+  const stableEntry: StableGeneratedContentImageEntry = {
+    resolvedPath: "cache/content-images/old-avatar.jpg",
+    contentType: "image/jpeg",
+    bytes: 4321,
+    updatedAt: "2026-03-08T10:00:00.000Z",
+  };
+  const runtimeEntry: RuntimeGeneratedContentImageEntry = {
+    sourceUrl: "https://example.com/old-avatar.jpg",
+    etag: '"old-avatar-etag"',
+    lastModified: "Tue, 08 Mar 2026 10:00:00 GMT",
+    cacheControl: "max-age=86400",
+    expiresAt: "2026-03-09T10:00:00.000Z",
+  };
+
+  // Act
+  const previousState = createPreviousState(
+    "https://example.com/new-avatar.jpg",
+    stableEntry,
+    runtimeEntry,
+  );
+
+  // Assert
+  assert.equal(previousState?.etag, undefined);
+  assert.equal(previousState?.lastModified, undefined);
+  assert.equal(previousState?.cacheControl, undefined);
+  assert.equal(previousState?.expiresAt, undefined);
+  assert.equal(previousState?.bytes, 4321);
 });
 
 test("collects effective link and site image slots using current metadata precedence", () => {
