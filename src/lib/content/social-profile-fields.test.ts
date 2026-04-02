@@ -353,12 +353,13 @@ test("medium profile normalization backfills the feed image as the profile avata
   assert.deepEqual(missingFields, []);
 });
 
-test("rumble profile normalization backfills image-only metadata into profile avatars", () => {
+test("rumble profile normalization keeps banner-like preview media out of profile avatars", () => {
   // Arrange
   const rumbleProfile = resolveSupportedSocialProfile({
     url: "https://rumble.com/c/InTheLitterBox",
   });
   assert.ok(rumbleProfile);
+  const exclusion = resolveProfileImageBackfillExclusion(rumbleProfile.platform);
 
   // Act
   const normalized = normalizeSupportedSocialProfileMetadata(
@@ -372,13 +373,13 @@ test("rumble profile normalization backfills image-only metadata into profile av
   const missingFields = resolveMissingSupportedSocialProfileFields(normalized, rumbleProfile);
 
   // Assert
+  assert.deepEqual(exclusion, PROFILE_IMAGE_BACKFILL_EXCLUSIONS.rumble);
   assert.deepEqual(normalized, {
     image: "https://example.com/rumble-avatar.jpg",
-    profileImage: "https://example.com/rumble-avatar.jpg",
     followersCount: 112000,
     followersCountRaw: "112K Followers",
   });
-  assert.deepEqual(missingFields, []);
+  assert.deepEqual(missingFields, ["profileImage"]);
 });
 
 test("substack profile normalization opts out of avatar backfill with a documented exclusion reason", () => {

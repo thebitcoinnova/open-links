@@ -95,8 +95,7 @@ export const parseRumblePublicProfile = (
   const profileDescription = extractRumbleProfileDescription(html);
   const ogImage = safeTrim(parsed.metadata.ogImage);
   const twitterImage = safeTrim(parsed.metadata.twitterImage);
-  const profileImage =
-    extractRumbleProfileImage(html, sourceUrl) ?? safeTrim(parsed.metadata.image);
+  const profileImage = extractRumbleProfileImage(html, sourceUrl);
   const image = safeTrim(parsed.metadata.image) ?? profileImage;
   const followersCountRaw = extractRumbleFollowersCountRaw(html);
   const placeholderSignals = detectPlaceholderSignals(

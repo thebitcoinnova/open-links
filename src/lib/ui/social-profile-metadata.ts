@@ -169,11 +169,12 @@ export const resolveSocialProfileMetadata = (link: OpenLink): ResolvedSocialProf
     profileSemantics === "non_profile" ? undefined : resolvedHandle.resolution.extractorId;
   const metrics: SocialAudienceMetric[] = [];
   const profileDescription = resolveMetadataText(normalizedMetadata.profileDescription);
+  const previewImageUrl = resolveMetadataText(normalizedMetadata.image);
   const profileImageUrl =
     profileSemantics === "non_profile"
       ? undefined
-      : resolveMetadataText(normalizedMetadata.profileImage);
-  const previewImageUrl = resolveMetadataText(normalizedMetadata.image);
+      : (resolveMetadataText(normalizedMetadata.profileImage) ??
+        (supportedProfile?.platform === "rumble" ? previewImageUrl : undefined));
   const displayName = resolveDisplayNameFromTitle(
     resolveMetadataText(normalizedMetadata.title),
     resolvedHandle.resolution.extractorId,
