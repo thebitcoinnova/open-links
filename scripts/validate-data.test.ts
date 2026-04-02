@@ -5,10 +5,12 @@ import process from "node:process";
 import test from "node:test";
 import type { EnrichmentRunReport } from "./enrichment/types";
 import {
+  analyticsHistorySetupIssues,
   collectReferralCatalogIssues,
   enrichmentIssues,
   followerHistoryArtifactIssues,
   pathTouchesHookRichArtifactInputs,
+  publicAugmentedStableCacheCoverageIssues,
   resolveHookRichArtifactCheckDecision,
   resolvePreviewImageAvailability,
 } from "./validate-data";
@@ -642,4 +644,235 @@ test("blocking enrichment failures remain strict-failing in strict mode", () => 
   assert.equal(issues.length, 1);
   assert.equal(issues[0]?.level, "error");
   assert.equal(issues[0]?.strictBlocking, undefined);
+});
+
+test("public augmentation coverage reports missing stable public-cache entries", (t) => {
+  const baseDir = "tmp/tests/public-cache-coverage-missing";
+  const publicCachePath = writeJsonFile(`${baseDir}/rich-public-cache.json`, {
+    $schema: "../../schema/rich-public-cache.schema.json",
+    version: 1,
+    entries: {},
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  const issues = publicAugmentedStableCacheCoverageIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "rumble",
+          type: "rich",
+          enabled: true,
+          url: "https://rumble.com/c/c-7752998",
+        },
+      ],
+    },
+    siteData: {},
+    generatedMetadataByLink: {
+      rumble: {
+        title: "The Bitcoin Nova Podcast",
+        description: "A complete generated description.",
+        image: "https://example.com/rumble.jpg",
+      },
+    },
+    publicCachePath,
+  });
+
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.source, publicCachePath);
+  assert.match(issues[0]?.message ?? "", /no committed stable public-cache entry/u);
+  assert.match(issues[0]?.remediation ?? "", /enrich:rich:strict:write-cache/u);
+});
+
+test("public augmentation coverage accepts committed stable public-cache entries", (t) => {
+  const baseDir = "tmp/tests/public-cache-coverage-present";
+  const publicCachePath = writeJsonFile(`${baseDir}/rich-public-cache.json`, {
+    $schema: "../../schema/rich-public-cache.schema.json",
+    version: 1,
+    entries: {
+      rumble: {
+        linkId: "rumble",
+        sourceUrl: "https://rumble.com/c/c-7752998/about",
+        capturedAt: "2026-04-01T09:24:36.440Z",
+        updatedAt: "2026-04-01T09:24:36.440Z",
+        metadata: {
+          title: "The Bitcoin Nova Podcast",
+          description: "A complete generated description.",
+          image: "https://example.com/rumble.jpg",
+        },
+      },
+    },
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  const issues = publicAugmentedStableCacheCoverageIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "rumble",
+          type: "rich",
+          enabled: true,
+          url: "https://rumble.com/c/c-7752998",
+        },
+      ],
+    },
+    siteData: {},
+    generatedMetadataByLink: {
+      rumble: {
+        title: "The Bitcoin Nova Podcast",
+        description: "A complete generated description.",
+        image: "https://example.com/rumble.jpg",
+      },
+    },
+    publicCachePath,
+  });
+
+  assert.deepEqual(issues, []);
+});
+
+test("analytics history setup warns when x is eligible but no follower-history entry exists", (t) => {
+  const baseDir = "tmp/tests/analytics-history-warning";
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { recursive: true, force: true });
+  });
+
+  const issues = analyticsHistorySetupIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "x",
+          label: "X",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/XSTAC1",
+        },
+      ],
+    },
+    siteData: {
+      title: "Site",
+      description: "Desc",
+      theme: { active: "sleek", available: ["sleek"] },
+      ui: {},
+    },
+    indexPath: writeJsonFile(`${baseDir}/index.json`, {
+      version: 1,
+      updatedAt: "2026-04-01T10:00:00.000Z",
+      entries: [],
+    }),
+  });
+
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "warning");
+  assert.match(
+    issues[0]?.message ?? "",
+    /analytics-capable links are missing follower-history entries: x/u,
+  );
+  assert.match(issues[0]?.remediation ?? "", /public:rich:sync -- --only-link x/u);
+});
+
+test("analytics history setup stays quiet when x already has a follower-history entry", (t) => {
+  const baseDir = "tmp/tests/analytics-history-ok";
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { recursive: true, force: true });
+  });
+
+  const issues = analyticsHistorySetupIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "x",
+          label: "X",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/XSTAC1",
+        },
+      ],
+    },
+    siteData: {
+      title: "Site",
+      description: "Desc",
+      theme: { active: "sleek", available: ["sleek"] },
+      ui: {},
+    },
+    indexPath: writeJsonFile(`${baseDir}/index.json`, {
+      version: 1,
+      updatedAt: "2026-04-01T10:00:00.000Z",
+      entries: [
+        {
+          linkId: "x",
+          label: "X",
+          platform: "x",
+          handle: "xstac1",
+          canonicalUrl: "https://x.com/XSTAC1",
+          audienceKind: "followers",
+          csvPath: "history/followers/x.csv",
+          latestAudienceCount: 5581,
+          latestAudienceCountRaw: "5,581 Followers",
+          latestObservedAt: "2026-04-01T10:00:00.000Z",
+        },
+      ],
+    }),
+  });
+
+  assert.deepEqual(issues, []);
+});
+
+test("analytics history setup treats x community coverage as satisfied by existing x platform history", (t) => {
+  const baseDir = "tmp/tests/analytics-history-platform-coverage";
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { recursive: true, force: true });
+  });
+
+  const issues = analyticsHistorySetupIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "paranoid-bitcoin-anarchists",
+          label: "Paranoid Bitcoin Anarchists",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/i/communities/1871996451812769951",
+        },
+      ],
+    },
+    siteData: {
+      title: "Site",
+      description: "Desc",
+      theme: { active: "sleek", available: ["sleek"] },
+      ui: {},
+    },
+    indexPath: writeJsonFile(`${baseDir}/index.json`, {
+      version: 1,
+      updatedAt: "2026-04-01T10:00:00.000Z",
+      entries: [
+        {
+          linkId: "x",
+          label: "X",
+          platform: "x",
+          handle: "xstac1",
+          canonicalUrl: "https://x.com/XSTAC1",
+          audienceKind: "followers",
+          csvPath: "history/followers/x.csv",
+          latestAudienceCount: 5581,
+          latestAudienceCountRaw: "5,581 Followers",
+          latestObservedAt: "2026-04-01T10:00:00.000Z",
+        },
+      ],
+    }),
+  });
+
+  assert.deepEqual(issues, []);
 });

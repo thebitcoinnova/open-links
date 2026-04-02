@@ -206,6 +206,14 @@ bun run public:rich:sync -- --only-link x
 bun run public:rich:sync -- --only-link primal
 ```
 
+The built-in audience analytics page is already enabled by default. It becomes visible once follower-history artifacts exist, so after refreshing audience-capable links you should also run:
+
+```bash
+bun run followers:history:sync
+```
+
+Then commit the updated files under `public/history/followers/`.
+
 ### Start dev server
 
 ```bash
@@ -221,7 +229,7 @@ bun run build
 bun run preview
 ```
 
-`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo. Cache-backed fetches across avatar/image/public/authenticated pipelines are governed by `data/policy/remote-cache-policy.json`; add new domains there whenever a change introduces a new remote host.
+`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo. Cache-backed fetches across avatar/image/public/authenticated pipelines are governed by `data/policy/remote-cache-policy.json`; add new domains there whenever a change introduces a new remote host. If a public-augmentation rich link picks up new generated metadata and should stay deployable from a fresh CI runner, run `bun run enrich:rich:strict:write-cache` before commit so cold-run deploys can fall back to committed public cache when the remote source is transiently unavailable.
 
 ## First Production Deploy
 
