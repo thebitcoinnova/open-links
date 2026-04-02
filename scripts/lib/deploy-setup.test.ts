@@ -7,6 +7,8 @@ import {
   buildAwsDeployPolicy,
   buildAwsDeployRoleArn,
   buildGithubOidcTrustPolicy,
+  classifyGitHubSetupAccessFailure,
+  formatGitHubSetupAccessFailure,
   normalizePolicyDocument,
   planGitHubPagesSite,
   resolveAwsDeployRoleArn,
@@ -227,4 +229,56 @@ test("planGitHubPagesSite distinguishes missing, legacy, and workflow configurat
       reason: "GitHub Pages is already configured for GitHub Actions workflow deployments.",
     },
   );
+});
+
+test("classifyGitHubSetupAccessFailure detects repository admin denial responses", () => {
+  // Arrange / Act
+  const failure = classifyGitHubSetupAccessFailure({
+    errorMessage:
+      "Command failed (1): gh variable list --repo pRizz/open-links --env production --json name,value\nfailed to get variables: HTTP 403: Must have admin rights to Repository.",
+    repositorySlug: "pRizz/open-links",
+    settingsUrls: ["https://github.com/pRizz/open-links/settings/environments"],
+    surface: "production environment digest variable",
+  });
+
+  // Assert
+  assert.deepEqual(failure, {
+    repositorySlug: "pRizz/open-links",
+    settingsUrls: ["https://github.com/pRizz/open-links/settings/environments"],
+    surface: "production environment digest variable",
+  });
+});
+
+test("classifyGitHubSetupAccessFailure ignores missing-resource responses", () => {
+  // Arrange / Act / Assert
+  assert.equal(
+    classifyGitHubSetupAccessFailure({
+      errorMessage:
+        "Command failed (1): gh api --method GET repos/pRizz/open-links/environments/production\nHTTP 404: Not Found",
+      repositorySlug: "pRizz/open-links",
+      settingsUrls: [],
+      surface: "production environment",
+    }),
+    null,
+  );
+});
+
+test("formatGitHubSetupAccessFailure includes repo-admin remediation and aws-only fallback", () => {
+  // Arrange
+  const message = formatGitHubSetupAccessFailure({
+    repositorySlug: "pRizz/open-links",
+    settingsUrls: [
+      "https://github.com/pRizz/open-links/settings/environments",
+      "https://github.com/pRizz/open-links/settings/variables/actions",
+    ],
+    surface: "production environment digest variable",
+  });
+
+  // Act / Assert
+  assert.match(message, /repository admin access/u);
+  assert.match(message, /deploy:setup -- --apply/u);
+  assert.match(message, /deploy:setup:aws -- --apply/u);
+  assert.match(message, /deploy:setup:github -- --apply/u);
+  assert.match(message, /settings\/environments/u);
+  assert.match(message, /settings\/variables\/actions/u);
 });

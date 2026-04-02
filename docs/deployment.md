@@ -31,6 +31,8 @@ git push origin main
 
 After any deployment naming or topology refactor, rerun `bun run deploy:setup -- --apply` before expecting `Deploy Production` to succeed. That step rotates the config-derived IAM role/policy references and the GitHub `AWS_DEPLOY_ROLE_ARN` secret to the current deployment model.
 
+When GitHub setup is in scope, `deploy:setup` now performs a read-only GitHub admin preflight before any AWS mutations. Use a repo-admin `gh` identity for the full flow, or split the work into `bun run deploy:setup:aws -- --apply` now and `bun run deploy:setup:github -- --apply` later with repo-admin access.
+
 ## Supported Targets
 
 - `github-pages`: default fork-safe target
@@ -97,6 +99,7 @@ Provider-native targets remain externally published by their hosting platforms, 
    - set `primaryTarget` to `aws`
    - set `targets.aws.publicOrigin` to the intended canonical HTTPS origin
 2. Run `bun run deploy:setup -- --apply`.
+   - This step requires repo-admin `gh` access because it preflights and updates GitHub environments, Pages, secrets, and variables.
 3. Ensure GitHub repo settings include:
    - `OPENLINKS_ENABLE_AWS_DEPLOY=true`
    - `AWS_DEPLOY_ROLE_ARN`
@@ -146,6 +149,7 @@ Local diagnostics:
 | Symptom | Likely Cause | Fix |
 |--------|--------------|-----|
 | `deploy:setup` updates `data/site.json` or README unexpectedly | deployment defaults or overlay changed, or the overlay is stale | review `bun run deploy:plan`, then rerun `bun run deploy:setup -- --apply` |
+| `deploy:setup` fails immediately at `GitHub admin preflight` | the current `gh` identity can authenticate but cannot administer repository environments, Pages, secrets, or variables | authenticate `gh` as a repo admin and rerun `bun run deploy:setup -- --apply`, or run `bun run deploy:setup:aws -- --apply` now and finish `bun run deploy:setup:github -- --apply` later with admin access |
 | `Deploy AWS Site` fails with CloudFormation `AccessDenied` after a deployment refactor | the attached IAM policy or GitHub `AWS_DEPLOY_ROLE_ARN` secret still points at pre-refactor role/policy names | rerun `bun run deploy:setup -- --apply`, confirm the config-derived role ARN/policy are active, then rerun `Deploy Production` |
 | AWS job is skipped | AWS target is disabled in the effective topology or GitHub AWS opt-in is missing | enable `aws` in the effective topology, then set `OPENLINKS_ENABLE_AWS_DEPLOY` and `AWS_DEPLOY_ROLE_ARN` |
 | Pages job is skipped | GitHub Pages is disabled in the effective topology | enable `github-pages` in the effective topology |

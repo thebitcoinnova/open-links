@@ -17,6 +17,12 @@ export interface ResolvedAwsDeployRoleArn {
   source: "config-derived" | "explicit-override";
 }
 
+export interface GitHubSetupAccessFailure {
+  repositorySlug: string;
+  settingsUrls: string[];
+  surface: string;
+}
+
 export const githubOidcThumbprint = "6938fd4d98bab03faadb97b34396831e3780aea1";
 export const awsDeployCloudFormationActions = [
   "cloudformation:CreateChangeSet",
@@ -157,6 +163,44 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
 
 export function buildAwsDeployRoleArn(accountId: string) {
   return `arn:aws:iam::${accountId}:role/${deploymentConfig.awsDeployRoleName}`;
+}
+
+export function classifyGitHubSetupAccessFailure(input: {
+  errorMessage: string;
+  repositorySlug: string;
+  settingsUrls: string[];
+  surface: string;
+}) {
+  const normalizedMessage = input.errorMessage.toLowerCase();
+  const isAdminDenied =
+    normalizedMessage.includes("http 403") &&
+    normalizedMessage.includes("must have admin rights to repository");
+
+  if (!isAdminDenied) {
+    return null;
+  }
+
+  return {
+    repositorySlug: input.repositorySlug,
+    settingsUrls: input.settingsUrls,
+    surface: input.surface,
+  } satisfies GitHubSetupAccessFailure;
+}
+
+export function formatGitHubSetupAccessFailure(failure: GitHubSetupAccessFailure) {
+  const guidance = [
+    `GitHub setup needs repository admin access to inspect ${failure.surface} for ${failure.repositorySlug}.`,
+    "Authenticate `gh` as a repository admin and rerun `bun run deploy:setup -- --apply`.",
+    "If you only need IAM reconciliation right now, run `bun run deploy:setup:aws -- --apply` and rerun `bun run deploy:setup:github -- --apply` later with repo-admin access.",
+  ];
+
+  if (failure.settingsUrls.length === 0) {
+    return guidance.join("\n");
+  }
+
+  return [...guidance, "Relevant settings:", ...failure.settingsUrls.map((url) => `- ${url}`)].join(
+    "\n",
+  );
 }
 
 export function resolveAwsDeployRoleArn(input: {

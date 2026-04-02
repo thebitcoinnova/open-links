@@ -8,7 +8,9 @@ import {
 import {
   type GitHubPagesSiteState,
   type ResolvedAwsDeployRoleArn,
+  classifyGitHubSetupAccessFailure,
   computeDigest,
+  formatGitHubSetupAccessFailure,
   planGitHubPagesSite,
   resolveAwsDeployRoleArn,
 } from "../lib/deploy-setup";
@@ -36,12 +38,15 @@ interface PlanDecision {
   reason: string;
 }
 
+type SetupGitHubMode = "apply" | "check" | "check-access";
+
 const args = parseArgs(process.argv.slice(2));
-const mode: "apply" | "check" = args.apply === "true" ? "apply" : "check";
+const mode = resolveSetupGitHubMode(args);
+const runMode: "apply" | "check" = mode === "apply" ? "apply" : "check";
 const commandName = "deploy:setup:github";
 const run = await createDeployRun({
   command: commandName,
-  mode,
+  mode: runMode,
   target: "github-setup",
 });
 const awsEnabled = deploymentConfig.enabledTargets.includes("aws");
@@ -104,11 +109,27 @@ const verificationResults: DeployVerificationResult[] = [
   },
   ...buildAwsRoleVerificationResults(awsEnabled, maybeResolvedRoleArn),
 ];
+const skippedReasons: string[] = [];
+const appliedChanges: string[] = [];
+const discoveredRemoteState: Record<string, unknown> = {
+  awsEnabled,
+  awsIdentity,
+  awsDeployPolicyName: deploymentConfig.awsDeployPolicyName,
+  awsDeployRoleName: deploymentConfig.awsDeployRoleName,
+  maybeRoleArn,
+  maybeRoleArnDigest,
+  maybeResolvedRoleArn,
+  repositorySlug,
+  settingsUrls,
+};
+let plannedChanges: unknown = {
+  mode,
+};
 
 if (maybeResolvedRoleArn?.mismatchDetail) {
-  const skippedReasons = [
+  skippedReasons.push(
     "GitHub setup stopped before mutating repository settings because the local role ARN override drifted from the deployment config.",
-  ];
+  );
 
   await run.addBreadcrumb({
     detail: maybeResolvedRoleArn.mismatchDetail,
@@ -122,15 +143,8 @@ if (maybeResolvedRoleArn?.mismatchDetail) {
       artifactDir: undefined,
       artifactHash: undefined,
       command: commandName,
-      discoveredRemoteState: {
-        awsEnabled,
-        awsIdentity,
-        awsDeployPolicyName: deploymentConfig.awsDeployPolicyName,
-        awsDeployRoleName: deploymentConfig.awsDeployRoleName,
-        maybeResolvedRoleArn,
-        repositorySlug,
-      },
-      mode,
+      discoveredRemoteState,
+      mode: runMode,
       plannedChanges: {
         blockedBy: "ambient role ARN drift",
       },
@@ -145,202 +159,352 @@ if (maybeResolvedRoleArn?.mismatchDetail) {
   throw new Error(`${maybeResolvedRoleArn.mismatchDetail} See ${runDirectory} for details.`);
 }
 
-const currentProductionEnvironment = awsEnabled
-  ? loadEnvironmentState(repositorySlug, productionEnvironment)
-  : null;
-const currentPagesEnvironment = loadEnvironmentState(repositorySlug, pagesEnvironment);
-const currentPagesSite = loadPagesSiteState(repositorySlug);
-const currentDigest =
-  awsEnabled && currentProductionEnvironment
-    ? loadEnvironmentVariable(
+try {
+  const currentProductionEnvironment = awsEnabled
+    ? readGitHubSetupSurface(
         repositorySlug,
-        productionEnvironment,
-        deploymentConfig.githubRoleArnDigestVariableName,
+        settingsUrls,
+        `${productionEnvironment} environment`,
+        () => loadEnvironmentState(repositorySlug, productionEnvironment),
       )
     : null;
-const currentAwsDeployEnabled = awsEnabled
-  ? loadRepoVariable(repositorySlug, awsDeployVariable)
-  : null;
-
-const environmentPlans = {
-  [pagesEnvironment]: buildEnvironmentPlan(currentPagesEnvironment, pagesEnvironment),
-  ...(awsEnabled
-    ? {
-        [productionEnvironment]: buildEnvironmentPlan(
-          currentProductionEnvironment,
-          productionEnvironment,
-        ),
-      }
-    : {}),
-};
-const pagesPlan = planGitHubPagesSite(currentPagesSite);
-const secretPlan = buildSecretPlan({
-  awsEnabled,
-  currentDigest,
-  maybeRoleArnDigest,
-  productionEnvironment,
-});
-const awsDeployVariablePlan = buildAwsDeployVariablePlan({
-  awsEnabled,
-  awsDeployVariable,
-  currentAwsDeployEnabled,
-});
-
-await run.addBreadcrumb({
-  data: {
-    awsDeployVariablePlan,
-    environmentPlans,
-    pagesPlan,
-    secretPlan,
-  },
-  detail: "Computed the GitHub repository setup mutation plan.",
-  status: "planned",
-  step: "plan",
-});
-
-const skippedReasons: string[] = [];
-const appliedChanges: string[] = [];
-
-if (allPlansAreNoOps(environmentPlans, pagesPlan, secretPlan, awsDeployVariablePlan)) {
-  skippedReasons.push(
-    awsEnabled
-      ? "The required GitHub environments, Pages workflow mode, deploy role secret, and AWS opt-in variable already match the desired state."
-      : "The github-pages environment and Pages workflow mode already match the desired state.",
+  const currentPagesEnvironment = readGitHubSetupSurface(
+    repositorySlug,
+    settingsUrls,
+    `${pagesEnvironment} environment`,
+    () => loadEnvironmentState(repositorySlug, pagesEnvironment),
   );
-  await run.addBreadcrumb({
-    detail: "Remote GitHub repository settings already match the desired state.",
-    status: "skipped",
-    step: "plan",
-  });
-} else if (mode === "check") {
-  skippedReasons.push("Check mode only. No GitHub repository mutations were executed.");
-  await run.addBreadcrumb({
-    detail: "Check mode prevented GitHub repository mutations.",
-    status: "skipped",
-    step: "apply",
-  });
-} else {
-  for (const [environmentName, plan] of Object.entries(environmentPlans)) {
-    if (plan.action === "create") {
-      createEnvironment(repositorySlug, environmentName);
-      appliedChanges.push(`Created GitHub environment ${environmentName}.`);
-    }
-  }
-
-  if (pagesPlan.action === "create") {
-    updatePagesSite(repositorySlug, "POST");
-    appliedChanges.push("Enabled GitHub Pages with GitHub Actions workflow deployments.");
-  } else if (pagesPlan.action === "update") {
-    updatePagesSite(repositorySlug, "PUT");
-    appliedChanges.push("Updated GitHub Pages to use GitHub Actions workflow deployments.");
-  }
-
-  if (secretPlan.action === "set" && maybeRoleArnDigest && maybeRoleArn) {
-    setEnvironmentVariable(
-      repositorySlug,
-      productionEnvironment,
-      deploymentConfig.githubRoleArnDigestVariableName,
-      maybeRoleArnDigest,
-    );
-    setEnvironmentSecret(
-      repositorySlug,
-      productionEnvironment,
-      deploymentConfig.githubRoleArnSecretName,
-      maybeRoleArn,
-    );
-    appliedChanges.push(
-      `Updated ${productionEnvironment} environment variable ${deploymentConfig.githubRoleArnDigestVariableName}.`,
-    );
-    appliedChanges.push(
-      `Updated ${productionEnvironment} environment secret ${deploymentConfig.githubRoleArnSecretName}.`,
-    );
-  }
-
-  if (awsDeployVariablePlan.action === "set") {
-    setRepoVariable(repositorySlug, awsDeployVariable, "true");
-    appliedChanges.push(`Set repository variable ${awsDeployVariable}=true.`);
-  }
-}
-
-const finalProductionEnvironment = awsEnabled
-  ? loadEnvironmentState(repositorySlug, productionEnvironment)
-  : null;
-const finalPagesEnvironment = loadEnvironmentState(repositorySlug, pagesEnvironment);
-const finalPagesSite = loadPagesSiteState(repositorySlug);
-const finalDigest =
-  awsEnabled && finalProductionEnvironment
-    ? loadEnvironmentVariable(
+  const currentPagesSite = readGitHubSetupSurface(
+    repositorySlug,
+    settingsUrls,
+    "GitHub Pages configuration",
+    () => loadPagesSiteState(repositorySlug),
+  );
+  const currentDigest =
+    awsEnabled && currentProductionEnvironment
+      ? readGitHubSetupSurface(
+          repositorySlug,
+          settingsUrls,
+          `${productionEnvironment} environment digest variable`,
+          () =>
+            loadEnvironmentVariable(
+              repositorySlug,
+              productionEnvironment,
+              deploymentConfig.githubRoleArnDigestVariableName,
+            ),
+        )
+      : null;
+  const currentAwsDeployEnabled = awsEnabled
+    ? readGitHubSetupSurface(
         repositorySlug,
-        productionEnvironment,
-        deploymentConfig.githubRoleArnDigestVariableName,
+        settingsUrls,
+        `repository variable ${awsDeployVariable}`,
+        () => loadRepoVariable(repositorySlug, awsDeployVariable),
       )
     : null;
-const finalAwsDeployEnabled = awsEnabled
-  ? loadRepoVariable(repositorySlug, awsDeployVariable)
-  : null;
 
-verificationResults.push(
-  buildEnvironmentVerificationResult(
-    "github-pages environment",
-    pagesEnvironment,
-    finalPagesEnvironment !== null,
-    mode,
-  ),
-  buildPagesVerificationResult(finalPagesSite, mode),
-  ...buildAwsVerificationResults({
-    awsDeployVariable,
-    awsEnabled,
-    finalAwsDeployEnabled,
-    finalDigest,
-    finalProductionEnvironment,
-    maybeRoleArnDigest,
-    mode,
-    productionEnvironment,
-  }),
-);
-
-const summary = {
-  appliedChanges,
-  artifactDir: undefined,
-  artifactHash: undefined,
-  command: commandName,
-  discoveredRemoteState: {
-    awsEnabled,
+  Object.assign(discoveredRemoteState, {
     currentAwsDeployEnabled,
     currentDigest,
     currentPagesEnvironment,
     currentPagesSite,
     currentProductionEnvironment,
+  });
+
+  if (mode === "check-access") {
+    plannedChanges = {
+      mode,
+      requiredSurfaces: buildGitHubAdminPreflightSurfaces({
+        awsDeployVariable,
+        awsEnabled,
+        pagesEnvironment,
+        productionEnvironment,
+      }),
+    };
+    skippedReasons.push(
+      "GitHub admin preflight only. No GitHub repository mutations were executed.",
+    );
+    verificationResults.push(
+      buildGitHubAdminAccessPreflightResult({
+        awsDeployVariable,
+        awsEnabled,
+        pagesEnvironment,
+        productionEnvironment,
+      }),
+    );
+
+    await run.addBreadcrumb({
+      detail: "Verified GitHub admin access for required repository setup surfaces.",
+      status: "passed",
+      step: "access check",
+    });
+
+    const { runDirectory } = await writeDeploySummary(
+      {
+        appliedChanges,
+        artifactDir: undefined,
+        artifactHash: undefined,
+        command: commandName,
+        discoveredRemoteState,
+        mode: runMode,
+        plannedChanges,
+        resultingUrls: settingsUrls,
+        skippedReasons,
+        target: "github-setup",
+        verificationResults,
+      },
+      { runDirectory: run.runDirectory },
+    );
+
+    console.log(`GitHub setup access check complete. Summary: ${runDirectory}`);
+    process.exit(0);
+  }
+
+  const environmentPlans = {
+    [pagesEnvironment]: buildEnvironmentPlan(currentPagesEnvironment, pagesEnvironment),
+    ...(awsEnabled
+      ? {
+          [productionEnvironment]: buildEnvironmentPlan(
+            currentProductionEnvironment,
+            productionEnvironment,
+          ),
+        }
+      : {}),
+  };
+  const pagesPlan = planGitHubPagesSite(currentPagesSite);
+  const secretPlan = buildSecretPlan({
+    awsEnabled,
+    currentDigest,
+    maybeRoleArnDigest,
+    productionEnvironment,
+  });
+  const awsDeployVariablePlan = buildAwsDeployVariablePlan({
+    awsEnabled,
+    awsDeployVariable,
+    currentAwsDeployEnabled,
+  });
+
+  plannedChanges = {
+    awsDeployVariablePlan,
+    environmentPlans,
+    mode,
+    pagesPlan,
+    secretPlan,
+  };
+
+  await run.addBreadcrumb({
+    data: {
+      awsDeployVariablePlan,
+      environmentPlans,
+      pagesPlan,
+      secretPlan,
+    },
+    detail: "Computed the GitHub repository setup mutation plan.",
+    status: "planned",
+    step: "plan",
+  });
+
+  if (allPlansAreNoOps(environmentPlans, pagesPlan, secretPlan, awsDeployVariablePlan)) {
+    skippedReasons.push(
+      awsEnabled
+        ? "The required GitHub environments, Pages workflow mode, deploy role secret, and AWS opt-in variable already match the desired state."
+        : "The github-pages environment and Pages workflow mode already match the desired state.",
+    );
+    await run.addBreadcrumb({
+      detail: "Remote GitHub repository settings already match the desired state.",
+      status: "skipped",
+      step: "plan",
+    });
+  } else if (mode === "check") {
+    skippedReasons.push("Check mode only. No GitHub repository mutations were executed.");
+    await run.addBreadcrumb({
+      detail: "Check mode prevented GitHub repository mutations.",
+      status: "skipped",
+      step: "apply",
+    });
+  } else {
+    for (const [environmentName, plan] of Object.entries(environmentPlans)) {
+      if (plan.action === "create") {
+        createEnvironment(repositorySlug, environmentName);
+        appliedChanges.push(`Created GitHub environment ${environmentName}.`);
+      }
+    }
+
+    if (pagesPlan.action === "create") {
+      updatePagesSite(repositorySlug, "POST");
+      appliedChanges.push("Enabled GitHub Pages with GitHub Actions workflow deployments.");
+    } else if (pagesPlan.action === "update") {
+      updatePagesSite(repositorySlug, "PUT");
+      appliedChanges.push("Updated GitHub Pages to use GitHub Actions workflow deployments.");
+    }
+
+    if (secretPlan.action === "set" && maybeRoleArnDigest && maybeRoleArn) {
+      setEnvironmentVariable(
+        repositorySlug,
+        productionEnvironment,
+        deploymentConfig.githubRoleArnDigestVariableName,
+        maybeRoleArnDigest,
+      );
+      setEnvironmentSecret(
+        repositorySlug,
+        productionEnvironment,
+        deploymentConfig.githubRoleArnSecretName,
+        maybeRoleArn,
+      );
+      appliedChanges.push(
+        `Updated ${productionEnvironment} environment variable ${deploymentConfig.githubRoleArnDigestVariableName}.`,
+      );
+      appliedChanges.push(
+        `Updated ${productionEnvironment} environment secret ${deploymentConfig.githubRoleArnSecretName}.`,
+      );
+    }
+
+    if (awsDeployVariablePlan.action === "set") {
+      setRepoVariable(repositorySlug, awsDeployVariable, "true");
+      appliedChanges.push(`Set repository variable ${awsDeployVariable}=true.`);
+    }
+  }
+
+  const finalProductionEnvironment = awsEnabled
+    ? readGitHubSetupSurface(
+        repositorySlug,
+        settingsUrls,
+        `${productionEnvironment} environment`,
+        () => loadEnvironmentState(repositorySlug, productionEnvironment),
+      )
+    : null;
+  const finalPagesEnvironment = readGitHubSetupSurface(
+    repositorySlug,
+    settingsUrls,
+    `${pagesEnvironment} environment`,
+    () => loadEnvironmentState(repositorySlug, pagesEnvironment),
+  );
+  const finalPagesSite = readGitHubSetupSurface(
+    repositorySlug,
+    settingsUrls,
+    "GitHub Pages configuration",
+    () => loadPagesSiteState(repositorySlug),
+  );
+  const finalDigest =
+    awsEnabled && finalProductionEnvironment
+      ? readGitHubSetupSurface(
+          repositorySlug,
+          settingsUrls,
+          `${productionEnvironment} environment digest variable`,
+          () =>
+            loadEnvironmentVariable(
+              repositorySlug,
+              productionEnvironment,
+              deploymentConfig.githubRoleArnDigestVariableName,
+            ),
+        )
+      : null;
+  const finalAwsDeployEnabled = awsEnabled
+    ? readGitHubSetupSurface(
+        repositorySlug,
+        settingsUrls,
+        `repository variable ${awsDeployVariable}`,
+        () => loadRepoVariable(repositorySlug, awsDeployVariable),
+      )
+    : null;
+
+  Object.assign(discoveredRemoteState, {
     finalAwsDeployEnabled,
     finalDigest,
     finalPagesEnvironment,
     finalPagesSite,
     finalProductionEnvironment,
-    maybeRoleArn,
-    maybeRoleArnDigest,
-    repositorySlug,
-  },
-  mode,
-  plannedChanges: {
-    awsDeployVariablePlan,
-    environmentPlans,
-    pagesPlan,
-    secretPlan,
-  },
-  resultingUrls: settingsUrls,
-  skippedReasons,
-  target: "github-setup",
-  verificationResults,
-};
+  });
 
-const { runDirectory } = await writeDeploySummary(summary, { runDirectory: run.runDirectory });
+  verificationResults.push(
+    buildEnvironmentVerificationResult(
+      "github-pages environment",
+      pagesEnvironment,
+      finalPagesEnvironment !== null,
+      runMode,
+    ),
+    buildPagesVerificationResult(finalPagesSite, runMode),
+    ...buildAwsVerificationResults({
+      awsDeployVariable,
+      awsEnabled,
+      finalAwsDeployEnabled,
+      finalDigest,
+      finalProductionEnvironment,
+      maybeRoleArnDigest,
+      mode: runMode,
+      productionEnvironment,
+    }),
+  );
 
-const maybeFailure = verificationResults.find((result) => result.status === "failed");
-if (maybeFailure) {
-  throw new Error(`${maybeFailure.name} verification failed. See ${runDirectory} for details.`);
+  const { runDirectory } = await writeDeploySummary(
+    {
+      appliedChanges,
+      artifactDir: undefined,
+      artifactHash: undefined,
+      command: commandName,
+      discoveredRemoteState,
+      mode: runMode,
+      plannedChanges,
+      resultingUrls: settingsUrls,
+      skippedReasons,
+      target: "github-setup",
+      verificationResults,
+    },
+    { runDirectory: run.runDirectory },
+  );
+
+  const maybeFailure = verificationResults.find((result) => result.status === "failed");
+  if (maybeFailure) {
+    console.error(`${maybeFailure.name} verification failed. See ${runDirectory} for details.`);
+    process.exit(1);
+  }
+
+  console.log(`GitHub setup ${mode} complete. Summary: ${runDirectory}`);
+} catch (error) {
+  const errorDetail = error instanceof Error ? error.message : String(error);
+
+  await run.addBreadcrumb({
+    detail: mode === "check-access" ? "GitHub admin preflight failed." : "GitHub setup failed.",
+    status: "failed",
+    step: mode === "check-access" ? "access check" : "setup",
+  });
+
+  if (mode === "check-access") {
+    skippedReasons.push(
+      "GitHub admin preflight failed before GitHub repository mutations were applied.",
+    );
+  } else if (appliedChanges.length === 0) {
+    skippedReasons.push("GitHub setup stopped before applying repository mutations.");
+  }
+
+  if (!verificationResults.some((result) => result.status === "failed")) {
+    verificationResults.push({
+      detail: errorDetail,
+      name: mode === "check-access" ? "GitHub admin access preflight" : "GitHub setup",
+      status: "failed",
+    });
+  }
+
+  const { runDirectory } = await writeDeploySummary(
+    {
+      appliedChanges,
+      artifactDir: undefined,
+      artifactHash: undefined,
+      command: commandName,
+      discoveredRemoteState,
+      mode: runMode,
+      plannedChanges,
+      resultingUrls: settingsUrls,
+      skippedReasons,
+      target: "github-setup",
+      verificationResults,
+    },
+    { runDirectory: run.runDirectory },
+  );
+
+  console.error(`${errorDetail}\nSee ${runDirectory}.`);
+  process.exit(1);
 }
-
-console.log(`GitHub setup ${mode} complete. Summary: ${runDirectory}`);
 
 function buildEnvironmentPlan(
   currentEnvironment: GitHubEnvironmentResponse | null,
@@ -472,6 +636,40 @@ function buildAwsVerificationResults(input: {
   ] satisfies DeployVerificationResult[];
 }
 
+function buildGitHubAdminAccessPreflightResult(input: {
+  awsDeployVariable: string;
+  awsEnabled: boolean;
+  pagesEnvironment: string;
+  productionEnvironment: string;
+}) {
+  const surfaceList = buildGitHubAdminPreflightSurfaces(input);
+
+  return {
+    detail: `Repository admin access is sufficient to inspect ${surfaceList.join(", ")}.`,
+    name: "GitHub admin access preflight",
+    status: "passed" as const,
+  };
+}
+
+function buildGitHubAdminPreflightSurfaces(input: {
+  awsDeployVariable: string;
+  awsEnabled: boolean;
+  pagesEnvironment: string;
+  productionEnvironment: string;
+}) {
+  return [
+    `${input.pagesEnvironment} environment`,
+    "GitHub Pages configuration",
+    ...(input.awsEnabled
+      ? [
+          `${input.productionEnvironment} environment`,
+          `${input.productionEnvironment} environment digest variable`,
+          `repository variable ${input.awsDeployVariable}`,
+        ]
+      : []),
+  ];
+}
+
 function allPlansAreNoOps(
   environmentPlans: Record<string, PlanDecision>,
   pagesPlan: ReturnType<typeof planGitHubPagesSite>,
@@ -492,6 +690,14 @@ function ensureGitHubCliAvailable() {
 
 function ensureGitHubAuthentication() {
   runCommand("gh", ["auth", "status"]);
+}
+
+function resolveSetupGitHubMode(args: Record<string, string>): SetupGitHubMode {
+  if (args["check-access"] === "true") {
+    return "check-access";
+  }
+
+  return args.apply === "true" ? "apply" : "check";
 }
 
 function loadAwsDeployIdentity() {
@@ -542,6 +748,31 @@ function loadEnvironmentState(repositorySlug: string, environmentName: string) {
   }
 
   return JSON.parse(result.stdout) as GitHubEnvironmentResponse;
+}
+
+function readGitHubSetupSurface<T>(
+  repositorySlug: string,
+  settingsUrls: string[],
+  surface: string,
+  read: () => T,
+) {
+  try {
+    return read();
+  } catch (error) {
+    const errorDetail = error instanceof Error ? error.message : String(error);
+    const maybeFailure = classifyGitHubSetupAccessFailure({
+      errorMessage: errorDetail,
+      repositorySlug,
+      settingsUrls,
+      surface,
+    });
+
+    if (maybeFailure) {
+      throw new Error(formatGitHubSetupAccessFailure(maybeFailure));
+    }
+
+    throw error;
+  }
 }
 
 function createEnvironment(repositorySlug: string, environmentName: string) {
