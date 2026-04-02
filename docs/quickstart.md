@@ -448,7 +448,6 @@ OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build
 Symptoms:
 
 - Verification reports that the configured AWS domain does not resolve publicly yet.
-- Verification reports that the configured AWS domain does not resolve publicly yet.
 
 Fix:
 
@@ -572,8 +571,8 @@ Fix:
 bun run quality:check
 bun run build
 ```
-3. Let the provider redeploy the new commit.
-4. Re-run:
+4. Let the provider redeploy the new commit.
+5. Re-run:
 
 ```bash
 bun run deploy:verify:live -- --target=<render|railway> --public-origin=https://<live-url>
