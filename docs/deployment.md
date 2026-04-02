@@ -29,6 +29,8 @@ bun run deploy:setup -- --apply
 git push origin main
 ```
 
+After any deployment naming or topology refactor, rerun `bun run deploy:setup -- --apply` before expecting `Deploy Production` to succeed. That step rotates the config-derived IAM role/policy references and the GitHub `AWS_DEPLOY_ROLE_ARN` secret to the current deployment model.
+
 ## Supported Targets
 
 - `github-pages`: default fork-safe target
@@ -144,6 +146,7 @@ Local diagnostics:
 | Symptom | Likely Cause | Fix |
 |--------|--------------|-----|
 | `deploy:setup` updates `data/site.json` or README unexpectedly | deployment defaults or overlay changed, or the overlay is stale | review `bun run deploy:plan`, then rerun `bun run deploy:setup -- --apply` |
+| `Deploy AWS Site` fails with CloudFormation `AccessDenied` after a deployment refactor | the attached IAM policy or GitHub `AWS_DEPLOY_ROLE_ARN` secret still points at pre-refactor role/policy names | rerun `bun run deploy:setup -- --apply`, confirm the config-derived role ARN/policy are active, then rerun `Deploy Production` |
 | AWS job is skipped | AWS target is disabled in the effective topology or GitHub AWS opt-in is missing | enable `aws` in the effective topology, then set `OPENLINKS_ENABLE_AWS_DEPLOY` and `AWS_DEPLOY_ROLE_ARN` |
 | Pages job is skipped | GitHub Pages is disabled in the effective topology | enable `github-pages` in the effective topology |
 | `deploy:verify` blocks on DNS readiness | the configured AWS domain does not resolve publicly yet | wait for Route 53 + CloudFront propagation, then rerun `bun run deploy:verify` |

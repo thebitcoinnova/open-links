@@ -3,10 +3,13 @@ import test from "node:test";
 import { deploymentConfig } from "../../src/lib/deployment-config";
 import { buildDomainReadinessAssessment, formatDomainReadinessMessage } from "./aws-deploy";
 import {
+  awsDeployCloudFormationActions,
   buildAwsDeployPolicy,
+  buildAwsDeployRoleArn,
   buildGithubOidcTrustPolicy,
   normalizePolicyDocument,
   planGitHubPagesSite,
+  resolveAwsDeployRoleArn,
 } from "./deploy-setup";
 import { parseGitHubRepositorySlug } from "./github-repository";
 
@@ -76,16 +79,65 @@ test("buildAwsDeployPolicy scopes route53 and s3 resources to the deployment acc
   });
 
   // Act
+  const cloudFormationStatement = policy.Statement.find(
+    (statement) => statement.Sid === "CloudFormationControlPlane",
+  );
   const route53Statement = policy.Statement.find(
     (statement) => statement.Sid === "Route53RecordChanges",
   );
   const s3Statement = policy.Statement.find((statement) => statement.Sid === "S3ObjectManagement");
 
   // Assert
+  assert.deepEqual(cloudFormationStatement?.Action, [...awsDeployCloudFormationActions]);
   assert.deepEqual(route53Statement?.Resource, ["arn:aws:route53:::hostedzone/ZOPENLINKS"]);
   assert.equal(
     s3Statement?.Resource,
     `arn:aws:s3:::${deploymentConfig.bucketNamePrefix}-123456789012/*`,
+  );
+});
+
+test("resolveAwsDeployRoleArn defaults to the config-derived deploy role ARN", () => {
+  // Arrange / Act
+  const resolvedRoleArn = resolveAwsDeployRoleArn({
+    accountId: "123456789012",
+  });
+
+  // Assert
+  assert.equal(resolvedRoleArn.resolvedRoleArn, buildAwsDeployRoleArn("123456789012"));
+  assert.equal(resolvedRoleArn.source, "config-derived");
+  assert.equal(resolvedRoleArn.mismatchDetail, undefined);
+});
+
+test("resolveAwsDeployRoleArn allows an explicit role ARN override", () => {
+  // Arrange
+  const explicitRoleArn = "arn:aws:iam::123456789012:role/open-links-fork-github-deploy";
+
+  // Act
+  const resolvedRoleArn = resolveAwsDeployRoleArn({
+    accountId: "123456789012",
+    maybeAmbientRoleArn: "arn:aws:iam::123456789012:role/open-links-github-deploy",
+    maybeExplicitRoleArn: explicitRoleArn,
+  });
+
+  // Assert
+  assert.equal(resolvedRoleArn.resolvedRoleArn, explicitRoleArn);
+  assert.equal(resolvedRoleArn.source, "explicit-override");
+  assert.equal(resolvedRoleArn.mismatchDetail, undefined);
+});
+
+test("resolveAwsDeployRoleArn flags stale ambient role overrides", () => {
+  // Arrange / Act
+  const resolvedRoleArn = resolveAwsDeployRoleArn({
+    accountId: "123456789012",
+    maybeAmbientRoleArn: "arn:aws:iam::123456789012:role/open-links-github-deploy",
+  });
+
+  // Assert
+  assert.equal(resolvedRoleArn.resolvedRoleArn, buildAwsDeployRoleArn("123456789012"));
+  assert.equal(resolvedRoleArn.source, "config-derived");
+  assert.match(
+    resolvedRoleArn.mismatchDetail ?? "",
+    /Unset AWS_DEPLOY_ROLE_ARN or pass --role-arn explicitly\./u,
   );
 });
 

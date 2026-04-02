@@ -5,7 +5,13 @@ import {
   createDeployRun,
   writeDeploySummary,
 } from "../lib/deploy-log";
-import { type GitHubPagesSiteState, computeDigest, planGitHubPagesSite } from "../lib/deploy-setup";
+import {
+  type GitHubPagesSiteState,
+  type ResolvedAwsDeployRoleArn,
+  computeDigest,
+  planGitHubPagesSite,
+  resolveAwsDeployRoleArn,
+} from "../lib/deploy-setup";
 import { deploymentConfig } from "../lib/effective-deployment-config";
 import { resolveGitHubRepositorySlug } from "../lib/github-repository";
 import { parseArgs } from "./shared";
@@ -52,7 +58,15 @@ ensureGitHubAuthentication();
 const repositorySlug = resolveGitHubRepositorySlug(args.repo);
 const productionEnvironment = deploymentConfig.githubProductionEnvironmentName;
 const pagesEnvironment = deploymentConfig.githubPagesEnvironmentName;
-const maybeRoleArn = awsEnabled ? resolveRoleArn(args["role-arn"]) : null;
+const awsIdentity = awsEnabled ? loadAwsDeployIdentity() : null;
+const maybeResolvedRoleArn = awsIdentity
+  ? resolveAwsDeployRoleArn({
+      accountId: awsIdentity.Account,
+      maybeAmbientRoleArn: process.env.AWS_DEPLOY_ROLE_ARN,
+      maybeExplicitRoleArn: args["role-arn"],
+    })
+  : null;
+const maybeRoleArn = maybeResolvedRoleArn?.resolvedRoleArn ?? null;
 const maybeRoleArnDigest = maybeRoleArn ? computeDigest(maybeRoleArn) : null;
 const awsDeployVariable = deploymentConfig.githubAwsDeployEnabledVariableName;
 const settingsUrls = [
@@ -69,14 +83,67 @@ const settingsUrls = [
 await run.addBreadcrumb({
   data: {
     awsEnabled,
+    awsIdentity,
+    awsDeployPolicyName: deploymentConfig.awsDeployPolicyName,
+    awsDeployRoleName: deploymentConfig.awsDeployRoleName,
     maybeRoleArn,
     maybeRoleArnDigest,
+    maybeResolvedRoleArn,
     repositorySlug,
   },
   detail: "Resolved repository slug and deployment topology requirements.",
   status: "passed",
   step: "context",
 });
+
+const verificationResults: DeployVerificationResult[] = [
+  {
+    detail: `Authenticated GitHub CLI access for ${repositorySlug}.`,
+    name: "gh auth",
+    status: "passed",
+  },
+  ...buildAwsRoleVerificationResults(awsEnabled, maybeResolvedRoleArn),
+];
+
+if (maybeResolvedRoleArn?.mismatchDetail) {
+  const skippedReasons = [
+    "GitHub setup stopped before mutating repository settings because the local role ARN override drifted from the deployment config.",
+  ];
+
+  await run.addBreadcrumb({
+    detail: maybeResolvedRoleArn.mismatchDetail,
+    status: "failed",
+    step: "context",
+  });
+
+  const { runDirectory } = await writeDeploySummary(
+    {
+      appliedChanges: [],
+      artifactDir: undefined,
+      artifactHash: undefined,
+      command: commandName,
+      discoveredRemoteState: {
+        awsEnabled,
+        awsIdentity,
+        awsDeployPolicyName: deploymentConfig.awsDeployPolicyName,
+        awsDeployRoleName: deploymentConfig.awsDeployRoleName,
+        maybeResolvedRoleArn,
+        repositorySlug,
+      },
+      mode,
+      plannedChanges: {
+        blockedBy: "ambient role ARN drift",
+      },
+      resultingUrls: settingsUrls,
+      skippedReasons,
+      target: "github-setup",
+      verificationResults,
+    },
+    { runDirectory: run.runDirectory },
+  );
+
+  throw new Error(`${maybeResolvedRoleArn.mismatchDetail} See ${runDirectory} for details.`);
+}
 
 const currentProductionEnvironment = awsEnabled
   ? loadEnvironmentState(repositorySlug, productionEnvironment)
@@ -133,13 +200,6 @@ await run.addBreadcrumb({
 
 const skippedReasons: string[] = [];
 const appliedChanges: string[] = [];
-const verificationResults: DeployVerificationResult[] = [
-  {
-    detail: `Authenticated GitHub CLI access for ${repositorySlug}.`,
-    name: "gh auth",
-    status: "passed",
-  },
-];
 
 if (allPlansAreNoOps(environmentPlans, pagesPlan, secretPlan, awsDeployVariablePlan)) {
   skippedReasons.push(
@@ -434,18 +494,32 @@ function ensureGitHubAuthentication() {
   runCommand("gh", ["auth", "status"]);
 }
 
-function resolveRoleArn(maybeRoleArn: string | undefined) {
-  if (maybeRoleArn) {
-    return maybeRoleArn;
-  }
-
-  if (process.env.AWS_DEPLOY_ROLE_ARN) {
-    return process.env.AWS_DEPLOY_ROLE_ARN;
-  }
-
+function loadAwsDeployIdentity() {
   ensureAwsCliAvailable();
-  const identity = loadAwsCallerIdentity();
-  return `arn:aws:iam::${identity.Account}:role/${deploymentConfig.awsDeployRoleName}`;
+  return loadAwsCallerIdentity();
+}
+
+function buildAwsRoleVerificationResults(
+  awsEnabled: boolean,
+  maybeResolvedRoleArn: ResolvedAwsDeployRoleArn | null,
+) {
+  if (!awsEnabled || !maybeResolvedRoleArn) {
+    return [] satisfies DeployVerificationResult[];
+  }
+
+  const detailPrefix =
+    maybeResolvedRoleArn.source === "explicit-override"
+      ? `Using explicit --role-arn override ${maybeResolvedRoleArn.resolvedRoleArn}. Config-derived role ARN is ${maybeResolvedRoleArn.configDerivedRoleArn}.`
+      : `Using config-derived deploy role ARN ${maybeResolvedRoleArn.resolvedRoleArn}.`;
+  const detail = `${detailPrefix} Expected role name ${deploymentConfig.awsDeployRoleName}; expected policy name ${deploymentConfig.awsDeployPolicyName}.`;
+
+  return [
+    {
+      detail: maybeResolvedRoleArn.mismatchDetail ?? detail,
+      name: "AWS deploy role identity",
+      status: maybeResolvedRoleArn.mismatchDetail ? "failed" : "passed",
+    },
+  ] satisfies DeployVerificationResult[];
 }
 
 function loadEnvironmentState(repositorySlug: string, environmentName: string) {

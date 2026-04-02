@@ -10,7 +10,26 @@ export interface GitHubPagesSiteState {
   sourcePath?: string | null;
 }
 
+export interface ResolvedAwsDeployRoleArn {
+  configDerivedRoleArn: string;
+  mismatchDetail?: string;
+  resolvedRoleArn: string;
+  source: "config-derived" | "explicit-override";
+}
+
 export const githubOidcThumbprint = "6938fd4d98bab03faadb97b34396831e3780aea1";
+export const awsDeployCloudFormationActions = [
+  "cloudformation:CreateChangeSet",
+  "cloudformation:DeleteChangeSet",
+  "cloudformation:DeleteStack",
+  "cloudformation:DescribeChangeSet",
+  "cloudformation:DescribeStackEvents",
+  "cloudformation:DescribeStacks",
+  "cloudformation:ExecuteChangeSet",
+  "cloudformation:ListChangeSets",
+  "cloudformation:ListStackResources",
+  "cloudformation:ValidateTemplate",
+] as const;
 
 export function buildGithubOidcTrustPolicy(
   accountId: string,
@@ -50,14 +69,7 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
       {
         Sid: "CloudFormationControlPlane",
         Effect: "Allow",
-        Action: [
-          "cloudformation:CreateChangeSet",
-          "cloudformation:DeleteChangeSet",
-          "cloudformation:DescribeChangeSet",
-          "cloudformation:DescribeStacks",
-          "cloudformation:ExecuteChangeSet",
-          "cloudformation:ValidateTemplate",
-        ],
+        Action: [...awsDeployCloudFormationActions],
         Resource: "*",
       },
       {
@@ -140,6 +152,43 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
         Resource: "*",
       },
     ],
+  };
+}
+
+export function buildAwsDeployRoleArn(accountId: string) {
+  return `arn:aws:iam::${accountId}:role/${deploymentConfig.awsDeployRoleName}`;
+}
+
+export function resolveAwsDeployRoleArn(input: {
+  accountId: string;
+  maybeAmbientRoleArn?: string;
+  maybeExplicitRoleArn?: string;
+}): ResolvedAwsDeployRoleArn {
+  const configDerivedRoleArn = buildAwsDeployRoleArn(input.accountId);
+  const explicitRoleArn = input.maybeExplicitRoleArn?.trim();
+
+  if (explicitRoleArn) {
+    return {
+      configDerivedRoleArn,
+      resolvedRoleArn: explicitRoleArn,
+      source: "explicit-override",
+    };
+  }
+
+  const ambientRoleArn = input.maybeAmbientRoleArn?.trim();
+  if (ambientRoleArn && ambientRoleArn !== configDerivedRoleArn) {
+    return {
+      configDerivedRoleArn,
+      mismatchDetail: `Ambient AWS_DEPLOY_ROLE_ARN (${ambientRoleArn}) does not match the config-derived deploy role ARN (${configDerivedRoleArn}). Unset AWS_DEPLOY_ROLE_ARN or pass --role-arn explicitly.`,
+      resolvedRoleArn: configDerivedRoleArn,
+      source: "config-derived",
+    };
+  }
+
+  return {
+    configDerivedRoleArn,
+    resolvedRoleArn: configDerivedRoleArn,
+    source: "config-derived",
   };
 }
 

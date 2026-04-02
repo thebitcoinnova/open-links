@@ -88,6 +88,7 @@ Execute in this exact order.
    - optional fork additions: `render`, `railway`
 16. Verify GitHub Pages source is set to **GitHub Actions**.
 17. For the upstream repo, verify AWS deploy settings are present (`OPENLINKS_ENABLE_AWS_DEPLOY=true` and `AWS_DEPLOY_ROLE_ARN`).
+   - If deployment naming or topology changed recently, rerun `bun run deploy:setup -- --apply` before CI/deploy verification so GitHub secrets and IAM references match the current config-derived role and policy names.
 18. Poll CI and all relevant deploy surfaces for the pushed SHA.
 19. On success, collect deployment URLs.
 20. Reconcile GitHub repository homepage metadata to the selected primary host:
