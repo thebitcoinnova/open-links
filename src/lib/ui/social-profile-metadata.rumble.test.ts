@@ -50,3 +50,32 @@ test("uses Rumble avatar-first layout while preserving a distinct banner preview
     },
   ]);
 });
+
+test("falls back to the only available Rumble image for avatar-first rendering", () => {
+  // Arrange
+  const link = {
+    id: "rumble",
+    label: "Rumble",
+    url: "https://rumble.com/c/InTheLitterBox",
+    type: "rich",
+    metadata: {
+      title: "In The Litter Box w/ Jewels & Catturd",
+      description:
+        'Browse the most recent videos from channel "In The Litter Box w/ Jewels & Catturd" uploaded to Rumble.com',
+      image: "/cache/content-images/rumble-avatar.jpg",
+      followersCount: 112000,
+      followersCountRaw: "112K Followers",
+      sourceLabel: "rumble.com",
+    },
+  } as const;
+
+  // Act
+  const resolved = resolveSocialProfileMetadata(link);
+
+  // Assert
+  assert.equal(resolved.platform, "rumble");
+  assert.equal(resolved.usesProfileLayout, true);
+  assert.equal(resolved.hasDistinctPreviewImage, false);
+  assert.equal(resolved.profileImageUrl, "/cache/content-images/rumble-avatar.jpg");
+  assert.equal(resolved.previewImageUrl, "/cache/content-images/rumble-avatar.jpg");
+});
