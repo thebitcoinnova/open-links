@@ -1,16 +1,15 @@
 import { createHash } from "node:crypto";
 import { access, copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { type DeployTarget, normalizeBasePath } from "../../src/lib/deployment-config";
 import {
-  type DeployTarget,
   deploymentConfig,
   getCanonicalUrl,
   getDeployTargetConfig,
   getExpectedAssetPrefix,
   getRobotsTxt,
-  normalizeBasePath,
   parseDeployTarget,
-} from "../../src/lib/deployment-config";
+} from "./effective-deployment-config";
 
 const indexableRoutes = ["/"] as const;
 
@@ -316,9 +315,9 @@ export async function assertArtifactMatchesTarget(outputDir: string, rawTarget?:
     relativePath.endsWith(".html"),
   );
   const assetPrefix = getExpectedAssetPrefix(target);
-  const githubPagesBasePath = normalizeBasePath(deploymentConfig.githubPagesBasePath);
+  const githubPagesBasePath = normalizeBasePath(deploymentConfig.githubPagesDefaultBasePath);
   const pagesBasePathPattern = new RegExp(
-    `(?:href|src)="${escapeRegExp(deploymentConfig.githubPagesBasePath)}(?:assets/|favicon|site\\.webmanifest|apple-touch-icon|openlinks-social-fallback)`,
+    `(?:href|src)="${escapeRegExp(deploymentConfig.githubPagesDefaultBasePath)}(?:assets/|favicon|site\\.webmanifest|apple-touch-icon|openlinks-social-fallback)`,
   );
   const unprefixedRootReferencePattern =
     githubPagesBasePath === "/"

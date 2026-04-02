@@ -1,5 +1,6 @@
 {
   "exactPaths": [
+    "config/deployment.json",
     "data/profile.json",
     "data/links.json",
     "data/site.json",

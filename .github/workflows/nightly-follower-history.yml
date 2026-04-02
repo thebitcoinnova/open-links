@@ -83,12 +83,12 @@ jobs:
 
       - name: Publish AWS artifact
         if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
-        run: bun run deploy:aws:publish --artifact=.artifacts/deploy/aws --apply
+        run: bun run deploy:publish -- --target=aws --artifact=.artifacts/deploy/aws --apply
 
-      - name: Plan Pages deployment
+      - name: Prepare Pages deployment
         if: steps.publish.outputs.push_result == 'pushed'
         id: pages_plan
-        run: bun run deploy:pages:plan --artifact=.artifacts/deploy/github-pages
+        run: bun run deploy:publish -- --target=github-pages --artifact=.artifacts/deploy/github-pages
 
       - name: Archive Pages artifact
         if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
@@ -119,7 +119,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: bun run scripts/ci/wait-for-pages-deployment.ts
 
-      - name: Verify canonical AWS site and Pages mirror
+      - name: Verify enabled deployment targets
         if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
         run: bun run deploy:verify
 
@@ -136,7 +136,6 @@ jobs:
         if: always()
         env:
           AWS_DEPLOY_ENABLED: ${{ steps.aws_opt_in.outputs.enabled || 'false' }}
-          AWS_DEPLOYMENT_URL: https://openlinks.us/
           PAGES_DEPLOYMENT_CHANGED: ${{ steps.pages_plan.outputs.pages_changed || 'false' }}
           PAGES_DEPLOYMENT_URL: ${{ steps.deployment.outputs.page_url }}
           PUSH_RESULT: ${{ steps.publish.outputs.push_result }}

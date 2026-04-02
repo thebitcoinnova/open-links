@@ -27,6 +27,7 @@ import {
   createDeployRun,
   writeDeploySummary,
 } from "../lib/deploy-log";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { parseArgs, recordTimedAction } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
@@ -203,7 +204,7 @@ try {
             finalStackStatus: completion.finalStackState.stackStatus ?? null,
             waitedMs: completion.waitedMs,
           }),
-          detail: `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? "open-links-site"}.`,
+          detail: `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? deploymentConfig.awsStackName}.`,
           status: "passed",
           step: "review shell recovery",
         },
@@ -213,7 +214,7 @@ try {
         },
       );
       appliedChanges.push(
-        `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? "open-links-site"}.`,
+        `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? deploymentConfig.awsStackName}.`,
       );
       verificationResults.push({
         detail:

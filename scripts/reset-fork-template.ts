@@ -6,6 +6,7 @@ import { replaceReadmeDeployUrlBlock } from "./lib/readme-deploy-urls";
 const ROOT = process.cwd();
 
 const RESET_TARGET_PATHS = {
+  deployment: "config/deployment.json",
   followerHistoryIndex: "public/history/followers/index.json",
   links: "data/links.json",
   profile: "data/profile.json",
@@ -121,6 +122,20 @@ const RESET_SITE = {
   },
 };
 
+const RESET_DEPLOYMENT = {
+  $schema: "../schema/deployment.schema.json",
+  enabledTargets: ["github-pages"],
+  primaryTarget: "github-pages",
+  targets: {
+    aws: {
+      priceClass: "PriceClass_100",
+    },
+    "github-pages": {},
+    railway: {},
+    render: {},
+  },
+};
+
 const EMPTY_FOLLOWER_HISTORY_INDEX = {
   entries: [],
   updatedAt: "1970-01-01T00:00:00.000Z",
@@ -165,6 +180,11 @@ const FORK_TEMPLATE_SIGNAL_CHECKS = [
   {
     filePath: "README.md",
     label: "README deploy URLs still advertise upstream production hosts",
+    pattern: /https:\/\/(?:openlinks\.us\/?|prizz\.github\.io\/open-links\/?)/u,
+  },
+  {
+    filePath: "config/deployment.json",
+    label: "deployment topology still points at upstream production hosts",
     pattern: /https:\/\/(?:openlinks\.us\/?|prizz\.github\.io\/open-links\/?)/u,
   },
   {
@@ -350,6 +370,11 @@ export const runForkReset = (options: ForkResetOptions = {}): ForkResetResult =>
     rootDir,
   };
 
+  writeFileIfChanged(
+    resolveAbsolutePath(rootDir, RESET_TARGET_PATHS.deployment),
+    serializeJson(RESET_DEPLOYMENT),
+    writeOptions,
+  );
   writeFileIfChanged(
     resolveAbsolutePath(rootDir, RESET_TARGET_PATHS.profile),
     serializeJson(RESET_PROFILE),

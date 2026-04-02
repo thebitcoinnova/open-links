@@ -1,6 +1,5 @@
 import { appendFile } from "node:fs/promises";
 import path from "node:path";
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   type DeployManifest,
   assertDeployArtifactIntegrity,
@@ -8,6 +7,7 @@ import {
   readDeployManifest,
 } from "../lib/deploy-artifact";
 import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { parseArgs } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));

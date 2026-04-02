@@ -1,7 +1,6 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   assessAwsDomainReadiness,
   buildSiteBucketName,
@@ -22,6 +21,7 @@ import {
   githubOidcThumbprint,
   normalizePolicyDocument,
 } from "../lib/deploy-setup";
+import { deploymentConfig } from "../lib/effective-deployment-config";
 import { resolveGitHubRepositorySlug } from "../lib/github-repository";
 import { parseArgs } from "./shared";
 
@@ -131,7 +131,7 @@ if (!domainReadiness.ready) {
     mode === "check"
       ? [blockerDetail]
       : [
-          "Apply mode stopped before IAM/OIDC mutations because openlinks.us is not fully ready in Route 53 yet.",
+          `Apply mode stopped before IAM/OIDC mutations because ${deploymentConfig.primaryCanonicalDomain} is not fully ready in Route 53 yet.`,
         ];
 
   await run.addBreadcrumb({
@@ -169,7 +169,9 @@ if (!domainReadiness.ready) {
     process.exit(0);
   }
 
-  throw new Error(`AWS setup apply blocked until openlinks.us is ready. See ${runDirectory}.`);
+  throw new Error(
+    `AWS setup apply blocked until ${deploymentConfig.primaryCanonicalDomain} is ready. See ${runDirectory}.`,
+  );
 }
 
 const hostedZones = resolveHostedZones();
@@ -200,7 +202,7 @@ const skippedReasons: string[] = [];
 const appliedChanges: string[] = [];
 const verificationResults: DeployVerificationResult[] = [
   {
-    detail: "Resolved the Route 53 hosted zone for openlinks.us.",
+    detail: `Resolved the Route 53 hosted zone for ${deploymentConfig.primaryCanonicalDomain}.`,
     name: "hosted zones",
     status: "passed",
   },

@@ -1,0 +1,14 @@
+{
+  "$schema": "../schema/deployment.schema.json",
+  "primaryTarget": "aws",
+  "enabledTargets": ["aws", "github-pages"],
+  "targets": {
+    "aws": {
+      "publicOrigin": "https://openlinks.us",
+      "priceClass": "PriceClass_100"
+    },
+    "github-pages": {},
+    "render": {},
+    "railway": {}
+  }
+}

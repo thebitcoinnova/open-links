@@ -2,14 +2,17 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { BuildInfo } from "../../src/lib/build-info";
-import {
-  type DeployTarget,
-  deploymentConfig,
-  parseDeployTarget,
-} from "../../src/lib/deployment-config";
 import { resolveBuildInfo } from "../lib/build-info";
 import { runCommand } from "../lib/command";
 import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
+import {
+  type DeployTarget,
+  deploymentConfig,
+  enabledDeployTargets,
+  getDeployTargetConfig,
+  isPlaceholderDeployPublicOrigin,
+  parseDeployTarget,
+} from "../lib/effective-deployment-config";
 import {
   assertLiveTargetSnapshot,
   buildLiveTargetExpectation,
@@ -126,7 +129,10 @@ function resolveTargets(
     return maybeTargets.map((target) => parseDeployTarget(target));
   }
 
-  return ["aws", "github-pages"];
+  const actionableTargets = enabledDeployTargets.filter(
+    (target) => !isPlaceholderDeployPublicOrigin(getDeployTargetConfig(target).publicOrigin),
+  );
+  return actionableTargets.length > 0 ? actionableTargets : enabledDeployTargets;
 }
 
 function resolveExplicitPublicOrigin(target: DeployTarget, parsedArgs: Record<string, string>) {

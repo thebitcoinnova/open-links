@@ -1,22 +1,21 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import {
-  type DeployTarget,
-  getDeployTargetConfig,
-  parseDeployTarget,
-} from "../../src/lib/deployment-config";
 import { runPublicBuildCleanup } from "../clean-public-build-artifacts";
 import { resolveStableBuildTimestamp } from "../lib/build-timestamp";
 import { runCommand } from "../lib/command";
 import { copyArtifact, finalizeArtifact, readDeployManifest } from "../lib/deploy-artifact";
 import { createDeployRun, writeDeploySummary } from "../lib/deploy-log";
+import {
+  type DeployTarget,
+  enabledDeployTargets,
+  getDeployTargetConfig,
+  parseDeployTarget,
+} from "../lib/effective-deployment-config";
 import { parseArgs } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
 const requestedTarget = args.target;
-const targets = requestedTarget
-  ? [parseDeployTarget(requestedTarget)]
-  : (["github-pages", "aws"] as const);
+const targets = requestedTarget ? [parseDeployTarget(requestedTarget)] : enabledDeployTargets;
 const outputDir = path.resolve("dist");
 const deployArtifactsDir = path.resolve(".artifacts/deploy");
 const commandName = "deploy:build";
