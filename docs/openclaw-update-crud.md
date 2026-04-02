@@ -87,6 +87,7 @@ If the request touches deployment settings, OpenClaw must also ask for:
 
 1. `deployment_targets`: any of `github-pages`, `render`, `railway`, `aws`
 2. `primary_host`: `github-pages`, `render`, `railway`, `aws`, `custom-domain`, or `unchanged`
+3. map the answer into `config/deployment.json`, then rerun `bun run deploy:setup -- --apply`
 
 ## Defaults
 

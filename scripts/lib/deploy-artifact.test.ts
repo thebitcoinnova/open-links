@@ -142,7 +142,7 @@ test("assertArtifactMatchesTarget allows external github links on aws artifacts"
       path.join(artifactDir, "index.html"),
       [
         "<!doctype html>",
-        '<meta name="robots" content="index, follow">',
+        '<meta name="robots" content="noindex, nofollow">',
         '<link rel="modulepreload" href="/assets/app.js">',
         '<a href="https://github.com/pRizz/open-links/commit/0123456789abcdef">Commit</a>',
       ].join(""),

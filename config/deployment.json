@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/deployment.schema.json",
+  "primaryTarget": "github-pages",
+  "enabledTargets": ["github-pages"],
+  "targets": {
+    "aws": {
+      "priceClass": "PriceClass_100"
+    },
+    "github-pages": {},
+    "render": {},
+    "railway": {}
+  }
+}

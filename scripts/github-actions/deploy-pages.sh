@@ -33,8 +33,32 @@ resolve_context() {
   fi
 }
 
+resolve_targets() {
+  local outputs
+  outputs="$(node --input-type=module <<'EOF'
+import fs from "node:fs";
+
+const rawConfig = JSON.parse(fs.readFileSync("config/deployment.json", "utf8"));
+const enabledTargets = new Set(Array.isArray(rawConfig.enabledTargets) ? rawConfig.enabledTargets : []);
+const primaryTarget = typeof rawConfig.primaryTarget === "string" ? rawConfig.primaryTarget : "github-pages";
+
+console.log(`aws_target_enabled=${enabledTargets.has("aws")}`);
+console.log(`github_pages_enabled=${enabledTargets.has("github-pages")}`);
+console.log(`render_enabled=${enabledTargets.has("render")}`);
+console.log(`railway_enabled=${enabledTargets.has("railway")}`);
+console.log(`primary_target=${primaryTarget}`);
+EOF
+)"
+
+  while IFS= read -r line; do
+    if [[ -n "${line}" ]]; then
+      write_output "${line%%=*}" "${line#*=}"
+    fi
+  done <<<"${outputs}"
+}
+
 resolve_aws_opt_in() {
-  if [[ "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" ]]; then
+  if [[ "${AWS_TARGET_ENABLED:-false}" == "true" && "${OPENLINKS_ENABLE_AWS_DEPLOY:-}" == "true" ]]; then
     echo "enabled=true" >>"$GITHUB_OUTPUT"
   else
     echo "enabled=false" >>"$GITHUB_OUTPUT"
@@ -46,6 +70,9 @@ publish_context_summary() {
 ## Deploy Context
 - Ref: \`${CHECKOUT_REF:-unknown}\`
 - Artifact source: \`${ARTIFACT_SOURCE:-unknown}\`
+- Primary target: \`${PRIMARY_TARGET:-unknown}\`
+- AWS target enabled: \`${AWS_TARGET_ENABLED:-unknown}\`
+- GitHub Pages enabled: \`${GITHUB_PAGES_ENABLED:-unknown}\`
 - AWS enabled: \`${AWS_ENABLED:-unknown}\`
 EOF
 }
@@ -64,6 +91,7 @@ Usage: bash scripts/github-actions/deploy-pages.sh <command>
 
 Commands:
   resolve-context
+  resolve-targets
   resolve-aws-opt-in
   publish-context-summary
   publish-pages-noop-summary
@@ -74,6 +102,9 @@ command_name="${1:-}"
 case "$command_name" in
   resolve-context)
     resolve_context
+    ;;
+  resolve-targets)
+    resolve_targets
     ;;
   resolve-aws-opt-in)
     resolve_aws_opt_in

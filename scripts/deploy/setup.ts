@@ -1,9 +1,12 @@
+import { enabledDeployTargets } from "../../src/lib/deployment-config";
 import { runCommand } from "../lib/command";
 import {
   type DeployVerificationResult,
   createDeployRun,
   writeDeploySummary,
 } from "../lib/deploy-log";
+import { buildSetupChildCommands, resolveRequestedTargets } from "../lib/deployment-command-plan";
+import { syncDeploymentTrackedFiles } from "../lib/deployment-tracked-files";
 import { parseArgs } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
@@ -15,14 +18,13 @@ const run = await createDeployRun({
   target: "deploy-setup",
 });
 
-const childCommands = [
-  buildChildCommand("scripts/deploy/setup-aws.ts", args, mode),
-  buildChildCommand("scripts/deploy/setup-github.ts", args, mode),
-];
+const requestedTargets = resolveRequestedTargets(args.targets);
+const activeTargets = requestedTargets.length > 0 ? requestedTargets : enabledDeployTargets;
+const childCommands = buildSetupChildCommands(activeTargets, args, mode);
 
 await run.addBreadcrumb({
-  data: { childCommands },
-  detail: "Prepared the AWS and GitHub setup command sequence.",
+  data: { activeTargets, childCommands },
+  detail: "Prepared the config-driven deployment setup command sequence.",
   status: "planned",
   step: "plan",
 });
@@ -110,6 +112,23 @@ for (const childCommand of childCommands) {
   });
 }
 
+const syncedTrackedFiles = await syncDeploymentTrackedFiles({ mode });
+if (mode === "apply") {
+  appliedChanges.push(...syncedTrackedFiles.plannedChanges);
+} else {
+  skippedReasons.push(...syncedTrackedFiles.plannedChanges);
+}
+skippedReasons.push(...syncedTrackedFiles.skippedReasons);
+
+verificationResults.push({
+  detail:
+    syncedTrackedFiles.changedPaths.length > 0
+      ? `Synchronized ${syncedTrackedFiles.changedPaths.length} tracked deployment file(s).`
+      : "Tracked deployment files already matched config/deployment.json.",
+  name: "tracked deployment files",
+  status: "passed",
+});
+
 const { runDirectory } = await writeDeploySummary(
   {
     appliedChanges,
@@ -118,8 +137,8 @@ const { runDirectory } = await writeDeploySummary(
     command: commandName,
     discoveredRemoteState,
     mode,
-    plannedChanges: { childCommands },
-    resultingUrls: [],
+    plannedChanges: { activeTargets, childCommands },
+    resultingUrls: syncedTrackedFiles.resultingUrls,
     skippedReasons,
     target: "deploy-setup",
     verificationResults,
@@ -128,28 +147,3 @@ const { runDirectory } = await writeDeploySummary(
 );
 
 console.log(`Deployment setup ${mode} complete. Summary: ${runDirectory}`);
-
-function buildChildCommand(
-  scriptPath: string,
-  args: Record<string, string>,
-  mode: "apply" | "check",
-) {
-  const command: [string, ...string[]] = ["bun", "run", scriptPath];
-
-  if (mode === "apply") {
-    command.push("--apply");
-  }
-
-  if (args.repo) {
-    command.push(`--repo=${args.repo}`);
-  }
-
-  if (args["role-arn"] && scriptPath.endsWith("setup-github.ts")) {
-    command.push(`--role-arn=${args["role-arn"]}`);
-  }
-
-  return {
-    command,
-    label: scriptPath.includes("setup-aws") ? "AWS setup" : "GitHub setup",
-  };
-}

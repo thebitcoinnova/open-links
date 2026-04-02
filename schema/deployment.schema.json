@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-links.dev/schema/deployment.schema.json",
+  "title": "OpenLinks Deployment Topology",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["primaryTarget", "enabledTargets"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "primaryTarget": {
+      "enum": ["aws", "github-pages", "render", "railway"]
+    },
+    "enabledTargets": {
+      "type": "array",
+      "items": {
+        "enum": ["aws", "github-pages", "render", "railway"]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aws": {
+          "$ref": "#/$defs/awsTarget"
+        },
+        "github-pages": {
+          "$ref": "#/$defs/genericTarget"
+        },
+        "render": {
+          "$ref": "#/$defs/genericTarget"
+        },
+        "railway": {
+          "$ref": "#/$defs/genericTarget"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "genericTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publicOrigin": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "awsTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publicOrigin": {
+          "type": "string",
+          "format": "uri"
+        },
+        "priceClass": {
+          "enum": ["PriceClass_100", "PriceClass_200", "PriceClass_All"]
+        }
+      }
+    }
+  }
+}

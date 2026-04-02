@@ -3,7 +3,7 @@
 <!-- coding-and-architecture-requirements-readme-badges:begin -->
 [![GitHub Stars](https://img.shields.io/github/stars/pRizz/open-links)](https://github.com/pRizz/open-links)
 [![CI](https://github.com/pRizz/open-links/actions/workflows/ci.yml/badge.svg)](https://github.com/pRizz/open-links/actions/workflows/ci.yml)
-[![Deploy Pages](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/pRizz/open-links/actions/workflows/deploy-pages.yml)
+[![Deploy Production](https://github.com/pRizz/open-links/actions/workflows/deploy-production.yml/badge.svg)](https://github.com/pRizz/open-links/actions/workflows/deploy-production.yml)
 [![License](https://img.shields.io/github/license/pRizz/open-links?s)](./LICENSE)
 [![TypeScript 5.9.3](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SolidJS 1.9.11](https://img.shields.io/badge/SolidJS-1.9.11-2C4F7C?logo=solid&logoColor=white)](https://www.solidjs.com/)
@@ -98,7 +98,7 @@ GitHub Pages fork example:
 - Build-time profile-avatar materialization with local fallback behavior.
 - Build-time rich/SEO image materialization with local-only runtime behavior.
 - Offline-friendly public app shell with cached same-origin assets and graceful analytics fallback after first online visit.
-- GitHub Actions CI + AWS canonical deploy + GitHub Pages mirror pipeline already wired.
+- GitHub Actions CI + config-driven production deploy pipeline already wired.
 - Checked-in Render and Railway deployment targets for fork-first provider-native hosting.
 - Theme and layout controls designed for forking and customization.
 - Data-driven typography overrides via `data/site.json` (`ui.typography`).
@@ -322,18 +322,22 @@ Recommended flow:
 
 ## First Production Deploy (Quick Path)
 
-1. Push to `main`.
-2. Pick your first target:
-   - default fork-safe path: GitHub Pages via **GitHub Actions**
-   - provider-native fork paths: Render or Railway
-   - upstream-only path: AWS + GitHub Pages
-3. Use the matching guide:
+1. Configure `config/deployment.json` for your intended topology.
+2. Run setup in apply mode so tracked site metadata and README deploy rows match the topology:
+
+```bash
+bun run deploy:plan
+bun run deploy:setup -- --apply
+```
+
+3. Push to `main`.
+4. Use the matching guide:
    - [Quickstart](https://raw.githubusercontent.com/pRizz/open-links/main/docs/quickstart.md)
    - [Render Deployment Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment-render.md)
    - [Railway Deployment Guide](https://raw.githubusercontent.com/pRizz/open-links/main/docs/deployment-railway.md)
-4. Wait for GitHub CI to pass on `main`.
-5. Verify the live target:
-   - GitHub Pages / upstream AWS through workflow summaries
+5. Wait for GitHub CI to pass on `main`.
+6. Verify the live target:
+   - GitHub Pages and AWS through workflow summaries
    - Render / Railway with `bun run deploy:verify:live -- --target=<target> --public-origin=<live-url>`
 
 Local parity commands:
@@ -375,9 +379,9 @@ Studio workspace tooling is Bun-first:
 High-signal deployment checks:
 
 1. `required-checks` job in `.github/workflows/ci.yml` is green.
-2. `Deploy AWS Canonical Site` job in `.github/workflows/deploy-pages.yml` is green when AWS deploy is enabled.
-3. `Deploy GitHub Pages Mirror` job in `.github/workflows/deploy-pages.yml` is green or intentionally skipped as a no-op.
-4. `Verify Production Deployment` is green when AWS deploy is enabled.
+2. `Deploy AWS Site` job in `.github/workflows/deploy-production.yml` is green when AWS is enabled in `config/deployment.json` and opted in via GitHub settings.
+3. `Deploy GitHub Pages` job in `.github/workflows/deploy-production.yml` is green when GitHub Pages is enabled in `config/deployment.json`, or intentionally skipped when that target is disabled.
+4. `Verify Production Deployment` is green for the currently enabled targets.
 5. If deploy fails, review workflow summaries and diagnostics artifacts.
 
 Live build provenance surfaces:

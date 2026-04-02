@@ -97,7 +97,7 @@ jobs:
           name: deploy-aws-site
           path: .artifacts/deploy/aws
           include-hidden-files: true
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 3
 
       - name: Upload Pages deployment artifact
@@ -107,7 +107,7 @@ jobs:
           name: deploy-pages-site
           path: .artifacts/deploy/github-pages
           include-hidden-files: true
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 3
 
       - name: Record deploy handoff contract

@@ -5,6 +5,9 @@ import type { BuildInfo } from "../../src/lib/build-info";
 import {
   type DeployTarget,
   deploymentConfig,
+  enabledDeployTargets,
+  getDeployTargetConfig,
+  isPlaceholderDeployPublicOrigin,
   parseDeployTarget,
 } from "../../src/lib/deployment-config";
 import { resolveBuildInfo } from "../lib/build-info";
@@ -126,7 +129,10 @@ function resolveTargets(
     return maybeTargets.map((target) => parseDeployTarget(target));
   }
 
-  return ["aws", "github-pages"];
+  const actionableTargets = enabledDeployTargets.filter(
+    (target) => !isPlaceholderDeployPublicOrigin(getDeployTargetConfig(target).publicOrigin),
+  );
+  return actionableTargets.length > 0 ? actionableTargets : enabledDeployTargets;
 }
 
 function resolveExplicitPublicOrigin(target: DeployTarget, parsedArgs: Record<string, string>) {

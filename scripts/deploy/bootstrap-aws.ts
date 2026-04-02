@@ -133,7 +133,7 @@ if (!domainReadiness.ready) {
   skippedReasons.push(
     mode === "check"
       ? blockerDetail
-      : "Apply mode stopped before CloudFormation mutations because openlinks.us is not fully ready in Route 53 yet.",
+      : `Apply mode stopped before CloudFormation mutations because ${deploymentConfig.primaryCanonicalDomain} is not fully ready in Route 53 yet.`,
   );
 
   await run.addBreadcrumb({
@@ -171,7 +171,9 @@ if (!domainReadiness.ready) {
     process.exit(0);
   }
 
-  throw new Error(`AWS bootstrap apply blocked until openlinks.us is ready. See ${runDirectory}.`);
+  throw new Error(
+    `AWS bootstrap apply blocked until ${deploymentConfig.primaryCanonicalDomain} is ready. See ${runDirectory}.`,
+  );
 }
 
 let mutableStackState = initialStackState;

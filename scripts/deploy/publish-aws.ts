@@ -1,4 +1,5 @@
 import path from "node:path";
+import { deploymentConfig } from "../../src/lib/deployment-config";
 import {
   assessOrphanedReviewStack,
   deleteStack,
@@ -203,7 +204,7 @@ try {
             finalStackStatus: completion.finalStackState.stackStatus ?? null,
             waitedMs: completion.waitedMs,
           }),
-          detail: `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? "open-links-site"}.`,
+          detail: `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? deploymentConfig.awsStackName}.`,
           status: "passed",
           step: "review shell recovery",
         },
@@ -213,7 +214,7 @@ try {
         },
       );
       appliedChanges.push(
-        `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? "open-links-site"}.`,
+        `Deleted orphaned CloudFormation stack shell ${mutableStackState.stackName ?? deploymentConfig.awsStackName}.`,
       );
       verificationResults.push({
         detail:

@@ -13,6 +13,7 @@ const publicRichSyncSummary = fs.existsSync(publicRichSyncSummaryPath)
   : null;
 const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
+const deploymentConfigPath = "config/deployment.json";
 
 const readCacheRevalidationSummaries = () => {
   if (!fs.existsSync(cacheRevalidationDir)) {
@@ -26,6 +27,19 @@ const readCacheRevalidationSummaries = () => {
       const absolute = path.join(cacheRevalidationDir, entry);
       return JSON.parse(fs.readFileSync(absolute, "utf8"));
     });
+};
+
+const readAwsDeploymentUrl = () => {
+  if (!fs.existsSync(deploymentConfigPath)) {
+    return null;
+  }
+
+  try {
+    const deploymentConfig = JSON.parse(fs.readFileSync(deploymentConfigPath, "utf8"));
+    return deploymentConfig?.targets?.aws?.publicOrigin ?? null;
+  } catch {
+    return null;
+  }
 };
 
 lines.push("## Nightly Follower History");
@@ -86,10 +100,10 @@ if (historySummary) {
 
 if (process.env.AWS_DEPLOY_ENABLED === "true") {
   lines.push(
-    `- AWS canonical deployment: ${process.env.AWS_DEPLOYMENT_URL || "https://openlinks.us/"}`,
+    `- AWS deployment: ${process.env.AWS_DEPLOYMENT_URL || readAwsDeploymentUrl() || "configured target"}`,
   );
 } else {
-  lines.push("- AWS canonical deployment: skipped");
+  lines.push("- AWS deployment: skipped");
 }
 
 if (process.env.PAGES_DEPLOYMENT_CHANGED === "true" && process.env.PAGES_DEPLOYMENT_URL) {
@@ -106,7 +120,7 @@ lines.push("- `bun run public:rich:sync`");
 lines.push("- `bun run followers:history:sync`");
 lines.push("- `bun run deploy:build`");
 lines.push(
-  "- Direct AWS and Pages deploys stay in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",
+  "- Direct AWS and GitHub Pages deploys stay in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",
 );
 
 const cacheSummaries = readCacheRevalidationSummaries();

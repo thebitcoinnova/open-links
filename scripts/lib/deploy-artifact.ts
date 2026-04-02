@@ -316,9 +316,9 @@ export async function assertArtifactMatchesTarget(outputDir: string, rawTarget?:
     relativePath.endsWith(".html"),
   );
   const assetPrefix = getExpectedAssetPrefix(target);
-  const githubPagesBasePath = normalizeBasePath(deploymentConfig.githubPagesBasePath);
+  const githubPagesBasePath = normalizeBasePath(deploymentConfig.githubPagesDefaultBasePath);
   const pagesBasePathPattern = new RegExp(
-    `(?:href|src)="${escapeRegExp(deploymentConfig.githubPagesBasePath)}(?:assets/|favicon|site\\.webmanifest|apple-touch-icon|openlinks-social-fallback)`,
+    `(?:href|src)="${escapeRegExp(deploymentConfig.githubPagesDefaultBasePath)}(?:assets/|favicon|site\\.webmanifest|apple-touch-icon|openlinks-social-fallback)`,
   );
   const unprefixedRootReferencePattern =
     githubPagesBasePath === "/"
