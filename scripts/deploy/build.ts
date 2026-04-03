@@ -15,6 +15,7 @@ import { parseArgs } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
 const requestedTarget = args.target;
+const skipContentSync = args["skip-content-sync"] === "true";
 const targets = requestedTarget ? [parseDeployTarget(requestedTarget)] : enabledDeployTargets;
 const outputDir = path.resolve("dist");
 const deployArtifactsDir = path.resolve(".artifacts/deploy");
@@ -53,14 +54,20 @@ await run.addBreadcrumb({
   step: "public cleanup",
 });
 
-runCommand("bun", ["run", "avatar:sync"]);
-runCommand("bun", ["run", "enrich:rich:strict"]);
-runCommand("bun", ["run", "images:sync"]);
-runCommand("bun", ["run", "social:preview:generate"]);
-runCommand("bun", ["run", "validate:data"]);
-runCommand("bun", ["run", "badge:site"]);
+if (!skipContentSync) {
+  runCommand("bun", ["run", "avatar:sync"]);
+  runCommand("bun", ["run", "enrich:rich:strict"]);
+  runCommand("bun", ["run", "images:sync"]);
+  runCommand("bun", ["run", "social:preview:generate"]);
+  runCommand("bun", ["run", "validate:data"]);
+  runCommand("bun", ["run", "badge:site"]);
+} else {
+  runCommand("bun", ["run", "validate:data"]);
+}
 await run.addBreadcrumb({
-  detail: "Ran the shared pre-build sync and validation steps for deployment artifacts.",
+  detail: skipContentSync
+    ? "Skipped content sync and generation steps before the deploy build and ran validate:data only."
+    : "Ran the shared pre-build sync and validation steps for deployment artifacts.",
   status: "passed",
   step: "prebuild",
 });
@@ -112,15 +119,21 @@ const { runDirectory } = await writeDeploySummary(
     command: commandName,
     discoveredRemoteState: {
       outputDir,
+      skipContentSync,
     },
     mode: "check",
     plannedChanges: {
+      skipContentSync,
       targets,
     },
     resultingUrls: builtArtifacts.map(
       (artifact) => getDeployTargetConfig(artifact.target).publicOrigin,
     ),
-    skippedReasons: [],
+    skippedReasons: skipContentSync
+      ? [
+          "Skipped avatar/rich/image/social-preview/badge generation for an infra/debug-oriented artifact build.",
+        ]
+      : [],
     target: requestedTarget ?? "all",
     verificationResults: builtArtifacts.map((artifact) => ({
       detail: `${artifact.target} artifact ${artifact.artifactHash} passed the target assertions.`,

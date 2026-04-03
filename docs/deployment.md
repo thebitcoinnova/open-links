@@ -63,6 +63,34 @@ bun run deploy:verify:live -- --target=render --public-origin=https://<service>.
 bun run deploy:verify:live -- --target=railway --public-origin=https://<service>.up.railway.app
 ```
 
+### Local-First AWS Debug Loop
+
+Use the local AWS loop when debugging production deploy failures so you can prove setup/bootstrap/publish behavior before asking GitHub Actions to confirm it:
+
+```bash
+bun run deploy:local:aws:check
+bun run deploy:local:aws:apply
+```
+
+For infra-focused debugging where you want to avoid tracked content-cache churn, use:
+
+```bash
+bun run deploy:local:aws:check:infra
+bun run deploy:local:aws:apply:infra
+```
+
+Rules for this loop:
+
+- It covers AWS only. GitHub Pages publish remains workflow-driven.
+- GitHub Actions stays enabled, but while debugging AWS you should treat workflow runs as confirmatory, not as the primary iteration loop.
+- `deploy:setup:github` is optional and only runs when you pass `--include-github-setup`.
+- The durable proof for local dirty-tree runs is the AWS artifact hash from `.artifacts/deploy/aws/deploy-manifest.json`, plus successful live verification. `build-info.commitSha` is only a secondary reference when local changes are uncommitted.
+- `--skip-content-sync` skips `avatar:sync`, `enrich:rich:strict`, `images:sync`, `social:preview:generate`, and `badge:site` during the build path. Use it for AWS/bootstrap/publish/debugging only; use the normal path when validating content freshness, rich metadata, or SEO asset generation.
+- When infra debugging produces incidental cache churn, restore it before committing unrelated changes:
+  - `git restore --worktree data/cache/content-images.json public/cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg`
+  - `rm -f public/cache/content-images/04f7c6ded33f86fca3ab16b6b3afba8068cc69e23769b7cfa714719e107eb1c0.jpg`
+  - if you need to keep iterating before the infra alias is available in another checkout, prefer a disposable worktree or clone
+
 Target-specific setup wrappers remain available while the old flow is phased out:
 
 - `bun run deploy:setup:render -- --public-origin=...`
