@@ -1,6 +1,7 @@
 import {
   assessAwsDomainReadiness,
   assessOrphanedReviewStack,
+  assessRecoverableRollbackStack,
   buildSiteBucketName,
   createStackChangeSet,
   deleteChangeSet,
@@ -182,6 +183,8 @@ let changeSetPlan: ReturnType<typeof waitForChangeSet> | undefined;
 let orphanedReviewStackAssessment: ReturnType<typeof assessOrphanedReviewStack> | undefined;
 let orphanedReviewStackChangeSets: ReturnType<typeof loadStackChangeSetSummaries> | undefined;
 let orphanedReviewStackResources: ReturnType<typeof loadStackResourceSummaries> | undefined;
+let rollbackStackAssessment: ReturnType<typeof assessRecoverableRollbackStack> | undefined;
+let rollbackStackResources: ReturnType<typeof loadStackResourceSummaries> | undefined;
 
 try {
   if (mutableStackState.exists && mutableStackState.stackStatus === "REVIEW_IN_PROGRESS") {
@@ -302,6 +305,112 @@ try {
     }
   }
 
+  if (
+    mutableStackState.exists &&
+    ["ROLLBACK_COMPLETE", "ROLLBACK_FAILED"].includes(mutableStackState.stackStatus ?? "")
+  ) {
+    rollbackStackResources = await recordTimedAction(
+      run,
+      {
+        data: (resources: ReturnType<typeof loadStackResourceSummaries>) => ({
+          count: resources.length,
+          resources,
+        }),
+        detail: "Loaded CloudFormation stack resources for the terminal rollback shell.",
+        status: "passed",
+        step: "rollback shell resources",
+      },
+      () => loadStackResourceSummaries(),
+    );
+    rollbackStackAssessment = assessRecoverableRollbackStack(
+      mutableStackState,
+      rollbackStackResources,
+    );
+
+    await run.addBreadcrumb({
+      data: rollbackStackAssessment,
+      detail: rollbackStackAssessment.detail,
+      status: rollbackStackAssessment.canAutoDelete ? "planned" : "info",
+      step: "rollback shell assessment",
+    });
+
+    if (rollbackStackAssessment.canAutoDelete) {
+      plannedChanges = {
+        recovery: {
+          action: "delete-rollback-shell",
+          stackName: deploymentConfig.awsStackName,
+        },
+      };
+
+      if (mode === "check") {
+        skippedReasons.push(
+          `Check mode detected a recoverable ${mutableStackState.stackStatus} rollback shell. Rerun with --apply to delete the shell and continue bootstrap safely.`,
+        );
+        verificationResults.push({
+          detail: rollbackStackAssessment.detail,
+          name: "rollback shell",
+          status: "skipped",
+        });
+
+        const { runDirectory } = await writeDeploySummary(
+          {
+            appliedChanges,
+            artifactDir: undefined,
+            artifactHash: undefined,
+            command: commandName,
+            discoveredRemoteState: {
+              currentStackState: initialStackState,
+              domainReadiness,
+              identity,
+              rollbackStackAssessment,
+              rollbackStackResources,
+              templateValidation,
+            },
+            mode,
+            plannedChanges,
+            resultingUrls,
+            skippedReasons,
+            target: "aws",
+            verificationResults,
+          },
+          { runDirectory: run.runDirectory },
+        );
+
+        console.log(
+          `AWS bootstrap ${mode} requires rollback-shell recovery. Summary: ${runDirectory}`,
+        );
+        process.exit(0);
+      }
+
+      await recordTimedAction(
+        run,
+        {
+          data: (completion: Awaited<ReturnType<typeof waitForStackDeletion>>) => ({
+            finalStackStatus: completion.finalStackState.stackStatus ?? null,
+            waitedMs: completion.waitedMs,
+          }),
+          detail: `Deleted terminal rollback shell ${deploymentConfig.awsStackName}.`,
+          status: "passed",
+          step: "rollback shell recovery",
+        },
+        () => {
+          deleteStack();
+          return waitForStackDeletion({ maxWaitMs });
+        },
+      );
+      appliedChanges.push(`Deleted terminal rollback shell ${deploymentConfig.awsStackName}.`);
+      verificationResults.push({
+        detail:
+          "Deleted the empty terminal rollback shell so bootstrap can recreate the stack cleanly.",
+        name: "rollback shell",
+        status: "passed",
+      });
+      mutableStackState = loadStackState();
+    } else {
+      throw new Error(rollbackStackAssessment.detail);
+    }
+  }
+
   const stackReadiness = await recordTimedAction(
     run,
     {
@@ -363,6 +472,8 @@ try {
           orphanedReviewStackAssessment,
           orphanedReviewStackChangeSets,
           orphanedReviewStackResources,
+          rollbackStackAssessment,
+          rollbackStackResources,
           templateValidation,
         },
         mode,
@@ -524,6 +635,8 @@ try {
         orphanedReviewStackAssessment,
         orphanedReviewStackChangeSets,
         orphanedReviewStackResources,
+        rollbackStackAssessment,
+        rollbackStackResources,
         templateValidation,
       },
       mode,
@@ -568,6 +681,8 @@ try {
         orphanedReviewStackAssessment,
         orphanedReviewStackChangeSets,
         orphanedReviewStackResources,
+        rollbackStackAssessment,
+        rollbackStackResources,
         templateValidation,
       },
       mode,

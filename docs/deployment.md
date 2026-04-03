@@ -33,6 +33,8 @@ After any deployment naming or topology refactor, rerun `bun run deploy:setup --
 
 When GitHub setup is in scope, `deploy:setup` now performs a read-only GitHub admin preflight before any AWS mutations. Use a repo-admin `gh` identity for the full flow, or split the work into `bun run deploy:setup:aws -- --apply` now and `bun run deploy:setup:github -- --apply` later with repo-admin access.
 
+`bun run deploy:aws:bootstrap --apply` now auto-deletes empty terminal rollback shells (`ROLLBACK_COMPLETE` or `ROLLBACK_FAILED`) before retrying stack creation. If rollback state still has live resources or outputs, bootstrap still stops and reports manual CloudFormation recovery.
+
 ## Supported Targets
 
 - `github-pages`: default fork-safe target
@@ -152,6 +154,7 @@ Local diagnostics:
 | `deploy:setup` fails immediately at `GitHub admin preflight` | the current `gh` identity can authenticate but cannot administer repository environments, Pages, secrets, or variables | authenticate `gh` as a repo admin and rerun `bun run deploy:setup -- --apply`, or run `bun run deploy:setup:aws -- --apply` now and finish `bun run deploy:setup:github -- --apply` later with admin access |
 | `Deploy AWS Site` fails with CloudFormation `AccessDenied` after a deployment refactor | the attached IAM policy or GitHub `AWS_DEPLOY_ROLE_ARN` secret still points at pre-refactor role/policy names | rerun `bun run deploy:setup -- --apply`, confirm the config-derived role ARN/policy are active, then rerun `Deploy Production` |
 | `deploy:aws:bootstrap --apply` ends in `ROLLBACK_FAILED` with `s3:DeleteBucket` denied for `SiteBucket` | the active deploy role can create the site bucket but cannot delete it during CloudFormation rollback | update the deploy policy to include `s3:DeleteBucket`, rerun `bun run deploy:setup:aws -- --apply` (and patch the legacy role if GitHub still uses it), delete the failed stack shell, then rerun `Deploy Production` |
+| `deploy:aws:bootstrap --apply` stops on `ROLLBACK_COMPLETE` or `ROLLBACK_FAILED` before creating a new change set | the stack is a terminal rollback shell from an earlier failed create | bootstrap now auto-deletes empty rollback shells; if it still stops, inspect the reported remaining resources/outputs, complete manual CloudFormation recovery, then rerun `Deploy Production` |
 | AWS job is skipped | AWS target is disabled in the effective topology or GitHub AWS opt-in is missing | enable `aws` in the effective topology, then set `OPENLINKS_ENABLE_AWS_DEPLOY` and `AWS_DEPLOY_ROLE_ARN` |
 | Pages job is skipped | GitHub Pages is disabled in the effective topology | enable `github-pages` in the effective topology |
 | `deploy:verify` blocks on DNS readiness | the configured AWS domain does not resolve publicly yet | wait for Route 53 + CloudFront propagation, then rerun `bun run deploy:verify` |
