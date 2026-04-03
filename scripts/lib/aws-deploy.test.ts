@@ -7,6 +7,7 @@ import {
   assessStackReadiness,
   buildAwsStackParameters,
   classifyChangeSetPlanRisks,
+  formatChangeSetRiskMessage,
   waitForStackReadiness,
 } from "./aws-deploy";
 
@@ -254,9 +255,45 @@ test("classifyChangeSetPlanRisks blocks replacement of route53 records", () => {
 
   // Act / Assert
   assert.equal(riskSummary.hasBlockingRisk, true);
+  assert.equal(riskSummary.blockedCriticalReplacements.length, 1);
+  assert.equal(
+    riskSummary.blockedCriticalReplacements[0]?.logicalResourceId,
+    "PrimaryDomainARecord",
+  );
   assert.equal(riskSummary.blockedRoute53Replacements.length, 1);
   assert.equal(
     riskSummary.blockedRoute53Replacements[0]?.logicalResourceId,
     "PrimaryDomainARecord",
   );
+});
+
+test("classifyChangeSetPlanRisks blocks replacement of live CloudFront distribution resources", () => {
+  // Arrange
+  const riskSummary = classifyChangeSetPlanRisks([
+    {
+      action: "Modify",
+      logicalResourceId: "SiteBucket",
+      replacement: "True",
+      resourceType: "AWS::S3::Bucket",
+    },
+    {
+      action: "Modify",
+      logicalResourceId: "SiteDistribution",
+      replacement: "True",
+      resourceType: "AWS::CloudFront::Distribution",
+    },
+    {
+      action: "Modify",
+      logicalResourceId: "SiteCertificate",
+      replacement: "True",
+      resourceType: "AWS::CertificateManager::Certificate",
+    },
+  ]);
+
+  // Act / Assert
+  assert.equal(riskSummary.hasBlockingRisk, true);
+  assert.equal(riskSummary.blockedCriticalReplacements.length, 3);
+  assert.match(formatChangeSetRiskMessage(riskSummary), /SiteBucket/u);
+  assert.match(formatChangeSetRiskMessage(riskSummary), /SiteDistribution/u);
+  assert.match(formatChangeSetRiskMessage(riskSummary), /SiteCertificate/u);
 });

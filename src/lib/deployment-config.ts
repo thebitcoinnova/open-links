@@ -16,6 +16,7 @@ export type AwsPriceClass = "PriceClass_100" | "PriceClass_200" | "PriceClass_Al
 export interface TrackedDeployTargetConfig {
   priceClass?: AwsPriceClass;
   publicOrigin?: string;
+  resourcePrefix?: string;
 }
 
 export interface TrackedDeploymentConfig {
@@ -202,7 +203,9 @@ export function resolveDeploymentState(
   const primaryCanonicalOrigin =
     normalizeDeployPublicOrigin(env.OPENLINKS_PRIMARY_CANONICAL_ORIGIN) ??
     publicOrigins[nextTrackedConfig.primaryTarget];
-  const awsResourcePrefix = buildAwsResourcePrefix(repositoryContext.repositorySlug);
+  const awsResourcePrefix =
+    nextTrackedConfig.targets.aws?.resourcePrefix ||
+    buildAwsResourcePrefix(repositoryContext.repositorySlug);
   const targets = {
     aws: buildDeployTargetConfig(
       {
@@ -510,6 +513,16 @@ function parseTrackedDeployTargetConfig(
     nextTargetConfig.priceClass = rawTarget.priceClass;
   }
 
+  if (target === "aws") {
+    const normalizedResourcePrefix = normalizeAwsResourcePrefix(
+      typeof rawTarget.resourcePrefix === "string" ? rawTarget.resourcePrefix : undefined,
+    );
+
+    if (normalizedResourcePrefix) {
+      nextTargetConfig.resourcePrefix = normalizedResourcePrefix;
+    }
+  }
+
   return nextTargetConfig;
 }
 
@@ -651,6 +664,24 @@ function buildAwsResourcePrefix(repositorySlug: string) {
     .replace(/^-+|-+$/g, "");
   const candidate = `${DEFAULT_DEPLOYMENT_RESOURCE_PREFIX}-${slugToken}`;
   return candidate.slice(0, MAX_AWS_RESOURCE_PREFIX_LENGTH).replace(/-+$/g, "");
+}
+
+function normalizeAwsResourcePrefix(input?: string) {
+  const trimmed = input?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const normalized = trimmed
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (normalized.length === 0) {
+    return undefined;
+  }
+
+  return normalized.slice(0, MAX_AWS_RESOURCE_PREFIX_LENGTH).replace(/-+$/g, "") || undefined;
 }
 
 function isAwsPriceClass(value: unknown): value is AwsPriceClass {

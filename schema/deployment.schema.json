@@ -60,6 +60,12 @@
         },
         "priceClass": {
           "enum": ["PriceClass_100", "PriceClass_200", "PriceClass_All"]
+        },
+        "resourcePrefix": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "minLength": 1,
+          "maxLength": 48
         }
       }
     }

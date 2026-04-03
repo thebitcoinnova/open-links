@@ -152,6 +152,7 @@ export interface ChangeSetRisk {
 }
 
 export interface ChangeSetRiskSummary {
+  blockedCriticalReplacements: ChangeSetRisk[];
   blockedRoute53Replacements: ChangeSetRisk[];
   hasBlockingRisk: boolean;
 }
@@ -799,9 +800,41 @@ export function classifyChangeSetPlanRisks(changes: ChangeSetPlanChange[]) {
     ];
   });
 
+  const blockedCriticalReplacements = changes.flatMap((change) => {
+    const criticalLogicalIds = new Set([
+      "SiteBucket",
+      "SiteDistribution",
+      "SiteCertificate",
+      "PrimaryDomainARecord",
+      "PrimaryDomainAAAARecord",
+    ]);
+
+    if (!criticalLogicalIds.has(change.logicalResourceId)) {
+      return [];
+    }
+
+    const shouldBlock =
+      change.action === "Remove" ||
+      (change.action !== "Add" && !["False", "Never"].includes(change.replacement));
+
+    if (!shouldBlock) {
+      return [];
+    }
+
+    return [
+      {
+        ...change,
+        reason:
+          "Replacing or removing this live AWS resource is blocked because upstream is expected to reuse the existing production stack without downtime.",
+      } satisfies ChangeSetRisk,
+    ];
+  });
+
   return {
+    blockedCriticalReplacements,
     blockedRoute53Replacements,
-    hasBlockingRisk: blockedRoute53Replacements.length > 0,
+    hasBlockingRisk:
+      blockedRoute53Replacements.length > 0 || blockedCriticalReplacements.length > 0,
   } satisfies ChangeSetRiskSummary;
 }
 
@@ -811,11 +844,24 @@ export function formatChangeSetRiskMessage(riskSummary: ChangeSetRiskSummary) {
   }
 
   return [
-    "Blocked CloudFormation change set because it would replace or remove Route 53 records:",
-    ...riskSummary.blockedRoute53Replacements.map(
+    "Blocked CloudFormation change set because it would replace or remove protected live resources:",
+    ...riskSummary.blockedCriticalReplacements.map(
       (risk) =>
         `- ${risk.logicalResourceId} (${risk.resourceType}, action=${risk.action}, replacement=${risk.replacement}): ${risk.reason}`,
     ),
+    ...riskSummary.blockedRoute53Replacements
+      .filter(
+        (route53Risk) =>
+          !riskSummary.blockedCriticalReplacements.some(
+            (criticalRisk) =>
+              criticalRisk.logicalResourceId === route53Risk.logicalResourceId &&
+              criticalRisk.resourceType === route53Risk.resourceType,
+          ),
+      )
+      .map(
+        (risk) =>
+          `- ${risk.logicalResourceId} (${risk.resourceType}, action=${risk.action}, replacement=${risk.replacement}): ${risk.reason}`,
+      ),
   ].join("\n");
 }
 

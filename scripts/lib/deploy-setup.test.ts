@@ -144,7 +144,7 @@ test("resolveAwsDeployRoleArn flags stale ambient role overrides", () => {
   // Arrange / Act
   const resolvedRoleArn = resolveAwsDeployRoleArn({
     accountId: "123456789012",
-    maybeAmbientRoleArn: "arn:aws:iam::123456789012:role/open-links-github-deploy",
+    maybeAmbientRoleArn: "arn:aws:iam::123456789012:role/open-links-fork-github-deploy",
   });
 
   // Assert

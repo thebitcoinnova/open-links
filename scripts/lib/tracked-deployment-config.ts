@@ -112,6 +112,10 @@ export function serializeDeploymentConfig(config: TrackedDeploymentConfig) {
           nextConfig.priceClass = targetConfig.priceClass;
         }
 
+        if (target === "aws" && targetConfig?.resourcePrefix) {
+          nextConfig.resourcePrefix = targetConfig.resourcePrefix;
+        }
+
         return [target, nextConfig];
       }),
   );

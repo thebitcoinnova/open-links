@@ -90,6 +90,7 @@ Rules for this loop:
   - `git restore --worktree data/cache/content-images.json public/cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg`
   - `rm -f public/cache/content-images/04f7c6ded33f86fca3ab16b6b3afba8068cc69e23769b7cfa714719e107eb1c0.jpg`
   - if you need to keep iterating before the infra alias is available in another checkout, prefer a disposable worktree or clone
+- Upstream `pRizz/open-links` intentionally reuses the fixed AWS resource prefix `open-links`, which keeps production on the existing `open-links-site` stack and CloudFront distribution `E334IP4L9JRO34`. The current live stack output bucket is `open-links-535002860186`. Forks should normally keep the slug-derived fallback unless they intentionally adopt an existing AWS stack.
 
 Target-specific setup wrappers remain available while the old flow is phased out:
 
@@ -138,6 +139,23 @@ Provider-native targets remain externally published by their hosting platforms, 
    - `Deploy AWS Site`
    - `Deploy GitHub Pages`
    - `Verify Production Deployment`
+
+### Upstream AWS Reuse
+
+For upstream `pRizz/open-links`, the AWS deploy flow should reuse the existing `open-links-site` stack rather than creating a second distribution for `openlinks.us`.
+
+Use this sequence:
+
+1. `bun run deploy:setup:aws -- --apply`
+2. `bun run deploy:local:aws:check:infra`
+3. confirm the check targets:
+   - stack `open-links-site`
+   - bucket `open-links-535002860186`
+   - distribution `E334IP4L9JRO34`
+4. only if the change set is empty or safe in-place, run `bun run deploy:local:aws:apply:infra`
+5. rerun `Deploy Production` only as confirmation
+
+If the reused-stack check proposes replacement of `SiteBucket`, `SiteDistribution`, `SiteCertificate`, `PrimaryDomainARecord`, or `PrimaryDomainAAAARecord`, stop and treat that as a blocker. The older `open-links-prizz-open-links-*` resources are not the upstream steady state and should be treated as later cleanup candidates, not as the primary production path.
 
 ### Provider-Native Primary
 

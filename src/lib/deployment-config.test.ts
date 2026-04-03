@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildDeploymentConfig,
   buildGitHubPagesUrl,
   deploymentConfig,
   getCanonicalUrl,
@@ -29,6 +30,21 @@ test("canonical urls follow the resolved primary origin for the active repositor
   // Assert
   assert.equal(homeUrl, `${deploymentConfig.primaryCanonicalOrigin}/`);
   assert.equal(aboutUrl, `${deploymentConfig.primaryCanonicalOrigin}/about`);
+});
+
+test("upstream defaults resolve to the open-links AWS reuse naming", () => {
+  // Arrange / Act
+  const state = resolveDeploymentState({
+    repositorySlug: "pRizz/open-links",
+  });
+  const config = buildDeploymentConfig(state);
+
+  // Assert
+  assert.equal(state.awsResourcePrefix, "open-links");
+  assert.equal(config.awsStackName, "open-links-site");
+  assert.equal(config.bucketNamePrefix, "open-links");
+  assert.equal(config.awsDeployRoleName, "open-links-github-deploy");
+  assert.equal(config.awsDeployPolicyName, "open-links-github-deploy");
 });
 
 test("github pages public urls include the repository base path in the default topology", () => {
@@ -153,6 +169,34 @@ test("explicit AWS-primary topologies drive indexing and mirrors for upstream an
     forkState.targets["github-pages"].publicOrigin,
     "https://someone.github.io/open-links-fork",
   );
+});
+
+test("aws resourcePrefix overrides slug-derived upstream resource naming", () => {
+  // Arrange
+  const trackedConfig = parseTrackedDeploymentConfig({
+    enabledTargets: ["aws", "github-pages"],
+    primaryTarget: "aws",
+    targets: {
+      aws: {
+        publicOrigin: "https://openlinks.us",
+        resourcePrefix: "open-links",
+      },
+    },
+  });
+
+  // Act
+  const state = resolveDeploymentState({
+    repositorySlug: "pRizz/open-links",
+    trackedConfig,
+  });
+  const config = buildDeploymentConfig(state);
+
+  // Assert
+  assert.equal(state.awsResourcePrefix, "open-links");
+  assert.equal(config.awsStackName, "open-links-site");
+  assert.equal(config.bucketNamePrefix, "open-links");
+  assert.equal(config.awsDeployRoleName, "open-links-github-deploy");
+  assert.equal(config.awsDeployPolicyName, "open-links-github-deploy");
 });
 
 test("pages custom-domain overrides keep github pages on the root path without changing app code", () => {
