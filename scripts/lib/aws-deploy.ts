@@ -823,6 +823,26 @@ export function waitForChangeSet(changeSetName: string, changeSetType: "CREATE" 
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < 10 * 60 * 1000) {
+    const stackState = loadStackState();
+    const stackStatus = stackState.stackStatus ?? "";
+
+    if (
+      changeSetType === "CREATE" &&
+      stackState.exists &&
+      blockedStackStatuses.has(stackStatus) &&
+      stackStatus.startsWith("ROLLBACK")
+    ) {
+      const recentFailureEvents = loadRecentStackFailureEvents();
+      throw new Error(
+        [
+          `Stack ${deploymentConfig.awsStackName} ended in ${stackStatus} while waiting for the create change set to finish.`,
+          ...(recentFailureEvents.length > 0
+            ? ["Recent failed stack events:", ...formatFailureEventLines(recentFailureEvents)]
+            : []),
+        ].join("\n"),
+      );
+    }
+
     const response = runJsonCommand<ChangeSetResponse>("aws", [
       "cloudformation",
       "describe-change-set",

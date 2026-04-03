@@ -84,6 +84,9 @@ test("buildAwsDeployPolicy scopes route53 and s3 resources to the deployment acc
   const cloudFormationStatement = policy.Statement.find(
     (statement) => statement.Sid === "CloudFormationControlPlane",
   );
+  const cloudFrontStatement = policy.Statement.find(
+    (statement) => statement.Sid === "CloudFrontManagement",
+  );
   const route53Statement = policy.Statement.find(
     (statement) => statement.Sid === "Route53RecordChanges",
   );
@@ -94,6 +97,8 @@ test("buildAwsDeployPolicy scopes route53 and s3 resources to the deployment acc
 
   // Assert
   assert.deepEqual(cloudFormationStatement?.Action, [...awsDeployCloudFormationActions]);
+  assert.ok(cloudFrontStatement?.Action.includes("cloudfront:TagResource"));
+  assert.ok(cloudFrontStatement?.Action.includes("cloudfront:UntagResource"));
   assert.deepEqual(route53Statement?.Resource, ["arn:aws:route53:::hostedzone/ZOPENLINKS"]);
   assert.ok(bucketStatement?.Action.includes("s3:DeleteBucket"));
   assert.equal(

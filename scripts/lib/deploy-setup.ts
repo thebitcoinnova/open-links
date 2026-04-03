@@ -121,6 +121,8 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
           "cloudfront:ListFunctions",
           "cloudfront:ListOriginAccessControls",
           "cloudfront:PublishFunction",
+          "cloudfront:TagResource",
+          "cloudfront:UntagResource",
           "cloudfront:UpdateDistribution",
           "cloudfront:UpdateFunction",
           "cloudfront:UpdateOriginAccessControl",
