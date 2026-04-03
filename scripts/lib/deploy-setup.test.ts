@@ -87,11 +87,19 @@ test("buildAwsDeployPolicy scopes route53 and s3 resources to the deployment acc
   const route53Statement = policy.Statement.find(
     (statement) => statement.Sid === "Route53RecordChanges",
   );
+  const bucketStatement = policy.Statement.find(
+    (statement) => statement.Sid === "S3BucketManagement",
+  );
   const s3Statement = policy.Statement.find((statement) => statement.Sid === "S3ObjectManagement");
 
   // Assert
   assert.deepEqual(cloudFormationStatement?.Action, [...awsDeployCloudFormationActions]);
   assert.deepEqual(route53Statement?.Resource, ["arn:aws:route53:::hostedzone/ZOPENLINKS"]);
+  assert.ok(bucketStatement?.Action.includes("s3:DeleteBucket"));
+  assert.equal(
+    bucketStatement?.Resource,
+    `arn:aws:s3:::${deploymentConfig.bucketNamePrefix}-123456789012`,
+  );
   assert.equal(
     s3Statement?.Resource,
     `arn:aws:s3:::${deploymentConfig.bucketNamePrefix}-123456789012/*`,

@@ -132,6 +132,7 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
         Effect: "Allow",
         Action: [
           "s3:CreateBucket",
+          "s3:DeleteBucket",
           "s3:GetBucketLocation",
           "s3:GetBucketOwnershipControls",
           "s3:GetBucketPolicy",
