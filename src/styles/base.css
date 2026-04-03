@@ -1002,6 +1002,8 @@ a:focus-visible {
 }
 
 .non-payment-card-frame {
+  --non-payment-card-lead-size: var(--non-payment-card-icon-mobile);
+
   display: grid;
   gap: var(--space-3);
   min-width: 0;
@@ -1056,8 +1058,6 @@ a:focus-visible {
 
 .simple-link-card,
 .rich-link-card {
-  --non-payment-card-lead-size: var(--non-payment-card-icon-mobile);
-
   display: block;
   min-width: 0;
   min-height: var(--page-target-size);
@@ -1094,16 +1094,15 @@ a:focus-visible {
   object-fit: cover;
 }
 
-.simple-link-card[data-lead-kind="avatar"],
-.rich-link-card[data-lead-kind="avatar"] {
+.non-payment-card-frame[data-lead-kind="avatar"] {
   --non-payment-card-lead-size: var(--rich-card-avatar-mobile);
 }
 
-.rich-link-card[data-lead-kind="preview"] {
+.non-payment-card-frame[data-card-variant="rich"][data-lead-kind="preview"] {
   --non-payment-card-lead-size: var(--card-rich-media-inline-mobile);
 }
 
-.rich-link-card.image-thumbnail[data-lead-kind="preview"] {
+.non-payment-card-frame[data-card-variant="rich"][data-image-treatment="thumbnail"][data-lead-kind="preview"] {
   --non-payment-card-lead-size: var(--card-rich-media-thumbnail-mobile);
 }
 
@@ -1404,11 +1403,14 @@ a:focus-visible {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .non-payment-card-referral-terms-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
   min-height: calc(var(--page-target-size) - 0.65rem);
   padding: 0.28rem 0.72rem;
   border-radius: 999px;
