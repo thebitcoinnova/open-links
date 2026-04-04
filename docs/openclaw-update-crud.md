@@ -55,7 +55,7 @@ Out of scope:
 
 When a requested link is a referral, affiliate, promo, or invite destination:
 
-1. If the request includes a new reusable family, offer variant, matcher/link shape, or a shared-vs-fork decision, start with `skills/referral-management/SKILL.md` before editing files.
+1. If the request includes a new reusable family, offer variant, matcher/link shape, a shared-vs-fork decision, or inbox/MCP batch discovery of referral links from email, start with `skills/referral-management/SKILL.md` before editing files.
 2. Treat the catalog as the higher-level authoring layer:
    - shared catalog: `data/policy/referral-catalog.json`
    - fork-owned overlay: `data/policy/referral-catalog.local.json`

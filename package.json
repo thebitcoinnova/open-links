@@ -67,6 +67,8 @@
     "deploy:readme:urls:update": "bun run scripts/deploy/update-readme-deploy-urls.ts",
     "fork:reset": "bun scripts/reset-fork-template.ts",
     "bootstrap:linktree": "bun scripts/bootstrap-linktree.ts",
+    "referrals:import:plan": "bun scripts/plan-referral-import.ts",
+    "referrals:import:apply": "bun scripts/apply-referral-import.ts",
     "biome:check": "bunx @biomejs/biome check . --files-ignore-unknown=true",
     "biome:fix": "bunx @biomejs/biome check . --write --files-ignore-unknown=true",
     "biome:staged:fix": "bunx @biomejs/biome check --staged --write --files-ignore-unknown=true --no-errors-on-unmatched",
