@@ -5,7 +5,8 @@
   "targets": {
     "aws": {
       "publicOrigin": "https://openlinks.us",
-      "priceClass": "PriceClass_100"
+      "priceClass": "PriceClass_100",
+      "resourcePrefix": "open-links"
     },
     "github-pages": {},
     "render": {},

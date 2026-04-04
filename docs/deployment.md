@@ -29,6 +29,12 @@ bun run deploy:setup -- --apply
 git push origin main
 ```
 
+After any deployment naming or topology refactor, rerun `bun run deploy:setup -- --apply` before expecting `Deploy Production` to succeed. That step rotates the config-derived IAM role/policy references and the GitHub `AWS_DEPLOY_ROLE_ARN` secret to the current deployment model.
+
+When GitHub setup is in scope, `deploy:setup` now performs a read-only GitHub admin preflight before any AWS mutations. Use a repo-admin `gh` identity for the full flow, or split the work into `bun run deploy:setup:aws -- --apply` now and `bun run deploy:setup:github -- --apply` later with repo-admin access.
+
+`bun run deploy:aws:bootstrap --apply` now auto-deletes empty terminal rollback shells (`ROLLBACK_COMPLETE` or `ROLLBACK_FAILED`) before retrying stack creation. If rollback state still has live resources or outputs, bootstrap still stops and reports manual CloudFormation recovery.
+
 ## Supported Targets
 
 - `github-pages`: default fork-safe target
@@ -56,6 +62,35 @@ Live-target verification:
 bun run deploy:verify:live -- --target=render --public-origin=https://<service>.onrender.com
 bun run deploy:verify:live -- --target=railway --public-origin=https://<service>.up.railway.app
 ```
+
+### Local-First AWS Debug Loop
+
+Use the local AWS loop when debugging production deploy failures so you can prove setup/bootstrap/publish behavior before asking GitHub Actions to confirm it:
+
+```bash
+bun run deploy:local:aws:check
+bun run deploy:local:aws:apply
+```
+
+For infra-focused debugging where you want to avoid tracked content-cache churn, use:
+
+```bash
+bun run deploy:local:aws:check:infra
+bun run deploy:local:aws:apply:infra
+```
+
+Rules for this loop:
+
+- It covers AWS only. GitHub Pages publish remains workflow-driven.
+- GitHub Actions stays enabled, but while debugging AWS you should treat workflow runs as confirmatory, not as the primary iteration loop.
+- `deploy:setup:github` is optional and only runs when you pass `--include-github-setup`.
+- The durable proof for local dirty-tree runs is the AWS artifact hash from `.artifacts/deploy/aws/deploy-manifest.json`, plus successful live verification. `build-info.commitSha` is only a secondary reference when local changes are uncommitted.
+- `--skip-content-sync` skips `avatar:sync`, `enrich:rich:strict`, `images:sync`, `social:preview:generate`, and `badge:site` during the build path. Use it for AWS/bootstrap/publish/debugging only; use the normal path when validating content freshness, rich metadata, or SEO asset generation.
+- When infra debugging produces incidental cache churn, restore it before committing unrelated changes:
+  - `git restore --worktree data/cache/content-images.json public/cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg`
+  - `rm -f public/cache/content-images/04f7c6ded33f86fca3ab16b6b3afba8068cc69e23769b7cfa714719e107eb1c0.jpg`
+  - if you need to keep iterating before the infra alias is available in another checkout, prefer a disposable worktree or clone
+- Upstream `pRizz/open-links` intentionally reuses the fixed AWS resource prefix `open-links`, which keeps production on the existing `open-links-site` stack and CloudFront distribution `E334IP4L9JRO34`. The current live stack output bucket is `open-links-535002860186`. Forks should normally keep the slug-derived fallback unless they intentionally adopt an existing AWS stack.
 
 Target-specific setup wrappers remain available while the old flow is phased out:
 
@@ -95,6 +130,7 @@ Provider-native targets remain externally published by their hosting platforms, 
    - set `primaryTarget` to `aws`
    - set `targets.aws.publicOrigin` to the intended canonical HTTPS origin
 2. Run `bun run deploy:setup -- --apply`.
+   - This step requires repo-admin `gh` access because it preflights and updates GitHub environments, Pages, secrets, and variables.
 3. Ensure GitHub repo settings include:
    - `OPENLINKS_ENABLE_AWS_DEPLOY=true`
    - `AWS_DEPLOY_ROLE_ARN`
@@ -103,6 +139,23 @@ Provider-native targets remain externally published by their hosting platforms, 
    - `Deploy AWS Site`
    - `Deploy GitHub Pages`
    - `Verify Production Deployment`
+
+### Upstream AWS Reuse
+
+For upstream `pRizz/open-links`, the AWS deploy flow should reuse the existing `open-links-site` stack rather than creating a second distribution for `openlinks.us`.
+
+Use this sequence:
+
+1. `bun run deploy:setup:aws -- --apply`
+2. `bun run deploy:local:aws:check:infra`
+3. confirm the check targets:
+   - stack `open-links-site`
+   - bucket `open-links-535002860186`
+   - distribution `E334IP4L9JRO34`
+4. only if the change set is empty or safe in-place, run `bun run deploy:local:aws:apply:infra`
+5. rerun `Deploy Production` only as confirmation
+
+If the reused-stack check proposes replacement of `SiteBucket`, `SiteDistribution`, `SiteCertificate`, `PrimaryDomainARecord`, or `PrimaryDomainAAAARecord`, stop and treat that as a blocker. The older `open-links-prizz-open-links-*` resources are not the upstream steady state and should be treated as later cleanup candidates, not as the primary production path.
 
 ### Provider-Native Primary
 
@@ -144,6 +197,11 @@ Local diagnostics:
 | Symptom | Likely Cause | Fix |
 |--------|--------------|-----|
 | `deploy:setup` updates `data/site.json` or README unexpectedly | deployment defaults or overlay changed, or the overlay is stale | review `bun run deploy:plan`, then rerun `bun run deploy:setup -- --apply` |
+| `deploy:setup` fails immediately at `GitHub admin preflight` | the current `gh` identity can authenticate but cannot administer repository environments, Pages, secrets, or variables | authenticate `gh` as a repo admin and rerun `bun run deploy:setup -- --apply`, or run `bun run deploy:setup:aws -- --apply` now and finish `bun run deploy:setup:github -- --apply` later with admin access |
+| `Deploy AWS Site` fails with CloudFormation `AccessDenied` after a deployment refactor | the attached IAM policy or GitHub `AWS_DEPLOY_ROLE_ARN` secret still points at pre-refactor role/policy names | rerun `bun run deploy:setup -- --apply`, confirm the config-derived role ARN/policy are active, then rerun `Deploy Production` |
+| `deploy:aws:bootstrap --apply` ends in `ROLLBACK_FAILED` with `s3:DeleteBucket` denied for `SiteBucket` | the active deploy role can create the site bucket but cannot delete it during CloudFormation rollback | update the deploy policy to include `s3:DeleteBucket`, rerun `bun run deploy:setup:aws -- --apply` (and patch the legacy role if GitHub still uses it), delete the failed stack shell, then rerun `Deploy Production` |
+| `deploy:aws:bootstrap --apply` stops on `ROLLBACK_COMPLETE` or `ROLLBACK_FAILED` before creating a new change set | the stack is a terminal rollback shell from an earlier failed create | bootstrap now auto-deletes empty rollback shells; if it still stops, inspect the reported remaining resources/outputs, complete manual CloudFormation recovery, then rerun `Deploy Production` |
+| `deploy:aws:bootstrap --apply` reports `SiteDistribution` / `cloudfront:TagResource` access denied during stack create | the active deploy role can create CloudFront resources but cannot tag the distribution during CloudFormation provisioning | update the deploy policy to include `cloudfront:TagResource` (and `cloudfront:UntagResource`), rerun `bun run deploy:setup:aws -- --apply` and patch the legacy role if GitHub still uses it, delete the failed rollback shell, then rerun `Deploy Production` |
 | AWS job is skipped | AWS target is disabled in the effective topology or GitHub AWS opt-in is missing | enable `aws` in the effective topology, then set `OPENLINKS_ENABLE_AWS_DEPLOY` and `AWS_DEPLOY_ROLE_ARN` |
 | Pages job is skipped | GitHub Pages is disabled in the effective topology | enable `github-pages` in the effective topology |
 | `deploy:verify` blocks on DNS readiness | the configured AWS domain does not resolve publicly yet | wait for Route 53 + CloudFront propagation, then rerun `bun run deploy:verify` |

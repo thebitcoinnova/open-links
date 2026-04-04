@@ -63,5 +63,14 @@ const response = await fetch(
 );
 
 if (!response.ok) {
-  throw new Error(`GitHub comment request failed: ${response.status} ${await response.text()}`);
+  const responseText = await response.text();
+
+  if (response.status === 403 && responseText.includes("Resource not accessible by integration")) {
+    console.warn(
+      `Skipping CI PR comment because the workflow token cannot write comments for this PR: ${response.status} ${responseText}`,
+    );
+    process.exit(0);
+  }
+
+  throw new Error(`GitHub comment request failed: ${response.status} ${responseText}`);
 }

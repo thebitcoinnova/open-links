@@ -215,10 +215,13 @@ export const NonPaymentLinkCardShell = (props: NonPaymentLinkCardShellProps) => 
       data-card-variant={props.cardVariant}
       data-has-actions={hasActions() ? "true" : "false"}
       data-has-referral={hasReferral() ? "true" : "false"}
+      data-has-referral-terms-link={hasReferralTermsLink() ? "true" : "false"}
       data-has-profile-layout={hasProfileLayout() ? "true" : "false"}
       data-has-profile-preview-media={profilePreview().enabled ? "true" : "false"}
       data-profile-preview-placement={profilePreview().placement}
       data-profile-preview-render={profilePreviewRenderKind()}
+      data-lead-kind={props.viewModel.leadKind}
+      data-image-treatment={props.viewModel.imageTreatment}
       data-link-kind={props.viewModel.linkKind}
       data-link-scheme={props.viewModel.linkScheme}
       data-contact-kind={props.viewModel.contactKind}

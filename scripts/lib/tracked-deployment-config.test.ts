@@ -23,6 +23,7 @@ test("readEffectiveTrackedDeploymentConfig returns shared defaults when no overl
           aws: {
             publicOrigin: "https://openlinks.us",
             priceClass: "PriceClass_100",
+            resourcePrefix: "open-links",
           },
         },
       },
@@ -39,6 +40,7 @@ test("readEffectiveTrackedDeploymentConfig returns shared defaults when no overl
     assert.deepEqual(config.enabledTargets, ["aws", "github-pages"]);
     assert.equal(config.primaryTarget, "aws");
     assert.equal(config.targets.aws?.publicOrigin, "https://openlinks.us");
+    assert.equal(config.targets.aws?.resourcePrefix, "open-links");
   } finally {
     fs.rmSync(tempDir, { force: true, recursive: true });
   }
@@ -59,6 +61,7 @@ test("readEffectiveTrackedDeploymentConfig merges a fork overlay over shared def
           aws: {
             publicOrigin: "https://openlinks.us",
             priceClass: "PriceClass_100",
+            resourcePrefix: "open-links",
           },
           "github-pages": {},
           render: {},
@@ -94,6 +97,7 @@ test("readEffectiveTrackedDeploymentConfig merges a fork overlay over shared def
     assert.deepEqual(config.enabledTargets, ["github-pages"]);
     assert.equal(config.primaryTarget, "github-pages");
     assert.equal(config.targets.aws?.publicOrigin, "https://openlinks.us");
+    assert.equal(config.targets.aws?.resourcePrefix, "open-links");
     assert.equal(config.targets["github-pages"]?.publicOrigin, "https://links.example.com");
   } finally {
     fs.rmSync(tempDir, { force: true, recursive: true });

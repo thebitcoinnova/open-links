@@ -78,7 +78,7 @@ jobs:
           retention-days: 7
 
       - name: Comment on PR for required-check failure
-        if: failure() && github.event_name == 'pull_request'
+        if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
           COMMENT_KIND: required
           FAILED_COMMANDS: ${{ steps.run_required.outputs.failures }}
@@ -163,7 +163,7 @@ jobs:
           retention-days: 7
 
       - name: Comment on PR for strict warning signal
-        if: failure() && steps.run_strict.conclusion == 'failure' && github.event_name == 'pull_request'
+        if: failure() && steps.run_strict.conclusion == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
           COMMENT_KIND: strict
           FAILED_COMMANDS: ${{ steps.run_strict.outputs.failures }}

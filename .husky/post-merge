@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+helper="$(dirname "$0")/../scripts/hooks/husky-hook-debug.sh"
+if [ -f "$helper" ]; then
+  # shellcheck source=/dev/null
+  . "$helper"
+  husky_hook_debug_init "post-merge" "$@"
+fi
+
+exit 0

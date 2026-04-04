@@ -152,6 +152,7 @@ export interface ChangeSetRisk {
 }
 
 export interface ChangeSetRiskSummary {
+  blockedCriticalReplacements: ChangeSetRisk[];
   blockedRoute53Replacements: ChangeSetRisk[];
   hasBlockingRisk: boolean;
 }
@@ -181,6 +182,14 @@ export interface StackResourceSummary {
 export interface OrphanedReviewStackAssessment {
   canAutoDelete: boolean;
   changeSetNames: string[];
+  detail: string;
+  resourceSummaries: StackResourceSummary[];
+  stackName: string;
+  stackStatus?: string;
+}
+
+export interface RecoverableRollbackStackAssessment {
+  canAutoDelete: boolean;
   detail: string;
   resourceSummaries: StackResourceSummary[];
   stackName: string;
@@ -583,6 +592,61 @@ export function assessOrphanedReviewStack(
   } satisfies OrphanedReviewStackAssessment;
 }
 
+export function assessRecoverableRollbackStack(
+  stackState: AwsStackState,
+  resources: StackResourceSummary[] = [],
+  stackName: string = deploymentConfig.awsStackName,
+) {
+  const rollbackTerminalStatuses = new Set(["ROLLBACK_COMPLETE", "ROLLBACK_FAILED"]);
+
+  if (!stackState.exists || !rollbackTerminalStatuses.has(stackState.stackStatus ?? "")) {
+    return {
+      canAutoDelete: false,
+      detail: `Stack ${stackName} is not a terminal rollback shell.`,
+      resourceSummaries: resources,
+      stackName,
+      stackStatus: stackState.stackStatus,
+    } satisfies RecoverableRollbackStackAssessment;
+  }
+
+  const outputKeys = Object.keys(stackState.outputs);
+  const remainingResources = resources.filter(
+    (resource) => resource.resourceStatus !== "DELETE_COMPLETE",
+  );
+
+  if (outputKeys.length === 0 && remainingResources.length === 0) {
+    return {
+      canAutoDelete: true,
+      detail: `Stack ${stackName} is stuck in ${stackState.stackStatus} with no remaining live resources and no outputs. This rollback shell can be safely deleted before retrying bootstrap.`,
+      resourceSummaries: resources,
+      stackName,
+      stackStatus: stackState.stackStatus,
+    } satisfies RecoverableRollbackStackAssessment;
+  }
+
+  const outputDetail =
+    outputKeys.length > 0
+      ? `Stack outputs still present: ${outputKeys.join(", ")}.`
+      : "No stack outputs remain.";
+  const resourceDetail =
+    remainingResources.length > 0
+      ? `Remaining resources not fully deleted: ${remainingResources
+          .map(
+            (resource) =>
+              `${resource.logicalResourceId} (${resource.resourceType}, status=${resource.resourceStatus ?? "UNKNOWN"})`,
+          )
+          .join(", ")}.`
+      : "All tracked resources are already deleted.";
+
+  return {
+    canAutoDelete: false,
+    detail: `Stack ${stackName} is in ${stackState.stackStatus} but does not qualify for automatic rollback-shell cleanup. ${outputDetail} ${resourceDetail}`,
+    resourceSummaries: resources,
+    stackName,
+    stackStatus: stackState.stackStatus,
+  } satisfies RecoverableRollbackStackAssessment;
+}
+
 export function assessStackReadiness(
   stackState: AwsStackState,
   recentFailureEvents: StackFailureEvent[] = [],
@@ -736,9 +800,41 @@ export function classifyChangeSetPlanRisks(changes: ChangeSetPlanChange[]) {
     ];
   });
 
+  const blockedCriticalReplacements = changes.flatMap((change) => {
+    const criticalLogicalIds = new Set([
+      "SiteBucket",
+      "SiteDistribution",
+      "SiteCertificate",
+      "PrimaryDomainARecord",
+      "PrimaryDomainAAAARecord",
+    ]);
+
+    if (!criticalLogicalIds.has(change.logicalResourceId)) {
+      return [];
+    }
+
+    const shouldBlock =
+      change.action === "Remove" ||
+      (change.action !== "Add" && !["False", "Never"].includes(change.replacement));
+
+    if (!shouldBlock) {
+      return [];
+    }
+
+    return [
+      {
+        ...change,
+        reason:
+          "Replacing or removing this live AWS resource is blocked because upstream is expected to reuse the existing production stack without downtime.",
+      } satisfies ChangeSetRisk,
+    ];
+  });
+
   return {
+    blockedCriticalReplacements,
     blockedRoute53Replacements,
-    hasBlockingRisk: blockedRoute53Replacements.length > 0,
+    hasBlockingRisk:
+      blockedRoute53Replacements.length > 0 || blockedCriticalReplacements.length > 0,
   } satisfies ChangeSetRiskSummary;
 }
 
@@ -748,11 +844,24 @@ export function formatChangeSetRiskMessage(riskSummary: ChangeSetRiskSummary) {
   }
 
   return [
-    "Blocked CloudFormation change set because it would replace or remove Route 53 records:",
-    ...riskSummary.blockedRoute53Replacements.map(
+    "Blocked CloudFormation change set because it would replace or remove protected live resources:",
+    ...riskSummary.blockedCriticalReplacements.map(
       (risk) =>
         `- ${risk.logicalResourceId} (${risk.resourceType}, action=${risk.action}, replacement=${risk.replacement}): ${risk.reason}`,
     ),
+    ...riskSummary.blockedRoute53Replacements
+      .filter(
+        (route53Risk) =>
+          !riskSummary.blockedCriticalReplacements.some(
+            (criticalRisk) =>
+              criticalRisk.logicalResourceId === route53Risk.logicalResourceId &&
+              criticalRisk.resourceType === route53Risk.resourceType,
+          ),
+      )
+      .map(
+        (risk) =>
+          `- ${risk.logicalResourceId} (${risk.resourceType}, action=${risk.action}, replacement=${risk.replacement}): ${risk.reason}`,
+      ),
   ].join("\n");
 }
 
@@ -760,6 +869,26 @@ export function waitForChangeSet(changeSetName: string, changeSetType: "CREATE" 
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < 10 * 60 * 1000) {
+    const stackState = loadStackState();
+    const stackStatus = stackState.stackStatus ?? "";
+
+    if (
+      changeSetType === "CREATE" &&
+      stackState.exists &&
+      blockedStackStatuses.has(stackStatus) &&
+      stackStatus.startsWith("ROLLBACK")
+    ) {
+      const recentFailureEvents = loadRecentStackFailureEvents();
+      throw new Error(
+        [
+          `Stack ${deploymentConfig.awsStackName} ended in ${stackStatus} while waiting for the create change set to finish.`,
+          ...(recentFailureEvents.length > 0
+            ? ["Recent failed stack events:", ...formatFailureEventLines(recentFailureEvents)]
+            : []),
+        ].join("\n"),
+      );
+    }
+
     const response = runJsonCommand<ChangeSetResponse>("aws", [
       "cloudformation",
       "describe-change-set",

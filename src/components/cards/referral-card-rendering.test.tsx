@@ -275,6 +275,9 @@ test("rich referral cards keep promo-image-led layout while rendering referral c
   assert.ok(frame);
   assert.equal(frame.props["data-has-referral"], "true");
   assert.equal(frame.props["data-card-variant"], "rich");
+  assert.equal(frame.props["data-has-referral-terms-link"], "true");
+  assert.equal(frame.props["data-lead-kind"], "preview");
+  assert.equal(frame.props["data-image-treatment"], "cover");
   assert.ok(badge);
   assert.equal(renderedTextContent(badge.props.children as RenderedNode), "Referral");
   assert.ok(description);

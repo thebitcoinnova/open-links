@@ -19,6 +19,17 @@ test("buildSetupChildCommands selects aws and github setup for aws-primary topol
       command: [
         "bun",
         "run",
+        "scripts/deploy/setup-github.ts",
+        "--check-access",
+        "--repo=someone/open-links-fork",
+        "--role-arn=arn:aws:iam::123456789012:role/open-links-test",
+      ],
+      label: "GitHub admin preflight",
+    },
+    {
+      command: [
+        "bun",
+        "run",
         "scripts/deploy/setup-aws.ts",
         "--apply",
         "--repo=someone/open-links-fork",
@@ -45,6 +56,10 @@ test("buildSetupChildCommands selects only github setup for pages-only topologie
 
   // Assert
   assert.deepEqual(commands, [
+    {
+      command: ["bun", "run", "scripts/deploy/setup-github.ts", "--check-access"],
+      label: "GitHub admin preflight",
+    },
     {
       command: ["bun", "run", "scripts/deploy/setup-github.ts"],
       label: "GitHub setup",

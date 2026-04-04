@@ -59,6 +59,12 @@ for (const childCommand of childCommands) {
   });
 
   if (result.status !== 0) {
+    if (childCommand.label === "GitHub admin preflight") {
+      skippedReasons.push(
+        "Deployment setup stopped before AWS or GitHub mutations because GitHub admin preflight failed.",
+      );
+    }
+
     verificationResults.push({
       detail:
         result.stderr.trim() || result.stdout.trim() || `${childCommand.command.join(" ")} failed.`,
@@ -89,7 +95,8 @@ for (const childCommand of childCommands) {
       { runDirectory: run.runDirectory },
     );
 
-    throw new Error(`${childCommand.label} failed. See ${runDirectory} for details.`);
+    console.error(`${childCommand.label} failed. See ${runDirectory} for details.`);
+    process.exit(1);
   }
 
   const output = result.stdout.trim();

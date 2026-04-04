@@ -10,6 +10,9 @@ import PlaywrightNavigationMenuRoute, {
 import PlaywrightPaymentQrRoute, {
   PLAYWRIGHT_PAYMENT_QR_PATH,
 } from "./routes/playwright-payment-qr";
+import PlaywrightReferralCardRoute, {
+  PLAYWRIGHT_REFERRAL_CARD_PATH,
+} from "./routes/playwright-referral-card";
 import "./styles/base.css";
 
 const rootElement = document.getElementById("root");
@@ -31,6 +34,10 @@ const resolveRootRoute = (): Component => {
 
     if (pathname.endsWith(PLAYWRIGHT_PAYMENT_QR_PATH)) {
       return PlaywrightPaymentQrRoute;
+    }
+
+    if (pathname.endsWith(PLAYWRIGHT_REFERRAL_CARD_PATH)) {
+      return PlaywrightReferralCardRoute;
     }
 
     if (pathname.endsWith(PLAYWRIGHT_NAVIGATION_MENU_PATH)) {

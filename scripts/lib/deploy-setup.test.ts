@@ -3,10 +3,15 @@ import test from "node:test";
 import { deploymentConfig } from "../../src/lib/deployment-config";
 import { buildDomainReadinessAssessment, formatDomainReadinessMessage } from "./aws-deploy";
 import {
+  awsDeployCloudFormationActions,
   buildAwsDeployPolicy,
+  buildAwsDeployRoleArn,
   buildGithubOidcTrustPolicy,
+  classifyGitHubSetupAccessFailure,
+  formatGitHubSetupAccessFailure,
   normalizePolicyDocument,
   planGitHubPagesSite,
+  resolveAwsDeployRoleArn,
 } from "./deploy-setup";
 import { parseGitHubRepositorySlug } from "./github-repository";
 
@@ -76,16 +81,78 @@ test("buildAwsDeployPolicy scopes route53 and s3 resources to the deployment acc
   });
 
   // Act
+  const cloudFormationStatement = policy.Statement.find(
+    (statement) => statement.Sid === "CloudFormationControlPlane",
+  );
+  const cloudFrontStatement = policy.Statement.find(
+    (statement) => statement.Sid === "CloudFrontManagement",
+  );
   const route53Statement = policy.Statement.find(
     (statement) => statement.Sid === "Route53RecordChanges",
+  );
+  const bucketStatement = policy.Statement.find(
+    (statement) => statement.Sid === "S3BucketManagement",
   );
   const s3Statement = policy.Statement.find((statement) => statement.Sid === "S3ObjectManagement");
 
   // Assert
+  assert.deepEqual(cloudFormationStatement?.Action, [...awsDeployCloudFormationActions]);
+  assert.ok(cloudFrontStatement?.Action.includes("cloudfront:TagResource"));
+  assert.ok(cloudFrontStatement?.Action.includes("cloudfront:UntagResource"));
   assert.deepEqual(route53Statement?.Resource, ["arn:aws:route53:::hostedzone/ZOPENLINKS"]);
+  assert.ok(bucketStatement?.Action.includes("s3:DeleteBucket"));
+  assert.equal(
+    bucketStatement?.Resource,
+    `arn:aws:s3:::${deploymentConfig.bucketNamePrefix}-123456789012`,
+  );
   assert.equal(
     s3Statement?.Resource,
     `arn:aws:s3:::${deploymentConfig.bucketNamePrefix}-123456789012/*`,
+  );
+});
+
+test("resolveAwsDeployRoleArn defaults to the config-derived deploy role ARN", () => {
+  // Arrange / Act
+  const resolvedRoleArn = resolveAwsDeployRoleArn({
+    accountId: "123456789012",
+  });
+
+  // Assert
+  assert.equal(resolvedRoleArn.resolvedRoleArn, buildAwsDeployRoleArn("123456789012"));
+  assert.equal(resolvedRoleArn.source, "config-derived");
+  assert.equal(resolvedRoleArn.mismatchDetail, undefined);
+});
+
+test("resolveAwsDeployRoleArn allows an explicit role ARN override", () => {
+  // Arrange
+  const explicitRoleArn = "arn:aws:iam::123456789012:role/open-links-fork-github-deploy";
+
+  // Act
+  const resolvedRoleArn = resolveAwsDeployRoleArn({
+    accountId: "123456789012",
+    maybeAmbientRoleArn: "arn:aws:iam::123456789012:role/open-links-github-deploy",
+    maybeExplicitRoleArn: explicitRoleArn,
+  });
+
+  // Assert
+  assert.equal(resolvedRoleArn.resolvedRoleArn, explicitRoleArn);
+  assert.equal(resolvedRoleArn.source, "explicit-override");
+  assert.equal(resolvedRoleArn.mismatchDetail, undefined);
+});
+
+test("resolveAwsDeployRoleArn flags stale ambient role overrides", () => {
+  // Arrange / Act
+  const resolvedRoleArn = resolveAwsDeployRoleArn({
+    accountId: "123456789012",
+    maybeAmbientRoleArn: "arn:aws:iam::123456789012:role/open-links-fork-github-deploy",
+  });
+
+  // Assert
+  assert.equal(resolvedRoleArn.resolvedRoleArn, buildAwsDeployRoleArn("123456789012"));
+  assert.equal(resolvedRoleArn.source, "config-derived");
+  assert.match(
+    resolvedRoleArn.mismatchDetail ?? "",
+    /Unset AWS_DEPLOY_ROLE_ARN or pass --role-arn explicitly\./u,
   );
 });
 
@@ -175,4 +242,56 @@ test("planGitHubPagesSite distinguishes missing, legacy, and workflow configurat
       reason: "GitHub Pages is already configured for GitHub Actions workflow deployments.",
     },
   );
+});
+
+test("classifyGitHubSetupAccessFailure detects repository admin denial responses", () => {
+  // Arrange / Act
+  const failure = classifyGitHubSetupAccessFailure({
+    errorMessage:
+      "Command failed (1): gh variable list --repo pRizz/open-links --env production --json name,value\nfailed to get variables: HTTP 403: Must have admin rights to Repository.",
+    repositorySlug: "pRizz/open-links",
+    settingsUrls: ["https://github.com/pRizz/open-links/settings/environments"],
+    surface: "production environment digest variable",
+  });
+
+  // Assert
+  assert.deepEqual(failure, {
+    repositorySlug: "pRizz/open-links",
+    settingsUrls: ["https://github.com/pRizz/open-links/settings/environments"],
+    surface: "production environment digest variable",
+  });
+});
+
+test("classifyGitHubSetupAccessFailure ignores missing-resource responses", () => {
+  // Arrange / Act / Assert
+  assert.equal(
+    classifyGitHubSetupAccessFailure({
+      errorMessage:
+        "Command failed (1): gh api --method GET repos/pRizz/open-links/environments/production\nHTTP 404: Not Found",
+      repositorySlug: "pRizz/open-links",
+      settingsUrls: [],
+      surface: "production environment",
+    }),
+    null,
+  );
+});
+
+test("formatGitHubSetupAccessFailure includes repo-admin remediation and aws-only fallback", () => {
+  // Arrange
+  const message = formatGitHubSetupAccessFailure({
+    repositorySlug: "pRizz/open-links",
+    settingsUrls: [
+      "https://github.com/pRizz/open-links/settings/environments",
+      "https://github.com/pRizz/open-links/settings/variables/actions",
+    ],
+    surface: "production environment digest variable",
+  });
+
+  // Act / Assert
+  assert.match(message, /repository admin access/u);
+  assert.match(message, /deploy:setup -- --apply/u);
+  assert.match(message, /deploy:setup:aws -- --apply/u);
+  assert.match(message, /deploy:setup:github -- --apply/u);
+  assert.match(message, /settings\/environments/u);
+  assert.match(message, /settings\/variables\/actions/u);
 });

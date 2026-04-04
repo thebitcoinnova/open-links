@@ -10,7 +10,32 @@ export interface GitHubPagesSiteState {
   sourcePath?: string | null;
 }
 
+export interface ResolvedAwsDeployRoleArn {
+  configDerivedRoleArn: string;
+  mismatchDetail?: string;
+  resolvedRoleArn: string;
+  source: "config-derived" | "explicit-override";
+}
+
+export interface GitHubSetupAccessFailure {
+  repositorySlug: string;
+  settingsUrls: string[];
+  surface: string;
+}
+
 export const githubOidcThumbprint = "6938fd4d98bab03faadb97b34396831e3780aea1";
+export const awsDeployCloudFormationActions = [
+  "cloudformation:CreateChangeSet",
+  "cloudformation:DeleteChangeSet",
+  "cloudformation:DeleteStack",
+  "cloudformation:DescribeChangeSet",
+  "cloudformation:DescribeStackEvents",
+  "cloudformation:DescribeStacks",
+  "cloudformation:ExecuteChangeSet",
+  "cloudformation:ListChangeSets",
+  "cloudformation:ListStackResources",
+  "cloudformation:ValidateTemplate",
+] as const;
 
 export function buildGithubOidcTrustPolicy(
   accountId: string,
@@ -50,14 +75,7 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
       {
         Sid: "CloudFormationControlPlane",
         Effect: "Allow",
-        Action: [
-          "cloudformation:CreateChangeSet",
-          "cloudformation:DeleteChangeSet",
-          "cloudformation:DescribeChangeSet",
-          "cloudformation:DescribeStacks",
-          "cloudformation:ExecuteChangeSet",
-          "cloudformation:ValidateTemplate",
-        ],
+        Action: [...awsDeployCloudFormationActions],
         Resource: "*",
       },
       {
@@ -103,6 +121,8 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
           "cloudfront:ListFunctions",
           "cloudfront:ListOriginAccessControls",
           "cloudfront:PublishFunction",
+          "cloudfront:TagResource",
+          "cloudfront:UntagResource",
           "cloudfront:UpdateDistribution",
           "cloudfront:UpdateFunction",
           "cloudfront:UpdateOriginAccessControl",
@@ -114,6 +134,7 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
         Effect: "Allow",
         Action: [
           "s3:CreateBucket",
+          "s3:DeleteBucket",
           "s3:GetBucketLocation",
           "s3:GetBucketOwnershipControls",
           "s3:GetBucketPolicy",
@@ -140,6 +161,81 @@ export function buildAwsDeployPolicy(accountId: string, hostedZones: ResolvedHos
         Resource: "*",
       },
     ],
+  };
+}
+
+export function buildAwsDeployRoleArn(accountId: string) {
+  return `arn:aws:iam::${accountId}:role/${deploymentConfig.awsDeployRoleName}`;
+}
+
+export function classifyGitHubSetupAccessFailure(input: {
+  errorMessage: string;
+  repositorySlug: string;
+  settingsUrls: string[];
+  surface: string;
+}) {
+  const normalizedMessage = input.errorMessage.toLowerCase();
+  const isAdminDenied =
+    normalizedMessage.includes("http 403") &&
+    normalizedMessage.includes("must have admin rights to repository");
+
+  if (!isAdminDenied) {
+    return null;
+  }
+
+  return {
+    repositorySlug: input.repositorySlug,
+    settingsUrls: input.settingsUrls,
+    surface: input.surface,
+  } satisfies GitHubSetupAccessFailure;
+}
+
+export function formatGitHubSetupAccessFailure(failure: GitHubSetupAccessFailure) {
+  const guidance = [
+    `GitHub setup needs repository admin access to inspect ${failure.surface} for ${failure.repositorySlug}.`,
+    "Authenticate `gh` as a repository admin and rerun `bun run deploy:setup -- --apply`.",
+    "If you only need IAM reconciliation right now, run `bun run deploy:setup:aws -- --apply` and rerun `bun run deploy:setup:github -- --apply` later with repo-admin access.",
+  ];
+
+  if (failure.settingsUrls.length === 0) {
+    return guidance.join("\n");
+  }
+
+  return [...guidance, "Relevant settings:", ...failure.settingsUrls.map((url) => `- ${url}`)].join(
+    "\n",
+  );
+}
+
+export function resolveAwsDeployRoleArn(input: {
+  accountId: string;
+  maybeAmbientRoleArn?: string;
+  maybeExplicitRoleArn?: string;
+}): ResolvedAwsDeployRoleArn {
+  const configDerivedRoleArn = buildAwsDeployRoleArn(input.accountId);
+  const explicitRoleArn = input.maybeExplicitRoleArn?.trim();
+
+  if (explicitRoleArn) {
+    return {
+      configDerivedRoleArn,
+      resolvedRoleArn: explicitRoleArn,
+      source: "explicit-override",
+    };
+  }
+
+  const ambientRoleArn = input.maybeAmbientRoleArn?.trim();
+  if (ambientRoleArn && ambientRoleArn !== configDerivedRoleArn) {
+    return {
+      configDerivedRoleArn,
+      mismatchDetail: `Ambient AWS_DEPLOY_ROLE_ARN (${ambientRoleArn}) does not match the config-derived deploy role ARN (${configDerivedRoleArn}). Unset AWS_DEPLOY_ROLE_ARN or pass --role-arn explicitly.`,
+      resolvedRoleArn: configDerivedRoleArn,
+      source: "config-derived",
+    };
+  }
+
+  return {
+    configDerivedRoleArn,
+    resolvedRoleArn: configDerivedRoleArn,
+    source: "config-derived",
   };
 }
 
