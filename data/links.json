@@ -230,6 +230,32 @@
       "custom": {}
     },
     {
+      "id": "lemonade-referral",
+      "label": "Lemonade Referral",
+      "url": "https://lemonade.com/r/peterryszkiewicz",
+      "type": "rich",
+      "icon": "lemonade",
+      "description": "Use my Lemonade referral link to start a Lemonade signup.",
+      "group": "support",
+      "enabled": true,
+      "metadata": {
+        "title": "Lemonade Referral",
+        "descriptionSource": "manual"
+      },
+      "referral": {
+        "catalogRef": {
+          "familyId": "lemonade",
+          "offerId": "lemonade-referral",
+          "matcherId": "lemonade-referral-short-path"
+        },
+        "ownerBenefit": "Referrer may receive a $10 gift card for each qualified signup."
+      },
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
+    },
+    {
       "id": "cluborange-lightning-tips",
       "label": "Club Orange Tips",
       "type": "payment",
@@ -318,6 +344,7 @@
     "instagram",
     "youtube",
     "medium",
+    "lemonade-referral",
     "cluborange-lightning-tips",
     "strike-lightning-tips"
   ],

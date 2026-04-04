@@ -26,6 +26,13 @@ const baseCatalog = mergeReferralCatalogPayloads(
         kind: "affiliate",
         canonicalProgramUrl: "https://shared.example.com/join",
       },
+      {
+        familyId: "lemonade",
+        label: "Lemonade",
+        kind: "referral",
+        canonicalProgramUrl: "https://www.lemonade.com/terms-and-conditions-referral-program",
+        canonicalHosts: ["www.lemonade.com", "lemonade.com"],
+      },
     ],
     offers: [
       {
@@ -42,6 +49,17 @@ const baseCatalog = mergeReferralCatalogPayloads(
         familyId: "shared-family",
         label: "Shared offer",
         ownerBenefit: "Shared owner benefit",
+      },
+      {
+        offerId: "lemonade-referral",
+        familyId: "lemonade",
+        label: "Lemonade referral link",
+        kind: "referral",
+        ownerBenefit: "Referrer may receive a $10 gift card for each qualified signup.",
+        offerSummary: "Use this Lemonade referral link to start a Lemonade signup.",
+        termsSummary:
+          "Available to eligible individuals outside LA, MI, MS, WA, and WV. Rewards are limited to 10 qualified referrals over 12 months. See Lemonade for current terms and eligibility details.",
+        termsUrl: "https://www.lemonade.com/terms-and-conditions-referral-program",
       },
     ],
     matchers: [
@@ -63,6 +81,29 @@ const baseCatalog = mergeReferralCatalogPayloads(
         hosts: ["www.cluborange.org", "cluborange.org"],
         pathExact: "/signup",
         requiredQueryKeys: ["referral"],
+      },
+      {
+        matcherId: "lemonade-referral-short-path",
+        familyId: "lemonade",
+        offerId: "lemonade-referral",
+        label: "Referral short-link path",
+        explanation: "Matches Lemonade share links on /r/<handle>.",
+        hosts: ["www.lemonade.com", "lemonade.com"],
+        pathPrefix: "/r/",
+      },
+      {
+        matcherId: "lemonade-onboarding-referral-query",
+        familyId: "lemonade",
+        offerId: "lemonade-referral",
+        label: "Onboarding referral query",
+        explanation: "Matches canonical Lemonade onboarding referral links.",
+        hosts: ["www.lemonade.com", "lemonade.com"],
+        pathExact: "/onboarding",
+        requiredQueryKeys: ["utm_content"],
+        requiredQueryValues: {
+          utm_source: "referral_program_v2",
+          utm_campaign: "lead_gift_card_1side",
+        },
       },
     ],
   },
@@ -150,6 +191,32 @@ test("matcher lookup resolves a unique strongest candidate and returns its seede
     offerId: "club-orange-signup",
     matcherId: "club-orange-signup-query-referral",
   });
+});
+
+test("matcher lookup resolves Lemonade short referral links through the shared path matcher", () => {
+  const resolution = resolveReferralCatalogMatcher(baseCatalog, "https://lemonade.com/r/pryszkie");
+
+  assert.equal(resolution?.source, "matcher");
+  assert.equal(resolution?.matcher?.matcherId, "lemonade-referral-short-path");
+  assert.deepEqual(resolution?.referral.catalogRef, {
+    familyId: "lemonade",
+    offerId: "lemonade-referral",
+    matcherId: "lemonade-referral-short-path",
+  });
+});
+
+test("matcher lookup resolves canonical Lemonade onboarding referral URLs through the query matcher", () => {
+  const resolution = resolveReferralCatalogMatcher(
+    baseCatalog,
+    "https://www.lemonade.com/onboarding?has_account=false&utm_campaign=lead_gift_card_1side&utm_content=pryszkie&utm_source=referral_program_v2",
+  );
+
+  assert.equal(resolution?.source, "matcher");
+  assert.equal(resolution?.matcher?.matcherId, "lemonade-onboarding-referral-query");
+  assert.equal(
+    resolution?.referral.termsUrl,
+    "https://www.lemonade.com/terms-and-conditions-referral-program",
+  );
 });
 
 test("explicit refs win before matcher fallback when both could resolve the same link", () => {
