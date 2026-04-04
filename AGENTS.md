@@ -225,9 +225,10 @@ Before starting substantive work in this repository, agents must sync local code
    - `upstream` exists,
    - `origin` and `upstream` point at different repositories.
 3. If a fork/downstream clone is detected, use the repo-native upstream sync path before any substantive work:
-   - prefer `bun run sync:upstream` from the current attached branch,
+   - prefer `bun run sync:upstream:main`, which syncs `upstream/main` into `origin/main` through a disposable integration worktree and does not require the caller worktree to have `main` attached,
+   - treat `bun run sync:upstream` as the lower-level attached-branch helper for compatibility and diagnostics only,
    - do not substitute `git pull --ff-only` against `origin/main`, because that only updates the fork branch tip and does not guarantee alignment with the latest upstream shared code,
-   - if the user specified a branch for the work, switch to or create that attached branch first, then run `bun run sync:upstream` there.
+   - if `bun run sync:upstream:main` reports unpublished commits on local `refs/heads/main`, reconcile that branch first instead of bypassing it.
 4. If the checkout is not a fork/downstream clone, pull the latest code for the active sync target using a safe fast-forward path before continuing.
    - If the user specified a branch for the work, use that branch.
    - Otherwise, if the worktree is attached to a branch, use the current branch with `git pull --ff-only`.
@@ -237,8 +238,7 @@ Before starting substantive work in this repository, agents must sync local code
 Exceptions:
 
 - If the user explicitly asks to work against the current local state without syncing, follow the user's instruction.
-- If a fork/downstream checkout cannot run `bun run sync:upstream` because the worktree is dirty, `upstream` is missing or misconfigured, or the sync hits shared-file conflicts, stop and report the blocker instead of falling back to stale local state.
-- If a fork/downstream checkout is in detached HEAD and therefore cannot determine a target branch for `bun run sync:upstream`, stop and report that the agent must first switch to or create an attached branch before continuing.
+- If a fork/downstream checkout cannot run `bun run sync:upstream:main` because `origin` or `upstream` is missing or misconfigured, local `refs/heads/main` has unpublished commits, or the sync hits shared-file conflicts, stop and report the blocker instead of falling back to stale local state.
 - If local changes, branch divergence, permissions, or another blocker prevent a safe non-fork fast-forward pull, stop and report the blocker instead of forcing a merge or resetting state.
 - If higher-priority tool or mode constraints disallow mutation, note the constraint and sync as soon as it is allowed.
 

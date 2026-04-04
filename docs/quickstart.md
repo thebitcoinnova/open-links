@@ -72,10 +72,12 @@ bun run fork:reset --check
 When you want to pull new upstream changes into your fork later, use:
 
 ```bash
-bun run sync:upstream
+bun run sync:upstream:main
 ```
 
-This command is for forks and downstream repos, not the canonical `pRizz/open-links` repo. `upstream` must point at a different repository than `origin`. It syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
+This command is for forks and downstream repos, not the canonical `pRizz/open-links` repo. It syncs `upstream/main` into `origin/main` through a disposable integration worktree, so it still works when your current worktree is detached or when local `main` is checked out elsewhere. Fork-owned personalized paths are preserved only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
+
+Use `bun run sync:upstream` only when you intentionally want the lower-level attached-branch sync helper for diagnostics or compatibility.
 
 ## Cursor Remote Environment
 

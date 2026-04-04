@@ -36,8 +36,30 @@ console.log("");
 console.log(`- Status: \`${result.status}\``);
 console.log(`- Message: ${result.message}`);
 console.log(`- Branch changed: \`${String(result.branchChanged)}\``);
-console.log(`- Target branch: \`${result.targetBranch}\``);
-console.log(`- Upstream ref: \`${result.upstreamRef}\``);
+if (result.publishRemote && result.publishBranch) {
+  console.log(`- Publish target: \`${result.publishRemote}/${result.publishBranch}\``);
+}
+if (result.targetBranch) {
+  console.log(`- Target branch: \`${result.targetBranch}\``);
+}
+if (result.baseRef) {
+  console.log(`- Base ref: \`${result.baseRef}\``);
+}
+if (result.upstreamRef) {
+  console.log(`- Upstream ref: \`${result.upstreamRef}\``);
+}
+if (result.beforeSha) {
+  console.log(`- Before SHA: \`${result.beforeSha}\``);
+}
+if (result.afterSha) {
+  console.log(`- After SHA: \`${result.afterSha}\``);
+}
+if (result.pushStatus) {
+  console.log(`- Push status: \`${result.pushStatus}\``);
+}
+if (typeof result.pushed === "boolean") {
+  console.log(`- Pushed: \`${String(result.pushed)}\``);
+}
 console.log(`- Result path: \`${resultPath}\``);
 
 if (deployDispatchStatus?.length) {

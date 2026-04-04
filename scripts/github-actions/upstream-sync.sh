@@ -9,6 +9,27 @@ write_output() {
   fi
 }
 
+read_result_field() {
+  local result_path="$1"
+  local field_name="$2"
+
+  if [[ ! -s "$result_path" ]]; then
+    return 0
+  fi
+
+  node -e '
+    const fs = require("node:fs");
+    const [filePath, fieldName] = process.argv.slice(1);
+
+    try {
+      const value = JSON.parse(fs.readFileSync(filePath, "utf8"))[fieldName];
+      if (value !== undefined) {
+        process.stdout.write(String(value));
+      }
+    } catch {}
+  ' "$result_path" "$field_name"
+}
+
 configure_upstream_remote() {
   local upstream_url="${UPSTREAM_REPOSITORY_URL:-https://github.com/pRizz/open-links.git}"
 
@@ -48,20 +69,17 @@ run_sync() {
   local result_path
   result_path="$(mktemp "${temp_root%/}/openlinks-upstream-sync-XXXXXX.json")"
 
-  local before_sha
-  before_sha="$(git rev-parse HEAD)"
-  write_output "before_sha" "$before_sha"
-
   set +e
-  bun run sync:upstream --json > "$result_path"
+  bun run sync:upstream:main --json > "$result_path"
   local command_status=$?
   set -e
 
-  local after_sha
-  after_sha="$(git rev-parse HEAD)"
-  write_output "after_sha" "$after_sha"
   write_output "command_status" "$command_status"
   write_output "result_path" "$result_path"
+  write_output "before_sha" "$(read_result_field "$result_path" "beforeSha")"
+  write_output "after_sha" "$(read_result_field "$result_path" "afterSha")"
+  write_output "push_status" "$(read_result_field "$result_path" "pushStatus")"
+  write_output "pushed" "$(read_result_field "$result_path" "pushed")"
 
   return 0
 }

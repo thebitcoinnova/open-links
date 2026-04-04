@@ -70,19 +70,30 @@ test("upstream sync summary renders the structured result when valid JSON is pre
     kind: "valid",
     status: "0",
     payload: {
-      status: "up_to_date",
-      message: "Already up to date with upstream/main.",
-      branchChanged: false,
+      status: "merged",
+      message: "Synchronized origin/main with upstream/main and pushed the result.",
+      branchChanged: true,
+      publishRemote: "origin",
+      publishBranch: "main",
       targetBranch: "main",
+      baseRef: "origin/main",
       upstreamRef: "upstream/main",
+      beforeSha: "1111111",
+      afterSha: "2222222",
+      pushStatus: "pushed",
+      pushed: true,
       sharedConflicts: [],
       forkOwnedConflicts: [],
     },
   });
 
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /Status: `up_to_date`/u);
-  assert.match(result.stdout, /Message: Already up to date with upstream\/main\./u);
-  assert.match(result.stdout, /Branch changed: `false`/u);
+  assert.match(result.stdout, /Status: `merged`/u);
+  assert.match(result.stdout, /Publish target: `origin\/main`/u);
+  assert.match(result.stdout, /Base ref: `origin\/main`/u);
+  assert.match(result.stdout, /Before SHA: `1111111`/u);
+  assert.match(result.stdout, /After SHA: `2222222`/u);
+  assert.match(result.stdout, /Push status: `pushed`/u);
+  assert.match(result.stdout, /Pushed: `true`/u);
   assert.match(result.stdout, /Deploy handoff: `requested`/u);
 });
