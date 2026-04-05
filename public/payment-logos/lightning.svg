@@ -1,4 +1,10 @@
+<!--
+SVG Logo Provenance
+Source: https://simpleicons.org/icons/lightning.svg
+Method: Generated from the Simple Icons glyph and brand color into a circular payment-logo badge.
+Notes: The payment-logo asset is generated from the Simple Icons glyph and brand color into a square centered badge.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Lightning">
-  <circle cx="64" cy="64" r="58" fill="#F2A900"/>
-  <path fill="#111827" d="M74 14 34 72h24l-6 42 42-58H70l4-42z"/>
+  <circle cx="64" cy="64" r="58" fill="#792EE5"/>
+  <g fill="#FFFFFF" transform="translate(35 35) scale(2.4166666666666665)"><path d="M12 0L1.75 6v12L12 24l10.25-6V6zm-1.775 18l1.08-4.657-2.428-2.397L13.79 6l-1.082 4.665 2.414 2.384z" /></g>
 </svg>

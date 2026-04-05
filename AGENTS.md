@@ -215,6 +215,24 @@ For branded payment/tip cards, verify card-shell icon resolution and QR badge re
 - `badge.items.asset` only changes the QR center badge. It does not change the card-shell icon.
 - If a new payment platform should render like an existing first-class brand such as Club Orange, add it to the shared known-site icon pipeline rather than relying on a QR-only asset.
 
+## Custom Logo SVG Provenance Rule
+
+When adding or editing human-authored custom logo SVG code or hand-authored logo SVG assets in this repository, keep the provenance visible in the source so future readers can tell where the mark came from and how it was produced.
+
+1. Required fields:
+   - `Source:` required. Use an external URL, repo path, or explicit `Hand-authored`.
+   - `Method:` required. Describe whether the mark was extracted, cropped, copied, simplified, adapted, or generated.
+   - `Notes:` required when `Source: Hand-authored`; optional otherwise.
+2. Required format by surface:
+   - TS/TSX custom logo SVG code: add an immediately preceding block comment headed `SVG Logo Provenance`.
+   - Hand-authored `.svg` logo assets: add a leading XML comment headed `SVG Logo Provenance`.
+3. Current enforcement scope:
+   - `src/lib/icons/*.ts*` custom logo path/component definitions
+   - `public/payment-logos/*.svg`
+4. Generated files are exempt when provenance already lives in generator code or manifest metadata.
+   - Current examples: generated OpenLinks logo outputs under `public/branding/openlinks-logo/`
+5. Keep `docs/logo-governance.md` and `scripts/quality/check-logo-svg-provenance.ts` aligned whenever the format or hotspot list changes.
+
 ## Startup Sync Rule
 
 Before starting substantive work in this repository, agents must sync local code and dependencies first:

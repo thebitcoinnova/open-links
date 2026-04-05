@@ -2,6 +2,56 @@
 
 This document defines the canonical OpenLinks logo asset paths and archive policy.
 
+## Human-Authored Logo SVG Provenance
+
+Human-authored custom logo SVG code and hand-authored logo SVG assets must carry visible provenance metadata in-source.
+
+### Required fields
+
+- `Source:` required. Use an external URL, a repo path, or explicit `Hand-authored`.
+- `Method:` required. Describe whether the logo was extracted, copied, cropped, simplified, adapted, or generated.
+- `Notes:` optional by default, but required when `Source: Hand-authored` so readers understand the design basis.
+
+### Required format
+
+- TS/TSX custom logo SVG code:
+
+```ts
+/**
+ * SVG Logo Provenance
+ * Source: https://example.com/logo.svg
+ * Method: Extracted and simplified the public logo path for local fallback rendering.
+ * Notes: Optional unless Source: Hand-authored.
+ */
+```
+
+- Hand-authored `.svg` logo assets:
+
+```xml
+<!--
+SVG Logo Provenance
+Source: Hand-authored
+Method: Simplified in-repo circular badge for payment-card rendering.
+Notes: Built for OpenLinks badge legibility rather than copied from a single canonical vendor SVG.
+-->
+```
+
+### Current human-authored hotspot scope
+
+- `src/lib/icons/custom-icons.tsx`
+- `src/lib/icons/site-icon-graphics.ts`
+- `public/payment-logos/*.svg`
+
+If custom logo SVG code moves elsewhere, update this list and `scripts/quality/check-logo-svg-provenance.ts` in the same change.
+
+### Exemptions
+
+- Generated OpenLinks logo outputs under `public/branding/openlinks-logo/` are exempt because provenance already lives in generator code and version manifests such as:
+  - `scripts/generate-openlinks-logo-variants.ts`
+  - `public/branding/openlinks-logo/v2/manifest.json`
+  - `public/branding/openlinks-logo/v3/manifest.json`
+- Non-logo SVGs are out of scope for this rule.
+
 ## Current Active Logo
 
 - Winner label: `inset / centerline-2x / centered / c8.5-l8.5`
