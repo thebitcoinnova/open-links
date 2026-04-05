@@ -75,6 +75,7 @@ for (const siteId of [
   "yarn",
   "docker",
   "linktree",
+  "lemonade",
   "patreon",
   "kofi",
   "paypal",

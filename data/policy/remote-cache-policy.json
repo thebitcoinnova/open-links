@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/remote-cache-policy.schema.json",
   "version": 1,
-  "updatedAt": "2026-03-25T18:24:00.000Z",
+  "updatedAt": "2026-04-05T11:08:34Z",
   "rules": [
     {
       "id": "content-image-head-eligible",
@@ -16,7 +16,9 @@
         "fbcdn.net",
         "fourthwall.com",
         "githubusercontent.com",
+        "i.scdn.co",
         "googleusercontent.com",
+        "monolith-assets.lemonade.com",
         "orange-pill-app-dev.s3.amazonaws.com",
         "linktr.ee",
         "media-amazon.com",
@@ -56,10 +58,12 @@
         "cluborange.org",
         "github.com",
         "instagram.com",
+        "lemonade.com",
         "linktr.ee",
         "linkedin.com",
         "medium.com",
         "microseed.io",
+        "open.spotify.com",
         "peter.ryszkiewicz.us",
         "primal.net",
         "rumble.com",

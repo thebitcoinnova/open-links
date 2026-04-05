@@ -328,6 +328,13 @@ export const KNOWN_SITES = [
     brandColor: "#43E55E",
   },
   {
+    id: "lemonade",
+    label: "Lemonade",
+    aliases: ["lemonade"],
+    domains: ["lemonade.com"],
+    brandColor: "#FF0083",
+  },
+  {
     id: "patreon",
     label: "Patreon",
     aliases: ["patreon"],

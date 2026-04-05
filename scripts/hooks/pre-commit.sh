@@ -3,6 +3,7 @@ set -euo pipefail
 
 readonly CI_REQUIRED_REGEX='^(src/|scripts/|data/|schema/|packages/|vite\.config\.ts$|tsconfig\.json$|package\.json$|bun\.lock$|docker-compose\.studio\.yml$)'
 readonly STUDIO_DOCKER_REGEX='^(bun\.lock$|package\.json$|packages/.*/package\.json$|packages/studio-api/Dockerfile$|packages/studio-web/Dockerfile$|packages/studio-worker/Dockerfile$|docker-compose\.studio\.yml$)'
+readonly LOGO_SVG_PROVENANCE_REGEX='^(src/lib/icons/.*\.(ts|tsx)$|public/payment-logos/.*\.svg$|scripts/quality/check-logo-svg-provenance(\.test)?\.ts$|scripts/hooks/pre-commit\.sh$|package\.json$)'
 readonly CI_RELEVANT_PATHS=(
   src
   scripts
@@ -154,6 +155,17 @@ if matches_paths '^(scripts/)'; then
   fi
 else
   echo "pre-commit: skipping quality:embedded-code (no staged scripts paths)"
+fi
+
+if matches_paths "$LOGO_SVG_PROVENANCE_REGEX"; then
+  echo "pre-commit: running logo SVG provenance guard (staged paths touched custom logo hotspots)"
+  if ! bun run quality:logo-svg-provenance; then
+    echo "pre-commit: bun run quality:logo-svg-provenance failed."
+    echo "Action: add the required SVG Logo Provenance metadata to the touched custom logo sources, then restage and commit again."
+    exit 1
+  fi
+else
+  echo "pre-commit: skipping quality:logo-svg-provenance (no staged custom logo hotspots)"
 fi
 
 if matches_paths '^(packages/|docs/studio-self-serve\.md$)'; then

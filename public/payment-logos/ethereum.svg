@@ -1,5 +1,10 @@
+<!--
+SVG Logo Provenance
+Source: https://simpleicons.org/icons/ethereum.svg
+Method: Generated from the Simple Icons glyph and brand color into a circular payment-logo badge.
+Notes: The payment-logo asset is generated from the Simple Icons glyph and brand color into a square centered badge.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Ethereum">
-  <circle cx="64" cy="64" r="58" fill="#627EEA"/>
-  <path fill="#fff" d="M64 16 34 66l30 18 30-18-30-50z"/>
-  <path fill="#DCE4FF" d="M64 87 34 70l30 42 30-42-30 17z"/>
+  <circle cx="64" cy="64" r="58" fill="#3C3C3D"/>
+  <g fill="#FFFFFF" transform="translate(35 35) scale(2.4166666666666665)"><path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223l7.365 4.354 7.365-4.35L12.056 0z" /></g>
 </svg>

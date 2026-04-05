@@ -99,6 +99,82 @@ test("real cluborange-referral data keeps manual owner terms while generated vis
   });
 });
 
+test("real lemonade-referral data keeps manual title and owner benefit while generated media fills blanks", () => {
+  // Arrange
+  const sourceLink = linksData.links.find((entry) => entry.id === "lemonade-referral");
+  const generatedReferral = generatedMetadata.links?.["lemonade-referral"]?.referral;
+  const [resolvedLink] = mergeGeneratedMetadata(
+    [sourceLink as OpenLink],
+    {
+      "lemonade-referral": generatedMetadata.links?.["lemonade-referral"] ?? {},
+    },
+    referralCatalog,
+  );
+
+  // Assert
+  assert.ok(sourceLink);
+  assert.ok(resolvedLink);
+  assert.deepEqual(sourceLink.referral, {
+    catalogRef: {
+      familyId: "lemonade",
+      offerId: "lemonade-referral",
+      matcherId: "lemonade-referral-short-path",
+    },
+    ownerBenefit: "Referrer may receive a $10 gift card for each qualified signup.",
+  });
+  assert.equal(sourceLink.metadata?.title, "Lemonade Referral");
+  assert.equal(sourceLink.metadata?.descriptionSource, "manual");
+  assert.equal(
+    generatedReferral?.visitorBenefit,
+    "Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+  );
+  assert.equal(resolvedLink.metadata?.title, "Lemonade Referral");
+  assert.equal(resolvedLink.metadata?.descriptionSource, "manual");
+  assert.equal(
+    resolvedLink.metadata?.image,
+    "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+  );
+  assert.deepEqual(resolvedLink.referral, {
+    kind: "referral",
+    catalogRef: {
+      familyId: "lemonade",
+      offerId: "lemonade-referral",
+      matcherId: "lemonade-referral-short-path",
+    },
+    visitorBenefit: "Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+    ownerBenefit: "Referrer may receive a $10 gift card for each qualified signup.",
+    offerSummary: "Use this Lemonade referral link to start a Lemonade signup.",
+    termsSummary:
+      "Available to eligible individuals outside LA, MI, MS, WA, and WV. Rewards are limited to 10 qualified referrals over 12 months. See Lemonade for current terms and eligibility details.",
+    termsUrl: "https://www.lemonade.com/terms-and-conditions-referral-program",
+    catalog: {
+      source: "explicit",
+      familyId: "lemonade",
+      familyLabel: "Lemonade",
+      offerId: "lemonade-referral",
+      offerLabel: "Lemonade referral link",
+      matcherId: "lemonade-referral-short-path",
+      matcherLabel: "Referral short-link path",
+      matcherExplanation:
+        "Lemonade share links encode the referral handle in the /r/<handle> path.",
+      canonicalProgramUrl: "https://www.lemonade.com/terms-and-conditions-referral-program",
+    },
+    completeness: "full",
+    originalUrl: "https://lemonade.com/r/peterryszkiewicz",
+    resolvedUrl: "https://www.lemonade.com/onboarding?has_account=false",
+    strategyId: "public-direct-html",
+    termsSourceUrl: "https://www.lemonade.com/onboarding?has_account=false",
+    provenance: {
+      kind: "catalog",
+      visitorBenefit: "generated",
+      ownerBenefit: "manual",
+      offerSummary: "catalog",
+      termsSummary: "catalog",
+      termsUrl: "catalog",
+    },
+  });
+});
+
 test("links without catalog refs or matcher hits keep their prior no-referral runtime behavior", () => {
   // Arrange
   const sourceLink = linksData.links.find((entry) => entry.id === "github");

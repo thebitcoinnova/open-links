@@ -101,3 +101,13 @@ When `open-links` work starts from a detached worktree and the user has not spec
 
 ### Trigger signal to catch it earlier
 `git status --branch` shows `HEAD (no branch)` during startup sync, and the user has not named a different branch to work against.
+
+## lesson-use-official-brand-assets | 2026-04-04 04:10
+### What went wrong
+I added the Lemonade icon with a hand-drawn approximation instead of sourcing the official mark, which introduced a visible overlap artifact.
+
+### Preventive rule
+When adding a branded known-site icon, inspect the product's shipped assets first and prefer an official SVG or source-derived path over manual reconstruction.
+
+### Trigger signal to catch it earlier
+A new icon requires custom stroke geometry because no existing library glyph is available.

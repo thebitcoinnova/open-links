@@ -662,9 +662,12 @@ export const mergeGeneratedMetadata = (
       };
     }
 
-    const metadata = generated.metadata
+    const mergedMetadata = generated.metadata
       ? mergeMetadataWithManualSocialProfileOverrides(link.metadata, generated.metadata)
       : link.metadata;
+    const manualTitle = trimToUndefined(link.metadata?.title);
+    const metadata =
+      manualTitle && mergedMetadata ? { ...mergedMetadata, title: manualTitle } : mergedMetadata;
     const referral = mergeReferralWithManualOverrides(
       link.referral,
       generated.referral,
