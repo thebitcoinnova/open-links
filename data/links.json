@@ -75,6 +75,14 @@
       "url": "https://youtube.com/@livewiththehive?si=tQizrqZ7AVqSBimH&sub_confirmation=1"
     },
     {
+      "enabled": true,
+      "group": "watch-listen",
+      "id": "fountain",
+      "label": "Fountain",
+      "type": "rich",
+      "url": "https://fountain.fm/show/ACfqgNSBFCxAxuB5jXgu"
+    },
+    {
       "custom": {
         "import": {
           "importedAt": "2026-03-18T11:24:40.180Z",
@@ -105,26 +113,15 @@
         }
       },
       "enabled": true,
-      "group": "community-partners",
+      "group": "projects-brands",
       "id": "satoshoes",
       "label": "Satoshoes",
+      "referral": {
+        "kind": "affiliate",
+        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
+      },
       "type": "rich",
       "url": "https://satoshoes.co.uk/?ref=xstac1"
-    },
-    {
-      "custom": {
-        "import": {
-          "importedAt": "2026-03-18T11:24:40.180Z",
-          "kind": "linktree",
-          "sourceUrl": "https://linktr.ee/XSTACI"
-        }
-      },
-      "enabled": true,
-      "group": "watch-listen",
-      "id": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
-      "label": "XSTACI Sweet Biddi Beats by @thebitcoinnova | Suno",
-      "type": "rich",
-      "url": "https://suno.com/playlist/2c53c4e4-e7c0-4772-b2c2-bb1d16c4d2ab"
     },
     {
       "custom": {
@@ -150,11 +147,53 @@
         }
       },
       "enabled": true,
-      "group": "community-partners",
+      "group": "projects-brands",
       "id": "home-microseed",
       "label": "Home - MicroSeed",
+      "referral": {
+        "kind": "affiliate",
+        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
+      },
       "type": "rich",
       "url": "https://microseed.io/?ref=XSTACI"
+    },
+    {
+      "enabled": true,
+      "group": "projects-brands",
+      "id": "the-bitcoin-way",
+      "label": "The Bitcoin Way",
+      "referral": {
+        "kind": "affiliate",
+        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
+      },
+      "type": "rich",
+      "url": "http://www.thebitcoinway.com/bitcoinnova"
+    },
+    {
+      "enabled": true,
+      "group": "projects-brands",
+      "id": "altair-tech",
+      "label": "Altair Tech",
+      "referral": {
+        "kind": "affiliate",
+        "visitorBenefit": "Use code XSTACI for a discount.",
+        "ownerBenefit": "Supports Staci and The Bitcoin Nova.",
+        "code": "XSTACI"
+      },
+      "type": "rich",
+      "url": "https://altairtech.io/"
+    },
+    {
+      "enabled": true,
+      "group": "projects-brands",
+      "id": "bitcoin-sovryn",
+      "label": "Bitcoin Sovryn",
+      "referral": {
+        "kind": "affiliate",
+        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
+      },
+      "type": "rich",
+      "url": "https://bitcoinsovryn.com/"
     },
     {
       "custom": {
@@ -320,17 +359,20 @@
     "the-bitcoin-nova",
     "home-bitcoin-black-sheep",
     "the-bitcoin-adviser-the-bitcoin-nova",
+    "home-microseed",
+    "satoshoes",
+    "the-bitcoin-way",
+    "altair-tech",
+    "bitcoin-sovryn",
     "youtube",
     "x",
     "live-with-the-hive-podcast",
+    "fountain",
     "rumble",
     "audible-the-bitcoin-nova-podcast",
     "the-bitcoin-nova-podcast-on-amazon-music",
-    "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
     "paranoid-bitcoin-anarchists",
     "club-orange",
-    "home-microseed",
-    "satoshoes",
     "tip-staci",
     "bookings-thebitcoinnova-gmail-com"
   ]

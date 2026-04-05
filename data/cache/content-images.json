@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-02T07:27:42.854Z",
+  "generatedAt": "2026-04-05T14:26:09.662Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/df9325785d065ff73729756c9bf5dad9d8b8305fda657bfc9da3d8bf841028da.png",
@@ -49,6 +49,24 @@
       "contentType": "image/jpeg",
       "bytes": 94045
     },
+    "link:fountain:image": {
+      "resolvedPath": "cache/content-images/38d47224bcff5372bc890d36e89cdeee3406d6b8998ba0fa5ac09e8284390251.jpg",
+      "updatedAt": "2026-04-05T14:26:05.679Z",
+      "contentType": "image/jpeg",
+      "bytes": 292924
+    },
+    "link:fountain:ogImage": {
+      "resolvedPath": "cache/content-images/38d47224bcff5372bc890d36e89cdeee3406d6b8998ba0fa5ac09e8284390251.jpg",
+      "updatedAt": "2026-04-05T14:26:05.967Z",
+      "contentType": "image/jpeg",
+      "bytes": 292924
+    },
+    "link:fountain:twitterImage": {
+      "resolvedPath": "cache/content-images/38d47224bcff5372bc890d36e89cdeee3406d6b8998ba0fa5ac09e8284390251.jpg",
+      "updatedAt": "2026-04-05T14:26:06.077Z",
+      "contentType": "image/jpeg",
+      "bytes": 292924
+    },
     "link:paranoid-bitcoin-anarchists:image": {
       "resolvedPath": "cache/content-images/5939a2b45a8a4d13f2e67b9d23d0b5a5ca27b1412f82f8d6be226e749b126611.jpg",
       "updatedAt": "2026-04-01T10:36:30.074Z",
@@ -72,24 +90,6 @@
       "updatedAt": "2026-04-01T08:40:25.185Z",
       "contentType": "image/png",
       "bytes": 113214
-    },
-    "link:xstaci-sweet-biddi-beats-by-thebitcoinnova-suno:image": {
-      "resolvedPath": "cache/content-images/7262482cb4e62de63f036f4104be74d0f0904fb300970feda6b589cc1b486078.jpg",
-      "updatedAt": "2026-04-01T08:40:25.258Z",
-      "contentType": "image/jpeg",
-      "bytes": 53123
-    },
-    "link:xstaci-sweet-biddi-beats-by-thebitcoinnova-suno:ogImage": {
-      "resolvedPath": "cache/content-images/7262482cb4e62de63f036f4104be74d0f0904fb300970feda6b589cc1b486078.jpg",
-      "updatedAt": "2026-04-01T08:40:25.474Z",
-      "contentType": "image/jpeg",
-      "bytes": 53123
-    },
-    "link:xstaci-sweet-biddi-beats-by-thebitcoinnova-suno:twitterImage": {
-      "resolvedPath": "cache/content-images/7262482cb4e62de63f036f4104be74d0f0904fb300970feda6b589cc1b486078.jpg",
-      "updatedAt": "2026-04-01T08:40:25.511Z",
-      "contentType": "image/jpeg",
-      "bytes": 53123
     },
     "link:the-bitcoin-adviser-the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/c653a3a15421b6450b50a105d03bdd7b12ae92a328a3cb123d7ce65466654a8e.png",
@@ -126,6 +126,48 @@
       "updatedAt": "2026-04-01T08:40:26.335Z",
       "contentType": "image/jpeg",
       "bytes": 950370
+    },
+    "link:the-bitcoin-way:image": {
+      "resolvedPath": "cache/content-images/3c44c2d81c7d1e8982ffc416048a01118206c551f8f9a86584307480014c420f.avif",
+      "updatedAt": "2026-04-05T14:26:07.288Z",
+      "contentType": "image/avif",
+      "bytes": 123253
+    },
+    "link:the-bitcoin-way:ogImage": {
+      "resolvedPath": "cache/content-images/3c44c2d81c7d1e8982ffc416048a01118206c551f8f9a86584307480014c420f.avif",
+      "updatedAt": "2026-04-05T14:26:07.391Z",
+      "contentType": "image/avif",
+      "bytes": 123253
+    },
+    "link:the-bitcoin-way:twitterImage": {
+      "resolvedPath": "cache/content-images/3c44c2d81c7d1e8982ffc416048a01118206c551f8f9a86584307480014c420f.avif",
+      "updatedAt": "2026-04-05T14:26:07.431Z",
+      "contentType": "image/avif",
+      "bytes": 123253
+    },
+    "link:altair-tech:image": {
+      "resolvedPath": "cache/content-images/c9a5f0b3941738b08b1181e9fa7fae08df35b4becc7cce5e0e668f78174072cd.jpg",
+      "updatedAt": "2026-04-05T14:26:07.470Z",
+      "contentType": "image/jpeg",
+      "bytes": 9680
+    },
+    "link:altair-tech:ogImage": {
+      "resolvedPath": "cache/content-images/c9a5f0b3941738b08b1181e9fa7fae08df35b4becc7cce5e0e668f78174072cd.jpg",
+      "updatedAt": "2026-04-05T14:26:07.618Z",
+      "contentType": "image/jpeg",
+      "bytes": 9680
+    },
+    "link:altair-tech:twitterImage": {
+      "resolvedPath": "cache/content-images/c9a5f0b3941738b08b1181e9fa7fae08df35b4becc7cce5e0e668f78174072cd.jpg",
+      "updatedAt": "2026-04-05T14:26:07.645Z",
+      "contentType": "image/jpeg",
+      "bytes": 9680
+    },
+    "link:bitcoin-sovryn:image": {
+      "resolvedPath": "cache/content-images/c1fa6765a96d563a9a4193740b943027ff39e47e58993ebe006d266a2fbebc50.png",
+      "updatedAt": "2026-04-05T14:26:07.676Z",
+      "contentType": "image/png",
+      "bytes": 248169
     },
     "link:club-orange:image": {
       "resolvedPath": "cache/content-images/bd1b93b531ddb5cb1391ac47c2b6fd136a2415ba5f6460c09f36c74cb07426b1.webp",
@@ -182,28 +224,28 @@
       "bytes": 73958
     },
     "link:youtube:image": {
-      "resolvedPath": "cache/content-images/a7029b0d03e569ef1ffc3ac979f405ed9912fcb95724b68118559cbed64337d3.jpg",
-      "updatedAt": "2026-04-01T08:40:27.506Z",
+      "resolvedPath": "cache/content-images/603b01bd5a57fc63ebec824080cb553a2942f2f6de89dd542e2d49a643cf8bba.jpg",
+      "updatedAt": "2026-04-05T14:26:09.335Z",
       "contentType": "image/jpeg",
-      "bytes": 46511
+      "bytes": 87045
     },
     "link:youtube:profileImage": {
-      "resolvedPath": "cache/content-images/a7029b0d03e569ef1ffc3ac979f405ed9912fcb95724b68118559cbed64337d3.jpg",
-      "updatedAt": "2026-04-01T08:40:27.546Z",
+      "resolvedPath": "cache/content-images/603b01bd5a57fc63ebec824080cb553a2942f2f6de89dd542e2d49a643cf8bba.jpg",
+      "updatedAt": "2026-04-05T14:26:09.379Z",
       "contentType": "image/jpeg",
-      "bytes": 46511
+      "bytes": 87045
     },
     "link:youtube:ogImage": {
-      "resolvedPath": "cache/content-images/a7029b0d03e569ef1ffc3ac979f405ed9912fcb95724b68118559cbed64337d3.jpg",
-      "updatedAt": "2026-04-01T08:40:27.576Z",
+      "resolvedPath": "cache/content-images/603b01bd5a57fc63ebec824080cb553a2942f2f6de89dd542e2d49a643cf8bba.jpg",
+      "updatedAt": "2026-04-05T14:26:09.411Z",
       "contentType": "image/jpeg",
-      "bytes": 46511
+      "bytes": 87045
     },
     "link:youtube:twitterImage": {
-      "resolvedPath": "cache/content-images/a7029b0d03e569ef1ffc3ac979f405ed9912fcb95724b68118559cbed64337d3.jpg",
-      "updatedAt": "2026-04-01T08:40:27.602Z",
+      "resolvedPath": "cache/content-images/603b01bd5a57fc63ebec824080cb553a2942f2f6de89dd542e2d49a643cf8bba.jpg",
+      "updatedAt": "2026-04-05T14:26:09.437Z",
       "contentType": "image/jpeg",
-      "bytes": 46511
+      "bytes": 87045
     },
     "link:x:image": {
       "resolvedPath": "cache/content-images/f663c89412a0c17a918d3d4582ecd58ed0157fcf1058d4d6c2537c3a4f0b585f.jpg",
