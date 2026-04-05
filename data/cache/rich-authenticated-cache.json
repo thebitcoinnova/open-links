@@ -1,36 +1,44 @@
 {
   "$schema": "../../schema/rich-authenticated-cache.schema.json",
   "version": 1,
-  "updatedAt": "2026-03-09T09:33:35.738Z",
+  "updatedAt": "2026-04-05T14:25:03.288Z",
   "entries": {
     "linkedin": {
       "extractorId": "linkedin-auth-browser",
       "linkId": "linkedin",
       "sourceUrl": "https://www.linkedin.com/in/peter-ryszkiewicz/",
-      "capturedAt": "2026-02-25T10:17:17.267Z",
+      "capturedAt": "2026-04-05T14:25:03.287Z",
       "metadata": {
         "title": "Peter Ryszkiewicz | LinkedIn",
-        "description": "Talented software engineer, excited to work on new and challenging problems.",
+        "description": "Software Engineer",
         "image": "cache/rich-authenticated/ba084a969cc2c5cdf91ef15cdc66611f8bcfeb914cb62d812970766c1a9361ec.jpg",
+        "profileImage": "cache/rich-authenticated/ba084a969cc2c5cdf91ef15cdc66611f8bcfeb914cb62d812970766c1a9361ec.jpg",
         "sourceLabel": "linkedin.com"
       },
       "assets": {
         "image": {
           "path": "cache/rich-authenticated/ba084a969cc2c5cdf91ef15cdc66611f8bcfeb914cb62d812970766c1a9361ec.jpg",
-          "sourceUrl": "https://media.licdn.com/dms/image/v2/C5603AQEYNo0rQlIviQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1517464087773?e=1773878400&v=beta&t=M_0TDR4fSQ5tT83Ore-wWExsvRMKWKLQD3S4FTOMlb8",
+          "sourceUrl": "https://media.licdn.com/dms/image/v2/C5603AQEYNo0rQlIviQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1517464087773?e=1776902400&v=beta&t=EjzIB6Ev_GuvVUA4pyKwzK2yKf3dRzruVW9kH55r8y8",
+          "contentType": "image/jpeg",
+          "bytes": 10973,
+          "sha256": "ba084a969cc2c5cdf91ef15cdc66611f8bcfeb914cb62d812970766c1a9361ec"
+        },
+        "profileImage": {
+          "path": "cache/rich-authenticated/ba084a969cc2c5cdf91ef15cdc66611f8bcfeb914cb62d812970766c1a9361ec.jpg",
+          "sourceUrl": "https://media.licdn.com/dms/image/v2/C5603AQEYNo0rQlIviQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1517464087773?e=1776902400&v=beta&t=EjzIB6Ev_GuvVUA4pyKwzK2yKf3dRzruVW9kH55r8y8",
           "contentType": "image/jpeg",
           "bytes": 10973,
           "sha256": "ba084a969cc2c5cdf91ef15cdc66611f8bcfeb914cb62d812970766c1a9361ec"
         }
       },
       "diagnostics": {
-        "extractorVersion": "2026-02-25.1",
+        "extractorVersion": "2026-03-06.1",
         "selectorProfile": "linkedin-profile-v1",
         "placeholderSignals": [],
         "capturedFromUrl": "https://www.linkedin.com/in/peter-ryszkiewicz/",
         "notes": [
-          "session=openlinks-linkedin-cache-validate",
-          "sessionName=openlinks-linkedin-cache-validate",
+          "session=openlinks-linkedin-debug",
+          "sessionName=openlinks-linkedin-debug",
           "cacheKey=linkedin"
         ]
       }
