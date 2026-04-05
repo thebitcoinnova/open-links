@@ -1,5 +1,6 @@
 import process from "node:process";
 import { runUpstreamSync } from "./lib/upstream-sync";
+import { renderUpstreamSyncCliOutput } from "./lib/upstream-sync-cli-output";
 
 interface CliArgs {
   branch?: string;
@@ -54,10 +55,7 @@ const run = () => {
   if (args.json) {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {
-    process.stdout.write(`${result.message}\n`);
-    if (result.conflictingPaths.length > 0) {
-      process.stdout.write(`Conflicts: ${result.conflictingPaths.join(", ")}\n`);
-    }
+    process.stdout.write(renderUpstreamSyncCliOutput(result));
   }
 
   if (result.status === "conflict" || result.status === "failed") {
