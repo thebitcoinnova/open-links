@@ -29,7 +29,7 @@ Do not use this contract for:
 
 - runtime app or website code changes,
 - CI/workflow implementation work,
-- new authenticated extractor development,
+- new authenticated extractor development in fork/downstream maintenance flows,
 - other named workflows with a more specific contract or skill.
 
 ## Scope and Non-Goals
@@ -49,7 +49,39 @@ Out of scope:
 
 - Runtime app code changes.
 - Workflow file changes.
-- New authenticated extractor development (use dedicated authoring workflow).
+- New authenticated extractor development in fork/downstream maintenance flows
+  (use dedicated authoring workflow unless the current checkout is upstream and
+  the requested CRUD change uncovers a shared enrichment gap that should be
+  fixed for all consumers).
+
+## Upstream Shared Enrichment Default
+
+When the current checkout resolves to the canonical upstream
+`pRizz/open-links` repository using the same fork/downstream detection described
+in `AGENTS.md`, and an approved CRUD request uncovers a shared rich-enrichment
+gap, treat the shared fix as part of the same task instead of stopping at a
+fork-local workaround.
+
+This upstream-default path may include:
+
+- `data/policy/remote-cache-policy.json` coverage and other public-path fixes
+- `public_direct` or `public_augmented` metadata parsing/normalization work
+- blocker registry/docs updates
+- authenticated extractor authoring when public-first triage selects
+  `authenticated_required`
+
+Guardrails:
+
+- Fork/downstream clones keep the existing ask-first, fork-safe behavior.
+- Reuse `docs/create-new-rich-content-extractor.md` and
+  `skills/create-new-rich-content-extractor/SKILL.md` when shared extractor
+  work is required.
+- Do not default to `links[].enrichment.allowKnownBlocker=true` or
+  `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
+- Never commit credentials, cookies, session state, or raw authenticated HTML
+  dumps.
+- Do not auto-click auth actions that require explicit confirmation in the
+  authenticated workflow.
 
 ## Referral Authoring Guidance
 
@@ -172,6 +204,8 @@ If target local repo has uncommitted or untracked changes:
 - Continue autonomously unless blockers occur.
 - In `customization-audit`, no per-category confirmations after startup handshake.
 - Still surface final summary with exact applied/not-applied details.
+- In the upstream repo, treat shared rich-enrichment fixes discovered while
+  satisfying the approved request as part of the same autopilot batch.
 
 ## Identity and Discovery Policy
 
@@ -214,6 +248,10 @@ Execute in this exact order:
 6. Branch flow by `customization_path`:
    - `targeted-crud`: build CRUD change plan from user request, mode, research setting, and seeds.
    - `customization-audit`: build category checklist and change plan from `docs/customization-catalog.md`, selected scope, and focus areas.
+   - if the repo target is upstream and the requested CRUD change reveals a
+     shared rich-enrichment gap, run the public-first shared-fix workflow in
+     `docs/create-new-rich-content-extractor.md` and include the resulting
+     shared policy/code/docs changes in the same batch.
 7. Confirm change plan according to selected interaction mode.
 8. Apply approved changes to:
    - `data/profile.json`

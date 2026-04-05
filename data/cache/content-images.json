@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-04T09:11:42.000Z",
+  "generatedAt": "2026-04-05T11:17:50.674Z",
   "bySlot": {
     "link:primal:image": {
       "resolvedPath": "cache/content-images/433895ee9e31178b956d5a5ff8c19006fa6227ec7569373f15d66df759a116d5.jpg",
@@ -187,11 +187,29 @@
       "contentType": "image/jpeg",
       "bytes": 7058
     },
-    "link:substack:image": {
-      "resolvedPath": "cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg",
-      "updatedAt": "2026-03-28T11:16:13.836Z",
+    "link:spotify-podcast:image": {
+      "resolvedPath": "cache/content-images/58ae79ba201183642ed2dc74ea3ad3e55791ed94420ebad894f0ac78c0cf2d32.jpg",
+      "updatedAt": "2026-04-05T11:12:53.805Z",
       "contentType": "image/jpeg",
-      "bytes": 133967
+      "bytes": 27103
+    },
+    "link:spotify-podcast:ogImage": {
+      "resolvedPath": "cache/content-images/58ae79ba201183642ed2dc74ea3ad3e55791ed94420ebad894f0ac78c0cf2d32.jpg",
+      "updatedAt": "2026-04-05T11:12:54.759Z",
+      "contentType": "image/jpeg",
+      "bytes": 27103
+    },
+    "link:spotify-podcast:twitterImage": {
+      "resolvedPath": "cache/content-images/58ae79ba201183642ed2dc74ea3ad3e55791ed94420ebad894f0ac78c0cf2d32.jpg",
+      "updatedAt": "2026-04-05T11:12:54.854Z",
+      "contentType": "image/jpeg",
+      "bytes": 27103
+    },
+    "link:substack:image": {
+      "resolvedPath": "cache/content-images/04f7c6ded33f86fca3ab16b6b3afba8068cc69e23769b7cfa714719e107eb1c0.jpg",
+      "updatedAt": "2026-04-05T11:12:54.963Z",
+      "contentType": "image/jpeg",
+      "bytes": 177263
     },
     "link:substack:profileImage": {
       "resolvedPath": "cache/content-images/507a2bdb6baf0c2930e28c0f5a30f7c7b7f88ccbe6aef3975d7aa26a7ccb9e57.jpg",
@@ -200,32 +218,32 @@
       "bytes": 136060
     },
     "link:substack:ogImage": {
-      "resolvedPath": "cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg",
-      "updatedAt": "2026-03-28T11:16:16.108Z",
+      "resolvedPath": "cache/content-images/04f7c6ded33f86fca3ab16b6b3afba8068cc69e23769b7cfa714719e107eb1c0.jpg",
+      "updatedAt": "2026-04-05T11:12:56.344Z",
       "contentType": "image/jpeg",
-      "bytes": 133967
+      "bytes": 177263
     },
     "link:substack:twitterImage": {
-      "resolvedPath": "cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg",
-      "updatedAt": "2026-03-28T11:16:16.663Z",
+      "resolvedPath": "cache/content-images/04f7c6ded33f86fca3ab16b6b3afba8068cc69e23769b7cfa714719e107eb1c0.jpg",
+      "updatedAt": "2026-04-05T11:12:56.830Z",
       "contentType": "image/jpeg",
-      "bytes": 133967
+      "bytes": 177263
     },
     "link:lemonade-referral:image": {
       "resolvedPath": "cache/content-images/89d83c850a55adf4b097967a314a8cb976153e48b038fd83dda45f2f6a4bafbe.png",
-      "updatedAt": "2026-04-04T09:11:32.378Z",
+      "updatedAt": "2026-04-05T11:17:43.590Z",
       "contentType": "image/png",
       "bytes": 981366
     },
     "link:lemonade-referral:ogImage": {
       "resolvedPath": "cache/content-images/89d83c850a55adf4b097967a314a8cb976153e48b038fd83dda45f2f6a4bafbe.png",
-      "updatedAt": "2026-04-04T09:11:37.397Z",
+      "updatedAt": "2026-04-05T11:17:46.323Z",
       "contentType": "image/png",
       "bytes": 981366
     },
     "link:lemonade-referral:twitterImage": {
       "resolvedPath": "cache/content-images/89d83c850a55adf4b097967a314a8cb976153e48b038fd83dda45f2f6a4bafbe.png",
-      "updatedAt": "2026-04-04T09:11:39.695Z",
+      "updatedAt": "2026-04-05T11:17:48.316Z",
       "contentType": "image/png",
       "bytes": 981366
     }

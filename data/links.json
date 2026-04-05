@@ -212,6 +212,21 @@
       "custom": {}
     },
     {
+      "id": "spotify-podcast",
+      "label": "Peter Ryszkiewicz Podcast",
+      "url": "https://open.spotify.com/show/35MZ1bOgHnHnxjCwVyZcnX",
+      "type": "rich",
+      "icon": "spotify",
+      "description": "Podcast episodes and show updates",
+      "group": "content",
+      "order": 15,
+      "enabled": true,
+      "enrichment": {
+        "enabled": true
+      },
+      "custom": {}
+    },
+    {
       "id": "substack",
       "label": "Substack",
       "url": "https://peter.ryszkiewicz.us/",
@@ -344,6 +359,7 @@
     "instagram",
     "youtube",
     "medium",
+    "spotify-podcast",
     "lemonade-referral",
     "cluborange-lightning-tips",
     "strike-lightning-tips"

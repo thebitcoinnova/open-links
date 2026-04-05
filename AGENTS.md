@@ -65,6 +65,11 @@ Routing rules:
 4. If the request mixes CRUD and runtime/code work, handle the CRUD portion via
    the Update/CRUD contract and surface the code work as a separate path rather
    than silently merging them.
+5. Exception: when the current checkout resolves to the upstream shared repo
+   under the Startup Sync Rule detection and the CRUD request exposes a shared
+   rich-enrichment gap that blocks the requested link/support, treat the
+   required shared enrichment/policy code work as part of the same task so
+   downstream forks and consumers inherit the fix.
 
 ## Downstream Consumer Awareness
 
@@ -185,6 +190,30 @@ recommended.
 5. This rule should fire for bugs like a broken `bun run fork:reset` baseline
    where the shared reset script and starter example produce invalid output.
 
+## Upstream Shared Enrichment Default Rule
+
+When the current checkout resolves to the canonical upstream
+`pRizz/open-links` repository rather than a fork/downstream clone using the
+same detection described in the Startup Sync Rule, agents should default to
+fixing shared rich-enrichment gaps automatically when a CRUD or maintenance
+request surfaces them.
+
+1. Treat the shared fix as part of the same approved task instead of splitting
+   it into a separate fork-local workaround or a new permission step.
+2. This default may include public-direct/public-augmented support work,
+   `data/policy/remote-cache-policy.json` coverage, blocker registry/doc
+   updates, and authenticated extractor authoring when public-first triage
+   selects that branch.
+3. Reuse `docs/create-new-rich-content-extractor.md` and
+   `skills/create-new-rich-content-extractor/SKILL.md` when extractor work is
+   required.
+4. Fork/downstream clones keep the existing ask-first and fork-safe behavior
+   for blocking enrichment incidents.
+5. This rule does not permit automatic `links[].enrichment.allowKnownBlocker`,
+   automatic `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`, committing credentials,
+   cookies, session state, raw authenticated HTML dumps, or auto-clicking auth
+   actions that require explicit confirmation.
+
 ## Local Scope
 
 This file defines mandatory agent behavior for rich-enrichment failures in this repository.
@@ -201,7 +230,10 @@ This is orchestration guidance for agents. It does not replace runtime policy so
 1. Run diagnostics first using:
    - `bun run enrich:rich:strict`
    - `bun run validate:data`
-2. Ask the user to choose a path before mutating policy or link configuration for blocking enrichment failures.
+2. In fork/downstream clones, ask the user to choose a path before mutating
+   policy or link configuration for blocking enrichment failures. In the
+   upstream shared repo, follow the Upstream Shared Enrichment Default Rule
+   instead.
 3. Do not silently set `links[].enrichment.allowKnownBlocker=true`.
 4. Do not silently use `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 5. Use bypass only when the user explicitly asks for an emergency temporary override.
@@ -279,14 +311,15 @@ Before creating any commit in this repository:
 
 | Trigger reason | Expected default behavior | First diagnostic commands | Agent first action |
 | --- | --- | --- | --- |
-| `known_blocker` | Blocking failure | `bun run enrich:rich:strict`, `bun run validate:data` | Present options and ask user to choose path before edits |
-| `authenticated_cache_missing` | Blocking failure | `bun run enrich:rich:strict`, `bun run validate:data` | Present options and ask user to choose path before edits |
-| `fetch_failed` | May block based on `site.ui.richCards.enrichment.failOn` | `bun run enrich:rich:strict`, `bun run validate:data` | Confirm whether failure is policy-blocking, then present options if configuration changes are needed |
-| `metadata_missing` | May block based on `site.ui.richCards.enrichment.failOn` and manual fallback policy | `bun run enrich:rich:strict`, `bun run validate:data` | Confirm whether manual fallback exists, then present options if configuration changes are needed |
+| `known_blocker` | Blocking in forks/downstream clones; shared-fix candidate in upstream | `bun run enrich:rich:strict`, `bun run validate:data` | Ask user to choose a path in forks/downstream clones; in upstream, continue public-first triage for the shared fix |
+| `authenticated_cache_missing` | Blocking in forks/downstream clones; shared-fix candidate in upstream | `bun run enrich:rich:strict`, `bun run validate:data` | Ask user to choose a path in forks/downstream clones; in upstream, continue public-first triage for the shared fix |
+| `fetch_failed` | May block or reveal a shared enrichment gap based on repo role/policy | `bun run enrich:rich:strict`, `bun run validate:data` | Confirm whether failure is policy-blocking, then ask user in forks/downstream clones or continue shared-fix triage in upstream |
+| `metadata_missing` | May block or reveal a shared enrichment gap based on repo role/policy | `bun run enrich:rich:strict`, `bun run validate:data` | Confirm whether manual fallback exists, then ask user in forks/downstream clones or continue shared-fix triage in upstream |
 
 ## Mandatory User Choice Step
 
-For blocking conditions, the agent must present these options and wait for user selection before policy/config mutation:
+For blocking conditions in fork/downstream clones, the agent must present these
+options and wait for user selection before policy/config mutation:
 
 1. Disable enrichment for the affected link and/or use manual metadata (`links[].metadata` path).
 2. Use authenticated cache setup/refresh path (`bun run setup:rich-auth`, targeted sync/clear flows as needed).
@@ -295,6 +328,9 @@ For blocking conditions, the agent must present these options and wait for user 
 When offering option 3, reference and use:
 
 - [`skills/create-new-rich-content-extractor/SKILL.md`](skills/create-new-rich-content-extractor/SKILL.md)
+
+When the Upstream Shared Enrichment Default Rule applies, skip this prompt and
+continue with the shared fix path selected by public-first triage.
 
 ## Known Blocked Domain Flow
 
@@ -306,8 +342,11 @@ When reason is `known_blocker`:
 2. Provide remediation commands from current workflow:
    - disable enrichment/manual metadata route, or
    - authenticated route if extractor exists (`bun run setup:rich-auth` / `bun run auth:rich:sync`).
-3. Do not default to `allowKnownBlocker=true`; only apply when user explicitly chooses override behavior.
-4. Do not default to bypass env var; only use when user explicitly requests emergency bypass.
+3. When the Upstream Shared Enrichment Default Rule applies, prefer
+   implementing the shared fix path automatically after blocker confirmation
+   instead of waiting for user path selection.
+4. Do not default to `allowKnownBlocker=true`; only apply when user explicitly chooses override behavior.
+5. Do not default to bypass env var; only use when user explicitly requests emergency bypass.
 
 ## Undocumented Social Domain Failure Flow
 
@@ -320,14 +359,15 @@ When enrichment fails for a social domain that is not in blocker registry:
 5. After reproducible confirmation, update in this exact order:
    - `data/policy/rich-enrichment-blockers.json`
    - `docs/rich-metadata-fetch-blockers.md` with UTC timestamped evidence and attempted remediations
-   - `data/links.json` remediation (disable enrichment/manual metadata/explicit override) as chosen by user
+   - `data/links.json` remediation when the selected resolution is disable/manual metadata/explicit override
 6. Re-run:
    - `bun run validate:data`
    - `bun run enrich:rich:strict`
 
 ## Extractor Escalation Flow
 
-If user chooses extractor path:
+If user chooses extractor path, or if upstream shared-fix triage selects the
+extractor path:
 
 1. Execute workflow from:
    - [`skills/create-new-rich-content-extractor/SKILL.md`](skills/create-new-rich-content-extractor/SKILL.md)
@@ -365,7 +405,7 @@ Every blocker incident response must include:
 
 1. Detected reason (for example `known_blocker`, `authenticated_cache_missing`, `fetch_failed`, `metadata_missing`).
 2. Affected link id and domain.
-3. User-selected path (disable/manual metadata, authenticated cache workflow, or new extractor).
+3. Selected path (user-selected or upstream-default automatic path: disable/manual metadata, authenticated cache workflow, or new extractor).
 4. Commands run and/or exact commands recommended next.
 5. Files updated, or explicit statement that files were intentionally not updated.
 6. Next user decision required (if any).
