@@ -20,9 +20,17 @@ Start narrow and only widen when the first pass misses obvious candidates.
 
 ## Candidate Contract
 
-Default gitignored path:
+Raw candidate input path:
 
 `/.cache/referral-management/inbox-candidates.json`
+
+Resolved planner input path:
+
+`/.cache/referral-management/inbox-candidates.resolved.json`
+
+Resolver audit report path:
+
+`/.cache/referral-management/referral-resolve-report.json`
 
 Supported JSON shapes:
 
@@ -65,12 +73,40 @@ Optional hints the planner understands:
 - `termsSummaryHint`
 - `termsUrlHint`
 
+Resolver-managed fields:
+
+- `approvedUrl`
+- `resolution.status`
+- `resolution.originalUrl`
+- `resolution.recommendedUrl`
+- `resolution.resolvedUrl`
+- `resolution.reason`
+- `resolution.reviewReason`
+- `resolution.terminalStatusCode`
+- `resolution.terminalTitle`
+
+Use `approvedUrl` only after reviewing the redirect audit report when the resolver marks a candidate `review_required`.
+
+## Resolver / Review Step
+
+Resolve tracking-heavy links and write the planner-ready candidate file plus audit report:
+
+```bash
+bun run referrals:import:resolve -- --input .cache/referral-management/inbox-candidates.json --output .cache/referral-management/inbox-candidates.resolved.json --report .cache/referral-management/referral-resolve-report.json
+```
+
+Review expectations:
+
+- `resolved_clear`: the resolver found exactly one strong referral-like web target and set `resolution.recommendedUrl`.
+- `review_required`: the redirect chain contained multiple plausible web targets; inspect the report and set `approvedUrl` before planning.
+- `unresolved`: the resolver did not find a safe referral-like web target; keep the candidate out of planning until you replace the URL manually or choose a different source link.
+
 ## Planner / Apply Commands
 
 Plan:
 
 ```bash
-bun run referrals:import:plan -- --input .cache/referral-management/inbox-candidates.json
+bun run referrals:import:plan -- --input .cache/referral-management/inbox-candidates.resolved.json
 ```
 
 Apply every reviewed actionable item:

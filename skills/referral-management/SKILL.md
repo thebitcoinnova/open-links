@@ -35,14 +35,21 @@ Use this branch when the user wants referral links mined from email.
 
 1. Do not query inbox tools until the user explicitly grants permission for that mailbox or MCP server.
 2. Build a minimal, gitignored candidate file first. Do not store raw email bodies, cookies, tokens, or screenshots in the repo.
-3. Run the deterministic planner:
+3. Resolve and audit tracking-heavy links before planning:
 
 ```bash
-bun run referrals:import:plan -- --input .cache/referral-management/inbox-candidates.json
+bun run referrals:import:resolve -- --input .cache/referral-management/inbox-candidates.json --output .cache/referral-management/inbox-candidates.resolved.json --report .cache/referral-management/referral-resolve-report.json
 ```
 
-4. Review the generated table and proposal JSON with the user before any repo write.
-5. After approval, apply the accepted batch:
+4. Review the resolver report and, when needed, set `approvedUrl` on any `review_required` candidate you want to carry forward.
+5. Run the deterministic planner on the resolved candidate file:
+
+```bash
+bun run referrals:import:plan -- --input .cache/referral-management/inbox-candidates.resolved.json
+```
+
+6. Review the generated table and proposal JSON with the user before any repo write.
+7. After approval, apply the accepted batch:
 
 ```bash
 bun run referrals:import:apply -- --proposal .cache/referral-management/referral-import-plan.json --all-planned
@@ -54,15 +61,15 @@ Or apply a reviewed subset:
 bun run referrals:import:apply -- --proposal .cache/referral-management/referral-import-plan.json --only candidate-a,candidate-b
 ```
 
-6. After apply, run the normal referral verification path:
+8. After apply, run the normal referral verification path:
    - `bun run enrich:rich:strict`
    - `bun run images:sync`
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
-7. If enrichment blocks on a candidate, stop that item and follow the repo’s blocker-choice workflow instead of silently enabling overrides.
+9. If enrichment blocks on a candidate, stop that item and follow the repo’s blocker-choice workflow instead of silently enabling overrides.
 
-Load `references/inbox-mcp-import.md` when you need the candidate contract, MCP search heuristics, permission gate wording, or planner/apply command details.
+Load `references/inbox-mcp-import.md` when you need the candidate contract, MCP search heuristics, permission gate wording, resolver/planner/apply command details, or the review gate for tracking-only links.
 
 ### 3) Upstream-worthy shared follow-up
 

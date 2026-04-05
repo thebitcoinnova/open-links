@@ -345,11 +345,38 @@ const normalizeProfileSemanticsHint = (
 ): LinkProfileSemantics | undefined =>
   value === "auto" || value === "profile" || value === "non_profile" ? value : undefined;
 
+const resolvePlanningUrl = (
+  input: ReferralInboxCandidateInput,
+): { url?: string; skipReason?: string } => {
+  const approvedUrl = trimToUndefined(input.approvedUrl);
+  if (approvedUrl) {
+    return {
+      url: approvedUrl,
+    };
+  }
+
+  if (input.resolution?.status === "review_required") {
+    return {
+      skipReason: `review_required:${input.resolution.reason ?? input.resolution.reviewReason ?? "manual_review_required"}`,
+    };
+  }
+
+  if (input.resolution?.status === "unresolved") {
+    return {
+      skipReason: `unresolved:${input.resolution.reason ?? "resolution_failed"}`,
+    };
+  }
+
+  return {
+    url: trimToUndefined(input.resolution?.recommendedUrl) ?? trimToUndefined(input.url),
+  };
+};
+
 export const normalizeReferralInboxCandidate = (
   input: ReferralInboxCandidateInput,
   options?: { index?: number; usedCandidateIds?: Set<string> },
 ): NormalizedReferralInboxCandidate => {
-  const maybeUrl = trimToUndefined(input.url);
+  const maybeUrl = resolvePlanningUrl(input).url;
   const canonicalUrl = maybeUrl ? canonicalizeHttpUrl(maybeUrl) : undefined;
   if (!canonicalUrl) {
     throw new Error("Missing a valid http(s) referral URL.");
@@ -929,6 +956,19 @@ export const buildReferralImportPlan = (
 
   input.candidates.forEach((rawCandidate, index) => {
     const fallbackCandidateId = slugify(rawCandidate.candidateId ?? `candidate-${index + 1}`);
+    const planningUrl = resolvePlanningUrl(rawCandidate);
+
+    if (planningUrl.skipReason) {
+      items.push(
+        createSkipItem({
+          candidateId: fallbackCandidateId,
+          confidence: rawCandidate.confidence,
+          url: trimToUndefined(rawCandidate.approvedUrl) ?? trimToUndefined(rawCandidate.url),
+          reason: planningUrl.skipReason,
+        }),
+      );
+      return;
+    }
 
     let candidate: NormalizedReferralInboxCandidate;
     try {

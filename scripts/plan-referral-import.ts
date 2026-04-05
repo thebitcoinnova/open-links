@@ -7,6 +7,7 @@ import {
   DEFAULT_LOCAL_REFERRAL_CATALOG_PATH,
   DEFAULT_REFERRAL_IMPORT_INPUT_PATH,
   DEFAULT_REFERRAL_IMPORT_PLAN_PATH,
+  DEFAULT_REFERRAL_IMPORT_RESOLVED_PATH,
   DEFAULT_SHARED_REFERRAL_CATALOG_PATH,
 } from "./referrals/import-contract";
 import { buildReferralImportPlan, renderReferralImportPlanTable } from "./referrals/import-planner";
@@ -51,6 +52,9 @@ const printHelp = (): void => {
       "Usage:",
       "  bun run referrals:import:plan -- --input <path> [--output <path>] [--links <path>]",
       "    [--shared-catalog <path>] [--local-catalog <path>]",
+      "",
+      `Default input: ${DEFAULT_REFERRAL_IMPORT_INPUT_PATH}`,
+      `Resolved candidate recommendation: ${DEFAULT_REFERRAL_IMPORT_RESOLVED_PATH}`,
     ].join("\n"),
   );
 };

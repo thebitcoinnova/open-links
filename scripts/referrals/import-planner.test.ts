@@ -205,6 +205,94 @@ test("buildReferralImportPlan creates shared catalog proposals without blocking 
   assert.match(item.upstreamWorthyNote ?? "", /clean upstream PR/u);
 });
 
+test("buildReferralImportPlan uses a resolved recommendation when present", () => {
+  const plan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "resolved",
+        url: "https://links.example.com/ref",
+        resolution: {
+          status: "resolved_clear",
+          originalUrl: "https://links.example.com/ref",
+          recommendedUrl: "https://www.cluborange.org/signup?referral=pryszkie",
+          resolvedUrl: "https://www.cluborange.org/signup?referral=pryszkie&utm_source=email",
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+    sharedCatalogPayload: sharedCatalog,
+  });
+
+  const item = plan.items[0];
+  assert.equal(item?.disposition, "match_existing_catalog");
+  assert.equal(item?.proposedLink?.url, "https://www.cluborange.org/signup?referral=pryszkie");
+});
+
+test("buildReferralImportPlan skips review-required candidates until approvedUrl is provided", () => {
+  const plan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "needs-review",
+        url: "https://links.example.com/review",
+        resolution: {
+          status: "review_required",
+          originalUrl: "https://links.example.com/review",
+          resolvedUrl: "https://example.com/signup?ref=alice",
+          reviewReason: "multiple plausible referral URLs found in redirect chain",
+          reason: "multiple_plausible_urls",
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+  });
+
+  assert.equal(plan.items[0]?.disposition, "skip");
+  assert.match(plan.items[0]?.skipReason ?? "", /review_required:multiple_plausible_urls/u);
+});
+
+test("buildReferralImportPlan allows approvedUrl to override a review-required candidate", () => {
+  const plan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "approved-review",
+        url: "https://links.example.com/review",
+        approvedUrl: "https://join.example.com/invite/beta",
+        resolution: {
+          status: "review_required",
+          originalUrl: "https://links.example.com/review",
+          reviewReason: "multiple plausible referral URLs found in redirect chain",
+          reason: "multiple_plausible_urls",
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+  });
+
+  assert.equal(plan.items[0]?.disposition, "link_only");
+  assert.equal(plan.items[0]?.proposedLink?.url, "https://join.example.com/invite/beta");
+});
+
+test("buildReferralImportPlan skips unresolved candidates with the resolver reason", () => {
+  const plan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "unresolved",
+        url: "https://links.example.com/dead",
+        resolution: {
+          status: "unresolved",
+          originalUrl: "https://links.example.com/dead",
+          reason: "redirect_missing_location",
+          terminalStatusCode: 302,
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+  });
+
+  assert.equal(plan.items[0]?.disposition, "skip");
+  assert.match(plan.items[0]?.skipReason ?? "", /unresolved:redirect_missing_location/u);
+});
+
 test("generateReferralLinkId adds numeric suffixes when ids collide", () => {
   const candidate = normalizeReferralInboxCandidate({
     url: "https://signup.cluborange.org/co/pryszkie",
