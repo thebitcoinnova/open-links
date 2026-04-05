@@ -201,6 +201,33 @@ test("runUpstreamSync blocks shared-file conflicts and aborts the merge", () => 
   }
 });
 
+test("runUpstreamSync separates shared and fork-owned conflicts when both overlap sets are present", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    writeText(path.join(workspace.forkRepo, "README.md"), "# Fork README\n");
+    writeText(path.join(workspace.forkRepo, "data/profile.json"), '{ "name": "Fork" }\n');
+    commitAll(workspace.forkRepo, "fork shared and fork-owned updates");
+
+    writeText(path.join(workspace.upstreamWorktree, "README.md"), "# Upstream README\n");
+    writeText(
+      path.join(workspace.upstreamWorktree, "data/profile.json"),
+      '{ "name": "Upstream" }\n',
+    );
+    commitAll(workspace.upstreamWorktree, "upstream shared and fork-owned updates");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+
+    assert.equal(result.status, "conflict");
+    assert.deepEqual(result.sharedConflicts, ["README.md"]);
+    assert.deepEqual(result.forkOwnedConflicts, ["data/profile.json"]);
+    assert.deepEqual(result.conflictingPaths, ["README.md", "data/profile.json"]);
+  } finally {
+    workspace.cleanup();
+  }
+});
+
 test("runUpstreamSync fails fast when the upstream remote is missing", () => {
   const rootDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "open-links-sync-upstream-missing-remote-"),

@@ -77,6 +77,8 @@ bun run sync:upstream
 
 This command is for forks and downstream repos, not the canonical `pRizz/open-links` repo. `upstream` must point at a different repository than `origin`. It syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
 
+When the sync stops on conflicts, the local CLI now reports `Shared conflicts:` and `Fork-owned conflicts:` separately. Only the shared list is the manual blocker; the fork-owned list is reported so you can see what the preservation helper already recognized.
+
 ## Cursor Remote Environment
 
 If you are opening this repository in a Cursor-managed remote workspace, the repo bootstrap is already checked in:
