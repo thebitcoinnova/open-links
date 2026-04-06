@@ -116,10 +116,6 @@
       "group": "projects-brands",
       "id": "satoshoes",
       "label": "Satoshoes",
-      "referral": {
-        "kind": "affiliate",
-        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
-      },
       "type": "rich",
       "url": "https://satoshoes.co.uk/?ref=xstac1"
     },
@@ -150,10 +146,6 @@
       "group": "projects-brands",
       "id": "home-microseed",
       "label": "Home - MicroSeed",
-      "referral": {
-        "kind": "affiliate",
-        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
-      },
       "type": "rich",
       "url": "https://microseed.io/?ref=XSTACI"
     },
@@ -162,10 +154,6 @@
       "group": "projects-brands",
       "id": "the-bitcoin-way",
       "label": "The Bitcoin Way",
-      "referral": {
-        "kind": "affiliate",
-        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
-      },
       "type": "rich",
       "url": "http://www.thebitcoinway.com/bitcoinnova"
     },
@@ -188,10 +176,6 @@
       "group": "projects-brands",
       "id": "bitcoin-sovryn",
       "label": "Bitcoin Sovryn",
-      "referral": {
-        "kind": "affiliate",
-        "ownerBenefit": "Supports Staci and The Bitcoin Nova."
-      },
       "type": "rich",
       "url": "https://bitcoinsovryn.com/"
     },

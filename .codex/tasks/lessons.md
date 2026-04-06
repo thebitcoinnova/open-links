@@ -111,3 +111,13 @@ When adding a branded known-site icon, inspect the product's shipped assets firs
 
 ### Trigger signal to catch it earlier
 A new icon requires custom stroke geometry because no existing library glyph is available.
+
+## lesson-audit-fork-owned-json-before-crud-commit | 2026-04-05 14:31 CDT
+### What went wrong
+I bundled Staci's requested fork-owned link edits together with supporting rich-link/cache-policy changes and a few inferred content choices, which made it too easy to miss that some user-facing `data/links.json` copy went beyond the request.
+
+### Preventive rule
+Before committing fork-owned CRUD updates in `open-links`, capture a before/after diff summary for `data/profile.json`, `data/links.json`, and `data/site.json`, and separate explicitly requested edits from supporting generated/cache artifacts in the task summary and final review.
+
+### Trigger signal to catch it earlier
+A fork-owned content task adds or reorders multiple links and also requires policy/cache churn to support rich cards; that combination should trigger a deliberate JSON-only audit before commit.
