@@ -1,6 +1,7 @@
 import deploymentDefaultsConfigJson from "../../config/deployment.defaults.json" with {
   type: "json",
 };
+import deploymentOverlayConfigJson from "../../config/deployment.json" with { type: "json" };
 import {
   DEFAULT_GITHUB_REPOSITORY_NAME,
   DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
@@ -81,8 +82,73 @@ const DEFAULT_PRIMARY_TARGET: DeployTarget = "github-pages";
 const DEFAULT_DEPLOYMENT_RESOURCE_PREFIX = "open-links";
 const MAX_AWS_RESOURCE_PREFIX_LENGTH = 48;
 
-const trackedDeploymentConfig = parseTrackedDeploymentConfig(deploymentDefaultsConfigJson);
-const deploymentState = resolveDeploymentState();
+const asRecord = (input: unknown) =>
+  input && typeof input === "object" ? (input as Record<string, unknown>) : Object.create(null);
+
+const mergeTrackedDeploymentTargetsInput = (
+  defaultsTargetsInput: unknown,
+  overlayTargetsInput: unknown,
+) => {
+  const defaultsTargets = asRecord(defaultsTargetsInput);
+  const overlayTargets = asRecord(overlayTargetsInput);
+
+  return {
+    ...defaultsTargets,
+    ...overlayTargets,
+    aws: {
+      ...asRecord(defaultsTargets.aws),
+      ...asRecord(overlayTargets.aws),
+    },
+    "github-pages": {
+      ...asRecord(defaultsTargets["github-pages"]),
+      ...asRecord(overlayTargets["github-pages"]),
+    },
+    render: {
+      ...asRecord(defaultsTargets.render),
+      ...asRecord(overlayTargets.render),
+    },
+    railway: {
+      ...asRecord(defaultsTargets.railway),
+      ...asRecord(overlayTargets.railway),
+    },
+  };
+};
+
+export function mergeTrackedDeploymentConfigInputs(
+  defaultsInput: unknown,
+  maybeOverlayInput?: unknown,
+) {
+  const defaultsConfig = asRecord(defaultsInput);
+
+  if (!maybeOverlayInput || typeof maybeOverlayInput !== "object") {
+    return defaultsConfig;
+  }
+
+  const overlayConfig = asRecord(maybeOverlayInput);
+
+  return {
+    ...defaultsConfig,
+    ...overlayConfig,
+    targets: mergeTrackedDeploymentTargetsInput(defaultsConfig.targets, overlayConfig.targets),
+  };
+}
+
+export function buildEffectiveTrackedDeploymentConfig(
+  defaultsInput: unknown,
+  maybeOverlayInput?: unknown,
+): TrackedDeploymentConfig {
+  return parseTrackedDeploymentConfig(
+    mergeTrackedDeploymentConfigInputs(defaultsInput, maybeOverlayInput),
+  );
+}
+
+const trackedDeploymentConfig = buildEffectiveTrackedDeploymentConfig(
+  deploymentDefaultsConfigJson,
+  deploymentOverlayConfigJson,
+);
+const deploymentState = resolveDeploymentState({
+  trackedConfig: trackedDeploymentConfig,
+});
 
 export function buildDeploymentConfig(state: DeploymentResolutionState) {
   return {

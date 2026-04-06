@@ -82,12 +82,12 @@ test("github pages public urls normalize mixed-case owners to lowercase hosts", 
   );
 });
 
-test("robots helpers follow the shared upstream defaults topology", () => {
+test("module-level robots helpers follow the active effective topology", () => {
   // Arrange / Act / Assert
-  assert.match(getRobotsTxt("aws"), /Allow: \//u);
-  assert.equal(getRobotsMetaContent("aws"), "index, follow");
-  assert.match(getRobotsTxt("github-pages"), /Disallow: \//u);
-  assert.equal(getRobotsMetaContent("github-pages"), "noindex, nofollow");
+  assert.match(getRobotsTxt("aws"), /Disallow: \//u);
+  assert.equal(getRobotsMetaContent("aws"), "noindex, nofollow");
+  assert.match(getRobotsTxt("github-pages"), /Allow: \//u);
+  assert.equal(getRobotsMetaContent("github-pages"), "index, follow");
 });
 
 test("base path normalization and target parsing stay stable for deploy scripts", () => {
@@ -101,15 +101,28 @@ test("base path normalization and target parsing stay stable for deploy scripts"
   assert.equal(parseDeployTarget("unexpected"), "aws");
 });
 
-test("shared upstream defaults stay AWS-primary, while forks can still resolve Pages-primary via overlay", () => {
+test("explicit tracked configs still model upstream AWS-primary and fork Pages-primary topologies", () => {
   // Arrange / Act / Assert
+  const upstreamAwsPrimary = parseTrackedDeploymentConfig({
+    enabledTargets: ["aws", "github-pages"],
+    primaryTarget: "aws",
+    targets: {
+      aws: {
+        publicOrigin: "https://openlinks.us",
+      },
+    },
+  });
+
   assert.equal(isUpstreamRepository("prizz/open-links"), true);
   assert.equal(isUpstreamRepository("someone/open-links-fork"), false);
   assert.equal(
     buildGitHubPagesUrl("someone/open-links-fork"),
     "https://someone.github.io/open-links-fork/",
   );
-  assert.equal(resolvePrimaryCanonicalOrigin("prizz/open-links"), "https://openlinks.us");
+  assert.equal(
+    resolvePrimaryCanonicalOrigin("prizz/open-links", undefined, upstreamAwsPrimary),
+    "https://openlinks.us",
+  );
   assert.equal(
     resolvePrimaryCanonicalOrigin(
       "someone/open-links-fork",
