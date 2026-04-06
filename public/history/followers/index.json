@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-05T07:25:13.929Z",
+  "updatedAt": "2026-04-06T07:32:38.453Z",
   "entries": [
     {
       "linkId": "github",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/github.csv",
       "latestAudienceCount": 95,
       "latestAudienceCountRaw": "95 followers",
-      "latestObservedAt": "2026-04-05T07:25:13.929Z"
+      "latestObservedAt": "2026-04-06T07:32:38.453Z"
     },
     {
       "linkId": "instagram",
@@ -22,9 +22,9 @@
       "canonicalUrl": "https://www.instagram.com/peterryszkiewicz/",
       "audienceKind": "followers",
       "csvPath": "history/followers/instagram.csv",
-      "latestAudienceCount": 88,
-      "latestAudienceCountRaw": "88 Followers",
-      "latestObservedAt": "2026-04-05T07:25:13.929Z"
+      "latestAudienceCount": 89,
+      "latestAudienceCountRaw": "89 Followers",
+      "latestObservedAt": "2026-04-06T07:32:38.453Z"
     },
     {
       "linkId": "medium",
@@ -58,9 +58,9 @@
       "canonicalUrl": "https://peter.ryszkiewicz.us/",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/substack.csv",
-      "latestAudienceCount": 13,
-      "latestAudienceCountRaw": "13 subscribers",
-      "latestObservedAt": "2026-04-05T07:25:13.929Z"
+      "latestAudienceCount": 14,
+      "latestAudienceCountRaw": "14 subscribers",
+      "latestObservedAt": "2026-04-06T07:32:38.453Z"
     },
     {
       "linkId": "x",
@@ -84,7 +84,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 12,
       "latestAudienceCountRaw": "12 subscribers",
-      "latestObservedAt": "2026-04-05T07:25:13.929Z"
+      "latestObservedAt": "2026-04-06T07:32:38.453Z"
     }
   ]
 }
