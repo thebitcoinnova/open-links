@@ -6,6 +6,7 @@ import {
   type DeploymentResolutionState,
   type TrackedDeploymentConfig,
   buildDeploymentConfig,
+  buildEffectiveTrackedDeploymentConfig,
   getRobotsMetaContentForPublicOrigin,
   isPlaceholderDeployPublicOrigin,
   joinOriginAndRoute,
@@ -38,50 +39,6 @@ const readJsonFileIfExists = (absolutePath: string) => {
   return JSON.parse(fs.readFileSync(absolutePath, "utf8")) as Record<string, unknown>;
 };
 
-const mergeDeploymentConfigInputs = (
-  defaultsInput: Record<string, unknown>,
-  maybeOverlayInput: Record<string, unknown> | null,
-) => {
-  if (!maybeOverlayInput) {
-    return defaultsInput;
-  }
-
-  return {
-    ...defaultsInput,
-    ...maybeOverlayInput,
-    targets: {
-      ...(defaultsInput.targets as Record<string, unknown> | undefined),
-      ...(maybeOverlayInput.targets as Record<string, unknown> | undefined),
-      aws: {
-        ...((defaultsInput.targets as Record<string, Record<string, unknown>> | undefined)?.aws ??
-          {}),
-        ...((maybeOverlayInput.targets as Record<string, Record<string, unknown>> | undefined)
-          ?.aws ?? {}),
-      },
-      "github-pages": {
-        ...((defaultsInput.targets as Record<string, Record<string, unknown>> | undefined)?.[
-          "github-pages"
-        ] ?? {}),
-        ...((maybeOverlayInput.targets as Record<string, Record<string, unknown>> | undefined)?.[
-          "github-pages"
-        ] ?? {}),
-      },
-      render: {
-        ...((defaultsInput.targets as Record<string, Record<string, unknown>> | undefined)
-          ?.render ?? {}),
-        ...((maybeOverlayInput.targets as Record<string, Record<string, unknown>> | undefined)
-          ?.render ?? {}),
-      },
-      railway: {
-        ...((defaultsInput.targets as Record<string, Record<string, unknown>> | undefined)
-          ?.railway ?? {}),
-        ...((maybeOverlayInput.targets as Record<string, Record<string, unknown>> | undefined)
-          ?.railway ?? {}),
-      },
-    },
-  };
-};
-
 export const readDeploymentDefaultsConfig = (
   defaultsPath = DEFAULT_DEPLOYMENT_DEFAULTS_PATH,
 ): TrackedDeploymentConfig => {
@@ -108,9 +65,7 @@ export const readEffectiveTrackedDeploymentConfig = (
     unknown
   >;
   const maybeOverlayInput = readJsonFileIfExists(overlayPath);
-  return parseTrackedDeploymentConfig(
-    mergeDeploymentConfigInputs(defaultsInput, maybeOverlayInput),
-  );
+  return buildEffectiveTrackedDeploymentConfig(defaultsInput, maybeOverlayInput);
 };
 
 const effectiveTrackedDeploymentConfig = readEffectiveTrackedDeploymentConfig();
