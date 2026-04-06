@@ -84,10 +84,22 @@ test("github pages public urls normalize mixed-case owners to lowercase hosts", 
 
 test("module-level robots helpers follow the active effective topology", () => {
   // Arrange / Act / Assert
-  assert.match(getRobotsTxt("aws"), /Disallow: \//u);
-  assert.equal(getRobotsMetaContent("aws"), "noindex, nofollow");
-  assert.match(getRobotsTxt("github-pages"), /Allow: \//u);
-  assert.equal(getRobotsMetaContent("github-pages"), "index, follow");
+  const awsTarget = getDeployTargetConfig("aws");
+  const pagesTarget = getDeployTargetConfig("github-pages");
+
+  assert.match(getRobotsTxt("aws"), awsTarget.shouldIndex ? /Allow: \//u : /Disallow: \//u);
+  assert.equal(
+    getRobotsMetaContent("aws"),
+    awsTarget.shouldIndex ? "index, follow" : "noindex, nofollow",
+  );
+  assert.match(
+    getRobotsTxt("github-pages"),
+    pagesTarget.shouldIndex ? /Allow: \//u : /Disallow: \//u,
+  );
+  assert.equal(
+    getRobotsMetaContent("github-pages"),
+    pagesTarget.shouldIndex ? "index, follow" : "noindex, nofollow",
+  );
 });
 
 test("base path normalization and target parsing stay stable for deploy scripts", () => {

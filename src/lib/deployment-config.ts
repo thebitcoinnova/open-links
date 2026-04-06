@@ -1,7 +1,7 @@
+import { existsSync, readFileSync } from "node:fs";
 import deploymentDefaultsConfigJson from "../../config/deployment.defaults.json" with {
   type: "json",
 };
-import deploymentOverlayConfigJson from "../../config/deployment.json" with { type: "json" };
 import {
   DEFAULT_GITHUB_REPOSITORY_NAME,
   DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
@@ -142,9 +142,19 @@ export function buildEffectiveTrackedDeploymentConfig(
   );
 }
 
+const readOptionalDeploymentOverlayConfig = () => {
+  const deploymentOverlayConfigPath = new URL("../../config/deployment.json", import.meta.url);
+
+  if (!existsSync(deploymentOverlayConfigPath)) {
+    return undefined;
+  }
+
+  return JSON.parse(readFileSync(deploymentOverlayConfigPath, "utf8")) as Record<string, unknown>;
+};
+
 const trackedDeploymentConfig = buildEffectiveTrackedDeploymentConfig(
   deploymentDefaultsConfigJson,
-  deploymentOverlayConfigJson,
+  readOptionalDeploymentOverlayConfig(),
 );
 const deploymentState = resolveDeploymentState({
   trackedConfig: trackedDeploymentConfig,
