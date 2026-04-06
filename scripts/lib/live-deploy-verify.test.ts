@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getCanonicalUrl, getRobotsMetaContent } from "../../src/lib/deployment-config";
+import { getCanonicalUrl, getRobotsMetaContent } from "./effective-deployment-config";
 import {
   assertLiveTargetSnapshot,
   buildLiveTargetExpectation,
   normalizePublicBaseUrl,
 } from "./live-deploy-verify";
 
-test("buildLiveTargetExpectation supports explicit provider origins", () => {
+test("buildLiveTargetExpectation supports explicit provider origins for the active fork topology", () => {
   // Arrange / Act
   const expectation = buildLiveTargetExpectation("render", {
     expectedCommitSha: "0123456789abcdef0123456789abcdef01234567",
@@ -27,6 +27,25 @@ test("buildLiveTargetExpectation supports explicit provider origins", () => {
     normalizePublicBaseUrl("https://someone.github.io/open-links-fork/"),
     "https://someone.github.io/open-links-fork",
   );
+});
+
+test("buildLiveTargetExpectation supports explicit provider origins with an upstream canonical override", () => {
+  // Arrange / Act
+  const expectation = buildLiveTargetExpectation("render", {
+    expectedCommitSha: "0123456789abcdef0123456789abcdef01234567",
+    primaryCanonicalOrigin: "https://openlinks.us",
+    publicOrigin: "https://open-links.onrender.com",
+  });
+
+  // Assert
+  assert.deepEqual(expectation, {
+    buildInfoUrl: "https://open-links.onrender.com/build-info.json",
+    expectedCanonicalUrl: "https://openlinks.us/",
+    expectedCommitSha: "0123456789abcdef0123456789abcdef01234567",
+    expectedRobotsMeta: "noindex, nofollow",
+    publicUrl: "https://open-links.onrender.com/",
+    target: "render",
+  });
 });
 
 test("buildLiveTargetExpectation supports fork-primary pages expectations", () => {
