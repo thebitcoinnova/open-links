@@ -49,7 +49,7 @@
         "followingCount": 95,
         "followingCountRaw": "95 following"
       },
-      "etag": "W/\"4a6c04043b728fc4bfc73cd891a8b161\""
+      "etag": "W/\"f342e95c0df3c09ef6912dc73e23fed0\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -73,9 +73,13 @@
       "linkId": "lemonade-referral",
       "sourceUrl": "https://lemonade.com/r/peterryszkiewicz",
       "capturedAt": "2026-04-05T07:24:09.372Z",
-      "updatedAt": "2026-04-06T07:31:31.993Z",
+      "updatedAt": "2026-04-07T07:30:21.743Z",
       "metadata": {
-        "title": "Lemonade",
+        "title": "Lemonade Insurance | Home, Car, Pet, and Life Coverage",
+        "description": "Lemonade offers renters and home insurance powered by tech and driven by social good. ❤ We promise zero paperwork and instant everything by replacing brokers and bureaucracy with bots and machine learning. Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+        "image": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "ogImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "twitterImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
         "sourceLabel": "lemonade.com"
       }
     },
@@ -165,7 +169,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-04-04T07:22:00.438Z",
+      "updatedAt": "2026-04-07T07:30:51.448Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -173,12 +177,12 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1353,
-        "followersCountRaw": "1,353 Followers",
-        "followingCount": 682,
-        "followingCountRaw": "682 Following"
+        "followersCount": 1350,
+        "followersCountRaw": "1,350 Followers",
+        "followingCount": 683,
+        "followingCountRaw": "683 Following"
       },
-      "lastModified": "Mon, 06 Apr 2026 07:31:32 GMT"
+      "lastModified": "Tue, 07 Apr 2026 07:30:24 GMT"
     },
     "youtube": {
       "linkId": "youtube",
