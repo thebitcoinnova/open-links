@@ -1,6 +1,34 @@
 {
   "version": 1,
   "entries": {
+    "altair-tech": {
+      "linkId": "altair-tech",
+      "sourceUrl": "https://altairtech.io/",
+      "capturedAt": "2026-04-07T10:37:09.694Z",
+      "updatedAt": "2026-04-07T10:37:09.694Z",
+      "metadata": {
+        "title": "#1 Trusted Source for Bitcoin Miners, Parts & Accessories-Altair Technology -",
+        "description": "We are an American Bitcoin mining company that's building a one-stop-shop for all popular bitcoin miners, parts & accessories.",
+        "image": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
+        "ogImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
+        "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
+        "sourceLabel": "altairtech.io"
+      },
+      "lastModified": "Tue, 07 Apr 2026 10:15:35 GMT"
+    },
+    "bitcoin-sovryn": {
+      "linkId": "bitcoin-sovryn",
+      "sourceUrl": "https://bitcoinsovryn.com/",
+      "capturedAt": "2026-04-07T10:37:09.694Z",
+      "updatedAt": "2026-04-07T10:37:09.694Z",
+      "metadata": {
+        "title": "Bitcoin Clothing for Sovereign Individuals | Bitcoin Sovryn",
+        "description": "Bitcoin Sovryn is decentralized apparel for sovereign individuals. This is more than merch - it's a declaration of freedom, truth, and self-rule. #BeSovryn",
+        "image": "https://bitcoinsovryn.com/cdn/shop/files/Chrome_Finish.png?v=1764770328&width=500",
+        "sourceLabel": "bitcoinsovryn.com"
+      },
+      "etag": "\"page_cache:93620306263:IndexController:b38187e11dd458a72848bcb19875702d\""
+    },
     "club-orange": {
       "linkId": "club-orange",
       "sourceUrl": "https://www.cluborange.org/signup?referral=bitcoinnova",
@@ -16,6 +44,20 @@
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
       "lastModified": "Tue, 31 Mar 2026 10:47:57 GMT"
+    },
+    "fountain": {
+      "linkId": "fountain",
+      "sourceUrl": "https://fountain.fm/show/ACfqgNSBFCxAxuB5jXgu",
+      "capturedAt": "2026-04-07T10:37:09.694Z",
+      "updatedAt": "2026-04-07T10:37:09.694Z",
+      "metadata": {
+        "title": "The Bitcoin Nova Podcast • Listen on Fountain",
+        "description": "I’m talking everything Bitcoin or any related topics with my 𝕏 communities or anyone that wants to talk Bitcoin! From updates, to speculations, to connections to spirituality and quantum physics, I’m eager to learn and showcase bright minds and fun people!",
+        "image": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---24a0bf8b-aeb5-41f0-bae3-b90f8766628c.jpg",
+        "ogImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---24a0bf8b-aeb5-41f0-bae3-b90f8766628c.jpg",
+        "twitterImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---24a0bf8b-aeb5-41f0-bae3-b90f8766628c.jpg",
+        "sourceLabel": "fountain.fm"
+      }
     },
     "home-bitcoin-black-sheep": {
       "linkId": "home-bitcoin-black-sheep",
@@ -48,7 +90,7 @@
       "linkId": "live-with-the-hive-podcast",
       "sourceUrl": "https://www.youtube.com/@livewiththehive/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-01T09:40:23.555Z",
+      "updatedAt": "2026-04-07T10:37:09.694Z",
       "metadata": {
         "title": "Hive Minded",
         "description": "The Hive Minded is created and hosted by Staci Costopoulos, creator of The Bitcoin Nova.The Hive Minded is a Bitcoin hangout. Real conversations, reactions, ...",
@@ -57,25 +99,25 @@
         "twitterImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 131,
-        "subscribersCountRaw": "131 subscribers"
+        "subscribersCount": 130,
+        "subscribersCountRaw": "130 subscribers"
       }
     },
     "paranoid-bitcoin-anarchists": {
       "linkId": "paranoid-bitcoin-anarchists",
       "sourceUrl": "https://x.com/i/communities/1871996451812769951",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-01T10:06:05.765Z",
+      "updatedAt": "2026-04-07T10:38:01.233Z",
       "metadata": {
         "title": "PARANOID BITCOIN ANARCHISTS",
         "description": "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
         "image": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "ogImage": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "sourceLabel": "x.com",
-        "membersCount": 787,
-        "membersCountRaw": "787 Members"
+        "membersCount": 788,
+        "membersCountRaw": "788 Members"
       },
-      "lastModified": "Thu, 02 Apr 2026 10:14:19 GMT"
+      "lastModified": "Tue, 07 Apr 2026 10:37:12 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -107,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:8e3e481274050d7f75959086149456ff\""
+      "etag": "\"page_cache:94205477246:IndexController:60d21ebf88850c33d17b8a6e85c6415b\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -122,7 +164,7 @@
         "twitterImage": "https://content.thebitcoinadviser.com/hubfs/block3.png",
         "sourceLabel": "content.thebitcoinadviser.com"
       },
-      "lastModified": "Sat, 07 Mar 2026 09:07:22 GMT"
+      "lastModified": "Tue, 07 Apr 2026 10:08:56 GMT"
     },
     "the-bitcoin-nova": {
       "linkId": "the-bitcoin-nova",
@@ -137,13 +179,28 @@
         "twitterImage": "https://imgproxy.fourthwall.com/NAyaO0KRbLeRPi9fCxfKafCsg9joK0bCPE9Mz0Jdm-A/w:1200/sm:1/enc/FNEq3fHnhor1KeC-/uNNaBGJ5cCaEPfgy/4aVqCKBdDo49WVWy/OK9b3ZlOTvaqhOxy/LBUiJuwWy4p9duQT/_q7k1xYKVn2qv7TA/8KZ9BS58ETH3yKSD/M80b5OUDjWGzwSKC/ZXUNGRnLhvSolD8Y/ztjXJ93Y0yFy3xTz/4hwl85Quf2Ii7-47/t7fGJG6IRJ43JtIu/28C-YgJr6fM7-yMN/Vrzr8A5Y0Y5QfFlA/pKltqUli_-7yc_eq/f_8vLp-uumS2fmKc.png",
         "sourceLabel": "bitcoinnova.store"
       },
-      "etag": "W/\"2bb9a3a5f4269c50836c2dd668546ecc\""
+      "etag": "W/\"f63049a7bdc349e3d618837511cd3ebc\""
+    },
+    "the-bitcoin-way": {
+      "linkId": "the-bitcoin-way",
+      "sourceUrl": "http://www.thebitcoinway.com/bitcoinnova",
+      "capturedAt": "2026-04-07T10:37:09.694Z",
+      "updatedAt": "2026-04-07T10:37:09.694Z",
+      "metadata": {
+        "title": "Bitcoin Nova – Bitcoin YouTube Channel",
+        "description": "See what Bitcoin Nova has to say about us. Real feedback from someone securing their Bitcoin the right way.",
+        "image": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
+        "ogImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
+        "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
+        "sourceLabel": "thebitcoinway.com"
+      },
+      "lastModified": "Mon, 06 Apr 2026 19:18:43 GMT"
     },
     "x": {
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fxstac1&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-02T10:15:24.696Z",
+      "updatedAt": "2026-04-07T10:38:21.492Z",
       "metadata": {
         "title": "@XSTAC1 on X",
         "description": "Posts and updates from @XSTAC1 on X.",
@@ -151,12 +208,12 @@
         "image": "https://unavatar.io/x/XSTAC1",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/XSTAC1",
-        "followersCount": 5591,
-        "followersCountRaw": "5,591 Followers",
-        "followingCount": 4068,
-        "followingCountRaw": "4,068 Following"
+        "followersCount": 5567,
+        "followersCountRaw": "5,567 Followers",
+        "followingCount": 4076,
+        "followingCountRaw": "4,076 Following"
       },
-      "lastModified": "Thu, 02 Apr 2026 10:15:04 GMT"
+      "lastModified": "Tue, 07 Apr 2026 10:38:00 GMT"
     },
     "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno": {
       "linkId": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
@@ -176,15 +233,15 @@
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@TheBitcoinNova/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-01T09:40:23.555Z",
+      "updatedAt": "2026-04-07T10:37:09.694Z",
       "metadata": {
         "title": "Staci | The Bitcoin Nova Podcast",
-        "description": "Staci Costopoulos, a Greek American host exploring Bitcoin, financial sovereignty, and the incentives shaping our world.Through conversations with builders, ...",
-        "image": "https://yt3.googleusercontent.com/CqCI04GRmipZXGnKcmqHZv2fYjWwVUvy2Sum_ygs0MsyWatzNjke8c5IY-l5vnP8CA-01_eZ=s900-c-k-c0x00ffffff-no-rj",
-        "ogImage": "https://yt3.googleusercontent.com/CqCI04GRmipZXGnKcmqHZv2fYjWwVUvy2Sum_ygs0MsyWatzNjke8c5IY-l5vnP8CA-01_eZ=s900-c-k-c0x00ffffff-no-rj",
-        "twitterImage": "https://yt3.googleusercontent.com/CqCI04GRmipZXGnKcmqHZv2fYjWwVUvy2Sum_ygs0MsyWatzNjke8c5IY-l5vnP8CA-01_eZ=s900-c-k-c0x00ffffff-no-rj",
+        "description": "Host of The Bitcoin Nova Podcast & Hive Minded Podcast. Club Orange Community Manager and Public Speaker. Staci is a Greek American, exploring Bitcoin, finan...",
+        "image": "https://yt3.googleusercontent.com/0_F4L4UBX8zgYQYfft84YOAXb0vLp1sDX7eFnAC37Cu5WgEoQsZ-bzpd6N9oJ9M2k8RYAf0MxA=s900-c-k-c0x00ffffff-no-rj",
+        "ogImage": "https://yt3.googleusercontent.com/0_F4L4UBX8zgYQYfft84YOAXb0vLp1sDX7eFnAC37Cu5WgEoQsZ-bzpd6N9oJ9M2k8RYAf0MxA=s900-c-k-c0x00ffffff-no-rj",
+        "twitterImage": "https://yt3.googleusercontent.com/0_F4L4UBX8zgYQYfft84YOAXb0vLp1sDX7eFnAC37Cu5WgEoQsZ-bzpd6N9oJ9M2k8RYAf0MxA=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
-        "profileImage": "https://yt3.googleusercontent.com/CqCI04GRmipZXGnKcmqHZv2fYjWwVUvy2Sum_ygs0MsyWatzNjke8c5IY-l5vnP8CA-01_eZ=s900-c-k-c0x00ffffff-no-rj",
+        "profileImage": "https://yt3.googleusercontent.com/0_F4L4UBX8zgYQYfft84YOAXb0vLp1sDX7eFnAC37Cu5WgEoQsZ-bzpd6N9oJ9M2k8RYAf0MxA=s900-c-k-c0x00ffffff-no-rj",
         "subscribersCount": 6870,
         "subscribersCountRaw": "6.87K subscribers"
       }
