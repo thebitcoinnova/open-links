@@ -3,6 +3,7 @@
 set -euo pipefail
 
 audit_path="coding-and-architecture-requirements.audit.md"
+backup_root=".coding-and-architecture-requirements-backups"
 update_branch="bright-builds/auto-update"
 commit_message="chore: update Bright Builds requirements"
 github_actions_name="github-actions[bot]"
@@ -22,6 +23,18 @@ note() {
 die() {
   printf 'error: %s\n' "$*" >&2
   exit 1
+}
+
+extract_status_field() {
+  local output="$1"
+  local label="$2"
+
+  printf '%s\n' "$output" | awk -v prefix="${label}: " '
+    index($0, prefix) == 1 {
+      print substr($0, length(prefix) + 1)
+      exit
+    }
+  '
 }
 
 extract_markdown_value() {
@@ -46,6 +59,40 @@ extract_repo_slug_from_url() {
   local input_url="$1"
 
   printf '%s' "$input_url" | sed -n 's#^https://github.com/\(.*\)$#\1#p' | sed 's#/$##'
+}
+
+snapshot_backup_entries() {
+  local snapshot_path="$1"
+
+  if [[ -d "$backup_root" ]]; then
+    find "$backup_root" -mindepth 1 -maxdepth 1 -print | sed "s#^${backup_root}/##" | sort > "$snapshot_path"
+    return
+  fi
+
+  : > "$snapshot_path"
+}
+
+cleanup_recovery_backups() {
+  local before_snapshot_path="$1"
+  local after_snapshot_path="$2"
+  local backup_entry=""
+
+  [[ -d "$backup_root" ]] || return
+
+  snapshot_backup_entries "$after_snapshot_path"
+
+  while IFS= read -r backup_entry; do
+    [[ -n "$backup_entry" ]] || continue
+
+    if grep -Fxq "$backup_entry" "$before_snapshot_path"; then
+      continue
+    fi
+
+    rm -rf "${backup_root}/${backup_entry}"
+    note "Removed recovery backup ${backup_root}/${backup_entry}"
+  done < "$after_snapshot_path"
+
+  rmdir "$backup_root" 2>/dev/null || true
 }
 
 path_exists_or_is_tracked() {
@@ -88,6 +135,62 @@ resolve_default_branch() {
   fi
 
   die "could not resolve the default branch"
+}
+
+resolve_installer_path() {
+  local maybe_override="${BRIGHT_BUILDS_MANAGE_DOWNSTREAM_PATH:-}"
+
+  if [[ -n "$maybe_override" ]]; then
+    [[ -f "$maybe_override" ]] || die "configured manager path does not exist: ${maybe_override}"
+    printf '%s\n' "$maybe_override"
+    return
+  fi
+
+  local managed_installer_path="${tmp_dir}/manage-downstream.sh"
+
+  curl -fsSL "https://raw.githubusercontent.com/${repo_slug}/${ref}/scripts/manage-downstream.sh" -o "$managed_installer_path"
+  chmod +x "$managed_installer_path"
+  printf '%s\n' "$managed_installer_path"
+}
+
+run_installer() {
+  local command_name="$1"
+  shift
+
+  bash "$installer_path" "$command_name" "$@" --repo-root "$repo_root"
+}
+
+run_status() {
+  local context="$1"
+
+  set +e
+  status_output="$(run_installer status 2>&1)"
+  status_code=$?
+  set -e
+
+  printf '%s\n' "$status_output"
+
+  if [[ "$status_code" -ne 0 ]]; then
+    die "${context} status failed"
+  fi
+
+  repo_state="$(extract_status_field "$status_output" "Repo state")"
+  recommended_action="$(extract_status_field "$status_output" "Recommended action")"
+
+  [[ -n "$repo_state" ]] || die "could not parse repo state from manage-downstream status during ${context}"
+}
+
+die_for_unexpected_repo_state() {
+  local context="$1"
+  local current_repo_state="$2"
+  local current_recommended_action="$3"
+  local message="auto-update cannot continue from repo state '${current_repo_state}' during ${context}"
+
+  if [[ -n "$current_recommended_action" ]]; then
+    message="${message} (recommended action: ${current_recommended_action})"
+  fi
+
+  die "$message"
 }
 
 stage_managed_paths() {
@@ -188,32 +291,46 @@ fi
 repo_slug="$(extract_repo_slug_from_url "$source_url")"
 [[ -n "$repo_slug" ]] || die "could not parse GitHub source repository from ${source_url}"
 
-installer_path="${tmp_dir}/manage-downstream.sh"
-
-curl -fsSL "https://raw.githubusercontent.com/${repo_slug}/${ref}/scripts/manage-downstream.sh" -o "$installer_path"
-chmod +x "$installer_path"
-
-set +e
-status_output="$(bash "$installer_path" status --repo-root "$repo_root" 2>&1)"
-status_code=$?
-set -e
-
-printf '%s\n' "$status_output"
-
-if [[ "$status_code" -ne 0 ]]; then
-  die "status failed"
-fi
-
-if [[ "$status_output" != *"Repo state: installed"* ]]; then
-  die "auto-update requires the repo state to remain installed"
-fi
-
 if [[ -f "$audit_path" ]]; then
   cp "$audit_path" "${tmp_dir}/audit.before"
 fi
 
+installer_path="$(resolve_installer_path)"
+status_output=""
+status_code=0
+repo_state=""
+recommended_action=""
+recovered_from_blocked_state=0
+backup_entries_before_recovery_path="${tmp_dir}/backups.before"
+backup_entries_after_recovery_path="${tmp_dir}/backups.after"
+
+run_status "initial"
+
+if [[ "$repo_state" == "blocked" && "$recommended_action" == "install --force" ]]; then
+  recovered_from_blocked_state=1
+  snapshot_backup_entries "$backup_entries_before_recovery_path"
+  note "Detected blocked repo state; running install --force self-heal."
+
+  set +e
+  install_output="$(run_installer install --force 2>&1)"
+  install_code=$?
+  set -e
+
+  printf '%s\n' "$install_output"
+
+  if [[ "$install_code" -ne 0 ]]; then
+    die "install --force self-heal failed"
+  fi
+
+  run_status "post-install self-heal"
+fi
+
+if [[ "$repo_state" != "installed" ]]; then
+  die_for_unexpected_repo_state "auto-update" "$repo_state" "$recommended_action"
+fi
+
 set +e
-update_output="$(bash "$installer_path" update --repo-root "$repo_root" 2>&1)"
+update_output="$(run_installer update 2>&1)"
 update_code=$?
 set -e
 
@@ -221,6 +338,10 @@ printf '%s\n' "$update_output"
 
 if [[ "$update_code" -ne 0 ]]; then
   die "update failed"
+fi
+
+if [[ "$recovered_from_blocked_state" -eq 1 ]]; then
+  cleanup_recovery_backups "$backup_entries_before_recovery_path" "$backup_entries_after_recovery_path"
 fi
 
 restore_audit_if_only_runtime_changed
