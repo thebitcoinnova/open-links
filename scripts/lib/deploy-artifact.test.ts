@@ -1,8 +1,8 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import test from "node:test";
 import type { DeployManifest } from "./deploy-artifact";
 import {
   assertArtifactMatchesTarget,
@@ -12,6 +12,7 @@ import {
   diffDeployManifests,
   getInvalidationPaths,
 } from "./deploy-artifact";
+import { getRobotsMetaContent } from "./effective-deployment-config";
 
 test("classifyArtifactPath marks hashed build assets immutable", () => {
   // Arrange / Act / Assert
@@ -142,7 +143,7 @@ test("assertArtifactMatchesTarget allows external github links on aws artifacts"
       path.join(artifactDir, "index.html"),
       [
         "<!doctype html>",
-        '<meta name="robots" content="noindex, nofollow">',
+        `<meta name="robots" content="${getRobotsMetaContent("aws")}">`,
         '<link rel="modulepreload" href="/assets/app.js">',
         '<a href="https://github.com/pRizz/open-links/commit/0123456789abcdef">Commit</a>',
       ].join(""),

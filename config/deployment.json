@@ -1,10 +1,12 @@
 {
   "$schema": "../schema/deployment.schema.json",
-  "primaryTarget": "github-pages",
-  "enabledTargets": ["github-pages"],
+  "primaryTarget": "aws",
+  "enabledTargets": ["aws", "github-pages"],
   "targets": {
     "aws": {
-      "priceClass": "PriceClass_100"
+      "priceClass": "PriceClass_100",
+      "publicOrigin": "https://links.thebitcoinnova.com",
+      "resourcePrefix": "open-links-thebitcoinnova-open-links"
     },
     "github-pages": {},
     "render": {},

@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import test from "node:test";
 import { buildSetupChildCommands, resolveRequestedTargets } from "./deployment-command-plan";
 
 test("buildSetupChildCommands selects aws and github setup for aws-primary topologies", () => {

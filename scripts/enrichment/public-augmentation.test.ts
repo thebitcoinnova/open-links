@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import test from "node:test";
 import { mergeReferralWithManualOverrides } from "../../src/lib/content/referral-fields";
 import {
   extractYoutubeProfileImageUrl,

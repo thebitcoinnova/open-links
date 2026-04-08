@@ -1,7 +1,11 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import test from "node:test";
+import deploymentDefaultsConfigJson from "../../config/deployment.defaults.json" with {
+  type: "json",
+};
 import {
   buildDeploymentConfig,
+  buildEffectiveTrackedDeploymentConfig,
   buildGitHubPagesUrl,
   deploymentConfig,
   getCanonicalUrl,
@@ -33,9 +37,13 @@ test("canonical urls follow the resolved primary origin for the active repositor
 });
 
 test("upstream defaults resolve to the open-links AWS reuse naming", () => {
-  // Arrange / Act
+  // Arrange
+  const trackedConfig = buildEffectiveTrackedDeploymentConfig(deploymentDefaultsConfigJson);
+
+  // Act
   const state = resolveDeploymentState({
     repositorySlug: "pRizz/open-links",
+    trackedConfig,
   });
   const config = buildDeploymentConfig(state);
 

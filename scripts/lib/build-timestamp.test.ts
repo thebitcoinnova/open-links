@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import test from "node:test";
 import { resolveStableBuildTimestamp } from "./build-timestamp";
 
 test("resolveStableBuildTimestamp prefers an explicit value", () => {
