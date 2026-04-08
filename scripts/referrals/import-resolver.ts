@@ -11,6 +11,7 @@ import {
   DEFAULT_REFERRAL_IMPORT_INPUT_PATH,
   DEFAULT_REFERRAL_IMPORT_RESOLVED_PATH,
 } from "./import-contract";
+import { checkReferralTermsPolicy } from "./terms-policy";
 
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -490,17 +491,27 @@ const resolveCandidate = async (
   const audit = await auditRedirectChain(originalUrl);
   const plausibleUrls = buildPlausibleUrls(audit);
   const resolution = buildResolution(originalUrl, audit, plausibleUrls);
+  const maybeTermsCheckUrl =
+    trimToUndefined(candidate.approvedUrl) ?? trimToUndefined(resolution.recommendedUrl);
+  const termsPolicy = maybeTermsCheckUrl
+    ? await checkReferralTermsPolicy({
+        referralUrl: maybeTermsCheckUrl,
+        termsUrl: trimToUndefined(candidate.termsUrlHint),
+      })
+    : undefined;
 
   return {
     candidate: {
       ...candidate,
       resolution,
+      termsPolicy,
     },
     reportItem: {
       candidateId: trimToUndefined(candidate.candidateId) ?? "candidate",
       originalUrl,
       approvedUrl: trimToUndefined(candidate.approvedUrl),
       resolution,
+      termsPolicy,
       hops: audit.hops,
       plausibleUrls,
     },

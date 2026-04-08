@@ -71,6 +71,24 @@ Routing rules:
    required shared enrichment/policy code work as part of the same task so
    downstream forks and consumers inherit the fix.
 
+## Referral Public-Sharing Compliance Rule
+
+Before publishing or proposing a public referral URL in this repository,
+review the official program terms or help page for public-sharing restrictions.
+
+Mandatory behavior:
+
+1. If the official terms explicitly forbid public posting or limit sharing to
+   people the owner personally knows, do not add or apply the public referral
+   URL.
+2. If the public-share policy is missing, unreachable, or ambiguous, stop and
+   confirm with the user before planning or applying a public referral URL.
+3. A public informational card without the personal referral URL remains an
+   allowed fallback when the offer itself can still be described publicly.
+4. Use the repo-native referral workflows and `bun run referrals:terms:check`
+   when a quick official-terms audit is needed; do not treat a missing terms
+   check as implicit approval.
+
 ## Downstream Consumer Awareness
 
 `open-links` is also an active upstream dependency for

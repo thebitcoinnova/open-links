@@ -25,6 +25,7 @@ import type {
   ReferralImportPlanItem,
   ReferralInboxCandidateInput,
   ReferralInboxCandidateSource,
+  ReferralTermsPolicyResult,
 } from "./import-contract";
 import {
   DEFAULT_LINKS_PATH,
@@ -32,6 +33,7 @@ import {
   DEFAULT_REFERRAL_IMPORT_INPUT_PATH,
   DEFAULT_SHARED_REFERRAL_CATALOG_PATH,
 } from "./import-contract";
+import { normalizeReferralTermsPolicyResult } from "./terms-policy";
 
 interface ExistingLinkRecord {
   id?: string;
@@ -429,6 +431,7 @@ export const normalizeReferralInboxCandidate = (
     offerSummaryHint: trimToUndefined(input.offerSummaryHint),
     termsSummaryHint: trimToUndefined(input.termsSummaryHint),
     termsUrlHint: trimToUndefined(input.termsUrlHint),
+    termsPolicy: normalizeReferralTermsPolicyResult(input.termsPolicy),
     notes: trimToUndefined(input.notes),
     extractedCode: code,
     dedupeKey: canonicalUrl,
@@ -441,6 +444,7 @@ const createSkipItem = (input: {
   url?: string;
   domain?: string;
   reason: string;
+  termsPolicy?: ReferralTermsPolicyResult;
 }): ReferralImportPlanItem => ({
   candidateId: input.candidateId,
   disposition: "skip",
@@ -449,8 +453,31 @@ const createSkipItem = (input: {
   confidence: clampConfidence(input.confidence),
   url: input.url,
   domain: input.domain,
+  termsPolicy: input.termsPolicy,
   skipReason: input.reason,
 });
+
+const resolveTermsPolicySkipReason = (
+  termsPolicy: ReferralTermsPolicyResult | undefined,
+): string | undefined => {
+  if (!termsPolicy) {
+    return undefined;
+  }
+
+  const reasonToken =
+    termsPolicy.matchedRuleId ?? termsPolicy.reason ?? "manual_confirmation_required";
+
+  switch (termsPolicy.status) {
+    case "public_forbidden":
+      return `terms_policy:public_forbidden:${reasonToken}`;
+    case "ambiguous":
+      return `terms_review_required:ambiguous:${reasonToken}`;
+    case "not_found":
+      return `terms_review_required:not_found:${reasonToken}`;
+    default:
+      return undefined;
+  }
+};
 
 const buildCatalogMatchSummary = (
   resolution: ReferralCatalogResolution,
@@ -965,6 +992,7 @@ export const buildReferralImportPlan = (
           confidence: rawCandidate.confidence,
           url: trimToUndefined(rawCandidate.approvedUrl) ?? trimToUndefined(rawCandidate.url),
           reason: planningUrl.skipReason,
+          termsPolicy: normalizeReferralTermsPolicyResult(rawCandidate.termsPolicy),
         }),
       );
       return;
@@ -984,6 +1012,7 @@ export const buildReferralImportPlan = (
           confidence: rawCandidate.confidence,
           url: trimToUndefined(rawCandidate.url),
           reason: message,
+          termsPolicy: normalizeReferralTermsPolicyResult(rawCandidate.termsPolicy),
         }),
       );
       return;
@@ -997,6 +1026,7 @@ export const buildReferralImportPlan = (
           url: candidate.url,
           domain: candidate.host,
           reason: `already_exists:${existingLinksByUrl.get(candidate.canonicalUrl)}`,
+          termsPolicy: candidate.termsPolicy,
         }),
       );
       return;
@@ -1010,12 +1040,28 @@ export const buildReferralImportPlan = (
           url: candidate.url,
           domain: candidate.host,
           reason: `duplicate_of:${seenDedupeKeys.get(candidate.dedupeKey)}`,
+          termsPolicy: candidate.termsPolicy,
         }),
       );
       return;
     }
 
     seenDedupeKeys.set(candidate.dedupeKey, candidate.candidateId);
+
+    const maybeTermsPolicySkipReason = resolveTermsPolicySkipReason(candidate.termsPolicy);
+    if (maybeTermsPolicySkipReason) {
+      items.push(
+        createSkipItem({
+          candidateId: candidate.candidateId,
+          confidence: candidate.confidence,
+          url: candidate.url,
+          domain: candidate.host,
+          reason: maybeTermsPolicySkipReason,
+          termsPolicy: candidate.termsPolicy,
+        }),
+      );
+      return;
+    }
 
     const resolution = resolveReferralCatalogForLink({
       catalog: workingCatalog,
@@ -1055,6 +1101,7 @@ export const buildReferralImportPlan = (
         url: candidate.url,
         extractedCode: candidate.extractedCode,
         dedupeKey: candidate.dedupeKey,
+        termsPolicy: candidate.termsPolicy,
         catalogMatch: buildCatalogMatchSummary(resolution),
         proposedLink,
       });
@@ -1103,6 +1150,7 @@ export const buildReferralImportPlan = (
         url: candidate.url,
         extractedCode: candidate.extractedCode,
         dedupeKey: candidate.dedupeKey,
+        termsPolicy: candidate.termsPolicy,
         plannedCatalogRef: catalogAdditionBundle.catalogRef,
         proposedLink,
         localCatalogAddition: plannedAddition,
@@ -1140,6 +1188,7 @@ export const buildReferralImportPlan = (
         url: candidate.url,
         extractedCode: candidate.extractedCode,
         dedupeKey: candidate.dedupeKey,
+        termsPolicy: candidate.termsPolicy,
         proposedLink,
         sharedCatalogProposal: catalogAdditionBundle.addition,
         upstreamWorthyNote: `Review the proposed family/offer/matcher for ${familyLabel}, then move the shared catalog portion into data/policy/referral-catalog.json in a clean upstream PR while keeping fork-owned data out of data/policy/referral-catalog.local.json.`,
@@ -1174,6 +1223,7 @@ export const buildReferralImportPlan = (
       url: candidate.url,
       extractedCode: candidate.extractedCode,
       dedupeKey: candidate.dedupeKey,
+      termsPolicy: candidate.termsPolicy,
       proposedLink,
     });
   });

@@ -253,3 +253,59 @@ test("resolver stops after the redirect hop limit", async () => {
   assert.equal(result.candidates[0]?.resolution?.reason, "redirect_hop_limit_exceeded");
   assert.equal(result.report.items[0]?.hops.at(-1)?.error, "redirect_hop_limit_exceeded");
 });
+
+test("resolver attaches a public-sharing terms policy result when the referral page points to help terms", async () => {
+  const result = await resolveSingleCandidate(
+    {
+      candidateId: "terms-policy",
+      url: "https://links.example.com/referral",
+    },
+    [
+      makeResponse({
+        url: "https://links.example.com/referral",
+        status: 302,
+        headers: {
+          location: "https://example.com/signup?ref=alpha",
+        },
+      }),
+      makeResponse({
+        url: "https://example.com/signup?ref=alpha",
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+        },
+        body: `
+          <html>
+            <head>
+              <meta property="og:url" content="https://help.example.com/help/referral-faq" />
+            </head>
+            <body>Apply from a mobile device to receive the eligible referral bonus.</body>
+          </html>
+        `,
+      }),
+      makeResponse({
+        url: "https://help.example.com/help/referral-faq",
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+        },
+        body: `
+          <html>
+            <body>
+              You may not publicly post the referral link online where it could reach people you do
+              not know.
+            </body>
+          </html>
+        `,
+      }),
+    ],
+  );
+
+  assert.equal(result.candidates[0]?.resolution?.status, "resolved_clear");
+  assert.equal(result.candidates[0]?.termsPolicy?.status, "public_forbidden");
+  assert.equal(result.candidates[0]?.termsPolicy?.matchedRuleId, "no_public_posting");
+  assert.equal(
+    result.report.items[0]?.termsPolicy?.checkedUrl,
+    "https://help.example.com/help/referral-faq",
+  );
+});

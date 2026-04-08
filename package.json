@@ -71,6 +71,7 @@
     "referrals:import:resolve": "bun scripts/resolve-referral-import.ts",
     "referrals:import:plan": "bun scripts/plan-referral-import.ts",
     "referrals:import:apply": "bun scripts/apply-referral-import.ts",
+    "referrals:terms:check": "bun scripts/referrals/check-terms-policy.ts",
     "biome:check": "bunx @biomejs/biome check . --files-ignore-unknown=true",
     "biome:fix": "bunx @biomejs/biome check . --write --files-ignore-unknown=true",
     "biome:staged:fix": "bunx @biomejs/biome check --staged --write --files-ignore-unknown=true --no-errors-on-unmatched",

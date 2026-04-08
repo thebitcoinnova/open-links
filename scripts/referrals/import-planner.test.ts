@@ -293,6 +293,95 @@ test("buildReferralImportPlan skips unresolved candidates with the resolver reas
   assert.match(plan.items[0]?.skipReason ?? "", /unresolved:redirect_missing_location/u);
 });
 
+test("buildReferralImportPlan skips candidates whose terms forbid public sharing", () => {
+  const plan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "venmo-forbidden",
+        url: "https://example.com/referral?code=alpha",
+        termsPolicy: {
+          status: "public_forbidden",
+          normalizedSourceUrl: "https://example.com/referral?code=alpha",
+          checkedUrl: "https://help.example.com/referrals",
+          matchedRuleId: "no_public_posting",
+          evidenceSnippet: "You may not publicly post the referral link online.",
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+  });
+
+  assert.equal(plan.items[0]?.disposition, "skip");
+  assert.match(plan.items[0]?.skipReason ?? "", /terms_policy:public_forbidden:no_public_posting/u);
+  assert.equal(plan.items[0]?.termsPolicy?.status, "public_forbidden");
+});
+
+test("buildReferralImportPlan keeps ambiguous or missing terms checks in manual review", () => {
+  const ambiguousPlan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "ambiguous-terms",
+        url: "https://example.com/referral?code=alpha",
+        termsPolicy: {
+          status: "ambiguous",
+          normalizedSourceUrl: "https://example.com/referral?code=alpha",
+          checkedUrl: "https://help.example.com/referrals",
+          reason: "no_conclusive_public_sharing_policy_language",
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+  });
+
+  const missingPlan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "missing-terms",
+        url: "https://example.com/referral?code=beta",
+        termsPolicy: {
+          status: "not_found",
+          normalizedSourceUrl: "https://example.com/referral?code=beta",
+          reason: "no_public_terms_page_found",
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+  });
+
+  assert.equal(ambiguousPlan.items[0]?.disposition, "skip");
+  assert.match(
+    ambiguousPlan.items[0]?.skipReason ?? "",
+    /terms_review_required:ambiguous:no_conclusive_public_sharing_policy_language/u,
+  );
+  assert.equal(missingPlan.items[0]?.disposition, "skip");
+  assert.match(
+    missingPlan.items[0]?.skipReason ?? "",
+    /terms_review_required:not_found:no_public_terms_page_found/u,
+  );
+});
+
+test("buildReferralImportPlan proceeds when the terms check explicitly allows public sharing", () => {
+  const plan = buildReferralImportPlan({
+    candidates: [
+      {
+        candidateId: "allowed-terms",
+        url: "https://join.example.com/invite/beta",
+        termsPolicy: {
+          status: "public_allowed",
+          normalizedSourceUrl: "https://join.example.com/invite/beta",
+          checkedUrl: "https://help.example.com/referrals",
+          matchedRuleId: "public_sharing_allowed",
+        },
+      },
+    ],
+    linksPayload: { links: [] },
+  });
+
+  assert.equal(plan.items[0]?.disposition, "link_only");
+  assert.equal(plan.items[0]?.termsPolicy?.status, "public_allowed");
+  assert.equal(plan.items[0]?.proposedLink?.url, "https://join.example.com/invite/beta");
+});
+
 test("generateReferralLinkId adds numeric suffixes when ids collide", () => {
   const candidate = normalizeReferralInboxCandidate({
     url: "https://signup.cluborange.org/co/pryszkie",
