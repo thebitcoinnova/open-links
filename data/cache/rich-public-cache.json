@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Tue, 07 Apr 2026 10:15:35 GMT"
+      "lastModified": "Wed, 08 Apr 2026 08:47:53 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Chrome_Finish.png?v=1764770328&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:b38187e11dd458a72848bcb19875702d\""
+      "etag": "\"page_cache:93620306263:IndexController:96f5d2fb6c5f3ae5bd19d94098dc4f42\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -43,7 +43,7 @@
         "sourceLabel": "signup.cluborange.org",
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
-      "lastModified": "Tue, 31 Mar 2026 10:47:57 GMT"
+      "lastModified": "Tue, 07 Apr 2026 05:32:59 GMT"
     },
     "fountain": {
       "linkId": "fountain",
@@ -107,17 +107,17 @@
       "linkId": "paranoid-bitcoin-anarchists",
       "sourceUrl": "https://x.com/i/communities/1871996451812769951",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-07T10:38:01.233Z",
+      "updatedAt": "2026-04-08T10:43:00.532Z",
       "metadata": {
         "title": "PARANOID BITCOIN ANARCHISTS",
         "description": "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
         "image": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "ogImage": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "sourceLabel": "x.com",
-        "membersCount": 788,
-        "membersCountRaw": "788 Members"
+        "membersCount": 789,
+        "membersCountRaw": "789 Members"
       },
-      "lastModified": "Tue, 07 Apr 2026 10:37:12 GMT"
+      "lastModified": "Wed, 08 Apr 2026 10:42:14 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -149,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:60d21ebf88850c33d17b8a6e85c6415b\""
+      "etag": "\"page_cache:94205477246:IndexController:96a8c44d9289c4e7bb54670b4c791ec0\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -179,7 +179,7 @@
         "twitterImage": "https://imgproxy.fourthwall.com/NAyaO0KRbLeRPi9fCxfKafCsg9joK0bCPE9Mz0Jdm-A/w:1200/sm:1/enc/FNEq3fHnhor1KeC-/uNNaBGJ5cCaEPfgy/4aVqCKBdDo49WVWy/OK9b3ZlOTvaqhOxy/LBUiJuwWy4p9duQT/_q7k1xYKVn2qv7TA/8KZ9BS58ETH3yKSD/M80b5OUDjWGzwSKC/ZXUNGRnLhvSolD8Y/ztjXJ93Y0yFy3xTz/4hwl85Quf2Ii7-47/t7fGJG6IRJ43JtIu/28C-YgJr6fM7-yMN/Vrzr8A5Y0Y5QfFlA/pKltqUli_-7yc_eq/f_8vLp-uumS2fmKc.png",
         "sourceLabel": "bitcoinnova.store"
       },
-      "etag": "W/\"f63049a7bdc349e3d618837511cd3ebc\""
+      "etag": "W/\"9600b36e954e08dfc071a2cd40a86150\""
     },
     "the-bitcoin-way": {
       "linkId": "the-bitcoin-way",
@@ -194,13 +194,13 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com"
       },
-      "lastModified": "Mon, 06 Apr 2026 19:18:43 GMT"
+      "lastModified": "Tue, 07 Apr 2026 13:11:09 GMT"
     },
     "x": {
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fxstac1&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-07T10:38:21.492Z",
+      "updatedAt": "2026-04-08T10:43:19.877Z",
       "metadata": {
         "title": "@XSTAC1 on X",
         "description": "Posts and updates from @XSTAC1 on X.",
@@ -208,12 +208,12 @@
         "image": "https://unavatar.io/x/XSTAC1",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/XSTAC1",
-        "followersCount": 5567,
-        "followersCountRaw": "5,567 Followers",
+        "followersCount": 5558,
+        "followersCountRaw": "5,558 Followers",
         "followingCount": 4076,
         "followingCountRaw": "4,076 Following"
       },
-      "lastModified": "Tue, 07 Apr 2026 10:38:00 GMT"
+      "lastModified": "Wed, 08 Apr 2026 10:43:00 GMT"
     },
     "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno": {
       "linkId": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
