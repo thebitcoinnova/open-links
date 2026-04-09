@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-08T10:43:38.728Z",
+  "updatedAt": "2026-04-09T10:46:47.660Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
       "latestAudienceCount": 131,
       "latestAudienceCountRaw": "131 subscribers",
-      "latestObservedAt": "2026-04-08T10:43:38.728Z"
+      "latestObservedAt": "2026-04-09T10:46:47.660Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-04-08T10:43:38.728Z"
+      "latestObservedAt": "2026-04-09T10:46:47.660Z"
     },
     {
       "linkId": "paranoid-bitcoin-anarchists",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/paranoid-bitcoin-anarchists.csv",
       "latestAudienceCount": 789,
       "latestAudienceCountRaw": "789 Members",
-      "latestObservedAt": "2026-04-08T10:43:38.728Z"
+      "latestObservedAt": "2026-04-09T10:46:47.660Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/XSTAC1",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5558,
-      "latestAudienceCountRaw": "5,558 Followers",
-      "latestObservedAt": "2026-04-08T10:43:38.728Z"
+      "latestAudienceCount": 5557,
+      "latestAudienceCountRaw": "5,557 Followers",
+      "latestObservedAt": "2026-04-09T10:46:47.660Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 6870,
       "latestAudienceCountRaw": "6.87K subscribers",
-      "latestObservedAt": "2026-04-08T10:43:38.728Z"
+      "latestObservedAt": "2026-04-09T10:46:47.660Z"
     }
   ]
 }
