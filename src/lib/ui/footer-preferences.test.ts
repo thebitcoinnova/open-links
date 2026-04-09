@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { SiteData } from "../content/load-content";
 import { buildGitHubRepositoryUrl, buildOpenClawBootstrapPrompt } from "../openclaw-prompts";
-import { resolveFooterPreferences } from "./footer-preferences";
+import { type FooterPreferenceBuildContext, resolveFooterPreferences } from "./footer-preferences";
 
 const createSite = (maybeFooter?: NonNullable<SiteData["ui"]>["footer"]): SiteData => ({
   title: "OpenLinks",
@@ -18,6 +18,14 @@ const createSite = (maybeFooter?: NonNullable<SiteData["ui"]>["footer"]): SiteDa
         },
       }
     : {}),
+});
+
+const createBuildContext = (
+  overrides: FooterPreferenceBuildContext = {},
+): FooterPreferenceBuildContext => ({
+  maybeRepositoryRef: "release/docs-prompts",
+  maybeRepositorySlug: "example/openlinks-fork",
+  ...overrides,
 });
 
 test("resolveFooterPreferences returns the expanded footer defaults", () => {
@@ -39,6 +47,24 @@ test("resolveFooterPreferences returns the expanded footer defaults", () => {
   assert.equal(preferences.prompt.text, buildOpenClawBootstrapPrompt());
 });
 
+test("resolveFooterPreferences keeps the default CTA canonical for fork builds while prompt docs stay repo-aware", () => {
+  // Arrange
+  const buildContext = createBuildContext();
+
+  // Act
+  const preferences = resolveFooterPreferences(createSite(), buildContext);
+
+  // Assert
+  assert.equal(preferences.ctaUrl, buildGitHubRepositoryUrl());
+  assert.equal(
+    preferences.prompt.text,
+    buildOpenClawBootstrapPrompt({
+      repositoryRef: buildContext.maybeRepositoryRef,
+      repositorySlug: buildContext.maybeRepositorySlug,
+    }),
+  );
+});
+
 test("resolveFooterPreferences trims custom prompt fields and respects explicit prompt toggles", () => {
   const preferences = resolveFooterPreferences(
     createSite({
@@ -54,6 +80,7 @@ test("resolveFooterPreferences trims custom prompt fields and respects explicit 
       showBuildInfo: false,
       showLastUpdated: false,
     }),
+    createBuildContext(),
   );
 
   assert.equal(preferences.description, "Custom footer copy");
