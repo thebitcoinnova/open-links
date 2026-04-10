@@ -128,6 +128,9 @@ test("site footer renders a compact single-line bootstrap prompt row by default"
   const promptInput = collectElements(tree).find(
     (element) => element.type === "input" && element.props["aria-label"] === "Bootstrap prompt",
   );
+  const ctaLink = collectElements(tree).find(
+    (element) => element.type === "a" && element.props.href === preferences.ctaUrl,
+  );
   const copyButton = collectElements(tree).find(
     (element) =>
       element.type === "button" && element.props["aria-label"] === "Copy bootstrap prompt",
@@ -142,6 +145,7 @@ test("site footer renders a compact single-line bootstrap prompt row by default"
   assert.equal(promptInput?.props.value, preferences.prompt.text);
   assert.equal(typeof promptInput?.props.onClick, "function");
   assert.equal(typeof promptInput?.props.onFocus, "function");
+  assert.equal(ctaLink?.props.children, preferences.ctaLabel);
   assert.equal(copyButton?.props.children, "Copy");
 });
 

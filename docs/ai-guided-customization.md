@@ -10,8 +10,10 @@ Referral links follow this same path. For referral authoring today:
 
 1. Prefer this wizard or `docs/openclaw-update-crud.md` first.
 2. Use `skills/referral-management/SKILL.md` when the work involves new reusable families, offers, matcher/link shapes, or a shared-vs-fork catalog decision.
-3. Use Studio only when Advanced JSON is acceptable for the change.
-4. Treat direct JSON edits as the lower-level fallback.
+3. Review the official terms/help page before publishing a public referral URL; `bun run referrals:terms:check -- --url <referral-url> [--terms-url <terms-url>]` is the scripted shortcut.
+4. If public-sharing rules are missing or ambiguous, confirm with the user before publishing the referral URL. If the terms forbid public posting, keep the public page informational and do not expose the personal referral URL.
+5. Use Studio only when Advanced JSON is acceptable for the change.
+6. Treat direct JSON edits as the lower-level fallback.
 
 For OpenClaw automation-first execution, use:
 
@@ -193,11 +195,12 @@ Agent should:
    - `termsSummary`
    - `termsUrl`
    - `code`
-9. If the referral work requires a new family, offer, matcher, or shared-vs-fork scope decision, switch to the `skills/referral-management/SKILL.md` interview before finalizing the edit plan.
-10. If a referral URL belongs to a supported profile-family site but should stay on generic rich-card behavior, set `enrichment.profileSemantics` to `non_profile`.
-11. If exact referral terms are unclear, it is acceptable to add a soft marker or partial manual disclosure first. Do not block the authoring flow on extractor work by default.
-12. If a fork adds a generic shared catalog item that would help other forks, recommend a clean upstream PR for the shared catalog/docs change and keep `data/policy/referral-catalog.local.json` out of that PR scope.
-13. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
+9. Review the official public terms/help page before planning a public referral URL. If the terms forbid public posting, do not expose the personal referral URL; use a public informational card instead. If the public-share policy is missing or ambiguous, confirm with the user before proceeding.
+10. If the referral work requires a new family, offer, matcher, or shared-vs-fork scope decision, switch to the `skills/referral-management/SKILL.md` interview before finalizing the edit plan.
+11. If a referral URL belongs to a supported profile-family site but should stay on generic rich-card behavior, set `enrichment.profileSemantics` to `non_profile`.
+12. If exact referral terms are unclear, it is acceptable to add a soft marker or partial manual disclosure first. Do not block the authoring flow on extractor work by default.
+13. If a fork adds a generic shared catalog item that would help other forks, recommend a clean upstream PR for the shared catalog/docs change and keep `data/policy/referral-catalog.local.json` out of that PR scope.
+14. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
 
 ```bash
 bun run images:sync

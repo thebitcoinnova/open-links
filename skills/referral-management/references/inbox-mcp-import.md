@@ -84,6 +84,11 @@ Resolver-managed fields:
 - `resolution.reviewReason`
 - `resolution.terminalStatusCode`
 - `resolution.terminalTitle`
+- `termsPolicy.status`
+- `termsPolicy.checkedUrl`
+- `termsPolicy.matchedRuleId`
+- `termsPolicy.evidenceSnippet`
+- `termsPolicy.reason`
 
 Use `approvedUrl` only after reviewing the redirect audit report when the resolver marks a candidate `review_required`.
 
@@ -100,6 +105,9 @@ Review expectations:
 - `resolved_clear`: the resolver found exactly one strong referral-like web target and set `resolution.recommendedUrl`.
 - `review_required`: the redirect chain contained multiple plausible web targets; inspect the report and set `approvedUrl` before planning.
 - `unresolved`: the resolver did not find a safe referral-like web target; keep the candidate out of planning until you replace the URL manually or choose a different source link.
+- `termsPolicy.public_forbidden`: do not plan or apply the public referral URL.
+- `termsPolicy.ambiguous` / `termsPolicy.not_found`: stop for user confirmation before carrying the candidate forward publicly.
+- `termsPolicy.public_allowed`: public planning may continue if the rest of the candidate is approved.
 
 ## Planner / Apply Commands
 

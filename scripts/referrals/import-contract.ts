@@ -24,12 +24,26 @@ export const DEFAULT_LOCAL_REFERRAL_CATALOG_PATH = "data/policy/referral-catalog
 
 export type ReferralImportCatalogScopeHint = "local" | "shared";
 export type ReferralImportResolutionStatus = "resolved_clear" | "review_required" | "unresolved";
+export type ReferralTermsPolicyStatus =
+  | "public_forbidden"
+  | "public_allowed"
+  | "ambiguous"
+  | "not_found";
 export type ReferralImportDisposition =
   | "match_existing_catalog"
   | "create_local_catalog"
   | "propose_shared_catalog"
   | "link_only"
   | "skip";
+
+export interface ReferralTermsPolicyResult {
+  status: ReferralTermsPolicyStatus;
+  normalizedSourceUrl: string;
+  checkedUrl?: string;
+  matchedRuleId?: string;
+  evidenceSnippet?: string;
+  reason?: string;
+}
 
 export interface ReferralInboxCandidateSource {
   provider?: string;
@@ -74,6 +88,7 @@ export interface ReferralInboxCandidateInput {
   offerSummaryHint?: string;
   termsSummaryHint?: string;
   termsUrlHint?: string;
+  termsPolicy?: ReferralTermsPolicyResult;
   notes?: string;
 }
 
@@ -100,6 +115,7 @@ export interface ReferralImportResolveReportItem {
   originalUrl?: string;
   approvedUrl?: string;
   resolution?: ReferralImportCandidateResolution;
+  termsPolicy?: ReferralTermsPolicyResult;
   hops: ReferralImportRedirectHop[];
   plausibleUrls: ReferralImportPlausibleUrl[];
 }
@@ -133,6 +149,7 @@ export interface NormalizedReferralInboxCandidate {
   offerSummaryHint?: string;
   termsSummaryHint?: string;
   termsUrlHint?: string;
+  termsPolicy?: ReferralTermsPolicyResult;
   notes?: string;
   extractedCode?: string;
   dedupeKey: string;
@@ -177,6 +194,7 @@ export interface ReferralImportPlanItem {
   url?: string;
   extractedCode?: string;
   dedupeKey?: string;
+  termsPolicy?: ReferralTermsPolicyResult;
   catalogMatch?: ReferralCatalogMatchSummary;
   plannedCatalogRef?: LinkReferralCatalogRef;
   proposedLink?: PlannedReferralLink;

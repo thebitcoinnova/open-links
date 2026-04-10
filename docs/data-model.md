@@ -992,7 +992,7 @@ Main presentation controls include:
 - `payments.effects.glitterPaletteDefault`: `gold`, `ice`
 - `footer.description`: optional descriptive footer text
 - `footer.ctaLabel`: optional CTA button label
-- `footer.ctaUrl`: optional CTA target URL (defaults to the current GitHub repository URL)
+- `footer.ctaUrl`: optional CTA target URL (defaults to the canonical upstream OpenLinks GitHub repository URL; explicit values still override)
 - `footer.prompt.enabled`: toggle the bootstrap prompt card in the footer
 - `footer.prompt.title`: optional prompt section title
 - `footer.prompt.explanation`: optional short explanation above the prompt text
@@ -1122,13 +1122,17 @@ Footer content and CTA are configurable from `data/site.json`.
 
 - `description`: descriptive body copy shown in the footer.
 - `ctaLabel`: button text for the footer CTA.
-- `ctaUrl`: CTA destination URL (when omitted, runtime uses the current GitHub repository URL).
+- `ctaUrl`: CTA destination URL (when omitted, runtime uses `https://github.com/pRizz/open-links`; explicit values still override).
 - `prompt.enabled`: controls whether the footer renders the copyable bootstrap prompt card.
 - `prompt.title`: heading shown above the bootstrap prompt.
 - `prompt.explanation`: short helper copy explaining how to use the prompt.
 - `prompt.text`: copyable prompt text shown in the footer compact field for single-line values, with a preformatted fallback for multiline values (when omitted, runtime uses repo-aware absolute GitHub doc URLs).
 - `showBuildInfo`: controls rendering of the footer build-provenance row (`Built <UTC>` plus an optional `Commit <shortSha>` link).
 - `showLastUpdated`: legacy alias for `showBuildInfo`. `showBuildInfo` wins when both are present.
+
+This fallback is renderer-level only: downstream consumers such as `open-links-sites`
+keep the same data contract, but sites that omit `footer.ctaUrl` inherit the canonical
+upstream repository CTA by default.
 
 Example:
 

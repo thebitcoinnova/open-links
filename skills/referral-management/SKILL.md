@@ -26,8 +26,11 @@ Use this branch when the user already knows which referral links or families the
    - fork-local overlay: `data/policy/referral-catalog.local.json`
    - link-only authoring in `data/links.json`
 2. Keep `links[].referral` as the runtime/render contract.
-3. Prefer manual disclosures first. Use catalog-backed defaults when the matcher/family/offer really is reusable.
-4. If the generic shared portion would help upstream or other forks, keep the fork update local first and then prepare a clean upstream follow-up that excludes fork-owned paths.
+3. Review the official public terms/help page before proposing a public referral URL. Use `bun run referrals:terms:check -- --url <referral-url> [--terms-url <terms-url>]` when the policy is not already obvious.
+4. If the terms forbid public posting or say the link may only be shared with people the owner personally knows, do not publish the public referral URL. Fall back to a public informational card or an ask-me-directly flow instead.
+5. If the public-share policy is missing, unreachable, or ambiguous, stop and confirm with the user before planning or applying a public referral URL.
+6. Prefer manual disclosures first. Use catalog-backed defaults when the matcher/family/offer really is reusable.
+7. If the generic shared portion would help upstream or other forks, keep the fork update local first and then prepare a clean upstream follow-up that excludes fork-owned paths.
 
 ### 2) Inbox / MCP referral import
 
@@ -42,14 +45,18 @@ bun run referrals:import:resolve -- --input .cache/referral-management/inbox-can
 ```
 
 4. Review the resolver report and, when needed, set `approvedUrl` on any `review_required` candidate you want to carry forward.
-5. Run the deterministic planner on the resolved candidate file:
+5. Review the resolver's `termsPolicy` result for each candidate:
+   - `public_forbidden`: do not plan or apply the public referral URL.
+   - `ambiguous` or `not_found`: stop for user confirmation before carrying the candidate forward publicly.
+   - `public_allowed`: normal planning can continue.
+6. Run the deterministic planner on the resolved candidate file:
 
 ```bash
 bun run referrals:import:plan -- --input .cache/referral-management/inbox-candidates.resolved.json
 ```
 
-6. Review the generated table and proposal JSON with the user before any repo write.
-7. After approval, apply the accepted batch:
+7. Review the generated table and proposal JSON with the user before any repo write.
+8. After approval, apply the accepted batch:
 
 ```bash
 bun run referrals:import:apply -- --proposal .cache/referral-management/referral-import-plan.json --all-planned
@@ -61,13 +68,13 @@ Or apply a reviewed subset:
 bun run referrals:import:apply -- --proposal .cache/referral-management/referral-import-plan.json --only candidate-a,candidate-b
 ```
 
-8. After apply, run the normal referral verification path:
+9. After apply, run the normal referral verification path:
    - `bun run enrich:rich:strict`
    - `bun run images:sync`
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
-9. If enrichment blocks on a candidate, stop that item and follow the repo’s blocker-choice workflow instead of silently enabling overrides.
+10. If enrichment blocks on a candidate, stop that item and follow the repo’s blocker-choice workflow instead of silently enabling overrides.
 
 Load `references/inbox-mcp-import.md` when you need the candidate contract, MCP search heuristics, permission gate wording, resolver/planner/apply command details, or the review gate for tracking-only links.
 
@@ -86,6 +93,7 @@ Load `references/shared-catalog-follow-up.md` when you need the scope rule and P
 - Imported HTTP(S) referrals should stay on `type: "rich"` by default.
 - Prefer known-site icon resolution first and fall back to `globe` only when no known site resolves.
 - Preserve `enrichment.profileSemantics="non_profile"` for signup/invite URLs on supported profile families.
+- Treat missing or inconclusive public-share terms as a stop-for-confirmation condition, not implicit approval.
 - The planner supports five dispositions: `match_existing_catalog`, `create_local_catalog`, `propose_shared_catalog`, `link_only`, and `skip`.
 
 ## References

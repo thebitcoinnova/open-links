@@ -16,6 +16,11 @@ export interface ResolvedFooterPreferences {
   showBuildInfo: boolean;
 }
 
+export interface FooterPreferenceBuildContext {
+  maybeRepositoryRef?: string;
+  maybeRepositorySlug?: string;
+}
+
 const DEFAULT_DESCRIPTION =
   "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.";
 const DEFAULT_CTA_LABEL = "Create Your OpenLinks";
@@ -40,34 +45,49 @@ const resolveBuildTimeRepositoryRef = (): string | undefined =>
     ? __OPENLINKS_REPOSITORY_DOCS_REF__
     : undefined;
 
-const resolveDefaultCtaUrl = (): string =>
-  buildGitHubRepositoryUrl(resolveBuildTimeRepositorySlug());
+const resolveFooterPreferenceBuildContext = (
+  maybeBuildContext?: FooterPreferenceBuildContext,
+): FooterPreferenceBuildContext => ({
+  maybeRepositoryRef:
+    toOptionalTrimmed(maybeBuildContext?.maybeRepositoryRef) ?? resolveBuildTimeRepositoryRef(),
+  maybeRepositorySlug:
+    toOptionalTrimmed(maybeBuildContext?.maybeRepositorySlug) ?? resolveBuildTimeRepositorySlug(),
+});
 
-const resolveDefaultPromptText = (): string =>
+const resolveDefaultCtaUrl = (): string => buildGitHubRepositoryUrl();
+
+const resolveDefaultPromptText = (maybeBuildContext: FooterPreferenceBuildContext): string =>
   buildOpenClawBootstrapPrompt({
-    repositoryRef: resolveBuildTimeRepositoryRef(),
-    repositorySlug: resolveBuildTimeRepositorySlug(),
+    repositoryRef: maybeBuildContext.maybeRepositoryRef,
+    repositorySlug: maybeBuildContext.maybeRepositorySlug,
   });
 
-const resolveFooterPromptPreferences = (site: SiteData): ResolvedFooterPromptPreferences => {
+const resolveFooterPromptPreferences = (
+  site: SiteData,
+  maybeBuildContext: FooterPreferenceBuildContext,
+): ResolvedFooterPromptPreferences => {
   const prompt = site.ui?.footer?.prompt;
 
   return {
     enabled: typeof prompt?.enabled === "boolean" ? prompt.enabled : true,
     explanation: toOptionalTrimmed(prompt?.explanation) ?? DEFAULT_PROMPT_EXPLANATION,
-    text: toOptionalTrimmed(prompt?.text) ?? resolveDefaultPromptText(),
+    text: toOptionalTrimmed(prompt?.text) ?? resolveDefaultPromptText(maybeBuildContext),
     title: toOptionalTrimmed(prompt?.title) ?? DEFAULT_PROMPT_TITLE,
   };
 };
 
-export const resolveFooterPreferences = (site: SiteData): ResolvedFooterPreferences => {
+export const resolveFooterPreferences = (
+  site: SiteData,
+  maybeBuildContext?: FooterPreferenceBuildContext,
+): ResolvedFooterPreferences => {
   const footer = site.ui?.footer;
+  const buildContext = resolveFooterPreferenceBuildContext(maybeBuildContext);
 
   return {
     description: toOptionalTrimmed(footer?.description) ?? DEFAULT_DESCRIPTION,
     ctaLabel: toOptionalTrimmed(footer?.ctaLabel) ?? DEFAULT_CTA_LABEL,
     ctaUrl: toOptionalTrimmed(footer?.ctaUrl) ?? resolveDefaultCtaUrl(),
-    prompt: resolveFooterPromptPreferences(site),
+    prompt: resolveFooterPromptPreferences(site, buildContext),
     showBuildInfo:
       typeof footer?.showBuildInfo === "boolean"
         ? footer.showBuildInfo

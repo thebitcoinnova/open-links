@@ -93,11 +93,14 @@ When a requested link is a referral, affiliate, promo, or invite destination:
    - fork-owned overlay: `data/policy/referral-catalog.local.json`
 3. Keep `links[].referral` as the canonical runtime/render surface, including any manual disclosures and `catalogRef`.
 4. Use `docs/data-model.md` for exact field meaning, precedence, and examples.
-5. Prefer adding manual disclosure fields first; generated referral data may fill blanks later but is not authoritative.
-6. Do not suggest a new extractor by default just because the referral URL is unfamiliar. Manual or catalog-backed referral authoring is a valid first step even when no extractor exists.
-7. For supported profile-family URLs acting as referral/promo links, set or preserve `links[].enrichment.profileSemantics="non_profile"` unless the user explicitly wants profile-style rendering.
-8. If a fork adds a generic shared catalog item that would help other forks, prompt for a clean upstream PR and keep `data/policy/referral-catalog.local.json` out of that PR scope.
-9. If the user prefers Studio for the change, note that referral editing currently relies on Advanced JSON rather than first-class referral controls.
+5. Review the official public terms/help page before proposing or applying a public referral URL. Use `bun run referrals:terms:check -- --url <referral-url> [--terms-url <terms-url>]` when you need a quick scripted check.
+6. If the official terms forbid public posting or say the link may only be shared with people the owner personally knows, do not publish the public referral URL. Offer a public informational card without the personal referral URL instead.
+7. If the public-share policy is missing, unreachable, or ambiguous, stop and confirm with the user before planning or applying a public referral URL.
+8. Prefer adding manual disclosure fields first; generated referral data may fill blanks later but is not authoritative.
+9. Do not suggest a new extractor by default just because the referral URL is unfamiliar. Manual or catalog-backed referral authoring is a valid first step even when no extractor exists.
+10. For supported profile-family URLs acting as referral/promo links, set or preserve `links[].enrichment.profileSemantics="non_profile"` unless the user explicitly wants profile-style rendering.
+11. If a fork adds a generic shared catalog item that would help other forks, prompt for a clean upstream PR and keep `data/policy/referral-catalog.local.json` out of that PR scope.
+12. If the user prefers Studio for the change, note that referral editing currently relies on Advanced JSON rather than first-class referral controls.
 
 ## Required Startup Handshake (First Step)
 
