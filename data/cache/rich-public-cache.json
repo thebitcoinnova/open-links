@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Thu, 09 Apr 2026 10:01:58 GMT"
+      "lastModified": "Fri, 10 Apr 2026 08:48:30 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Chrome_Finish.png?v=1764770328&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:139ca45545da696bae7b780d31925ddc\""
+      "etag": "\"page_cache:93620306263:IndexController:20a5b546f4c7de76a148c7f113c1cd5e\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -43,7 +43,7 @@
         "sourceLabel": "signup.cluborange.org",
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
-      "lastModified": "Tue, 07 Apr 2026 05:32:59 GMT"
+      "lastModified": "Fri, 10 Apr 2026 06:59:40 GMT"
     },
     "fountain": {
       "linkId": "fountain",
@@ -117,7 +117,7 @@
         "membersCount": 789,
         "membersCountRaw": "789 Members"
       },
-      "lastModified": "Thu, 09 Apr 2026 10:45:20 GMT"
+      "lastModified": "Fri, 10 Apr 2026 10:35:46 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -149,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:eab45c397b70de7df3d537dae8660cac\""
+      "etag": "\"page_cache:94205477246:IndexController:7d9a000ff4a09f5ac8deab7c4d447188\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -194,13 +194,13 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com"
       },
-      "lastModified": "Wed, 08 Apr 2026 19:07:23 GMT"
+      "lastModified": "Fri, 10 Apr 2026 05:56:15 GMT"
     },
     "x": {
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fxstac1&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-09T10:46:28.249Z",
+      "updatedAt": "2026-04-10T10:36:51.955Z",
       "metadata": {
         "title": "@XSTAC1 on X",
         "description": "Posts and updates from @XSTAC1 on X.",
@@ -208,12 +208,12 @@
         "image": "https://unavatar.io/x/XSTAC1",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/XSTAC1",
-        "followersCount": 5557,
-        "followersCountRaw": "5,557 Followers",
+        "followersCount": 5553,
+        "followersCountRaw": "5,553 Followers",
         "followingCount": 4072,
         "followingCountRaw": "4,072 Following"
       },
-      "lastModified": "Thu, 09 Apr 2026 10:46:08 GMT"
+      "lastModified": "Fri, 10 Apr 2026 10:36:32 GMT"
     },
     "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno": {
       "linkId": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
