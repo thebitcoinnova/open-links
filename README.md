@@ -1,7 +1,9 @@
 # OpenLinks
 
 <!-- bright-builds-rules-readme-badges:begin -->
+
 <!-- Managed upstream by bright-builds-rules. If this badge block needs a fix, open an upstream PR or issue instead of editing the downstream managed block. Keep repo-local README content outside this managed badge block. -->
+
 [![GitHub Stars](https://img.shields.io/github/stars/pRizz/open-links)](https://github.com/pRizz/open-links)
 [![CI](https://img.shields.io/github/actions/workflow/status/pRizz/open-links/ci.yml?style=flat-square&logo=github&label=CI)](https://github.com/pRizz/open-links/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/pRizz/open-links?style=flat-square)](./LICENSE)
@@ -10,6 +12,7 @@
 [![Vite 7.3.1](https://img.shields.io/badge/Vite-7.3.1-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![Bright Builds: Rules](https://raw.githubusercontent.com/bright-builds-llc/bright-builds-rules/main/public/badges/bright-builds-rules-flat.svg)](https://github.com/bright-builds-llc/bright-builds-rules)
 [![OpenLinks profile](https://img.shields.io/badge/OpenLinks-profile-0F172A)](https://openlinks.us/)
+
 <!-- bright-builds-rules-readme-badges:end -->
 
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
