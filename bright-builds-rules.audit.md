@@ -10,15 +10,15 @@ This audit trail is managed upstream by `bright-builds-rules`. If the managed au
 
 - Source repository: `https://github.com/bright-builds-llc/bright-builds-rules`
 - Version pin: `main`
-- Exact commit: `fa6cd165d31d6ad20344fcc93a9e1c42b4dbb04f`
+- Exact commit: `f4db3f0193232152698eab291ba8d74c3d5c7fdb`
 - Canonical entrypoint: `https://github.com/bright-builds-llc/bright-builds-rules/blob/main/standards/index.md`
 - Managed sidecar path: `AGENTS.bright-builds.md`
 - AGENTS integration mode: `append-only managed block`
 - Audit manifest path: `bright-builds-rules.audit.md`
 - Auto-update: `enabled`
 - Auto-update reason: `trusted repo owner pRizz`
-- Last operation: `install`
-- Last updated (UTC): `2026-04-10T10:55:33Z`
+- Last operation: `update`
+- Last updated (UTC): `2026-04-11T14:13:19Z`
 
 ## Managed files
 
