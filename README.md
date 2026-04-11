@@ -1,14 +1,19 @@
 # OpenLinks
 
-<!-- coding-and-architecture-requirements-readme-badges:begin -->
+<!-- bright-builds-rules-readme-badges:begin -->
+
+<!-- Managed upstream by bright-builds-rules. If this badge block needs a fix, open an upstream PR or issue instead of editing the downstream managed block. Keep repo-local README content outside this managed badge block. -->
+
 [![GitHub Stars](https://img.shields.io/github/stars/pRizz/open-links)](https://github.com/pRizz/open-links)
-[![CI](https://github.com/pRizz/open-links/actions/workflows/ci.yml/badge.svg)](https://github.com/pRizz/open-links/actions/workflows/ci.yml)
-[![Deploy Production](https://github.com/pRizz/open-links/actions/workflows/deploy-production.yml/badge.svg)](https://github.com/pRizz/open-links/actions/workflows/deploy-production.yml)
-[![License](https://img.shields.io/github/license/pRizz/open-links?s)](./LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/pRizz/open-links/ci.yml?style=flat-square&logo=github&label=CI)](https://github.com/pRizz/open-links/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/pRizz/open-links?style=flat-square)](./LICENSE)
 [![TypeScript 5.9.3](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SolidJS 1.9.11](https://img.shields.io/badge/SolidJS-1.9.11-2C4F7C?logo=solid&logoColor=white)](https://www.solidjs.com/)
 [![Vite 7.3.1](https://img.shields.io/badge/Vite-7.3.1-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
-<!-- coding-and-architecture-requirements-readme-badges:end -->
+[![Bright Builds: Rules](https://raw.githubusercontent.com/bright-builds-llc/bright-builds-rules/main/public/badges/bright-builds-rules-flat.svg)](https://github.com/bright-builds-llc/bright-builds-rules)
+[![OpenLinks profile](https://img.shields.io/badge/OpenLinks-profile-0F172A)](https://openlinks.us/)
+
+<!-- bright-builds-rules-readme-badges:end -->
 
 OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
 
