@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T09:11:00.061Z",
+  "updatedAt": "2026-04-11T22:25:51.256Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
       "latestAudienceCount": 131,
       "latestAudienceCountRaw": "131 subscribers",
-      "latestObservedAt": "2026-04-11T09:11:00.061Z"
+      "latestObservedAt": "2026-04-11T22:25:51.256Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-04-11T09:11:00.061Z"
+      "latestObservedAt": "2026-04-11T22:25:51.256Z"
     },
     {
       "linkId": "paranoid-bitcoin-anarchists",
@@ -34,9 +34,9 @@
       "canonicalUrl": "https://x.com/i/communities/1871996451812769951",
       "audienceKind": "members",
       "csvPath": "history/followers/paranoid-bitcoin-anarchists.csv",
-      "latestAudienceCount": 789,
-      "latestAudienceCountRaw": "789 Members",
-      "latestObservedAt": "2026-04-11T09:11:00.061Z"
+      "latestAudienceCount": 790,
+      "latestAudienceCountRaw": "790 Members",
+      "latestObservedAt": "2026-04-11T22:25:51.256Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/XSTAC1",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5552,
-      "latestAudienceCountRaw": "5,552 Followers",
-      "latestObservedAt": "2026-04-11T09:11:00.061Z"
+      "latestAudienceCount": 5551,
+      "latestAudienceCountRaw": "5,551 Followers",
+      "latestObservedAt": "2026-04-11T22:25:51.256Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 6870,
       "latestAudienceCountRaw": "6.87K subscribers",
-      "latestObservedAt": "2026-04-11T09:11:00.061Z"
+      "latestObservedAt": "2026-04-11T22:25:51.256Z"
     }
   ]
 }
