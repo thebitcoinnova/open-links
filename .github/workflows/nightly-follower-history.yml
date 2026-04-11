@@ -47,7 +47,13 @@ jobs:
       - name: Append follower history snapshots
         run: bash scripts/github-actions/nightly-follower-history.sh append-history
 
+      - name: Commit follower-history artifacts
+        id: commit
+        shell: bash
+        run: bash scripts/github-actions/nightly-follower-history.sh commit-history
+
       - name: Build deploy artifacts
+        if: steps.commit.outputs.commit_result == 'committed'
         run: bun run deploy:build
 
       - name: Upload cache revalidation diagnostics
@@ -58,13 +64,14 @@ jobs:
           path: output/cache-revalidation
           if-no-files-found: ignore
 
-      - name: Commit and push follower-history artifacts
-        id: publish
+      - name: Push follower-history artifacts
+        if: steps.commit.outputs.commit_result == 'committed'
+        id: push
         shell: bash
-        run: bash scripts/github-actions/nightly-follower-history.sh commit-and-push
+        run: bash scripts/github-actions/nightly-follower-history.sh push-history
 
       - name: Resolve AWS deploy opt-in
-        if: steps.publish.outputs.push_result == 'pushed'
+        if: steps.push.outputs.push_result == 'pushed'
         id: aws_opt_in
         shell: bash
         env:
@@ -73,31 +80,31 @@ jobs:
         run: bash scripts/github-actions/nightly-follower-history.sh resolve-aws-opt-in
 
       - name: Configure AWS credentials
-        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-east-1
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
 
       - name: Bootstrap AWS infrastructure
-        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
         run: bun run deploy:aws:bootstrap --apply
 
       - name: Publish AWS artifact
-        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
         run: bun run deploy:publish -- --target=aws --artifact=.artifacts/deploy/aws --apply
 
       - name: Prepare Pages deployment
-        if: steps.publish.outputs.push_result == 'pushed'
+        if: steps.push.outputs.push_result == 'pushed'
         id: pages_plan
         run: bun run deploy:publish -- --target=github-pages --artifact=.artifacts/deploy/github-pages
 
       - name: Archive Pages artifact
-        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
         run: bash scripts/ci/archive-pages-artifact.sh .artifacts/deploy/github-pages "$RUNNER_TEMP/pages-artifact.tar"
 
       - name: Upload Pages deployment artifact
-        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
         id: upload_pages_artifact
         uses: actions/upload-artifact@v4
         with:
@@ -107,7 +114,7 @@ jobs:
           if-no-files-found: error
 
       - name: Create Pages deployment
-        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
         id: deployment
         env:
           ARTIFACT_ID: ${{ steps.upload_pages_artifact.outputs.artifact-id }}
@@ -115,14 +122,14 @@ jobs:
         run: bun run scripts/ci/create-pages-deployment.ts
 
       - name: Wait for Pages deployment
-        if: steps.publish.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
         env:
           DEPLOYMENT_ID: ${{ steps.deployment.outputs.deployment_id }}
           GITHUB_TOKEN: ${{ github.token }}
         run: bun run scripts/ci/wait-for-pages-deployment.ts
 
       - name: Verify enabled deployment targets
-        if: steps.publish.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
+        if: steps.push.outputs.push_result == 'pushed' && steps.aws_opt_in.outputs.enabled == 'true'
         run: bun run deploy:verify
 
       - name: Upload deploy diagnostics on failure
@@ -138,7 +145,9 @@ jobs:
         if: always()
         env:
           AWS_DEPLOY_ENABLED: ${{ steps.aws_opt_in.outputs.enabled || 'false' }}
+          COMMIT_RESULT: ${{ steps.commit.outputs.commit_result || 'unknown' }}
+          COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
           PAGES_DEPLOYMENT_CHANGED: ${{ steps.pages_plan.outputs.pages_changed || 'false' }}
           PAGES_DEPLOYMENT_URL: ${{ steps.deployment.outputs.page_url }}
-          PUSH_RESULT: ${{ steps.publish.outputs.push_result }}
+          PUSH_RESULT: ${{ steps.push.outputs.push_result || steps.commit.outputs.commit_result || 'unknown' }}
         run: node scripts/github-actions/nightly-follower-history-summary.mjs >> "$GITHUB_STEP_SUMMARY"

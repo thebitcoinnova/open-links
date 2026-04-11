@@ -62,6 +62,10 @@ const readAwsDeploymentUrl = () => {
 
 lines.push("## Nightly Follower History");
 lines.push(`- Event: \`${process.env.GITHUB_EVENT_NAME ?? "unknown"}\``);
+lines.push(`- Commit result: \`${process.env.COMMIT_RESULT || "unknown"}\``);
+if (process.env.COMMIT_SHA) {
+  lines.push(`- Commit SHA: \`${process.env.COMMIT_SHA}\``);
+}
 lines.push(`- Publish result: \`${process.env.PUSH_RESULT || "unknown"}\``);
 
 if (publicRichSyncSummary) {
