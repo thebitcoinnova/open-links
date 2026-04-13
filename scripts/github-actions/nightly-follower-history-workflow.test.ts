@@ -45,3 +45,18 @@ test("nightly follower history runs under production and commits before building
     /- name: Verify enabled deployment targets\n\s+if: steps\.push\.outputs\.push_result == 'pushed' && steps\.aws_opt_in\.outputs\.enabled == 'true'\n\s+run: bun run deploy:verify/u,
   );
 });
+
+test("nightly follower history passes the committed SHA into the shared Pages deployment helpers", () => {
+  // Arrange
+  const workflowSource = fs.readFileSync(WORKFLOW_PATH, "utf8");
+
+  // Act / Assert
+  assert.match(
+    workflowSource,
+    /- name: Create Pages deployment\n\s+if: steps\.push\.outputs\.push_result == 'pushed' && steps\.pages_plan\.outputs\.pages_changed == 'true'\n\s+id: deployment\n\s+env:\n\s+ARTIFACT_ID: \$\{\{ steps\.upload_pages_artifact\.outputs\.artifact-id \}\}\n\s+GITHUB_TOKEN: \$\{\{ github\.token \}\}\n\s+PAGES_BUILD_VERSION: \$\{\{ steps\.commit\.outputs\.commit_sha \}\}\n\s+run: bun run scripts\/ci\/create-pages-deployment\.ts/u,
+  );
+  assert.match(
+    workflowSource,
+    /- name: Wait for Pages deployment\n\s+if: steps\.push\.outputs\.push_result == 'pushed' && steps\.pages_plan\.outputs\.pages_changed == 'true'\n\s+env:\n\s+DEPLOYMENT_ID: \$\{\{ steps\.deployment\.outputs\.deployment_id \}\}\n\s+EXPECTED_COMMIT_SHA: \$\{\{ steps\.commit\.outputs\.commit_sha \}\}\n\s+EXPECTED_PUBLIC_URL: \$\{\{ steps\.deployment\.outputs\.page_url \}\}\n\s+GITHUB_TOKEN: \$\{\{ github\.token \}\}\n\s+run: bun run scripts\/ci\/wait-for-pages-deployment\.ts/u,
+  );
+});
