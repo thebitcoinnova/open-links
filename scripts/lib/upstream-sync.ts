@@ -125,16 +125,20 @@ const resolveConflictResult = (cwd: string, upstreamRef: string, headBefore: str
   });
   const unmergedPaths = listUnmergedPaths(cwd);
   const unmergedSummary = classifyForkOwnedPaths(unmergedPaths);
+  const conflictingPaths = Array.from(
+    new Set([...conflictSummary.conflictingPaths, ...unmergedPaths]),
+  ).sort();
+  const forkOwnedConflicts = Array.from(
+    new Set([...conflictSummary.forkOwnedConflicts, ...unmergedSummary.forkOwnedPaths]),
+  ).sort();
 
-  if (unmergedSummary.sharedPaths.length > 0 || conflictSummary.sharedConflicts.length > 0) {
-    const sharedConflicts = Array.from(
-      new Set([...unmergedSummary.sharedPaths, ...conflictSummary.sharedConflicts]),
-    ).sort();
+  if (unmergedSummary.sharedPaths.length > 0) {
+    const sharedConflicts = unmergedSummary.sharedPaths;
 
     abortMerge(cwd);
     return {
-      conflictingPaths: conflictSummary.conflictingPaths,
-      forkOwnedConflicts: conflictSummary.forkOwnedConflicts,
+      conflictingPaths,
+      forkOwnedConflicts,
       message: describeSharedForkSyncConflicts(sharedConflicts),
       sharedConflicts,
       status: "conflict" as const,
@@ -146,8 +150,8 @@ const resolveConflictResult = (cwd: string, upstreamRef: string, headBefore: str
     if (!isForkOwnedPath(repoPath)) {
       abortMerge(cwd);
       return {
-        conflictingPaths: conflictSummary.conflictingPaths,
-        forkOwnedConflicts: conflictSummary.forkOwnedConflicts,
+        conflictingPaths,
+        forkOwnedConflicts,
         message: describeSharedForkSyncConflicts([repoPath]),
         sharedConflicts: [repoPath],
         status: "conflict" as const,
@@ -167,8 +171,8 @@ const resolveConflictResult = (cwd: string, upstreamRef: string, headBefore: str
   git(cwd, ["commit", "-m", AUTO_RESOLVE_COMMIT_MESSAGE]);
 
   return {
-    conflictingPaths: conflictSummary.conflictingPaths,
-    forkOwnedConflicts: conflictSummary.forkOwnedConflicts,
+    conflictingPaths,
+    forkOwnedConflicts,
     message: "Fork synchronized while preserving fork-owned paths.",
     sharedConflicts: [] as string[],
     status: "merged" as const,

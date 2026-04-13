@@ -177,6 +177,39 @@ test("runUpstreamSync preserves fork deletions for fork-owned paths during modif
   }
 });
 
+test("runUpstreamSync merges identical shared-path updates while preserving fork-owned conflicts", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    writeText(path.join(workspace.forkRepo, "README.md"), "# Synced README\n");
+    writeText(path.join(workspace.forkRepo, "data/profile.json"), '{ "name": "Fork" }\n');
+    commitAll(workspace.forkRepo, "fork identical shared update");
+
+    writeText(path.join(workspace.upstreamWorktree, "README.md"), "# Synced README\n");
+    writeText(
+      path.join(workspace.upstreamWorktree, "data/profile.json"),
+      '{ "name": "Upstream" }\n',
+    );
+    commitAll(workspace.upstreamWorktree, "upstream identical shared update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+    const profile = fs.readFileSync(path.join(workspace.forkRepo, "data/profile.json"), "utf8");
+    const readme = fs.readFileSync(path.join(workspace.forkRepo, "README.md"), "utf8");
+
+    assert.equal(result.status, "merged");
+    assert.equal(result.mergeCommitCreated, true);
+    assert.deepEqual(result.sharedConflicts, []);
+    assert.deepEqual(result.forkOwnedConflicts, ["data/profile.json"]);
+    assert.deepEqual(result.conflictingPaths, ["README.md", "data/profile.json"]);
+    assert.equal(profile, '{ "name": "Fork" }\n');
+    assert.equal(readme, "# Synced README\n");
+    assert.equal(git(workspace.forkRepo, ["status", "--porcelain"]).stdout.trim(), "");
+  } finally {
+    workspace.cleanup();
+  }
+});
+
 test("runUpstreamSync blocks shared-file conflicts and aborts the merge", () => {
   const workspace = initializeForkWorkspace();
 
