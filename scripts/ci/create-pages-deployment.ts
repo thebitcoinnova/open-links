@@ -33,7 +33,7 @@ const { value: deploymentResponse } = await fetchJson<Record<string, unknown>>(
     body: JSON.stringify({
       artifact_id: env.artifactId,
       oidc_token: oidcToken,
-      pages_build_version: env.githubSha,
+      pages_build_version: env.pagesBuildVersion,
     }),
   },
   "Pages deployment request",

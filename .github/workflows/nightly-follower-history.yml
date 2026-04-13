@@ -119,12 +119,15 @@ jobs:
         env:
           ARTIFACT_ID: ${{ steps.upload_pages_artifact.outputs.artifact-id }}
           GITHUB_TOKEN: ${{ github.token }}
+          PAGES_BUILD_VERSION: ${{ steps.commit.outputs.commit_sha }}
         run: bun run scripts/ci/create-pages-deployment.ts
 
       - name: Wait for Pages deployment
         if: steps.push.outputs.push_result == 'pushed' && steps.pages_plan.outputs.pages_changed == 'true'
         env:
           DEPLOYMENT_ID: ${{ steps.deployment.outputs.deployment_id }}
+          EXPECTED_COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
+          EXPECTED_PUBLIC_URL: ${{ steps.deployment.outputs.page_url }}
           GITHUB_TOKEN: ${{ github.token }}
         run: bun run scripts/ci/wait-for-pages-deployment.ts
 
