@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Sun, 12 Apr 2026 02:08:24 GMT"
+      "lastModified": "Mon, 13 Apr 2026 11:46:55 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Chrome_Finish.png?v=1764770328&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:1ccebcb6cef7375b6ac47e00c9c1dc09\""
+      "etag": "\"page_cache:93620306263:IndexController:03594eda4021d5830f4073745ae0cc91\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -107,17 +107,17 @@
       "linkId": "paranoid-bitcoin-anarchists",
       "sourceUrl": "https://x.com/i/communities/1871996451812769951",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-11T22:25:11.916Z",
+      "updatedAt": "2026-04-13T11:53:34.214Z",
       "metadata": {
         "title": "PARANOID BITCOIN ANARCHISTS",
         "description": "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
         "image": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "ogImage": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "sourceLabel": "x.com",
-        "membersCount": 790,
-        "membersCountRaw": "790 Members"
+        "membersCount": 788,
+        "membersCountRaw": "788 Members"
       },
-      "lastModified": "Sun, 12 Apr 2026 09:33:01 GMT"
+      "lastModified": "Mon, 13 Apr 2026 11:52:49 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -149,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:cef66246b8c999d22ec1c5af3f7436f9\""
+      "etag": "\"page_cache:94205477246:IndexController:fccfb6e527ce4c5d8a6f1df61589dc1f\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -179,7 +179,7 @@
         "twitterImage": "https://imgproxy.fourthwall.com/NAyaO0KRbLeRPi9fCxfKafCsg9joK0bCPE9Mz0Jdm-A/w:1200/sm:1/enc/FNEq3fHnhor1KeC-/uNNaBGJ5cCaEPfgy/4aVqCKBdDo49WVWy/OK9b3ZlOTvaqhOxy/LBUiJuwWy4p9duQT/_q7k1xYKVn2qv7TA/8KZ9BS58ETH3yKSD/M80b5OUDjWGzwSKC/ZXUNGRnLhvSolD8Y/ztjXJ93Y0yFy3xTz/4hwl85Quf2Ii7-47/t7fGJG6IRJ43JtIu/28C-YgJr6fM7-yMN/Vrzr8A5Y0Y5QfFlA/pKltqUli_-7yc_eq/f_8vLp-uumS2fmKc.png",
         "sourceLabel": "bitcoinnova.store"
       },
-      "etag": "W/\"b718ef70b26a0bf80eeb43715fe02128\""
+      "etag": "W/\"e836585bd9d9c7bf818aeb094cf84dae\""
     },
     "the-bitcoin-way": {
       "linkId": "the-bitcoin-way",
@@ -194,7 +194,7 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com"
       },
-      "lastModified": "Fri, 10 Apr 2026 05:56:15 GMT"
+      "lastModified": "Mon, 13 Apr 2026 04:45:23 GMT"
     },
     "x": {
       "linkId": "x",
