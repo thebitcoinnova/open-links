@@ -35,7 +35,7 @@
       "linkId": "github",
       "sourceUrl": "https://github.com/pRizz",
       "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-04-12T07:28:58.077Z",
+      "updatedAt": "2026-04-13T07:33:44.717Z",
       "metadata": {
         "title": "pRizz - Overview",
         "description": "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
@@ -46,10 +46,10 @@
         "profileImage": "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
         "followersCount": 95,
         "followersCountRaw": "95 followers",
-        "followingCount": 97,
-        "followingCountRaw": "97 following"
+        "followingCount": 98,
+        "followingCountRaw": "98 following"
       },
-      "etag": "W/\"833c12d20c612f65674a17ee7425345f\""
+      "etag": "W/\"55d3ad756c89f091cbae5217e61b13ee\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -169,7 +169,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-04-12T07:29:24.332Z",
+      "updatedAt": "2026-04-13T07:34:13.364Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -179,10 +179,10 @@
         "profileImage": "https://unavatar.io/x/pryszkie",
         "followersCount": 1349,
         "followersCountRaw": "1,349 Followers",
-        "followingCount": 699,
-        "followingCountRaw": "699 Following"
+        "followingCount": 700,
+        "followingCountRaw": "700 Following"
       },
-      "lastModified": "Sun, 12 Apr 2026 07:28:59 GMT"
+      "lastModified": "Mon, 13 Apr 2026 07:33:45 GMT"
     },
     "youtube": {
       "linkId": "youtube",
