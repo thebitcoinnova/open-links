@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Fri, 17 Apr 2026 04:11:02 GMT"
+      "lastModified": "Sat, 18 Apr 2026 09:13:24 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Chrome_Finish.png?v=1764770328&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:6caabedf58168f3181ce12991d5d89d1\""
+      "etag": "\"page_cache:93620306263:IndexController:89a6a4c380a3841021032bebe81f44d7\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -43,7 +43,7 @@
         "sourceLabel": "signup.cluborange.org",
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
-      "lastModified": "Tue, 14 Apr 2026 10:51:32 GMT"
+      "lastModified": "Sat, 18 Apr 2026 09:35:38 GMT"
     },
     "fountain": {
       "linkId": "fountain",
@@ -90,7 +90,7 @@
       "linkId": "live-with-the-hive-podcast",
       "sourceUrl": "https://www.youtube.com/@livewiththehive/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-07T10:37:09.694Z",
+      "updatedAt": "2026-04-18T09:34:49.172Z",
       "metadata": {
         "title": "Hive Minded",
         "description": "The Hive Minded is created and hosted by Staci Costopoulos, creator of The Bitcoin Nova.The Hive Minded is a Bitcoin hangout. Real conversations, reactions, ...",
@@ -99,25 +99,25 @@
         "twitterImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 130,
-        "subscribersCountRaw": "130 subscribers"
+        "subscribersCount": 128,
+        "subscribersCountRaw": "128 subscribers"
       }
     },
     "paranoid-bitcoin-anarchists": {
       "linkId": "paranoid-bitcoin-anarchists",
       "sourceUrl": "https://x.com/i/communities/1871996451812769951",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-13T11:53:34.214Z",
+      "updatedAt": "2026-04-18T09:35:40.190Z",
       "metadata": {
         "title": "PARANOID BITCOIN ANARCHISTS",
         "description": "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
         "image": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "ogImage": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
         "sourceLabel": "x.com",
-        "membersCount": 788,
-        "membersCountRaw": "788 Members"
+        "membersCount": 787,
+        "membersCountRaw": "787 Members"
       },
-      "lastModified": "Fri, 17 Apr 2026 10:40:00 GMT"
+      "lastModified": "Sat, 18 Apr 2026 09:34:52 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -149,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:07655563b5406878245a1c35638ddb5a\""
+      "etag": "\"page_cache:94205477246:IndexController:b6db04071d6b4e2acfba90a2be3d7148\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -179,7 +179,7 @@
         "twitterImage": "https://imgproxy.fourthwall.com/NAyaO0KRbLeRPi9fCxfKafCsg9joK0bCPE9Mz0Jdm-A/w:1200/sm:1/enc/FNEq3fHnhor1KeC-/uNNaBGJ5cCaEPfgy/4aVqCKBdDo49WVWy/OK9b3ZlOTvaqhOxy/LBUiJuwWy4p9duQT/_q7k1xYKVn2qv7TA/8KZ9BS58ETH3yKSD/M80b5OUDjWGzwSKC/ZXUNGRnLhvSolD8Y/ztjXJ93Y0yFy3xTz/4hwl85Quf2Ii7-47/t7fGJG6IRJ43JtIu/28C-YgJr6fM7-yMN/Vrzr8A5Y0Y5QfFlA/pKltqUli_-7yc_eq/f_8vLp-uumS2fmKc.png",
         "sourceLabel": "bitcoinnova.store"
       },
-      "etag": "W/\"781ab6d6aa2f569e135c2900a546b6d6\""
+      "etag": "W/\"0d4c954749c067f43d32f48118317e44\""
     },
     "the-bitcoin-way": {
       "linkId": "the-bitcoin-way",
