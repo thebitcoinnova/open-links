@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-17T07:33:05.594Z",
+  "updatedAt": "2026-04-18T07:26:41.978Z",
   "entries": [
     {
       "linkId": "github",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/github.csv",
       "latestAudienceCount": 95,
       "latestAudienceCountRaw": "95 followers",
-      "latestObservedAt": "2026-04-17T07:33:05.594Z"
+      "latestObservedAt": "2026-04-18T07:26:41.978Z"
     },
     {
       "linkId": "instagram",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/instagram.csv",
       "latestAudienceCount": 89,
       "latestAudienceCountRaw": "89 Followers",
-      "latestObservedAt": "2026-04-17T07:33:05.594Z"
+      "latestObservedAt": "2026-04-18T07:26:41.978Z"
     },
     {
       "linkId": "medium",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/medium.csv",
       "latestAudienceCount": 3300,
       "latestAudienceCountRaw": "3.3K followers",
-      "latestObservedAt": "2026-04-17T07:33:05.594Z"
+      "latestObservedAt": "2026-04-18T07:26:41.978Z"
     },
     {
       "linkId": "primal",
@@ -48,7 +48,7 @@
       "csvPath": "history/followers/primal.csv",
       "latestAudienceCount": 16,
       "latestAudienceCountRaw": "16 followers",
-      "latestObservedAt": "2026-04-17T07:33:05.594Z"
+      "latestObservedAt": "2026-04-18T07:26:41.978Z"
     },
     {
       "linkId": "substack",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/substack.csv",
       "latestAudienceCount": 14,
       "latestAudienceCountRaw": "14 subscribers",
-      "latestObservedAt": "2026-04-17T07:33:05.594Z"
+      "latestObservedAt": "2026-04-18T07:26:41.978Z"
     },
     {
       "linkId": "x",
@@ -72,7 +72,7 @@
       "csvPath": "history/followers/x.csv",
       "latestAudienceCount": 1356,
       "latestAudienceCountRaw": "1,356 Followers",
-      "latestObservedAt": "2026-04-17T07:33:05.594Z"
+      "latestObservedAt": "2026-04-18T07:26:41.978Z"
     },
     {
       "linkId": "youtube",
@@ -84,7 +84,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 13,
       "latestAudienceCountRaw": "13 subscribers",
-      "latestObservedAt": "2026-04-17T07:33:05.594Z"
+      "latestObservedAt": "2026-04-18T07:26:41.978Z"
     }
   ]
 }
