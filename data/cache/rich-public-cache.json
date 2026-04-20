@@ -49,7 +49,7 @@
         "followingCount": 98,
         "followingCountRaw": "98 following"
       },
-      "etag": "W/\"6ada311edbe296be4715ac03cca1b2b6\""
+      "etag": "W/\"e4f3ae1e0e66c454988fa0aa69872882\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -73,13 +73,9 @@
       "linkId": "lemonade-referral",
       "sourceUrl": "https://lemonade.com/r/peterryszkiewicz",
       "capturedAt": "2026-04-05T07:24:09.372Z",
-      "updatedAt": "2026-04-18T07:25:35.543Z",
+      "updatedAt": "2026-04-20T07:34:32.945Z",
       "metadata": {
-        "title": "Lemonade Insurance | Home, Car, Pet, and Life Coverage",
-        "description": "Lemonade offers renters and home insurance powered by tech and driven by social good. ❤ We promise zero paperwork and instant everything by replacing brokers and bureaucracy with bots and machine learning. Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
-        "image": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
-        "ogImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
-        "twitterImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "title": "Lemonade",
         "sourceLabel": "lemonade.com"
       }
     },
@@ -103,7 +99,7 @@
       "linkId": "primal",
       "sourceUrl": "https://primal.net/peterryszkiewicz",
       "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-04-19T07:30:25.060Z",
+      "updatedAt": "2026-04-20T07:34:40.311Z",
       "metadata": {
         "title": "Peter No Taxation Without Representation Ryszkiewicz",
         "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
@@ -115,8 +111,8 @@
         "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
         "followersCount": 17,
         "followersCountRaw": "17 followers",
-        "followingCount": 90,
-        "followingCountRaw": "90 following"
+        "followingCount": 91,
+        "followingCountRaw": "91 following"
       }
     },
     "rumble": {
@@ -169,7 +165,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-04-19T07:30:45.888Z",
+      "updatedAt": "2026-04-20T07:35:03.002Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -177,12 +173,12 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1355,
-        "followersCountRaw": "1,355 Followers",
+        "followersCount": 1357,
+        "followersCountRaw": "1,357 Followers",
         "followingCount": 705,
         "followingCountRaw": "705 Following"
       },
-      "lastModified": "Sun, 19 Apr 2026 07:30:18 GMT"
+      "lastModified": "Mon, 20 Apr 2026 07:34:33 GMT"
     },
     "youtube": {
       "linkId": "youtube",
