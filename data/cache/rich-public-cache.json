@@ -35,7 +35,7 @@
       "linkId": "github",
       "sourceUrl": "https://github.com/pRizz",
       "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-04-13T07:33:44.717Z",
+      "updatedAt": "2026-04-21T07:32:18.393Z",
       "metadata": {
         "title": "pRizz - Overview",
         "description": "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
@@ -44,12 +44,12 @@
         "twitterImage": "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
         "sourceLabel": "github.com",
         "profileImage": "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
-        "followersCount": 95,
-        "followersCountRaw": "95 followers",
+        "followersCount": 96,
+        "followersCountRaw": "96 followers",
         "followingCount": 98,
         "followingCountRaw": "98 following"
       },
-      "etag": "W/\"e4f3ae1e0e66c454988fa0aa69872882\""
+      "etag": "W/\"576e768f7023e837342c59e99b8de4ed\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -73,9 +73,13 @@
       "linkId": "lemonade-referral",
       "sourceUrl": "https://lemonade.com/r/peterryszkiewicz",
       "capturedAt": "2026-04-05T07:24:09.372Z",
-      "updatedAt": "2026-04-20T07:34:32.945Z",
+      "updatedAt": "2026-04-21T07:32:18.393Z",
       "metadata": {
-        "title": "Lemonade",
+        "title": "Lemonade Insurance | Home, Car, Pet, and Life Coverage",
+        "description": "Lemonade offers renters and home insurance powered by tech and driven by social good. ❤ We promise zero paperwork and instant everything by replacing brokers and bureaucracy with bots and machine learning. Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+        "image": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "ogImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "twitterImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
         "sourceLabel": "lemonade.com"
       }
     },
@@ -165,7 +169,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-04-20T07:35:03.002Z",
+      "updatedAt": "2026-04-21T07:32:44.681Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -173,12 +177,12 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1357,
-        "followersCountRaw": "1,357 Followers",
-        "followingCount": 705,
-        "followingCountRaw": "705 Following"
+        "followersCount": 1358,
+        "followersCountRaw": "1,358 Followers",
+        "followingCount": 706,
+        "followingCountRaw": "706 Following"
       },
-      "lastModified": "Mon, 20 Apr 2026 07:34:33 GMT"
+      "lastModified": "Tue, 21 Apr 2026 07:32:19 GMT"
     },
     "youtube": {
       "linkId": "youtube",
