@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Tue, 21 Apr 2026 01:38:21 GMT"
+      "lastModified": "Wed, 22 Apr 2026 03:33:17 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Bitcoin_Sovryn_Head_Banner.png?v=1776621154&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:95bdd14773b9a2139888c4c046cadea0\""
+      "etag": "\"page_cache:93620306263:IndexController:4caad2c3d100ffa5ebb712c88e1b81e1\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -43,7 +43,7 @@
         "sourceLabel": "signup.cluborange.org",
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
-      "lastModified": "Tue, 21 Apr 2026 10:55:30 GMT"
+      "lastModified": "Wed, 22 Apr 2026 10:52:09 GMT"
     },
     "fountain": {
       "linkId": "fountain",
@@ -117,7 +117,7 @@
         "membersCount": 787,
         "membersCountRaw": "787 Members"
       },
-      "lastModified": "Tue, 21 Apr 2026 10:54:43 GMT"
+      "lastModified": "Wed, 22 Apr 2026 10:52:33 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -149,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:f78db0c7714fe336441a6c2898c2f0ea\""
+      "etag": "\"page_cache:94205477246:IndexController:bf0691c4db85e10a586d50f4be3bd50e\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -179,7 +179,7 @@
         "twitterImage": "https://imgproxy.fourthwall.com/NAyaO0KRbLeRPi9fCxfKafCsg9joK0bCPE9Mz0Jdm-A/w:1200/sm:1/enc/FNEq3fHnhor1KeC-/uNNaBGJ5cCaEPfgy/4aVqCKBdDo49WVWy/OK9b3ZlOTvaqhOxy/LBUiJuwWy4p9duQT/_q7k1xYKVn2qv7TA/8KZ9BS58ETH3yKSD/M80b5OUDjWGzwSKC/ZXUNGRnLhvSolD8Y/ztjXJ93Y0yFy3xTz/4hwl85Quf2Ii7-47/t7fGJG6IRJ43JtIu/28C-YgJr6fM7-yMN/Vrzr8A5Y0Y5QfFlA/pKltqUli_-7yc_eq/f_8vLp-uumS2fmKc.png",
         "sourceLabel": "bitcoinnova.store"
       },
-      "etag": "W/\"0d4c954749c067f43d32f48118317e44\""
+      "etag": "W/\"b0bc35613d334ecaa041b8a47317ff91\""
     },
     "the-bitcoin-way": {
       "linkId": "the-bitcoin-way",
@@ -194,7 +194,7 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com"
       },
-      "lastModified": "Mon, 20 Apr 2026 11:54:29 GMT"
+      "lastModified": "Tue, 21 Apr 2026 16:39:48 GMT"
     },
     "x": {
       "linkId": "x",
@@ -233,7 +233,7 @@
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@TheBitcoinNova/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-21T10:54:41.615Z",
+      "updatedAt": "2026-04-22T10:52:31.455Z",
       "metadata": {
         "title": "Bitcoin Nova Podcast",
         "description": "Host of The Bitcoin Nova Podcast & Hive Minded Podcast. Club Orange Community Manager and Public Speaker. Staci is a Greek American, exploring Bitcoin, finan...",
@@ -242,8 +242,8 @@
         "twitterImage": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 7100,
-        "subscribersCountRaw": "7.1K subscribers"
+        "subscribersCount": 7290,
+        "subscribersCountRaw": "7.29K subscribers"
       }
     }
   }
