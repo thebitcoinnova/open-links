@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Thu, 23 Apr 2026 04:13:39 GMT"
+      "lastModified": "Fri, 24 Apr 2026 05:28:12 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Bitcoin_Sovryn_Head_Banner.png?v=1776621154&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:26cc71e0e6e4edb8b5c1ee2a2dc5fd60\""
+      "etag": "\"page_cache:93620306263:IndexController:4ca7d1ad14c09428b5fcabbf0bd058e7\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -117,7 +117,7 @@
         "membersCount": 787,
         "membersCountRaw": "787 Members"
       },
-      "lastModified": "Thu, 23 Apr 2026 10:57:46 GMT"
+      "lastModified": "Fri, 24 Apr 2026 10:56:00 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -149,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:915419b706443976d609e51b665bbd72\""
+      "etag": "\"page_cache:94205477246:IndexController:a771f53039910548851a2f9b10a950e8\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -233,7 +233,7 @@
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@TheBitcoinNova/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-23T10:57:42.241Z",
+      "updatedAt": "2026-04-24T10:55:59.380Z",
       "metadata": {
         "title": "Bitcoin Nova Podcast",
         "description": "Host of The Bitcoin Nova Podcast & Hive Minded Podcast. Club Orange Community Manager and Public Speaker. Staci is a Greek American, exploring Bitcoin, finan...",
@@ -242,8 +242,8 @@
         "twitterImage": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 7490,
-        "subscribersCountRaw": "7.49K subscribers"
+        "subscribersCount": 7720,
+        "subscribersCountRaw": "7.72K subscribers"
       }
     }
   }
