@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-24T07:35:40.419Z",
+  "updatedAt": "2026-04-25T07:30:29.837Z",
   "entries": [
     {
       "linkId": "github",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/github.csv",
       "latestAudienceCount": 97,
       "latestAudienceCountRaw": "97 followers",
-      "latestObservedAt": "2026-04-24T07:35:40.419Z"
+      "latestObservedAt": "2026-04-25T07:30:29.837Z"
     },
     {
       "linkId": "instagram",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/instagram.csv",
       "latestAudienceCount": 89,
       "latestAudienceCountRaw": "89 Followers",
-      "latestObservedAt": "2026-04-24T07:35:40.419Z"
+      "latestObservedAt": "2026-04-25T07:30:29.837Z"
     },
     {
       "linkId": "medium",
@@ -48,7 +48,7 @@
       "csvPath": "history/followers/primal.csv",
       "latestAudienceCount": 17,
       "latestAudienceCountRaw": "17 followers",
-      "latestObservedAt": "2026-04-24T07:35:40.419Z"
+      "latestObservedAt": "2026-04-25T07:30:29.837Z"
     },
     {
       "linkId": "substack",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/substack.csv",
       "latestAudienceCount": 14,
       "latestAudienceCountRaw": "14 subscribers",
-      "latestObservedAt": "2026-04-24T07:35:40.419Z"
+      "latestObservedAt": "2026-04-25T07:30:29.837Z"
     },
     {
       "linkId": "x",
@@ -70,9 +70,9 @@
       "canonicalUrl": "https://x.com/pryszkie",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 1356,
-      "latestAudienceCountRaw": "1,356 Followers",
-      "latestObservedAt": "2026-04-24T07:35:40.419Z"
+      "latestAudienceCount": 1357,
+      "latestAudienceCountRaw": "1,357 Followers",
+      "latestObservedAt": "2026-04-25T07:30:29.837Z"
     },
     {
       "linkId": "youtube",
@@ -84,7 +84,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 13,
       "latestAudienceCountRaw": "13 subscribers",
-      "latestObservedAt": "2026-04-24T07:35:40.419Z"
+      "latestObservedAt": "2026-04-25T07:30:29.837Z"
     }
   ]
 }
