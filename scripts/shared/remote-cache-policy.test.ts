@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   type RemoteCachePolicyRegistry,
+  loadRemoteCachePolicyRegistry,
   resolveRemoteCachePolicyRule,
 } from "./remote-cache-policy";
 
@@ -60,4 +61,21 @@ test("keeps exact-match domains scoped when subdomains are not allowed", () => {
   // Assert
   assert.equal(exactMatch?.rule.id, "public-metadata");
   assert.equal(subdomainMiss, null);
+});
+
+test("the checked-in registry covers fourthwall content image hosts", () => {
+  // Arrange
+  const registry = loadRemoteCachePolicyRegistry();
+
+  // Act
+  const match = resolveRemoteCachePolicyRule({
+    registry,
+    pipeline: "content_images",
+    url: "https://imgproxy.fourthwall.dev/example.png",
+  });
+
+  // Assert
+  assert.equal(match?.matchedDomain, "fourthwall.dev");
+  assert.equal(match?.host, "imgproxy.fourthwall.dev");
+  assert.equal(match?.rule.checkMode, "head_then_get");
 });

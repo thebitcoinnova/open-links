@@ -303,13 +303,11 @@ jobs:
       needs.prepare.result == 'success' &&
       (
         needs.prepare.outputs.aws_target_enabled != 'true' ||
-        needs.aws.result == 'success' ||
-        needs.aws.result == 'skipped'
+        needs.aws.result == 'success'
       ) &&
       (
         needs.prepare.outputs.github_pages_enabled != 'true' ||
-        needs.pages.result == 'success' ||
-        needs.pages.result == 'skipped'
+        needs.pages.result == 'success'
       ) &&
       (
         needs.prepare.outputs.aws_enabled == 'true' ||
