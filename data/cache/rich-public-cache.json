@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Sat, 02 May 2026 08:17:41 GMT"
+      "lastModified": "Sun, 03 May 2026 03:38:30 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Bitcoin_Sovryn_Head_Banner.png?v=1776621154&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:c7bbc44e418186a98ff786ed7ff6d38a\""
+      "etag": "\"page_cache:93620306263:IndexController:8345783d81759a558b3a5a9d00c02736\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -90,7 +90,7 @@
       "linkId": "live-with-the-hive-podcast",
       "sourceUrl": "https://www.youtube.com/@livewiththehive/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-05-02T08:18:33.356Z",
+      "updatedAt": "2026-05-03T08:30:00.863Z",
       "metadata": {
         "title": "Hive Minded",
         "description": "The Hive Minded is created and hosted by Staci Costopoulos, creator of The Bitcoin Nova.The Hive Minded is a Bitcoin hangout. Real conversations, reactions, ...",
@@ -99,8 +99,8 @@
         "twitterImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 173,
-        "subscribersCountRaw": "173 subscribers"
+        "subscribersCount": 179,
+        "subscribersCountRaw": "179 subscribers"
       }
     },
     "paranoid-bitcoin-anarchists": {
@@ -117,7 +117,7 @@
         "membersCount": 787,
         "membersCountRaw": "787 Members"
       },
-      "lastModified": "Sat, 02 May 2026 08:18:36 GMT"
+      "lastModified": "Sun, 03 May 2026 08:30:02 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -149,7 +149,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:a994c729dcb10d5c02f0b4199e409021\""
+      "etag": "\"page_cache:94205477246:IndexController:5ef3fc91e636158e86ece8ff68971e00\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
