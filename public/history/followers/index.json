@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-07T07:55:35.571Z",
+  "updatedAt": "2026-05-08T07:32:27.670Z",
   "entries": [
     {
       "linkId": "github",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/github.csv",
       "latestAudienceCount": 99,
       "latestAudienceCountRaw": "99 followers",
-      "latestObservedAt": "2026-05-07T07:55:35.571Z"
+      "latestObservedAt": "2026-05-08T07:32:27.670Z"
     },
     {
       "linkId": "instagram",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/instagram.csv",
       "latestAudienceCount": 89,
       "latestAudienceCountRaw": "89 Followers",
-      "latestObservedAt": "2026-05-07T07:55:35.571Z"
+      "latestObservedAt": "2026-05-08T07:32:27.670Z"
     },
     {
       "linkId": "medium",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/medium.csv",
       "latestAudienceCount": 3300,
       "latestAudienceCountRaw": "3.3K followers",
-      "latestObservedAt": "2026-05-07T07:55:35.571Z"
+      "latestObservedAt": "2026-05-08T07:32:27.670Z"
     },
     {
       "linkId": "primal",
@@ -48,7 +48,7 @@
       "csvPath": "history/followers/primal.csv",
       "latestAudienceCount": 17,
       "latestAudienceCountRaw": "17 followers",
-      "latestObservedAt": "2026-05-07T07:55:35.571Z"
+      "latestObservedAt": "2026-05-08T07:32:27.670Z"
     },
     {
       "linkId": "substack",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/substack.csv",
       "latestAudienceCount": 14,
       "latestAudienceCountRaw": "14 subscribers",
-      "latestObservedAt": "2026-05-07T07:55:35.571Z"
+      "latestObservedAt": "2026-05-08T07:32:27.670Z"
     },
     {
       "linkId": "x",
@@ -72,7 +72,7 @@
       "csvPath": "history/followers/x.csv",
       "latestAudienceCount": 1376,
       "latestAudienceCountRaw": "1,376 Followers",
-      "latestObservedAt": "2026-05-07T07:55:35.571Z"
+      "latestObservedAt": "2026-05-08T07:32:27.670Z"
     },
     {
       "linkId": "youtube",
@@ -82,9 +82,9 @@
       "canonicalUrl": "https://www.youtube.com/@peterryszkiewicz4354",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/youtube.csv",
-      "latestAudienceCount": 15,
-      "latestAudienceCountRaw": "15 subscribers",
-      "latestObservedAt": "2026-05-07T07:55:35.571Z"
+      "latestAudienceCount": 16,
+      "latestAudienceCountRaw": "16 subscribers",
+      "latestObservedAt": "2026-05-08T07:32:27.670Z"
     }
   ]
 }
