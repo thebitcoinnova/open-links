@@ -240,13 +240,15 @@ If your links use authenticated extractors (`links[].enrichment.authenticatedExt
 bun run setup:rich-auth
 ```
 
-If you use Medium, X, or Primal rich links and want the optional public audience metrics cached locally, run:
+If you use Medium, X, or Primal rich links and want the optional public audience metrics cached locally, run this once per link id:
 
 ```bash
 bun run public:rich:sync -- --only-link medium
 bun run public:rich:sync -- --only-link x
 bun run public:rich:sync -- --only-link primal
 ```
+
+For X, `bun run enrich:rich:strict:write-cache` only persists oEmbed/avatar metadata; it does not capture follower counts. Use `public:rich:sync` before follower-history sync whenever you add or change an X profile card that should show analytics.
 
 If you want to refresh the public follower-history artifacts locally before the nightly automation does it on `main`, run:
 
@@ -404,7 +406,7 @@ Live build provenance surfaces:
 - `bun run enrich:rich:write-cache` - run non-strict rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
 - `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement; routine runs leave `data/cache/rich-public-cache.json` unchanged and only update the local runtime overlay when needed.
 - `bun run enrich:rich:strict:write-cache` - run policy-enforced rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
-- `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal profile audience metrics into the committed stable cache at `data/cache/rich-public-cache.json` and the local runtime overlay at `data/cache/rich-public-cache.runtime.json` (non-auth, operator-invoked).
+- `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal profile audience metrics into the committed stable cache at `data/cache/rich-public-cache.json` and the local runtime overlay at `data/cache/rich-public-cache.runtime.json` (non-auth, operator-invoked; use `-- --only-link <link-id>` for each profile card that needs metrics).
 - `bun run followers:history:sync` - append the current follower/subscriber snapshots into the public CSV history files under `public/history/followers/` and refresh `public/history/followers/index.json`.
 - `bun run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
 - `bun run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
@@ -433,7 +435,7 @@ Live build provenance surfaces:
   - `public/history/followers/index.json`
 - Local parity:
   - `bun run enrich:rich:strict:write-cache`
-  - `bun run public:rich:sync`
+  - `bun run public:rich:sync` or targeted `bun run public:rich:sync -- --only-link <link-id>` for new/changed Medium, X, or Primal profile links
   - `bun run followers:history:sync`
   - `bun run build`
 - The workflow commits directly to `main` and deploys Pages in the same run. This avoids depending on downstream workflow fan-out from a bot-authored push.

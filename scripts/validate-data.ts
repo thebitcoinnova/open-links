@@ -1623,9 +1623,9 @@ export const analyticsHistorySetupIssues = (input: {
     return [];
   }
 
-  const indexedPlatforms = new Set(index.entries.map((entry) => entry.platform));
+  const indexedLinkIds = new Set(index.entries.map((entry) => entry.linkId));
   const missingTargets = analyticsCapableTargets.filter(
-    (target) => !indexedPlatforms.has(target.platform),
+    (target) => !indexedLinkIds.has(target.linkId),
   );
   if (missingTargets.length === 0) {
     return [];

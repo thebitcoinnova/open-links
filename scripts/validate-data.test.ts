@@ -828,8 +828,8 @@ test("analytics history setup stays quiet when x already has a follower-history 
   assert.deepEqual(issues, []);
 });
 
-test("analytics history setup treats x community coverage as satisfied by existing x platform history", (t) => {
-  const baseDir = "tmp/tests/analytics-history-platform-coverage";
+test("analytics history setup warns when a second x link is missing its own history", (t) => {
+  const baseDir = "tmp/tests/analytics-history-link-coverage";
   t.after(() => {
     fs.rmSync(path.join(ROOT, baseDir), { recursive: true, force: true });
   });
@@ -845,6 +845,14 @@ test("analytics history setup treats x community coverage as satisfied by existi
           icon: "x",
           enabled: true,
           url: "https://x.com/i/communities/1871996451812769951",
+        },
+        {
+          id: "x",
+          label: "X",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/XSTAC1",
         },
       ],
     },
@@ -874,5 +882,16 @@ test("analytics history setup treats x community coverage as satisfied by existi
     }),
   });
 
-  assert.deepEqual(issues, []);
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "warning");
+  assert.match(
+    issues[0]?.message ?? "",
+    /analytics-capable links are missing follower-history entries: paranoid-bitcoin-anarchists/u,
+  );
+  assert.doesNotMatch(issues[0]?.message ?? "", /entries: x/u);
+  assert.match(
+    issues[0]?.remediation ?? "",
+    /public:rich:sync -- --only-link paranoid-bitcoin-anarchists/u,
+  );
+  assert.doesNotMatch(issues[0]?.remediation ?? "", /--only-link x/u);
 });

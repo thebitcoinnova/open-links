@@ -202,13 +202,15 @@ Recommended first pass:
 bun run validate:data
 ```
 
-If you want Medium, X, or Primal audience metrics cached through the public browser path, run this before `dev` or after your profile changes:
+If you want Medium, X, or Primal audience metrics cached through the public browser path, run this before `dev` or after your profile changes. Run it once per link id; multiple links on the same platform each need their own capture.
 
 ```bash
 bun run public:rich:sync -- --only-link medium
 bun run public:rich:sync -- --only-link x
 bun run public:rich:sync -- --only-link primal
 ```
+
+For X profile links, `bun run enrich:rich:strict:write-cache` persists the oEmbed/avatar fallback only. It does not fetch follower or following counts; use `public:rich:sync -- --only-link <link-id>` before follower-history sync when analytics should be available.
 
 The built-in audience analytics page is already enabled by default. It becomes visible once follower-history artifacts exist, so after refreshing audience-capable links you should also run:
 

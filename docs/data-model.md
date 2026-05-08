@@ -881,7 +881,7 @@ observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audien
 
 The follower-history sync reads the normalized audience metadata that runtime also uses for profile-card header metrics. That means both public-augmented and authenticated-cache-backed profiles can contribute history when they expose a primary audience field.
 
-History files are link-scoped rather than platform-scoped. This avoids blending separate entities that share a platform, such as an `x` profile plus an `x` community.
+History files are link-scoped rather than platform-scoped. This avoids blending separate entities that share a platform, such as two `x` profiles or an `x` profile plus an `x` community. When adding or changing Medium, X, or Primal profile links that should publish analytics, run `bun run public:rich:sync -- --only-link <link-id>` for each link before `bun run followers:history:sync`; X oEmbed enrichment alone does not expose follower counts.
 
 #### Analytics and share surfaces
 
