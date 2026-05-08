@@ -165,6 +165,25 @@
       },
       "etag": "W/\"2ee4c08877fc02065c505ef566924f81\""
     },
+    "the-bitcoin-nova-x": {
+      "linkId": "the-bitcoin-nova-x",
+      "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fthebitcoinnova&omit_script=true&hide_thread=true&dnt=true",
+      "capturedAt": "2026-05-08T22:08:31.327Z",
+      "updatedAt": "2026-05-08T22:13:32.793Z",
+      "metadata": {
+        "title": "@TheBitcoinNova on X",
+        "description": "Posts and updates from @TheBitcoinNova on X.",
+        "profileDescription": "Official Bitcoin Nova Podcast Page https://youtube.com/@StaciNova http://Links.thebitcoinnova.com",
+        "image": "https://unavatar.io/x/TheBitcoinNova",
+        "sourceLabel": "x.com",
+        "profileImage": "https://unavatar.io/x/TheBitcoinNova",
+        "followersCount": 489,
+        "followersCountRaw": "489 Followers",
+        "followingCount": 513,
+        "followingCountRaw": "513 Following"
+      },
+      "lastModified": "Fri, 08 May 2026 22:08:51 GMT"
+    },
     "the-bitcoin-way": {
       "linkId": "the-bitcoin-way",
       "sourceUrl": "http://www.thebitcoinway.com/bitcoinnova",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-08T21:38:47.980Z",
+  "generatedAt": "2026-05-08T22:08:55.444Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/df9325785d065ff73729756c9bf5dad9d8b8305fda657bfc9da3d8bf841028da.png",
@@ -234,6 +234,18 @@
       "updatedAt": "2026-04-05T14:26:09.437Z",
       "contentType": "image/jpeg",
       "bytes": 87045
+    },
+    "link:the-bitcoin-nova-x:image": {
+      "resolvedPath": "cache/content-images/722a2977d053c5063f94bb1c31360f26c933aaffaa7deac2ac0e64b5cb7e3b91.jpg",
+      "updatedAt": "2026-05-08T22:08:55.105Z",
+      "contentType": "image/jpeg",
+      "bytes": 25604
+    },
+    "link:the-bitcoin-nova-x:profileImage": {
+      "resolvedPath": "cache/content-images/722a2977d053c5063f94bb1c31360f26c933aaffaa7deac2ac0e64b5cb7e3b91.jpg",
+      "updatedAt": "2026-05-08T22:08:55.422Z",
+      "contentType": "image/jpeg",
+      "bytes": 25604
     },
     "link:x:image": {
       "resolvedPath": "cache/content-images/bb4be66aa03ba7ac665341e9feb27d6aba4571e68c7c6b177dc7297da8eef992.jpg",

@@ -323,6 +323,15 @@
       "url": "https://www.youtube.com/@TheBitcoinNova"
     },
     {
+      "enabled": true,
+      "group": "watch-listen",
+      "icon": "x",
+      "id": "the-bitcoin-nova-x",
+      "label": "The Bitcoin Nova X",
+      "type": "rich",
+      "url": "https://x.com/TheBitcoinNova"
+    },
+    {
       "custom": {
         "import": {
           "importedAt": "2026-03-27T09:33:52.429Z",
@@ -348,6 +357,7 @@
     "altair-tech",
     "bitcoin-sovryn",
     "youtube",
+    "the-bitcoin-nova-x",
     "x",
     "live-with-the-hive-podcast",
     "fountain",
