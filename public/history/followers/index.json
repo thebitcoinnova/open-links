@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-08T22:14:03.414Z",
+  "updatedAt": "2026-05-08T22:38:58.806Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
-      "label": "Live with the Hive Podcast",
+      "label": "Hive Minded YouTube",
       "platform": "live-with-the-hive-podcast",
-      "handle": "livewiththehive",
-      "canonicalUrl": "https://youtube.com/@livewiththehive?si=tQizrqZ7AVqSBimH&sub_confirmation=1",
+      "handle": "hiveminded21",
+      "canonicalUrl": "https://www.youtube.com/@HiveMinded21",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
-      "latestAudienceCount": 131,
-      "latestAudienceCountRaw": "131 subscribers",
-      "latestObservedAt": "2026-05-08T22:14:03.414Z"
+      "latestAudienceCount": 215,
+      "latestAudienceCountRaw": "215 subscribers",
+      "latestObservedAt": "2026-05-08T22:38:58.806Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-05-08T22:14:03.414Z"
+      "latestObservedAt": "2026-05-08T22:38:58.806Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
       "latestAudienceCount": 489,
       "latestAudienceCountRaw": "489 Followers",
-      "latestObservedAt": "2026-05-08T22:14:03.414Z"
+      "latestObservedAt": "2026-05-08T22:38:58.806Z"
     },
     {
       "linkId": "x",
@@ -48,19 +48,19 @@
       "csvPath": "history/followers/x.csv",
       "latestAudienceCount": 5551,
       "latestAudienceCountRaw": "5,551 Followers",
-      "latestObservedAt": "2026-05-08T22:14:03.414Z"
+      "latestObservedAt": "2026-05-08T22:38:58.806Z"
     },
     {
       "linkId": "youtube",
-      "label": "The Bitcoin Nova YouTube",
+      "label": "Staci Nova YouTube",
       "platform": "youtube",
-      "handle": "thebitcoinnova",
-      "canonicalUrl": "https://www.youtube.com/@TheBitcoinNova",
+      "handle": "stacinova",
+      "canonicalUrl": "https://www.youtube.com/@StaciNova",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/youtube.csv",
-      "latestAudienceCount": 7850,
-      "latestAudienceCountRaw": "7.85K subscribers",
-      "latestObservedAt": "2026-05-08T22:14:03.414Z"
+      "latestAudienceCount": 9200,
+      "latestAudienceCountRaw": "9.2K subscribers",
+      "latestObservedAt": "2026-05-08T22:38:58.806Z"
     }
   ]
 }

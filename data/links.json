@@ -65,14 +65,12 @@
       "enabled": true,
       "group": "watch-listen",
       "id": "live-with-the-hive-podcast",
-      "label": "Live with the Hive Podcast",
+      "label": "Hive Minded YouTube",
       "metadata": {
-        "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
-        "subscribersCount": 131,
-        "subscribersCountRaw": "131 subscribers"
+        "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points."
       },
       "type": "rich",
-      "url": "https://youtube.com/@livewiththehive?si=tQizrqZ7AVqSBimH&sub_confirmation=1"
+      "url": "https://www.youtube.com/@HiveMinded21"
     },
     {
       "enabled": true,
@@ -318,9 +316,9 @@
       "enabled": true,
       "group": "watch-listen",
       "id": "youtube",
-      "label": "The Bitcoin Nova YouTube",
+      "label": "Staci Nova YouTube",
       "type": "rich",
-      "url": "https://www.youtube.com/@TheBitcoinNova"
+      "url": "https://www.youtube.com/@StaciNova"
     },
     {
       "enabled": true,

@@ -1,6 +1,6 @@
 {
   "$schema": "https://open-links.dev/schema/profile.schema.json",
-  "avatar": "https://ugc.production.linktr.ee/cb51ef8a-75f5-45d0-b5ee-84930a9a6116_IMG-0031.jpeg?io=true&size=avatar-v3_0",
+  "avatar": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
   "bio": "Host of Bitcoin Nova Podcast | X Community Leader",
   "custom": {},
   "headline": "Bitcoin educator, podcast host, and community builder",
@@ -13,7 +13,7 @@
     },
     {
       "label": "YouTube",
-      "url": "https://youtube.com/@thebitcoinnovapodcast?si=bJDvNhG8zklJMv8Q"
+      "url": "https://www.youtube.com/@StaciNova"
     },
     {
       "label": "X",
@@ -30,10 +30,6 @@
     {
       "label": "Apple Podcasts",
       "url": "https://podcasts.apple.com/us/podcast/the-bitcoin-nova-podcast/id1800522855"
-    },
-    {
-      "label": "The Bitcoin Nova YouTube",
-      "url": "https://www.youtube.com/@TheBitcoinNova"
     }
   ]
 }
