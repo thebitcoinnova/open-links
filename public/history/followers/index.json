@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-08T08:20:16.883Z",
+  "updatedAt": "2026-05-08T21:38:02.743Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -27,28 +27,16 @@
       "latestObservedAt": "2026-05-08T08:20:16.883Z"
     },
     {
-      "linkId": "paranoid-bitcoin-anarchists",
-      "label": "Paranoid Bitcoin Anarchists",
-      "platform": "x",
-      "handle": "1871996451812769951",
-      "canonicalUrl": "https://x.com/i/communities/1871996451812769951",
-      "audienceKind": "members",
-      "csvPath": "history/followers/paranoid-bitcoin-anarchists.csv",
-      "latestAudienceCount": 787,
-      "latestAudienceCountRaw": "787 Members",
-      "latestObservedAt": "2026-05-08T08:20:16.883Z"
-    },
-    {
       "linkId": "x",
       "label": "X",
       "platform": "x",
-      "handle": "xstac1",
-      "canonicalUrl": "https://x.com/XSTAC1",
+      "handle": "stacinova",
+      "canonicalUrl": "https://x.com/StaciNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
       "latestAudienceCount": 5551,
       "latestAudienceCountRaw": "5,551 Followers",
-      "latestObservedAt": "2026-04-12T09:34:27.224Z"
+      "latestObservedAt": "2026-05-08T21:38:02.743Z"
     },
     {
       "linkId": "youtube",

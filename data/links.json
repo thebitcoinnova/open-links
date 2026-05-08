@@ -91,28 +91,6 @@
         }
       },
       "enabled": true,
-      "group": "community-partners",
-      "icon": "x",
-      "id": "paranoid-bitcoin-anarchists",
-      "label": "Paranoid Bitcoin Anarchists",
-      "metadata": {
-        "description": "Bitcoin community for people who question everything, run nodes, hold their own keys, and build outside the fiat system.",
-        "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
-        "sourceLabel": "x.com",
-        "title": "Paranoid Bitcoin Anarchists"
-      },
-      "type": "rich",
-      "url": "https://x.com/i/communities/1871996451812769951"
-    },
-    {
-      "custom": {
-        "import": {
-          "importedAt": "2026-03-18T11:24:40.180Z",
-          "kind": "linktree",
-          "sourceUrl": "https://linktr.ee/XSTACI"
-        }
-      },
-      "enabled": true,
       "group": "projects-brands",
       "id": "satoshoes",
       "label": "Satoshoes",
@@ -146,8 +124,17 @@
       "group": "projects-brands",
       "id": "home-microseed",
       "label": "Home - MicroSeed",
+      "referral": {
+        "code": "NOVA",
+        "kind": "promo",
+        "offerSummary": "Save on MicroSeed with code NOVA.",
+        "ownerBenefit": "Supports Staci and The Bitcoin Nova.",
+        "termsSummary": "Microseed public-sharing terms were not conclusive in the scripted check; code is published with owner confirmation.",
+        "termsUrl": "https://microseed.io/faq/",
+        "visitorBenefit": "Use code NOVA for a discount."
+      },
       "type": "rich",
-      "url": "https://microseed.io/?ref=XSTACI"
+      "url": "https://microseed.io/?ref=NOVA"
     },
     {
       "enabled": true,
@@ -163,10 +150,13 @@
       "id": "altair-tech",
       "label": "Altair Tech",
       "referral": {
+        "code": "NOVA",
         "kind": "affiliate",
-        "visitorBenefit": "Use code XSTACI for a discount.",
+        "offerSummary": "Save on Altair Tech with code NOVA.",
         "ownerBenefit": "Supports Staci and The Bitcoin Nova.",
-        "code": "XSTACI"
+        "termsSummary": "Altair Tech public-sharing terms were not conclusive in the scripted check; code is published with owner confirmation.",
+        "termsUrl": "https://altairtech.io/",
+        "visitorBenefit": "Use code NOVA for a discount."
       },
       "type": "rich",
       "url": "https://altairtech.io/"
@@ -176,6 +166,15 @@
       "group": "projects-brands",
       "id": "bitcoin-sovryn",
       "label": "Bitcoin Sovryn",
+      "referral": {
+        "code": "NOVA",
+        "kind": "promo",
+        "offerSummary": "Save on Bitcoin Sovryn with code NOVA.",
+        "ownerBenefit": "Supports Staci and The Bitcoin Nova.",
+        "termsSummary": "Bitcoin Sovryn public-sharing terms were not conclusive in the scripted check; code is published with owner confirmation.",
+        "termsUrl": "https://bitcoinsovryn.com/",
+        "visitorBenefit": "Use code NOVA for a discount."
+      },
       "type": "rich",
       "url": "https://bitcoinsovryn.com/"
     },
@@ -336,7 +335,7 @@
       "id": "x",
       "label": "X",
       "type": "rich",
-      "url": "https://x.com/XSTAC1"
+      "url": "https://x.com/StaciNova"
     }
   ],
   "order": [
@@ -355,7 +354,6 @@
     "rumble",
     "audible-the-bitcoin-nova-podcast",
     "the-bitcoin-nova-podcast-on-amazon-music",
-    "paranoid-bitcoin-anarchists",
     "club-orange",
     "tip-staci",
     "bookings-thebitcoinnova-gmail-com"

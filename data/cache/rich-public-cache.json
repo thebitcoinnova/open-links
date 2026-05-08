@@ -73,9 +73,9 @@
     },
     "home-microseed": {
       "linkId": "home-microseed",
-      "sourceUrl": "https://microseed.io/?ref=XSTACI",
+      "sourceUrl": "https://microseed.io/?ref=NOVA",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-01T09:40:23.555Z",
+      "updatedAt": "2026-05-08T21:47:19.642Z",
       "metadata": {
         "title": "Home - MicroSeed",
         "description": "Premium Seed Phrase Backup MicroSeed engraves your entire Bitcoin seed phrase on fireproof, waterproof steel or titanium the size of a coin Unlock Security",
@@ -102,22 +102,6 @@
         "subscribersCount": 210,
         "subscribersCountRaw": "210 subscribers"
       }
-    },
-    "paranoid-bitcoin-anarchists": {
-      "linkId": "paranoid-bitcoin-anarchists",
-      "sourceUrl": "https://x.com/i/communities/1871996451812769951",
-      "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-18T09:35:40.190Z",
-      "metadata": {
-        "title": "PARANOID BITCOIN ANARCHISTS",
-        "description": "Hold your keys | Run a Node Paranoid: Question everything Bitcoin: Don’t trust, verify. Anarchists: We build, laugh, and ignore conspiring fiat clowns",
-        "image": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
-        "ogImage": "https://pbs.twimg.com/community_banner_img/1997471355478892544/GydvYqIp?format=jpg&name=orig",
-        "sourceLabel": "x.com",
-        "membersCount": 787,
-        "membersCountRaw": "787 Members"
-      },
-      "lastModified": "Fri, 08 May 2026 08:18:45 GMT"
     },
     "rumble": {
       "linkId": "rumble",
@@ -198,22 +182,22 @@
     },
     "x": {
       "linkId": "x",
-      "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fxstac1&omit_script=true&hide_thread=true&dnt=true",
+      "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2FStaciNova&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-04-12T09:34:06.949Z",
+      "updatedAt": "2026-05-08T21:36:10.300Z",
       "metadata": {
-        "title": "@XSTAC1 on X",
-        "description": "Posts and updates from @XSTAC1 on X.",
+        "title": "@StaciNova on X",
+        "description": "Posts and updates from @StaciNova on X.",
         "profileDescription": "Club Orange Community Manager & Host of @TheBitcoinNova & Hive Minded STACK FRIENDS WHO STACK SATS https://signup.cluborange.org/co/bitcoinnova",
-        "image": "https://unavatar.io/x/XSTAC1",
+        "image": "https://unavatar.io/x/StaciNova",
         "sourceLabel": "x.com",
-        "profileImage": "https://unavatar.io/x/XSTAC1",
+        "profileImage": "https://unavatar.io/x/StaciNova",
         "followersCount": 5551,
         "followersCountRaw": "5,551 Followers",
         "followingCount": 4080,
         "followingCountRaw": "4,080 Following"
       },
-      "lastModified": "Sun, 12 Apr 2026 09:33:47 GMT"
+      "lastModified": "Fri, 08 May 2026 21:36:10 GMT"
     },
     "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno": {
       "linkId": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
