@@ -60,6 +60,14 @@ const primalLink = {
   },
 } as const;
 
+const youtubeLink = {
+  id: "youtube",
+  label: "YouTube",
+  url: "https://www.youtube.com/@peterryszkiewicz4354",
+  type: "rich",
+  icon: "youtube",
+} as const;
+
 const emptyRegistry = (): PublicCacheRegistry => ({
   version: 1,
   updatedAt: "2026-03-08T14:00:00.000Z",
@@ -147,6 +155,25 @@ const createPrimalBaseEntry = (
     sourceLabel: "primal.net",
   },
   cacheControl: "must-revalidate, proxy-revalidate, max-age=1",
+});
+
+const createYoutubeBaseEntry = (
+  linkId: string,
+  generatedAt: string,
+  sourceUrl: string,
+): PublicCacheEntry => ({
+  linkId,
+  sourceUrl,
+  capturedAt: generatedAt,
+  updatedAt: generatedAt,
+  metadata: {
+    title: "Peter Ryszkiewicz - YouTube",
+    description: "Videos from Peter Ryszkiewicz.",
+    image: "https://yt3.googleusercontent.com/avatar.jpg",
+    profileImage: "https://yt3.googleusercontent.com/avatar.jpg",
+    sourceLabel: "youtube.com",
+  },
+  cacheControl: "no-cache, no-store, must-revalidate",
 });
 
 const captureSuccess = (
@@ -774,6 +801,7 @@ test("preserves existing X metrics when a refresh attempt fails", async () => {
 
   // Assert
   assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
   assert.equal(result.registry.entries.x?.metadata.followersCountRaw, "1,350 Followers");
   assert.equal(result.registry.entries.x?.metadata.followingCountRaw, "643 Following");
   assert.equal(
@@ -787,6 +815,76 @@ test("preserves existing X metrics when a refresh attempt fails", async () => {
       reason: "profile_metadata_missing",
       artifactPath: "output/playwright/public-rich-sync/x-failed.json",
       detail: "X public browser capture did not find a following count.",
+    },
+  ]);
+});
+
+test("marks terminal X placeholder captures as fatal profile-unavailable failures", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.x = {
+    ...createXBaseEntry(
+      "x",
+      "2026-03-08T17:00:00.000Z",
+      "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
+    ),
+    metadata: {
+      ...createXBaseEntry(
+        "x",
+        "2026-03-08T17:00:00.000Z",
+        "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
+      ).metadata,
+      followersCount: 1350,
+      followersCountRaw: "1,350 Followers",
+      followingCount: 643,
+      followingCountRaw: "643 Following",
+      profileDescription: "Existing profile description.",
+    },
+  };
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "x",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [xLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/x-missing.json",
+        metrics: {
+          placeholderSignals: ["account_missing"],
+        },
+        error: "X public browser capture saw placeholder content: account_missing.",
+      }),
+      nowIso: () => "2026-03-08T18:14:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 1);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), true);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "x",
+      status: "failed",
+      reason: "profile_unavailable",
+      artifactPath: "output/playwright/public-rich-sync/x-missing.json",
+      detail: "X public browser capture saw terminal profile placeholder content: account_missing.",
+      fatal: true,
     },
   ]);
 });
@@ -968,6 +1066,7 @@ test("preserves existing Primal metrics when a refresh attempt fails", async () 
 
   // Assert
   assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
   assert.equal(result.registry.entries.primal?.metadata.followersCountRaw, "15 followers");
   assert.equal(result.registry.entries.primal?.metadata.followingCountRaw, "90 following");
   assert.deepEqual(result.entries, [
@@ -981,6 +1080,176 @@ test("preserves existing Primal metrics when a refresh attempt fails", async () 
   ]);
 });
 
+test("classifies public source 404 errors as fatal profile-unavailable failures", async () => {
+  // Arrange
+  let captureCalls = 0;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "youtube",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [youtubeLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error(
+          "Unable to fetch public augmentation source 'https://www.youtube.com/@missing/about'. HTTP 404",
+        );
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        throw new Error("should not capture after bootstrap failure");
+      },
+      nowIso: () => "2026-03-08T20:00:30.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(captureCalls, 0);
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "youtube",
+      status: "failed",
+      reason: "profile_unavailable",
+      detail:
+        "Unable to fetch public augmentation source 'https://www.youtube.com/@missing/about'. HTTP 404",
+      fatal: true,
+    },
+  ]);
+});
+
+test("bootstraps a missing YouTube cache entry and overlays subscriber counts", async () => {
+  // Arrange
+  let bootstrapCalls = 0;
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "youtube",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [youtubeLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: (_path, registry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(registry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        assert.equal(target.id, "youtube-public-profile");
+        return createYoutubeBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "youtube-public-profile");
+        return captureSuccess(
+          {
+            subscribersCount: 9200,
+            subscribersCountRaw: "9.2K subscribers",
+          },
+          "output/playwright/public-rich-sync/youtube-2026-03-08.json",
+        );
+      },
+      nowIso: () => "2026-03-08T20:00:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.processed, 1);
+  assert.equal(
+    writtenRegistry?.entries.youtube?.sourceUrl,
+    "https://www.youtube.com/@peterryszkiewicz4354/about",
+  );
+  assert.equal(writtenRegistry?.entries.youtube?.metadata.subscribersCount, 9200);
+  assert.equal(writtenRegistry?.entries.youtube?.metadata.subscribersCountRaw, "9.2K subscribers");
+});
+
+test("preserves existing YouTube metrics when a refresh attempt fails", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.youtube = {
+    ...createYoutubeBaseEntry(
+      "youtube",
+      "2026-03-08T19:00:00.000Z",
+      "https://www.youtube.com/@peterryszkiewicz4354/about",
+    ),
+    metadata: {
+      ...createYoutubeBaseEntry(
+        "youtube",
+        "2026-03-08T19:00:00.000Z",
+        "https://www.youtube.com/@peterryszkiewicz4354/about",
+      ).metadata,
+      subscribersCount: 9100,
+      subscribersCountRaw: "9.1K subscribers",
+    },
+  };
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "youtube",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [youtubeLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/youtube-failed.json",
+        metrics: {
+          placeholderSignals: [],
+        },
+        error: "YouTube public browser capture did not find a subscriber count.",
+      }),
+      nowIso: () => "2026-03-08T20:01:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), false);
+  assert.equal(result.registry.entries.youtube?.metadata.subscribersCountRaw, "9.1K subscribers");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "youtube",
+      status: "failed",
+      reason: "subscribers_missing",
+      artifactPath: "output/playwright/public-rich-sync/youtube-failed.json",
+      detail: "YouTube public browser capture did not find a subscriber count.",
+    },
+  ]);
+});
+
 test("records failure detail in the run summary", () => {
   // Arrange
   const result = {
@@ -988,6 +1257,7 @@ test("records failure detail in the run summary", () => {
     processed: 3,
     skipped: 1,
     failed: 1,
+    fatalFailed: 1,
     entries: [
       {
         linkId: "medium",
@@ -995,6 +1265,7 @@ test("records failure detail in the run summary", () => {
         reason: "followers_missing",
         artifactPath: "output/playwright/public-rich-sync/medium.json",
         detail: "Medium public browser capture saw placeholder content: cloudflare_challenge.",
+        fatal: true,
       },
     ],
   };
@@ -1014,4 +1285,12 @@ test("allow-failures suppresses non-zero exit semantics", () => {
   assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, false), true);
   assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, true), false);
   assert.equal(shouldPublicRichSyncExitWithFailure({ failed: 0 }, false), false);
+});
+
+test("fatal public sync failures exit non-zero even when allow-failures is set", () => {
+  // Arrange
+  const failingResult = { failed: 1, fatalFailed: 1 };
+
+  // Act / Assert
+  assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, true), true);
 });

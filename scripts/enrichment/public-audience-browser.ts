@@ -1,7 +1,7 @@
 import { parseAudienceCount } from "./social-profile-counts";
 
 const AUDIENCE_PATTERN =
-  /(?<![\d.])(?<raw>(?:\d+(?:\.\d+)?[KMBkmb]|\d[\d.,]*)\s+(?<label>followers?|following|members?))\b/giu;
+  /(?<![\d.])(?<raw>(?:\d+(?:\.\d+)?[KMBkmb]|\d[\d.,]*)\s+(?<label>followers?|following|members?|subscribers?))\b/giu;
 
 export interface PublicAudienceBrowserSnapshot {
   currentUrl?: string;
@@ -18,6 +18,8 @@ export interface PublicAudienceMetrics {
   followingCountRaw?: string;
   membersCount?: number;
   membersCountRaw?: string;
+  subscribersCount?: number;
+  subscribersCountRaw?: string;
   profileDescription?: string;
   placeholderSignals: string[];
 }
@@ -112,9 +114,19 @@ export const parsePublicAudienceMetrics = (input: {
         metrics.membersCount = parsedCount;
         metrics.membersCountRaw = normalizedRaw;
       }
+
+      if (label.startsWith("subscriber") && !metrics.subscribersCountRaw) {
+        metrics.subscribersCount = parsedCount;
+        metrics.subscribersCountRaw = normalizedRaw;
+      }
     }
 
-    if (metrics.followersCountRaw && metrics.followingCountRaw && metrics.membersCountRaw) {
+    if (
+      metrics.followersCountRaw &&
+      metrics.followingCountRaw &&
+      metrics.membersCountRaw &&
+      metrics.subscribersCountRaw
+    ) {
       break;
     }
   }

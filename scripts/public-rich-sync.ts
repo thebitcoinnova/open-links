@@ -34,6 +34,7 @@ import {
 } from "./enrichment/public-cache";
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
 import { parseXPublicProfileMetrics } from "./enrichment/x-public-browser";
+import { parseYoutubePublicProfileMetrics } from "./enrichment/youtube-public-browser";
 import { loadEmbeddedCode } from "./shared/embedded-code-loader";
 import {
   RemoteCacheStatsCollector,
@@ -55,6 +56,9 @@ const PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
 );
 const X_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/x/extract-public-profile-metrics.js",
+);
+const YOUTUBE_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/youtube/extract-public-profile-metrics.js",
 );
 
 interface CliArgs {
@@ -106,11 +110,16 @@ interface PrimalPublicTarget extends PublicAugmentationTarget {
   id: "primal-public-profile";
 }
 
+interface YoutubePublicTarget extends PublicAugmentationTarget {
+  id: "youtube-public-profile";
+}
+
 type SyncablePublicTarget =
   | MediumPublicTarget
   | PrimalPublicTarget
   | XProfilePublicTarget
-  | XCommunityPublicTarget;
+  | XCommunityPublicTarget
+  | YoutubePublicTarget;
 type SyncablePublicTargetId = SyncablePublicTarget["id"];
 type PublicBrowserAudienceSnapshot = PublicAudienceBrowserSnapshot;
 export type PublicBrowserAudienceMetrics = PublicAudienceMetrics;
@@ -158,6 +167,7 @@ export interface PublicRichSyncRunEntry {
   reason: string;
   artifactPath?: string;
   detail?: string;
+  fatal?: boolean;
 }
 
 export interface PublicRichSyncResult {
@@ -165,6 +175,7 @@ export interface PublicRichSyncResult {
   processed: number;
   skipped: number;
   failed: number;
+  fatalFailed: number;
   entries: PublicRichSyncRunEntry[];
   registry: PublicCacheRegistry;
 }
@@ -174,6 +185,7 @@ export interface PublicRichSyncSummary {
   processed: number;
   skipped: number;
   failed: number;
+  fatalFailed: number;
   entries: PublicRichSyncRunEntry[];
 }
 
@@ -264,7 +276,8 @@ const isSyncablePublicTarget = (
   isMediumPublicTarget(target) ||
   isPrimalPublicTarget(target) ||
   isXProfilePublicTarget(target) ||
-  isXCommunityPublicTarget(target);
+  isXCommunityPublicTarget(target) ||
+  target?.id === "youtube-public-profile";
 
 const hasDefinedAudienceMetric = (value: number | string | undefined): boolean => {
   if (typeof value === "number") {
@@ -323,9 +336,11 @@ interface SyncableTargetBehavior {
   label: string;
   snippet: string;
   parseMetrics: (snapshot: PublicAudienceBrowserSnapshot) => PublicBrowserAudienceMetrics;
+  terminalPlaceholderSignals: readonly string[];
   requiresFollowingCount: boolean;
   requiresMembersCount: boolean;
   requiresProfileDescription: boolean;
+  requiresSubscribersCount: boolean;
 }
 
 const SYNCABLE_TARGET_BEHAVIORS = {
@@ -333,33 +348,51 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Medium",
     snippet: MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseMediumPublicProfileMetrics,
+    terminalPlaceholderSignals: [],
     requiresFollowingCount: false,
     requiresMembersCount: false,
     requiresProfileDescription: false,
+    requiresSubscribersCount: false,
   },
   "primal-public-profile": {
     label: "Primal",
     snippet: PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parsePrimalPublicProfileMetrics,
+    terminalPlaceholderSignals: ["profile_missing"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: false,
+    requiresSubscribersCount: false,
   },
   "x-public-oembed": {
     label: "X",
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
+    terminalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: true,
+    requiresSubscribersCount: false,
   },
   "x-public-community": {
     label: "X community",
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
+    terminalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: false,
     requiresMembersCount: true,
     requiresProfileDescription: false,
+    requiresSubscribersCount: false,
+  },
+  "youtube-public-profile": {
+    label: "YouTube",
+    snippet: YOUTUBE_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseYoutubePublicProfileMetrics,
+    terminalPlaceholderSignals: ["unavailable_page"],
+    requiresFollowingCount: false,
+    requiresMembersCount: false,
+    requiresProfileDescription: false,
+    requiresSubscribersCount: true,
   },
 } as const satisfies Record<SyncablePublicTargetId, SyncableTargetBehavior>;
 
@@ -385,6 +418,13 @@ const hasRequiredAudienceMetrics = (
     );
   }
 
+  if (behaviorForTarget(targetId).requiresSubscribersCount) {
+    return (
+      hasDefinedAudienceMetric(entry.metadata.subscribersCount) ||
+      hasDefinedAudienceMetric(entry.metadata.subscribersCountRaw)
+    );
+  }
+
   if (!behaviorForTarget(targetId).requiresFollowingCount) {
     return hasFollowers;
   }
@@ -402,29 +442,35 @@ const hasRequiredAudienceMetrics = (
 const skipReasonForTarget = (targetId: SyncablePublicTargetId): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? "members_present"
-    : behaviorForTarget(targetId).requiresProfileDescription
-      ? "profile_metadata_present"
-      : behaviorForTarget(targetId).requiresFollowingCount
-        ? "audience_present"
-        : "followers_present";
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? "subscribers_present"
+      : behaviorForTarget(targetId).requiresProfileDescription
+        ? "profile_metadata_present"
+        : behaviorForTarget(targetId).requiresFollowingCount
+          ? "audience_present"
+          : "followers_present";
 
 const skipMessageForTarget = (targetId: SyncablePublicTargetId): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? "members already present"
-    : behaviorForTarget(targetId).requiresProfileDescription
-      ? "followers, following, and profile description already present"
-      : behaviorForTarget(targetId).requiresFollowingCount
-        ? "followers and following already present"
-        : "followers already present";
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? "subscribers already present"
+      : behaviorForTarget(targetId).requiresProfileDescription
+        ? "followers, following, and profile description already present"
+        : behaviorForTarget(targetId).requiresFollowingCount
+          ? "followers and following already present"
+          : "followers already present";
 
 const missingMetricsReasonForTarget = (targetId: SyncablePublicTargetId): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? "members_missing"
-    : behaviorForTarget(targetId).requiresProfileDescription
-      ? "profile_metadata_missing"
-      : behaviorForTarget(targetId).requiresFollowingCount
-        ? "audience_missing"
-        : "followers_missing";
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? "subscribers_missing"
+      : behaviorForTarget(targetId).requiresProfileDescription
+        ? "profile_metadata_missing"
+        : behaviorForTarget(targetId).requiresFollowingCount
+          ? "audience_missing"
+          : "followers_missing";
 
 const captureSummaryForTarget = (
   targetId: SyncablePublicTargetId,
@@ -432,19 +478,21 @@ const captureSummaryForTarget = (
 ): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? (metrics.membersCountRaw ?? "members missing")
-    : !behaviorForTarget(targetId).requiresFollowingCount
-      ? (metrics.followersCountRaw ?? "followers missing")
-      : behaviorForTarget(targetId).requiresProfileDescription
-        ? `${metrics.followingCountRaw ?? "following missing"} / ${
-            metrics.followersCountRaw ?? "followers missing"
-          } / ${
-            metrics.profileDescription
-              ? "profile description captured"
-              : "profile description missing"
-          }`
-        : `${metrics.followingCountRaw ?? "following missing"} / ${
-            metrics.followersCountRaw ?? "followers missing"
-          }`;
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? (metrics.subscribersCountRaw ?? "subscribers missing")
+      : !behaviorForTarget(targetId).requiresFollowingCount
+        ? (metrics.followersCountRaw ?? "followers missing")
+        : behaviorForTarget(targetId).requiresProfileDescription
+          ? `${metrics.followingCountRaw ?? "following missing"} / ${
+              metrics.followersCountRaw ?? "followers missing"
+            } / ${
+              metrics.profileDescription
+                ? "profile description captured"
+                : "profile description missing"
+            }`
+          : `${metrics.followingCountRaw ?? "following missing"} / ${
+              metrics.followersCountRaw ?? "followers missing"
+            }`;
 
 const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
   ...entry,
@@ -455,6 +503,87 @@ const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
 
 const toErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
+
+interface PublicRichSyncFailureClassification {
+  reason: string;
+  detail: string;
+  fatal: boolean;
+}
+
+const terminalPlaceholderSignalsForTarget = (
+  targetId: SyncablePublicTargetId,
+  metrics: PublicBrowserAudienceMetrics,
+): string[] => {
+  const terminalSignals = behaviorForTarget(targetId).terminalPlaceholderSignals;
+  return metrics.placeholderSignals.filter((signal) => terminalSignals.includes(signal));
+};
+
+const isTerminalSourceFailureDetail = (
+  targetId: SyncablePublicTargetId,
+  detail: string,
+): boolean => {
+  const normalized = detail.toLowerCase();
+  if (/\bhttp\s+404\b|\b404\s+not found\b/u.test(normalized)) {
+    return true;
+  }
+
+  switch (targetId) {
+    case "primal-public-profile":
+      return /profile not found|user not found|page not found|profile_missing/u.test(normalized);
+    case "x-public-oembed":
+    case "x-public-community":
+      return /account_missing|account_suspended|oembed_unavailable|this account doesn['’]?t exist|account suspended/u.test(
+        normalized,
+      );
+    case "youtube-public-profile":
+      return /unavailable_page|this channel does not exist|account has been terminated|channel not found/u.test(
+        normalized,
+      );
+    case "medium-public-feed":
+      return false;
+  }
+};
+
+const classifyCaptureFailure = (
+  targetId: SyncablePublicTargetId,
+  capture: PublicBrowserAudienceCaptureResult,
+): PublicRichSyncFailureClassification => {
+  const terminalSignals = terminalPlaceholderSignalsForTarget(targetId, capture.metrics);
+  if (terminalSignals.length > 0) {
+    return {
+      reason: "profile_unavailable",
+      detail: `${behaviorForTarget(targetId).label} public browser capture saw terminal profile placeholder content: ${terminalSignals.join(
+        ", ",
+      )}.`,
+      fatal: true,
+    };
+  }
+
+  return {
+    reason: missingMetricsReasonForTarget(targetId),
+    detail: capture.error ?? captureSummaryForTarget(targetId, capture.metrics),
+    fatal: false,
+  };
+};
+
+const classifySyncError = (
+  targetId: SyncablePublicTargetId,
+  detail: string,
+): PublicRichSyncFailureClassification => {
+  if (isTerminalSourceFailureDetail(targetId, detail)) {
+    return {
+      reason: "profile_unavailable",
+      detail,
+      fatal: true,
+    };
+  }
+
+  return {
+    reason: "sync_error",
+    detail,
+    fatal: false,
+  };
+};
 
 const extractEvalResult = (value: unknown): Record<string, unknown> | null => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -598,6 +727,12 @@ const buildAudienceCaptureError = (
       : `${behaviorForTarget(targetId).label} public browser capture did not find a member count.`;
   }
 
+  if (behaviorForTarget(targetId).requiresSubscribersCount) {
+    return metrics.subscribersCountRaw
+      ? undefined
+      : `${behaviorForTarget(targetId).label} public browser capture did not find a subscriber count.`;
+  }
+
   if (!behaviorForTarget(targetId).requiresFollowingCount) {
     return metrics.followersCountRaw
       ? undefined
@@ -712,12 +847,16 @@ const defaultDependencies: PublicRichSyncDependencies = {
 };
 
 export const buildPublicRichSyncRunSummary = (
-  result: Pick<PublicRichSyncResult, "dirty" | "processed" | "skipped" | "failed" | "entries">,
+  result: Pick<
+    PublicRichSyncResult,
+    "dirty" | "processed" | "skipped" | "failed" | "fatalFailed" | "entries"
+  >,
 ): PublicRichSyncSummary => ({
   dirty: result.dirty,
   processed: result.processed,
   skipped: result.skipped,
   failed: result.failed,
+  fatalFailed: result.fatalFailed,
   entries: result.entries.map((entry) => ({ ...entry })),
 });
 
@@ -729,9 +868,9 @@ export const writePublicRichSyncRunSummary = (
 };
 
 export const shouldPublicRichSyncExitWithFailure = (
-  result: Pick<PublicRichSyncResult, "failed">,
+  result: Pick<PublicRichSyncResult, "failed"> & { fatalFailed?: number },
   allowFailures: boolean,
-): boolean => result.failed > 0 && !allowFailures;
+): boolean => (result.fatalFailed ?? 0) > 0 || (result.failed > 0 && !allowFailures);
 
 export const runPublicRichSyncWithDependencies = async (
   args: CliArgs,
@@ -746,6 +885,7 @@ export const runPublicRichSyncWithDependencies = async (
   let processed = 0;
   let skipped = 0;
   let failed = 0;
+  let fatalFailed = 0;
 
   const candidates = linksPayload.links
     .filter(isRichLink)
@@ -769,6 +909,7 @@ export const runPublicRichSyncWithDependencies = async (
       processed,
       skipped,
       failed,
+      fatalFailed,
       entries,
       registry,
     };
@@ -821,18 +962,21 @@ export const runPublicRichSyncWithDependencies = async (
       });
 
       if (!capture.ok) {
-        const detail =
-          capture.error ?? captureSummaryForTarget(candidate.target.id, capture.metrics);
+        const failure = classifyCaptureFailure(candidate.target.id, capture);
         failed += 1;
+        if (failure.fatal) {
+          fatalFailed += 1;
+        }
         entries.push({
           linkId: candidate.link.id,
           status: "failed",
-          reason: missingMetricsReasonForTarget(candidate.target.id),
+          reason: failure.reason,
           artifactPath: capture.artifactPath,
-          detail,
+          detail: failure.detail,
+          ...(failure.fatal ? { fatal: true } : {}),
         });
         dependencies.log(
-          `[public:rich:sync] fail ${candidate.link.id}: ${detail} (${capture.artifactPath})`,
+          `[public:rich:sync] fail ${candidate.link.id}: ${failure.detail} (${capture.artifactPath})`,
         );
         continue;
       }
@@ -855,6 +999,12 @@ export const runPublicRichSyncWithDependencies = async (
       }
       if (capture.metrics.followingCountRaw) {
         nextEntry.metadata.followingCountRaw = capture.metrics.followingCountRaw;
+      }
+      if (capture.metrics.subscribersCount !== undefined) {
+        nextEntry.metadata.subscribersCount = capture.metrics.subscribersCount;
+      }
+      if (capture.metrics.subscribersCountRaw) {
+        nextEntry.metadata.subscribersCountRaw = capture.metrics.subscribersCountRaw;
       }
       if (capture.metrics.profileDescription) {
         nextEntry.metadata.profileDescription = capture.metrics.profileDescription;
@@ -902,15 +1052,19 @@ export const runPublicRichSyncWithDependencies = async (
         )} (${capture.artifactPath})`,
       );
     } catch (candidateError: unknown) {
-      const detail = toErrorMessage(candidateError);
+      const failure = classifySyncError(candidate.target.id, toErrorMessage(candidateError));
       failed += 1;
+      if (failure.fatal) {
+        fatalFailed += 1;
+      }
       entries.push({
         linkId: candidate.link.id,
         status: "failed",
-        reason: "sync_error",
-        detail,
+        reason: failure.reason,
+        detail: failure.detail,
+        ...(failure.fatal ? { fatal: true } : {}),
       });
-      dependencies.log(`[public:rich:sync] fail ${candidate.link.id}: ${detail}`);
+      dependencies.log(`[public:rich:sync] fail ${candidate.link.id}: ${failure.detail}`);
     }
   }
 
@@ -927,6 +1081,7 @@ export const runPublicRichSyncWithDependencies = async (
     processed,
     skipped,
     failed,
+    fatalFailed,
     entries,
     registry,
   };
@@ -944,6 +1099,7 @@ const runCli = async () => {
   console.log(`Processed: ${result.processed}`);
   console.log(`Skipped: ${result.skipped}`);
   console.log(`Failed: ${result.failed}`);
+  console.log(`Fatal failures: ${result.fatalFailed}`);
   console.log(`Cache updated: ${result.dirty ? "yes" : "no"}`);
 
   if (shouldPublicRichSyncExitWithFailure(result, args.allowFailures ?? false)) {

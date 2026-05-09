@@ -17,6 +17,7 @@ import {
   loadAuthenticatedCacheRegistry,
   resolveAuthenticatedCacheKey,
 } from "./authenticated-extractors/cache";
+import { resolvePublicAugmentationTarget } from "./enrichment/public-augmentation";
 import { DEFAULT_PUBLIC_CACHE_PATH, loadPublicCacheRegistry } from "./enrichment/public-cache";
 import {
   appendFollowerHistoryRows,
@@ -74,6 +75,13 @@ export interface HistoryRunSummary {
 }
 
 const ROOT = process.cwd();
+const PUBLIC_AUDIENCE_SYNC_TARGET_IDS = new Set([
+  "medium-public-feed",
+  "primal-public-profile",
+  "x-public-oembed",
+  "x-public-community",
+  "youtube-public-profile",
+]);
 
 const absolutePath = (value: string): string =>
   path.isAbsolute(value) ? value : path.join(ROOT, value);
@@ -139,6 +147,19 @@ export const resolvePublicRichSyncFailedLinkIds = (
       .map((entry) => entry.linkId),
   );
 
+export const resolveFreshPublicRichSyncLinkIds = (
+  summary: Pick<PublicRichSyncSummary, "entries"> | null | undefined,
+): Set<string> =>
+  new Set(
+    (summary?.entries ?? [])
+      .filter(
+        (entry) =>
+          entry.status === "synced" ||
+          (entry.status === "skipped" && entry.reason === "counts_unchanged"),
+      )
+      .map((entry) => entry.linkId),
+  );
+
 const readOptionalPublicRichSyncSummary = (
   summaryPath: string | undefined,
 ): PublicRichSyncSummary | null => {
@@ -153,6 +174,20 @@ const readOptionalPublicRichSyncSummary = (
   }
 
   return JSON.parse(fs.readFileSync(absolute, "utf8")) as PublicRichSyncSummary;
+};
+
+const requiresFreshPublicAudienceCapture = (link: OpenLink): boolean => {
+  if (!link.url) {
+    return false;
+  }
+
+  const target = resolvePublicAugmentationTarget({
+    url: link.url,
+    icon: link.icon,
+    metadataHandle: link.metadata?.handle,
+  });
+
+  return target ? PUBLIC_AUDIENCE_SYNC_TARGET_IDS.has(target.id) : false;
 };
 
 const resolveArgs = (argv = process.argv.slice(2)): CliArgs => {
@@ -230,12 +265,13 @@ const resolveSourceAndMetadata = (
   };
 };
 
-const resolveSnapshots = (
+export const resolveSnapshots = (
   links: readonly OpenLink[],
   publicRegistry: ReturnType<typeof loadPublicCacheRegistry>,
   authenticatedRegistry: ReturnType<typeof readOptionalAuthenticatedCache>,
   observedAt: string,
   options?: {
+    freshPublicAudienceLinkIds?: ReadonlySet<string>;
     log?: (message: string) => void;
     skipLinkIds?: ReadonlySet<string>;
   },
@@ -273,6 +309,17 @@ const resolveSnapshots = (
     );
 
     if (!primaryAudience) {
+      return [];
+    }
+
+    if (
+      source === "public-cache" &&
+      requiresFreshPublicAudienceCapture(link) &&
+      !options?.freshPublicAudienceLinkIds?.has(link.id)
+    ) {
+      options?.log?.(
+        `[followers:history:sync] skip ${link.id}: no fresh public audience capture succeeded earlier in this run.`,
+      );
       return [];
     }
 
@@ -460,6 +507,7 @@ export const run = (args = resolveArgs()): HistoryRunSummary => {
   const authenticatedRegistry = readOptionalAuthenticatedCache(args.authCachePath);
   const publicRichSyncSummary = readOptionalPublicRichSyncSummary(args.publicRichSyncSummaryPath);
   const failedPublicRichSyncLinkIds = resolvePublicRichSyncFailedLinkIds(publicRichSyncSummary);
+  const freshPublicRichSyncLinkIds = resolveFreshPublicRichSyncLinkIds(publicRichSyncSummary);
   const migratedLegacyLayout = migrateFollowerHistoryCsvLayout(linksPayload.links);
   const snapshots = resolveSnapshots(
     linksPayload.links,
@@ -467,6 +515,7 @@ export const run = (args = resolveArgs()): HistoryRunSummary => {
     authenticatedRegistry,
     observedAt,
     {
+      freshPublicAudienceLinkIds: freshPublicRichSyncLinkIds,
       log: (message) => console.log(message),
       skipLinkIds: failedPublicRichSyncLinkIds,
     },
