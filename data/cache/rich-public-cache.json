@@ -29,13 +29,13 @@
         "twitterImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp",
         "sourceLabel": "signup.cluborange.org"
       },
-      "lastModified": "Fri, 01 May 2026 07:44:47 GMT"
+      "lastModified": "Sat, 02 May 2026 07:31:34 GMT"
     },
     "github": {
       "linkId": "github",
       "sourceUrl": "https://github.com/pRizz",
       "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-05-06T07:47:23.174Z",
+      "updatedAt": "2026-05-09T07:32:36.392Z",
       "metadata": {
         "title": "pRizz - Overview",
         "description": "An agentic engineer, making things in the AI space, Bitcoin space, and many others. - pRizz",
@@ -46,10 +46,10 @@
         "profileImage": "https://avatars.githubusercontent.com/u/3519085?v=4?s=400",
         "followersCount": 99,
         "followersCountRaw": "99 followers",
-        "followingCount": 99,
-        "followingCountRaw": "99 following"
+        "followingCount": 100,
+        "followingCountRaw": "100 following"
       },
-      "etag": "W/\"72c4b0320177ad61b391e419a2e6429a\""
+      "etag": "W/\"2dc5bc09fed326f0828ba936e650ac26\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -73,9 +73,13 @@
       "linkId": "lemonade-referral",
       "sourceUrl": "https://lemonade.com/r/peterryszkiewicz",
       "capturedAt": "2026-04-05T07:24:09.372Z",
-      "updatedAt": "2026-05-08T07:31:22.303Z",
+      "updatedAt": "2026-05-09T07:32:36.392Z",
       "metadata": {
-        "title": "Lemonade",
+        "title": "Lemonade Insurance | Home, Car, Pet, and Life Coverage",
+        "description": "Lemonade offers renters and home insurance powered by tech and driven by social good. ❤ We promise zero paperwork and instant everything by replacing brokers and bureaucracy with bots and machine learning. Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+        "image": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "ogImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "twitterImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
         "sourceLabel": "lemonade.com"
       }
     },
@@ -99,7 +103,7 @@
       "linkId": "primal",
       "sourceUrl": "https://primal.net/peterryszkiewicz",
       "capturedAt": "2026-03-08T20:34:49.144Z",
-      "updatedAt": "2026-05-05T07:37:18.717Z",
+      "updatedAt": "2026-05-09T07:32:42.616Z",
       "metadata": {
         "title": "Peter No Taxation Without Representation Ryszkiewicz",
         "description": "Agentic engineer, making things in the AI space, Bitcoin space, and many others.",
@@ -109,8 +113,8 @@
         "handle": "peterryszkiewicz",
         "sourceLabel": "primal.net",
         "profileImage": "https://primal.net/media-cache?u=https%3A%2F%2Fr2.primal.net%2Fcache%2Fe%2F83%2Fb2%2Fe83b2b9f3de47e969ff7ef97b9ddfffb1673671ba25f5ca83421b73ffd0f9ec9.jpg",
-        "followersCount": 17,
-        "followersCountRaw": "17 followers",
+        "followersCount": 16,
+        "followersCountRaw": "16 followers",
         "followingCount": 92,
         "followingCountRaw": "92 following"
       }
@@ -165,7 +169,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-05-07T07:54:54.749Z",
+      "updatedAt": "2026-05-09T07:33:06.236Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -173,12 +177,12 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1376,
-        "followersCountRaw": "1,376 Followers",
-        "followingCount": 751,
-        "followingCountRaw": "751 Following"
+        "followersCount": 1379,
+        "followersCountRaw": "1,379 Followers",
+        "followingCount": 754,
+        "followingCountRaw": "754 Following"
       },
-      "lastModified": "Fri, 08 May 2026 07:31:23 GMT"
+      "lastModified": "Sat, 09 May 2026 07:32:37 GMT"
     },
     "youtube": {
       "linkId": "youtube",
