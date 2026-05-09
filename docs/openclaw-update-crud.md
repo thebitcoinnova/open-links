@@ -262,8 +262,8 @@ Execute in this exact order:
    - `data/site.json`
 9. Refresh caches, validate, and build:
    - `bun run enrich:rich:strict`
-   - for new or changed Medium, X, or Primal profile links that should publish analytics, run `bun run public:rich:sync -- --only-link <link-id>` for each affected link before `bun run followers:history:sync`; X oEmbed enrichment alone does not expose follower counts
-   - when public audience metrics are refreshed, run `bun run followers:history:sync` and keep follower-history CSV/index artifacts aligned by link id, not just platform
+   - for new or changed Medium, X, Primal, or YouTube profile links that should publish analytics, run `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for each affected link before `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`; X oEmbed enrichment alone does not expose follower counts
+   - when public audience metrics are refreshed, run `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json` and keep follower-history CSV/index artifacts aligned by link id, not just platform; public-cache rows are skipped when the same-run public sync did not successfully capture fresh audience data
    - ensure any newly introduced remote fetch domains are covered by `data/policy/remote-cache-policy.json`
    - `bun run images:sync`
    - `bun run validate:data`

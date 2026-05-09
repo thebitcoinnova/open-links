@@ -60,6 +60,23 @@ test("returns partial audience metrics when only one count is visible", () => {
   assert.equal(parsed.followingCountRaw, undefined);
 });
 
+test("parses subscriber counts from a browser snapshot", () => {
+  // Arrange
+  const snapshot = {
+    currentUrl: "https://www.youtube.com/@example/about",
+    title: "Example - YouTube",
+    metricTexts: ["9.2K subscribers"],
+  };
+
+  // Act
+  const parsed = parsePublicAudienceMetrics({ snapshot });
+
+  // Assert
+  assert.equal(parsed.subscribersCount, 9200);
+  assert.equal(parsed.subscribersCountRaw, "9.2K subscribers");
+  assert.equal(parsed.followersCount, undefined);
+});
+
 test("handles noisy text that contains audience counts inline", () => {
   // Arrange
   const snapshot = {

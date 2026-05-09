@@ -10,11 +10,49 @@ import {
   buildFollowerHistoryIndexEntries,
   createHistoryRunSummary,
   migrateFollowerHistoryCsvLayout,
+  resolveFreshPublicRichSyncLinkIds,
   resolvePublicRichSyncFailedLinkIds,
+  resolveSnapshots,
   writeHistoryRunSummary,
 } from "./sync-follower-history";
 
 const ROOT = process.cwd();
+
+const createPublicRegistry = (
+  entries: Parameters<typeof resolveSnapshots>[1]["entries"],
+): Parameters<typeof resolveSnapshots>[1] => ({
+  version: 1,
+  updatedAt: "2026-03-12T06:00:00.000Z",
+  entries,
+});
+
+const createYoutubeLink = (): OpenLink => ({
+  id: "youtube",
+  label: "YouTube",
+  url: "https://www.youtube.com/@example",
+  type: "rich",
+  icon: "youtube",
+  enabled: true,
+});
+
+const createYoutubePublicRegistry = (): Parameters<typeof resolveSnapshots>[1] =>
+  createPublicRegistry({
+    youtube: {
+      linkId: "youtube",
+      sourceUrl: "https://www.youtube.com/@example/about",
+      capturedAt: "2026-03-12T06:00:00.000Z",
+      updatedAt: "2026-03-12T06:00:00.000Z",
+      metadata: {
+        title: "Example - YouTube",
+        description: "Videos from Example.",
+        image: "https://yt3.googleusercontent.com/avatar.jpg",
+        profileImage: "https://yt3.googleusercontent.com/avatar.jpg",
+        sourceLabel: "youtube.com",
+        subscribersCount: 9200,
+        subscribersCountRaw: "9.2K subscribers",
+      },
+    },
+  });
 
 test("createHistoryRunSummary counts captured snapshots and preserves change metadata", () => {
   const snapshots: HistoryRunSnapshotSummary[] = [
@@ -113,6 +151,184 @@ test("resolvePublicRichSyncFailedLinkIds returns only failed link ids", () => {
 
   // Assert
   assert.deepEqual([...failedLinkIds].sort(), ["medium", "primal"]);
+});
+
+test("resolveFreshPublicRichSyncLinkIds returns synced and freshly captured unchanged link ids", () => {
+  // Arrange
+  const summary = {
+    entries: [
+      { linkId: "medium", status: "synced" as const, reason: "counts_refreshed" },
+      { linkId: "x", status: "skipped" as const, reason: "counts_unchanged" },
+      { linkId: "youtube", status: "skipped" as const, reason: "subscribers_present" },
+      { linkId: "primal", status: "failed" as const, reason: "audience_missing" },
+    ],
+  };
+
+  // Act
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds(summary);
+
+  // Assert
+  assert.deepEqual([...freshLinkIds].sort(), ["medium", "x"]);
+});
+
+test("resolveSnapshots skips public-cache audience rows without fresh public sync evidence", () => {
+  // Arrange
+  const links = [createYoutubeLink()];
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createYoutubePublicRegistry(),
+    null,
+    "2026-03-12T07:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: resolveFreshPublicRichSyncLinkIds(undefined),
+    },
+  );
+
+  // Assert
+  assert.deepEqual(snapshots, []);
+});
+
+test("resolveSnapshots skips public-cache audience rows when public sync failed", () => {
+  // Arrange
+  const links = [createYoutubeLink()];
+  const failedLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [{ linkId: "youtube", status: "failed" as const, reason: "subscribers_missing" }],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createYoutubePublicRegistry(),
+    null,
+    "2026-03-12T07:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: failedLinkIds,
+    },
+  );
+
+  // Assert
+  assert.deepEqual(snapshots, []);
+});
+
+test("resolveSnapshots accepts public-cache audience rows after public sync refreshed counts", () => {
+  // Arrange
+  const links = [createYoutubeLink()];
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [{ linkId: "youtube", status: "synced" as const, reason: "counts_refreshed" }],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createYoutubePublicRegistry(),
+    null,
+    "2026-03-12T07:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: freshLinkIds,
+    },
+  );
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.linkId, "youtube");
+  assert.equal(snapshots[0]?.row.audienceCountRaw, "9.2K subscribers");
+  assert.equal(snapshots[0]?.row.source, "public-cache");
+});
+
+test("resolveSnapshots accepts public-cache audience rows after fresh unchanged capture", () => {
+  // Arrange
+  const links = [createYoutubeLink()];
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [{ linkId: "youtube", status: "skipped" as const, reason: "counts_unchanged" }],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createYoutubePublicRegistry(),
+    null,
+    "2026-03-12T07:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: freshLinkIds,
+    },
+  );
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.audienceCountRaw, "9.2K subscribers");
+});
+
+test("resolveSnapshots keeps manual and authenticated snapshots without public sync evidence", () => {
+  // Arrange
+  const links: OpenLink[] = [
+    {
+      id: "manual-youtube",
+      label: "Manual YouTube",
+      url: "https://www.youtube.com/@manual",
+      type: "rich",
+      icon: "youtube",
+      enabled: true,
+      metadata: {
+        subscribersCount: 1200,
+        subscribersCountRaw: "1.2K subscribers",
+      },
+    },
+    {
+      id: "linkedin",
+      label: "LinkedIn",
+      url: "https://www.linkedin.com/in/example/",
+      type: "rich",
+      icon: "linkedin",
+      enabled: true,
+      enrichment: {
+        authenticatedExtractor: "linkedin-auth-browser",
+      },
+    },
+  ];
+  const authenticatedRegistry = {
+    entries: {
+      linkedin: {
+        metadata: {
+          followersCount: 90,
+          followersCountRaw: "90 followers",
+        },
+      },
+    },
+  } as unknown as Parameters<typeof resolveSnapshots>[2];
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createPublicRegistry({}),
+    authenticatedRegistry,
+    "2026-03-12T07:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: resolveFreshPublicRichSyncLinkIds(undefined),
+    },
+  );
+
+  // Assert
+  assert.deepEqual(
+    snapshots.map((snapshot) => ({
+      linkId: snapshot.row.linkId,
+      source: snapshot.row.source,
+      audienceCountRaw: snapshot.row.audienceCountRaw,
+    })),
+    [
+      {
+        linkId: "manual-youtube",
+        source: "manual",
+        audienceCountRaw: "1.2K subscribers",
+      },
+      {
+        linkId: "linkedin",
+        source: "authenticated-cache",
+        audienceCountRaw: "90 followers",
+      },
+    ],
+  );
 });
 
 test("buildFollowerHistoryIndexEntries keeps existing platform entries from committed CSVs", (t) => {

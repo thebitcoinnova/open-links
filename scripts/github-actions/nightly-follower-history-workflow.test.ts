@@ -60,3 +60,18 @@ test("nightly follower history passes the committed SHA into the shared Pages de
     /- name: Wait for Pages deployment\n\s+if: steps\.push\.outputs\.push_result == 'pushed' && steps\.pages_plan\.outputs\.pages_changed == 'true'\n\s+env:\n\s+DEPLOYMENT_ID: \$\{\{ steps\.deployment\.outputs\.deployment_id \}\}\n\s+EXPECTED_COMMIT_SHA: \$\{\{ steps\.commit\.outputs\.commit_sha \}\}\n\s+EXPECTED_PUBLIC_URL: \$\{\{ steps\.deployment\.outputs\.page_url \}\}\n\s+GITHUB_TOKEN: \$\{\{ github\.token \}\}\n\s+run: bun run scripts\/ci\/wait-for-pages-deployment\.ts/u,
   );
 });
+
+test("nightly follower history keeps public audience sync best effort for non-terminal failures", () => {
+  // Arrange
+  const workflowSource = fs.readFileSync(WORKFLOW_PATH, "utf8");
+
+  // Act / Assert
+  assert.match(
+    workflowSource,
+    /- name: Refresh public audience cache\n\s+run: bun run public:rich:sync -- --allow-failures --summary-json \.ci-diagnostics\/public-rich-sync-summary\.json/u,
+  );
+  assert.doesNotMatch(
+    workflowSource,
+    /- name: Refresh public audience cache[\s\S]{0,160}continue-on-error:\s+true/u,
+  );
+});
