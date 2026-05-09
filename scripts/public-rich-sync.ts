@@ -34,6 +34,7 @@ import {
 } from "./enrichment/public-cache";
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
 import { parseXPublicProfileMetrics } from "./enrichment/x-public-browser";
+import { parseYoutubePublicProfileMetrics } from "./enrichment/youtube-public-browser";
 import { loadEmbeddedCode } from "./shared/embedded-code-loader";
 import {
   RemoteCacheStatsCollector,
@@ -55,6 +56,9 @@ const PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
 );
 const X_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/x/extract-public-profile-metrics.js",
+);
+const YOUTUBE_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/youtube/extract-public-profile-metrics.js",
 );
 
 interface CliArgs {
@@ -106,11 +110,16 @@ interface PrimalPublicTarget extends PublicAugmentationTarget {
   id: "primal-public-profile";
 }
 
+interface YoutubePublicTarget extends PublicAugmentationTarget {
+  id: "youtube-public-profile";
+}
+
 type SyncablePublicTarget =
   | MediumPublicTarget
   | PrimalPublicTarget
   | XProfilePublicTarget
-  | XCommunityPublicTarget;
+  | XCommunityPublicTarget
+  | YoutubePublicTarget;
 type SyncablePublicTargetId = SyncablePublicTarget["id"];
 type PublicBrowserAudienceSnapshot = PublicAudienceBrowserSnapshot;
 export type PublicBrowserAudienceMetrics = PublicAudienceMetrics;
@@ -264,7 +273,8 @@ const isSyncablePublicTarget = (
   isMediumPublicTarget(target) ||
   isPrimalPublicTarget(target) ||
   isXProfilePublicTarget(target) ||
-  isXCommunityPublicTarget(target);
+  isXCommunityPublicTarget(target) ||
+  target?.id === "youtube-public-profile";
 
 const hasDefinedAudienceMetric = (value: number | string | undefined): boolean => {
   if (typeof value === "number") {
@@ -326,6 +336,7 @@ interface SyncableTargetBehavior {
   requiresFollowingCount: boolean;
   requiresMembersCount: boolean;
   requiresProfileDescription: boolean;
+  requiresSubscribersCount: boolean;
 }
 
 const SYNCABLE_TARGET_BEHAVIORS = {
@@ -336,6 +347,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     requiresFollowingCount: false,
     requiresMembersCount: false,
     requiresProfileDescription: false,
+    requiresSubscribersCount: false,
   },
   "primal-public-profile": {
     label: "Primal",
@@ -344,6 +356,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: false,
+    requiresSubscribersCount: false,
   },
   "x-public-oembed": {
     label: "X",
@@ -352,6 +365,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: true,
+    requiresSubscribersCount: false,
   },
   "x-public-community": {
     label: "X community",
@@ -360,6 +374,16 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     requiresFollowingCount: false,
     requiresMembersCount: true,
     requiresProfileDescription: false,
+    requiresSubscribersCount: false,
+  },
+  "youtube-public-profile": {
+    label: "YouTube",
+    snippet: YOUTUBE_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseYoutubePublicProfileMetrics,
+    requiresFollowingCount: false,
+    requiresMembersCount: false,
+    requiresProfileDescription: false,
+    requiresSubscribersCount: true,
   },
 } as const satisfies Record<SyncablePublicTargetId, SyncableTargetBehavior>;
 
@@ -385,6 +409,13 @@ const hasRequiredAudienceMetrics = (
     );
   }
 
+  if (behaviorForTarget(targetId).requiresSubscribersCount) {
+    return (
+      hasDefinedAudienceMetric(entry.metadata.subscribersCount) ||
+      hasDefinedAudienceMetric(entry.metadata.subscribersCountRaw)
+    );
+  }
+
   if (!behaviorForTarget(targetId).requiresFollowingCount) {
     return hasFollowers;
   }
@@ -402,29 +433,35 @@ const hasRequiredAudienceMetrics = (
 const skipReasonForTarget = (targetId: SyncablePublicTargetId): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? "members_present"
-    : behaviorForTarget(targetId).requiresProfileDescription
-      ? "profile_metadata_present"
-      : behaviorForTarget(targetId).requiresFollowingCount
-        ? "audience_present"
-        : "followers_present";
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? "subscribers_present"
+      : behaviorForTarget(targetId).requiresProfileDescription
+        ? "profile_metadata_present"
+        : behaviorForTarget(targetId).requiresFollowingCount
+          ? "audience_present"
+          : "followers_present";
 
 const skipMessageForTarget = (targetId: SyncablePublicTargetId): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? "members already present"
-    : behaviorForTarget(targetId).requiresProfileDescription
-      ? "followers, following, and profile description already present"
-      : behaviorForTarget(targetId).requiresFollowingCount
-        ? "followers and following already present"
-        : "followers already present";
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? "subscribers already present"
+      : behaviorForTarget(targetId).requiresProfileDescription
+        ? "followers, following, and profile description already present"
+        : behaviorForTarget(targetId).requiresFollowingCount
+          ? "followers and following already present"
+          : "followers already present";
 
 const missingMetricsReasonForTarget = (targetId: SyncablePublicTargetId): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? "members_missing"
-    : behaviorForTarget(targetId).requiresProfileDescription
-      ? "profile_metadata_missing"
-      : behaviorForTarget(targetId).requiresFollowingCount
-        ? "audience_missing"
-        : "followers_missing";
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? "subscribers_missing"
+      : behaviorForTarget(targetId).requiresProfileDescription
+        ? "profile_metadata_missing"
+        : behaviorForTarget(targetId).requiresFollowingCount
+          ? "audience_missing"
+          : "followers_missing";
 
 const captureSummaryForTarget = (
   targetId: SyncablePublicTargetId,
@@ -432,19 +469,21 @@ const captureSummaryForTarget = (
 ): string =>
   behaviorForTarget(targetId).requiresMembersCount
     ? (metrics.membersCountRaw ?? "members missing")
-    : !behaviorForTarget(targetId).requiresFollowingCount
-      ? (metrics.followersCountRaw ?? "followers missing")
-      : behaviorForTarget(targetId).requiresProfileDescription
-        ? `${metrics.followingCountRaw ?? "following missing"} / ${
-            metrics.followersCountRaw ?? "followers missing"
-          } / ${
-            metrics.profileDescription
-              ? "profile description captured"
-              : "profile description missing"
-          }`
-        : `${metrics.followingCountRaw ?? "following missing"} / ${
-            metrics.followersCountRaw ?? "followers missing"
-          }`;
+    : behaviorForTarget(targetId).requiresSubscribersCount
+      ? (metrics.subscribersCountRaw ?? "subscribers missing")
+      : !behaviorForTarget(targetId).requiresFollowingCount
+        ? (metrics.followersCountRaw ?? "followers missing")
+        : behaviorForTarget(targetId).requiresProfileDescription
+          ? `${metrics.followingCountRaw ?? "following missing"} / ${
+              metrics.followersCountRaw ?? "followers missing"
+            } / ${
+              metrics.profileDescription
+                ? "profile description captured"
+                : "profile description missing"
+            }`
+          : `${metrics.followingCountRaw ?? "following missing"} / ${
+              metrics.followersCountRaw ?? "followers missing"
+            }`;
 
 const cloneEntry = (entry: PublicCacheEntry): PublicCacheEntry => ({
   ...entry,
@@ -596,6 +635,12 @@ const buildAudienceCaptureError = (
     return metrics.membersCountRaw
       ? undefined
       : `${behaviorForTarget(targetId).label} public browser capture did not find a member count.`;
+  }
+
+  if (behaviorForTarget(targetId).requiresSubscribersCount) {
+    return metrics.subscribersCountRaw
+      ? undefined
+      : `${behaviorForTarget(targetId).label} public browser capture did not find a subscriber count.`;
   }
 
   if (!behaviorForTarget(targetId).requiresFollowingCount) {
@@ -855,6 +900,12 @@ export const runPublicRichSyncWithDependencies = async (
       }
       if (capture.metrics.followingCountRaw) {
         nextEntry.metadata.followingCountRaw = capture.metrics.followingCountRaw;
+      }
+      if (capture.metrics.subscribersCount !== undefined) {
+        nextEntry.metadata.subscribersCount = capture.metrics.subscribersCount;
+      }
+      if (capture.metrics.subscribersCountRaw) {
+        nextEntry.metadata.subscribersCountRaw = capture.metrics.subscribersCountRaw;
       }
       if (capture.metrics.profileDescription) {
         nextEntry.metadata.profileDescription = capture.metrics.profileDescription;
