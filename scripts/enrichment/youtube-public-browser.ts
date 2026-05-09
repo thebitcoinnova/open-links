@@ -14,6 +14,11 @@ const YOUTUBE_BROWSER_PLACEHOLDER_CHECKS = [
     label: "login_or_bot_check",
     pattern: /sign in to continue to youtube|sign in to confirm you're not a bot/i,
   },
+  {
+    label: "unavailable_page",
+    pattern:
+      /this channel does not exist|account has been terminated|this video is unavailable|channel not found|404 not found/i,
+  },
 ] as const;
 
 export type YoutubePublicProfileBrowserSnapshot = PublicAudienceBrowserSnapshot;
