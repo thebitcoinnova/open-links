@@ -719,6 +719,45 @@ test("preserves Medium social metrics when feed refresh metadata does not includ
   assert.equal(merged.image, "https://cdn-images-1.medium.com/refreshed-avatar.jpg");
 });
 
+test("keeps Instagram browser-captured audience metrics authoritative over stale metadata", () => {
+  // Arrange
+  const merged = mergePublicCacheMetadataForTarget({
+    targetId: "instagram-public-profile",
+    previous: {
+      title: "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+      description:
+        "89 Followers, 177 Following, 36 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+      image: "https://scontent.cdninstagram.com/original-avatar.jpg",
+      profileImage: "https://scontent.cdninstagram.com/original-avatar.jpg",
+      followersCount: 100,
+      followersCountRaw: "100 followers",
+      followingCount: 206,
+      followingCountRaw: "206 following",
+    },
+    next: {
+      title: "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+      description:
+        "99 Followers, 210 Following, 10 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+      image: "https://scontent.cdninstagram.com/refreshed-avatar.jpg",
+      profileImage: "https://scontent.cdninstagram.com/refreshed-avatar.jpg",
+      followersCount: 99,
+      followersCountRaw: "99 Followers",
+      followingCount: 210,
+      followingCountRaw: "210 Following",
+      sourceLabel: "instagram.com",
+    },
+  });
+
+  // Assert
+  assert.equal(merged.followersCount, 100);
+  assert.equal(merged.followersCountRaw, "100 followers");
+  assert.equal(merged.followingCount, 206);
+  assert.equal(merged.followingCountRaw, "206 following");
+  assert.equal(merged.description, undefined);
+  assert.equal(merged.image, "https://scontent.cdninstagram.com/refreshed-avatar.jpg");
+  assert.equal(merged.sourceLabel, "instagram.com");
+});
+
 test("preserves X audience metrics when oEmbed refresh metadata does not include them", () => {
   // Arrange
   const merged = mergePublicCacheMetadataForTarget({

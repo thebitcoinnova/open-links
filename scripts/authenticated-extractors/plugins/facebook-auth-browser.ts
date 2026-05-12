@@ -176,8 +176,8 @@ const formatIdentifierDisplayName = (identifier: string): string => {
   return parts.map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" ");
 };
 
-const isGenericHeading = (heading: string): boolean =>
-  /^(new|notifications?|friends?|messages?|menu|search|home|watch|marketplace|reels)$/i.test(
+export const isGenericFacebookHeading = (heading: string): boolean =>
+  /^(new|notifications?|friends?|messages?|chats?|menu|search|home|watch|marketplace|reels)$/i.test(
     heading.trim(),
   );
 
@@ -884,7 +884,9 @@ const extract = async (
     const decodedHeading = inspection.heading ? decodeHtmlEntities(inspection.heading) : undefined;
     const fallbackDisplayName = formatIdentifierDisplayName(target.identifier);
     const displayName =
-      decodedHeading && !isGenericHeading(decodedHeading) ? decodedHeading : fallbackDisplayName;
+      decodedHeading && !isGenericFacebookHeading(decodedHeading)
+        ? decodedHeading
+        : fallbackDisplayName;
     const title = `${displayName} on Facebook`;
     const description = `Profile and updates from ${displayName} on Facebook.`;
 
