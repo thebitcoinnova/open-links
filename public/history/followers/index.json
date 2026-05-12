@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T03:04:51.362Z",
+  "updatedAt": "2026-05-12T07:58:12.655Z",
   "entries": [
     {
       "linkId": "github",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/github.csv",
       "latestAudienceCount": 98,
       "latestAudienceCountRaw": "98 followers",
-      "latestObservedAt": "2026-05-11T08:10:40.872Z"
+      "latestObservedAt": "2026-05-12T07:58:12.655Z"
     },
     {
       "linkId": "instagram",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/instagram.csv",
       "latestAudienceCount": 100,
       "latestAudienceCountRaw": "100 followers",
-      "latestObservedAt": "2026-05-12T03:04:51.362Z"
+      "latestObservedAt": "2026-05-12T07:58:12.655Z"
     },
     {
       "linkId": "medium",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/medium.csv",
       "latestAudienceCount": 3300,
       "latestAudienceCountRaw": "3.3K followers",
-      "latestObservedAt": "2026-05-11T08:10:40.872Z"
+      "latestObservedAt": "2026-05-12T07:58:12.655Z"
     },
     {
       "linkId": "primal",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://primal.net/peterryszkiewicz",
       "audienceKind": "followers",
       "csvPath": "history/followers/primal.csv",
-      "latestAudienceCount": 17,
-      "latestAudienceCountRaw": "17 followers",
-      "latestObservedAt": "2026-05-11T08:10:40.872Z"
+      "latestAudienceCount": 18,
+      "latestAudienceCountRaw": "18 followers",
+      "latestObservedAt": "2026-05-12T07:58:12.655Z"
     },
     {
       "linkId": "substack",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/substack.csv",
       "latestAudienceCount": 14,
       "latestAudienceCountRaw": "14 subscribers",
-      "latestObservedAt": "2026-05-11T08:10:40.872Z"
+      "latestObservedAt": "2026-05-12T07:58:12.655Z"
     },
     {
       "linkId": "x",
@@ -70,9 +70,9 @@
       "canonicalUrl": "https://x.com/pryszkie",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 1378,
-      "latestAudienceCountRaw": "1,378 Followers",
-      "latestObservedAt": "2026-05-11T08:10:40.872Z"
+      "latestAudienceCount": 1380,
+      "latestAudienceCountRaw": "1,380 Followers",
+      "latestObservedAt": "2026-05-12T07:58:12.655Z"
     },
     {
       "linkId": "youtube",
@@ -82,9 +82,9 @@
       "canonicalUrl": "https://www.youtube.com/@peterryszkiewicz4354",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/youtube.csv",
-      "latestAudienceCount": 16,
-      "latestAudienceCountRaw": "16 subscribers",
-      "latestObservedAt": "2026-05-11T08:10:40.872Z"
+      "latestAudienceCount": 17,
+      "latestAudienceCountRaw": "17 subscribers",
+      "latestObservedAt": "2026-05-12T07:58:12.655Z"
     }
   ]
 }
