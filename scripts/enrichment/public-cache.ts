@@ -73,6 +73,30 @@ export interface PublicCacheRegistry {
 }
 
 export type PublicCacheMergeTargetId = string | null;
+const INSTAGRAM_AUDIENCE_DESCRIPTION_PATTERN =
+  /\b(?:\d[\d.,]*|\d+(?:\.\d+)?[KMBkmb])\s+followers?,\s*(?:\d[\d.,]*|\d+(?:\.\d+)?[KMBkmb])\s+following\b/i;
+
+export const prunePublicCacheMetadataForTarget = (input: {
+  targetId: PublicCacheMergeTargetId;
+  metadata: PublicCacheMetadata;
+  audienceMetricsAreAuthoritative?: boolean;
+}): PublicCacheMetadata => {
+  const metadata = normalizeMetadata(input.metadata);
+
+  if (
+    input.targetId !== "instagram-public-profile" ||
+    !input.audienceMetricsAreAuthoritative ||
+    typeof metadata.description !== "string" ||
+    !INSTAGRAM_AUDIENCE_DESCRIPTION_PATTERN.test(metadata.description)
+  ) {
+    return metadata;
+  }
+
+  const metadataWithoutStaleDescription = { ...metadata };
+  metadataWithoutStaleDescription.description = undefined;
+  return metadataWithoutStaleDescription;
+};
+
 export type PublicCacheSkippedStableOperation = "upsert" | "delete";
 export type PublicCachePersistenceAction =
   | "noop"
@@ -807,6 +831,7 @@ export const mergePublicCacheMetadataForTarget = (input: {
 }): PublicCacheMetadata => {
   const next = normalizeMetadata(input.next);
   const preservesAudienceMetrics =
+    input.targetId === "instagram-public-profile" ||
     input.targetId === "medium-public-feed" ||
     input.targetId === "primal-public-profile" ||
     input.targetId === "x-public-oembed" ||
@@ -821,6 +846,7 @@ export const mergePublicCacheMetadataForTarget = (input: {
   };
   const mergedRecord = merged as Record<string, number | string | undefined>;
   const previousRecord = input.previous as Record<string, unknown>;
+  const previousAudienceMetricsAreAuthoritative = input.targetId === "instagram-public-profile";
   const fieldsToPreserve =
     input.targetId === "x-public-oembed"
       ? ([
@@ -835,7 +861,7 @@ export const mergePublicCacheMetadataForTarget = (input: {
         : (["followersCount", "followersCountRaw", "followingCount", "followingCountRaw"] as const);
 
   for (const field of fieldsToPreserve) {
-    if (hasDefinedMetadataValue(mergedRecord[field])) {
+    if (!previousAudienceMetricsAreAuthoritative && hasDefinedMetadataValue(mergedRecord[field])) {
       continue;
     }
 
@@ -850,7 +876,11 @@ export const mergePublicCacheMetadataForTarget = (input: {
     }
   }
 
-  return normalizeMetadata(merged);
+  return prunePublicCacheMetadataForTarget({
+    targetId: input.targetId,
+    metadata: merged,
+    audienceMetricsAreAuthoritative: previousAudienceMetricsAreAuthoritative,
+  });
 };
 
 export const arePublicCacheMetadataEqual = (

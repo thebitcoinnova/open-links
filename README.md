@@ -241,16 +241,17 @@ If your links use authenticated extractors (`links[].enrichment.authenticatedExt
 bun run setup:rich-auth
 ```
 
-If you use Medium, X, Primal, or YouTube rich links and want the optional public audience metrics cached locally, run this once per link id:
+If you use Instagram, Medium, X, Primal, or YouTube rich links and want the optional public audience metrics cached locally, run this once per link id:
 
 ```bash
+bun run public:rich:sync -- --only-link instagram
 bun run public:rich:sync -- --only-link medium
 bun run public:rich:sync -- --only-link x
 bun run public:rich:sync -- --only-link primal
 bun run public:rich:sync -- --only-link youtube
 ```
 
-For X, `bun run enrich:rich:strict:write-cache` only persists oEmbed/avatar metadata; it does not capture follower counts. Use `public:rich:sync` before follower-history sync whenever you add or change a Medium, X, Primal, or YouTube profile card that should show analytics.
+For Instagram and X, `bun run enrich:rich:strict:write-cache` can miss the browser-rendered public audience counts. Use `public:rich:sync` before follower-history sync whenever you add or change an Instagram, Medium, X, Primal, or YouTube profile card that should show analytics.
 
 If you want to refresh the public follower-history artifacts locally before the nightly automation does it on `main`, run:
 
@@ -438,7 +439,7 @@ Live build provenance surfaces:
   - `public/history/followers/index.json`
 - Local parity:
   - `bun run enrich:rich:strict:write-cache`
-  - `bun run public:rich:sync -- --summary-json .ci-diagnostics/public-rich-sync-summary.json` or targeted `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for new/changed Medium, X, Primal, or YouTube profile links
+  - `bun run public:rich:sync -- --summary-json .ci-diagnostics/public-rich-sync-summary.json` or targeted `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for new/changed Instagram, Medium, X, Primal, or YouTube profile links
   - `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`
   - `bun run build`
 - The workflow commits directly to `main` and deploys Pages in the same run. This avoids depending on downstream workflow fan-out from a bot-authored push.

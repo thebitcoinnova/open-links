@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import { resolveSupportedSocialProfile } from "../src/lib/content/social-profile-fields";
 import { fetchMetadata } from "./enrichment/fetch-metadata";
+import { parseInstagramPublicProfileMetrics } from "./enrichment/instagram-public-browser";
 import { parseMediumPublicProfileMetrics } from "./enrichment/medium-public-browser";
 import { parsePrimalPublicProfileMetrics } from "./enrichment/primal-public-browser";
 import type {
@@ -29,6 +30,7 @@ import {
   buildPublicCacheEntry,
   loadPublicCacheRegistry,
   mergePublicCacheMetadataForTarget,
+  prunePublicCacheMetadataForTarget,
   toPublicCacheMetadata,
   writePublicCacheRegistry,
 } from "./enrichment/public-cache";
@@ -48,6 +50,9 @@ const DEFAULT_BROWSER_WAIT_MS = 8_000;
 const DEFAULT_FETCH_TIMEOUT_MS = 4_000;
 const DEFAULT_FETCH_RETRIES = 1;
 const PUBLIC_BROWSER_ARGS = ["--disable-blink-features=AutomationControlled"] as const;
+const INSTAGRAM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/instagram/extract-public-profile-metrics.js",
+);
 const MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/medium/extract-public-profile-metrics.js",
 );
@@ -110,11 +115,16 @@ interface PrimalPublicTarget extends PublicAugmentationTarget {
   id: "primal-public-profile";
 }
 
+interface InstagramPublicTarget extends PublicAugmentationTarget {
+  id: "instagram-public-profile";
+}
+
 interface YoutubePublicTarget extends PublicAugmentationTarget {
   id: "youtube-public-profile";
 }
 
 type SyncablePublicTarget =
+  | InstagramPublicTarget
   | MediumPublicTarget
   | PrimalPublicTarget
   | XProfilePublicTarget
@@ -258,6 +268,10 @@ const isMediumPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is MediumPublicTarget => target?.id === "medium-public-feed";
 
+const isInstagramPublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is InstagramPublicTarget => target?.id === "instagram-public-profile";
+
 const isPrimalPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is PrimalPublicTarget => target?.id === "primal-public-profile";
@@ -273,6 +287,7 @@ const isXCommunityPublicTarget = (
 const isSyncablePublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is SyncablePublicTarget =>
+  isInstagramPublicTarget(target) ||
   isMediumPublicTarget(target) ||
   isPrimalPublicTarget(target) ||
   isXProfilePublicTarget(target) ||
@@ -344,6 +359,16 @@ interface SyncableTargetBehavior {
 }
 
 const SYNCABLE_TARGET_BEHAVIORS = {
+  "instagram-public-profile": {
+    label: "Instagram",
+    snippet: INSTAGRAM_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseInstagramPublicProfileMetrics,
+    terminalPlaceholderSignals: ["login_redirect", "not_found"],
+    requiresFollowingCount: true,
+    requiresMembersCount: false,
+    requiresProfileDescription: false,
+    requiresSubscribersCount: false,
+  },
   "medium-public-feed": {
     label: "Medium",
     snippet: MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET,
@@ -528,6 +553,10 @@ const isTerminalSourceFailureDetail = (
   }
 
   switch (targetId) {
+    case "instagram-public-profile":
+      return /login_redirect|not_found|sorry, this page isn't available|user not found/u.test(
+        normalized,
+      );
     case "primal-public-profile":
       return /profile not found|user not found|page not found|profile_missing/u.test(normalized);
     case "x-public-oembed":
@@ -1009,6 +1038,11 @@ export const runPublicRichSyncWithDependencies = async (
       if (capture.metrics.profileDescription) {
         nextEntry.metadata.profileDescription = capture.metrics.profileDescription;
       }
+      nextEntry.metadata = prunePublicCacheMetadataForTarget({
+        targetId: candidate.target.id,
+        metadata: nextEntry.metadata,
+        audienceMetricsAreAuthoritative: true,
+      });
 
       const stabilizedEntry = buildPublicCacheEntry({
         previous: workingEntry,

@@ -49,6 +49,17 @@ const xCommunityLink = {
   icon: "x",
 } as const;
 
+const instagramLink = {
+  id: "instagram",
+  label: "Instagram",
+  url: "https://www.instagram.com/peterryszkiewicz/",
+  type: "rich",
+  icon: "instagram",
+  metadata: {
+    handle: "peterryszkiewicz",
+  },
+} as const;
+
 const primalLink = {
   id: "primal",
   label: "Primal",
@@ -134,6 +145,32 @@ const createXCommunityBaseEntry = (
     sourceLabel: "x.com",
   },
   cacheControl: "no-cache, no-store, must-revalidate",
+});
+
+const createInstagramBaseEntry = (
+  linkId: string,
+  generatedAt: string,
+  sourceUrl: string,
+  handle = "peterryszkiewicz",
+): PublicCacheEntry => ({
+  linkId,
+  sourceUrl,
+  capturedAt: generatedAt,
+  updatedAt: generatedAt,
+  metadata: {
+    title: "Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+    description:
+      "99 Followers, 210 Following, 10 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+    image: "https://scontent.cdninstagram.com/avatar.jpg",
+    profileImage: "https://scontent.cdninstagram.com/avatar.jpg",
+    followersCount: 99,
+    followersCountRaw: "99 Followers",
+    followingCount: 210,
+    followingCountRaw: "210 Following",
+    handle,
+    sourceLabel: "instagram.com",
+  },
+  cacheControl: "private, no-cache, no-store, must-revalidate",
 });
 
 const createPrimalBaseEntry = (
@@ -233,6 +270,65 @@ test("bootstraps a missing Medium cache entry and overlays follower counts", asy
   );
   assert.equal(writtenRegistry?.entries.medium?.metadata.followersCount, 3300);
   assert.equal(writtenRegistry?.entries.medium?.metadata.followersCountRaw, "3.3K followers");
+});
+
+test("overlays Instagram browser counts when profile metadata counts are stale", async () => {
+  // Arrange
+  let bootstrapCalls = 0;
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: (_path, registry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(registry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        assert.equal(target.id, "instagram-public-profile");
+        return createInstagramBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "instagram-public-profile");
+        return captureSuccess(
+          {
+            followersCount: 100,
+            followersCountRaw: "100 followers",
+            followingCount: 206,
+            followingCountRaw: "206 following",
+          },
+          "output/playwright/public-rich-sync/instagram-2026-05-12.json",
+        );
+      },
+      nowIso: () => "2026-05-12T03:15:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.processed, 1);
+  assert.equal(
+    writtenRegistry?.entries.instagram?.sourceUrl,
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followersCount, 100);
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followersCountRaw, "100 followers");
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCount, 206);
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCountRaw, "206 following");
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.description, undefined);
 });
 
 test("refreshes Medium counts without replacing the existing base cache entry fields", async () => {
