@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T07:58:12.655Z",
+  "updatedAt": "2026-05-12T12:39:57.059Z",
   "entries": [
     {
       "linkId": "github",
@@ -58,9 +58,9 @@
       "canonicalUrl": "https://peter.ryszkiewicz.us/",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/substack.csv",
-      "latestAudienceCount": 14,
-      "latestAudienceCountRaw": "14 subscribers",
-      "latestObservedAt": "2026-05-12T07:58:12.655Z"
+      "latestAudienceCount": 15,
+      "latestAudienceCountRaw": "15 subscribers",
+      "latestObservedAt": "2026-05-12T12:39:57.059Z"
     },
     {
       "linkId": "x",

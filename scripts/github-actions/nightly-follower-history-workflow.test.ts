@@ -6,6 +6,8 @@ import test from "node:test";
 
 const ROOT = process.cwd();
 const WORKFLOW_PATH = path.join(ROOT, ".github/workflows/nightly-follower-history.yml");
+const PUBLIC_RICH_SYNC_PATH = path.join(ROOT, "scripts/public-rich-sync.ts");
+const FOLLOWER_HISTORY_SYNC_PATH = path.join(ROOT, "scripts/sync-follower-history.ts");
 
 const requireLine = (workflowSource: string, needle: string) => {
   const index = workflowSource.indexOf(needle);
@@ -74,4 +76,15 @@ test("nightly follower history keeps public audience sync best effort for non-te
     workflowSource,
     /- name: Refresh public audience cache[\s\S]{0,160}continue-on-error:\s+true/u,
   );
+});
+
+test("nightly follower history includes Substack in the fresh public audience contract", () => {
+  // Arrange
+  const publicRichSyncSource = fs.readFileSync(PUBLIC_RICH_SYNC_PATH, "utf8");
+  const followerHistorySyncSource = fs.readFileSync(FOLLOWER_HISTORY_SYNC_PATH, "utf8");
+
+  // Act / Assert
+  assert.match(publicRichSyncSource, /id:\s+"substack-public-profile"/u);
+  assert.match(publicRichSyncSource, /requiresSubscribersCount:\s+true/u);
+  assert.match(followerHistorySyncSource, /"substack-public-profile"/u);
 });

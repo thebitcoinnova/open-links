@@ -111,3 +111,13 @@ When adding a branded known-site icon, inspect the product's shipped assets firs
 
 ### Trigger signal to catch it earlier
 A new icon requires custom stroke geometry because no existing library glyph is available.
+
+## lesson-verify-audience-freshness-before-explaining-history | 2026-05-12 09:27 CDT
+### What went wrong
+I inferred the Substack follower history was current because the nightly job had appended rows, but the user's dashboard evidence showed the count had been 15 since around April 10 and the appended rows were stale-cache observations.
+
+### Preventive rule
+When debugging audience history drift, first prove freshness from the same run's source refresh evidence before treating appended history rows as current observations.
+
+### Trigger signal to catch it earlier
+A nightly history row repeats the same public-cache count while enrichment logs show blocked refreshes, stale-cache fallback, or HTTP failures for the same platform.

@@ -35,6 +35,18 @@ const createYoutubeLink = (): OpenLink => ({
   enabled: true,
 });
 
+const createSubstackLink = (): OpenLink => ({
+  id: "substack",
+  label: "Substack",
+  url: "https://peter.ryszkiewicz.us/",
+  type: "rich",
+  icon: "substack",
+  enabled: true,
+  metadata: {
+    handle: "peterryszkiewicz",
+  },
+});
+
 const createYoutubePublicRegistry = (): Parameters<typeof resolveSnapshots>[1] =>
   createPublicRegistry({
     youtube: {
@@ -50,6 +62,26 @@ const createYoutubePublicRegistry = (): Parameters<typeof resolveSnapshots>[1] =
         sourceLabel: "youtube.com",
         subscribersCount: 9200,
         subscribersCountRaw: "9.2K subscribers",
+      },
+    },
+  });
+
+const createSubstackPublicRegistry = (): Parameters<typeof resolveSnapshots>[1] =>
+  createPublicRegistry({
+    substack: {
+      linkId: "substack",
+      sourceUrl: "https://substack.com/@peterryszkiewicz",
+      capturedAt: "2026-05-12T12:00:00.000Z",
+      updatedAt: "2026-05-12T12:00:00.000Z",
+      metadata: {
+        title: "Peter Ryszkiewicz",
+        description: "I'm an agentic engineer, making things in the AI space.",
+        image: "https://substackcdn.com/profile-card.jpg",
+        profileImage: "https://substackcdn.com/avatar.jpg",
+        handle: "peterryszkiewicz",
+        sourceLabel: "peter.ryszkiewicz.us",
+        subscribersCount: 15,
+        subscribersCountRaw: "15 subscribers",
       },
     },
   });
@@ -258,6 +290,101 @@ test("resolveSnapshots accepts public-cache audience rows after fresh unchanged 
   // Assert
   assert.equal(snapshots.length, 1);
   assert.equal(snapshots[0]?.row.audienceCountRaw, "9.2K subscribers");
+});
+
+test("resolveSnapshots skips Substack public-cache rows without fresh public sync evidence", () => {
+  // Arrange
+  const links = [createSubstackLink()];
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createSubstackPublicRegistry(),
+    null,
+    "2026-05-12T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: resolveFreshPublicRichSyncLinkIds(undefined),
+    },
+  );
+
+  // Assert
+  assert.deepEqual(snapshots, []);
+});
+
+test("resolveSnapshots accepts Substack public-cache rows after fresh public sync evidence", () => {
+  // Arrange
+  const links = [createSubstackLink()];
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [{ linkId: "substack", status: "synced" as const, reason: "counts_refreshed" }],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createSubstackPublicRegistry(),
+    null,
+    "2026-05-12T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: freshLinkIds,
+    },
+  );
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.linkId, "substack");
+  assert.equal(snapshots[0]?.row.audienceCountRaw, "15 subscribers");
+  assert.equal(snapshots[0]?.row.source, "public-cache");
+});
+
+test("resolveSnapshots accepts Substack public-cache rows after fresh unchanged capture", () => {
+  // Arrange
+  const links = [createSubstackLink()];
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [{ linkId: "substack", status: "skipped" as const, reason: "counts_unchanged" }],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createSubstackPublicRegistry(),
+    null,
+    "2026-05-12T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: freshLinkIds,
+    },
+  );
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.audienceCountRaw, "15 subscribers");
+});
+
+test("resolveSnapshots skips Substack public-cache rows after stale enrichment fallback only", () => {
+  // Arrange
+  const links = [createSubstackLink()];
+  const staleOnlySummary = {
+    entries: [
+      {
+        linkId: "substack",
+        status: "skipped" as const,
+        reason: "stale_cache_fallback",
+      },
+    ],
+  };
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createSubstackPublicRegistry(),
+    null,
+    "2026-05-12T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: resolveFreshPublicRichSyncLinkIds(staleOnlySummary),
+    },
+  );
+
+  // Assert
+  assert.deepEqual(snapshots, []);
 });
 
 test("resolveSnapshots keeps manual and authenticated snapshots without public sync evidence", () => {

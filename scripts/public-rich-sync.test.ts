@@ -79,6 +79,17 @@ const youtubeLink = {
   icon: "youtube",
 } as const;
 
+const substackLink = {
+  id: "substack",
+  label: "Substack",
+  url: "https://peter.ryszkiewicz.us/",
+  type: "rich",
+  icon: "substack",
+  metadata: {
+    handle: "peterryszkiewicz",
+  },
+} as const;
+
 const emptyRegistry = (): PublicCacheRegistry => ({
   version: 1,
   updatedAt: "2026-03-08T14:00:00.000Z",
@@ -211,6 +222,26 @@ const createYoutubeBaseEntry = (
     sourceLabel: "youtube.com",
   },
   cacheControl: "no-cache, no-store, must-revalidate",
+});
+
+const createSubstackBaseEntry = (
+  linkId: string,
+  generatedAt: string,
+  sourceUrl: string,
+): PublicCacheEntry => ({
+  linkId,
+  sourceUrl,
+  capturedAt: generatedAt,
+  updatedAt: generatedAt,
+  metadata: {
+    title: "Peter Ryszkiewicz",
+    description: "I'm an agentic engineer, making things in the AI space.",
+    image: "https://substackcdn.com/profile-card.jpg",
+    profileImage: "https://substackcdn.com/avatar.jpg",
+    handle: "peterryszkiewicz",
+    sourceLabel: "peter.ryszkiewicz.us",
+  },
+  cacheControl: "no-cache",
 });
 
 const captureSuccess = (
@@ -1342,6 +1373,196 @@ test("preserves existing YouTube metrics when a refresh attempt fails", async ()
       reason: "subscribers_missing",
       artifactPath: "output/playwright/public-rich-sync/youtube-failed.json",
       detail: "YouTube public browser capture did not find a subscriber count.",
+    },
+  ]);
+});
+
+test("bootstraps a missing Substack cache entry and overlays subscriber counts", async () => {
+  // Arrange
+  let bootstrapCalls = 0;
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: (_path, registry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(registry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        assert.equal(target.id, "substack-public-profile");
+        return createSubstackBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "substack-public-profile");
+        return captureSuccess(
+          {
+            subscribersCount: 15,
+            subscribersCountRaw: "15 subscribers",
+          },
+          "output/playwright/public-rich-sync/substack-2026-05-12.json",
+        );
+      },
+      nowIso: () => "2026-05-12T13:00:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.processed, 1);
+  assert.equal(
+    writtenRegistry?.entries.substack?.sourceUrl,
+    "https://substack.com/@peterryszkiewicz",
+  );
+  assert.equal(writtenRegistry?.entries.substack?.metadata.subscribersCount, 15);
+  assert.equal(writtenRegistry?.entries.substack?.metadata.subscribersCountRaw, "15 subscribers");
+});
+
+test("treats unchanged Substack subscriber counts as fresh no-op evidence", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    updatedAt: "2026-05-12T12:00:00.000Z",
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+  let wroteRegistry = false;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {
+        wroteRegistry = true;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "substack-public-profile");
+        return captureSuccess(
+          {
+            subscribersCount: 15,
+            subscribersCountRaw: "15 subscribers",
+          },
+          "output/playwright/public-rich-sync/substack-unchanged.json",
+        );
+      },
+      nowIso: () => "2026-05-12T13:05:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(wroteRegistry, false);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
+test("preserves existing Substack metrics when a refresh attempt is blocked", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/substack-blocked.json",
+        metrics: {
+          placeholderSignals: ["access_denied"],
+        },
+        error: "Substack public browser capture saw placeholder content: access_denied.",
+      }),
+      nowIso: () => "2026-05-12T13:10:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), false);
+  assert.equal(result.registry.entries.substack?.metadata.subscribersCountRaw, "15 subscribers");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "failed",
+      reason: "subscribers_missing",
+      artifactPath: "output/playwright/public-rich-sync/substack-blocked.json",
+      detail: "Substack public browser capture saw placeholder content: access_denied.",
     },
   ]);
 });

@@ -11,6 +11,10 @@ const publicRichSyncSummaryPath = ".ci-diagnostics/public-rich-sync-summary.json
 const publicRichSyncSummary = fs.existsSync(publicRichSyncSummaryPath)
   ? JSON.parse(fs.readFileSync(publicRichSyncSummaryPath, "utf8"))
   : null;
+const enrichmentReportPath = "data/generated/rich-enrichment-report.json";
+const enrichmentReport = fs.existsSync(enrichmentReportPath)
+  ? JSON.parse(fs.readFileSync(enrichmentReportPath, "utf8"))
+  : null;
 const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
 const deploymentDefaultsPath = "config/deployment.defaults.json";
@@ -90,6 +94,29 @@ if (publicRichSyncSummary) {
     for (const entry of failedEntries) {
       lines.push(
         `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.fatal === true ? "yes" : "no"}\` | ${entry.detail ?? "n/a"} |`,
+      );
+    }
+  }
+}
+
+if (enrichmentReport) {
+  const staleCacheEntries = (enrichmentReport.entries ?? []).filter(
+    (entry) => entry.staleCache === true,
+  );
+
+  if (staleCacheEntries.length > 0) {
+    lines.push("");
+    lines.push("## Stale Public Cache Fallbacks");
+    lines.push(
+      "- These links used committed public cache metadata because fresh public enrichment was blocked or unavailable.",
+    );
+    lines.push("");
+    lines.push("| Link | Reason | HTTP | Cache captured at | Remediation |");
+    lines.push("| --- | --- | --- | --- | --- |");
+
+    for (const entry of staleCacheEntries) {
+      lines.push(
+        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.statusCode ?? "n/a"}\` | \`${entry.cacheCapturedAt ?? "n/a"}\` | ${entry.remediation ?? "n/a"} |`,
       );
     }
   }

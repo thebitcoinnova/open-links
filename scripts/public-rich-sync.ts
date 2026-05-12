@@ -34,6 +34,7 @@ import {
   toPublicCacheMetadata,
   writePublicCacheRegistry,
 } from "./enrichment/public-cache";
+import { parseSubstackPublicProfileMetrics } from "./enrichment/substack-public-browser";
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
 import { parseXPublicProfileMetrics } from "./enrichment/x-public-browser";
 import { parseYoutubePublicProfileMetrics } from "./enrichment/youtube-public-browser";
@@ -58,6 +59,9 @@ const MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
 );
 const PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/primal/extract-public-profile-metrics.js",
+);
+const SUBSTACK_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/substack/extract-public-profile-metrics.js",
 );
 const X_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/x/extract-public-profile-metrics.js",
@@ -123,10 +127,15 @@ interface YoutubePublicTarget extends PublicAugmentationTarget {
   id: "youtube-public-profile";
 }
 
+interface SubstackPublicTarget extends PublicAugmentationTarget {
+  id: "substack-public-profile";
+}
+
 type SyncablePublicTarget =
   | InstagramPublicTarget
   | MediumPublicTarget
   | PrimalPublicTarget
+  | SubstackPublicTarget
   | XProfilePublicTarget
   | XCommunityPublicTarget
   | YoutubePublicTarget;
@@ -276,6 +285,10 @@ const isPrimalPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is PrimalPublicTarget => target?.id === "primal-public-profile";
 
+const isSubstackPublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is SubstackPublicTarget => target?.id === "substack-public-profile";
+
 const isXProfilePublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is XProfilePublicTarget => target?.id === "x-public-oembed";
@@ -290,6 +303,7 @@ const isSyncablePublicTarget = (
   isInstagramPublicTarget(target) ||
   isMediumPublicTarget(target) ||
   isPrimalPublicTarget(target) ||
+  isSubstackPublicTarget(target) ||
   isXProfilePublicTarget(target) ||
   isXCommunityPublicTarget(target) ||
   target?.id === "youtube-public-profile";
@@ -388,6 +402,16 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     requiresMembersCount: false,
     requiresProfileDescription: false,
     requiresSubscribersCount: false,
+  },
+  "substack-public-profile": {
+    label: "Substack",
+    snippet: SUBSTACK_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseSubstackPublicProfileMetrics,
+    terminalPlaceholderSignals: [],
+    requiresFollowingCount: false,
+    requiresMembersCount: false,
+    requiresProfileDescription: false,
+    requiresSubscribersCount: true,
   },
   "x-public-oembed": {
     label: "X",
@@ -568,6 +592,8 @@ const isTerminalSourceFailureDetail = (
       return /unavailable_page|this channel does not exist|account has been terminated|channel not found/u.test(
         normalized,
       );
+    case "substack-public-profile":
+      return false;
     case "medium-public-feed":
       return false;
   }
@@ -790,10 +816,14 @@ const buildAudienceCaptureError = (
   return undefined;
 };
 
+const browserCaptureUrlForTarget = (input: CapturePublicAudienceMetricsInput): string =>
+  input.target.id === "substack-public-profile" ? input.target.sourceUrl : input.link.url;
+
 export const capturePublicAudienceMetricsFromBrowser = async (
   input: CapturePublicAudienceMetricsInput,
 ): Promise<PublicBrowserAudienceCaptureResult> => {
   const config = buildPublicProfileConfig(input.link.id, input.headed);
+  const browserCaptureUrl = browserCaptureUrlForTarget(input);
   fs.mkdirSync(config.profilePath, { recursive: true });
 
   const artifactRelativePath = path.join(
@@ -805,7 +835,7 @@ export const capturePublicAudienceMetricsFromBrowser = async (
   let error: string | undefined;
 
   try {
-    runPublicBrowserJson(["open", input.link.url], config, {
+    runPublicBrowserJson(["open", browserCaptureUrl], config, {
       allowFailure: true,
     });
     runPublicBrowserJson(["wait", "1500"], config, {
@@ -845,7 +875,7 @@ export const capturePublicAudienceMetricsFromBrowser = async (
     timestamp: input.generatedAt,
     linkId: input.link.id,
     targetId: input.target.id,
-    targetUrl: input.link.url,
+    targetUrl: browserCaptureUrl,
     headed: input.headed,
     browserWaitMs: input.browserWaitMs,
     profilePath: path.relative(ROOT, config.profilePath),
@@ -1005,7 +1035,7 @@ export const runPublicRichSyncWithDependencies = async (
           ...(failure.fatal ? { fatal: true } : {}),
         });
         dependencies.log(
-          `[public:rich:sync] fail ${candidate.link.id}: ${failure.detail} (${capture.artifactPath})`,
+          `[public:rich:sync] fail ${candidate.link.id}: ${failure.detail}; excluded from this run's follower history snapshots. (${capture.artifactPath})`,
         );
         continue;
       }
@@ -1065,7 +1095,7 @@ export const runPublicRichSyncWithDependencies = async (
           reason: "counts_unchanged",
         });
         dependencies.log(
-          `[public:rich:sync] no-op ${candidate.link.id}: captured audience metrics matched the committed cache.`,
+          `[public:rich:sync] fresh unchanged observation ${candidate.link.id}: captured audience metrics matched the committed cache.`,
         );
         continue;
       }
@@ -1080,7 +1110,7 @@ export const runPublicRichSyncWithDependencies = async (
         artifactPath: capture.artifactPath,
       });
       dependencies.log(
-        `[public:rich:sync] synced ${candidate.link.id}: ${captureSummaryForTarget(
+        `[public:rich:sync] fresh public observation ${candidate.link.id}: ${captureSummaryForTarget(
           candidate.target.id,
           capture.metrics,
         )} (${capture.artifactPath})`,
@@ -1098,7 +1128,9 @@ export const runPublicRichSyncWithDependencies = async (
         detail: failure.detail,
         ...(failure.fatal ? { fatal: true } : {}),
       });
-      dependencies.log(`[public:rich:sync] fail ${candidate.link.id}: ${failure.detail}`);
+      dependencies.log(
+        `[public:rich:sync] fail ${candidate.link.id}: ${failure.detail}; excluded from this run's follower history snapshots.`,
+      );
     }
   }
 
