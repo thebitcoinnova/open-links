@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T09:31:49.899Z",
+  "updatedAt": "2026-05-13T09:39:10.379Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -10,9 +10,9 @@
       "canonicalUrl": "https://www.youtube.com/@HiveMinded21",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
-      "latestAudienceCount": 246,
-      "latestAudienceCountRaw": "246 subscribers",
-      "latestObservedAt": "2026-05-12T09:31:49.899Z"
+      "latestAudienceCount": 247,
+      "latestAudienceCountRaw": "247 subscribers",
+      "latestObservedAt": "2026-05-13T09:39:10.379Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-05-12T09:31:49.899Z"
+      "latestObservedAt": "2026-05-13T09:39:10.379Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -34,9 +34,9 @@
       "canonicalUrl": "https://x.com/TheBitcoinNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
-      "latestAudienceCount": 493,
-      "latestAudienceCountRaw": "493 Followers",
-      "latestObservedAt": "2026-05-12T09:31:49.899Z"
+      "latestAudienceCount": 492,
+      "latestAudienceCountRaw": "492 Followers",
+      "latestObservedAt": "2026-05-13T09:39:10.379Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/StaciNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5670,
-      "latestAudienceCountRaw": "5,670 Followers",
-      "latestObservedAt": "2026-05-12T09:31:49.899Z"
+      "latestAudienceCount": 5668,
+      "latestAudienceCountRaw": "5,668 Followers",
+      "latestObservedAt": "2026-05-13T09:39:10.379Z"
     },
     {
       "linkId": "youtube",
@@ -58,9 +58,9 @@
       "canonicalUrl": "https://www.youtube.com/@StaciNova",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/youtube.csv",
-      "latestAudienceCount": 10300,
-      "latestAudienceCountRaw": "10.3K subscribers",
-      "latestObservedAt": "2026-05-12T09:31:49.899Z"
+      "latestAudienceCount": 10700,
+      "latestAudienceCountRaw": "10.7K subscribers",
+      "latestObservedAt": "2026-05-13T09:39:10.379Z"
     }
   ]
 }
