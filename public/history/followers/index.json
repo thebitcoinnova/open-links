@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-13T08:01:18.991Z",
+  "updatedAt": "2026-05-14T07:58:07.982Z",
   "entries": [
     {
       "linkId": "github",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/github.csv",
       "latestAudienceCount": 97,
       "latestAudienceCountRaw": "97 followers",
-      "latestObservedAt": "2026-05-13T08:01:18.991Z"
+      "latestObservedAt": "2026-05-14T07:58:07.982Z"
     },
     {
       "linkId": "instagram",
@@ -22,9 +22,9 @@
       "canonicalUrl": "https://www.instagram.com/peterryszkiewicz/",
       "audienceKind": "followers",
       "csvPath": "history/followers/instagram.csv",
-      "latestAudienceCount": 100,
-      "latestAudienceCountRaw": "100 followers",
-      "latestObservedAt": "2026-05-12T07:58:12.655Z"
+      "latestAudienceCount": 103,
+      "latestAudienceCountRaw": "103 followers",
+      "latestObservedAt": "2026-05-14T07:58:07.982Z"
     },
     {
       "linkId": "medium",
@@ -48,7 +48,7 @@
       "csvPath": "history/followers/primal.csv",
       "latestAudienceCount": 20,
       "latestAudienceCountRaw": "20 followers",
-      "latestObservedAt": "2026-05-13T08:01:18.991Z"
+      "latestObservedAt": "2026-05-14T07:58:07.982Z"
     },
     {
       "linkId": "substack",
@@ -72,7 +72,7 @@
       "csvPath": "history/followers/x.csv",
       "latestAudienceCount": 1381,
       "latestAudienceCountRaw": "1,381 Followers",
-      "latestObservedAt": "2026-05-13T08:01:18.991Z"
+      "latestObservedAt": "2026-05-14T07:58:07.982Z"
     },
     {
       "linkId": "youtube",
@@ -82,9 +82,9 @@
       "canonicalUrl": "https://www.youtube.com/@peterryszkiewicz4354",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/youtube.csv",
-      "latestAudienceCount": 17,
-      "latestAudienceCountRaw": "17 subscribers",
-      "latestObservedAt": "2026-05-13T08:01:18.991Z"
+      "latestAudienceCount": 19,
+      "latestAudienceCountRaw": "19 subscribers",
+      "latestObservedAt": "2026-05-14T07:58:07.982Z"
     }
   ]
 }
