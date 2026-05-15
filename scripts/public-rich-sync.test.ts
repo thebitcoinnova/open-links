@@ -362,6 +362,167 @@ test("overlays Instagram browser counts when profile metadata counts are stale",
   assert.equal(writtenRegistry?.entries.instagram?.metadata.description, undefined);
 });
 
+test("treats Instagram login redirects as non-fatal capture failures", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+        metrics: {
+          placeholderSignals: ["login_redirect"],
+        },
+        error: "Instagram public browser capture saw placeholder content: login_redirect.",
+      }),
+      nowIso: () => "2026-05-12T03:30:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), false);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "failed",
+      reason: "audience_missing",
+      artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+      detail: "Instagram public browser capture saw placeholder content: login_redirect.",
+    },
+  ]);
+});
+
+test("keeps Instagram not-found placeholders fatal", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-not-found.json",
+        metrics: {
+          placeholderSignals: ["not_found"],
+        },
+        error: "Instagram public browser capture saw placeholder content: not_found.",
+      }),
+      nowIso: () => "2026-05-12T03:31:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 1);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), true);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "failed",
+      reason: "profile_unavailable",
+      artifactPath: "output/playwright/public-rich-sync/instagram-not-found.json",
+      detail:
+        "Instagram public browser capture saw fatal profile-unavailable placeholder content: not_found.",
+      fatal: true,
+    },
+  ]);
+});
+
+test("treats Instagram login redirect sync errors as non-fatal", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        throw new Error("Instagram browser capture failed after login_redirect");
+      },
+      nowIso: () => "2026-05-12T03:32:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), false);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "failed",
+      reason: "sync_error",
+      detail: "Instagram browser capture failed after login_redirect",
+    },
+  ]);
+});
+
 test("refreshes Medium counts without replacing the existing base cache entry fields", async () => {
   // Arrange
   const registry = emptyRegistry();
@@ -1010,7 +1171,8 @@ test("marks terminal X placeholder captures as fatal profile-unavailable failure
       status: "failed",
       reason: "profile_unavailable",
       artifactPath: "output/playwright/public-rich-sync/x-missing.json",
-      detail: "X public browser capture saw terminal profile placeholder content: account_missing.",
+      detail:
+        "X public browser capture saw fatal profile-unavailable placeholder content: account_missing.",
       fatal: true,
     },
   ]);

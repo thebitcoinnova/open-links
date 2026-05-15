@@ -365,7 +365,7 @@ interface SyncableTargetBehavior {
   label: string;
   snippet: string;
   parseMetrics: (snapshot: PublicAudienceBrowserSnapshot) => PublicBrowserAudienceMetrics;
-  terminalPlaceholderSignals: readonly string[];
+  fatalPlaceholderSignals: readonly string[];
   requiresFollowingCount: boolean;
   requiresMembersCount: boolean;
   requiresProfileDescription: boolean;
@@ -377,7 +377,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Instagram",
     snippet: INSTAGRAM_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseInstagramPublicProfileMetrics,
-    terminalPlaceholderSignals: ["login_redirect", "not_found"],
+    fatalPlaceholderSignals: ["not_found"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -387,7 +387,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Medium",
     snippet: MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseMediumPublicProfileMetrics,
-    terminalPlaceholderSignals: [],
+    fatalPlaceholderSignals: [],
     requiresFollowingCount: false,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -397,7 +397,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Primal",
     snippet: PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parsePrimalPublicProfileMetrics,
-    terminalPlaceholderSignals: ["profile_missing"],
+    fatalPlaceholderSignals: ["profile_missing"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -407,7 +407,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Substack",
     snippet: SUBSTACK_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseSubstackPublicProfileMetrics,
-    terminalPlaceholderSignals: [],
+    fatalPlaceholderSignals: [],
     requiresFollowingCount: false,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -417,7 +417,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "X",
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
-    terminalPlaceholderSignals: ["account_missing", "account_suspended"],
+    fatalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: true,
@@ -427,7 +427,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "X community",
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
-    terminalPlaceholderSignals: ["account_missing", "account_suspended"],
+    fatalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: false,
     requiresMembersCount: true,
     requiresProfileDescription: false,
@@ -437,7 +437,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "YouTube",
     snippet: YOUTUBE_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseYoutubePublicProfileMetrics,
-    terminalPlaceholderSignals: ["unavailable_page"],
+    fatalPlaceholderSignals: ["unavailable_page"],
     requiresFollowingCount: false,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -559,18 +559,15 @@ interface PublicRichSyncFailureClassification {
   fatal: boolean;
 }
 
-const terminalPlaceholderSignalsForTarget = (
+const fatalPlaceholderSignalsForTarget = (
   targetId: SyncablePublicTargetId,
   metrics: PublicBrowserAudienceMetrics,
 ): string[] => {
-  const terminalSignals = behaviorForTarget(targetId).terminalPlaceholderSignals;
-  return metrics.placeholderSignals.filter((signal) => terminalSignals.includes(signal));
+  const fatalSignals = behaviorForTarget(targetId).fatalPlaceholderSignals;
+  return metrics.placeholderSignals.filter((signal) => fatalSignals.includes(signal));
 };
 
-const isTerminalSourceFailureDetail = (
-  targetId: SyncablePublicTargetId,
-  detail: string,
-): boolean => {
+const isFatalSourceFailureDetail = (targetId: SyncablePublicTargetId, detail: string): boolean => {
   const normalized = detail.toLowerCase();
   if (/\bhttp\s+404\b|\b404\s+not found\b/u.test(normalized)) {
     return true;
@@ -578,9 +575,7 @@ const isTerminalSourceFailureDetail = (
 
   switch (targetId) {
     case "instagram-public-profile":
-      return /login_redirect|not_found|sorry, this page isn't available|user not found/u.test(
-        normalized,
-      );
+      return /not_found|sorry, this page isn't available|user not found/u.test(normalized);
     case "primal-public-profile":
       return /profile not found|user not found|page not found|profile_missing/u.test(normalized);
     case "x-public-oembed":
@@ -603,11 +598,11 @@ const classifyCaptureFailure = (
   targetId: SyncablePublicTargetId,
   capture: PublicBrowserAudienceCaptureResult,
 ): PublicRichSyncFailureClassification => {
-  const terminalSignals = terminalPlaceholderSignalsForTarget(targetId, capture.metrics);
-  if (terminalSignals.length > 0) {
+  const fatalSignals = fatalPlaceholderSignalsForTarget(targetId, capture.metrics);
+  if (fatalSignals.length > 0) {
     return {
       reason: "profile_unavailable",
-      detail: `${behaviorForTarget(targetId).label} public browser capture saw terminal profile placeholder content: ${terminalSignals.join(
+      detail: `${behaviorForTarget(targetId).label} public browser capture saw fatal profile-unavailable placeholder content: ${fatalSignals.join(
         ", ",
       )}.`,
       fatal: true,
@@ -625,7 +620,7 @@ const classifySyncError = (
   targetId: SyncablePublicTargetId,
   detail: string,
 ): PublicRichSyncFailureClassification => {
-  if (isTerminalSourceFailureDetail(targetId, detail)) {
+  if (isFatalSourceFailureDetail(targetId, detail)) {
     return {
       reason: "profile_unavailable",
       detail,

@@ -74,22 +74,22 @@ lines.push(`- Publish result: \`${process.env.PUSH_RESULT || "unknown"}\``);
 
 if (publicRichSyncSummary) {
   lines.push(`- Public audience sync failures: \`${publicRichSyncSummary.failed}\``);
-  lines.push(`- Terminal profile failures: \`${publicRichSyncSummary.fatalFailed ?? 0}\``);
+  lines.push(`- Fatal profile-unavailable failures: \`${publicRichSyncSummary.fatalFailed ?? 0}\``);
 
   const failedEntries = publicRichSyncSummary.entries.filter((entry) => entry.status === "failed");
   if (failedEntries.length > 0) {
     const fatalEntries = failedEntries.filter((entry) => entry.fatal === true);
     if (fatalEntries.length > 0) {
       lines.push(
-        "- Terminal profile failures likely indicate deleted, renamed, suspended, or moved handles. Update the affected link URL/handle, then rerun `bun run public:rich:sync -- --only-link <link-id>`.",
+        "- Fatal profile-unavailable failures likely indicate deleted, renamed, suspended, or moved handles. Update the affected link URL/handle, then rerun `bun run public:rich:sync -- --only-link <link-id>`.",
       );
     } else {
       lines.push(
-        "- Public audience sync ran in best-effort mode; failed links were excluded from this run's history snapshots.",
+        "- Public audience sync ran in best-effort mode; browser capture failures were excluded from this run's history snapshots.",
       );
     }
     lines.push("");
-    lines.push("| Public audience link | Reason | Terminal | Detail |");
+    lines.push("| Public audience link | Reason | Fatal | Detail |");
     lines.push("| --- | --- | --- | --- |");
     for (const entry of failedEntries) {
       lines.push(
