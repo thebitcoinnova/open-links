@@ -1,7 +1,7 @@
 {
   "$schema": "../../schema/remote-cache-policy.schema.json",
   "version": 1,
-  "updatedAt": "2026-04-05T11:08:34Z",
+  "updatedAt": "2026-05-15T11:51:09Z",
   "rules": [
     {
       "id": "content-image-head-eligible",
@@ -12,6 +12,7 @@
         "bitcoinblacksheep.com",
         "cdninstagram.com",
         "cdn.prod.website-files.com",
+        "cdn.rumble.cloud",
         "chewfugum.com",
         "fbcdn.net",
         "fourthwall.com",
