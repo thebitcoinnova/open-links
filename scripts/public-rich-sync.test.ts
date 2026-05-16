@@ -1662,6 +1662,166 @@ test("treats unchanged Substack subscriber counts as fresh no-op evidence", asyn
   ]);
 });
 
+test("recovers unchanged Substack subscribers from public HTML fallback when browser capture misses counts", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    updatedAt: "2026-05-12T12:00:00.000Z",
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+  let fallbackCaptureArtifact: string | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+        metrics: {
+          placeholderSignals: [],
+        },
+        error: "Substack public browser capture did not find a subscriber count.",
+      }),
+      fetchFallbackAudienceMetrics: async ({ failedCapture, target }) => {
+        fallbackCaptureArtifact = failedCapture.artifactPath;
+        assert.equal(target.id, "substack-public-profile");
+        return {
+          ok: true,
+          source: "public-html",
+          metrics: {
+            placeholderSignals: [],
+            subscribersCount: 15,
+            subscribersCountRaw: "15 subscribers",
+          },
+        };
+      },
+      nowIso: () => "2026-05-16T07:37:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(
+    fallbackCaptureArtifact,
+    "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+  );
+  assert.equal(result.failed, 0);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
+test("refreshes Substack subscribers from public HTML fallback when browser capture misses counts", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: (_path, nextRegistry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(nextRegistry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+        metrics: {
+          placeholderSignals: [],
+        },
+        error: "Substack public browser capture did not find a subscriber count.",
+      }),
+      fetchFallbackAudienceMetrics: async () => ({
+        ok: true,
+        source: "public-html",
+        metrics: {
+          placeholderSignals: [],
+          subscribersCount: 16,
+          subscribersCountRaw: "16 subscribers",
+        },
+      }),
+      nowIso: () => "2026-05-16T07:37:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 0);
+  assert.equal(result.dirty, true);
+  assert.equal(result.registry.entries.substack?.metadata.subscribersCount, 16);
+  assert.equal(writtenRegistry?.entries.substack?.metadata.subscribersCountRaw, "16 subscribers");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "synced",
+      reason: "counts_refreshed",
+      artifactPath: "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+    },
+  ]);
+});
+
 test("preserves existing Substack metrics when a refresh attempt is blocked", async () => {
   // Arrange
   const registry = emptyRegistry();
@@ -1772,4 +1932,13 @@ test("fatal public sync failures exit non-zero even when allow-failures is set",
 
   // Act / Assert
   assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, true), true);
+});
+
+test("deferred public sync failures do not exit non-zero before the final health check", () => {
+  // Arrange
+  const failingResult = { failed: 1, fatalFailed: 1 };
+
+  // Act / Assert
+  assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, false, true), false);
+  assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, true, true), false);
 });

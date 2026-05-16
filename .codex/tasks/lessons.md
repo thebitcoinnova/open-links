@@ -121,3 +121,13 @@ When debugging audience history drift, first prove freshness from the same run's
 
 ### Trigger signal to catch it earlier
 A nightly history row repeats the same public-cache count while enrichment logs show blocked refreshes, stale-cache fallback, or HTTP failures for the same platform.
+
+## lesson-verify-ci-runner-before-freshness-claim | 2026-05-16 09:33 CDT
+### What went wrong
+I verified Substack audience capture locally and inferred the next nightly CI run would append a fresh row, but GitHub's Ubuntu runner still missed the subscriber count and the workflow remained green while skipping Substack.
+
+### Preventive rule
+When audience freshness depends on browser-rendered capture, verify or inspect the CI-runner artifact path before declaring a durable fix; local browser success is not enough.
+
+### Trigger signal to catch it earlier
+The affected platform renders counts differently by environment, and the workflow uses best-effort capture flags that can commit other platforms while skipping the failed one.

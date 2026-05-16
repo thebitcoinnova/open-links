@@ -77,6 +77,7 @@ interface CliArgs {
   onlyMissing: boolean;
   force: boolean;
   allowFailures?: boolean;
+  deferFailures?: boolean;
   headed: boolean;
   browserWaitMs: number;
   summaryJsonPath?: string;
@@ -160,12 +161,29 @@ export interface PublicBrowserAudienceCaptureResult {
   error?: string;
 }
 
+export interface PublicAudienceFallbackResult {
+  ok: boolean;
+  source: string;
+  metrics: PublicBrowserAudienceMetrics;
+  detail?: string;
+}
+
 interface CapturePublicAudienceMetricsInput {
   link: RichLinkInput;
   target: SyncablePublicTarget;
   headed: boolean;
   browserWaitMs: number;
   generatedAt: string;
+}
+
+interface FetchFallbackAudienceMetricsInput {
+  link: RichLinkInput;
+  target: SyncablePublicTarget;
+  existingEntry?: PublicCacheEntry;
+  failedCapture: PublicBrowserAudienceCaptureResult;
+  generatedAt: string;
+  remoteCachePolicyRegistry: ReturnType<typeof loadRemoteCachePolicyRegistry>;
+  remoteCacheStats: RemoteCacheStatsCollector;
 }
 
 export interface PublicRichSyncDependencies {
@@ -176,6 +194,9 @@ export interface PublicRichSyncDependencies {
   captureAudienceMetrics: (
     input: CapturePublicAudienceMetricsInput,
   ) => Promise<PublicBrowserAudienceCaptureResult>;
+  fetchFallbackAudienceMetrics?: (
+    input: FetchFallbackAudienceMetricsInput,
+  ) => Promise<PublicAudienceFallbackResult | null>;
   nowIso: () => string;
   log: (message: string) => void;
 }
@@ -262,6 +283,7 @@ const parseArgs = (argv = process.argv.slice(2)): CliArgs => ({
   onlyMissing: argv.includes("--only-missing"),
   force: argv.includes("--force"),
   allowFailures: argv.includes("--allow-failures"),
+  deferFailures: argv.includes("--defer-failures"),
   headed: argv.includes("--headed"),
   browserWaitMs: Math.max(
     1_000,
@@ -721,6 +743,62 @@ export const bootstrapPublicBaseEntry = async (
   };
 };
 
+export const fetchPublicAudienceMetricsFallback = async (
+  input: FetchFallbackAudienceMetricsInput,
+): Promise<PublicAudienceFallbackResult | null> => {
+  if (input.target.id !== "substack-public-profile") {
+    return null;
+  }
+
+  try {
+    const fetched = await fetchMetadata(input.target.sourceUrl, {
+      timeoutMs: DEFAULT_FETCH_TIMEOUT_MS,
+      retries: DEFAULT_FETCH_RETRIES,
+      acceptHeader: input.target.acceptHeader,
+      headers: input.target.headers,
+      policyRegistry: input.remoteCachePolicyRegistry,
+      statsCollector: input.remoteCacheStats,
+      force: true,
+    });
+
+    if (!fetched.ok || !fetched.html) {
+      return {
+        ok: false,
+        source: "public-html",
+        metrics: { placeholderSignals: [] },
+        detail:
+          fetched.error ??
+          `Unable to fetch public audience fallback source '${input.target.sourceUrl}'. HTTP ${
+            fetched.statusCode ?? "unknown"
+          }`,
+      };
+    }
+
+    const parsed = input.target.parse(fetched.html);
+    const metadata = toPublicCacheMetadata(parsed.metadata);
+    const metrics: PublicBrowserAudienceMetrics = {
+      placeholderSignals: [],
+      subscribersCount: metadata.subscribersCount,
+      subscribersCountRaw: metadata.subscribersCountRaw,
+    };
+    const maybeError = buildAudienceCaptureError(input.target.id, metrics);
+
+    return {
+      ok: !maybeError,
+      source: "public-html",
+      metrics,
+      detail: maybeError,
+    };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      source: "public-html",
+      metrics: { placeholderSignals: [] },
+      detail: toErrorMessage(error),
+    };
+  }
+};
+
 const extractMetricTexts = (value: unknown): string[] | undefined => {
   if (!Array.isArray(value)) {
     return undefined;
@@ -896,6 +974,7 @@ const defaultDependencies: PublicRichSyncDependencies = {
     writePublicCacheRegistry(publicCachePath, registry),
   bootstrapBaseEntry: bootstrapPublicBaseEntry,
   captureAudienceMetrics: capturePublicAudienceMetricsFromBrowser,
+  fetchFallbackAudienceMetrics: fetchPublicAudienceMetricsFallback,
   nowIso,
   log: (message) => console.log(message),
 };
@@ -924,7 +1003,9 @@ export const writePublicRichSyncRunSummary = (
 export const shouldPublicRichSyncExitWithFailure = (
   result: Pick<PublicRichSyncResult, "failed"> & { fatalFailed?: number },
   allowFailures: boolean,
-): boolean => (result.fatalFailed ?? 0) > 0 || (result.failed > 0 && !allowFailures);
+  deferFailures = false,
+): boolean =>
+  !deferFailures && ((result.fatalFailed ?? 0) > 0 || (result.failed > 0 && !allowFailures));
 
 export const runPublicRichSyncWithDependencies = async (
   args: CliArgs,
@@ -1007,13 +1088,47 @@ export const runPublicRichSyncWithDependencies = async (
       }
 
       processed += 1;
-      const capture = await dependencies.captureAudienceMetrics({
+      let capture = await dependencies.captureAudienceMetrics({
         link: candidate.link,
         target: candidate.target,
         headed: args.headed,
         browserWaitMs: args.browserWaitMs,
         generatedAt,
       });
+
+      if (!capture.ok) {
+        const fallback = await dependencies.fetchFallbackAudienceMetrics?.({
+          link: candidate.link,
+          target: candidate.target,
+          existingEntry: workingEntry,
+          failedCapture: capture,
+          generatedAt,
+          remoteCachePolicyRegistry,
+          remoteCacheStats,
+        });
+
+        if (fallback?.ok) {
+          capture = {
+            ...capture,
+            ok: true,
+            metrics: fallback.metrics,
+            error: undefined,
+          };
+          dependencies.log(
+            `[public:rich:sync] recovered ${candidate.link.id}: ${captureSummaryForTarget(
+              candidate.target.id,
+              fallback.metrics,
+            )} via ${fallback.source} fallback after browser capture missed audience metrics.`,
+          );
+        } else if (fallback) {
+          capture = {
+            ...capture,
+            error: `${capture.error ?? captureSummaryForTarget(candidate.target.id, capture.metrics)} Fallback ${fallback.source} capture also failed: ${
+              fallback.detail ?? "unknown failure"
+            }`,
+          };
+        }
+      }
 
       if (!capture.ok) {
         const failure = classifyCaptureFailure(candidate.target.id, capture);
@@ -1163,7 +1278,13 @@ const runCli = async () => {
   console.log(`Fatal failures: ${result.fatalFailed}`);
   console.log(`Cache updated: ${result.dirty ? "yes" : "no"}`);
 
-  if (shouldPublicRichSyncExitWithFailure(result, args.allowFailures ?? false)) {
+  if (
+    shouldPublicRichSyncExitWithFailure(
+      result,
+      args.allowFailures ?? false,
+      args.deferFailures ?? false,
+    )
+  ) {
     process.exit(1);
   }
 };

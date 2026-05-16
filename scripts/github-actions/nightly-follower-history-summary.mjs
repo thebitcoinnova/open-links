@@ -15,6 +15,10 @@ const enrichmentReportPath = "data/generated/rich-enrichment-report.json";
 const enrichmentReport = fs.existsSync(enrichmentReportPath)
   ? JSON.parse(fs.readFileSync(enrichmentReportPath, "utf8"))
   : null;
+const followerHistoryIndexPath = "public/history/followers/index.json";
+const followerHistoryIndex = fs.existsSync(followerHistoryIndexPath)
+  ? JSON.parse(fs.readFileSync(followerHistoryIndexPath, "utf8"))
+  : null;
 const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
 const deploymentDefaultsPath = "config/deployment.defaults.json";
@@ -33,6 +37,18 @@ const readCacheRevalidationSummaries = () => {
       return JSON.parse(fs.readFileSync(absolute, "utf8"));
     });
 };
+
+const escapeTableCell = (value) =>
+  String(value ?? "n/a")
+    .replaceAll("|", "\\|")
+    .replaceAll("\n", " ");
+
+const latestHistoryTimestampForLink = (linkId) =>
+  followerHistoryIndex?.entries?.find((entry) => entry.linkId === linkId)?.latestObservedAt ??
+  "n/a";
+
+const isFreshPublicObservation = (entry) =>
+  entry.status === "synced" || (entry.status === "skipped" && entry.reason === "counts_unchanged");
 
 const readAwsDeploymentUrl = () => {
   if (!fs.existsSync(deploymentDefaultsPath)) {
@@ -89,11 +105,12 @@ if (publicRichSyncSummary) {
       );
     }
     lines.push("");
-    lines.push("| Public audience link | Reason | Fatal | Detail |");
-    lines.push("| --- | --- | --- | --- |");
+    lines.push("");
+    lines.push("| Public audience link | Reason | Fatal | Artifact | Latest history | Detail |");
+    lines.push("| --- | --- | --- | --- | --- | --- |");
     for (const entry of failedEntries) {
       lines.push(
-        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.fatal === true ? "yes" : "no"}\` | ${entry.detail ?? "n/a"} |`,
+        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.fatal === true ? "yes" : "no"}\` | \`${entry.artifactPath ?? "n/a"}\` | \`${latestHistoryTimestampForLink(entry.linkId)}\` | ${escapeTableCell(entry.detail)} |`,
       );
     }
   }
@@ -152,6 +169,46 @@ if (historySummary) {
     }
   } else {
     lines.push("- No follower-history snapshots were eligible for capture.");
+  }
+
+  const failedLinkIds = new Set(
+    (publicRichSyncSummary?.entries ?? [])
+      .filter((entry) => entry.status === "failed")
+      .map((entry) => entry.linkId),
+  );
+  const snapshotLinkIds = new Set(historySummary.snapshots.map((snapshot) => snapshot.linkId));
+  const currentRunGaps = [];
+
+  for (const entry of publicRichSyncSummary?.entries?.filter(isFreshPublicObservation) ?? []) {
+    if (!snapshotLinkIds.has(entry.linkId)) {
+      currentRunGaps.push({
+        linkId: entry.linkId,
+        reason: "fresh public observation missing history snapshot",
+        latestObservedAt: latestHistoryTimestampForLink(entry.linkId),
+      });
+    }
+  }
+
+  for (const entry of followerHistoryIndex?.entries ?? []) {
+    if (entry.latestObservedAt !== historySummary.observedAt && !failedLinkIds.has(entry.linkId)) {
+      currentRunGaps.push({
+        linkId: entry.linkId,
+        reason: "history index not updated for current run",
+        latestObservedAt: entry.latestObservedAt,
+      });
+    }
+  }
+
+  if (currentRunGaps.length > 0) {
+    lines.push("");
+    lines.push("## Current-Run Audience Gaps");
+    lines.push("| Link | Reason | Latest history |");
+    lines.push("| --- | --- | --- |");
+    for (const gap of currentRunGaps) {
+      lines.push(
+        `| \`${gap.linkId}\` | ${escapeTableCell(gap.reason)} | \`${gap.latestObservedAt}\` |`,
+      );
+    }
   }
 } else {
   lines.push("- History sync summary artifact was not produced.");
