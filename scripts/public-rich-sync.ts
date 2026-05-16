@@ -311,6 +311,66 @@ const isSubstackPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is SubstackPublicTarget => target?.id === "substack-public-profile";
 
+const appendHttpUrl = (urls: string[], seen: Set<string>, value: unknown): void => {
+  const trimmed = safeTrim(value);
+  if (!trimmed) {
+    return;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      return;
+    }
+
+    const normalized = url.href;
+    if (seen.has(normalized)) {
+      return;
+    }
+
+    seen.add(normalized);
+    urls.push(normalized);
+  } catch {
+    return;
+  }
+};
+
+const appendSubstackHandleUrl = (urls: string[], seen: Set<string>, handle: unknown): void => {
+  const normalizedHandle = safeTrim(handle)?.toLowerCase();
+  if (!normalizedHandle || !/^[a-z0-9-]+$/u.test(normalizedHandle)) {
+    return;
+  }
+
+  appendHttpUrl(urls, seen, `https://${normalizedHandle}.substack.com/`);
+};
+
+export const resolveSubstackPublicHtmlFallbackUrls = (input: {
+  targetSourceUrl: string;
+  linkUrl: string;
+  icon?: string;
+  metadataHandle?: unknown;
+  profileSemantics?: unknown;
+}): string[] => {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+
+  appendHttpUrl(urls, seen, input.targetSourceUrl);
+  appendHttpUrl(urls, seen, input.linkUrl);
+
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: input.linkUrl,
+    icon: input.icon,
+    metadataHandle: input.metadataHandle,
+    profileSemantics: input.profileSemantics,
+  });
+
+  if (supportedProfile?.platform === "substack") {
+    appendSubstackHandleUrl(urls, seen, supportedProfile.handle);
+  }
+
+  return urls;
+};
+
 const isXProfilePublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is XProfilePublicTarget => target?.id === "x-public-oembed";
@@ -750,44 +810,64 @@ export const fetchPublicAudienceMetricsFallback = async (
     return null;
   }
 
-  try {
-    const fetched = await fetchMetadata(input.target.sourceUrl, {
-      timeoutMs: DEFAULT_FETCH_TIMEOUT_MS,
-      retries: DEFAULT_FETCH_RETRIES,
-      acceptHeader: input.target.acceptHeader,
-      headers: input.target.headers,
-      policyRegistry: input.remoteCachePolicyRegistry,
-      statsCollector: input.remoteCacheStats,
-      force: true,
-    });
+  const sourceUrls = resolveSubstackPublicHtmlFallbackUrls({
+    targetSourceUrl: input.target.sourceUrl,
+    linkUrl: input.link.url,
+    icon: input.link.icon,
+    metadataHandle: input.link.metadata?.handle,
+    profileSemantics: input.link.enrichment?.profileSemantics,
+  });
+  const failures: string[] = [];
 
-    if (!fetched.ok || !fetched.html) {
-      return {
-        ok: false,
-        source: "public-html",
-        metrics: { placeholderSignals: [] },
-        detail:
-          fetched.error ??
-          `Unable to fetch public audience fallback source '${input.target.sourceUrl}'. HTTP ${
-            fetched.statusCode ?? "unknown"
+  try {
+    for (const sourceUrl of sourceUrls) {
+      const fetched = await fetchMetadata(sourceUrl, {
+        timeoutMs: DEFAULT_FETCH_TIMEOUT_MS,
+        retries: DEFAULT_FETCH_RETRIES,
+        acceptHeader: input.target.acceptHeader,
+        headers: input.target.headers,
+        policyRegistry: input.remoteCachePolicyRegistry,
+        statsCollector: input.remoteCacheStats,
+        force: true,
+      });
+
+      if (!fetched.ok || !fetched.html) {
+        failures.push(
+          `${sourceUrl}: ${
+            fetched.error ??
+            `Unable to fetch public audience fallback source. HTTP ${fetched.statusCode ?? "unknown"}`
           }`,
+        );
+        continue;
+      }
+
+      const parsed = input.target.parse(fetched.html);
+      const metadata = toPublicCacheMetadata(parsed.metadata);
+      const metrics: PublicBrowserAudienceMetrics = {
+        placeholderSignals: [],
+        subscribersCount: metadata.subscribersCount,
+        subscribersCountRaw: metadata.subscribersCountRaw,
+      };
+      const maybeError = buildAudienceCaptureError(input.target.id, metrics);
+
+      if (maybeError) {
+        failures.push(`${sourceUrl}: ${maybeError}`);
+        continue;
+      }
+
+      return {
+        ok: true,
+        source: "public-html",
+        metrics,
       };
     }
 
-    const parsed = input.target.parse(fetched.html);
-    const metadata = toPublicCacheMetadata(parsed.metadata);
-    const metrics: PublicBrowserAudienceMetrics = {
-      placeholderSignals: [],
-      subscribersCount: metadata.subscribersCount,
-      subscribersCountRaw: metadata.subscribersCountRaw,
-    };
-    const maybeError = buildAudienceCaptureError(input.target.id, metrics);
-
     return {
-      ok: !maybeError,
+      ok: false,
       source: "public-html",
-      metrics,
-      detail: maybeError,
+      metrics: { placeholderSignals: [] },
+      detail:
+        failures.length > 0 ? failures.join("; ") : "No public HTML fallback source was available.",
     };
   } catch (error: unknown) {
     return {

@@ -4,6 +4,7 @@ import type { PublicCacheEntry, PublicCacheRegistry } from "./enrichment/public-
 import {
   type PublicBrowserAudienceCaptureResult,
   buildPublicRichSyncRunSummary,
+  resolveSubstackPublicHtmlFallbackUrls,
   runPublicRichSyncWithDependencies,
   shouldPublicRichSyncExitWithFailure,
 } from "./public-rich-sync";
@@ -89,6 +90,23 @@ const substackLink = {
     handle: "peterryszkiewicz",
   },
 } as const;
+
+test("resolves Substack fallback sources from canonical, custom domain, and handle URL", () => {
+  // Arrange / Act
+  const urls = resolveSubstackPublicHtmlFallbackUrls({
+    targetSourceUrl: "https://substack.com/@peterryszkiewicz",
+    linkUrl: substackLink.url,
+    icon: substackLink.icon,
+    metadataHandle: substackLink.metadata.handle,
+  });
+
+  // Assert
+  assert.deepEqual(urls, [
+    "https://substack.com/@peterryszkiewicz",
+    "https://peter.ryszkiewicz.us/",
+    "https://peterryszkiewicz.substack.com/",
+  ]);
+});
 
 const emptyRegistry = (): PublicCacheRegistry => ({
   version: 1,

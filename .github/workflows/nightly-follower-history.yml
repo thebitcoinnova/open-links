@@ -157,6 +157,7 @@ jobs:
             output/playwright/public-rich-sync/*.json
             output/cache-revalidation/*.json
           if-no-files-found: ignore
+          include-hidden-files: true
           retention-days: 7
 
       - name: Check nightly audience health

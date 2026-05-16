@@ -94,6 +94,7 @@ test("nightly follower history defers public audience failures until after deplo
     workflowSource,
     /- name: Upload nightly audience diagnostics\n\s+if: always\(\)\n\s+uses: actions\/upload-artifact@v4\n\s+with:\n\s+name: nightly-audience-diagnostics\n\s+path: \|\n\s+\.ci-diagnostics\/\*\.json\n\s+output\/playwright\/public-rich-sync\/\*\.json\n\s+output\/cache-revalidation\/\*\.json/u,
   );
+  assert.match(workflowSource, /include-hidden-files:\s+true/u);
   assert.match(
     workflowSource,
     /- name: Check nightly audience health\n\s+if: always\(\)\n\s+run: bun run scripts\/github-actions\/nightly-follower-history-health\.ts/u,
