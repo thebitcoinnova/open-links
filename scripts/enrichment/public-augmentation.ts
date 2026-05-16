@@ -220,26 +220,51 @@ const resolveSubstackPublicationMetadata = (
 const isSubstackGenericPreviewImage = (value: string | undefined): boolean =>
   Boolean(value && /subscribe-card/iu.test(value));
 
+const parseSubstackSubscriberCountValue = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  return parseAudienceCount(safeTrim(value));
+};
+
+const formatSubstackSubscriberCountRaw = (count: number | undefined): string | undefined =>
+  count === undefined ? undefined : `${count.toLocaleString("en-US")} subscribers`;
+
 const resolveSubstackProfileMetadata = (
   preloads: Record<string, unknown> | undefined,
 ): SubstackProfileMetadata | undefined => {
-  if (!preloads || !isRecord(preloads.profile)) {
+  if (!preloads) {
     return undefined;
   }
 
-  const subscribersCountRaw = safeTrim(preloads.profile.subscriberCountString);
+  const profile = isRecord(preloads.profile) ? preloads.profile : undefined;
+  const pub = isRecord(preloads.pub) ? preloads.pub : undefined;
+  if (!profile && !pub) {
+    return undefined;
+  }
+
+  const publicationSubscribersCount =
+    parseSubstackSubscriberCountValue(pub?.freeSubscriberCount) ??
+    parseSubstackSubscriberCountValue(pub?.freeSubscriberCountOrderOfMagnitude);
+  const subscribersCountRaw =
+    safeTrim(profile?.subscriberCountString) ??
+    formatSubstackSubscriberCountRaw(publicationSubscribersCount);
   const subscribersCountNumber =
-    typeof preloads.profile.subscriberCountNumber === "number" &&
-    Number.isFinite(preloads.profile.subscriberCountNumber)
-      ? preloads.profile.subscriberCountNumber
+    typeof profile?.subscriberCountNumber === "number" &&
+    Number.isFinite(profile.subscriberCountNumber)
+      ? profile.subscriberCountNumber
       : undefined;
 
   return {
-    name: safeTrim(preloads.profile.name),
-    handle: safeTrim(preloads.profile.handle),
-    bio: safeTrim(preloads.profile.bio),
-    photoUrl: safeTrim(preloads.profile.photo_url),
-    subscribersCount: subscribersCountNumber ?? parseAudienceCount(subscribersCountRaw),
+    name: safeTrim(profile?.name) ?? safeTrim(pub?.author_name),
+    handle: safeTrim(profile?.handle) ?? safeTrim(pub?.author_handle),
+    bio: safeTrim(profile?.bio) ?? safeTrim(pub?.author_bio),
+    photoUrl: safeTrim(profile?.photo_url) ?? safeTrim(pub?.author_photo_url),
+    subscribersCount:
+      subscribersCountNumber ??
+      publicationSubscribersCount ??
+      parseAudienceCount(subscribersCountRaw),
     subscribersCountRaw,
   };
 };

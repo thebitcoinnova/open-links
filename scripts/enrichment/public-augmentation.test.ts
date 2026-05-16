@@ -786,6 +786,35 @@ test("preserves a Substack custom-domain source label while reading subscriber c
   );
 });
 
+test("reads Substack custom-domain subscriber counts from publication preloads", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+    metadataHandle: "@peterryszkiewicz",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Peter Ryszkiewicz | Substack" />
+        <meta property="og:description" content="Software Engineer" />
+        <script>
+          window._preloads = JSON.parse("{\\"pub\\":{\\"author_name\\":\\"Peter Ryszkiewicz\\",\\"author_handle\\":\\"peterryszkiewicz\\",\\"author_bio\\":\\"Software Engineer\\",\\"author_photo_url\\":\\"https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg\\",\\"freeSubscriberCount\\":null,\\"freeSubscriberCountOrderOfMagnitude\\":\\"15\\"}}")
+        </script>
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.handle, "peterryszkiewicz");
+  assert.equal(parsed?.metadata.subscribersCount, 15);
+  assert.equal(parsed?.metadata.subscribersCountRaw, "15 subscribers");
+});
+
 test("falls back to Substack preloads data when JSON-LD person metadata is absent", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({
