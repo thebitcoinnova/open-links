@@ -4,9 +4,11 @@ import type { PublicCacheEntry, PublicCacheRegistry } from "./enrichment/public-
 import {
   type PublicBrowserAudienceCaptureResult,
   buildPublicRichSyncRunSummary,
+  resolveInstagramPublicHtmlFallbackUrls,
   resolveSubstackPublicHtmlFallbackUrls,
   runPublicRichSyncWithDependencies,
   shouldPublicRichSyncExitWithFailure,
+  toPublicHtmlFallbackAudienceMetrics,
 } from "./public-rich-sync";
 
 const mediumLink = {
@@ -106,6 +108,39 @@ test("resolves Substack fallback sources from canonical, custom domain, and hand
     "https://peter.ryszkiewicz.us/",
     "https://peterryszkiewicz.substack.com/",
   ]);
+});
+
+test("resolves Instagram fallback sources from canonical and link URL", () => {
+  // Arrange / Act
+  const urls = resolveInstagramPublicHtmlFallbackUrls({
+    targetSourceUrl: "https://www.instagram.com/peterryszkiewicz/",
+    linkUrl: "https://instagram.com/peterryszkiewicz/",
+  });
+
+  // Assert
+  assert.deepEqual(urls, [
+    "https://www.instagram.com/peterryszkiewicz/",
+    "https://instagram.com/peterryszkiewicz/",
+  ]);
+});
+
+test("maps Instagram public HTML metadata to fallback audience metrics", () => {
+  // Arrange / Act
+  const metrics = toPublicHtmlFallbackAudienceMetrics("instagram-public-profile", {
+    followersCount: 104,
+    followersCountRaw: "104 Followers",
+    followingCount: 211,
+    followingCountRaw: "211 Following",
+  });
+
+  // Assert
+  assert.deepEqual(metrics, {
+    placeholderSignals: [],
+    followersCount: 104,
+    followersCountRaw: "104 Followers",
+    followingCount: 211,
+    followingCountRaw: "211 Following",
+  });
 });
 
 const emptyRegistry = (): PublicCacheRegistry => ({
@@ -360,6 +395,9 @@ test("overlays Instagram browser counts when profile metadata counts are stale",
           "output/playwright/public-rich-sync/instagram-2026-05-12.json",
         );
       },
+      fetchFallbackAudienceMetrics: async () => {
+        throw new Error("should not use fallback after browser success");
+      },
       nowIso: () => "2026-05-12T03:15:00.000Z",
       log: () => {},
     },
@@ -380,7 +418,173 @@ test("overlays Instagram browser counts when profile metadata counts are stale",
   assert.equal(writtenRegistry?.entries.instagram?.metadata.description, undefined);
 });
 
-test("treats Instagram login redirects as non-fatal capture failures", async () => {
+test("recovers unchanged Instagram audience from public HTML fallback when browser redirects to login", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  const existingEntry = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+  registry.entries.instagram = existingEntry;
+  let fallbackCaptureArtifact: string | undefined;
+  let wroteRegistry = false;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {
+        wroteRegistry = true;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+        metrics: {
+          placeholderSignals: ["login_redirect"],
+        },
+        error: "Instagram public browser capture saw placeholder content: login_redirect.",
+      }),
+      fetchFallbackAudienceMetrics: async ({ failedCapture, target }) => {
+        fallbackCaptureArtifact = failedCapture.artifactPath;
+        assert.equal(target.id, "instagram-public-profile");
+        return {
+          ok: true,
+          source: "public-html",
+          metadata: createInstagramBaseEntry(
+            "instagram",
+            "2026-05-16T15:30:00.000Z",
+            "https://www.instagram.com/peterryszkiewicz/",
+          ).metadata,
+          metrics: {
+            placeholderSignals: [],
+            followersCount: 99,
+            followersCountRaw: "99 Followers",
+            followingCount: 210,
+            followingCountRaw: "210 Following",
+          },
+        };
+      },
+      nowIso: () => "2026-05-16T15:30:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(fallbackCaptureArtifact, "output/playwright/public-rich-sync/instagram-login.json");
+  assert.equal(wroteRegistry, false);
+  assert.equal(result.failed, 0);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
+test("refreshes Instagram audience from public HTML fallback when browser redirects to login", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: (_path, nextRegistry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(nextRegistry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+        metrics: {
+          placeholderSignals: ["login_redirect"],
+        },
+        error: "Instagram public browser capture saw placeholder content: login_redirect.",
+      }),
+      fetchFallbackAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "instagram-public-profile");
+        return {
+          ok: true,
+          source: "public-html",
+          metadata: {
+            ...createInstagramBaseEntry(
+              "instagram",
+              "2026-05-16T15:35:00.000Z",
+              "https://www.instagram.com/peterryszkiewicz/",
+            ).metadata,
+            description:
+              "104 Followers, 211 Following, 10 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+            followersCount: 104,
+            followersCountRaw: "104 Followers",
+            followingCount: 211,
+            followingCountRaw: "211 Following",
+          },
+          metrics: {
+            placeholderSignals: [],
+            followersCount: 104,
+            followersCountRaw: "104 Followers",
+            followingCount: 211,
+            followingCountRaw: "211 Following",
+          },
+        };
+      },
+      nowIso: () => "2026-05-16T15:35:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 0);
+  assert.equal(result.dirty, true);
+  assert.equal(result.registry.entries.instagram?.metadata.followersCount, 104);
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followersCountRaw, "104 Followers");
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCount, 211);
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCountRaw, "211 Following");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "synced",
+      reason: "counts_refreshed",
+      artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+    },
+  ]);
+});
+
+test("treats Instagram login redirects as non-fatal failures when public HTML fallback also fails", async () => {
   // Arrange
   const registry = emptyRegistry();
   registry.entries.instagram = createInstagramBaseEntry(
@@ -415,6 +619,18 @@ test("treats Instagram login redirects as non-fatal capture failures", async () 
         },
         error: "Instagram public browser capture saw placeholder content: login_redirect.",
       }),
+      fetchFallbackAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "instagram-public-profile");
+        return {
+          ok: false,
+          source: "public-html",
+          metrics: {
+            placeholderSignals: [],
+          },
+          detail:
+            "https://www.instagram.com/peterryszkiewicz/: Instagram public browser capture did not find follower or following counts.",
+        };
+      },
       nowIso: () => "2026-05-12T03:30:00.000Z",
       log: () => {},
     },
@@ -430,7 +646,8 @@ test("treats Instagram login redirects as non-fatal capture failures", async () 
       status: "failed",
       reason: "audience_missing",
       artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
-      detail: "Instagram public browser capture saw placeholder content: login_redirect.",
+      detail:
+        "Instagram public browser capture saw placeholder content: login_redirect. Fallback public-html capture also failed: https://www.instagram.com/peterryszkiewicz/: Instagram public browser capture did not find follower or following counts.",
     },
   ]);
 });

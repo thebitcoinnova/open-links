@@ -865,6 +865,35 @@ test("parses Instagram follower and following counts from the profile descriptio
   });
 });
 
+test("parses Instagram public profile HTML into profile metadata counts", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://www.instagram.com/example/",
+    icon: "instagram",
+    metadataHandle: "example",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Example (@example) • Instagram photos and videos" />
+        <meta property="og:description" content="104 Followers, 211 Following, 12 Posts - See Instagram photos and videos from Example (@example)" />
+        <meta property="og:image" content="https://scontent.cdninstagram.com/avatar.jpg" />
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(target?.id, "instagram-public-profile");
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.followersCount, 104);
+  assert.equal(parsed?.metadata.followersCountRaw, "104 Followers");
+  assert.equal(parsed?.metadata.followingCount, 211);
+  assert.equal(parsed?.metadata.followingCountRaw, "211 Following");
+});
+
 test("preserves raw Instagram count text when compact notation is used", () => {
   // Arrange
   const description =

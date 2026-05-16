@@ -25,6 +25,7 @@ import { computePublicCacheExpiresAt } from "./enrichment/public-cache";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
   type PublicCacheEntry,
+  type PublicCacheMetadata,
   type PublicCacheRegistry,
   arePublicCacheEntriesEqual,
   buildPublicCacheEntry,
@@ -165,6 +166,7 @@ export interface PublicAudienceFallbackResult {
   ok: boolean;
   source: string;
   metrics: PublicBrowserAudienceMetrics;
+  metadata?: PublicCacheMetadata;
   detail?: string;
 }
 
@@ -367,6 +369,19 @@ export const resolveSubstackPublicHtmlFallbackUrls = (input: {
   if (supportedProfile?.platform === "substack") {
     appendSubstackHandleUrl(urls, seen, supportedProfile.handle);
   }
+
+  return urls;
+};
+
+export const resolveInstagramPublicHtmlFallbackUrls = (input: {
+  targetSourceUrl: string;
+  linkUrl: string;
+}): string[] => {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+
+  appendHttpUrl(urls, seen, input.targetSourceUrl);
+  appendHttpUrl(urls, seen, input.linkUrl);
 
   return urls;
 };
@@ -806,21 +821,15 @@ export const bootstrapPublicBaseEntry = async (
 export const fetchPublicAudienceMetricsFallback = async (
   input: FetchFallbackAudienceMetricsInput,
 ): Promise<PublicAudienceFallbackResult | null> => {
-  if (input.target.id !== "substack-public-profile") {
+  const sourceUrls = publicHtmlFallbackUrlsForTarget(input);
+  if (!sourceUrls) {
     return null;
   }
 
-  const sourceUrls = resolveSubstackPublicHtmlFallbackUrls({
-    targetSourceUrl: input.target.sourceUrl,
-    linkUrl: input.link.url,
-    icon: input.link.icon,
-    metadataHandle: input.link.metadata?.handle,
-    profileSemantics: input.link.enrichment?.profileSemantics,
-  });
   const failures: string[] = [];
 
-  try {
-    for (const sourceUrl of sourceUrls) {
+  for (const sourceUrl of sourceUrls) {
+    try {
       const fetched = await fetchMetadata(sourceUrl, {
         timeoutMs: DEFAULT_FETCH_TIMEOUT_MS,
         retries: DEFAULT_FETCH_RETRIES,
@@ -843,11 +852,12 @@ export const fetchPublicAudienceMetricsFallback = async (
 
       const parsed = input.target.parse(fetched.html);
       const metadata = toPublicCacheMetadata(parsed.metadata);
-      const metrics: PublicBrowserAudienceMetrics = {
-        placeholderSignals: [],
-        subscribersCount: metadata.subscribersCount,
-        subscribersCountRaw: metadata.subscribersCountRaw,
-      };
+      const metrics = toPublicHtmlFallbackAudienceMetrics(input.target.id, metadata);
+      if (!metrics) {
+        failures.push(`${sourceUrl}: ${input.target.id} does not support public HTML fallback.`);
+        continue;
+      }
+
       const maybeError = buildAudienceCaptureError(input.target.id, metrics);
 
       if (maybeError) {
@@ -859,24 +869,68 @@ export const fetchPublicAudienceMetricsFallback = async (
         ok: true,
         source: "public-html",
         metrics,
+        ...(input.target.id === "instagram-public-profile" ? { metadata } : {}),
       };
+    } catch (error: unknown) {
+      failures.push(`${sourceUrl}: ${toErrorMessage(error)}`);
     }
+  }
 
+  return {
+    ok: false,
+    source: "public-html",
+    metrics: { placeholderSignals: [] },
+    detail:
+      failures.length > 0 ? failures.join("; ") : "No public HTML fallback source was available.",
+  };
+};
+
+const publicHtmlFallbackUrlsForTarget = (
+  input: FetchFallbackAudienceMetricsInput,
+): string[] | null => {
+  if (input.target.id === "instagram-public-profile") {
+    return resolveInstagramPublicHtmlFallbackUrls({
+      targetSourceUrl: input.target.sourceUrl,
+      linkUrl: input.link.url,
+    });
+  }
+
+  if (input.target.id === "substack-public-profile") {
+    return resolveSubstackPublicHtmlFallbackUrls({
+      targetSourceUrl: input.target.sourceUrl,
+      linkUrl: input.link.url,
+      icon: input.link.icon,
+      metadataHandle: input.link.metadata?.handle,
+      profileSemantics: input.link.enrichment?.profileSemantics,
+    });
+  }
+
+  return null;
+};
+
+export const toPublicHtmlFallbackAudienceMetrics = (
+  targetId: string,
+  metadata: PublicCacheMetadata,
+): PublicBrowserAudienceMetrics | null => {
+  if (targetId === "instagram-public-profile") {
     return {
-      ok: false,
-      source: "public-html",
-      metrics: { placeholderSignals: [] },
-      detail:
-        failures.length > 0 ? failures.join("; ") : "No public HTML fallback source was available.",
-    };
-  } catch (error: unknown) {
-    return {
-      ok: false,
-      source: "public-html",
-      metrics: { placeholderSignals: [] },
-      detail: toErrorMessage(error),
+      placeholderSignals: [],
+      followersCount: metadata.followersCount,
+      followersCountRaw: metadata.followersCountRaw,
+      followingCount: metadata.followingCount,
+      followingCountRaw: metadata.followingCountRaw,
     };
   }
+
+  if (targetId === "substack-public-profile") {
+    return {
+      placeholderSignals: [],
+      subscribersCount: metadata.subscribersCount,
+      subscribersCountRaw: metadata.subscribersCountRaw,
+    };
+  }
+
+  return null;
 };
 
 const extractMetricTexts = (value: unknown): string[] | undefined => {
@@ -1175,6 +1229,7 @@ export const runPublicRichSyncWithDependencies = async (
         browserWaitMs: args.browserWaitMs,
         generatedAt,
       });
+      let fallbackMetadataApplied = false;
 
       if (!capture.ok) {
         const fallback = await dependencies.fetchFallbackAudienceMetrics?.({
@@ -1188,6 +1243,21 @@ export const runPublicRichSyncWithDependencies = async (
         });
 
         if (fallback?.ok) {
+          if (
+            candidate.target.id === "instagram-public-profile" &&
+            fallback.metadata &&
+            workingEntry
+          ) {
+            workingEntry = {
+              ...workingEntry,
+              metadata: mergePublicCacheMetadataForTarget({
+                targetId: candidate.target.id,
+                previous: workingEntry.metadata,
+                next: fallback.metadata,
+              }),
+            };
+            fallbackMetadataApplied = true;
+          }
           capture = {
             ...capture,
             ok: true,
@@ -1261,7 +1331,7 @@ export const runPublicRichSyncWithDependencies = async (
       nextEntry.metadata = prunePublicCacheMetadataForTarget({
         targetId: candidate.target.id,
         metadata: nextEntry.metadata,
-        audienceMetricsAreAuthoritative: true,
+        audienceMetricsAreAuthoritative: !fallbackMetadataApplied,
       });
 
       const stabilizedEntry = buildPublicCacheEntry({
