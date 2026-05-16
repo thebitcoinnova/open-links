@@ -39,7 +39,11 @@ surfaces; `data/policy/referral-catalog.local.json` is the fork-owned overlay
 side of that split and should stay out of upstream PRs.
 <!-- OPENLINKS_SCREENSHOT_ANCHOR -->
 <!-- OPENLINKS_SCREENSHOT_START -->
-![OpenLinks preview](docs/assets/openlinks-preview.png)
+![OpenLinks desktop preview](docs/assets/openlinks-preview.png)
+
+![OpenLinks tablet preview](docs/assets/openlinks-preview-tablet.png)
+
+![OpenLinks mobile preview](docs/assets/openlinks-preview-mobile.png)
 <!-- OPENLINKS_SCREENSHOT_END -->
 
 ## Logo Assets
