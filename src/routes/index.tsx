@@ -603,6 +603,7 @@ export default function RouteIndex() {
   const profileHeader = () => (
     <ProfileHeader
       profile={content.profile}
+      alignment={layout.profileHeaderAlignment}
       quickLinks={profileQuickLinks}
       richness={composition.profileRichness}
       onProfileQrOpen={openProfileQrDialog}

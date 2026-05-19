@@ -338,6 +338,12 @@ a:focus-visible {
   box-shadow: none;
 }
 
+.profile-header[data-alignment-default="center"] {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+}
+
 .profile-avatar {
   --profile-avatar-base: 80px;
   width: calc(var(--profile-avatar-base) * var(--profile-avatar-scale, 1.5));
@@ -351,6 +357,11 @@ a:focus-visible {
   display: grid;
   gap: var(--space-2);
   min-width: 0;
+}
+
+.profile-header[data-alignment-default="center"] .profile-copy {
+  width: 100%;
+  justify-items: center;
 }
 
 .profile-quick-links {
@@ -434,6 +445,11 @@ a:focus-visible {
   min-width: 0;
 }
 
+.profile-header[data-alignment-default="center"] .profile-title-row {
+  width: 100%;
+  justify-content: center;
+}
+
 .profile-copy h1 {
   min-width: 0;
   max-width: 100%;
@@ -443,6 +459,12 @@ a:focus-visible {
   line-height: var(--line-height-title);
   overflow-wrap: anywhere;
   hyphens: auto;
+}
+
+.profile-header[data-alignment-default="center"] .profile-copy h1,
+.profile-header[data-alignment-default="center"] .profile-headline,
+.profile-header[data-alignment-default="center"] .profile-bio {
+  text-align: center;
 }
 
 .profile-headline {
@@ -577,6 +599,11 @@ a:focus-visible {
   border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
 }
 
+.profile-header[data-alignment-default="center"] .profile-action-bar {
+  justify-self: center;
+  width: min(100%, 24rem);
+}
+
 .profile-action-bar-mobile {
   display: none;
 }
@@ -633,6 +660,13 @@ a:focus-visible {
   gap: var(--space-2);
 }
 
+.profile-header[data-alignment-default="center"] .profile-meta {
+  justify-content: center;
+  margin-inline: 0;
+  padding-inline: 0;
+  list-style: none;
+}
+
 .profile-meta p {
   margin: 0;
   border: 1px solid var(--border-subtle);
@@ -651,6 +685,11 @@ a:focus-visible {
   min-width: 0;
 }
 
+.profile-header[data-alignment-default="center"] .profile-contact-list {
+  justify-self: center;
+  width: min(100%, 32rem);
+}
+
 .profile-contact-item {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -659,6 +698,13 @@ a:focus-visible {
   min-width: 0;
   color: var(--text-muted);
   font-size: var(--page-type-caption);
+}
+
+.profile-header[data-alignment-default="center"] .profile-contact-item {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 0.1rem;
+  text-align: center;
 }
 
 .profile-contact-key {

@@ -1,10 +1,16 @@
 import type {
   DensityMode,
   DesktopColumnsMode,
+  ProfileHeaderAlignment,
   SiteData,
   TargetSizeMode,
   TypographyScaleMode,
 } from "../content/load-content";
+
+export interface ResolvedProfileHeaderAlignment {
+  default: ProfileHeaderAlignment;
+  small: ProfileHeaderAlignment;
+}
 
 export interface LayoutPreferences {
   density: DensityMode;
@@ -12,6 +18,7 @@ export interface LayoutPreferences {
   typographyScale: TypographyScaleMode;
   targetSize: TargetSizeMode;
   profileAvatarScale: number;
+  profileHeaderAlignment: ResolvedProfileHeaderAlignment;
 }
 
 const density = (site: SiteData): DensityMode => {
@@ -51,10 +58,45 @@ const profileAvatarScale = (site: SiteData): number => {
   return 1.7;
 };
 
+const isProfileHeaderAlignment = (value: unknown): value is ProfileHeaderAlignment =>
+  value === "leading" || value === "center";
+
+const profileHeaderAlignment = (site: SiteData): ResolvedProfileHeaderAlignment => {
+  const value = site.ui?.profileHeaderAlignment;
+
+  if (isProfileHeaderAlignment(value)) {
+    return {
+      default: value,
+      small: value,
+    };
+  }
+
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const configuredAlignment = value as { default?: unknown; small?: unknown };
+    const defaultAlignment = isProfileHeaderAlignment(configuredAlignment.default)
+      ? configuredAlignment.default
+      : "leading";
+    const smallAlignment = isProfileHeaderAlignment(configuredAlignment.small)
+      ? configuredAlignment.small
+      : defaultAlignment;
+
+    return {
+      default: defaultAlignment,
+      small: smallAlignment,
+    };
+  }
+
+  return {
+    default: "leading",
+    small: "center",
+  };
+};
+
 export const resolveLayoutPreferences = (site: SiteData): LayoutPreferences => ({
   density: density(site),
   desktopColumns: desktopColumns(site),
   typographyScale: typographyScale(site),
   targetSize: targetSize(site),
   profileAvatarScale: profileAvatarScale(site),
+  profileHeaderAlignment: profileHeaderAlignment(site),
 });

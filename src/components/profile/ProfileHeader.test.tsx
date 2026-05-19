@@ -295,6 +295,50 @@ test("profile header marks empty quick-link state without rendering placeholder 
   assert.equal(firstElementWithClass(tree, "profile-quick-links"), undefined);
 });
 
+test("profile header exposes mobile-centered alignment attributes by default", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+  }) as RenderedNode;
+
+  // Act
+  const section = firstElementWithClass(tree, "profile-header");
+
+  // Assert
+  assert.ok(section);
+  assert.equal(section.props["data-alignment-default"], "leading");
+  assert.equal(section.props["data-alignment-small"], "center");
+});
+
+test("profile header exposes responsive alignment attributes", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    alignment: {
+      default: "leading",
+      small: "center",
+    },
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+  }) as RenderedNode;
+
+  // Act
+  const section = firstElementWithClass(tree, "profile-header");
+
+  // Assert
+  assert.ok(section);
+  assert.equal(section.props["data-alignment-default"], "leading");
+  assert.equal(section.props["data-alignment-small"], "center");
+});
+
 test("profile header exposes populated quick-link readiness through the future-facing seam", () => {
   // Arrange
   const tree = ProfileHeader({

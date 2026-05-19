@@ -959,6 +959,7 @@ Main presentation controls include:
 - `typography`: optional global/per-theme typography overrides
 - `targetSize`: `comfortable`, `compact`, `large`
 - `profileAvatarScale`: number between `0` and `4`; default `1.5` (avatar size multiplier)
+- `profileHeaderAlignment`: `leading`, `center`, or `{ "default": "leading", "small": "center" }`; when omitted, defaults to leading alignment on larger screens and centered alignment at the existing `max-width: 760px` mobile breakpoint
 - `brandIcons.colorMode`: `brand`, `theme`
 - `brandIcons.contrastMode`: `auto`, `always-theme`, `always-brand`
 - `brandIcons.minContrastRatio`: number between `1` and `21` (default `3`)

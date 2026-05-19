@@ -194,13 +194,32 @@ In `data/site.json` under `ui`:
 - `typographyScale`: fixed/compact/expressive typography tuning
 - `typography`: global and per-theme typography token overrides
 - `targetSize`: comfortable/compact/large interaction footprint
+- `profileHeaderAlignment`: leading/center profile header alignment, with optional `default` and `small` responsive values
 
 ### How layout resolution works
 
 1. `load-content.ts` reads site config.
 2. `resolveComposition()` maps composition mode and grouping style.
-3. `resolveLayoutPreferences()` maps density/columns/type scale/target size.
+3. `resolveLayoutPreferences()` maps density/columns/type scale/target size/profile header alignment.
 4. `src/routes/index.tsx` applies these decisions through page class names and section rendering.
+
+### Responsive Profile Header Alignment
+
+Use `site.ui.profileHeaderAlignment` when you want the profile identity block to center independently from the rest of the page layout.
+
+```json
+{
+  "ui": {
+    "profileHeaderAlignment": {
+      "default": "leading",
+      "small": "center"
+    }
+  }
+}
+```
+
+The shorthand `"center"` or `"leading"` applies to every viewport. The responsive object supports only `default` and `small` in v1; `small` maps to the existing `max-width: 760px` mobile breakpoint.
+When `profileHeaderAlignment` is omitted, OpenLinks defaults to leading alignment on larger screens and centered alignment on small screens.
 
 ### Typography Overrides via `site.ui.typography`
 

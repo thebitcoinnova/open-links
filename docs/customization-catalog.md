@@ -189,6 +189,7 @@ Coverage:
 - `typographyScale`
 - `typography`
 - `targetSize`
+- `profileHeaderAlignment`
 - `payments.qr.displayDefault`
 - `payments.qr.styleDefault`
 - `payments.qr.foregroundColorDefault`

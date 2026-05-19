@@ -7,6 +7,7 @@ import {
 import type { ProfileData } from "../../lib/content/load-content";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
+import type { ResolvedProfileHeaderAlignment } from "../../lib/ui/layout-preferences";
 import type { ResolvedProfileQuickLinksState } from "../../lib/ui/profile-quick-links";
 import BottomActionBar, {
   BottomActionBarActionContent,
@@ -21,6 +22,7 @@ export interface ProfileHeaderProps {
   quickLinks?: ResolvedProfileQuickLinksState;
   onProfileQrOpen?: (payload: string) => void;
   richness?: "minimal" | "standard" | "rich";
+  alignment?: ResolvedProfileHeaderAlignment;
 }
 
 const orderedContactEntries = (contact?: Record<string, string>) =>
@@ -59,6 +61,11 @@ export const resolveMobileProfileActionLayout = (
 
 export const ProfileHeader = (props: ProfileHeaderProps) => {
   const richness = () => props.richness ?? "standard";
+  const alignment = (): ResolvedProfileHeaderAlignment =>
+    props.alignment ?? {
+      default: "leading",
+      small: "center",
+    };
   const contacts = () => orderedContactEntries(props.profile.contact);
   const pageNoun = () => resolveEntityPageNoun(props.profile.entityType);
   const pageLabel = () => resolveEntityPageLabel(props.profile.entityType);
@@ -154,6 +161,8 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     <section
       class="profile-header"
       aria-label={pageLabel()}
+      data-alignment-default={alignment().default}
+      data-alignment-small={alignment().small}
       data-has-quick-links={props.quickLinks?.hasAny ? "true" : "false"}
     >
       <Show when={props.profile.avatar && richness() !== "minimal"}>

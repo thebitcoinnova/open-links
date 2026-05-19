@@ -103,6 +103,23 @@
       },
       "additionalProperties": false
     },
+    "profileHeaderAlignmentValue": {
+      "type": "string",
+      "enum": ["leading", "center"]
+    },
+    "profileHeaderAlignmentConfig": {
+      "oneOf": [
+        { "$ref": "#/$defs/profileHeaderAlignmentValue" },
+        {
+          "type": "object",
+          "properties": {
+            "default": { "$ref": "#/$defs/profileHeaderAlignmentValue" },
+            "small": { "$ref": "#/$defs/profileHeaderAlignmentValue" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "siteFooterConfig": {
       "type": "object",
       "properties": {
@@ -315,6 +332,9 @@
         "targetSize": {
           "type": "string",
           "enum": ["comfortable", "compact", "large"]
+        },
+        "profileHeaderAlignment": {
+          "$ref": "#/$defs/profileHeaderAlignmentConfig"
         },
         "brandIcons": {
           "type": "object",
