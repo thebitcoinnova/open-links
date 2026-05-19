@@ -256,7 +256,8 @@ For vCard configuration, keep the default privacy posture conservative:
 1. Ask whether the profile-header vCard download button should be enabled.
 2. If enabled, include only `profile.name` and the canonical profile URL by default.
 3. Add email, phone, organization, title, role, note, selected `links[]` ids, custom URLs, or embedded profile photo only when the user explicitly chooses them.
-4. Do not infer that all public links or the profile avatar should be exported to the vCard.
+4. Ask for the intended labels for extra URLs; runtime preserves explicit labels in Apple Contacts-compatible vCard output.
+5. Do not infer that all public links or the profile avatar should be exported to the vCard.
 
 Validation checkpoint:
 

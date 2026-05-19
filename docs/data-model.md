@@ -955,7 +955,10 @@ Sharing controls live under top-level `site.sharing`.
 The vCard export is deliberately conservative. Enabling the button exports `FN`
 from `profile.name` and the canonical profile URL by default. Contact details,
 the profile photo, and extra URLs are exported only when explicitly configured
-under `site.sharing.vcard`.
+under `site.sharing.vcard`. Runtime currently emits an Apple-compatible vCard
+3.0 file: profile photos are embedded as inline base64 when the resolved avatar
+is a supported contact image type, and labeled extra URLs use Apple grouped URL
+labels so Contacts can preserve names like `GitHub` or `Calendar`.
 
 Example:
 

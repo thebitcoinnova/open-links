@@ -24,9 +24,21 @@ interface VCardUrlEntry {
   url: string;
 }
 
+interface VCardPhotoEntry {
+  base64: string;
+  imageType: string;
+}
+
 const VCARD_LINE_ENDING = "\r\n";
 const VCARD_MAX_LINE_OCTETS = 75;
 const UTF8_ENCODER = new TextEncoder();
+const VCARD_PHOTO_TYPES: Record<string, string> = {
+  "image/bmp": "BMP",
+  "image/gif": "GIF",
+  "image/jpeg": "JPEG",
+  "image/jpg": "JPEG",
+  "image/png": "PNG",
+};
 
 const trimToUndefined = (value: string | undefined): string | undefined => {
   if (typeof value !== "string") {
@@ -43,11 +55,6 @@ const escapeTextValue = (value: string): string =>
     .replaceAll(/\r\n|\r|\n/gu, "\\n")
     .replaceAll(";", "\\;")
     .replaceAll(",", "\\,");
-
-const escapeParameterValue = (value: string): string => {
-  const escaped = value.replaceAll('"', "").replaceAll("\\", "\\\\");
-  return /[:;,]/u.test(escaped) || /\s/u.test(escaped) ? `"${escaped}"` : escaped;
-};
 
 const countUtf8Octets = (value: string): number => UTF8_ENCODER.encode(value).length;
 
@@ -121,7 +128,16 @@ const appendTextLine = (lines: string[], name: string, maybeValue: string | unde
   lines.push(`${name}:${escapeTextValue(value)}`);
 };
 
-const appendStructuredNameLine = (lines: string[], formattedName: string) => {
+const appendStructuredNameLine = (
+  lines: string[],
+  formattedName: string,
+  entityType: "organization" | "person",
+) => {
+  if (entityType === "organization") {
+    lines.push(`N:${escapeTextValue(formattedName)};;;;`);
+    return;
+  }
+
   const nameParts = formattedName.split(/\s+/u).filter((part) => part.length > 0);
   const familyName = nameParts.length > 1 ? (nameParts.at(-1) ?? "") : "";
   const givenName = nameParts.length > 1 ? nameParts[0] : formattedName;
@@ -131,11 +147,18 @@ const appendStructuredNameLine = (lines: string[], formattedName: string) => {
   lines.push(`N:${components.join(";")}`);
 };
 
-const resolveDataUriMediaType = (uri: string): string | undefined => {
-  const match = /^data:([^;,]+)[;,]/u.exec(uri);
-  const mediaType = match?.[1]?.trim().toLowerCase();
+const resolveDataUriPhoto = (uri: string): VCardPhotoEntry | undefined => {
+  const match = /^data:([^,]+),([A-Za-z0-9+/]+={0,2})$/u.exec(uri);
+  const metadata = match?.[1]?.split(";").map((part) => part.trim().toLowerCase()) ?? [];
+  const maybeMediaType = metadata[0];
+  const imageType = maybeMediaType ? VCARD_PHOTO_TYPES[maybeMediaType] : undefined;
+  const base64 = match?.[2];
 
-  return mediaType?.startsWith("image/") ? mediaType : undefined;
+  if (!imageType || !base64 || !metadata.includes("base64")) {
+    return undefined;
+  }
+
+  return { base64, imageType };
 };
 
 const appendPhotoLine = (lines: string[], maybePhotoUri: string | undefined) => {
@@ -144,27 +167,34 @@ const appendPhotoLine = (lines: string[], maybePhotoUri: string | undefined) => 
     return;
   }
 
-  const mediaType = resolveDataUriMediaType(photoUri);
-  lines.push(
-    mediaType
-      ? `PHOTO;MEDIATYPE=${escapeParameterValue(mediaType)}:${photoUri}`
-      : `PHOTO:${photoUri}`,
-  );
-};
-
-const appendUriLine = (
-  lines: string[],
-  name: string,
-  maybeValue: string | undefined,
-  maybeLabel?: string,
-) => {
-  const value = trimToUndefined(maybeValue);
-  if (!value || !isAbsoluteUri(value)) {
+  const photo = resolveDataUriPhoto(photoUri);
+  if (!photo) {
     return;
   }
 
-  const label = trimToUndefined(maybeLabel);
-  lines.push(label ? `${name};TYPE=${escapeParameterValue(label)}:${value}` : `${name}:${value}`);
+  lines.push(`PHOTO;ENCODING=b;TYPE=${photo.imageType}:${photo.base64}`);
+};
+
+const appendUrlLines = (lines: string[], entries: VCardUrlEntry[]) => {
+  let labeledUrlIndex = 1;
+
+  for (const entry of entries) {
+    const value = trimToUndefined(entry.url);
+    if (!value || !isAbsoluteUri(value)) {
+      continue;
+    }
+
+    const label = trimToUndefined(entry.label);
+    if (!label) {
+      lines.push(`URL:${value}`);
+      continue;
+    }
+
+    const group = `item${labeledUrlIndex}`;
+    labeledUrlIndex += 1;
+    lines.push(`${group}.URL:${value}`);
+    lines.push(`${group}.X-ABLabel:${escapeTextValue(label)}`);
+  }
 };
 
 const resolveConfiguredLinks = (links: OpenLink[], linkIds: string[] = []): VCardUrlEntry[] => {
@@ -220,27 +250,25 @@ const resolveVCardUrls = (input: ProfileVCardInput): VCardUrlEntry[] => {
 
 export const buildProfileVCard = (input: ProfileVCardInput): string => {
   const fields = input.config?.fields;
-  const lines = ["BEGIN:VCARD", "VERSION:4.0"];
+  const lines = ["BEGIN:VCARD", "VERSION:3.0"];
   const entityType = resolveEntityType(input.profile.entityType);
   const formattedName = trimToUndefined(input.profile.name) ?? "Profile";
+  const maybeOrganizationName =
+    fields?.organization ?? (entityType === "organization" ? formattedName : undefined);
 
   appendTextLine(lines, "FN", formattedName);
   if (entityType === "organization") {
-    appendTextLine(lines, "KIND", "org");
-  } else {
-    appendStructuredNameLine(lines, formattedName);
+    appendTextLine(lines, "X-ABShowAs", "COMPANY");
   }
-  appendTextLine(lines, "ORG", fields?.organization);
+  appendStructuredNameLine(lines, formattedName, entityType);
+  appendTextLine(lines, "ORG", maybeOrganizationName);
   appendTextLine(lines, "TITLE", fields?.title);
   appendTextLine(lines, "ROLE", fields?.role);
   appendTextLine(lines, "NOTE", fields?.note);
   appendTextLine(lines, "EMAIL", fields?.email);
   appendTextLine(lines, "TEL", fields?.phone);
   appendPhotoLine(lines, input.photoUri);
-
-  for (const entry of resolveVCardUrls(input)) {
-    appendUriLine(lines, "URL", entry.url, entry.label);
-  }
+  appendUrlLines(lines, resolveVCardUrls(input));
 
   lines.push("END:VCARD");
   return `${lines.map(foldContentLine).join(VCARD_LINE_ENDING)}${VCARD_LINE_ENDING}`;

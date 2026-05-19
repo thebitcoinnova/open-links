@@ -115,8 +115,9 @@ card behavior, or `site.sharing.vcard`:
 5. Include extra URLs only through an explicit allowlist:
    - `site.sharing.vcard.include.linkIds` for existing `links[]` ids
    - `site.sharing.vcard.include.customUrls` for one-off URLs
-6. Do not infer that every enabled public link belongs in the vCard.
-7. Use Studio guided controls when the user prefers browser-based editing; Advanced JSON remains available for unusual extension data.
+6. Keep labels explicit; runtime emits Apple grouped URL labels for allowlisted link and custom URL labels.
+7. Do not infer that every enabled public link belongs in the vCard.
+8. Use Studio guided controls when the user prefers browser-based editing; Advanced JSON remains available for unusual extension data.
 
 ## Required Startup Handshake (First Step)
 

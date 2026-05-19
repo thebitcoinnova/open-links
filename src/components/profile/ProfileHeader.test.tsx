@@ -229,7 +229,7 @@ test("profile header embeds configured vCard photo before downloading", async ()
       // Assert
       assert.deepEqual(result.fetchedUrls, ["/cache/profile-avatar/profile-avatar.jpg"]);
       assert.equal(result.clickedAnchors[0]?.download, "peter-ryszkiewicz.vcf");
-      assert.match(contents ?? "", /PHOTO;MEDIATYPE=image\/jpeg:data:image\/jpeg;base64,AQID/u);
+      assert.match(contents ?? "", /PHOTO;ENCODING=b;TYPE=JPEG:AQID/u);
     },
   );
 });

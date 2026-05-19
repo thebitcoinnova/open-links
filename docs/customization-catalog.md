@@ -363,6 +363,7 @@ Notes:
 - The default export is conservative: `profile.name` plus the canonical profile URL.
 - Contact fields, profile photo export, and extra URLs require explicit vCard config.
 - `vcard.include.linkIds` is an explicit allowlist of existing `links[]` ids; do not export all links unless the user deliberately lists them.
+- Runtime emits an Apple-compatible vCard 3.0 file; labeled extra URLs use grouped Apple URL labels so Contacts can preserve explicit names.
 - Studio exposes guided controls for the vCard surface, including the photo toggle; Advanced JSON remains available for unusual extension fields.
 
 ## 12) `site.quality` (`site-quality`)
