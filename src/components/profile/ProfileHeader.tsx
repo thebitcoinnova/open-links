@@ -4,11 +4,14 @@ import {
   resolveEntityPageLabel,
   resolveEntityPageNoun,
 } from "../../lib/content/entity-type";
-import type { ProfileData } from "../../lib/content/load-content";
+import type { OpenLink, ProfileData, SiteSharingVCardConfig } from "../../lib/content/load-content";
 import { copyLink, resolveDocumentShareUrl, shareLink } from "../../lib/share/share-link";
 import { showActionToast } from "../../lib/ui/action-toast";
 import type { ResolvedProfileHeaderAlignment } from "../../lib/ui/layout-preferences";
 import type { ResolvedProfileQuickLinksState } from "../../lib/ui/profile-quick-links";
+import { downloadVCardFile } from "../../lib/vcard/download-vcard";
+import { resolveVCardPhotoUri } from "../../lib/vcard/photo-vcard";
+import { resolveProfileVCardDownload } from "../../lib/vcard/profile-vcard";
 import BottomActionBar, {
   BottomActionBarActionContent,
   type BottomActionBarButtonItem,
@@ -19,10 +22,12 @@ import ProfileQuickLinks from "./ProfileQuickLinks";
 
 export interface ProfileHeaderProps {
   profile: ProfileData;
+  links?: OpenLink[];
   quickLinks?: ResolvedProfileQuickLinksState;
   onProfileQrOpen?: (payload: string) => void;
   richness?: "minimal" | "standard" | "rich";
   alignment?: ResolvedProfileHeaderAlignment;
+  vcard?: SiteSharingVCardConfig;
 }
 
 const orderedContactEntries = (contact?: Record<string, string>) =>
@@ -33,7 +38,7 @@ export interface MobileProfileActionLayout {
   overflowKinds: BottomActionKind[];
 }
 
-const orderedProfileActionKinds: BottomActionKind[] = ["qr", "share", "copy"];
+const orderedProfileActionKinds: BottomActionKind[] = ["qr", "share", "download", "copy"];
 
 export const resolveMobileProfileActionLayout = (
   kinds: BottomActionKind[],
@@ -98,6 +103,32 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
     props.onProfileQrOpen?.(resolveDocumentShareUrl());
   };
 
+  const handleDownloadProfileVCard = async () => {
+    const photoUri = await resolveVCardPhotoUri({
+      enabled: props.vcard?.include?.photo === true,
+      sourceUrl: props.profile.avatar,
+    });
+    const maybeVCard = resolveProfileVCardDownload({
+      config: props.vcard,
+      links: props.links,
+      photoUri,
+      profile: props.profile,
+      profileUrl: resolveDocumentShareUrl(),
+    });
+
+    if (!maybeVCard) {
+      return;
+    }
+
+    const downloaded = downloadVCardFile(maybeVCard);
+    if (!downloaded) {
+      showActionToast({
+        message: `Could not download ${pageNoun()} vCard`,
+        status: "failed",
+      });
+    }
+  };
+
   const actionItems = (): BottomActionBarButtonItem[] => {
     const items: BottomActionBarButtonItem[] = [];
 
@@ -122,6 +153,17 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
         },
         title: `Share ${pageNoun()}`,
       },
+      ...(props.vcard?.enabled
+        ? [
+            {
+              ariaLabel: `Download ${pageNoun()} vCard`,
+              kind: "download" as const,
+              label: "Download",
+              onClick: handleDownloadProfileVCard,
+              title: `Download ${pageNoun()} vCard`,
+            },
+          ]
+        : []),
       {
         ariaLabel: `Copy ${pageNoun()} link`,
         kind: "copy",

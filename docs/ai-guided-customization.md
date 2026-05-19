@@ -248,7 +248,15 @@ Agent should capture:
 - typography overrides (`ui.typography.global`, `ui.typography.themes`)
 - brand icon policy (`ui.brandIcons.colorMode`, `contrastMode`, `minContrastRatio`, `sizeMode`, `iconOverrides`)
 - rich-card policy (`ui.richCards.renderMode`, `sourceLabelDefault`, `imageTreatment`, legacy `mobile.imageLayout`, `enrichment.*`)
+- vCard download policy (`sharing.vcard.enabled`, optional filename, explicit contact fields, profile photo inclusion, profile URL inclusion, and explicit link/custom URL allowlists)
 - quality policy (`quality.reportPath`, `summaryPath`, `blockingDomains`, `seo.*`, `accessibility.*`, `performance.*`)
+
+For vCard configuration, keep the default privacy posture conservative:
+
+1. Ask whether the profile-header vCard download button should be enabled.
+2. If enabled, include only `profile.name` and the canonical profile URL by default.
+3. Add email, phone, organization, title, role, note, selected `links[]` ids, custom URLs, or embedded profile photo only when the user explicitly chooses them.
+4. Do not infer that all public links or the profile avatar should be exported to the vCard.
 
 Validation checkpoint:
 
@@ -263,7 +271,7 @@ Opt-out:
 References:
 
 - `docs/data-model.md` (`site.json` section)
-- `docs/customization-catalog.md` (`site-core-theme`, `site-ui-*`, `site-quality` categories)
+- `docs/customization-catalog.md` (`site-core-theme`, `site-ui-*`, `site-sharing`, `site-quality` categories)
 - `docs/theming-and-layouts.md`
 
 ### Step 5: Build and quality verification

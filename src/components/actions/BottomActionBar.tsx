@@ -2,12 +2,13 @@ import { For, Show } from "solid-js";
 import {
   IconAnalytics,
   IconCopy,
+  IconDownload,
   IconOpen,
   IconQrCode,
   IconShare,
 } from "../../lib/icons/custom-icons";
 
-export type BottomActionKind = "analytics" | "copy" | "open" | "qr" | "share";
+export type BottomActionKind = "analytics" | "copy" | "download" | "open" | "qr" | "share";
 
 interface BottomActionItemBase {
   active?: boolean;
@@ -44,6 +45,10 @@ const resolveActionIcon = (kind: BottomActionKind) => {
 
   if (kind === "copy") {
     return <IconCopy class="bottom-action-bar-action-icon" aria-hidden="true" />;
+  }
+
+  if (kind === "download") {
+    return <IconDownload class="bottom-action-bar-action-icon" aria-hidden="true" />;
   }
 
   if (kind === "open") {

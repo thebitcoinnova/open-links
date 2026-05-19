@@ -11,6 +11,9 @@ import { api } from "@/lib/api";
 import {
   STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS,
   STUDIO_LINK_TYPE_OPTIONS,
+  STUDIO_VCARD_PHOTO_OPTIONS,
+  STUDIO_VCARD_PROFILE_URL_OPTIONS,
+  STUDIO_VCARD_VISIBILITY_OPTIONS,
   type StudioConfirmAction,
   type StudioSiteData,
   resolveEditorLinkAccordionSummary,
@@ -18,6 +21,20 @@ import {
   resolveStudioAnalyticsPageVisibilityValue,
   resolveStudioConfirmDialogCopy,
   resolveStudioThemeOptions,
+  resolveStudioVCardCustomUrlsValue,
+  resolveStudioVCardFieldValue,
+  resolveStudioVCardFilenameValue,
+  resolveStudioVCardLinkIdsValue,
+  resolveStudioVCardPhotoValue,
+  resolveStudioVCardProfileUrlValue,
+  resolveStudioVCardVisibilityValue,
+  updateStudioVCardCustomUrls,
+  updateStudioVCardEnabled,
+  updateStudioVCardField,
+  updateStudioVCardFilename,
+  updateStudioVCardLinkIds,
+  updateStudioVCardPhoto,
+  updateStudioVCardProfileUrl,
 } from "@/lib/editor-options";
 import type { RepoContentPayload, ValidationResult } from "@openlinks/studio-shared";
 import { useParams } from "@solidjs/router";
@@ -92,6 +109,12 @@ export default function EditorPage() {
     const loaded = content();
     if (!loaded) return;
     setContent({ ...loaded, site: { ...loaded.site, [field]: value } });
+  };
+
+  const updateSiteRecord = (site: Record<string, unknown>) => {
+    const loaded = content();
+    if (!loaded) return;
+    setContent({ ...loaded, site });
   };
 
   const updateLink = (index: number, field: string, value: string) => {
@@ -449,6 +472,140 @@ export default function EditorPage() {
                   options={STUDIO_ANALYTICS_PAGE_VISIBILITY_OPTIONS}
                   value={resolveStudioAnalyticsPageVisibilityValue(loaded().site as StudioSiteData)}
                 />
+                <div class="space-y-3 rounded-lg border border-slate-700 bg-slate-900/30 p-4">
+                  <h3 class="font-display text-xl font-semibold">vCard Download</h3>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <LabeledSelect
+                      id="editor-site-vcard-visibility"
+                      label="Download button"
+                      onChange={(value) =>
+                        updateSiteRecord(updateStudioVCardEnabled(loaded().site, value === "true"))
+                      }
+                      options={STUDIO_VCARD_VISIBILITY_OPTIONS}
+                      value={resolveStudioVCardVisibilityValue(loaded().site as StudioSiteData)}
+                    />
+                    <LabeledInput
+                      id="editor-site-vcard-filename"
+                      label="Filename"
+                      onInput={(event) =>
+                        updateSiteRecord(
+                          updateStudioVCardFilename(loaded().site, event.currentTarget.value),
+                        )
+                      }
+                      value={resolveStudioVCardFilenameValue(loaded().site as StudioSiteData)}
+                    />
+                    <LabeledSelect
+                      id="editor-site-vcard-profile-url"
+                      label="Profile URL"
+                      onChange={(value) =>
+                        updateSiteRecord(
+                          updateStudioVCardProfileUrl(loaded().site, value === "true"),
+                        )
+                      }
+                      options={STUDIO_VCARD_PROFILE_URL_OPTIONS}
+                      value={resolveStudioVCardProfileUrlValue(loaded().site as StudioSiteData)}
+                    />
+                    <LabeledSelect
+                      id="editor-site-vcard-photo"
+                      label="Photo"
+                      onChange={(value) =>
+                        updateSiteRecord(updateStudioVCardPhoto(loaded().site, value === "true"))
+                      }
+                      options={STUDIO_VCARD_PHOTO_OPTIONS}
+                      value={resolveStudioVCardPhotoValue(loaded().site as StudioSiteData)}
+                    />
+                    <LabeledInput
+                      id="editor-site-vcard-email"
+                      label="Email"
+                      onInput={(event) =>
+                        updateSiteRecord(
+                          updateStudioVCardField(loaded().site, "email", event.currentTarget.value),
+                        )
+                      }
+                      value={resolveStudioVCardFieldValue(loaded().site as StudioSiteData, "email")}
+                    />
+                    <LabeledInput
+                      id="editor-site-vcard-phone"
+                      label="Phone"
+                      onInput={(event) =>
+                        updateSiteRecord(
+                          updateStudioVCardField(loaded().site, "phone", event.currentTarget.value),
+                        )
+                      }
+                      value={resolveStudioVCardFieldValue(loaded().site as StudioSiteData, "phone")}
+                    />
+                    <LabeledInput
+                      id="editor-site-vcard-organization"
+                      label="Organization"
+                      onInput={(event) =>
+                        updateSiteRecord(
+                          updateStudioVCardField(
+                            loaded().site,
+                            "organization",
+                            event.currentTarget.value,
+                          ),
+                        )
+                      }
+                      value={resolveStudioVCardFieldValue(
+                        loaded().site as StudioSiteData,
+                        "organization",
+                      )}
+                    />
+                    <LabeledInput
+                      id="editor-site-vcard-title"
+                      label="Title"
+                      onInput={(event) =>
+                        updateSiteRecord(
+                          updateStudioVCardField(loaded().site, "title", event.currentTarget.value),
+                        )
+                      }
+                      value={resolveStudioVCardFieldValue(loaded().site as StudioSiteData, "title")}
+                    />
+                    <LabeledInput
+                      id="editor-site-vcard-role"
+                      label="Role"
+                      onInput={(event) =>
+                        updateSiteRecord(
+                          updateStudioVCardField(loaded().site, "role", event.currentTarget.value),
+                        )
+                      }
+                      value={resolveStudioVCardFieldValue(loaded().site as StudioSiteData, "role")}
+                    />
+                  </div>
+                  <LabeledTextarea
+                    id="editor-site-vcard-note"
+                    label="Note"
+                    onInput={(event) =>
+                      updateSiteRecord(
+                        updateStudioVCardField(loaded().site, "note", event.currentTarget.value),
+                      )
+                    }
+                    rows={3}
+                    value={resolveStudioVCardFieldValue(loaded().site as StudioSiteData, "note")}
+                  />
+                  <LabeledTextarea
+                    id="editor-site-vcard-link-ids"
+                    label="Included link IDs"
+                    onInput={(event) =>
+                      updateSiteRecord(
+                        updateStudioVCardLinkIds(loaded().site, event.currentTarget.value),
+                      )
+                    }
+                    rows={2}
+                    value={resolveStudioVCardLinkIdsValue(loaded().site as StudioSiteData)}
+                  />
+                  <LabeledTextarea
+                    id="editor-site-vcard-custom-urls"
+                    label="Custom URLs"
+                    onInput={(event) =>
+                      updateSiteRecord(
+                        updateStudioVCardCustomUrls(loaded().site, event.currentTarget.value),
+                      )
+                    }
+                    rows={3}
+                    value={resolveStudioVCardCustomUrlsValue(loaded().site as StudioSiteData)}
+                  />
+                </div>
               </>
             ),
             advanced: (

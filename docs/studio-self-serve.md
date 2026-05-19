@@ -7,6 +7,7 @@ Prefer Studio when you want the browser-based CRUD path and the current self-ser
 Current referral status:
 
 - Studio can edit referral links today through the Advanced JSON editor for `data/links.json`.
+- Studio exposes guided controls for `site.sharing.vcard` so maintainers can opt into the profile-header vCard download button and photo export without hand-editing JSON.
 - First-class referral/disclosure form controls and referral-specific previews are not shipped yet.
 - When you want guided referral authoring, field examples, or warning interpretation, prefer `docs/openclaw-update-crud.md`, `docs/ai-guided-customization.md`, and `docs/data-model.md` first.
 

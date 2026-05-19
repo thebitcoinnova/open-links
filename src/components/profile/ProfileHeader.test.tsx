@@ -70,6 +70,62 @@ const firstElementWithClass = (
     return typeof classValue === "string" && classValue.split(/\s+/u).includes(className);
   });
 
+interface MockedDownloadEnvironmentResult {
+  clickedAnchors: Array<{ download?: string; href?: string; rel?: string }>;
+  createdBlobs: Blob[];
+  fetchedUrls: string[];
+}
+
+const withMockedDownloadEnvironment = async (
+  fetchImplementation: (sourceUrl: string) => Promise<{ ok?: boolean; blob: () => Promise<Blob> }>,
+  callback: (result: MockedDownloadEnvironmentResult) => Promise<void>,
+) => {
+  const globalScope = globalThis as unknown as {
+    document?: Document;
+    fetch?: (sourceUrl: string) => Promise<{ ok?: boolean; blob: () => Promise<Blob> }>;
+  };
+  const originalDocument = globalScope.document;
+  const originalFetch = globalScope.fetch;
+  const originalCreateObjectUrl = URL.createObjectURL;
+  const originalRevokeObjectUrl = URL.revokeObjectURL;
+  const result: MockedDownloadEnvironmentResult = {
+    clickedAnchors: [],
+    createdBlobs: [],
+    fetchedUrls: [],
+  };
+
+  globalScope.fetch = async (sourceUrl: string) => {
+    result.fetchedUrls.push(sourceUrl);
+    return fetchImplementation(sourceUrl);
+  };
+  globalScope.document = {
+    createElement: () =>
+      ({
+        click() {
+          result.clickedAnchors.push({
+            download: this.download,
+            href: this.href,
+            rel: this.rel,
+          });
+        },
+      }) as HTMLAnchorElement,
+  } as unknown as Document;
+  URL.createObjectURL = ((blob: Blob) => {
+    result.createdBlobs.push(blob);
+    return "blob:openlinks-vcard";
+  }) as typeof URL.createObjectURL;
+  URL.revokeObjectURL = (() => undefined) as typeof URL.revokeObjectURL;
+
+  try {
+    await callback(result);
+  } finally {
+    globalScope.document = originalDocument;
+    globalScope.fetch = originalFetch;
+    URL.createObjectURL = originalCreateObjectUrl;
+    URL.revokeObjectURL = originalRevokeObjectUrl;
+  }
+};
+
 const createQuickLinksState = (hasAny: boolean): ResolvedProfileQuickLinksState => ({
   hasAny,
   items: hasAny
@@ -110,6 +166,112 @@ test("profile header renders QR, share, and copy desktop actions when QR is avai
   assert.equal(buttons[2]?.props["aria-label"], "Copy profile link");
 });
 
+test("profile header renders enabled vCard download between share and copy", () => {
+  // Arrange
+  const tree = ProfileHeader({
+    onProfileQrOpen: () => undefined,
+    profile: {
+      avatar: "/profile-avatar-fallback.svg",
+      bio: "Engineer",
+      headline: "Justice-driven builder",
+      name: "Peter Ryszkiewicz",
+    },
+    vcard: {
+      enabled: true,
+    },
+  }) as RenderedNode;
+
+  // Act
+  const desktopBar = firstElementWithClass(tree, "profile-action-bar-desktop");
+  const buttons = collectElements(desktopBar?.props.children as RenderedNode).filter(
+    (element) => element.type === "button",
+  );
+
+  // Assert
+  assert.equal(buttons[0]?.props["aria-label"], "Show profile QR code");
+  assert.equal(buttons[1]?.props["aria-label"], "Share profile");
+  assert.equal(buttons[2]?.props["aria-label"], "Download profile vCard");
+  assert.equal(buttons[2]?.props["data-kind"], "download");
+  assert.equal(buttons[3]?.props["aria-label"], "Copy profile link");
+});
+
+test("profile header embeds configured vCard photo before downloading", async () => {
+  await withMockedDownloadEnvironment(
+    async () => ({
+      ok: true,
+      blob: async () => new Blob([new Uint8Array([1, 2, 3])], { type: "image/jpeg" }),
+    }),
+    async (result) => {
+      // Arrange
+      const tree = ProfileHeader({
+        profile: {
+          avatar: "/cache/profile-avatar/profile-avatar.jpg",
+          bio: "Engineer",
+          headline: "Justice-driven builder",
+          name: "Peter Ryszkiewicz",
+        },
+        vcard: {
+          enabled: true,
+          include: {
+            photo: true,
+          },
+        },
+      }) as RenderedNode;
+      const desktopBar = firstElementWithClass(tree, "profile-action-bar-desktop");
+      const downloadButton = collectElements(desktopBar?.props.children as RenderedNode).find(
+        (element) => element.type === "button" && element.props["data-kind"] === "download",
+      );
+
+      // Act
+      await (downloadButton?.props.onClick as () => Promise<void>)();
+      const contents = await result.createdBlobs[0]?.text();
+
+      // Assert
+      assert.deepEqual(result.fetchedUrls, ["/cache/profile-avatar/profile-avatar.jpg"]);
+      assert.equal(result.clickedAnchors[0]?.download, "peter-ryszkiewicz.vcf");
+      assert.match(contents ?? "", /PHOTO;MEDIATYPE=image\/jpeg:data:image\/jpeg;base64,AQID/u);
+    },
+  );
+});
+
+test("profile header still downloads vCard when configured photo embedding fails", async () => {
+  await withMockedDownloadEnvironment(
+    async () => {
+      throw new Error("avatar fetch failed");
+    },
+    async (result) => {
+      // Arrange
+      const tree = ProfileHeader({
+        profile: {
+          avatar: "/cache/profile-avatar/profile-avatar.jpg",
+          bio: "Engineer",
+          headline: "Justice-driven builder",
+          name: "Peter Ryszkiewicz",
+        },
+        vcard: {
+          enabled: true,
+          include: {
+            photo: true,
+          },
+        },
+      }) as RenderedNode;
+      const desktopBar = firstElementWithClass(tree, "profile-action-bar-desktop");
+      const downloadButton = collectElements(desktopBar?.props.children as RenderedNode).find(
+        (element) => element.type === "button" && element.props["data-kind"] === "download",
+      );
+
+      // Act
+      await (downloadButton?.props.onClick as () => Promise<void>)();
+      const contents = await result.createdBlobs[0]?.text();
+
+      // Assert
+      assert.deepEqual(result.fetchedUrls, ["/cache/profile-avatar/profile-avatar.jpg"]);
+      assert.equal(result.clickedAnchors[0]?.download, "peter-ryszkiewicz.vcf");
+      assert.doesNotMatch(contents ?? "", /PHOTO/u);
+    },
+  );
+});
+
 test("profile header keeps QR, share, and copy inline on mobile when QR is available", () => {
   // Arrange
   const tree = ProfileHeader({
@@ -142,6 +304,17 @@ test("profile header mobile layout moves multiple trailing actions into overflow
   assert.deepEqual(layout, {
     inlineKinds: ["qr", "share"],
     overflowKinds: ["copy", "open"],
+  });
+});
+
+test("profile header mobile layout overflows download and copy when vCard is enabled", () => {
+  // Arrange
+  const layout = resolveMobileProfileActionLayout(["qr", "share", "download", "copy"]);
+
+  // Assert
+  assert.deepEqual(layout, {
+    inlineKinds: ["qr", "share"],
+    overflowKinds: ["download", "copy"],
   });
 });
 

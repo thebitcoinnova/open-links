@@ -45,7 +45,7 @@ changes here can propagate into that downstream project as well.
 |------|---------|--------------------|-------|
 | `data/profile.json` | Primary entity identity and bio metadata | Yes | Stable compatibility path for the primary hero/entity record |
 | `data/links.json` | All rendered links + groups + order | Yes | Supports `simple`, `rich`, and `payment` cards |
-| `data/site.json` | Theme, UI preferences, quality policy | Yes | Also controls quality and deploy-relevant behavior |
+| `data/site.json` | Theme, UI preferences, quality policy | Yes | Also controls quality, sharing, and deploy-relevant behavior |
 
 ## `profile.json`
 
@@ -890,6 +890,7 @@ The social-card system now exposes a few behavior-only surfaces that are driven 
 - Profile header:
   - analytics button appears when follower-history index data is available
   - share button is always present and uses a clean-URL native-share/copy payload
+  - vCard download button appears only when `site.sharing.vcard.enabled` is `true`
 - Card header row:
   - analytics button appears only for cards that have public follower-history data
   - share button appears on non-payment cards, including cards without history
@@ -936,6 +937,60 @@ Schema: `schema/site.schema.json`
 - `theme` (`active`, `available`)
 
 ### High-signal sections
+
+#### `sharing`
+
+Sharing controls live under top-level `site.sharing`.
+
+- `badge.enabled`: controls whether the generated site badge is published.
+- `badge.message`: optional badge label override.
+- `vcard.enabled`: opt-in switch for the profile-header vCard download button.
+- `vcard.filename`: optional `.vcf` download filename. When omitted, runtime derives one from `profile.name`.
+- `vcard.fields`: optional business-card fields. Supported keys are `email`, `phone`, `organization`, `title`, `role`, and `note`.
+- `vcard.include.photo`: opt-in switch to embed the current profile avatar as the vCard `PHOTO`.
+- `vcard.include.profileUrl`: includes the canonical OpenLinks profile URL by default. Set to `false` to exclude it.
+- `vcard.include.linkIds`: explicit allowlist of `links[]` ids to include as extra vCard URLs.
+- `vcard.include.customUrls`: extra URL entries as `{ "label": "...", "url": "https://..." }`.
+
+The vCard export is deliberately conservative. Enabling the button exports `FN`
+from `profile.name` and the canonical profile URL by default. Contact details,
+the profile photo, and extra URLs are exported only when explicitly configured
+under `site.sharing.vcard`.
+
+Example:
+
+```json
+{
+  "sharing": {
+    "vcard": {
+      "enabled": true,
+      "filename": "peter-ryszkiewicz.vcf",
+      "fields": {
+        "email": "hello@example.com",
+        "phone": "+15551234567",
+        "organization": "Example LLC",
+        "title": "Founder",
+        "role": "Engineer",
+        "note": "Optional business-card note"
+      },
+      "include": {
+        "photo": true,
+        "profileUrl": true,
+        "linkIds": ["github", "linkedin"],
+        "customUrls": [
+          {
+            "label": "Calendar",
+            "url": "https://example.com/book"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+The browser builds the `.vcf` file on demand from bundled site data and the
+current canonical URL; no generated vCard asset is tracked in git.
 
 #### `theme`
 

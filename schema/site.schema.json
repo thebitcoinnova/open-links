@@ -257,6 +257,101 @@
         }
       },
       "additionalProperties": true
+    },
+    "vcardFieldsConfig": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 1
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organization": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "vcardCustomUrl": {
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": true
+    },
+    "vcardIncludeConfig": {
+      "type": "object",
+      "properties": {
+        "photo": {
+          "type": "boolean"
+        },
+        "profileUrl": {
+          "type": "boolean"
+        },
+        "linkIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "customUrls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/vcardCustomUrl"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "vcardConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fields": {
+          "$ref": "#/$defs/vcardFieldsConfig"
+        },
+        "include": {
+          "$ref": "#/$defs/vcardIncludeConfig"
+        },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
     }
   },
   "properties": {
@@ -660,6 +755,9 @@
             }
           },
           "additionalProperties": true
+        },
+        "vcard": {
+          "$ref": "#/$defs/vcardConfig"
         }
       },
       "additionalProperties": true

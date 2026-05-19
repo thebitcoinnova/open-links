@@ -71,6 +71,23 @@
       }
     }
   },
+  "sharing": {
+    "vcard": {
+      "enabled": true,
+      "filename": "peter-ryszkiewicz.vcf",
+      "fields": {
+        "organization": "Bright Builds LLC",
+        "title": "Founder",
+        "role": "Agentic Engineer",
+        "note": "Agentic engineer building in AI, Bitcoin, and open-source systems."
+      },
+      "include": {
+        "photo": true,
+        "profileUrl": true,
+        "linkIds": ["github", "linkedin", "bright-builds-facebook", "medium", "substack"]
+      }
+    }
+  },
   "quality": {
     "reportPath": "data/generated/quality-report.json",
     "summaryPath": "data/generated/quality-report.md",

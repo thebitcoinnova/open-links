@@ -604,9 +604,11 @@ export default function RouteIndex() {
     <ProfileHeader
       profile={content.profile}
       alignment={layout.profileHeaderAlignment}
+      links={content.links}
       quickLinks={profileQuickLinks}
       richness={composition.profileRichness}
       onProfileQrOpen={openProfileQrDialog}
+      vcard={content.site.sharing?.vcard}
     />
   );
 

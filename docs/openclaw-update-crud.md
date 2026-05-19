@@ -38,6 +38,7 @@ In scope:
 
 - Day-2 CRUD updates for `data/profile.json`, `data/links.json`, and `data/site.json`.
 - Referral authoring through `links[].referral`, including manual disclosures, `catalogRef` adoption, supported-family `non_profile` referral links, and catalog-backed shared-vs-fork decisions.
+- Optional profile-header vCard download configuration through `site.sharing.vcard`.
 - Optional full customization-audit path across all data-driven knobs in `docs/customization-catalog.md`.
 - Deployment target and primary-host changes when the user wants deployment settings or docs updated.
 - Startup interaction-level selection.
@@ -101,6 +102,21 @@ When a requested link is a referral, affiliate, promo, or invite destination:
 10. For supported profile-family URLs acting as referral/promo links, set or preserve `links[].enrichment.profileSemantics="non_profile"` unless the user explicitly wants profile-style rendering.
 11. If a fork adds a generic shared catalog item that would help other forks, prompt for a clean upstream PR and keep `data/policy/referral-catalog.local.json` out of that PR scope.
 12. If the user prefers Studio for the change, note that referral editing currently relies on Advanced JSON rather than first-class referral controls.
+
+## vCard Download Guidance
+
+When the requested update touches profile download, contact-card export, business
+card behavior, or `site.sharing.vcard`:
+
+1. Treat the vCard button as opt-in. Set `site.sharing.vcard.enabled=true` only when the user explicitly wants the profile-header download button.
+2. Keep the default export minimal: `profile.name` plus the canonical OpenLinks profile URL.
+3. Ask before adding personal/business contact fields. Supported fields are `email`, `phone`, `organization`, `title`, `role`, and `note`.
+4. Ask before setting `site.sharing.vcard.include.photo=true`; it embeds the current profile avatar as the imported contact photo.
+5. Include extra URLs only through an explicit allowlist:
+   - `site.sharing.vcard.include.linkIds` for existing `links[]` ids
+   - `site.sharing.vcard.include.customUrls` for one-off URLs
+6. Do not infer that every enabled public link belongs in the vCard.
+7. Use Studio guided controls when the user prefers browser-based editing; Advanced JSON remains available for unusual extension data.
 
 ## Required Startup Handshake (First Step)
 

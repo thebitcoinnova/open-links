@@ -77,6 +77,30 @@ export const IconCopy: Component<IconProps> = (props: IconProps) => (
   </svg>
 );
 
+/**
+ * SVG Logo Provenance
+ * Source: Hand-authored
+ * Method: Designed an in-repo generic download action icon using simple stroke geometry.
+ * Notes: UI action glyph, not a brand mark.
+ */
+export const IconDownload: Component<IconProps> = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    {...props}
+  >
+    <title>Download</title>
+    <path d="M12 3v12" />
+    <path d="M7 10l5 5 5-5" />
+    <path d="M5 19h14" />
+  </svg>
+);
+
 /** Generic QR code icon (24x24 stroke-based). */
 export const IconQrCode: Component<IconProps> = (props: IconProps) => (
   <svg

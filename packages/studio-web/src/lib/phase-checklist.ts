@@ -95,6 +95,12 @@ export const phaseChecklist: PhaseChecklist[] = [
         status: "done",
         priority: "P1",
       },
+      {
+        id: "p4-7",
+        label: "Guided vCard download and photo controls for site sharing config",
+        status: "done",
+        priority: "P1",
+      },
     ],
   },
   {

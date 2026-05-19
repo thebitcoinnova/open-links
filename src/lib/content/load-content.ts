@@ -296,8 +296,38 @@ export interface SiteBadgeConfig {
   message?: string;
 }
 
+export interface SiteSharingVCardFieldsConfig {
+  email?: string;
+  phone?: string;
+  organization?: string;
+  title?: string;
+  role?: string;
+  note?: string;
+}
+
+export interface SiteSharingVCardCustomUrl {
+  label?: string;
+  url: string;
+}
+
+export interface SiteSharingVCardIncludeConfig {
+  photo?: boolean;
+  profileUrl?: boolean;
+  linkIds?: string[];
+  customUrls?: SiteSharingVCardCustomUrl[];
+}
+
+export interface SiteSharingVCardConfig {
+  enabled?: boolean;
+  filename?: string;
+  fields?: SiteSharingVCardFieldsConfig;
+  include?: SiteSharingVCardIncludeConfig;
+  custom?: Record<string, unknown>;
+}
+
 export interface SiteSharingConfig {
   badge?: SiteBadgeConfig;
+  vcard?: SiteSharingVCardConfig;
 }
 
 export interface SiteData {

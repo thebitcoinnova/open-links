@@ -131,3 +131,13 @@ When audience freshness depends on browser-rendered capture, verify or inspect t
 
 ### Trigger signal to catch it earlier
 The affected platform renders counts differently by environment, and the workflow uses best-effort capture flags that can commit other platforms while skipping the failed one.
+
+## lesson-vcard-apple-contacts-structured-name | 2026-05-18 22:39 CDT
+### What went wrong
+I treated `FN` as sufficient for a person vCard with organization affiliation, but Apple Contacts displayed the `ORG` value as the primary contact name when the card lacked a structured `N` field.
+
+### Preventive rule
+When generating person vCards for address book imports, emit both `FN` and structured `N` fields; keep `ORG` as affiliation metadata, not the only name-bearing structured field.
+
+### Trigger signal to catch it earlier
+A vCard includes `ORG`, `TITLE`, or `ROLE` for a person but has no `N:` line, especially when testing against Apple Contacts or other native address book apps.
