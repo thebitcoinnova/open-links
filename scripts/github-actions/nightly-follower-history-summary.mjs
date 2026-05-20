@@ -11,6 +11,14 @@ const publicRichSyncSummaryPath = ".ci-diagnostics/public-rich-sync-summary.json
 const publicRichSyncSummary = fs.existsSync(publicRichSyncSummaryPath)
   ? JSON.parse(fs.readFileSync(publicRichSyncSummaryPath, "utf8"))
   : null;
+const enrichmentReportPath = "data/generated/rich-enrichment-report.json";
+const enrichmentReport = fs.existsSync(enrichmentReportPath)
+  ? JSON.parse(fs.readFileSync(enrichmentReportPath, "utf8"))
+  : null;
+const followerHistoryIndexPath = "public/history/followers/index.json";
+const followerHistoryIndex = fs.existsSync(followerHistoryIndexPath)
+  ? JSON.parse(fs.readFileSync(followerHistoryIndexPath, "utf8"))
+  : null;
 const cacheRevalidationDir = "output/cache-revalidation";
 const lines = [];
 const deploymentDefaultsPath = "config/deployment.defaults.json";
@@ -29,6 +37,18 @@ const readCacheRevalidationSummaries = () => {
       return JSON.parse(fs.readFileSync(absolute, "utf8"));
     });
 };
+
+const escapeTableCell = (value) =>
+  String(value ?? "n/a")
+    .replaceAll("|", "\\|")
+    .replaceAll("\n", " ");
+
+const latestHistoryTimestampForLink = (linkId) =>
+  followerHistoryIndex?.entries?.find((entry) => entry.linkId === linkId)?.latestObservedAt ??
+  "n/a";
+
+const isFreshPublicObservation = (entry) =>
+  entry.status === "synced" || (entry.status === "skipped" && entry.reason === "counts_unchanged");
 
 const readAwsDeploymentUrl = () => {
   if (!fs.existsSync(deploymentDefaultsPath)) {
@@ -70,26 +90,50 @@ lines.push(`- Publish result: \`${process.env.PUSH_RESULT || "unknown"}\``);
 
 if (publicRichSyncSummary) {
   lines.push(`- Public audience sync failures: \`${publicRichSyncSummary.failed}\``);
-  lines.push(`- Terminal profile failures: \`${publicRichSyncSummary.fatalFailed ?? 0}\``);
+  lines.push(`- Fatal profile-unavailable failures: \`${publicRichSyncSummary.fatalFailed ?? 0}\``);
 
   const failedEntries = publicRichSyncSummary.entries.filter((entry) => entry.status === "failed");
   if (failedEntries.length > 0) {
     const fatalEntries = failedEntries.filter((entry) => entry.fatal === true);
     if (fatalEntries.length > 0) {
       lines.push(
-        "- Terminal profile failures likely indicate deleted, renamed, suspended, or moved handles. Update the affected link URL/handle, then rerun `bun run public:rich:sync -- --only-link <link-id>`.",
+        "- Fatal profile-unavailable failures likely indicate deleted, renamed, suspended, or moved handles. Update the affected link URL/handle, then rerun `bun run public:rich:sync -- --only-link <link-id>`.",
       );
     } else {
       lines.push(
-        "- Public audience sync ran in best-effort mode; failed links were excluded from this run's history snapshots.",
+        "- Public audience sync ran in best-effort mode; browser capture failures were excluded from this run's history snapshots.",
       );
     }
     lines.push("");
-    lines.push("| Public audience link | Reason | Terminal | Detail |");
-    lines.push("| --- | --- | --- | --- |");
+    lines.push("");
+    lines.push("| Public audience link | Reason | Fatal | Artifact | Latest history | Detail |");
+    lines.push("| --- | --- | --- | --- | --- | --- |");
     for (const entry of failedEntries) {
       lines.push(
-        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.fatal === true ? "yes" : "no"}\` | ${entry.detail ?? "n/a"} |`,
+        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.fatal === true ? "yes" : "no"}\` | \`${entry.artifactPath ?? "n/a"}\` | \`${latestHistoryTimestampForLink(entry.linkId)}\` | ${escapeTableCell(entry.detail)} |`,
+      );
+    }
+  }
+}
+
+if (enrichmentReport) {
+  const staleCacheEntries = (enrichmentReport.entries ?? []).filter(
+    (entry) => entry.staleCache === true,
+  );
+
+  if (staleCacheEntries.length > 0) {
+    lines.push("");
+    lines.push("## Stale Public Cache Fallbacks");
+    lines.push(
+      "- These links used committed public cache metadata because fresh public enrichment was blocked or unavailable.",
+    );
+    lines.push("");
+    lines.push("| Link | Reason | HTTP | Cache captured at | Remediation |");
+    lines.push("| --- | --- | --- | --- | --- |");
+
+    for (const entry of staleCacheEntries) {
+      lines.push(
+        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.statusCode ?? "n/a"}\` | \`${entry.cacheCapturedAt ?? "n/a"}\` | ${entry.remediation ?? "n/a"} |`,
       );
     }
   }
@@ -125,6 +169,46 @@ if (historySummary) {
     }
   } else {
     lines.push("- No follower-history snapshots were eligible for capture.");
+  }
+
+  const failedLinkIds = new Set(
+    (publicRichSyncSummary?.entries ?? [])
+      .filter((entry) => entry.status === "failed")
+      .map((entry) => entry.linkId),
+  );
+  const snapshotLinkIds = new Set(historySummary.snapshots.map((snapshot) => snapshot.linkId));
+  const currentRunGaps = [];
+
+  for (const entry of publicRichSyncSummary?.entries?.filter(isFreshPublicObservation) ?? []) {
+    if (!snapshotLinkIds.has(entry.linkId)) {
+      currentRunGaps.push({
+        linkId: entry.linkId,
+        reason: "fresh public observation missing history snapshot",
+        latestObservedAt: latestHistoryTimestampForLink(entry.linkId),
+      });
+    }
+  }
+
+  for (const entry of followerHistoryIndex?.entries ?? []) {
+    if (entry.latestObservedAt !== historySummary.observedAt && !failedLinkIds.has(entry.linkId)) {
+      currentRunGaps.push({
+        linkId: entry.linkId,
+        reason: "history index not updated for current run",
+        latestObservedAt: entry.latestObservedAt,
+      });
+    }
+  }
+
+  if (currentRunGaps.length > 0) {
+    lines.push("");
+    lines.push("## Current-Run Audience Gaps");
+    lines.push("| Link | Reason | Latest history |");
+    lines.push("| --- | --- | --- |");
+    for (const gap of currentRunGaps) {
+      lines.push(
+        `| \`${gap.linkId}\` | ${escapeTableCell(gap.reason)} | \`${gap.latestObservedAt}\` |`,
+      );
+    }
   }
 } else {
   lines.push("- History sync summary artifact was not produced.");

@@ -78,6 +78,7 @@ const ROOT = process.cwd();
 const PUBLIC_AUDIENCE_SYNC_TARGET_IDS = new Set([
   "medium-public-feed",
   "primal-public-profile",
+  "substack-public-profile",
   "x-public-oembed",
   "x-public-community",
   "youtube-public-profile",

@@ -75,7 +75,16 @@ const LINK_KEYS = new Set([
   "custom",
 ]);
 
-const SITE_KEYS = new Set(["title", "description", "baseUrl", "theme", "ui", "quality", "custom"]);
+const SITE_KEYS = new Set([
+  "title",
+  "description",
+  "baseUrl",
+  "theme",
+  "ui",
+  "quality",
+  "sharing",
+  "custom",
+]);
 
 const WEB_PAYMENT_RAILS = new Set<PaymentRailType>([
   "patreon",

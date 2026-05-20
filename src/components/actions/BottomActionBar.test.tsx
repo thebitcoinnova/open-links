@@ -77,6 +77,12 @@ test("bottom action bar renders button and link actions with labels", () => {
         onClick: () => undefined,
       },
       {
+        ariaLabel: "Download profile vCard",
+        kind: "download",
+        label: "Download",
+        onClick: () => undefined,
+      },
+      {
         ariaLabel: "Open Tip Jar",
         href: "https://example.com/tips",
         kind: "open",
@@ -97,8 +103,9 @@ test("bottom action bar renders button and link actions with labels", () => {
   assert.ok(group);
   assert.ok(legend);
   assert.equal(legend.props.children, "Profile actions");
-  assert.equal(buttons.length, 1);
+  assert.equal(buttons.length, 2);
   assert.equal(buttons[0]?.props["aria-label"], "Share profile");
+  assert.equal(buttons[1]?.props["aria-label"], "Download profile vCard");
   assert.equal(links.length, 1);
   assert.equal(links[0]?.props["aria-label"], "Open Tip Jar");
   assert.equal(links[0]?.props.href, "https://example.com/tips");

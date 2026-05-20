@@ -11,13 +11,25 @@ const CURRENT_COPY_ANCHOR =
 
 const createArgs = (anchorLines: string[]) => ({
   anchorLines,
-  imagePath: "docs/assets/openlinks-preview.png",
-  imageAlt: "OpenLinks preview",
+  screenshotImages: [
+    {
+      path: "docs/assets/openlinks-preview.png",
+      alt: "OpenLinks desktop preview",
+    },
+    {
+      path: "docs/assets/openlinks-preview-tablet.png",
+      alt: "OpenLinks tablet preview",
+    },
+    {
+      path: "docs/assets/openlinks-preview-mobile.png",
+      alt: "OpenLinks mobile preview",
+    },
+  ],
   startMarker: START_MARKER,
   endMarker: END_MARKER,
 });
 
-test("updater replaces the screenshot block after the stable README marker", () => {
+test("updater replaces a single-image screenshot block after the stable README marker", () => {
   // Arrange
   const originalContent = [
     "# OpenLinks",
@@ -36,7 +48,18 @@ test("updater replaces the screenshot block after the stable README marker", () 
 
   // Assert
   assert.match(updatedContent, new RegExp(`${ANCHOR_MARKER}\\n${START_MARKER}`, "u"));
-  assert.match(updatedContent, /!\[OpenLinks preview\]\(docs\/assets\/openlinks-preview\.png\)/u);
+  assert.match(
+    updatedContent,
+    /!\[OpenLinks desktop preview\]\(docs\/assets\/openlinks-preview\.png\)/u,
+  );
+  assert.match(
+    updatedContent,
+    /!\[OpenLinks tablet preview\]\(docs\/assets\/openlinks-preview-tablet\.png\)/u,
+  );
+  assert.match(
+    updatedContent,
+    /!\[OpenLinks mobile preview\]\(docs\/assets\/openlinks-preview-mobile\.png\)/u,
+  );
   assert.doesNotMatch(updatedContent, /Old preview/u);
 });
 
@@ -56,8 +79,46 @@ test("updater falls back to the current README prose when the stable marker is a
   assert.match(
     updatedContent,
     new RegExp(
-      `${CURRENT_COPY_ANCHOR}\\n${START_MARKER}\\n!\\[OpenLinks preview\\]\\(docs/assets/openlinks-preview.png\\)\\n${END_MARKER}`,
+      `${CURRENT_COPY_ANCHOR}\\n${START_MARKER}\\n!\\[OpenLinks desktop preview\\]\\(docs/assets/openlinks-preview.png\\)\\n\\n!\\[OpenLinks tablet preview\\]\\(docs/assets/openlinks-preview-tablet.png\\)\\n\\n!\\[OpenLinks mobile preview\\]\\(docs/assets/openlinks-preview-mobile.png\\)\\n${END_MARKER}`,
       "u",
     ),
+  );
+});
+
+test("updater rejects duplicate screenshot marker blocks", () => {
+  // Arrange
+  const originalContent = [
+    "# OpenLinks",
+    "",
+    ANCHOR_MARKER,
+    START_MARKER,
+    "![Preview one](docs/assets/one.png)",
+    END_MARKER,
+    START_MARKER,
+    "![Preview two](docs/assets/two.png)",
+    END_MARKER,
+  ].join("\n");
+
+  // Act / Assert
+  assert.throws(
+    () => updateReadmeScreenshotBlock(originalContent, createArgs([ANCHOR_MARKER])),
+    /README screenshot markers appear multiple times/u,
+  );
+});
+
+test("updater rejects unbalanced screenshot markers", () => {
+  // Arrange
+  const originalContent = [
+    "# OpenLinks",
+    "",
+    ANCHOR_MARKER,
+    START_MARKER,
+    "![Preview](docs/assets/preview.png)",
+  ].join("\n");
+
+  // Act / Assert
+  assert.throws(
+    () => updateReadmeScreenshotBlock(originalContent, createArgs([ANCHOR_MARKER])),
+    /README screenshot markers are unbalanced/u,
   );
 });

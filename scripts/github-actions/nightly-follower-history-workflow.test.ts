@@ -3,9 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import test from "node:test";
+import {
+  analyzeNightlyAudienceHealth,
+  formatNightlyAudienceHealthReport,
+} from "./nightly-follower-history-health";
 
 const ROOT = process.cwd();
 const WORKFLOW_PATH = path.join(ROOT, ".github/workflows/nightly-follower-history.yml");
+const PUBLIC_RICH_SYNC_PATH = path.join(ROOT, "scripts/public-rich-sync.ts");
+const FOLLOWER_HISTORY_SYNC_PATH = path.join(ROOT, "scripts/sync-follower-history.ts");
 
 const requireLine = (workflowSource: string, needle: string) => {
   const index = workflowSource.indexOf(needle);
@@ -61,17 +67,210 @@ test("nightly follower history passes the committed SHA into the shared Pages de
   );
 });
 
-test("nightly follower history keeps public audience sync best effort for non-terminal failures", () => {
+test("nightly follower history defers public audience failures until after deploy diagnostics", () => {
   // Arrange
   const workflowSource = fs.readFileSync(WORKFLOW_PATH, "utf8");
 
   // Act / Assert
   assert.match(
     workflowSource,
-    /- name: Refresh public audience cache\n\s+run: bun run public:rich:sync -- --allow-failures --summary-json \.ci-diagnostics\/public-rich-sync-summary\.json/u,
+    /- name: Refresh public audience cache\n\s+run: bun run public:rich:sync -- --defer-failures --summary-json \.ci-diagnostics\/public-rich-sync-summary\.json/u,
+  );
+  const publishSummaryIndex = requireLine(workflowSource, "- name: Publish summary");
+  const uploadDiagnosticsIndex = requireLine(
+    workflowSource,
+    "- name: Upload nightly audience diagnostics",
+  );
+  const healthCheckIndex = requireLine(workflowSource, "- name: Check nightly audience health");
+  assert.ok(
+    publishSummaryIndex < uploadDiagnosticsIndex,
+    "Expected summary to publish before diagnostics upload.",
+  );
+  assert.ok(
+    uploadDiagnosticsIndex < healthCheckIndex,
+    "Expected diagnostics upload before the final health failure gate.",
+  );
+  assert.match(
+    workflowSource,
+    /- name: Upload nightly audience diagnostics\n\s+if: always\(\)\n\s+uses: actions\/upload-artifact@v4\n\s+with:\n\s+name: nightly-audience-diagnostics\n\s+path: \|\n\s+\.ci-diagnostics\/\*\.json\n\s+output\/playwright\/public-rich-sync\/\*\.json\n\s+output\/cache-revalidation\/\*\.json/u,
+  );
+  assert.match(workflowSource, /include-hidden-files:\s+true/u);
+  assert.match(
+    workflowSource,
+    /- name: Check nightly audience health\n\s+if: always\(\)\n\s+run: bun run scripts\/github-actions\/nightly-follower-history-health\.ts/u,
   );
   assert.doesNotMatch(
     workflowSource,
     /- name: Refresh public audience cache[\s\S]{0,160}continue-on-error:\s+true/u,
   );
+});
+
+test("nightly follower history includes Substack in the fresh public audience contract", () => {
+  // Arrange
+  const publicRichSyncSource = fs.readFileSync(PUBLIC_RICH_SYNC_PATH, "utf8");
+  const followerHistorySyncSource = fs.readFileSync(FOLLOWER_HISTORY_SYNC_PATH, "utf8");
+
+  // Act / Assert
+  assert.match(publicRichSyncSource, /id:\s+"substack-public-profile"/u);
+  assert.match(publicRichSyncSource, /requiresSubscribersCount:\s+true/u);
+  assert.match(followerHistorySyncSource, /"substack-public-profile"/u);
+});
+
+test("nightly audience health fails on public sync failures", () => {
+  // Arrange
+  const report = analyzeNightlyAudienceHealth({
+    publicRichSyncSummary: {
+      failed: 1,
+      fatalFailed: 0,
+      entries: [
+        {
+          linkId: "substack",
+          status: "failed",
+          reason: "subscribers_missing",
+          artifactPath: "output/playwright/public-rich-sync/substack.json",
+          detail: "Substack public browser capture did not find a subscriber count.",
+        },
+      ],
+    },
+    historySummary: {
+      observedAt: "2026-05-16T07:37:25.097Z",
+      status: "written",
+      snapshots: [
+        {
+          linkId: "github",
+          platform: "github",
+          audienceCountRaw: "97 followers",
+        },
+      ],
+    },
+    followerHistoryIndex: {
+      entries: [
+        {
+          linkId: "substack",
+          platform: "substack",
+          latestObservedAt: "2026-05-12T12:39:57.059Z",
+          latestAudienceCountRaw: "15 subscribers",
+        },
+      ],
+    },
+  });
+
+  // Act
+  const formatted = formatNightlyAudienceHealthReport(report);
+
+  // Assert
+  assert.equal(report.ok, false);
+  assert.deepEqual(report.findings, [
+    {
+      kind: "capture_failure",
+      linkId: "substack",
+      reason: "subscribers_missing",
+      fatal: false,
+      detail: "Substack public browser capture did not find a subscriber count.",
+      artifactPath: "output/playwright/public-rich-sync/substack.json",
+    },
+  ]);
+  assert.match(formatted, /Nightly audience health check failed/u);
+});
+
+test("nightly audience health flags stale index rows without explicit failures", () => {
+  // Arrange
+  const report = analyzeNightlyAudienceHealth({
+    publicRichSyncSummary: {
+      failed: 0,
+      fatalFailed: 0,
+      entries: [
+        { linkId: "instagram", status: "synced", reason: "counts_refreshed" },
+        { linkId: "medium", status: "skipped", reason: "counts_unchanged" },
+      ],
+    },
+    historySummary: {
+      observedAt: "2026-05-16T07:37:25.097Z",
+      status: "written",
+      snapshots: [
+        {
+          linkId: "instagram",
+          platform: "instagram",
+          audienceCountRaw: "104 followers",
+        },
+        {
+          linkId: "medium",
+          platform: "medium",
+          audienceCountRaw: "3.3K followers",
+        },
+      ],
+    },
+    followerHistoryIndex: {
+      entries: [
+        {
+          linkId: "instagram",
+          platform: "instagram",
+          latestObservedAt: "2026-05-16T07:37:25.097Z",
+          latestAudienceCountRaw: "104 followers",
+        },
+        {
+          linkId: "medium",
+          platform: "medium",
+          latestObservedAt: "2026-05-16T07:37:25.097Z",
+          latestAudienceCountRaw: "3.3K followers",
+        },
+        {
+          linkId: "substack",
+          platform: "substack",
+          latestObservedAt: "2026-05-12T12:39:57.059Z",
+          latestAudienceCountRaw: "15 subscribers",
+        },
+      ],
+    },
+  });
+
+  // Assert
+  assert.equal(report.ok, false);
+  assert.deepEqual(report.findings, [
+    {
+      kind: "stale_index",
+      linkId: "substack",
+      platform: "substack",
+      reason: "history_index_not_updated_for_current_run",
+      latestObservedAt: "2026-05-12T12:39:57.059Z",
+      detail:
+        "Latest history remains 2026-05-12T12:39:57.059Z; current run observed at 2026-05-16T07:37:25.097Z.",
+    },
+  ]);
+});
+
+test("nightly audience health passes when fresh observations have current snapshots", () => {
+  // Arrange
+  const report = analyzeNightlyAudienceHealth({
+    publicRichSyncSummary: {
+      failed: 0,
+      fatalFailed: 0,
+      entries: [{ linkId: "substack", status: "skipped", reason: "counts_unchanged" }],
+    },
+    historySummary: {
+      observedAt: "2026-05-16T07:37:25.097Z",
+      status: "written",
+      snapshots: [
+        {
+          linkId: "substack",
+          platform: "substack",
+          audienceCountRaw: "15 subscribers",
+        },
+      ],
+    },
+    followerHistoryIndex: {
+      entries: [
+        {
+          linkId: "substack",
+          platform: "substack",
+          latestObservedAt: "2026-05-16T07:37:25.097Z",
+          latestAudienceCountRaw: "15 subscribers",
+        },
+      ],
+    },
+  });
+
+  // Assert
+  assert.equal(report.ok, true);
+  assert.equal(formatNightlyAudienceHealthReport(report), "Nightly audience health check passed.");
 });

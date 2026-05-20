@@ -22,6 +22,10 @@ test("resolveLayoutPreferences uses the larger default profile avatar scale when
   // Assert
   assert.equal(resolved.profileAvatarScale, 1.7);
   assert.equal(resolved.typographyScale, "fixed");
+  assert.deepEqual(resolved.profileHeaderAlignment, {
+    default: "leading",
+    small: "center",
+  });
 });
 
 test("resolveLayoutPreferences preserves an explicit profile avatar scale override", () => {
@@ -40,4 +44,66 @@ test("resolveLayoutPreferences preserves an explicit profile avatar scale overri
   // Assert
   assert.equal(resolved.profileAvatarScale, 2.4);
   assert.equal(resolved.typographyScale, "expressive");
+});
+
+test("resolveLayoutPreferences applies profile header alignment shorthand to all widths", () => {
+  // Arrange
+  const site = {
+    ...baseSite,
+    ui: {
+      profileHeaderAlignment: "center",
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const resolved = resolveLayoutPreferences(site);
+
+  // Assert
+  assert.deepEqual(resolved.profileHeaderAlignment, {
+    default: "center",
+    small: "center",
+  });
+});
+
+test("resolveLayoutPreferences preserves responsive profile header alignment", () => {
+  // Arrange
+  const site = {
+    ...baseSite,
+    ui: {
+      profileHeaderAlignment: {
+        default: "leading",
+        small: "center",
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const resolved = resolveLayoutPreferences(site);
+
+  // Assert
+  assert.deepEqual(resolved.profileHeaderAlignment, {
+    default: "leading",
+    small: "center",
+  });
+});
+
+test("resolveLayoutPreferences inherits small profile header alignment from default", () => {
+  // Arrange
+  const site = {
+    ...baseSite,
+    ui: {
+      profileHeaderAlignment: {
+        default: "center",
+      },
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const resolved = resolveLayoutPreferences(site);
+
+  // Assert
+  assert.deepEqual(resolved.profileHeaderAlignment, {
+    default: "center",
+    small: "center",
+  });
 });

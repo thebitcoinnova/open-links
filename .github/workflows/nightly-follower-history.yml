@@ -42,7 +42,7 @@ jobs:
         run: bun run enrich:rich:strict:write-cache
 
       - name: Refresh public audience cache
-        run: bun run public:rich:sync -- --allow-failures --summary-json .ci-diagnostics/public-rich-sync-summary.json
+        run: bun run public:rich:sync -- --defer-failures --summary-json .ci-diagnostics/public-rich-sync-summary.json
 
       - name: Append follower history snapshots
         run: bash scripts/github-actions/nightly-follower-history.sh append-history
@@ -55,14 +55,6 @@ jobs:
       - name: Build deploy artifacts
         if: steps.commit.outputs.commit_result == 'committed'
         run: bun run deploy:build
-
-      - name: Upload cache revalidation diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cache-revalidation-stats
-          path: output/cache-revalidation
-          if-no-files-found: ignore
 
       - name: Push follower-history artifacts
         if: steps.commit.outputs.commit_result == 'committed'
@@ -154,3 +146,20 @@ jobs:
           PAGES_DEPLOYMENT_URL: ${{ steps.deployment.outputs.page_url }}
           PUSH_RESULT: ${{ steps.push.outputs.push_result || steps.commit.outputs.commit_result || 'unknown' }}
         run: node scripts/github-actions/nightly-follower-history-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload nightly audience diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-audience-diagnostics
+          path: |
+            .ci-diagnostics/*.json
+            output/playwright/public-rich-sync/*.json
+            output/cache-revalidation/*.json
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 7
+
+      - name: Check nightly audience health
+        if: always()
+        run: bun run scripts/github-actions/nightly-follower-history-health.ts

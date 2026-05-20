@@ -4,22 +4,39 @@ import path from "node:path";
 interface Args {
   readmePath: string;
   anchorLines: string[];
-  imagePath: string;
-  imageAlt: string;
+  screenshotImages: ScreenshotImage[];
   startMarker: string;
   endMarker: string;
 }
 
 interface UpdateReadmeScreenshotBlockArgs {
   anchorLines: string[];
-  imagePath: string;
-  imageAlt: string;
+  screenshotImages: ScreenshotImage[];
   startMarker: string;
   endMarker: string;
 }
 
+interface ScreenshotImage {
+  path: string;
+  alt: string;
+}
+
 const ROOT = process.cwd();
 const DEFAULT_SCREENSHOT_ANCHOR = "<!-- OPENLINKS_SCREENSHOT_ANCHOR -->";
+const DEFAULT_SCREENSHOT_IMAGES: ScreenshotImage[] = [
+  {
+    path: "docs/assets/openlinks-preview.png",
+    alt: "OpenLinks desktop preview",
+  },
+  {
+    path: "docs/assets/openlinks-preview-tablet.png",
+    alt: "OpenLinks tablet preview",
+  },
+  {
+    path: "docs/assets/openlinks-preview-mobile.png",
+    alt: "OpenLinks mobile preview",
+  },
+];
 const LEGACY_SCREENSHOT_ANCHOR_LINES = [
   DEFAULT_SCREENSHOT_ANCHOR,
   "This project is developer-first, but that does not mean raw JSON should be your default CRUD surface. For most maintainers, the recommended path is:",
@@ -40,8 +57,7 @@ const parseArgs = (): Args => {
   return {
     readmePath: getFlag("--readme") ?? "README.md",
     anchorLines: maybeAnchorLine ? [maybeAnchorLine] : LEGACY_SCREENSHOT_ANCHOR_LINES,
-    imagePath: getFlag("--image-path") ?? "docs/assets/openlinks-preview.png",
-    imageAlt: getFlag("--image-alt") ?? "OpenLinks preview",
+    screenshotImages: DEFAULT_SCREENSHOT_IMAGES,
     startMarker: getFlag("--start-marker") ?? "<!-- OPENLINKS_SCREENSHOT_START -->",
     endMarker: getFlag("--end-marker") ?? "<!-- OPENLINKS_SCREENSHOT_END -->",
   };
@@ -120,7 +136,10 @@ export const updateReadmeScreenshotBlock = (
 
   const screenshotBlock = [
     args.startMarker,
-    `![${args.imageAlt}](${args.imagePath})`,
+    ...args.screenshotImages.flatMap((image, index) => [
+      ...(index > 0 ? [""] : []),
+      `![${image.alt}](${image.path})`,
+    ]),
     args.endMarker,
   ];
 

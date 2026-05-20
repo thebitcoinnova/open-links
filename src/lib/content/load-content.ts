@@ -54,6 +54,7 @@ export type ModePolicy = "dark-toggle" | "static-dark" | "static-light";
 export type LinkTargetMode = "new-tab-external" | "same-tab" | "new-tab-all";
 export type DesktopColumnsMode = "one" | "two";
 export type TypographyScaleMode = "fixed" | "compact" | "expressive";
+export type ProfileHeaderAlignment = "leading" | "center";
 export type TypographyTransformMode = "none" | "uppercase" | "lowercase" | "capitalize";
 export type BrandIconColorMode = "brand" | "theme";
 export type BrandIconContrastMode = "auto" | "always-theme" | "always-brand";
@@ -269,6 +270,11 @@ export interface TypographyConfig {
   themes?: Record<string, TypographyOverrides>;
 }
 
+export interface ProfileHeaderAlignmentConfig {
+  default?: ProfileHeaderAlignment;
+  small?: ProfileHeaderAlignment;
+}
+
 export interface SiteFooterPromptConfig {
   enabled?: boolean;
   title?: string;
@@ -290,8 +296,38 @@ export interface SiteBadgeConfig {
   message?: string;
 }
 
+export interface SiteSharingVCardFieldsConfig {
+  email?: string;
+  phone?: string;
+  organization?: string;
+  title?: string;
+  role?: string;
+  note?: string;
+}
+
+export interface SiteSharingVCardCustomUrl {
+  label?: string;
+  url: string;
+}
+
+export interface SiteSharingVCardIncludeConfig {
+  photo?: boolean;
+  profileUrl?: boolean;
+  linkIds?: string[];
+  customUrls?: SiteSharingVCardCustomUrl[];
+}
+
+export interface SiteSharingVCardConfig {
+  enabled?: boolean;
+  filename?: string;
+  fields?: SiteSharingVCardFieldsConfig;
+  include?: SiteSharingVCardIncludeConfig;
+  custom?: Record<string, unknown>;
+}
+
 export interface SiteSharingConfig {
   badge?: SiteBadgeConfig;
+  vcard?: SiteSharingVCardConfig;
 }
 
 export interface SiteData {
@@ -316,6 +352,7 @@ export interface SiteData {
     typography?: TypographyConfig;
     targetSize?: TargetSizeMode;
     profileAvatarScale?: number;
+    profileHeaderAlignment?: ProfileHeaderAlignment | ProfileHeaderAlignmentConfig;
     brandIcons?: {
       colorMode?: BrandIconColorMode;
       contrastMode?: BrandIconContrastMode;

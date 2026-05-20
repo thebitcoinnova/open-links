@@ -786,6 +786,35 @@ test("preserves a Substack custom-domain source label while reading subscriber c
   );
 });
 
+test("reads Substack custom-domain subscriber counts from publication preloads", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://peter.ryszkiewicz.us/",
+    icon: "substack",
+    metadataHandle: "@peterryszkiewicz",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Peter Ryszkiewicz | Substack" />
+        <meta property="og:description" content="Software Engineer" />
+        <script>
+          window._preloads = JSON.parse("{\\"pub\\":{\\"author_name\\":\\"Peter Ryszkiewicz\\",\\"author_handle\\":\\"peterryszkiewicz\\",\\"author_bio\\":\\"Software Engineer\\",\\"author_photo_url\\":\\"https://substack-post-media.s3.amazonaws.com/public/images/avatar.jpeg\\",\\"freeSubscriberCount\\":null,\\"freeSubscriberCountOrderOfMagnitude\\":\\"15\\"}}")
+        </script>
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.handle, "peterryszkiewicz");
+  assert.equal(parsed?.metadata.subscribersCount, 15);
+  assert.equal(parsed?.metadata.subscribersCountRaw, "15 subscribers");
+});
+
 test("falls back to Substack preloads data when JSON-LD person metadata is absent", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({
@@ -834,6 +863,35 @@ test("parses Instagram follower and following counts from the profile descriptio
     followingCount: 169,
     followingCountRaw: "169 Following",
   });
+});
+
+test("parses Instagram public profile HTML into profile metadata counts", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://www.instagram.com/example/",
+    icon: "instagram",
+    metadataHandle: "example",
+  });
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="Example (@example) • Instagram photos and videos" />
+        <meta property="og:description" content="104 Followers, 211 Following, 12 Posts - See Instagram photos and videos from Example (@example)" />
+        <meta property="og:image" content="https://scontent.cdninstagram.com/avatar.jpg" />
+      </head>
+    </html>
+  `;
+
+  // Act
+  const parsed = target?.parse(html);
+
+  // Assert
+  assert.equal(target?.id, "instagram-public-profile");
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.followersCount, 104);
+  assert.equal(parsed?.metadata.followersCountRaw, "104 Followers");
+  assert.equal(parsed?.metadata.followingCount, 211);
+  assert.equal(parsed?.metadata.followingCountRaw, "211 Following");
 });
 
 test("preserves raw Instagram count text when compact notation is used", () => {

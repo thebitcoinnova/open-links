@@ -36,6 +36,14 @@ validate_env() {
   fi
 }
 
+stage_readme_screenshot_files() {
+  git add \
+    README.md \
+    docs/assets/openlinks-preview.png \
+    docs/assets/openlinks-preview-tablet.png \
+    docs/assets/openlinks-preview-mobile.png
+}
+
 start_preview() {
   bun run preview --host 127.0.0.1 --port 4173 --strictPort >/tmp/openlinks-preview.log 2>&1 &
   write_output "pid" "$!"
@@ -58,9 +66,7 @@ wait_preview() {
   exit 1
 }
 
-capture_screenshot() {
-  mkdir -p docs/assets
-
+resolve_capture_url() {
   local script_src
   script_src="$(sed -n 's|.*<script type=\"module\" crossorigin src=\"\([^\"]*\)\".*|\1|p' dist/index.html | head -n 1)"
   if [ -z "$script_src" ]; then
@@ -79,8 +85,8 @@ capture_screenshot() {
 
   local capture_url="http://127.0.0.1:4173${capture_path}"
   local asset_url="http://127.0.0.1:4173${script_src}"
-  echo "Resolved capture_url=${capture_url}"
-  echo "Resolved asset_url=${asset_url}"
+  echo "Resolved capture_url=${capture_url}" >&2
+  echo "Resolved asset_url=${asset_url}" >&2
 
   local ready="false"
   for _ in {1..60}; do
@@ -109,19 +115,43 @@ capture_screenshot() {
     exit 1
   fi
 
-  npx --yes playwright@1.52.0 screenshot --device="Desktop Chrome" \
+  printf '%s\n' "$capture_url"
+}
+
+capture_viewport_screenshot() {
+  local label="$1"
+  local viewport_size="$2"
+  local output_path="$3"
+  local minimum_bytes="$4"
+  local capture_url="$5"
+
+  npx --yes playwright@1.52.0 screenshot \
+    --viewport-size="$viewport_size" \
     --timeout=120000 \
     --wait-for-selector=".profile-header" \
     --wait-for-timeout=1200 \
     "$capture_url" \
-    docs/assets/openlinks-preview.png
+    "$output_path"
 
   local bytes
-  bytes="$(wc -c <docs/assets/openlinks-preview.png)"
-  if [ "$bytes" -lt 20000 ]; then
-    echo "::error::Captured screenshot is unexpectedly small (${bytes} bytes)."
+  bytes="$(wc -c <"$output_path")"
+  if [ "$bytes" -lt "$minimum_bytes" ]; then
+    echo "::error::Captured ${label} screenshot is unexpectedly small (${bytes} bytes)."
     exit 1
   fi
+
+  echo "Captured ${label} screenshot (${viewport_size}) at ${output_path}."
+}
+
+capture_screenshot() {
+  mkdir -p docs/assets
+
+  local capture_url
+  capture_url="$(resolve_capture_url)"
+
+  capture_viewport_screenshot "desktop" "1280,720" "docs/assets/openlinks-preview.png" "20000" "$capture_url"
+  capture_viewport_screenshot "tablet" "768,1024" "docs/assets/openlinks-preview-tablet.png" "20000" "$capture_url"
+  capture_viewport_screenshot "mobile" "390,844" "docs/assets/openlinks-preview-mobile.png" "15000" "$capture_url"
 }
 
 stop_preview() {
@@ -135,7 +165,7 @@ publish_changes() {
   git config user.name "github-actions[bot]"
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-  git add README.md docs/assets/openlinks-preview.png
+  stage_readme_screenshot_files
 
   if git diff --cached --quiet; then
     write_output "push_result" "no_changes"
@@ -159,11 +189,13 @@ publish_summary() {
 - Files in scope:
   - \`README.md\`
   - \`docs/assets/openlinks-preview.png\`
+  - \`docs/assets/openlinks-preview-tablet.png\`
+  - \`docs/assets/openlinks-preview-mobile.png\`
 EOF
 }
 
 check_changes() {
-  git add README.md docs/assets/openlinks-preview.png
+  stage_readme_screenshot_files
   if git diff --cached --quiet; then
     write_output "has_changes" "false"
   else

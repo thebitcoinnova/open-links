@@ -25,6 +25,7 @@ import { computePublicCacheExpiresAt } from "./enrichment/public-cache";
 import {
   DEFAULT_PUBLIC_CACHE_PATH,
   type PublicCacheEntry,
+  type PublicCacheMetadata,
   type PublicCacheRegistry,
   arePublicCacheEntriesEqual,
   buildPublicCacheEntry,
@@ -34,6 +35,7 @@ import {
   toPublicCacheMetadata,
   writePublicCacheRegistry,
 } from "./enrichment/public-cache";
+import { parseSubstackPublicProfileMetrics } from "./enrichment/substack-public-browser";
 import { augmentSupportedSocialProfileMetadata } from "./enrichment/supported-social-profile-metadata";
 import { parseXPublicProfileMetrics } from "./enrichment/x-public-browser";
 import { parseYoutubePublicProfileMetrics } from "./enrichment/youtube-public-browser";
@@ -59,6 +61,9 @@ const MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
 const PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/primal/extract-public-profile-metrics.js",
 );
+const SUBSTACK_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
+  "browser/substack/extract-public-profile-metrics.js",
+);
 const X_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/x/extract-public-profile-metrics.js",
 );
@@ -73,6 +78,7 @@ interface CliArgs {
   onlyMissing: boolean;
   force: boolean;
   allowFailures?: boolean;
+  deferFailures?: boolean;
   headed: boolean;
   browserWaitMs: number;
   summaryJsonPath?: string;
@@ -123,10 +129,15 @@ interface YoutubePublicTarget extends PublicAugmentationTarget {
   id: "youtube-public-profile";
 }
 
+interface SubstackPublicTarget extends PublicAugmentationTarget {
+  id: "substack-public-profile";
+}
+
 type SyncablePublicTarget =
   | InstagramPublicTarget
   | MediumPublicTarget
   | PrimalPublicTarget
+  | SubstackPublicTarget
   | XProfilePublicTarget
   | XCommunityPublicTarget
   | YoutubePublicTarget;
@@ -151,12 +162,30 @@ export interface PublicBrowserAudienceCaptureResult {
   error?: string;
 }
 
+export interface PublicAudienceFallbackResult {
+  ok: boolean;
+  source: string;
+  metrics: PublicBrowserAudienceMetrics;
+  metadata?: PublicCacheMetadata;
+  detail?: string;
+}
+
 interface CapturePublicAudienceMetricsInput {
   link: RichLinkInput;
   target: SyncablePublicTarget;
   headed: boolean;
   browserWaitMs: number;
   generatedAt: string;
+}
+
+interface FetchFallbackAudienceMetricsInput {
+  link: RichLinkInput;
+  target: SyncablePublicTarget;
+  existingEntry?: PublicCacheEntry;
+  failedCapture: PublicBrowserAudienceCaptureResult;
+  generatedAt: string;
+  remoteCachePolicyRegistry: ReturnType<typeof loadRemoteCachePolicyRegistry>;
+  remoteCacheStats: RemoteCacheStatsCollector;
 }
 
 export interface PublicRichSyncDependencies {
@@ -167,6 +196,9 @@ export interface PublicRichSyncDependencies {
   captureAudienceMetrics: (
     input: CapturePublicAudienceMetricsInput,
   ) => Promise<PublicBrowserAudienceCaptureResult>;
+  fetchFallbackAudienceMetrics?: (
+    input: FetchFallbackAudienceMetricsInput,
+  ) => Promise<PublicAudienceFallbackResult | null>;
   nowIso: () => string;
   log: (message: string) => void;
 }
@@ -253,6 +285,7 @@ const parseArgs = (argv = process.argv.slice(2)): CliArgs => ({
   onlyMissing: argv.includes("--only-missing"),
   force: argv.includes("--force"),
   allowFailures: argv.includes("--allow-failures"),
+  deferFailures: argv.includes("--defer-failures"),
   headed: argv.includes("--headed"),
   browserWaitMs: Math.max(
     1_000,
@@ -276,6 +309,83 @@ const isPrimalPublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is PrimalPublicTarget => target?.id === "primal-public-profile";
 
+const isSubstackPublicTarget = (
+  target: PublicAugmentationTarget | null,
+): target is SubstackPublicTarget => target?.id === "substack-public-profile";
+
+const appendHttpUrl = (urls: string[], seen: Set<string>, value: unknown): void => {
+  const trimmed = safeTrim(value);
+  if (!trimmed) {
+    return;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      return;
+    }
+
+    const normalized = url.href;
+    if (seen.has(normalized)) {
+      return;
+    }
+
+    seen.add(normalized);
+    urls.push(normalized);
+  } catch {
+    return;
+  }
+};
+
+const appendSubstackHandleUrl = (urls: string[], seen: Set<string>, handle: unknown): void => {
+  const normalizedHandle = safeTrim(handle)?.toLowerCase();
+  if (!normalizedHandle || !/^[a-z0-9-]+$/u.test(normalizedHandle)) {
+    return;
+  }
+
+  appendHttpUrl(urls, seen, `https://${normalizedHandle}.substack.com/`);
+};
+
+export const resolveSubstackPublicHtmlFallbackUrls = (input: {
+  targetSourceUrl: string;
+  linkUrl: string;
+  icon?: string;
+  metadataHandle?: unknown;
+  profileSemantics?: unknown;
+}): string[] => {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+
+  appendHttpUrl(urls, seen, input.targetSourceUrl);
+  appendHttpUrl(urls, seen, input.linkUrl);
+
+  const supportedProfile = resolveSupportedSocialProfile({
+    url: input.linkUrl,
+    icon: input.icon,
+    metadataHandle: input.metadataHandle,
+    profileSemantics: input.profileSemantics,
+  });
+
+  if (supportedProfile?.platform === "substack") {
+    appendSubstackHandleUrl(urls, seen, supportedProfile.handle);
+  }
+
+  return urls;
+};
+
+export const resolveInstagramPublicHtmlFallbackUrls = (input: {
+  targetSourceUrl: string;
+  linkUrl: string;
+}): string[] => {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+
+  appendHttpUrl(urls, seen, input.targetSourceUrl);
+  appendHttpUrl(urls, seen, input.linkUrl);
+
+  return urls;
+};
+
 const isXProfilePublicTarget = (
   target: PublicAugmentationTarget | null,
 ): target is XProfilePublicTarget => target?.id === "x-public-oembed";
@@ -290,6 +400,7 @@ const isSyncablePublicTarget = (
   isInstagramPublicTarget(target) ||
   isMediumPublicTarget(target) ||
   isPrimalPublicTarget(target) ||
+  isSubstackPublicTarget(target) ||
   isXProfilePublicTarget(target) ||
   isXCommunityPublicTarget(target) ||
   target?.id === "youtube-public-profile";
@@ -351,7 +462,7 @@ interface SyncableTargetBehavior {
   label: string;
   snippet: string;
   parseMetrics: (snapshot: PublicAudienceBrowserSnapshot) => PublicBrowserAudienceMetrics;
-  terminalPlaceholderSignals: readonly string[];
+  fatalPlaceholderSignals: readonly string[];
   requiresFollowingCount: boolean;
   requiresMembersCount: boolean;
   requiresProfileDescription: boolean;
@@ -363,7 +474,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Instagram",
     snippet: INSTAGRAM_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseInstagramPublicProfileMetrics,
-    terminalPlaceholderSignals: ["login_redirect", "not_found"],
+    fatalPlaceholderSignals: ["not_found"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -373,7 +484,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Medium",
     snippet: MEDIUM_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseMediumPublicProfileMetrics,
-    terminalPlaceholderSignals: [],
+    fatalPlaceholderSignals: [],
     requiresFollowingCount: false,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -383,17 +494,27 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "Primal",
     snippet: PRIMAL_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parsePrimalPublicProfileMetrics,
-    terminalPlaceholderSignals: ["profile_missing"],
+    fatalPlaceholderSignals: ["profile_missing"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: false,
     requiresSubscribersCount: false,
   },
+  "substack-public-profile": {
+    label: "Substack",
+    snippet: SUBSTACK_PUBLIC_PROFILE_METRICS_SNIPPET,
+    parseMetrics: parseSubstackPublicProfileMetrics,
+    fatalPlaceholderSignals: [],
+    requiresFollowingCount: false,
+    requiresMembersCount: false,
+    requiresProfileDescription: false,
+    requiresSubscribersCount: true,
+  },
   "x-public-oembed": {
     label: "X",
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
-    terminalPlaceholderSignals: ["account_missing", "account_suspended"],
+    fatalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
     requiresProfileDescription: true,
@@ -403,7 +524,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "X community",
     snippet: X_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseXPublicProfileMetrics,
-    terminalPlaceholderSignals: ["account_missing", "account_suspended"],
+    fatalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: false,
     requiresMembersCount: true,
     requiresProfileDescription: false,
@@ -413,7 +534,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     label: "YouTube",
     snippet: YOUTUBE_PUBLIC_PROFILE_METRICS_SNIPPET,
     parseMetrics: parseYoutubePublicProfileMetrics,
-    terminalPlaceholderSignals: ["unavailable_page"],
+    fatalPlaceholderSignals: ["unavailable_page"],
     requiresFollowingCount: false,
     requiresMembersCount: false,
     requiresProfileDescription: false,
@@ -535,18 +656,15 @@ interface PublicRichSyncFailureClassification {
   fatal: boolean;
 }
 
-const terminalPlaceholderSignalsForTarget = (
+const fatalPlaceholderSignalsForTarget = (
   targetId: SyncablePublicTargetId,
   metrics: PublicBrowserAudienceMetrics,
 ): string[] => {
-  const terminalSignals = behaviorForTarget(targetId).terminalPlaceholderSignals;
-  return metrics.placeholderSignals.filter((signal) => terminalSignals.includes(signal));
+  const fatalSignals = behaviorForTarget(targetId).fatalPlaceholderSignals;
+  return metrics.placeholderSignals.filter((signal) => fatalSignals.includes(signal));
 };
 
-const isTerminalSourceFailureDetail = (
-  targetId: SyncablePublicTargetId,
-  detail: string,
-): boolean => {
+const isFatalSourceFailureDetail = (targetId: SyncablePublicTargetId, detail: string): boolean => {
   const normalized = detail.toLowerCase();
   if (/\bhttp\s+404\b|\b404\s+not found\b/u.test(normalized)) {
     return true;
@@ -554,9 +672,7 @@ const isTerminalSourceFailureDetail = (
 
   switch (targetId) {
     case "instagram-public-profile":
-      return /login_redirect|not_found|sorry, this page isn't available|user not found/u.test(
-        normalized,
-      );
+      return /not_found|sorry, this page isn't available|user not found/u.test(normalized);
     case "primal-public-profile":
       return /profile not found|user not found|page not found|profile_missing/u.test(normalized);
     case "x-public-oembed":
@@ -568,6 +684,8 @@ const isTerminalSourceFailureDetail = (
       return /unavailable_page|this channel does not exist|account has been terminated|channel not found/u.test(
         normalized,
       );
+    case "substack-public-profile":
+      return false;
     case "medium-public-feed":
       return false;
   }
@@ -577,11 +695,11 @@ const classifyCaptureFailure = (
   targetId: SyncablePublicTargetId,
   capture: PublicBrowserAudienceCaptureResult,
 ): PublicRichSyncFailureClassification => {
-  const terminalSignals = terminalPlaceholderSignalsForTarget(targetId, capture.metrics);
-  if (terminalSignals.length > 0) {
+  const fatalSignals = fatalPlaceholderSignalsForTarget(targetId, capture.metrics);
+  if (fatalSignals.length > 0) {
     return {
       reason: "profile_unavailable",
-      detail: `${behaviorForTarget(targetId).label} public browser capture saw terminal profile placeholder content: ${terminalSignals.join(
+      detail: `${behaviorForTarget(targetId).label} public browser capture saw fatal profile-unavailable placeholder content: ${fatalSignals.join(
         ", ",
       )}.`,
       fatal: true,
@@ -599,7 +717,7 @@ const classifySyncError = (
   targetId: SyncablePublicTargetId,
   detail: string,
 ): PublicRichSyncFailureClassification => {
-  if (isTerminalSourceFailureDetail(targetId, detail)) {
+  if (isFatalSourceFailureDetail(targetId, detail)) {
     return {
       reason: "profile_unavailable",
       detail,
@@ -700,6 +818,121 @@ export const bootstrapPublicBaseEntry = async (
   };
 };
 
+export const fetchPublicAudienceMetricsFallback = async (
+  input: FetchFallbackAudienceMetricsInput,
+): Promise<PublicAudienceFallbackResult | null> => {
+  const sourceUrls = publicHtmlFallbackUrlsForTarget(input);
+  if (!sourceUrls) {
+    return null;
+  }
+
+  const failures: string[] = [];
+
+  for (const sourceUrl of sourceUrls) {
+    try {
+      const fetched = await fetchMetadata(sourceUrl, {
+        timeoutMs: DEFAULT_FETCH_TIMEOUT_MS,
+        retries: DEFAULT_FETCH_RETRIES,
+        acceptHeader: input.target.acceptHeader,
+        headers: input.target.headers,
+        policyRegistry: input.remoteCachePolicyRegistry,
+        statsCollector: input.remoteCacheStats,
+        force: true,
+      });
+
+      if (!fetched.ok || !fetched.html) {
+        failures.push(
+          `${sourceUrl}: ${
+            fetched.error ??
+            `Unable to fetch public audience fallback source. HTTP ${fetched.statusCode ?? "unknown"}`
+          }`,
+        );
+        continue;
+      }
+
+      const parsed = input.target.parse(fetched.html);
+      const metadata = toPublicCacheMetadata(parsed.metadata);
+      const metrics = toPublicHtmlFallbackAudienceMetrics(input.target.id, metadata);
+      if (!metrics) {
+        failures.push(`${sourceUrl}: ${input.target.id} does not support public HTML fallback.`);
+        continue;
+      }
+
+      const maybeError = buildAudienceCaptureError(input.target.id, metrics);
+
+      if (maybeError) {
+        failures.push(`${sourceUrl}: ${maybeError}`);
+        continue;
+      }
+
+      return {
+        ok: true,
+        source: "public-html",
+        metrics,
+        ...(input.target.id === "instagram-public-profile" ? { metadata } : {}),
+      };
+    } catch (error: unknown) {
+      failures.push(`${sourceUrl}: ${toErrorMessage(error)}`);
+    }
+  }
+
+  return {
+    ok: false,
+    source: "public-html",
+    metrics: { placeholderSignals: [] },
+    detail:
+      failures.length > 0 ? failures.join("; ") : "No public HTML fallback source was available.",
+  };
+};
+
+const publicHtmlFallbackUrlsForTarget = (
+  input: FetchFallbackAudienceMetricsInput,
+): string[] | null => {
+  if (input.target.id === "instagram-public-profile") {
+    return resolveInstagramPublicHtmlFallbackUrls({
+      targetSourceUrl: input.target.sourceUrl,
+      linkUrl: input.link.url,
+    });
+  }
+
+  if (input.target.id === "substack-public-profile") {
+    return resolveSubstackPublicHtmlFallbackUrls({
+      targetSourceUrl: input.target.sourceUrl,
+      linkUrl: input.link.url,
+      icon: input.link.icon,
+      metadataHandle: input.link.metadata?.handle,
+      profileSemantics: input.link.enrichment?.profileSemantics,
+    });
+  }
+
+  return null;
+};
+
+export const toPublicHtmlFallbackAudienceMetrics = (
+  targetId: string,
+  metadata: PublicCacheMetadata,
+): PublicBrowserAudienceMetrics | null => {
+  if (targetId === "instagram-public-profile") {
+    return {
+      placeholderSignals: [],
+      followersCount: metadata.followersCount,
+      followersCountRaw: metadata.followersCountRaw,
+      followingCount: metadata.followingCount,
+      followingCountRaw: metadata.followingCountRaw,
+    };
+  }
+
+  if (targetId === "substack-public-profile") {
+    return {
+      placeholderSignals: [],
+      subscribersCount: metadata.subscribersCount,
+      subscribersCountRaw: metadata.subscribersCountRaw,
+    };
+  }
+
+  return null;
+};
+
 const extractMetricTexts = (value: unknown): string[] | undefined => {
   if (!Array.isArray(value)) {
     return undefined;
@@ -790,10 +1023,14 @@ const buildAudienceCaptureError = (
   return undefined;
 };
 
+const browserCaptureUrlForTarget = (input: CapturePublicAudienceMetricsInput): string =>
+  input.target.id === "substack-public-profile" ? input.target.sourceUrl : input.link.url;
+
 export const capturePublicAudienceMetricsFromBrowser = async (
   input: CapturePublicAudienceMetricsInput,
 ): Promise<PublicBrowserAudienceCaptureResult> => {
   const config = buildPublicProfileConfig(input.link.id, input.headed);
+  const browserCaptureUrl = browserCaptureUrlForTarget(input);
   fs.mkdirSync(config.profilePath, { recursive: true });
 
   const artifactRelativePath = path.join(
@@ -805,7 +1042,7 @@ export const capturePublicAudienceMetricsFromBrowser = async (
   let error: string | undefined;
 
   try {
-    runPublicBrowserJson(["open", input.link.url], config, {
+    runPublicBrowserJson(["open", browserCaptureUrl], config, {
       allowFailure: true,
     });
     runPublicBrowserJson(["wait", "1500"], config, {
@@ -845,7 +1082,7 @@ export const capturePublicAudienceMetricsFromBrowser = async (
     timestamp: input.generatedAt,
     linkId: input.link.id,
     targetId: input.target.id,
-    targetUrl: input.link.url,
+    targetUrl: browserCaptureUrl,
     headed: input.headed,
     browserWaitMs: input.browserWaitMs,
     profilePath: path.relative(ROOT, config.profilePath),
@@ -871,6 +1108,7 @@ const defaultDependencies: PublicRichSyncDependencies = {
     writePublicCacheRegistry(publicCachePath, registry),
   bootstrapBaseEntry: bootstrapPublicBaseEntry,
   captureAudienceMetrics: capturePublicAudienceMetricsFromBrowser,
+  fetchFallbackAudienceMetrics: fetchPublicAudienceMetricsFallback,
   nowIso,
   log: (message) => console.log(message),
 };
@@ -899,7 +1137,9 @@ export const writePublicRichSyncRunSummary = (
 export const shouldPublicRichSyncExitWithFailure = (
   result: Pick<PublicRichSyncResult, "failed"> & { fatalFailed?: number },
   allowFailures: boolean,
-): boolean => (result.fatalFailed ?? 0) > 0 || (result.failed > 0 && !allowFailures);
+  deferFailures = false,
+): boolean =>
+  !deferFailures && ((result.fatalFailed ?? 0) > 0 || (result.failed > 0 && !allowFailures));
 
 export const runPublicRichSyncWithDependencies = async (
   args: CliArgs,
@@ -982,13 +1222,63 @@ export const runPublicRichSyncWithDependencies = async (
       }
 
       processed += 1;
-      const capture = await dependencies.captureAudienceMetrics({
+      let capture = await dependencies.captureAudienceMetrics({
         link: candidate.link,
         target: candidate.target,
         headed: args.headed,
         browserWaitMs: args.browserWaitMs,
         generatedAt,
       });
+      let fallbackMetadataApplied = false;
+
+      if (!capture.ok) {
+        const fallback = await dependencies.fetchFallbackAudienceMetrics?.({
+          link: candidate.link,
+          target: candidate.target,
+          existingEntry: workingEntry,
+          failedCapture: capture,
+          generatedAt,
+          remoteCachePolicyRegistry,
+          remoteCacheStats,
+        });
+
+        if (fallback?.ok) {
+          if (
+            candidate.target.id === "instagram-public-profile" &&
+            fallback.metadata &&
+            workingEntry
+          ) {
+            workingEntry = {
+              ...workingEntry,
+              metadata: mergePublicCacheMetadataForTarget({
+                targetId: candidate.target.id,
+                previous: workingEntry.metadata,
+                next: fallback.metadata,
+              }),
+            };
+            fallbackMetadataApplied = true;
+          }
+          capture = {
+            ...capture,
+            ok: true,
+            metrics: fallback.metrics,
+            error: undefined,
+          };
+          dependencies.log(
+            `[public:rich:sync] recovered ${candidate.link.id}: ${captureSummaryForTarget(
+              candidate.target.id,
+              fallback.metrics,
+            )} via ${fallback.source} fallback after browser capture missed audience metrics.`,
+          );
+        } else if (fallback) {
+          capture = {
+            ...capture,
+            error: `${capture.error ?? captureSummaryForTarget(candidate.target.id, capture.metrics)} Fallback ${fallback.source} capture also failed: ${
+              fallback.detail ?? "unknown failure"
+            }`,
+          };
+        }
+      }
 
       if (!capture.ok) {
         const failure = classifyCaptureFailure(candidate.target.id, capture);
@@ -1005,7 +1295,7 @@ export const runPublicRichSyncWithDependencies = async (
           ...(failure.fatal ? { fatal: true } : {}),
         });
         dependencies.log(
-          `[public:rich:sync] fail ${candidate.link.id}: ${failure.detail} (${capture.artifactPath})`,
+          `[public:rich:sync] fail ${candidate.link.id}: ${failure.detail}; excluded from this run's follower history snapshots. (${capture.artifactPath})`,
         );
         continue;
       }
@@ -1041,7 +1331,7 @@ export const runPublicRichSyncWithDependencies = async (
       nextEntry.metadata = prunePublicCacheMetadataForTarget({
         targetId: candidate.target.id,
         metadata: nextEntry.metadata,
-        audienceMetricsAreAuthoritative: true,
+        audienceMetricsAreAuthoritative: !fallbackMetadataApplied,
       });
 
       const stabilizedEntry = buildPublicCacheEntry({
@@ -1065,7 +1355,7 @@ export const runPublicRichSyncWithDependencies = async (
           reason: "counts_unchanged",
         });
         dependencies.log(
-          `[public:rich:sync] no-op ${candidate.link.id}: captured audience metrics matched the committed cache.`,
+          `[public:rich:sync] fresh unchanged observation ${candidate.link.id}: captured audience metrics matched the committed cache.`,
         );
         continue;
       }
@@ -1080,7 +1370,7 @@ export const runPublicRichSyncWithDependencies = async (
         artifactPath: capture.artifactPath,
       });
       dependencies.log(
-        `[public:rich:sync] synced ${candidate.link.id}: ${captureSummaryForTarget(
+        `[public:rich:sync] fresh public observation ${candidate.link.id}: ${captureSummaryForTarget(
           candidate.target.id,
           capture.metrics,
         )} (${capture.artifactPath})`,
@@ -1098,7 +1388,9 @@ export const runPublicRichSyncWithDependencies = async (
         detail: failure.detail,
         ...(failure.fatal ? { fatal: true } : {}),
       });
-      dependencies.log(`[public:rich:sync] fail ${candidate.link.id}: ${failure.detail}`);
+      dependencies.log(
+        `[public:rich:sync] fail ${candidate.link.id}: ${failure.detail}; excluded from this run's follower history snapshots.`,
+      );
     }
   }
 
@@ -1136,7 +1428,13 @@ const runCli = async () => {
   console.log(`Fatal failures: ${result.fatalFailed}`);
   console.log(`Cache updated: ${result.dirty ? "yes" : "no"}`);
 
-  if (shouldPublicRichSyncExitWithFailure(result, args.allowFailures ?? false)) {
+  if (
+    shouldPublicRichSyncExitWithFailure(
+      result,
+      args.allowFailures ?? false,
+      args.deferFailures ?? false,
+    )
+  ) {
     process.exit(1);
   }
 };

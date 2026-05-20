@@ -27,8 +27,9 @@ Use these IDs when `audit_scope=focused`:
 8. `site-ui-typography`
 9. `site-ui-brand-icons`
 10. `site-ui-rich-cards`
-11. `site-quality`
-12. `extensions-guardrails`
+11. `site-sharing`
+12. `site-quality`
+13. `extensions-guardrails`
 
 ## 1) `data/profile.json` (`profile`)
 
@@ -189,6 +190,7 @@ Coverage:
 - `typographyScale`
 - `typography`
 - `targetSize`
+- `profileHeaderAlignment`
 - `payments.qr.displayDefault`
 - `payments.qr.styleDefault`
 - `payments.qr.foregroundColorDefault`
@@ -336,7 +338,35 @@ Derived behavior without dedicated config keys:
 - Card share actions are available on non-payment cards even when analytics/history is unavailable.
 - Profile-header share uses a clean-URL payload so copy fallback remains browser-paste-safe.
 
-## 11) `site.quality` (`site-quality`)
+## 11) `site.sharing` (`site-sharing`)
+
+Coverage:
+
+- `badge.enabled`
+- `badge.message`
+- `vcard.enabled`
+- `vcard.filename`
+- `vcard.fields.email`
+- `vcard.fields.phone`
+- `vcard.fields.organization`
+- `vcard.fields.title`
+- `vcard.fields.role`
+- `vcard.fields.note`
+- `vcard.include.photo`
+- `vcard.include.profileUrl`
+- `vcard.include.linkIds`
+- `vcard.include.customUrls[]`
+
+Notes:
+
+- The vCard button is opt-in with `vcard.enabled=true`.
+- The default export is conservative: `profile.name` plus the canonical profile URL.
+- Contact fields, profile photo export, and extra URLs require explicit vCard config.
+- `vcard.include.linkIds` is an explicit allowlist of existing `links[]` ids; do not export all links unless the user deliberately lists them.
+- Runtime emits an Apple-compatible vCard 3.0 file; labeled extra URLs use grouped Apple URL labels so Contacts can preserve explicit names.
+- Studio exposes guided controls for the vCard surface, including the photo toggle; Advanced JSON remains available for unusual extension fields.
+
+## 12) `site.quality` (`site-quality`)
 
 Coverage:
 
@@ -364,7 +394,7 @@ Notes:
 - The starter config points `seo.socialImageFallback` at `/generated/seo/social-preview.png`, which is created by `bun run social:preview:generate`.
 - Forks that want a fully custom social card can still point `seo.socialImageFallback`, `seo.defaults.ogImage`, or `seo.defaults.twitterImage` at their own local asset paths.
 
-## 12) Extension guardrails (`extensions-guardrails`)
+## 13) Extension guardrails (`extensions-guardrails`)
 
 Preferred extension namespace:
 

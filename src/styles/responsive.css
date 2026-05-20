@@ -22,6 +22,93 @@
     grid-template-columns: 1fr;
   }
 
+  body .profile-header[data-alignment-small="center"] {
+    justify-items: center;
+    text-align: center;
+  }
+
+  body .profile-header[data-alignment-small="center"] .profile-copy {
+    width: 100%;
+    justify-items: center;
+  }
+
+  body .profile-header[data-alignment-small="center"] .profile-title-row {
+    width: 100%;
+    justify-content: center;
+  }
+
+  body .profile-header[data-alignment-small="center"] .profile-copy h1,
+  body .profile-header[data-alignment-small="center"] .profile-headline,
+  body .profile-header[data-alignment-small="center"] .profile-bio {
+    text-align: center;
+  }
+
+  body .profile-header[data-alignment-small="center"] .profile-action-bar {
+    justify-self: center;
+    width: min(100%, 24rem);
+  }
+
+  body .profile-header[data-alignment-small="center"] .profile-meta {
+    justify-content: center;
+    margin-inline: 0;
+    padding-inline: 0;
+    list-style: none;
+  }
+
+  body .profile-header[data-alignment-small="center"] .profile-contact-list {
+    justify-self: center;
+    width: min(100%, 32rem);
+  }
+
+  body .profile-header[data-alignment-small="center"] .profile-contact-item {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 0.1rem;
+    text-align: center;
+  }
+
+  body .profile-header[data-alignment-small="leading"] {
+    justify-items: stretch;
+    text-align: start;
+  }
+
+  body .profile-header[data-alignment-small="leading"] .profile-copy {
+    width: auto;
+    justify-items: stretch;
+  }
+
+  body .profile-header[data-alignment-small="leading"] .profile-title-row {
+    width: auto;
+    justify-content: flex-start;
+  }
+
+  body .profile-header[data-alignment-small="leading"] .profile-copy h1,
+  body .profile-header[data-alignment-small="leading"] .profile-headline,
+  body .profile-header[data-alignment-small="leading"] .profile-bio {
+    text-align: start;
+  }
+
+  body .profile-header[data-alignment-small="leading"] .profile-action-bar {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  body .profile-header[data-alignment-small="leading"] .profile-meta {
+    justify-content: flex-start;
+  }
+
+  body .profile-header[data-alignment-small="leading"] .profile-contact-list {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  body .profile-header[data-alignment-small="leading"] .profile-contact-item {
+    grid-template-columns: max-content minmax(0, 1fr);
+    justify-items: stretch;
+    gap: var(--space-2);
+    text-align: start;
+  }
+
   body .profile-quick-links {
     width: min(100%, 18rem);
     margin-top: 0;

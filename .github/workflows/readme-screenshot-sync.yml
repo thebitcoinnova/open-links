@@ -178,6 +178,10 @@ jobs:
             Updated files:
             - `README.md`
             - `docs/assets/openlinks-preview.png`
+            - `docs/assets/openlinks-preview-tablet.png`
+            - `docs/assets/openlinks-preview-mobile.png`
           add-paths: |
             README.md
             docs/assets/openlinks-preview.png
+            docs/assets/openlinks-preview-tablet.png
+            docs/assets/openlinks-preview-mobile.png

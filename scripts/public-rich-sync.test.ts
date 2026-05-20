@@ -4,8 +4,11 @@ import type { PublicCacheEntry, PublicCacheRegistry } from "./enrichment/public-
 import {
   type PublicBrowserAudienceCaptureResult,
   buildPublicRichSyncRunSummary,
+  resolveInstagramPublicHtmlFallbackUrls,
+  resolveSubstackPublicHtmlFallbackUrls,
   runPublicRichSyncWithDependencies,
   shouldPublicRichSyncExitWithFailure,
+  toPublicHtmlFallbackAudienceMetrics,
 } from "./public-rich-sync";
 
 const mediumLink = {
@@ -78,6 +81,67 @@ const youtubeLink = {
   type: "rich",
   icon: "youtube",
 } as const;
+
+const substackLink = {
+  id: "substack",
+  label: "Substack",
+  url: "https://peter.ryszkiewicz.us/",
+  type: "rich",
+  icon: "substack",
+  metadata: {
+    handle: "peterryszkiewicz",
+  },
+} as const;
+
+test("resolves Substack fallback sources from canonical, custom domain, and handle URL", () => {
+  // Arrange / Act
+  const urls = resolveSubstackPublicHtmlFallbackUrls({
+    targetSourceUrl: "https://substack.com/@peterryszkiewicz",
+    linkUrl: substackLink.url,
+    icon: substackLink.icon,
+    metadataHandle: substackLink.metadata.handle,
+  });
+
+  // Assert
+  assert.deepEqual(urls, [
+    "https://substack.com/@peterryszkiewicz",
+    "https://peter.ryszkiewicz.us/",
+    "https://peterryszkiewicz.substack.com/",
+  ]);
+});
+
+test("resolves Instagram fallback sources from canonical and link URL", () => {
+  // Arrange / Act
+  const urls = resolveInstagramPublicHtmlFallbackUrls({
+    targetSourceUrl: "https://www.instagram.com/peterryszkiewicz/",
+    linkUrl: "https://instagram.com/peterryszkiewicz/",
+  });
+
+  // Assert
+  assert.deepEqual(urls, [
+    "https://www.instagram.com/peterryszkiewicz/",
+    "https://instagram.com/peterryszkiewicz/",
+  ]);
+});
+
+test("maps Instagram public HTML metadata to fallback audience metrics", () => {
+  // Arrange / Act
+  const metrics = toPublicHtmlFallbackAudienceMetrics("instagram-public-profile", {
+    followersCount: 104,
+    followersCountRaw: "104 Followers",
+    followingCount: 211,
+    followingCountRaw: "211 Following",
+  });
+
+  // Assert
+  assert.deepEqual(metrics, {
+    placeholderSignals: [],
+    followersCount: 104,
+    followersCountRaw: "104 Followers",
+    followingCount: 211,
+    followingCountRaw: "211 Following",
+  });
+});
 
 const emptyRegistry = (): PublicCacheRegistry => ({
   version: 1,
@@ -213,6 +277,26 @@ const createYoutubeBaseEntry = (
   cacheControl: "no-cache, no-store, must-revalidate",
 });
 
+const createSubstackBaseEntry = (
+  linkId: string,
+  generatedAt: string,
+  sourceUrl: string,
+): PublicCacheEntry => ({
+  linkId,
+  sourceUrl,
+  capturedAt: generatedAt,
+  updatedAt: generatedAt,
+  metadata: {
+    title: "Peter Ryszkiewicz",
+    description: "I'm an agentic engineer, making things in the AI space.",
+    image: "https://substackcdn.com/profile-card.jpg",
+    profileImage: "https://substackcdn.com/avatar.jpg",
+    handle: "peterryszkiewicz",
+    sourceLabel: "peter.ryszkiewicz.us",
+  },
+  cacheControl: "no-cache",
+});
+
 const captureSuccess = (
   metrics: Omit<PublicBrowserAudienceCaptureResult["metrics"], "placeholderSignals">,
   artifactPath = "output/playwright/public-rich-sync/capture.json",
@@ -311,6 +395,9 @@ test("overlays Instagram browser counts when profile metadata counts are stale",
           "output/playwright/public-rich-sync/instagram-2026-05-12.json",
         );
       },
+      fetchFallbackAudienceMetrics: async () => {
+        throw new Error("should not use fallback after browser success");
+      },
       nowIso: () => "2026-05-12T03:15:00.000Z",
       log: () => {},
     },
@@ -329,6 +416,346 @@ test("overlays Instagram browser counts when profile metadata counts are stale",
   assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCount, 206);
   assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCountRaw, "206 following");
   assert.equal(writtenRegistry?.entries.instagram?.metadata.description, undefined);
+});
+
+test("recovers unchanged Instagram audience from public HTML fallback when browser redirects to login", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  const existingEntry = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+  registry.entries.instagram = existingEntry;
+  let fallbackCaptureArtifact: string | undefined;
+  let wroteRegistry = false;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {
+        wroteRegistry = true;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+        metrics: {
+          placeholderSignals: ["login_redirect"],
+        },
+        error: "Instagram public browser capture saw placeholder content: login_redirect.",
+      }),
+      fetchFallbackAudienceMetrics: async ({ failedCapture, target }) => {
+        fallbackCaptureArtifact = failedCapture.artifactPath;
+        assert.equal(target.id, "instagram-public-profile");
+        return {
+          ok: true,
+          source: "public-html",
+          metadata: createInstagramBaseEntry(
+            "instagram",
+            "2026-05-16T15:30:00.000Z",
+            "https://www.instagram.com/peterryszkiewicz/",
+          ).metadata,
+          metrics: {
+            placeholderSignals: [],
+            followersCount: 99,
+            followersCountRaw: "99 Followers",
+            followingCount: 210,
+            followingCountRaw: "210 Following",
+          },
+        };
+      },
+      nowIso: () => "2026-05-16T15:30:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(fallbackCaptureArtifact, "output/playwright/public-rich-sync/instagram-login.json");
+  assert.equal(wroteRegistry, false);
+  assert.equal(result.failed, 0);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
+test("refreshes Instagram audience from public HTML fallback when browser redirects to login", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: (_path, nextRegistry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(nextRegistry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+        metrics: {
+          placeholderSignals: ["login_redirect"],
+        },
+        error: "Instagram public browser capture saw placeholder content: login_redirect.",
+      }),
+      fetchFallbackAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "instagram-public-profile");
+        return {
+          ok: true,
+          source: "public-html",
+          metadata: {
+            ...createInstagramBaseEntry(
+              "instagram",
+              "2026-05-16T15:35:00.000Z",
+              "https://www.instagram.com/peterryszkiewicz/",
+            ).metadata,
+            description:
+              "104 Followers, 211 Following, 10 Posts - See Instagram photos and videos from Peter Justice For The Victims Ryszkiewicz (@peterryszkiewicz)",
+            followersCount: 104,
+            followersCountRaw: "104 Followers",
+            followingCount: 211,
+            followingCountRaw: "211 Following",
+          },
+          metrics: {
+            placeholderSignals: [],
+            followersCount: 104,
+            followersCountRaw: "104 Followers",
+            followingCount: 211,
+            followingCountRaw: "211 Following",
+          },
+        };
+      },
+      nowIso: () => "2026-05-16T15:35:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 0);
+  assert.equal(result.dirty, true);
+  assert.equal(result.registry.entries.instagram?.metadata.followersCount, 104);
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followersCountRaw, "104 Followers");
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCount, 211);
+  assert.equal(writtenRegistry?.entries.instagram?.metadata.followingCountRaw, "211 Following");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "synced",
+      reason: "counts_refreshed",
+      artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+    },
+  ]);
+});
+
+test("treats Instagram login redirects as non-fatal failures when public HTML fallback also fails", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+        metrics: {
+          placeholderSignals: ["login_redirect"],
+        },
+        error: "Instagram public browser capture saw placeholder content: login_redirect.",
+      }),
+      fetchFallbackAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "instagram-public-profile");
+        return {
+          ok: false,
+          source: "public-html",
+          metrics: {
+            placeholderSignals: [],
+          },
+          detail:
+            "https://www.instagram.com/peterryszkiewicz/: Instagram public browser capture did not find follower or following counts.",
+        };
+      },
+      nowIso: () => "2026-05-12T03:30:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), false);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "failed",
+      reason: "audience_missing",
+      artifactPath: "output/playwright/public-rich-sync/instagram-login.json",
+      detail:
+        "Instagram public browser capture saw placeholder content: login_redirect. Fallback public-html capture also failed: https://www.instagram.com/peterryszkiewicz/: Instagram public browser capture did not find follower or following counts.",
+    },
+  ]);
+});
+
+test("keeps Instagram not-found placeholders fatal", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/instagram-not-found.json",
+        metrics: {
+          placeholderSignals: ["not_found"],
+        },
+        error: "Instagram public browser capture saw placeholder content: not_found.",
+      }),
+      nowIso: () => "2026-05-12T03:31:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 1);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), true);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "failed",
+      reason: "profile_unavailable",
+      artifactPath: "output/playwright/public-rich-sync/instagram-not-found.json",
+      detail:
+        "Instagram public browser capture saw fatal profile-unavailable placeholder content: not_found.",
+      fatal: true,
+    },
+  ]);
+});
+
+test("treats Instagram login redirect sync errors as non-fatal", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        throw new Error("Instagram browser capture failed after login_redirect");
+      },
+      nowIso: () => "2026-05-12T03:32:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), false);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "failed",
+      reason: "sync_error",
+      detail: "Instagram browser capture failed after login_redirect",
+    },
+  ]);
 });
 
 test("refreshes Medium counts without replacing the existing base cache entry fields", async () => {
@@ -979,7 +1406,8 @@ test("marks terminal X placeholder captures as fatal profile-unavailable failure
       status: "failed",
       reason: "profile_unavailable",
       artifactPath: "output/playwright/public-rich-sync/x-missing.json",
-      detail: "X public browser capture saw terminal profile placeholder content: account_missing.",
+      detail:
+        "X public browser capture saw fatal profile-unavailable placeholder content: account_missing.",
       fatal: true,
     },
   ]);
@@ -1346,6 +1774,356 @@ test("preserves existing YouTube metrics when a refresh attempt fails", async ()
   ]);
 });
 
+test("bootstraps a missing Substack cache entry and overlays subscriber counts", async () => {
+  // Arrange
+  let bootstrapCalls = 0;
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: (_path, registry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(registry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        assert.equal(target.id, "substack-public-profile");
+        return createSubstackBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "substack-public-profile");
+        return captureSuccess(
+          {
+            subscribersCount: 15,
+            subscribersCountRaw: "15 subscribers",
+          },
+          "output/playwright/public-rich-sync/substack-2026-05-12.json",
+        );
+      },
+      nowIso: () => "2026-05-12T13:00:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.processed, 1);
+  assert.equal(
+    writtenRegistry?.entries.substack?.sourceUrl,
+    "https://substack.com/@peterryszkiewicz",
+  );
+  assert.equal(writtenRegistry?.entries.substack?.metadata.subscribersCount, 15);
+  assert.equal(writtenRegistry?.entries.substack?.metadata.subscribersCountRaw, "15 subscribers");
+});
+
+test("treats unchanged Substack subscriber counts as fresh no-op evidence", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    updatedAt: "2026-05-12T12:00:00.000Z",
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+  let wroteRegistry = false;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {
+        wroteRegistry = true;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async ({ target }) => {
+        assert.equal(target.id, "substack-public-profile");
+        return captureSuccess(
+          {
+            subscribersCount: 15,
+            subscribersCountRaw: "15 subscribers",
+          },
+          "output/playwright/public-rich-sync/substack-unchanged.json",
+        );
+      },
+      nowIso: () => "2026-05-12T13:05:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(wroteRegistry, false);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
+test("recovers unchanged Substack subscribers from public HTML fallback when browser capture misses counts", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    updatedAt: "2026-05-12T12:00:00.000Z",
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+  let fallbackCaptureArtifact: string | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+        metrics: {
+          placeholderSignals: [],
+        },
+        error: "Substack public browser capture did not find a subscriber count.",
+      }),
+      fetchFallbackAudienceMetrics: async ({ failedCapture, target }) => {
+        fallbackCaptureArtifact = failedCapture.artifactPath;
+        assert.equal(target.id, "substack-public-profile");
+        return {
+          ok: true,
+          source: "public-html",
+          metrics: {
+            placeholderSignals: [],
+            subscribersCount: 15,
+            subscribersCountRaw: "15 subscribers",
+          },
+        };
+      },
+      nowIso: () => "2026-05-16T07:37:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(
+    fallbackCaptureArtifact,
+    "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+  );
+  assert.equal(result.failed, 0);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
+test("refreshes Substack subscribers from public HTML fallback when browser capture misses counts", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+  let writtenRegistry: PublicCacheRegistry | undefined;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: (_path, nextRegistry) => {
+        writtenRegistry = JSON.parse(JSON.stringify(nextRegistry)) as PublicCacheRegistry;
+      },
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+        metrics: {
+          placeholderSignals: [],
+        },
+        error: "Substack public browser capture did not find a subscriber count.",
+      }),
+      fetchFallbackAudienceMetrics: async () => ({
+        ok: true,
+        source: "public-html",
+        metrics: {
+          placeholderSignals: [],
+          subscribersCount: 16,
+          subscribersCountRaw: "16 subscribers",
+        },
+      }),
+      nowIso: () => "2026-05-16T07:37:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 0);
+  assert.equal(result.dirty, true);
+  assert.equal(result.registry.entries.substack?.metadata.subscribersCount, 16);
+  assert.equal(writtenRegistry?.entries.substack?.metadata.subscribersCountRaw, "16 subscribers");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "synced",
+      reason: "counts_refreshed",
+      artifactPath: "output/playwright/public-rich-sync/substack-missing-browser-count.json",
+    },
+  ]);
+});
+
+test("preserves existing Substack metrics when a refresh attempt is blocked", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = {
+    ...createSubstackBaseEntry(
+      "substack",
+      "2026-05-12T12:00:00.000Z",
+      "https://substack.com/@peterryszkiewicz",
+    ),
+    metadata: {
+      ...createSubstackBaseEntry(
+        "substack",
+        "2026-05-12T12:00:00.000Z",
+        "https://substack.com/@peterryszkiewicz",
+      ).metadata,
+      subscribersCount: 15,
+      subscribersCountRaw: "15 subscribers",
+    },
+  };
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => ({
+        ok: false,
+        artifactPath: "output/playwright/public-rich-sync/substack-blocked.json",
+        metrics: {
+          placeholderSignals: ["access_denied"],
+        },
+        error: "Substack public browser capture saw placeholder content: access_denied.",
+      }),
+      nowIso: () => "2026-05-12T13:10:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.equal(shouldPublicRichSyncExitWithFailure(result, true), false);
+  assert.equal(result.registry.entries.substack?.metadata.subscribersCountRaw, "15 subscribers");
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "failed",
+      reason: "subscribers_missing",
+      artifactPath: "output/playwright/public-rich-sync/substack-blocked.json",
+      detail: "Substack public browser capture saw placeholder content: access_denied.",
+    },
+  ]);
+});
+
 test("records failure detail in the run summary", () => {
   // Arrange
   const result = {
@@ -1389,4 +2167,13 @@ test("fatal public sync failures exit non-zero even when allow-failures is set",
 
   // Act / Assert
   assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, true), true);
+});
+
+test("deferred public sync failures do not exit non-zero before the final health check", () => {
+  // Arrange
+  const failingResult = { failed: 1, fatalFailed: 1 };
+
+  // Act / Assert
+  assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, false, true), false);
+  assert.equal(shouldPublicRichSyncExitWithFailure(failingResult, true, true), false);
 });
