@@ -121,3 +121,33 @@ Before committing fork-owned CRUD updates in `open-links`, capture a before/afte
 
 ### Trigger signal to catch it earlier
 A fork-owned content task adds or reorders multiple links and also requires policy/cache churn to support rich cards; that combination should trigger a deliberate JSON-only audit before commit.
+
+## lesson-verify-audience-freshness-before-explaining-history | 2026-05-12 09:27 CDT
+### What went wrong
+I inferred the Substack follower history was current because the nightly job had appended rows, but the user's dashboard evidence showed the count had been 15 since around April 10 and the appended rows were stale-cache observations.
+
+### Preventive rule
+When debugging audience history drift, first prove freshness from the same run's source refresh evidence before treating appended history rows as current observations.
+
+### Trigger signal to catch it earlier
+A nightly history row repeats the same public-cache count while enrichment logs show blocked refreshes, stale-cache fallback, or HTTP failures for the same platform.
+
+## lesson-verify-ci-runner-before-freshness-claim | 2026-05-16 09:33 CDT
+### What went wrong
+I verified Substack audience capture locally and inferred the next nightly CI run would append a fresh row, but GitHub's Ubuntu runner still missed the subscriber count and the workflow remained green while skipping Substack.
+
+### Preventive rule
+When audience freshness depends on browser-rendered capture, verify or inspect the CI-runner artifact path before declaring a durable fix; local browser success is not enough.
+
+### Trigger signal to catch it earlier
+The affected platform renders counts differently by environment, and the workflow uses best-effort capture flags that can commit other platforms while skipping the failed one.
+
+## lesson-vcard-apple-contacts-structured-name | 2026-05-18 22:39 CDT
+### What went wrong
+I treated `FN` as sufficient for a person vCard with organization affiliation, but Apple Contacts displayed the `ORG` value as the primary contact name when the card lacked a structured `N` field.
+
+### Preventive rule
+When generating person vCards for address book imports, emit both `FN` and structured `N` fields; keep `ORG` as affiliation metadata, not the only name-bearing structured field.
+
+### Trigger signal to catch it earlier
+A vCard includes `ORG`, `TITLE`, or `ROLE` for a person but has no `N:` line, especially when testing against Apple Contacts or other native address book apps.
