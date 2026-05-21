@@ -5,6 +5,38 @@
     "preset": "default"
   },
   "description": "Host of Bitcoin Nova Podcast | X Community Leader",
+  "sharing": {
+    "vcard": {
+      "enabled": true,
+      "filename": "staci-costopoulos.vcf",
+      "fields": {
+        "email": "TheBitcoinNova@gmail.com",
+        "organization": "The Bitcoin Nova",
+        "title": "Host of Bitcoin Nova Podcast",
+        "role": "Bitcoin educator, podcast host, and community builder",
+        "note": "X Community Leader"
+      },
+      "include": {
+        "photo": true,
+        "profileUrl": true,
+        "linkIds": ["the-bitcoin-nova", "youtube", "x", "the-bitcoin-nova-x"],
+        "customUrls": [
+          {
+            "label": "Spotify",
+            "url": "https://open.spotify.com/show/TheBitcoinNova"
+          },
+          {
+            "label": "TikTok",
+            "url": "https://tiktok.com/@bitcoinnova"
+          },
+          {
+            "label": "Apple Podcasts",
+            "url": "https://podcasts.apple.com/us/podcast/the-bitcoin-nova-podcast/id1800522855"
+          }
+        ]
+      }
+    }
+  },
   "quality": {
     "seo": {
       "canonicalBaseUrl": "https://links.thebitcoinnova.com/",
