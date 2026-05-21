@@ -6,6 +6,7 @@ import addFormats from "ajv-formats";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 
 export const DEFAULT_REMOTE_CACHE_POLICY_PATH = "data/policy/remote-cache-policy.json";
+export const DEFAULT_REMOTE_CACHE_POLICY_LOCAL_PATH = "data/policy/remote-cache-policy.local.json";
 export const DEFAULT_REMOTE_CACHE_POLICY_SCHEMA_PATH = "schema/remote-cache-policy.schema.json";
 
 export const REMOTE_CACHE_PIPELINES = [
@@ -63,6 +64,16 @@ const readJsonFileOrThrow = (relativePath: string): unknown => {
   }
 };
 
+const maybeReadJsonFile = (relativePath: string): unknown | undefined => {
+  const absolute = absolutePath(relativePath);
+
+  if (!fs.existsSync(absolute)) {
+    return undefined;
+  }
+
+  return readJsonFileOrThrow(relativePath);
+};
+
 const normalizePath = (instancePath: string): string => {
   if (!instancePath || instancePath === "/") {
     return "$";
@@ -108,31 +119,117 @@ const normalizeRegistry = (registry: RemoteCachePolicyRegistry): RemoteCachePoli
     .sort((left, right) => left.id.localeCompare(right.id)),
 });
 
+const arraysEqual = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((value, index) => value === right[index]);
+
+const newestUpdatedAt = (left: string, right: string): string =>
+  Date.parse(right) > Date.parse(left) ? right : left;
+
+const mergeRuleOrThrow = (input: {
+  baseRule: RemoteCachePolicyRule;
+  localRule: RemoteCachePolicyRule;
+  localPolicyPath: string;
+}): RemoteCachePolicyRule => {
+  if (
+    !arraysEqual(input.baseRule.pipelines, input.localRule.pipelines) ||
+    input.baseRule.matchSubdomains !== input.localRule.matchSubdomains ||
+    input.baseRule.checkMode !== input.localRule.checkMode
+  ) {
+    throw new Error(
+      [
+        `Invalid local remote cache policy overlay at ${input.localPolicyPath}.`,
+        `Rule '${input.localRule.id}' must keep the same pipelines, matchSubdomains, and checkMode as the shared rule before it can extend domains or docs.`,
+      ].join(" "),
+    );
+  }
+
+  return normalizeRule({
+    ...input.baseRule,
+    domains: [...input.baseRule.domains, ...input.localRule.domains],
+    docs: [...input.baseRule.docs, ...input.localRule.docs],
+  });
+};
+
+const mergeRegistriesOrThrow = (input: {
+  baseRegistry: RemoteCachePolicyRegistry;
+  localPolicyPath: string;
+  localRegistry: RemoteCachePolicyRegistry;
+}): RemoteCachePolicyRegistry => {
+  const rulesById = new Map(input.baseRegistry.rules.map((rule) => [rule.id, rule]));
+
+  for (const localRule of input.localRegistry.rules) {
+    const maybeBaseRule = rulesById.get(localRule.id);
+    if (!maybeBaseRule) {
+      rulesById.set(localRule.id, localRule);
+      continue;
+    }
+
+    rulesById.set(
+      localRule.id,
+      mergeRuleOrThrow({
+        baseRule: maybeBaseRule,
+        localPolicyPath: input.localPolicyPath,
+        localRule,
+      }),
+    );
+  }
+
+  return normalizeRegistry({
+    ...input.baseRegistry,
+    updatedAt: newestUpdatedAt(input.baseRegistry.updatedAt, input.localRegistry.updatedAt),
+    rules: [...rulesById.values()],
+  });
+};
+
 export const loadRemoteCachePolicyRegistry = (options?: {
+  maybeLocalPolicyPath?: string;
   policyPath?: string;
   schemaPath?: string;
 }): RemoteCachePolicyRegistry => {
   const policyPath = options?.policyPath ?? DEFAULT_REMOTE_CACHE_POLICY_PATH;
+  const localPolicyPath = options?.maybeLocalPolicyPath ?? DEFAULT_REMOTE_CACHE_POLICY_LOCAL_PATH;
   const schemaPath = options?.schemaPath ?? DEFAULT_REMOTE_CACHE_POLICY_SCHEMA_PATH;
   const schema = readJsonFileOrThrow(schemaPath) as AnySchema;
   const registry = readJsonFileOrThrow(policyPath);
+  const maybeLocalRegistry = maybeReadJsonFile(localPolicyPath);
 
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
 
-  const validate = ajv.compile(schema);
-  const valid = validate(registry);
+  const validateRegistry = ajv.compile(schema);
+  const valid = validateRegistry(registry);
   if (!valid) {
     throw new Error(
       [
         `Invalid remote cache policy registry at ${policyPath}.`,
         "Schema validation errors:",
-        formatSchemaErrors(validate.errors),
+        formatSchemaErrors(validateRegistry.errors),
       ].join("\n"),
     );
   }
 
-  return normalizeRegistry(registry as RemoteCachePolicyRegistry);
+  const baseRegistry = normalizeRegistry(registry as RemoteCachePolicyRegistry);
+  if (maybeLocalRegistry === undefined) {
+    return baseRegistry;
+  }
+
+  const validateLocalRegistry = ajv.compile(schema);
+  const localValid = validateLocalRegistry(maybeLocalRegistry);
+  if (!localValid) {
+    throw new Error(
+      [
+        `Invalid local remote cache policy overlay at ${localPolicyPath}.`,
+        "Schema validation errors:",
+        formatSchemaErrors(validateLocalRegistry.errors),
+      ].join("\n"),
+    );
+  }
+
+  return mergeRegistriesOrThrow({
+    baseRegistry,
+    localPolicyPath,
+    localRegistry: normalizeRegistry(maybeLocalRegistry as RemoteCachePolicyRegistry),
+  });
 };
 
 export const resolveRemoteCachePolicyHostname = (url: string): string => {
@@ -205,7 +302,7 @@ export const resolveRequiredRemoteCachePolicyRule = (input: {
       `Remote cache policy coverage is required for pipeline '${input.pipeline}'.`,
       `No rule matched URL '${input.url}'.`,
       `Resolved host: '${host ?? "unparseable"}'.`,
-      `Add a matching rule to ${DEFAULT_REMOTE_CACHE_POLICY_PATH} before running this cache-backed fetch.`,
+      `Add a matching shared rule to ${DEFAULT_REMOTE_CACHE_POLICY_PATH}, or a fork-only rule to ${DEFAULT_REMOTE_CACHE_POLICY_LOCAL_PATH}, before running this cache-backed fetch.`,
     ].join(" "),
   );
 };

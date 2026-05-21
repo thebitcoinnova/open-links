@@ -1,9 +1,12 @@
 {
   "exactPaths": [
+    ".codex/tasks/lessons.md",
+    ".codex/tasks/todo.md",
     "config/deployment.json",
     "data/profile.json",
     "data/links.json",
     "data/site.json",
+    "data/policy/remote-cache-policy.local.json",
     "data/policy/referral-catalog.local.json",
     "data/cache/content-images.json",
     "data/cache/content-images.runtime.json",
@@ -16,6 +19,8 @@
     "data/generated/rich-enrichment-report.json",
     "data/generated/quality-report.json",
     "data/generated/quality-report.md",
+    "docs/assets/openlinks-preview-mobile.png",
+    "docs/assets/openlinks-preview-tablet.png",
     "docs/assets/openlinks-preview.png",
     "public/badges/openlinks.svg",
     "public/cache/profile-avatar/profile-avatar.jpg",

@@ -10,6 +10,9 @@ describe("fork-owned path helpers", () => {
     expect(isForkOwnedPath("data/profile.json")).toBe(true);
     expect(isForkOwnedPath("public/cache/content-images/example.png")).toBe(true);
     expect(isForkOwnedPath("docs/assets/openlinks-preview.png")).toBe(true);
+    expect(isForkOwnedPath(".codex/tasks/lessons.md")).toBe(true);
+    expect(isForkOwnedPath(".codex/tasks/todo.md")).toBe(true);
+    expect(isForkOwnedPath("data/policy/remote-cache-policy.local.json")).toBe(true);
   });
 
   test("leaves shared source and docs files outside the fork-owned contract", () => {
@@ -34,6 +37,9 @@ describe("fork-owned path helpers", () => {
   test("exposes the tracked contract for docs and service code", () => {
     const config = getForkOwnedPathConfig();
     expect(config.exactPaths).toContain("data/profile.json");
+    expect(config.exactPaths).toContain(".codex/tasks/lessons.md");
+    expect(config.exactPaths).toContain(".codex/tasks/todo.md");
+    expect(config.exactPaths).toContain("data/policy/remote-cache-policy.local.json");
     expect(config.directoryPrefixes).toContain("public/cache/content-images/");
   });
 });

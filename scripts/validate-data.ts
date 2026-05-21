@@ -58,6 +58,7 @@ import type {
   EnrichmentRunSummary,
 } from "./enrichment/types";
 import {
+  DEFAULT_REMOTE_CACHE_POLICY_LOCAL_PATH,
   DEFAULT_REMOTE_CACHE_POLICY_PATH,
   loadRemoteCachePolicyRegistry,
   resolveRemoteCachePolicyRule,
@@ -105,6 +106,7 @@ const HOOK_RICH_ARTIFACT_TRIGGER_EXACT_PATHS = new Set([
   "data/cache/content-images.runtime.json",
   "data/cache/profile-avatar.json",
   "data/cache/profile-avatar.runtime.json",
+  DEFAULT_REMOTE_CACHE_POLICY_LOCAL_PATH,
   "data/policy/remote-cache-policy.json",
   "data/generated/rich-enrichment-report.json",
   "schema/links.schema.json",
@@ -1179,8 +1181,7 @@ const remoteCachePolicyCoverageIssues = (input: {
         source: DEFAULT_REMOTE_CACHE_POLICY_PATH,
         path: "$",
         message: `Failed to load remote cache policy registry. ${message}`,
-        remediation:
-          "Restore data/policy/remote-cache-policy.json, ensure it validates against schema/remote-cache-policy.schema.json, then rerun validation.",
+        remediation: `Restore ${DEFAULT_REMOTE_CACHE_POLICY_PATH}, ensure any optional ${DEFAULT_REMOTE_CACHE_POLICY_LOCAL_PATH} overlay validates against schema/remote-cache-policy.schema.json, then rerun validation.`,
       },
     ];
   }
@@ -1221,7 +1222,7 @@ const remoteCachePolicyCoverageIssues = (input: {
       source,
       path: fieldPath,
       message: `Remote cache policy coverage is missing for pipeline '${pipeline}' and URL '${canonicalUrl}'.`,
-      remediation: `Add a matching rule to ${DEFAULT_REMOTE_CACHE_POLICY_PATH} for host '${
+      remediation: `Add a matching shared rule to ${DEFAULT_REMOTE_CACHE_POLICY_PATH}, or a fork-only rule to ${DEFAULT_REMOTE_CACHE_POLICY_LOCAL_PATH}, for host '${
         new URL(canonicalUrl).hostname
       }', then rerun validation/build.`,
     });

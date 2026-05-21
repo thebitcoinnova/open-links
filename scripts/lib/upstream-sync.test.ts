@@ -11,6 +11,23 @@ const writeText = (absolutePath: string, content: string) => {
   fs.writeFileSync(absolutePath, content, "utf8");
 };
 
+const remoteCachePolicyOverlay = (ruleId: string, domain: string): string =>
+  `${JSON.stringify({
+    version: 1,
+    updatedAt: "2026-03-15T00:00:00Z",
+    rules: [
+      {
+        id: ruleId,
+        pipelines: ["content_images"],
+        domains: [domain],
+        matchSubdomains: true,
+        checkMode: "head_then_get",
+        summary: `${ruleId} host.`,
+        docs: ["data/policy/remote-cache-policy.local.json"],
+      },
+    ],
+  })}\n`;
+
 const git = (cwd: string, args: string[], allowFailure = false) =>
   runCommand("git", args, { allowFailure, cwd });
 
@@ -145,6 +162,71 @@ test("runUpstreamSync preserves fork-local referral catalog overlays during conf
       overlay,
       '{ "families": [{ "familyId": "fork-offer" }], "offers": [], "matchers": [] }\n',
     );
+    assert.deepEqual(result.sharedConflicts, []);
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync preserves fork-local remote cache policy overlays during conflicts", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    writeText(
+      path.join(workspace.forkRepo, "data/policy/remote-cache-policy.local.json"),
+      remoteCachePolicyOverlay("fork-host", "fork.example"),
+    );
+    commitAll(workspace.forkRepo, "fork remote cache policy overlay update");
+
+    writeText(
+      path.join(workspace.upstreamWorktree, "data/policy/remote-cache-policy.local.json"),
+      remoteCachePolicyOverlay("upstream-host", "upstream.example"),
+    );
+    commitAll(workspace.upstreamWorktree, "upstream remote cache policy overlay update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+    const overlay = fs.readFileSync(
+      path.join(workspace.forkRepo, "data/policy/remote-cache-policy.local.json"),
+      "utf8",
+    );
+
+    assert.equal(result.status, "merged");
+    assert.equal(result.mergeCommitCreated, true);
+    assert.match(overlay, /fork-host/u);
+    assert.doesNotMatch(overlay, /upstream-host/u);
+    assert.deepEqual(result.sharedConflicts, []);
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync preserves fork-local lessons during conflicts", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    writeText(
+      path.join(workspace.forkRepo, ".codex/tasks/lessons.md"),
+      "# Lessons\n\n## fork-lesson\n",
+    );
+    commitAll(workspace.forkRepo, "fork lessons update");
+
+    writeText(
+      path.join(workspace.upstreamWorktree, ".codex/tasks/lessons.md"),
+      "# Lessons\n\n## upstream-lesson\n",
+    );
+    commitAll(workspace.upstreamWorktree, "upstream lessons update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+    const lessons = fs.readFileSync(
+      path.join(workspace.forkRepo, ".codex/tasks/lessons.md"),
+      "utf8",
+    );
+
+    assert.equal(result.status, "merged");
+    assert.equal(result.mergeCommitCreated, true);
+    assert.equal(lessons, "# Lessons\n\n## fork-lesson\n");
     assert.deepEqual(result.sharedConflicts, []);
   } finally {
     workspace.cleanup();
