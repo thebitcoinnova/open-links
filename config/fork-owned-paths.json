@@ -1,9 +1,12 @@
 {
   "exactPaths": [
+    ".codex/tasks/lessons.md",
+    ".codex/tasks/todo.md",
     "config/deployment.json",
     "data/profile.json",
     "data/links.json",
     "data/site.json",
+    "data/policy/remote-cache-policy.local.json",
     "data/policy/referral-catalog.local.json",
     "data/cache/content-images.json",
     "data/cache/content-images.runtime.json",

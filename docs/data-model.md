@@ -81,7 +81,7 @@ the site, including a person or an organization.
   - cached local avatar is reused when available, or
   - fallback file `public/profile-avatar-fallback.svg` is used.
 - Force refresh is available via `bun run avatar:sync -- --force` or `OPENLINKS_AVATAR_FORCE=1`.
-- All cache-backed remote fetches are governed by `data/policy/remote-cache-policy.json`; adding a new remote host without policy coverage is a validation error.
+- All cache-backed remote fetches are governed by `data/policy/remote-cache-policy.json` plus optional fork-owned additions in `data/policy/remote-cache-policy.local.json`; adding a new remote host without shared or local policy coverage is a validation error.
 
 ### Common optional fields
 
