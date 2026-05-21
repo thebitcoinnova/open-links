@@ -65,7 +65,9 @@ fork-local workaround.
 
 This upstream-default path may include:
 
-- `data/policy/remote-cache-policy.json` coverage and other public-path fixes
+- shared `data/policy/remote-cache-policy.json` coverage, fork-only
+  `data/policy/remote-cache-policy.local.json` coverage, and other public-path
+  fixes
 - `public_direct` or `public_augmented` metadata parsing/normalization work
 - blocker registry/docs updates
 - authenticated extractor authoring when public-first triage selects
@@ -281,7 +283,9 @@ Execute in this exact order:
    - `bun run enrich:rich:strict`
    - for new or changed Instagram, Medium, X, Primal, or YouTube profile links that should publish analytics, run `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for each affected link before `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`; Instagram metadata can lag the browser-rendered public counts, and X oEmbed enrichment alone does not expose follower counts
    - when public audience metrics are refreshed, run `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json` and keep follower-history CSV/index artifacts aligned by link id, not just platform; public-cache rows are skipped when the same-run public sync did not successfully capture fresh audience data
-   - ensure any newly introduced remote fetch domains are covered by `data/policy/remote-cache-policy.json`
+   - ensure any newly introduced remote fetch domains are covered by shared
+     `data/policy/remote-cache-policy.json` rules or fork-only
+     `data/policy/remote-cache-policy.local.json` overlay rules
    - `bun run images:sync`
    - `bun run validate:data`
    - `bun run build`

@@ -117,6 +117,7 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   const avatarTrigger = "scripts/sync-profile-avatar.ts";
   const socialPreviewTrigger = "scripts/generate-site-social-preview.ts";
   const policyTrigger = "data/policy/remote-cache-policy.json";
+  const localPolicyTrigger = "data/policy/remote-cache-policy.local.json";
   const nonMatch = "scripts/quality/perf.ts";
 
   // Act
@@ -127,6 +128,7 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   const avatarTriggered = pathTouchesHookRichArtifactInputs(avatarTrigger);
   const socialPreviewTriggered = pathTouchesHookRichArtifactInputs(socialPreviewTrigger);
   const policyTriggered = pathTouchesHookRichArtifactInputs(policyTrigger);
+  const localPolicyTriggered = pathTouchesHookRichArtifactInputs(localPolicyTrigger);
   const unrelatedTriggered = pathTouchesHookRichArtifactInputs(nonMatch);
 
   // Assert
@@ -137,6 +139,7 @@ test("rich-artifact trigger matcher covers exact and prefix-based hook paths", (
   assert.equal(avatarTriggered, true);
   assert.equal(socialPreviewTriggered, true);
   assert.equal(policyTriggered, true);
+  assert.equal(localPolicyTriggered, true);
   assert.equal(unrelatedTriggered, false);
 });
 

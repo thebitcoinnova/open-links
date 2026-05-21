@@ -75,7 +75,7 @@ When you want to pull new upstream changes into your fork later, use:
 bun run sync:upstream
 ```
 
-This command is for forks and downstream repos, not the canonical `pRizz/open-links` repo. `upstream` must point at a different repository than `origin`. It syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Shared-file conflicts still require manual resolution.
+This command is for forks and downstream repos, not the canonical `pRizz/open-links` repo. `upstream` must point at a different repository than `origin`. It syncs from `upstream/main` and preserves fork-owned personalized paths only when every overlap is covered by `config/fork-owned-paths.json`. Fork-owned operational state such as `.codex/tasks/*.md` and `data/policy/*.local.json` is preserved with the fork. Shared-file conflicts still require manual resolution.
 
 When the sync stops on conflicts, the local CLI now reports `Shared conflicts:` and `Fork-owned conflicts:` separately. Only the shared list is the manual blocker; the fork-owned list is reported so you can see what the preservation helper already recognized.
 
@@ -235,7 +235,7 @@ bun run build
 bun run preview
 ```
 
-`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo. Cache-backed fetches across avatar/image/public/authenticated pipelines are governed by `data/policy/remote-cache-policy.json`; add new domains there whenever a change introduces a new remote host. If a public-augmentation rich link picks up new generated metadata and should stay deployable from a fresh CI runner, run `bun run enrich:rich:strict:write-cache` before commit so cold-run deploys can fall back to committed public cache when the remote source is transiently unavailable.
+`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo. Cache-backed fetches across avatar/image/public/authenticated pipelines are governed by `data/policy/remote-cache-policy.json` plus optional fork-only additions in `data/policy/remote-cache-policy.local.json`; add shared domains to the shared registry and fork-only domains to the local overlay whenever a change introduces a new remote host. If a public-augmentation rich link picks up new generated metadata and should stay deployable from a fresh CI runner, run `bun run enrich:rich:strict:write-cache` before commit so cold-run deploys can fall back to committed public cache when the remote source is transiently unavailable.
 
 ## First Production Deploy
 

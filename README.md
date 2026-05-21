@@ -238,7 +238,7 @@ To sync new upstream code/docs/tooling into your fork while preserving fork-owne
 bun run sync:upstream
 ```
 
-`bun run sync:upstream` is for forks and downstream repos only. `upstream` must point at a different repository than `origin`, typically `pRizz/open-links` for a fork. It fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Shared-file conflicts still stop for manual resolution. The scheduled `Upstream Sync` GitHub workflow should not run in the canonical `pRizz/open-links` repo itself.
+`bun run sync:upstream` is for forks and downstream repos only. `upstream` must point at a different repository than `origin`, typically `pRizz/open-links` for a fork. It fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Fork-owned operational state such as `.codex/tasks/*.md` and `data/policy/*.local.json` stays with the fork. Shared-file conflicts still stop for manual resolution. The scheduled `Upstream Sync` GitHub workflow should not run in the canonical `pRizz/open-links` repo itself.
 
 If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
 
@@ -426,7 +426,7 @@ Live build provenance surfaces:
 - `bun run linkedin:debug:validate` - LinkedIn authenticated metadata debug validator.
 - `bun run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
 - `bun run images:sync` - fetch rich-card/SEO remote images into the committed cache at `public/cache/content-images/`, write the stable manifest `data/cache/content-images.json`, and refresh the gitignored runtime overlay `data/cache/content-images.runtime.json`.
-- Cache-backed fetches are governed by the committed per-domain registry `data/policy/remote-cache-policy.json`. New remote hosts must be added there in the same change batch as link/extractor updates.
+- Cache-backed fetches are governed by the committed per-domain registry `data/policy/remote-cache-policy.json`, plus optional fork-owned additions in `data/policy/remote-cache-policy.local.json`. Add shared hosts to the shared registry and fork-only hosts to the local overlay in the same change batch as link/extractor updates.
 - `bun run dev` - start local dev server (predev runs strict enrichment in read-only public-cache mode and fails on blocking enrichment policy issues).
 - `bun run validate:data` - schema + policy checks (standard mode).
 - `bun run validate:data:strict` - fails on warnings and errors.
