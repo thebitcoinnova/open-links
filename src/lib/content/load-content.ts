@@ -56,6 +56,7 @@ export type DesktopColumnsMode = "one" | "two";
 export type TypographyScaleMode = "fixed" | "compact" | "expressive";
 export type ProfileHeaderAlignment = "leading" | "center";
 export type TypographyTransformMode = "none" | "uppercase" | "lowercase" | "capitalize";
+export type CardStyleMode = "standard" | "glassy";
 export type BrandIconColorMode = "brand" | "theme";
 export type BrandIconContrastMode = "auto" | "always-theme" | "always-brand";
 export type BrandIconSizeMode = "normal" | "large";
@@ -351,6 +352,7 @@ export interface SiteData {
     typographyScale?: TypographyScaleMode;
     typography?: TypographyConfig;
     targetSize?: TargetSizeMode;
+    cardStyle?: CardStyleMode;
     profileAvatarScale?: number;
     profileHeaderAlignment?: ProfileHeaderAlignment | ProfileHeaderAlignmentConfig;
     brandIcons?: {

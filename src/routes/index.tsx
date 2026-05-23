@@ -719,7 +719,7 @@ export default function RouteIndex() {
   return (
     <main
       aria-label={`OpenLinks ${resolveEntityPageLabel(content.profile.entityType).toLowerCase()} and links`}
-      class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
+      class={`page composition-${composition.mode} profile-${composition.profileEmphasis} layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize} card-style-${layout.cardStyle}`}
       style={
         { "--profile-avatar-scale": String(layout.profileAvatarScale) } as Record<string, string>
       }

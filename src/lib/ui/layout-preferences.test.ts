@@ -20,12 +20,45 @@ test("resolveLayoutPreferences uses the larger default profile avatar scale when
   const resolved = resolveLayoutPreferences(site);
 
   // Assert
+  assert.equal(resolved.cardStyle, "standard");
   assert.equal(resolved.profileAvatarScale, 1.7);
   assert.equal(resolved.typographyScale, "fixed");
   assert.deepEqual(resolved.profileHeaderAlignment, {
     default: "leading",
     small: "center",
   });
+});
+
+test("resolveLayoutPreferences preserves the explicit glassy card style", () => {
+  // Arrange
+  const site = {
+    ...baseSite,
+    ui: {
+      cardStyle: "glassy",
+    },
+  } as const satisfies SiteData;
+
+  // Act
+  const resolved = resolveLayoutPreferences(site);
+
+  // Assert
+  assert.equal(resolved.cardStyle, "glassy");
+});
+
+test("resolveLayoutPreferences falls back to standard for invalid card styles", () => {
+  // Arrange
+  const site = {
+    ...baseSite,
+    ui: {
+      cardStyle: "mirror-shine",
+    },
+  } as unknown as SiteData;
+
+  // Act
+  const resolved = resolveLayoutPreferences(site);
+
+  // Assert
+  assert.equal(resolved.cardStyle, "standard");
 });
 
 test("resolveLayoutPreferences preserves an explicit profile avatar scale override", () => {

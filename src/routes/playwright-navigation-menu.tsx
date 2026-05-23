@@ -105,7 +105,7 @@ const PlaywrightNavigationMenuRoute = () => {
   return (
     <main
       aria-label="Navigation menu Playwright fixtures"
-      class={`page layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
+      class={`page layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize} card-style-${layout.cardStyle}`}
       style={pageStyle}
     >
       <section style={headerStyle}>
