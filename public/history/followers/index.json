@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-22T10:20:39.410Z",
+  "updatedAt": "2026-05-23T09:00:27.351Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -10,9 +10,9 @@
       "canonicalUrl": "https://www.youtube.com/@HiveMinded21",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
-      "latestAudienceCount": 294,
-      "latestAudienceCountRaw": "294 subscribers",
-      "latestObservedAt": "2026-05-22T10:20:39.410Z"
+      "latestAudienceCount": 301,
+      "latestAudienceCountRaw": "301 subscribers",
+      "latestObservedAt": "2026-05-23T09:00:27.351Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-05-22T10:20:39.410Z"
+      "latestObservedAt": "2026-05-23T09:00:27.351Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
       "latestAudienceCount": 498,
       "latestAudienceCountRaw": "498 Followers",
-      "latestObservedAt": "2026-05-22T10:20:39.410Z"
+      "latestObservedAt": "2026-05-23T09:00:27.351Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/StaciNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5681,
-      "latestAudienceCountRaw": "5,681 Followers",
-      "latestObservedAt": "2026-05-22T10:20:39.410Z"
+      "latestAudienceCount": 5690,
+      "latestAudienceCountRaw": "5,690 Followers",
+      "latestObservedAt": "2026-05-23T09:00:27.351Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 13500,
       "latestAudienceCountRaw": "13.5K subscribers",
-      "latestObservedAt": "2026-05-22T10:20:39.410Z"
+      "latestObservedAt": "2026-05-23T09:00:27.351Z"
     }
   ]
 }
