@@ -1199,7 +1199,7 @@ Example:
 {
   "ui": {
     "footer": {
-      "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
+      "description": "OpenLinks is a personal, free, open source links site. It stores no cookies, and we will never serve ads. Welcome to the new Open Web, where privacy and freedom reign.",
       "ctaLabel": "Create Your OpenLinks",
       "prompt": {
         "enabled": true,
