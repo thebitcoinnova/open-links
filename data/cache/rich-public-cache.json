@@ -49,7 +49,7 @@
         "followingCount": 101,
         "followingCountRaw": "101 following"
       },
-      "etag": "W/\"9a0c81abd2030c6f9658789a613df31e\""
+      "etag": "W/\"984f4049c72abc9e80aa877d44cf406a\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -72,9 +72,13 @@
       "linkId": "lemonade-referral",
       "sourceUrl": "https://lemonade.com/r/peterryszkiewicz",
       "capturedAt": "2026-04-05T07:24:09.372Z",
-      "updatedAt": "2026-05-24T07:55:12.635Z",
+      "updatedAt": "2026-05-24T14:23:20.339Z",
       "metadata": {
-        "title": "Lemonade",
+        "title": "Lemonade Insurance | Home, Car, Pet, and Life Coverage",
+        "description": "Lemonade offers renters and home insurance powered by tech and driven by social good. ❤ We promise zero paperwork and instant everything by replacing brokers and bureaucracy with bots and machine learning. Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+        "image": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "ogImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "twitterImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
         "sourceLabel": "lemonade.com"
       }
     },
@@ -177,7 +181,7 @@
         "followingCount": 773,
         "followingCountRaw": "773 Following"
       },
-      "lastModified": "Sun, 24 May 2026 07:55:13 GMT"
+      "lastModified": "Sun, 24 May 2026 14:23:20 GMT"
     },
     "youtube": {
       "linkId": "youtube",
