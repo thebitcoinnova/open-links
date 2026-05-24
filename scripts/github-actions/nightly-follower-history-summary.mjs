@@ -92,6 +92,19 @@ if (publicRichSyncSummary) {
   lines.push(`- Public audience sync failures: \`${publicRichSyncSummary.failed}\``);
   lines.push(`- Fatal profile-unavailable failures: \`${publicRichSyncSummary.fatalFailed ?? 0}\``);
 
+  const retriedEntries = publicRichSyncSummary.entries.filter((entry) => entry.attempts > 1);
+  if (retriedEntries.length > 0) {
+    lines.push(`- Public audience links retried: \`${retriedEntries.length}\``);
+    lines.push("");
+    lines.push("| Retried link | Status | Reason | Attempts | Artifact | Detail |");
+    lines.push("| --- | --- | --- | --- | --- | --- |");
+    for (const entry of retriedEntries) {
+      lines.push(
+        `| \`${entry.linkId}\` | \`${entry.status}\` | \`${entry.reason}\` | \`${entry.attempts}\` | \`${entry.artifactPath ?? "n/a"}\` | ${escapeTableCell(entry.detail)} |`,
+      );
+    }
+  }
+
   const failedEntries = publicRichSyncSummary.entries.filter((entry) => entry.status === "failed");
   if (failedEntries.length > 0) {
     const fatalEntries = failedEntries.filter((entry) => entry.fatal === true);
@@ -106,11 +119,13 @@ if (publicRichSyncSummary) {
     }
     lines.push("");
     lines.push("");
-    lines.push("| Public audience link | Reason | Fatal | Artifact | Latest history | Detail |");
-    lines.push("| --- | --- | --- | --- | --- | --- |");
+    lines.push(
+      "| Public audience link | Reason | Fatal | Attempts | Artifact | Latest history | Detail |",
+    );
+    lines.push("| --- | --- | --- | --- | --- | --- | --- |");
     for (const entry of failedEntries) {
       lines.push(
-        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.fatal === true ? "yes" : "no"}\` | \`${entry.artifactPath ?? "n/a"}\` | \`${latestHistoryTimestampForLink(entry.linkId)}\` | ${escapeTableCell(entry.detail)} |`,
+        `| \`${entry.linkId}\` | \`${entry.reason}\` | \`${entry.fatal === true ? "yes" : "no"}\` | \`${entry.attempts ?? 1}\` | \`${entry.artifactPath ?? "n/a"}\` | \`${latestHistoryTimestampForLink(entry.linkId)}\` | ${escapeTableCell(entry.detail)} |`,
       );
     }
   }

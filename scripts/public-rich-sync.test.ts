@@ -309,6 +309,343 @@ const captureSuccess = (
   },
 });
 
+const captureFailure = (
+  error: string,
+  metrics: Partial<PublicBrowserAudienceCaptureResult["metrics"]>,
+  artifactPath = "output/playwright/public-rich-sync/capture-failed.json",
+): PublicBrowserAudienceCaptureResult => ({
+  ok: false,
+  artifactPath,
+  metrics: {
+    placeholderSignals: [],
+    ...metrics,
+  },
+  error,
+});
+
+test("retries nonfatal browser capture failures with the default delayed retry budget", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.medium = createMediumBaseEntry(
+    "medium",
+    "2026-03-08T13:00:00.000Z",
+    "https://medium.com/feed/@peterryszkiewicz",
+  );
+  const retryDelays: number[] = [];
+  let captureCalls = 0;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "medium",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [mediumLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        if (captureCalls === 1) {
+          return captureFailure(
+            "Medium public browser capture saw placeholder content: cloudflare_challenge.",
+            { placeholderSignals: ["cloudflare_challenge"] },
+            "output/playwright/public-rich-sync/medium-first.json",
+          );
+        }
+
+        return captureSuccess(
+          {
+            followersCount: 3300,
+            followersCountRaw: "3.3K followers",
+          },
+          "output/playwright/public-rich-sync/medium-second.json",
+        );
+      },
+      nowIso: () => "2026-05-24T09:15:00.000Z",
+      log: () => {},
+      sleep: async (milliseconds) => {
+        retryDelays.push(milliseconds);
+      },
+    },
+  );
+
+  // Assert
+  assert.equal(captureCalls, 2);
+  assert.deepEqual(retryDelays, [120000]);
+  assert.equal(result.failed, 0);
+  assert.equal(result.processed, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "medium",
+      status: "synced",
+      reason: "counts_refreshed",
+      artifactPath: "output/playwright/public-rich-sync/medium-second.json",
+      attempts: 2,
+    },
+  ]);
+});
+
+test("retries nonfatal bootstrap sync errors before capturing audience metrics", async () => {
+  // Arrange
+  let bootstrapCalls = 0;
+  let captureCalls = 0;
+  const retryDelays: number[] = [];
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => emptyRegistry(),
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        if (bootstrapCalls === 1) {
+          throw new Error(
+            "Instagram public augmentation captured placeholder content: login_wall.",
+          );
+        }
+
+        return createInstagramBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        return captureSuccess(
+          {
+            followersCount: 104,
+            followersCountRaw: "104 Followers",
+            followingCount: 211,
+            followingCountRaw: "211 Following",
+          },
+          "output/playwright/public-rich-sync/instagram-second.json",
+        );
+      },
+      nowIso: () => "2026-05-24T09:16:00.000Z",
+      log: () => {},
+      sleep: async (milliseconds) => {
+        retryDelays.push(milliseconds);
+      },
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 2);
+  assert.equal(captureCalls, 1);
+  assert.deepEqual(retryDelays, [120000]);
+  assert.equal(result.failed, 0);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "synced",
+      reason: "bootstrapped_and_refreshed",
+      artifactPath: "output/playwright/public-rich-sync/instagram-second.json",
+      attempts: 2,
+    },
+  ]);
+});
+
+test("records one final failure after default nonfatal capture retries are exhausted", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.substack = createSubstackBaseEntry(
+    "substack",
+    "2026-05-12T12:00:00.000Z",
+    "https://substack.com/@peterryszkiewicz",
+  );
+  const retryDelays: number[] = [];
+  let captureCalls = 0;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "substack",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [substackLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        return captureFailure(
+          "Substack public browser capture did not find a subscriber count.",
+          { placeholderSignals: [] },
+          `output/playwright/public-rich-sync/substack-${captureCalls}.json`,
+        );
+      },
+      nowIso: () => "2026-05-24T09:17:00.000Z",
+      log: () => {},
+      sleep: async (milliseconds) => {
+        retryDelays.push(milliseconds);
+      },
+    },
+  );
+
+  // Assert
+  assert.equal(captureCalls, 3);
+  assert.deepEqual(retryDelays, [120000, 120000]);
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 0);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "substack",
+      status: "failed",
+      reason: "subscribers_missing",
+      artifactPath: "output/playwright/public-rich-sync/substack-3.json",
+      detail: "Substack public browser capture did not find a subscriber count.",
+      attempts: 3,
+    },
+  ]);
+});
+
+test("does not retry fatal profile-unavailable capture failures", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.instagram = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-12T03:00:00.000Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+  let captureCalls = 0;
+  const retryDelays: number[] = [];
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        return captureFailure(
+          "Instagram public browser capture saw placeholder content: not_found.",
+          { placeholderSignals: ["not_found"] },
+          "output/playwright/public-rich-sync/instagram-not-found.json",
+        );
+      },
+      nowIso: () => "2026-05-24T09:18:00.000Z",
+      log: () => {},
+      sleep: async (milliseconds) => {
+        retryDelays.push(milliseconds);
+      },
+    },
+  );
+
+  // Assert
+  assert.equal(captureCalls, 1);
+  assert.deepEqual(retryDelays, []);
+  assert.equal(result.failed, 1);
+  assert.equal(result.fatalFailed, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "failed",
+      reason: "profile_unavailable",
+      artifactPath: "output/playwright/public-rich-sync/instagram-not-found.json",
+      detail:
+        "Instagram public browser capture saw fatal profile-unavailable placeholder content: not_found.",
+      fatal: true,
+    },
+  ]);
+});
+
+test("captureRetries zero disables retry attempts", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  registry.entries.medium = createMediumBaseEntry(
+    "medium",
+    "2026-03-08T13:00:00.000Z",
+    "https://medium.com/feed/@peterryszkiewicz",
+  );
+  let captureCalls = 0;
+  const retryDelays: number[] = [];
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "medium",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+      captureRetries: 0,
+    },
+    {
+      readLinks: () => ({ links: [mediumLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async () => {
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        return captureFailure(
+          "Medium public browser capture saw placeholder content: cloudflare_challenge.",
+          { placeholderSignals: ["cloudflare_challenge"] },
+          "output/playwright/public-rich-sync/medium-first.json",
+        );
+      },
+      nowIso: () => "2026-05-24T09:19:00.000Z",
+      log: () => {},
+      sleep: async (milliseconds) => {
+        retryDelays.push(milliseconds);
+      },
+    },
+  );
+
+  // Assert
+  assert.equal(captureCalls, 1);
+  assert.deepEqual(retryDelays, []);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "medium",
+      status: "failed",
+      reason: "followers_missing",
+      artifactPath: "output/playwright/public-rich-sync/medium-first.json",
+      detail: "Medium public browser capture saw placeholder content: cloudflare_challenge.",
+    },
+  ]);
+});
+
 test("bootstraps a missing Medium cache entry and overlays follower counts", async () => {
   // Arrange
   let bootstrapCalls = 0;
@@ -603,6 +940,7 @@ test("treats Instagram login redirects as non-fatal failures when public HTML fa
       force: false,
       headed: false,
       browserWaitMs: 5000,
+      captureRetries: 0,
     },
     {
       readLinks: () => ({ links: [instagramLink] }),
@@ -728,6 +1066,7 @@ test("treats Instagram login redirect sync errors as non-fatal", async () => {
       force: false,
       headed: false,
       browserWaitMs: 5000,
+      captureRetries: 0,
     },
     {
       readLinks: () => ({ links: [instagramLink] }),
@@ -1299,6 +1638,7 @@ test("preserves existing X metrics when a refresh attempt fails", async () => {
       force: false,
       headed: false,
       browserWaitMs: 5000,
+      captureRetries: 0,
     },
     {
       readLinks: () => ({ links: [xLink] }),
@@ -1565,6 +1905,7 @@ test("preserves existing Primal metrics when a refresh attempt fails", async () 
       force: false,
       headed: false,
       browserWaitMs: 5000,
+      captureRetries: 0,
     },
     {
       readLinks: () => ({ links: [primalLink] }),
@@ -1737,6 +2078,7 @@ test("preserves existing YouTube metrics when a refresh attempt fails", async ()
       force: false,
       headed: false,
       browserWaitMs: 5000,
+      captureRetries: 0,
     },
     {
       readLinks: () => ({ links: [youtubeLink] }),
@@ -2087,6 +2429,7 @@ test("preserves existing Substack metrics when a refresh attempt is blocked", as
       force: false,
       headed: false,
       browserWaitMs: 5000,
+      captureRetries: 0,
     },
     {
       readLinks: () => ({ links: [substackLink] }),
