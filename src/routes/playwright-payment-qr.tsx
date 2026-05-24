@@ -298,7 +298,7 @@ const PlaywrightPaymentQrRoute = () => {
   return (
     <main
       aria-label="Payment QR Playwright fixtures"
-      class={`page layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
+      class={`page layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize} card-style-${layout.cardStyle}`}
       style={pageStyle}
     >
       <section style={headerStyle}>

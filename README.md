@@ -14,7 +14,9 @@
 
 <!-- bright-builds-rules-readme-badges:end -->
 
-OpenLinks is a personal, free, open source, version-controlled static website generator for social links.
+OpenLinks helps you publish a personal links site for social links.
+
+OpenLinks is a personal, free, open source links site. It stores no cookies, and we will never serve ads. Welcome to the new Open Web, where privacy and freedom reign.
 
 This project is developer-first, but that does not mean raw JSON should be your default CRUD surface. For most maintainers, the recommended path is:
 

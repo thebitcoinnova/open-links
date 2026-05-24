@@ -1016,6 +1016,7 @@ Main presentation controls include:
 - `typographyScale`: `fixed`, `compact`, `expressive`
 - `typography`: optional global/per-theme typography overrides
 - `targetSize`: `comfortable`, `compact`, `large`
+- `cardStyle`: `standard` (default) or `glassy`; `glassy` applies subtle translucent, glossy, and reduced-motion-aware effects to public simple, rich, and payment link cards only
 - `profileAvatarScale`: number between `0` and `4`; default `1.5` (avatar size multiplier)
 - `profileHeaderAlignment`: `leading`, `center`, or `{ "default": "leading", "small": "center" }`; when omitted, defaults to leading alignment on larger screens and centered alignment at the existing `max-width: 760px` mobile breakpoint
 - `brandIcons.colorMode`: `brand`, `theme`
@@ -1199,7 +1200,7 @@ Example:
 {
   "ui": {
     "footer": {
-      "description": "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
+      "description": "OpenLinks is a personal, free, open source links site. It stores no cookies, and we will never serve ads. Welcome to the new Open Web, where privacy and freedom reign.",
       "ctaLabel": "Create Your OpenLinks",
       "prompt": {
         "enabled": true,

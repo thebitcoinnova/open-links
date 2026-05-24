@@ -428,6 +428,11 @@
           "type": "string",
           "enum": ["comfortable", "compact", "large"]
         },
+        "cardStyle": {
+          "type": "string",
+          "enum": ["standard", "glassy"],
+          "default": "standard"
+        },
         "profileHeaderAlignment": {
           "$ref": "#/$defs/profileHeaderAlignmentConfig"
         },

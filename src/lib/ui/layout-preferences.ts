@@ -1,4 +1,5 @@
 import type {
+  CardStyleMode,
   DensityMode,
   DesktopColumnsMode,
   ProfileHeaderAlignment,
@@ -17,6 +18,7 @@ export interface LayoutPreferences {
   desktopColumns: DesktopColumnsMode;
   typographyScale: TypographyScaleMode;
   targetSize: TargetSizeMode;
+  cardStyle: CardStyleMode;
   profileAvatarScale: number;
   profileHeaderAlignment: ResolvedProfileHeaderAlignment;
 }
@@ -48,6 +50,11 @@ const targetSize = (site: SiteData): TargetSizeMode => {
     return value;
   }
   return "comfortable";
+};
+
+const cardStyle = (site: SiteData): CardStyleMode => {
+  const value = site.ui?.cardStyle;
+  return value === "glassy" ? "glassy" : "standard";
 };
 
 const profileAvatarScale = (site: SiteData): number => {
@@ -97,6 +104,7 @@ export const resolveLayoutPreferences = (site: SiteData): LayoutPreferences => (
   desktopColumns: desktopColumns(site),
   typographyScale: typographyScale(site),
   targetSize: targetSize(site),
+  cardStyle: cardStyle(site),
   profileAvatarScale: profileAvatarScale(site),
   profileHeaderAlignment: profileHeaderAlignment(site),
 });

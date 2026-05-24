@@ -194,14 +194,34 @@ In `data/site.json` under `ui`:
 - `typographyScale`: fixed/compact/expressive typography tuning
 - `typography`: global and per-theme typography token overrides
 - `targetSize`: comfortable/compact/large interaction footprint
+- `cardStyle`: standard/glassy public link-card treatment
 - `profileHeaderAlignment`: leading/center profile header alignment, with optional `default` and `small` responsive values
 
 ### How layout resolution works
 
 1. `load-content.ts` reads site config.
 2. `resolveComposition()` maps composition mode and grouping style.
-3. `resolveLayoutPreferences()` maps density/columns/type scale/target size/profile header alignment.
+3. `resolveLayoutPreferences()` maps density/columns/type scale/target size/card style/profile header alignment.
 4. `src/routes/index.tsx` applies these decisions through page class names and section rendering.
+
+### Card Style
+
+Use `site.ui.cardStyle` when you want to switch the public link-card surface treatment without creating a new theme.
+
+```json
+{
+  "ui": {
+    "cardStyle": "glassy"
+  }
+}
+```
+
+Supported values:
+
+- `standard` (default): existing solid card surfaces.
+- `glassy`: translucent card surfaces with subtle glossy highlights, ambient shimmer, progressive scroll-linked sheen, and reduced-motion fallbacks.
+
+The v1 glassy style applies only to public simple, rich, and payment link cards. It does not restyle analytics cards, dialogs, footer prompt cards, or Studio controls.
 
 ### Responsive Profile Header Alignment
 

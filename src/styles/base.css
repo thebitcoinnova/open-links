@@ -1699,6 +1699,228 @@ a:focus-visible {
   border-color: var(--accent-strong);
 }
 
+.page.card-style-glassy {
+  --glassy-card-background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--text-primary) 10%, transparent) 0%,
+      transparent 22%,
+      color-mix(in srgb, var(--accent) 6%, transparent) 74%,
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 72%, transparent) 0%,
+      color-mix(in srgb, var(--surface-panel) 58%, transparent) 100%
+    );
+  --glassy-card-background-active: linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--accent-strong) 18%, transparent) 0%,
+      transparent 42%,
+      color-mix(in srgb, var(--text-primary) 8%, transparent) 100%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 80%, var(--accent) 20%),
+      color-mix(in srgb, var(--surface-panel) 76%, transparent 24%)
+    );
+  --glassy-card-border: color-mix(in srgb, var(--text-primary) 16%, var(--border-subtle) 84%);
+  --glassy-card-border-strong: color-mix(in srgb, var(--accent-strong) 52%, transparent);
+  --glassy-card-shadow: 0 1px 0 color-mix(in srgb, white 18%, transparent) inset, 0 18px 42px
+    color-mix(in srgb, var(--surface-bg) 42%, transparent);
+  --glassy-card-highlight-opacity: 0.7;
+  --glassy-card-sheen-opacity: 0.36;
+}
+
+.page.card-style-glassy .non-payment-card-frame,
+.page.card-style-glassy .payment-link-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: var(--glassy-card-border);
+  background: var(--glassy-card-background);
+  box-shadow: var(--glassy-card-shadow);
+  backdrop-filter: blur(18px) saturate(1.18);
+  -webkit-backdrop-filter: blur(18px) saturate(1.18);
+}
+
+.page.card-style-glassy .non-payment-card-frame[data-has-referral="true"],
+.page.card-style-glassy
+  .non-payment-card-frame[data-card-variant="simple"][data-has-profile-layout="true"] {
+  border-color: color-mix(in srgb, var(--accent-strong) 34%, var(--glassy-card-border) 66%);
+  background: linear-gradient(
+      142deg,
+      color-mix(in srgb, var(--accent-strong) 18%, transparent) 0%,
+      transparent 38%,
+      color-mix(in srgb, var(--text-primary) 8%, transparent) 100%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 74%, var(--accent) 26%),
+      color-mix(in srgb, var(--surface-panel) 64%, transparent 36%)
+    );
+}
+
+.page.card-style-glassy .non-payment-card-frame::before,
+.page.card-style-glassy .non-payment-card-frame::after,
+.page.card-style-glassy .payment-link-card::before,
+.page.card-style-glassy .payment-link-card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page.card-style-glassy .non-payment-card-frame::before,
+.page.card-style-glassy .payment-link-card::before {
+  inset: 0;
+  background: radial-gradient(
+      circle at 14% 0%,
+      color-mix(in srgb, white 18%, transparent) 0,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 88% 18%,
+      color-mix(in srgb, var(--accent-strong) 14%, transparent) 0,
+      transparent 42%
+    ),
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, white 16%, transparent) 0%,
+      transparent 18%,
+      transparent 72%,
+      color-mix(in srgb, white 8%, transparent) 100%
+    );
+  opacity: var(--glassy-card-highlight-opacity);
+  animation: glassy-card-ambient-glimmer 12s ease-in-out infinite alternate;
+}
+
+.page.card-style-glassy .non-payment-card-frame::after,
+.page.card-style-glassy .payment-link-card::after {
+  inset: -40% -78%;
+  background: linear-gradient(
+    108deg,
+    transparent 36%,
+    color-mix(in srgb, white 22%, transparent) 48%,
+    transparent 60%
+  );
+  opacity: var(--glassy-card-sheen-opacity);
+  transform: translate3d(-24%, 0, 0);
+  animation: glassy-card-ambient-sheen 9s ease-in-out infinite;
+}
+
+.page.card-style-glassy .non-payment-card-frame > *,
+.page.card-style-glassy .payment-link-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page.card-style-glassy .payment-card-effects {
+  z-index: 1;
+}
+
+.page.card-style-glassy .payment-link-card-content {
+  z-index: 2;
+}
+
+.page.card-style-glassy .non-payment-card-frame:hover,
+.page.card-style-glassy .payment-link-card:hover {
+  border-color: var(--glassy-card-border-strong);
+  box-shadow: 0 1px 0 color-mix(in srgb, white 22%, transparent) inset, 0 20px 46px
+    color-mix(in srgb, var(--surface-bg) 48%, transparent);
+}
+
+.page.card-style-glassy .non-payment-card-frame:has(> .simple-link-card:active),
+.page.card-style-glassy .non-payment-card-frame:has(> .rich-link-card:active),
+.page.card-style-glassy .payment-link-card:active {
+  background: var(--glassy-card-background-active);
+}
+
+.page.card-style-glassy .non-payment-card-frame:focus-within,
+.page.card-style-glassy .payment-link-card:focus-within {
+  border-color: var(--accent-strong);
+  box-shadow: var(--shadow-focus), var(--glassy-card-shadow);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .page.card-style-glassy .non-payment-card-frame,
+  .page.card-style-glassy .payment-link-card {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 94%, var(--surface-panel) 6%),
+      color-mix(in srgb, var(--surface-card) 86%, var(--surface-bg) 14%)
+    );
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .page.card-style-glassy .non-payment-card-frame::after,
+  .page.card-style-glassy .payment-link-card::after {
+    animation-name: glassy-card-scroll-sheen;
+    animation-duration: 1ms;
+    animation-fill-mode: both;
+    animation-iteration-count: 1;
+    animation-timeline: view();
+    animation-range: entry 0% cover 95%;
+  }
+}
+
+@keyframes glassy-card-ambient-glimmer {
+  from {
+    opacity: calc(var(--glassy-card-highlight-opacity) * 0.72);
+    transform: translate3d(-1.6%, -0.8%, 0) scale(1);
+  }
+
+  to {
+    opacity: var(--glassy-card-highlight-opacity);
+    transform: translate3d(1.4%, 0.8%, 0) scale(1.02);
+  }
+}
+
+@keyframes glassy-card-ambient-sheen {
+  0%,
+  100% {
+    opacity: calc(var(--glassy-card-sheen-opacity) * 0.45);
+    transform: translate3d(-30%, 0, 0);
+  }
+
+  48%,
+  58% {
+    opacity: var(--glassy-card-sheen-opacity);
+    transform: translate3d(18%, 0, 0);
+  }
+}
+
+@keyframes glassy-card-scroll-sheen {
+  from {
+    opacity: calc(var(--glassy-card-sheen-opacity) * 0.12);
+    transform: translate3d(-42%, 0, 0);
+  }
+
+  52% {
+    opacity: var(--glassy-card-sheen-opacity);
+  }
+
+  to {
+    opacity: calc(var(--glassy-card-sheen-opacity) * 0.24);
+    transform: translate3d(34%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page.card-style-glassy .non-payment-card-frame::before,
+  .page.card-style-glassy .non-payment-card-frame::after,
+  .page.card-style-glassy .payment-link-card::before,
+  .page.card-style-glassy .payment-link-card::after {
+    animation: none;
+    transform: none;
+  }
+
+  .page.card-style-glassy .non-payment-card-frame::after,
+  .page.card-style-glassy .payment-link-card::after {
+    opacity: calc(var(--glassy-card-sheen-opacity) * 0.38);
+  }
+}
+
 .payment-card-header {
   display: flex;
   align-items: flex-start;

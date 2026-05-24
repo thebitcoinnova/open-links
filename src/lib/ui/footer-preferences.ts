@@ -22,6 +22,10 @@ export interface FooterPreferenceBuildContext {
 }
 
 const DEFAULT_DESCRIPTION =
+  "OpenLinks is a personal, free, open source links site. " +
+  "It stores no cookies, and we will never serve ads. " +
+  "Welcome to the new Open Web, where privacy and freedom reign.";
+const LEGACY_DEFAULT_DESCRIPTION =
   "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.";
 const DEFAULT_CTA_LABEL = "Create Your OpenLinks";
 const DEFAULT_PROMPT_TITLE = "Create your own OpenLinks site";
@@ -56,6 +60,15 @@ const resolveFooterPreferenceBuildContext = (
 
 const resolveDefaultCtaUrl = (): string => buildGitHubRepositoryUrl();
 
+const resolveFooterDescription = (description: unknown): string => {
+  const maybeDescription = toOptionalTrimmed(description);
+  if (!maybeDescription || maybeDescription === LEGACY_DEFAULT_DESCRIPTION) {
+    return DEFAULT_DESCRIPTION;
+  }
+
+  return maybeDescription;
+};
+
 const resolveDefaultPromptText = (maybeBuildContext: FooterPreferenceBuildContext): string =>
   buildOpenClawBootstrapPrompt({
     repositoryRef: maybeBuildContext.maybeRepositoryRef,
@@ -84,7 +97,7 @@ export const resolveFooterPreferences = (
   const buildContext = resolveFooterPreferenceBuildContext(maybeBuildContext);
 
   return {
-    description: toOptionalTrimmed(footer?.description) ?? DEFAULT_DESCRIPTION,
+    description: resolveFooterDescription(footer?.description),
     ctaLabel: toOptionalTrimmed(footer?.ctaLabel) ?? DEFAULT_CTA_LABEL,
     ctaUrl: toOptionalTrimmed(footer?.ctaUrl) ?? resolveDefaultCtaUrl(),
     prompt: resolveFooterPromptPreferences(site, buildContext),

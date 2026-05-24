@@ -326,7 +326,7 @@ const PaymentCardEffectSamplesRoute = () => {
   return (
     <main
       aria-label="Payment card effect samples"
-      class={`page layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize}`}
+      class={`page layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize} card-style-${layout.cardStyle}`}
       style={pageStyle}
     >
       <section style={headerStyle}>

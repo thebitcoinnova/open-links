@@ -190,6 +190,7 @@ Coverage:
 - `typographyScale`
 - `typography`
 - `targetSize`
+- `cardStyle`
 - `profileHeaderAlignment`
 - `payments.qr.displayDefault`
 - `payments.qr.styleDefault`

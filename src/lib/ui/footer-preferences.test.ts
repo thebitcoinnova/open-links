@@ -33,7 +33,7 @@ test("resolveFooterPreferences returns the expanded footer defaults", () => {
 
   assert.equal(
     preferences.description,
-    "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
+    "OpenLinks is a personal, free, open source links site. It stores no cookies, and we will never serve ads. Welcome to the new Open Web, where privacy and freedom reign.",
   );
   assert.equal(preferences.ctaLabel, "Create Your OpenLinks");
   assert.equal(preferences.ctaUrl, buildGitHubRepositoryUrl());
@@ -62,6 +62,22 @@ test("resolveFooterPreferences keeps the default CTA canonical for fork builds w
       repositoryRef: buildContext.maybeRepositoryRef,
       repositorySlug: buildContext.maybeRepositorySlug,
     }),
+  );
+});
+
+test("resolveFooterPreferences upgrades the explicit legacy starter footer description", () => {
+  // Arrange / Act
+  const preferences = resolveFooterPreferences(
+    createSite({
+      description:
+        "OpenLinks is a personal, free, open source, version-controlled links site.\nFork it, customize it, and publish fast.",
+    }),
+  );
+
+  // Assert
+  assert.equal(
+    preferences.description,
+    "OpenLinks is a personal, free, open source links site. It stores no cookies, and we will never serve ads. Welcome to the new Open Web, where privacy and freedom reign.",
   );
 });
 
