@@ -29,7 +29,7 @@
         "twitterImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp",
         "sourceLabel": "signup.cluborange.org"
       },
-      "lastModified": "Mon, 25 May 2026 08:29:29 GMT"
+      "lastModified": "Sat, 23 May 2026 14:36:22 GMT"
     },
     "github": {
       "linkId": "github",
@@ -49,7 +49,7 @@
         "followingCount": 101,
         "followingCountRaw": "101 following"
       },
-      "etag": "W/\"d448c85ea2b24602f76b5038096a02ac\""
+      "etag": "W/\"0d7032d44d0374bee0843d92fb0486cf\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -72,9 +72,13 @@
       "linkId": "lemonade-referral",
       "sourceUrl": "https://lemonade.com/r/peterryszkiewicz",
       "capturedAt": "2026-04-05T07:24:09.372Z",
-      "updatedAt": "2026-05-25T08:29:26.238Z",
+      "updatedAt": "2026-05-26T08:11:39.919Z",
       "metadata": {
-        "title": "Lemonade",
+        "title": "Lemonade Insurance | Home, Car, Pet, and Life Coverage",
+        "description": "Lemonade offers renters and home insurance powered by tech and driven by social good. ❤ We promise zero paperwork and instant everything by replacing brokers and bureaucracy with bots and machine learning. Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+        "image": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "ogImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "twitterImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
         "sourceLabel": "lemonade.com"
       }
     },
@@ -177,7 +181,7 @@
         "followingCount": 773,
         "followingCountRaw": "773 Following"
       },
-      "lastModified": "Mon, 25 May 2026 08:29:27 GMT"
+      "lastModified": "Tue, 26 May 2026 08:11:41 GMT"
     },
     "youtube": {
       "linkId": "youtube",
