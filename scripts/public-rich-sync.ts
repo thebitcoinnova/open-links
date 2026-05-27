@@ -429,9 +429,29 @@ const hasDefinedAudienceMetric = (value: number | string | undefined): boolean =
   return typeof value === "string" && value.trim().length > 0;
 };
 
-const hasBaseProfileMetadata = (entry: PublicCacheEntry | undefined): boolean => {
+const hasBaseProfileMetadata = (
+  targetId: SyncablePublicTargetId,
+  entry: PublicCacheEntry | undefined,
+): boolean => {
   if (!entry) {
     return false;
+  }
+
+  if (targetId === "instagram-public-profile") {
+    const hasFollowers =
+      hasDefinedAudienceMetric(entry.metadata.followersCount) ||
+      hasDefinedAudienceMetric(entry.metadata.followersCountRaw);
+    const hasFollowing =
+      hasDefinedAudienceMetric(entry.metadata.followingCount) ||
+      hasDefinedAudienceMetric(entry.metadata.followingCountRaw);
+
+    return (
+      Boolean(safeTrim(entry.metadata.title)) &&
+      Boolean(safeTrim(entry.metadata.image) || safeTrim(entry.metadata.profileImage)) &&
+      Boolean(safeTrim(entry.metadata.sourceLabel)) &&
+      hasFollowers &&
+      hasFollowing
+    );
   }
 
   const hasBaseMetadata =
@@ -1214,7 +1234,7 @@ const runPublicRichSyncCandidateAttempt = async (
     }
 
     let workingEntry = existingEntry ? cloneEntry(existingEntry) : undefined;
-    if (!hasBaseProfileMetadata(workingEntry)) {
+    if (!hasBaseProfileMetadata(candidate.target.id, workingEntry)) {
       workingEntry = await dependencies.bootstrapBaseEntry({
         link: candidate.link,
         target: candidate.target,
