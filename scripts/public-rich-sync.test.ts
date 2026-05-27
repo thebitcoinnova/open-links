@@ -755,6 +755,74 @@ test("overlays Instagram browser counts when profile metadata counts are stale",
   assert.equal(writtenRegistry?.entries.instagram?.metadata.description, undefined);
 });
 
+test("uses authoritative Instagram cache metadata when description was pruned", async () => {
+  // Arrange
+  const registry = emptyRegistry();
+  const existingEntry = createInstagramBaseEntry(
+    "instagram",
+    "2026-05-22T08:07:39.816Z",
+    "https://www.instagram.com/peterryszkiewicz/",
+  );
+  existingEntry.metadata.description = undefined;
+  registry.entries.instagram = existingEntry;
+  let bootstrapCalls = 0;
+  let captureCalls = 0;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "instagram",
+      onlyMissing: false,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+    },
+    {
+      readLinks: () => ({ links: [instagramLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {
+        throw new Error("should not write unchanged cache");
+      },
+      bootstrapBaseEntry: async () => {
+        bootstrapCalls += 1;
+        throw new Error("should not bootstrap");
+      },
+      captureAudienceMetrics: async () => {
+        captureCalls += 1;
+        return captureSuccess(
+          {
+            followersCount: 99,
+            followersCountRaw: "99 Followers",
+            followingCount: 210,
+            followingCountRaw: "210 Following",
+          },
+          "output/playwright/public-rich-sync/instagram-unchanged.json",
+        );
+      },
+      fetchFallbackAudienceMetrics: async () => {
+        throw new Error("should not use fallback after browser success");
+      },
+      nowIso: () => "2026-05-24T09:17:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 0);
+  assert.equal(captureCalls, 1);
+  assert.equal(result.failed, 0);
+  assert.equal(result.skipped, 1);
+  assert.deepEqual(result.entries, [
+    {
+      linkId: "instagram",
+      status: "skipped",
+      reason: "counts_unchanged",
+    },
+  ]);
+});
+
 test("recovers unchanged Instagram audience from public HTML fallback when browser redirects to login", async () => {
   // Arrange
   const registry = emptyRegistry();
