@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Thu, 28 May 2026 09:15:37 GMT"
+      "lastModified": "Fri, 29 May 2026 06:22:20 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Bitcoin_Sovryn_Head_Banner.png?v=1776621154&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:aaedcf800605fd8f545c9a4dca94fc65\""
+      "etag": "\"page_cache:93620306263:IndexController:8559f6ca530f999759cff3aa2ca5c36e\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -90,7 +90,7 @@
       "linkId": "live-with-the-hive-podcast",
       "sourceUrl": "https://www.youtube.com/@HiveMinded21/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-05-28T10:47:26.458Z",
+      "updatedAt": "2026-05-29T10:39:10.521Z",
       "metadata": {
         "title": "Hive Minded",
         "description": "The Hive Minded is created and hosted by Staci Costopoulos, creator of The Bitcoin Nova.The Hive Minded is a Bitcoin hangout. Real conversations, reactions, ...",
@@ -99,8 +99,8 @@
         "twitterImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 318,
-        "subscribersCountRaw": "318 subscribers"
+        "subscribersCount": 329,
+        "subscribersCountRaw": "329 subscribers"
       }
     },
     "rumble": {
@@ -133,7 +133,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:fac9c90e5bded08d862a0920af6549b4\""
+      "etag": "\"page_cache:94205477246:IndexController:5a58cc1d363a1812c59789dee11ded88\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -163,24 +163,24 @@
         "twitterImage": "https://imgproxy.fourthwall.dev/NAyaO0KRbLeRPi9fCxfKafCsg9joK0bCPE9Mz0Jdm-A/w:1200/sm:1/enc/FNEq3fHnhor1KeC-/uNNaBGJ5cCaEPfgy/4aVqCKBdDo49WVWy/OK9b3ZlOTvaqhOxy/LBUiJuwWy4p9duQT/_q7k1xYKVn2qv7TA/8KZ9BS58ETH3yKSD/M80b5OUDjWGzwSKC/ZXUNGRnLhvSolD8Y/ztjXJ93Y0yFy3xTz/4hwl85Quf2Ii7-47/t7fGJG6IRJ43JtIu/28C-YgJr6fM7-yMN/Vrzr8A5Y0Y5QfFlA/pKltqUli_-7yc_eq/f_8vLp-uumS2fmKc.png",
         "sourceLabel": "bitcoinnova.store"
       },
-      "etag": "W/\"fc353773d8bc34a6d539eead315f788c\""
+      "etag": "W/\"5aaec5c2ef5907481e78e93c3f094732\""
     },
     "the-bitcoin-nova-x": {
       "linkId": "the-bitcoin-nova-x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fthebitcoinnova&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-05-08T22:08:31.327Z",
-      "updatedAt": "2026-05-28T10:48:35.298Z",
+      "updatedAt": "2026-05-29T10:40:17.662Z",
       "metadata": {
         "title": "@TheBitcoinNova on X",
         "description": "Posts and updates from @TheBitcoinNova on X.",
-        "profileDescription": "Official Bitcoin Nova Podcast Page https://youtube.com/@StaciNova http://freesamourai.com http://Links.thebitcoinnova.com http://",
+        "profileDescription": "Official Bitcoin Nova Podcast Page @StaciNova https://youtube.com/@stacinova?si=62XThkrvCLqk4tLwl… http://Links.thebitcoinnova.com",
         "image": "https://unavatar.io/x/TheBitcoinNova",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 508,
-        "followersCountRaw": "508 Followers",
-        "followingCount": 528,
-        "followingCountRaw": "528 Following"
+        "followersCount": 512,
+        "followersCountRaw": "512 Followers",
+        "followingCount": 534,
+        "followingCountRaw": "534 Following"
       },
       "lastModified": "Wed, 27 May 2026 10:51:51 GMT"
     },
@@ -197,13 +197,13 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com"
       },
-      "lastModified": "Thu, 28 May 2026 10:47:53 GMT"
+      "lastModified": "Fri, 29 May 2026 10:39:36 GMT"
     },
     "x": {
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fstacinova&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-05-28T10:48:54.763Z",
+      "updatedAt": "2026-05-29T10:40:35.716Z",
       "metadata": {
         "title": "@StaciNova on X",
         "description": "Posts and updates from @StaciNova on X.",
@@ -211,10 +211,10 @@
         "image": "https://unavatar.io/x/StaciNova",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/StaciNova",
-        "followersCount": 5684,
-        "followersCountRaw": "5,684 Followers",
-        "followingCount": 4300,
-        "followingCountRaw": "4,300 Following",
+        "followersCount": 5685,
+        "followersCountRaw": "5,685 Followers",
+        "followingCount": 4301,
+        "followingCountRaw": "4,301 Following",
         "membersCount": 1000,
         "membersCountRaw": "1K members"
       },
@@ -238,17 +238,17 @@
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@StaciNova/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-05-28T10:47:26.458Z",
+      "updatedAt": "2026-05-29T10:39:10.521Z",
       "metadata": {
         "title": "Bitcoin Nova Podcast",
         "description": "Host of The Bitcoin Nova Podcast & Hive Minded Podcast. Community Builder, Public Speaker and Club Orange Community Manager. Staci is a Greek American, explo...",
-        "image": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
-        "ogImage": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
-        "twitterImage": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
+        "image": "https://yt3.googleusercontent.com/LKTRsnhSeFRfWBq2DKb8TFWGwjCMJrwG9wnB33uCRM2jGjksRb_tPbtnTwXhwfiAuhZKqO-ORgQ=s900-c-k-c0x00ffffff-no-rj",
+        "ogImage": "https://yt3.googleusercontent.com/LKTRsnhSeFRfWBq2DKb8TFWGwjCMJrwG9wnB33uCRM2jGjksRb_tPbtnTwXhwfiAuhZKqO-ORgQ=s900-c-k-c0x00ffffff-no-rj",
+        "twitterImage": "https://yt3.googleusercontent.com/LKTRsnhSeFRfWBq2DKb8TFWGwjCMJrwG9wnB33uCRM2jGjksRb_tPbtnTwXhwfiAuhZKqO-ORgQ=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
-        "profileImage": "https://yt3.googleusercontent.com/CjT5ED3c6EP7V2-z0_YhGy7ok6kdxwy4snnFAG0Zqf7hTbIYm0SqB8nubC3PnFiLbCjH6iyTWGY=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 15000,
-        "subscribersCountRaw": "15K subscribers"
+        "profileImage": "https://yt3.googleusercontent.com/LKTRsnhSeFRfWBq2DKb8TFWGwjCMJrwG9wnB33uCRM2jGjksRb_tPbtnTwXhwfiAuhZKqO-ORgQ=s900-c-k-c0x00ffffff-no-rj",
+        "subscribersCount": 15700,
+        "subscribersCountRaw": "15.7K subscribers"
       }
     }
   }
