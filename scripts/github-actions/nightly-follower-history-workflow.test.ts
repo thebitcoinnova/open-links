@@ -116,7 +116,7 @@ test("nightly follower history includes Substack in the fresh public audience co
   assert.match(followerHistorySyncSource, /"substack-public-profile"/u);
 });
 
-test("nightly audience health fails on public sync failures", () => {
+test("nightly audience health treats nonfatal public sync failures as advisory", () => {
   // Arrange
   const report = analyzeNightlyAudienceHealth({
     publicRichSyncSummary: {
@@ -124,11 +124,12 @@ test("nightly audience health fails on public sync failures", () => {
       fatalFailed: 0,
       entries: [
         {
-          linkId: "substack",
+          linkId: "instagram",
           status: "failed",
-          reason: "subscribers_missing",
-          artifactPath: "output/playwright/public-rich-sync/substack.json",
-          detail: "Substack public browser capture did not find a subscriber count.",
+          reason: "audience_missing",
+          artifactPath: "output/playwright/public-rich-sync/instagram.json",
+          detail:
+            "Instagram public browser capture saw placeholder content: login_redirect. Fallback public-html capture also failed: login_wall.",
         },
       ],
     },
@@ -146,10 +147,67 @@ test("nightly audience health fails on public sync failures", () => {
     followerHistoryIndex: {
       entries: [
         {
-          linkId: "substack",
-          platform: "substack",
+          linkId: "instagram",
+          platform: "instagram",
           latestObservedAt: "2026-05-12T12:39:57.059Z",
-          latestAudienceCountRaw: "15 subscribers",
+          latestAudienceCountRaw: "102 followers",
+        },
+      ],
+    },
+  });
+
+  // Act
+  const formatted = formatNightlyAudienceHealthReport(report);
+
+  // Assert
+  assert.equal(report.ok, true);
+  assert.deepEqual(report.findings, [
+    {
+      kind: "capture_failure",
+      linkId: "instagram",
+      reason: "audience_missing",
+      fatal: false,
+      detail:
+        "Instagram public browser capture saw placeholder content: login_redirect. Fallback public-html capture also failed: login_wall.",
+      artifactPath: "output/playwright/public-rich-sync/instagram.json",
+    },
+  ]);
+  assert.deepEqual(report.blockingFindings, []);
+  assert.deepEqual(report.advisoryFindings, report.findings);
+  assert.match(formatted, /Nightly audience health check passed with advisory findings/u);
+  assert.match(formatted, /fatal=no/u);
+});
+
+test("nightly audience health fails on fatal public sync failures", () => {
+  // Arrange
+  const report = analyzeNightlyAudienceHealth({
+    publicRichSyncSummary: {
+      failed: 1,
+      fatalFailed: 1,
+      entries: [
+        {
+          linkId: "instagram",
+          status: "failed",
+          reason: "profile_unavailable",
+          artifactPath: "output/playwright/public-rich-sync/instagram-not-found.json",
+          detail:
+            "Instagram public browser capture saw fatal profile-unavailable placeholder content: not_found.",
+          fatal: true,
+        },
+      ],
+    },
+    historySummary: {
+      observedAt: "2026-05-16T07:37:25.097Z",
+      status: "written",
+      snapshots: [],
+    },
+    followerHistoryIndex: {
+      entries: [
+        {
+          linkId: "instagram",
+          platform: "instagram",
+          latestObservedAt: "2026-05-12T12:39:57.059Z",
+          latestAudienceCountRaw: "102 followers",
         },
       ],
     },
@@ -160,17 +218,59 @@ test("nightly audience health fails on public sync failures", () => {
 
   // Assert
   assert.equal(report.ok, false);
+  assert.deepEqual(report.blockingFindings, report.findings);
+  assert.deepEqual(report.advisoryFindings, []);
+  assert.match(formatted, /Nightly audience health check failed/u);
+  assert.match(formatted, /Blocking findings/u);
+  assert.match(formatted, /fatal=yes/u);
+});
+
+test("nightly audience health fails when fresh observations are missing snapshots", () => {
+  // Arrange
+  const report = analyzeNightlyAudienceHealth({
+    publicRichSyncSummary: {
+      failed: 0,
+      fatalFailed: 0,
+      entries: [
+        {
+          linkId: "instagram",
+          status: "synced",
+          reason: "counts_refreshed",
+          artifactPath: "output/playwright/public-rich-sync/instagram.json",
+        },
+      ],
+    },
+    historySummary: {
+      observedAt: "2026-05-16T07:37:25.097Z",
+      status: "written",
+      snapshots: [],
+    },
+    followerHistoryIndex: {
+      entries: [
+        {
+          linkId: "instagram",
+          platform: "instagram",
+          latestObservedAt: "2026-05-16T07:37:25.097Z",
+          latestAudienceCountRaw: "104 followers",
+        },
+      ],
+    },
+  });
+
+  // Assert
+  assert.equal(report.ok, false);
+  assert.deepEqual(report.blockingFindings, report.findings);
+  assert.deepEqual(report.advisoryFindings, []);
   assert.deepEqual(report.findings, [
     {
-      kind: "capture_failure",
-      linkId: "substack",
-      reason: "subscribers_missing",
-      fatal: false,
-      detail: "Substack public browser capture did not find a subscriber count.",
-      artifactPath: "output/playwright/public-rich-sync/substack.json",
+      kind: "missing_snapshot",
+      linkId: "instagram",
+      platform: "instagram",
+      reason: "fresh_public_observation_missing_history_snapshot",
+      artifactPath: "output/playwright/public-rich-sync/instagram.json",
+      latestObservedAt: "2026-05-16T07:37:25.097Z",
     },
   ]);
-  assert.match(formatted, /Nightly audience health check failed/u);
 });
 
 test("nightly audience health flags stale index rows without explicit failures", () => {
@@ -226,6 +326,8 @@ test("nightly audience health flags stale index rows without explicit failures",
 
   // Assert
   assert.equal(report.ok, false);
+  assert.deepEqual(report.blockingFindings, report.findings);
+  assert.deepEqual(report.advisoryFindings, []);
   assert.deepEqual(report.findings, [
     {
       kind: "stale_index",
@@ -272,5 +374,8 @@ test("nightly audience health passes when fresh observations have current snapsh
 
   // Assert
   assert.equal(report.ok, true);
+  assert.deepEqual(report.findings, []);
+  assert.deepEqual(report.blockingFindings, []);
+  assert.deepEqual(report.advisoryFindings, []);
   assert.equal(formatNightlyAudienceHealthReport(report), "Nightly audience health check passed.");
 });

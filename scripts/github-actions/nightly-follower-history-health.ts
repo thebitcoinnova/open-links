@@ -68,6 +68,8 @@ export interface NightlyAudienceHealthInput {
 export interface NightlyAudienceHealthReport {
   ok: boolean;
   findings: NightlyAudienceHealthFinding[];
+  blockingFindings: NightlyAudienceHealthFinding[];
+  advisoryFindings: NightlyAudienceHealthFinding[];
 }
 
 const ROOT = process.cwd();
@@ -109,6 +111,14 @@ const dedupeFindings = (
   }
 
   return deduped;
+};
+
+const isBlockingFinding = (finding: NightlyAudienceHealthFinding): boolean => {
+  if (finding.kind === "capture_failure") {
+    return finding.fatal === true;
+  }
+
+  return true;
 };
 
 export const analyzeNightlyAudienceHealth = (
@@ -188,29 +198,50 @@ export const analyzeNightlyAudienceHealth = (
   }
 
   const dedupedFindings = dedupeFindings(findings);
+  const blockingFindings = dedupedFindings.filter(isBlockingFinding);
+  const advisoryFindings = dedupedFindings.filter((finding) => !isBlockingFinding(finding));
   return {
-    ok: dedupedFindings.length === 0,
+    ok: blockingFindings.length === 0,
     findings: dedupedFindings,
+    blockingFindings,
+    advisoryFindings,
   };
 };
 
+const formatFinding = (finding: NightlyAudienceHealthFinding): string => {
+  const subject = finding.linkId ? `${finding.linkId}` : finding.reason;
+  const details = [
+    `kind=${finding.kind}`,
+    `reason=${finding.reason}`,
+    finding.fatal === undefined ? undefined : `fatal=${finding.fatal ? "yes" : "no"}`,
+    finding.latestObservedAt ? `latestObservedAt=${finding.latestObservedAt}` : undefined,
+    finding.artifactPath ? `artifact=${finding.artifactPath}` : undefined,
+    finding.detail,
+  ].filter((entry): entry is string => Boolean(entry));
+
+  return `- ${subject}: ${details.join("; ")}`;
+};
+
 export const formatNightlyAudienceHealthReport = (report: NightlyAudienceHealthReport): string => {
-  if (report.ok) {
+  if (report.findings.length === 0) {
     return "Nightly audience health check passed.";
   }
 
+  if (report.ok) {
+    return [
+      "Nightly audience health check passed with advisory findings:",
+      ...report.advisoryFindings.map(formatFinding),
+    ].join("\n");
+  }
+
   const lines = ["Nightly audience health check failed:"];
-  for (const finding of report.findings) {
-    const subject = finding.linkId ? `${finding.linkId}` : finding.reason;
-    const details = [
-      `kind=${finding.kind}`,
-      `reason=${finding.reason}`,
-      finding.fatal === undefined ? undefined : `fatal=${finding.fatal ? "yes" : "no"}`,
-      finding.latestObservedAt ? `latestObservedAt=${finding.latestObservedAt}` : undefined,
-      finding.artifactPath ? `artifact=${finding.artifactPath}` : undefined,
-      finding.detail,
-    ].filter((entry): entry is string => Boolean(entry));
-    lines.push(`- ${subject}: ${details.join("; ")}`);
+  if (report.blockingFindings.length > 0) {
+    lines.push("Blocking findings:");
+    lines.push(...report.blockingFindings.map(formatFinding));
+  }
+  if (report.advisoryFindings.length > 0) {
+    lines.push("Advisory findings:");
+    lines.push(...report.advisoryFindings.map(formatFinding));
   }
 
   return lines.join("\n");

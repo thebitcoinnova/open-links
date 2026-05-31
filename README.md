@@ -449,6 +449,10 @@ Live build provenance surfaces:
   - `bun run public:rich:sync -- --summary-json .ci-diagnostics/public-rich-sync-summary.json` or targeted `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for new/changed Instagram, Medium, X, Primal, or YouTube profile links
   - `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`
   - `bun run build`
+- Manual backfill for nonfatal public browser failures, such as Instagram login walls:
+  - `bun run public:rich:sync -- --only-link instagram --headed --wait-ms 600000 --capture-retries 0 --summary-json .ci-diagnostics/public-rich-sync-summary.json`
+  - sign in only inside the opened local browser profile, then rerun `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`
+- Nonfatal public audience capture failures are diagnostic-only in the nightly health gate; fatal profile-unavailable failures, missing diagnostics, stale rows, and missing fresh snapshots still fail the workflow.
 - The workflow commits directly to `main` and deploys Pages in the same run. This avoids depending on downstream workflow fan-out from a bot-authored push.
 
 ### Authenticated Cache Lifecycle
