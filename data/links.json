@@ -91,7 +91,11 @@
       },
       "enrichment": {
         "enabled": false,
-        "authenticatedExtractor": "facebook-auth-browser"
+        "authenticatedExtractor": "facebook-auth-browser",
+        "facebookPageMetrics": {
+          "enabled": true,
+          "pageId": "1002804269589824"
+        }
       },
       "custom": {}
     },

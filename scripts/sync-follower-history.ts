@@ -76,6 +76,7 @@ export interface HistoryRunSummary {
 
 const ROOT = process.cwd();
 const PUBLIC_AUDIENCE_SYNC_TARGET_IDS = new Set([
+  "facebook-page-metrics",
   "medium-public-feed",
   "primal-public-profile",
   "substack-public-profile",
@@ -177,7 +178,24 @@ const readOptionalPublicRichSyncSummary = (
   return JSON.parse(fs.readFileSync(absolute, "utf8")) as PublicRichSyncSummary;
 };
 
+const hasEnabledFacebookPageMetrics = (link: OpenLink): boolean => {
+  const facebookPageMetrics = link.enrichment?.facebookPageMetrics;
+  if (
+    typeof facebookPageMetrics !== "object" ||
+    facebookPageMetrics === null ||
+    Array.isArray(facebookPageMetrics)
+  ) {
+    return false;
+  }
+
+  return facebookPageMetrics.enabled === true;
+};
+
 const requiresFreshPublicAudienceCapture = (link: OpenLink): boolean => {
+  if (hasEnabledFacebookPageMetrics(link)) {
+    return true;
+  }
+
   if (!link.url) {
     return false;
   }
@@ -247,14 +265,22 @@ const resolveSourceAndMetadata = (
     };
   }
 
+  const authenticatedAudience = resolveFollowerHistoryPrimaryAudience(authenticatedMetadataRecord);
+  const publicAudience = resolveFollowerHistoryPrimaryAudience(publicMetadataRecord);
   if (authenticatedMetadata) {
+    const authenticatedWithPublicAudience =
+      mergeMetadataWithManualSocialProfileOverrides(
+        authenticatedMetadataRecord,
+        publicMetadataRecord,
+      ) ?? authenticatedMetadataRecord;
+
     return {
       metadata:
         mergeMetadataWithManualSocialProfileOverrides(
           manualMetadata,
-          authenticatedMetadataRecord,
+          authenticatedWithPublicAudience,
         ) ?? manualMetadata,
-      source: "authenticated-cache",
+      source: authenticatedAudience || !publicAudience ? "authenticated-cache" : "public-cache",
     };
   }
 

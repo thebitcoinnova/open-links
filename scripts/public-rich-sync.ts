@@ -53,6 +53,9 @@ const DEFAULT_FETCH_TIMEOUT_MS = 4_000;
 const DEFAULT_FETCH_RETRIES = 1;
 const DEFAULT_CAPTURE_RETRIES = 2;
 const DEFAULT_CAPTURE_RETRY_DELAY_MS = 120_000;
+const DEFAULT_FACEBOOK_GRAPH_API_VERSION = "v24.0";
+const FACEBOOK_PAGE_ACCESS_TOKEN_ENV = "OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN";
+const FACEBOOK_PAGE_METRICS_FIELDS = "id,name,followers_count,fan_count";
 const PUBLIC_BROWSER_ARGS = ["--disable-blink-features=AutomationControlled"] as const;
 const INSTAGRAM_PUBLIC_PROFILE_METRICS_SNIPPET = loadEmbeddedCode(
   "browser/instagram/extract-public-profile-metrics.js",
@@ -97,6 +100,11 @@ interface LinkInput {
   metadata?: Record<string, unknown>;
   enrichment?: {
     profileSemantics?: unknown;
+    facebookPageMetrics?: {
+      enabled?: unknown;
+      pageId?: unknown;
+      apiVersion?: unknown;
+    };
   };
 }
 
@@ -137,6 +145,14 @@ interface SubstackPublicTarget extends PublicAugmentationTarget {
   id: "substack-public-profile";
 }
 
+export interface FacebookPageMetricsTarget {
+  id: "facebook-page-metrics";
+  pageId: string;
+  apiVersion: string;
+  sourceUrl: string;
+  tokenEnv: typeof FACEBOOK_PAGE_ACCESS_TOKEN_ENV;
+}
+
 type SyncablePublicTarget =
   | InstagramPublicTarget
   | MediumPublicTarget
@@ -146,8 +162,25 @@ type SyncablePublicTarget =
   | XCommunityPublicTarget
   | YoutubePublicTarget;
 type SyncablePublicTargetId = SyncablePublicTarget["id"];
+type PublicRichSyncTarget = SyncablePublicTarget | FacebookPageMetricsTarget;
+type PublicRichSyncTargetId = PublicRichSyncTarget["id"];
 type PublicBrowserAudienceSnapshot = PublicAudienceBrowserSnapshot;
 export type PublicBrowserAudienceMetrics = PublicAudienceMetrics;
+
+export interface FacebookPageMetricsResult {
+  pageId: string;
+  pageName?: string;
+  followersCount: number;
+  followersCountRaw: string;
+  fanCount?: number;
+  sourceUrl: string;
+}
+
+export interface FetchFacebookPageMetricsInput {
+  target: FacebookPageMetricsTarget;
+  accessToken?: string;
+  fetchImpl?: typeof fetch;
+}
 
 interface BootstrapBaseEntryInput {
   link: RichLinkInput;
@@ -196,6 +229,9 @@ export interface PublicRichSyncDependencies {
   readLinks: (linksPath: string) => LinksPayload;
   loadPublicCache: (publicCachePath: string) => PublicCacheRegistry;
   writePublicCache: (publicCachePath: string, registry: PublicCacheRegistry) => void;
+  fetchFacebookPageMetrics?: (
+    input: FetchFacebookPageMetricsInput,
+  ) => Promise<FacebookPageMetricsResult>;
   bootstrapBaseEntry: (input: BootstrapBaseEntryInput) => Promise<PublicCacheEntry>;
   captureAudienceMetrics: (
     input: CapturePublicAudienceMetricsInput,
@@ -312,6 +348,139 @@ const parseArgs = (argv = process.argv.slice(2)): CliArgs => ({
 
 const isRichLink = (link: LinkInput): link is RichLinkInput =>
   link.type === "rich" && typeof link.url === "string" && link.url.trim().length > 0;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toNonNegativeInteger = (value: unknown): number | undefined => {
+  if (typeof value === "number") {
+    return Number.isInteger(value) && value >= 0 ? value : undefined;
+  }
+
+  if (typeof value === "string" && /^\d+$/u.test(value.trim())) {
+    const parsed = Number.parseInt(value.trim(), 10);
+    return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
+  }
+
+  return undefined;
+};
+
+const normalizeFacebookGraphApiVersion = (value: unknown): string => {
+  const maybeVersion = safeTrim(value);
+  if (!maybeVersion) {
+    return DEFAULT_FACEBOOK_GRAPH_API_VERSION;
+  }
+
+  return /^v\d+\.\d+$/u.test(maybeVersion) ? maybeVersion : DEFAULT_FACEBOOK_GRAPH_API_VERSION;
+};
+
+const buildFacebookPageMetricsSourceUrl = (input: {
+  pageId: string;
+  apiVersion: string;
+}): string => {
+  const url = new URL(`${input.apiVersion}/${input.pageId}`, "https://graph.facebook.com/");
+  url.searchParams.set("fields", FACEBOOK_PAGE_METRICS_FIELDS);
+  return url.href;
+};
+
+export const resolveFacebookPageMetricsTarget = (
+  link: Pick<RichLinkInput, "enrichment">,
+): FacebookPageMetricsTarget | null => {
+  const config = link.enrichment?.facebookPageMetrics;
+  if (!isRecord(config) || config.enabled !== true) {
+    return null;
+  }
+
+  const pageId = safeTrim(config.pageId);
+  if (!pageId || !/^\d{5,30}$/u.test(pageId)) {
+    return null;
+  }
+
+  const apiVersion = normalizeFacebookGraphApiVersion(config.apiVersion);
+  return {
+    id: "facebook-page-metrics",
+    pageId,
+    apiVersion,
+    sourceUrl: buildFacebookPageMetricsSourceUrl({ pageId, apiVersion }),
+    tokenEnv: FACEBOOK_PAGE_ACCESS_TOKEN_ENV,
+  };
+};
+
+const isFacebookPageMetricsTarget = (
+  target: PublicRichSyncTarget,
+): target is FacebookPageMetricsTarget => target.id === "facebook-page-metrics";
+
+export const normalizeFacebookPageMetricsResponse = (
+  payload: unknown,
+  target: FacebookPageMetricsTarget,
+): FacebookPageMetricsResult => {
+  if (!isRecord(payload)) {
+    throw new Error("Facebook Graph API response must be a JSON object.");
+  }
+
+  const responsePageId = safeTrim(payload.id);
+  if (responsePageId && responsePageId !== target.pageId) {
+    throw new Error(
+      `Facebook Graph API response id '${responsePageId}' did not match requested page '${target.pageId}'.`,
+    );
+  }
+
+  const followersCount = toNonNegativeInteger(payload.followers_count);
+  if (followersCount === undefined) {
+    throw new Error("Facebook Graph API response did not include followers_count.");
+  }
+
+  return {
+    pageId: responsePageId ?? target.pageId,
+    pageName: safeTrim(payload.name),
+    followersCount,
+    followersCountRaw: `${followersCount.toLocaleString("en-US")} followers`,
+    fanCount: toNonNegativeInteger(payload.fan_count),
+    sourceUrl: target.sourceUrl,
+  };
+};
+
+export const fetchFacebookPageMetrics = async ({
+  target,
+  accessToken = process.env[FACEBOOK_PAGE_ACCESS_TOKEN_ENV],
+  fetchImpl = fetch,
+}: FetchFacebookPageMetricsInput): Promise<FacebookPageMetricsResult> => {
+  const token = safeTrim(accessToken);
+  if (!token) {
+    throw new Error(
+      `Missing ${FACEBOOK_PAGE_ACCESS_TOKEN_ENV}; configure a Facebook Page access token before syncing '${target.pageId}'.`,
+    );
+  }
+
+  const requestUrl = new URL(target.sourceUrl);
+  requestUrl.searchParams.set("access_token", token);
+
+  const response = await fetchImpl(requestUrl, {
+    headers: {
+      accept: "application/json",
+    },
+  });
+  const body = await response.text();
+  const payload = body.trim().length > 0 ? JSON.parse(body) : {};
+
+  if (!response.ok) {
+    const maybeError = isRecord(payload.error) ? payload.error : undefined;
+    const maybeMessage = maybeError ? safeTrim(maybeError.message) : undefined;
+    const maybeCode = maybeError ? toNonNegativeInteger(maybeError.code) : undefined;
+    const maybeSubcode = maybeError ? toNonNegativeInteger(maybeError.error_subcode) : undefined;
+    const maybePageIdHint =
+      maybeCode === 100 && maybeSubcode === 33
+        ? " This usually means facebookPageMetrics.pageId is not the Meta Graph Page ID, or the Page token cannot access that Page. Use the Graph Page ID shown in Meta Business Suite or a successful Graph Explorer Page object."
+        : "";
+    throw new Error(
+      `Facebook Graph API request failed for page '${target.pageId}': HTTP ${response.status}${
+        maybeMessage ? ` ${maybeMessage}` : ""
+      }${maybePageIdHint}`,
+    );
+  }
+
+  return normalizeFacebookPageMetricsResponse(payload, target);
+};
 
 const isMediumPublicTarget = (
   target: PublicAugmentationTarget | null,
@@ -582,7 +751,7 @@ const behaviorForTarget = (targetId: SyncablePublicTargetId): SyncableTargetBeha
   SYNCABLE_TARGET_BEHAVIORS[targetId];
 
 const hasRequiredAudienceMetrics = (
-  targetId: SyncablePublicTargetId,
+  targetId: PublicRichSyncTargetId,
   entry: PublicCacheEntry | undefined,
 ): boolean => {
   if (!entry) {
@@ -592,6 +761,10 @@ const hasRequiredAudienceMetrics = (
   const hasFollowers =
     hasDefinedAudienceMetric(entry.metadata.followersCount) ||
     hasDefinedAudienceMetric(entry.metadata.followersCountRaw);
+
+  if (targetId === "facebook-page-metrics") {
+    return hasFollowers;
+  }
 
   if (behaviorForTarget(targetId).requiresMembersCount) {
     return (
@@ -621,27 +794,31 @@ const hasRequiredAudienceMetrics = (
   return hasFollowers && hasFollowing && hasProfileDescription;
 };
 
-const skipReasonForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresMembersCount
-    ? "members_present"
-    : behaviorForTarget(targetId).requiresSubscribersCount
-      ? "subscribers_present"
-      : behaviorForTarget(targetId).requiresProfileDescription
-        ? "profile_metadata_present"
-        : behaviorForTarget(targetId).requiresFollowingCount
-          ? "audience_present"
-          : "followers_present";
+const skipReasonForTarget = (targetId: PublicRichSyncTargetId): string =>
+  targetId === "facebook-page-metrics"
+    ? "followers_present"
+    : behaviorForTarget(targetId).requiresMembersCount
+      ? "members_present"
+      : behaviorForTarget(targetId).requiresSubscribersCount
+        ? "subscribers_present"
+        : behaviorForTarget(targetId).requiresProfileDescription
+          ? "profile_metadata_present"
+          : behaviorForTarget(targetId).requiresFollowingCount
+            ? "audience_present"
+            : "followers_present";
 
-const skipMessageForTarget = (targetId: SyncablePublicTargetId): string =>
-  behaviorForTarget(targetId).requiresMembersCount
-    ? "members already present"
-    : behaviorForTarget(targetId).requiresSubscribersCount
-      ? "subscribers already present"
-      : behaviorForTarget(targetId).requiresProfileDescription
-        ? "followers, following, and profile description already present"
-        : behaviorForTarget(targetId).requiresFollowingCount
-          ? "followers and following already present"
-          : "followers already present";
+const skipMessageForTarget = (targetId: PublicRichSyncTargetId): string =>
+  targetId === "facebook-page-metrics"
+    ? "followers already present"
+    : behaviorForTarget(targetId).requiresMembersCount
+      ? "members already present"
+      : behaviorForTarget(targetId).requiresSubscribersCount
+        ? "subscribers already present"
+        : behaviorForTarget(targetId).requiresProfileDescription
+          ? "followers, following, and profile description already present"
+          : behaviorForTarget(targetId).requiresFollowingCount
+            ? "followers and following already present"
+            : "followers already present";
 
 const missingMetricsReasonForTarget = (targetId: SyncablePublicTargetId): string =>
   behaviorForTarget(targetId).requiresMembersCount
@@ -1142,6 +1319,7 @@ const defaultDependencies: PublicRichSyncDependencies = {
   loadPublicCache: (publicCachePath) => loadPublicCacheRegistry({ cachePath: publicCachePath }),
   writePublicCache: (publicCachePath, registry) =>
     writePublicCacheRegistry(publicCachePath, registry),
+  fetchFacebookPageMetrics,
   bootstrapBaseEntry: bootstrapPublicBaseEntry,
   captureAudienceMetrics: capturePublicAudienceMetricsFromBrowser,
   fetchFallbackAudienceMetrics: fetchPublicAudienceMetricsFallback,
@@ -1180,7 +1358,7 @@ export const shouldPublicRichSyncExitWithFailure = (
 
 interface PublicRichSyncCandidate {
   link: RichLinkInput;
-  target: SyncablePublicTarget;
+  target: PublicRichSyncTarget;
 }
 
 interface PublicRichSyncCandidateAttemptInput {
@@ -1205,11 +1383,122 @@ const withAttemptCount = (
   attempts: number,
 ): PublicRichSyncRunEntry => (attempts > 1 ? { ...entry, attempts } : entry);
 
+const facebookMetricsDetail = (metrics: FacebookPageMetricsResult): string =>
+  [
+    `followers_count=${metrics.followersCount}`,
+    metrics.fanCount === undefined ? undefined : `fan_count=${metrics.fanCount}`,
+    metrics.pageName ? `page=${metrics.pageName}` : undefined,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join("; ");
+
+const runFacebookPageMetricsSyncCandidateAttempt = async (
+  input: PublicRichSyncCandidateAttemptInput & {
+    candidate: {
+      link: RichLinkInput;
+      target: FacebookPageMetricsTarget;
+    };
+  },
+): Promise<PublicRichSyncCandidateAttemptResult> => {
+  const { args, candidate, dependencies, registry } = input;
+  const generatedAt = dependencies.nowIso();
+  const existingEntry = registry.entries[candidate.link.id];
+
+  if (
+    args.onlyMissing &&
+    !args.force &&
+    hasRequiredAudienceMetrics(candidate.target.id, existingEntry)
+  ) {
+    return {
+      dirty: false,
+      processed: false,
+      retryableFailure: false,
+      entry: {
+        linkId: candidate.link.id,
+        status: "skipped",
+        reason: skipReasonForTarget(candidate.target.id),
+      },
+    };
+  }
+
+  try {
+    const metrics = await (dependencies.fetchFacebookPageMetrics ?? fetchFacebookPageMetrics)({
+      target: candidate.target,
+    });
+    const nextMetadata: PublicCacheMetadata = {
+      ...(existingEntry?.metadata ?? {}),
+      followersCount: metrics.followersCount,
+      followersCountRaw: metrics.followersCountRaw,
+      sourceLabel: existingEntry?.metadata.sourceLabel ?? "facebook.com",
+    };
+    const stabilizedEntry = buildPublicCacheEntry({
+      previous: existingEntry,
+      linkId: candidate.link.id,
+      sourceUrl: metrics.sourceUrl,
+      metadata: nextMetadata,
+      updatedAt: generatedAt,
+    });
+
+    if (arePublicCacheEntriesEqual(existingEntry, stabilizedEntry)) {
+      return {
+        dirty: false,
+        processed: true,
+        retryableFailure: false,
+        entry: {
+          linkId: candidate.link.id,
+          status: "skipped",
+          reason: "counts_unchanged",
+          detail: facebookMetricsDetail(metrics),
+        },
+      };
+    }
+
+    registry.entries[candidate.link.id] = stabilizedEntry;
+    registry.updatedAt = generatedAt;
+    return {
+      dirty: true,
+      processed: true,
+      retryableFailure: false,
+      entry: {
+        linkId: candidate.link.id,
+        status: "synced",
+        reason: input.originalExistingEntry ? "counts_refreshed" : "bootstrapped_and_refreshed",
+        detail: facebookMetricsDetail(metrics),
+      },
+    };
+  } catch (error: unknown) {
+    return {
+      dirty: false,
+      processed: true,
+      retryableFailure: false,
+      entry: {
+        linkId: candidate.link.id,
+        status: "failed",
+        reason: toErrorMessage(error).includes(FACEBOOK_PAGE_ACCESS_TOKEN_ENV)
+          ? "token_missing"
+          : "facebook_graph_error",
+        detail: toErrorMessage(error),
+        fatal: true,
+      },
+    };
+  }
+};
+
 const runPublicRichSyncCandidateAttempt = async (
   input: PublicRichSyncCandidateAttemptInput,
 ): Promise<PublicRichSyncCandidateAttemptResult> => {
   const { args, candidate, dependencies, registry, remoteCachePolicyRegistry, remoteCacheStats } =
     input;
+  if (isFacebookPageMetricsTarget(candidate.target)) {
+    return runFacebookPageMetricsSyncCandidateAttempt({
+      ...input,
+      candidate: {
+        link: candidate.link,
+        target: candidate.target,
+      },
+    });
+  }
+
   const generatedAt = dependencies.nowIso();
   const existingEntry = registry.entries[candidate.link.id];
   let attemptDirty = false;
@@ -1440,20 +1729,27 @@ export const runPublicRichSyncWithDependencies = async (
   const candidates = linksPayload.links
     .filter(isRichLink)
     .filter((link) => !args.onlyLink || link.id === args.onlyLink)
-    .map((link) => ({
-      link,
-      target: resolvePublicAugmentationTarget({
+    .flatMap((link): PublicRichSyncCandidate[] => {
+      const maybePublicAugmentationTarget = resolvePublicAugmentationTarget({
         url: link.url,
         icon: link.icon,
         metadataHandle: link.metadata?.handle,
-      }),
-    }))
-    .filter((candidate): candidate is { link: RichLinkInput; target: SyncablePublicTarget } =>
-      isSyncablePublicTarget(candidate.target),
-    );
+      });
+      const targets: PublicRichSyncTarget[] = [];
+      if (isSyncablePublicTarget(maybePublicAugmentationTarget)) {
+        targets.push(maybePublicAugmentationTarget);
+      }
+
+      const maybeFacebookPageMetricsTarget = resolveFacebookPageMetricsTarget(link);
+      if (maybeFacebookPageMetricsTarget) {
+        targets.push(maybeFacebookPageMetricsTarget);
+      }
+
+      return targets.map((target) => ({ link, target }));
+    });
 
   if (candidates.length === 0) {
-    dependencies.log("No supported public-browser sync links matched the sync filters.");
+    dependencies.log("No supported public audience sync links matched the sync filters.");
     return {
       dirty: false,
       processed,
@@ -1537,8 +1833,9 @@ export const runPublicRichSyncWithDependencies = async (
 
     entries.push(entry);
     const attemptSummary = entry.attempts ? ` after ${entry.attempts} attempts` : "";
+    const artifactSummary = entry.artifactPath ? ` (${entry.artifactPath})` : "";
     dependencies.log(
-      `[public:rich:sync] fresh public observation ${candidate.link.id}${attemptSummary}. (${entry.artifactPath})`,
+      `[public:rich:sync] fresh public observation ${candidate.link.id}${attemptSummary}.${artifactSummary}`,
     );
   }
 

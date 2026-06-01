@@ -74,7 +74,7 @@ test("nightly follower history defers public audience failures until after deplo
   // Act / Assert
   assert.match(
     workflowSource,
-    /- name: Refresh public audience cache\n\s+run: bun run public:rich:sync -- --defer-failures --summary-json \.ci-diagnostics\/public-rich-sync-summary\.json/u,
+    /- name: Refresh public audience cache\n\s+env:\n\s+OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN: \$\{\{ secrets\.OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN \}\}\n\s+run: bun run public:rich:sync -- --defer-failures --summary-json \.ci-diagnostics\/public-rich-sync-summary\.json/u,
   );
   const publishSummaryIndex = requireLine(workflowSource, "- name: Publish summary");
   const uploadDiagnosticsIndex = requireLine(
@@ -114,6 +114,17 @@ test("nightly follower history includes Substack in the fresh public audience co
   assert.match(publicRichSyncSource, /id:\s+"substack-public-profile"/u);
   assert.match(publicRichSyncSource, /requiresSubscribersCount:\s+true/u);
   assert.match(followerHistorySyncSource, /"substack-public-profile"/u);
+});
+
+test("nightly follower history passes Facebook Page metrics through public sync freshness", () => {
+  // Arrange
+  const publicRichSyncSource = fs.readFileSync(PUBLIC_RICH_SYNC_PATH, "utf8");
+  const followerHistorySyncSource = fs.readFileSync(FOLLOWER_HISTORY_SYNC_PATH, "utf8");
+
+  // Act / Assert
+  assert.match(publicRichSyncSource, /id:\s+"facebook-page-metrics"/u);
+  assert.match(publicRichSyncSource, /OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN/u);
+  assert.match(followerHistorySyncSource, /"facebook-page-metrics"/u);
 });
 
 test("nightly audience health treats nonfatal public sync failures as advisory", () => {

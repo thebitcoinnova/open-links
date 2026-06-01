@@ -765,6 +765,7 @@ Per-link controls:
 - `allowKnownBlocker`: explicit override to force-attempt enrichment for a known blocked domain
 - `authenticatedExtractor`: use committed authenticated cache instead of public enrichment for true auth-required domains (currently LinkedIn and Facebook)
 - `authenticatedCacheKey`: optional cache-key override (default uses `link.id`)
+- `facebookPageMetrics`: opt into Meta Graph Page `followers_count` capture for Facebook Page links; set `enabled: true`, `pageId`, and optionally `apiVersion` (default `v24.0`). `pageId` is the Meta Graph Page ID, which may differ from the numeric ID in a public Facebook URL. Runtime sync reads `OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN` and does not use `fan_count` or crawler-visible likes as follower history. If Graph returns code `100` / subcode `33`, verify the Business Suite Page ID, the token's Page access, and the Page object ID that succeeds in Graph API Explorer.
 - `sourceLabel`
 - `sourceLabelVisible`
 - `custom`
@@ -879,9 +880,9 @@ observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audien
 2026-03-10T02:29:19.676Z,github,github,prizz,https://github.com/pRizz,followers,90,90 followers,public-cache
 ```
 
-The follower-history sync reads the normalized audience metadata that runtime also uses for profile-card header metrics. That means both public-augmented and authenticated-cache-backed profiles can contribute history when they expose a primary audience field.
+The follower-history sync reads the normalized audience metadata that runtime also uses for profile-card header metrics. That means public-augmented profiles, authenticated-cache-backed profiles, and opt-in Facebook Page Graph metrics can contribute history when they expose a primary audience field.
 
-History files are link-scoped rather than platform-scoped. This avoids blending separate entities that share a platform, such as two `x` profiles or an `x` profile plus an `x` community. When adding or changing Instagram, Medium, X, Primal, or YouTube profile links that should publish analytics, run `bun run public:rich:sync -- --only-link <link-id>` for each link before `bun run followers:history:sync`; Instagram metadata can lag the browser-rendered public counts, and X oEmbed enrichment alone does not expose follower counts.
+History files are link-scoped rather than platform-scoped. This avoids blending separate entities that share a platform, such as two `x` profiles or an `x` profile plus an `x` community. When adding or changing Instagram, Medium, X, Primal, YouTube, or Facebook Page links that should publish analytics, run `bun run public:rich:sync -- --only-link <link-id>` for each link before `bun run followers:history:sync`; Instagram metadata can lag the browser-rendered public counts, X oEmbed enrichment alone does not expose follower counts, and Facebook Page history uses Meta Graph `followers_count` rather than crawler-visible likes.
 
 #### Analytics and share surfaces
 

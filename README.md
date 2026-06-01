@@ -248,9 +248,10 @@ If your links use authenticated extractors (`links[].enrichment.authenticatedExt
 bun run setup:rich-auth
 ```
 
-If you use Instagram, Medium, X, Primal, or YouTube rich links and want the optional public audience metrics cached locally, run this once per link id:
+If you use Instagram, Medium, X, Primal, YouTube, or Facebook Page rich links and want the optional public audience metrics cached locally, run this once per link id. Facebook Page metrics require `OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN`:
 
 ```bash
+bun run public:rich:sync -- --only-link bright-builds-facebook
 bun run public:rich:sync -- --only-link instagram
 bun run public:rich:sync -- --only-link medium
 bun run public:rich:sync -- --only-link x
@@ -258,7 +259,9 @@ bun run public:rich:sync -- --only-link primal
 bun run public:rich:sync -- --only-link youtube
 ```
 
-For Instagram and X, `bun run enrich:rich:strict:write-cache` can miss the browser-rendered public audience counts. Use `public:rich:sync` before follower-history sync whenever you add or change an Instagram, Medium, X, Primal, or YouTube profile card that should show analytics.
+For Instagram and X, `bun run enrich:rich:strict:write-cache` can miss the browser-rendered public audience counts. Facebook Page follower counts come from Meta Graph `followers_count`, not crawler-visible likes. Use `public:rich:sync` before follower-history sync whenever you add or change an Instagram, Medium, X, Primal, YouTube, or Facebook Page card that should show analytics.
+
+For Facebook Page metrics, `links[].enrichment.facebookPageMetrics.pageId` must be the Meta Graph Page ID. It may differ from the numeric ID in a public `facebook.com/people/.../.../` URL. Verify it in Meta Business Suite Page settings or by running `/{pageId}?fields=id,name,followers_count,fan_count` in Graph API Explorer. If the public URL ID returns Graph code `100` with subcode `33`, use the Business Suite Page ID or the Page object ID from a successful Graph Explorer response instead. Never paste, commit, or share user or Page access tokens.
 
 If you want to refresh the public follower-history artifacts locally before the nightly automation does it on `main`, run:
 
@@ -417,7 +420,7 @@ Live build provenance surfaces:
 - `bun run enrich:rich:write-cache` - run non-strict rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
 - `bun run enrich:rich:strict` - run policy-enforced rich metadata enrichment (blocking mode) with known-blocker + authenticated-cache policy enforcement; routine runs leave `data/cache/rich-public-cache.json` unchanged and only update the local runtime overlay when needed.
 - `bun run enrich:rich:strict:write-cache` - run policy-enforced rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
-- `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal/YouTube profile audience metrics into the committed stable cache at `data/cache/rich-public-cache.json` and the local runtime overlay at `data/cache/rich-public-cache.runtime.json` (non-auth, operator-invoked; use `-- --only-link <link-id>` for each profile card that needs metrics).
+- `bun run public:rich:sync` - refresh public browser-derived Medium/X/Primal/YouTube profile audience metrics and opt-in Facebook Page Graph follower metrics into the committed stable cache at `data/cache/rich-public-cache.json` and the local runtime overlay at `data/cache/rich-public-cache.runtime.json` (operator-invoked; use `-- --only-link <link-id>` for each profile card that needs metrics; Facebook Page metrics require `OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN`).
 - `bun run followers:history:sync` - append the current follower/subscriber snapshots into the public CSV history files under `public/history/followers/` and refresh `public/history/followers/index.json`; public-cache audience rows require a same-run `public:rich:sync -- --summary-json ...` success entry so stale cached metadata is not recorded as new data.
 - `bun run setup:rich-auth` - first-run authenticated cache setup (captures only missing/invalid authenticated cache entries).
 - `bun run auth:rich:sync` - guided authenticated rich-cache capture (updates `data/cache/rich-authenticated-cache.json` + `public/cache/rich-authenticated/*`).
@@ -446,7 +449,7 @@ Live build provenance surfaces:
   - `public/history/followers/index.json`
 - Local parity:
   - `bun run enrich:rich:strict:write-cache`
-  - `bun run public:rich:sync -- --summary-json .ci-diagnostics/public-rich-sync-summary.json` or targeted `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for new/changed Instagram, Medium, X, Primal, or YouTube profile links
+  - `bun run public:rich:sync -- --summary-json .ci-diagnostics/public-rich-sync-summary.json` or targeted `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for new/changed Instagram, Medium, X, Primal, YouTube, or Facebook Page links
   - `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`
   - `bun run build`
 - Manual backfill for nonfatal public browser failures, such as Instagram login walls:
