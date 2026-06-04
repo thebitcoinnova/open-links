@@ -29,7 +29,7 @@
         "twitterImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp",
         "sourceLabel": "signup.cluborange.org"
       },
-      "lastModified": "Wed, 03 Jun 2026 08:37:26 GMT"
+      "lastModified": "Sun, 31 May 2026 08:02:37 GMT"
     },
     "github": {
       "linkId": "github",
@@ -49,7 +49,7 @@
         "followingCount": 101,
         "followingCountRaw": "101 following"
       },
-      "etag": "W/\"70ebbe10ec6a45e01e39f221a07b3ea9\""
+      "etag": "W/\"50bccf14d60a100a098323e201797dc5\""
     },
     "instagram": {
       "linkId": "instagram",
@@ -72,9 +72,13 @@
       "linkId": "lemonade-referral",
       "sourceUrl": "https://lemonade.com/r/peterryszkiewicz",
       "capturedAt": "2026-04-05T07:24:09.372Z",
-      "updatedAt": "2026-06-01T08:49:36.223Z",
+      "updatedAt": "2026-06-04T08:26:51.433Z",
       "metadata": {
-        "title": "Lemonade",
+        "title": "Lemonade Insurance | Home, Car, Pet, and Life Coverage",
+        "description": "Lemonade offers renters and home insurance powered by tech and driven by social good. ❤ We promise zero paperwork and instant everything by replacing brokers and bureaucracy with bots and machine learning. Get a Lemonade insurance policy in 90 seconds, starting at $5/month.",
+        "image": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "ogImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
+        "twitterImage": "https://monolith-assets.lemonade.com/lemonade-share-image.e5edb258d8ac2711c113.png",
         "sourceLabel": "lemonade.com"
       }
     },
@@ -164,7 +168,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fpryszkie&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-03-08T19:05:44.872Z",
-      "updatedAt": "2026-06-02T08:31:21.601Z",
+      "updatedAt": "2026-06-04T08:27:17.363Z",
       "metadata": {
         "title": "@pryszkie on X",
         "description": "Posts and updates from @pryszkie on X.",
@@ -172,10 +176,10 @@
         "image": "https://unavatar.io/x/pryszkie",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/pryszkie",
-        "followersCount": 1386,
-        "followersCountRaw": "1,386 Followers",
-        "followingCount": 776,
-        "followingCountRaw": "776 Following"
+        "followersCount": 1387,
+        "followersCountRaw": "1,387 Followers",
+        "followingCount": 779,
+        "followingCountRaw": "779 Following"
       },
       "lastModified": "Wed, 27 May 2026 13:51:48 GMT"
     },
