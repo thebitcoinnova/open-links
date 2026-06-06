@@ -178,6 +178,11 @@ export interface LinkEnrichmentPolicy {
   allowKnownBlocker?: boolean;
   authenticatedExtractor?: string;
   authenticatedCacheKey?: string;
+  facebookPageMetrics?: {
+    enabled?: boolean;
+    pageId?: string;
+    apiVersion?: string;
+  };
   sourceLabel?: string;
   sourceLabelVisible?: boolean;
   custom?: Record<string, unknown>;

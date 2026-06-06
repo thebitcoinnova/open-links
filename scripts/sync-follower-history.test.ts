@@ -47,6 +47,27 @@ const createSubstackLink = (): OpenLink => ({
   },
 });
 
+const createBrightBuildsFacebookLink = (): OpenLink => ({
+  id: "bright-builds-facebook",
+  label: "Bright Builds LLC",
+  url: "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/",
+  type: "rich",
+  icon: "facebook",
+  enabled: true,
+  metadata: {
+    title: "Bright Builds LLC",
+    profileDescription: "Chicago software engineering, open-source work, and business updates.",
+  },
+  enrichment: {
+    enabled: false,
+    authenticatedExtractor: "facebook-auth-browser",
+    facebookPageMetrics: {
+      enabled: true,
+      pageId: "1002804269589824",
+    },
+  },
+});
+
 const createYoutubePublicRegistry = (): Parameters<typeof resolveSnapshots>[1] =>
   createPublicRegistry({
     youtube: {
@@ -82,6 +103,22 @@ const createSubstackPublicRegistry = (): Parameters<typeof resolveSnapshots>[1] 
         sourceLabel: "peter.ryszkiewicz.us",
         subscribersCount: 15,
         subscribersCountRaw: "15 subscribers",
+      },
+    },
+  });
+
+const createBrightBuildsFacebookPublicRegistry = (): Parameters<typeof resolveSnapshots>[1] =>
+  createPublicRegistry({
+    "bright-builds-facebook": {
+      linkId: "bright-builds-facebook",
+      sourceUrl:
+        "https://graph.facebook.com/v24.0/1002804269589824?fields=id%2Cname%2Cfollowers_count%2Cfan_count",
+      capturedAt: "2026-05-31T12:00:00.000Z",
+      updatedAt: "2026-05-31T12:00:00.000Z",
+      metadata: {
+        sourceLabel: "facebook.com",
+        followersCount: 41,
+        followersCountRaw: "41 followers",
       },
     },
   });
@@ -385,6 +422,153 @@ test("resolveSnapshots skips Substack public-cache rows after stale enrichment f
 
   // Assert
   assert.deepEqual(snapshots, []);
+});
+
+test("resolveSnapshots skips Facebook Page metrics rows without fresh Graph sync evidence", () => {
+  // Arrange
+  const links = [createBrightBuildsFacebookLink()];
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createBrightBuildsFacebookPublicRegistry(),
+    null,
+    "2026-05-31T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: resolveFreshPublicRichSyncLinkIds(undefined),
+    },
+  );
+
+  // Assert
+  assert.deepEqual(snapshots, []);
+});
+
+test("resolveSnapshots accepts Facebook Page metrics rows after fresh Graph sync evidence", () => {
+  // Arrange
+  const links = [createBrightBuildsFacebookLink()];
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [
+      {
+        linkId: "bright-builds-facebook",
+        status: "synced" as const,
+        reason: "counts_refreshed",
+      },
+    ],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createBrightBuildsFacebookPublicRegistry(),
+    null,
+    "2026-05-31T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: freshLinkIds,
+    },
+  );
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.linkId, "bright-builds-facebook");
+  assert.equal(snapshots[0]?.row.platform, "facebook");
+  assert.equal(snapshots[0]?.row.handle, "bright-builds-llc");
+  assert.equal(snapshots[0]?.row.audienceCountRaw, "41 followers");
+  assert.equal(snapshots[0]?.row.source, "public-cache");
+});
+
+test("resolveSnapshots does not treat Facebook fan_count as follower history", () => {
+  // Arrange
+  const links = [createBrightBuildsFacebookLink()];
+  const fanCountOnlyRegistry = createPublicRegistry({
+    "bright-builds-facebook": {
+      linkId: "bright-builds-facebook",
+      sourceUrl:
+        "https://graph.facebook.com/v24.0/1002804269589824?fields=id%2Cname%2Cfollowers_count%2Cfan_count",
+      capturedAt: "2026-05-31T12:00:00.000Z",
+      updatedAt: "2026-05-31T12:00:00.000Z",
+      metadata: {
+        sourceLabel: "facebook.com",
+        fanCount: 32,
+      } as unknown as Parameters<typeof resolveSnapshots>[1]["entries"][string]["metadata"],
+    },
+  });
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [
+      {
+        linkId: "bright-builds-facebook",
+        status: "synced" as const,
+        reason: "counts_refreshed",
+      },
+    ],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    fanCountOnlyRegistry,
+    null,
+    "2026-05-31T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: freshLinkIds,
+    },
+  );
+
+  // Assert
+  assert.deepEqual(snapshots, []);
+});
+
+test("resolveSnapshots supplements authenticated metadata with public-cache Facebook audience", () => {
+  // Arrange
+  const links = [createBrightBuildsFacebookLink()];
+  const authenticatedRegistry = {
+    entries: {
+      "bright-builds-facebook": {
+        metadata: {
+          title: "Bright Builds LLC on Facebook",
+          description: "Profile and updates from Bright Builds LLC on Facebook.",
+          image: "cache/rich-authenticated/bright-builds.jpg",
+          profileImage: "cache/rich-authenticated/bright-builds.jpg",
+          sourceLabel: "facebook.com",
+        },
+      },
+    },
+  } as unknown as Parameters<typeof resolveSnapshots>[2];
+  const freshLinkIds = resolveFreshPublicRichSyncLinkIds({
+    entries: [
+      {
+        linkId: "bright-builds-facebook",
+        status: "skipped" as const,
+        reason: "counts_unchanged",
+      },
+    ],
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    createBrightBuildsFacebookPublicRegistry(),
+    authenticatedRegistry,
+    "2026-05-31T13:00:00.000Z",
+    {
+      freshPublicAudienceLinkIds: freshLinkIds,
+    },
+  );
+
+  // Assert
+  assert.deepEqual(
+    snapshots.map((snapshot) => ({
+      linkId: snapshot.row.linkId,
+      source: snapshot.row.source,
+      audienceCountRaw: snapshot.row.audienceCountRaw,
+    })),
+    [
+      {
+        linkId: "bright-builds-facebook",
+        source: "public-cache",
+        audienceCountRaw: "41 followers",
+      },
+    ],
+  );
 });
 
 test("resolveSnapshots keeps manual and authenticated snapshots without public sync evidence", () => {

@@ -274,6 +274,34 @@
       },
       "additionalProperties": true
     },
+    "facebookPageMetricsConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "pageId": {
+          "type": "string",
+          "pattern": "^\\d{5,30}$"
+        },
+        "apiVersion": {
+          "type": "string",
+          "pattern": "^v\\d+\\.\\d+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": { "const": true }
+            },
+            "required": ["enabled"]
+          },
+          "then": {
+            "required": ["pageId"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
     "linkItem": {
       "type": "object",
       "required": ["id", "label", "type"],
@@ -355,6 +383,7 @@
             "allowKnownBlocker": { "type": "boolean" },
             "authenticatedExtractor": { "type": "string", "minLength": 1 },
             "authenticatedCacheKey": { "type": "string", "minLength": 1 },
+            "facebookPageMetrics": { "$ref": "#/$defs/facebookPageMetricsConfig" },
             "sourceLabel": { "type": "string" },
             "sourceLabelVisible": { "type": "boolean" },
             "custom": {

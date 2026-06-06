@@ -42,6 +42,8 @@ jobs:
         run: bun run enrich:rich:strict:write-cache
 
       - name: Refresh public audience cache
+        env:
+          OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN: ${{ secrets.OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN }}
         run: bun run public:rich:sync -- --defer-failures --summary-json .ci-diagnostics/public-rich-sync-summary.json
 
       - name: Append follower history snapshots
