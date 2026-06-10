@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Tue, 09 Jun 2026 10:02:11 GMT"
+      "lastModified": "Wed, 10 Jun 2026 07:52:16 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Bitcoin_Sovryn_Head_Banner.png?v=1776621154&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:617c56b8915f7102d4f17fc6e4e4622e\""
+      "etag": "\"page_cache:93620306263:IndexController:b8091fb51bcd885d61fa3ac6b10207a7\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -43,7 +43,7 @@
         "sourceLabel": "signup.cluborange.org",
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
-      "lastModified": "Mon, 08 Jun 2026 11:50:55 GMT"
+      "lastModified": "Wed, 10 Jun 2026 10:51:12 GMT"
     },
     "fountain": {
       "linkId": "fountain",
@@ -90,7 +90,7 @@
       "linkId": "live-with-the-hive-podcast",
       "sourceUrl": "https://www.youtube.com/@HiveMinded21/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-06-09T10:29:39.050Z",
+      "updatedAt": "2026-06-10T10:51:14.062Z",
       "metadata": {
         "title": "Hive Minded",
         "description": "The Hive Minded is created and hosted by Staci Costopoulos, creator of The Bitcoin Nova.The Hive Minded is a Bitcoin hangout. Real conversations, reactions, ...",
@@ -99,8 +99,8 @@
         "twitterImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 369,
-        "subscribersCountRaw": "369 subscribers"
+        "subscribersCount": 375,
+        "subscribersCountRaw": "375 subscribers"
       }
     },
     "rumble": {
@@ -133,7 +133,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:3f128cf5e61226971a0e5a3d9013c305\""
+      "etag": "\"page_cache:94205477246:IndexController:ffb0162a3db5dbccb54cc7f8d3d1f3f0\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -169,7 +169,7 @@
       "linkId": "the-bitcoin-nova-x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fthebitcoinnova&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-05-08T22:08:31.327Z",
-      "updatedAt": "2026-06-09T10:30:44.688Z",
+      "updatedAt": "2026-06-10T10:51:52.246Z",
       "metadata": {
         "title": "@TheBitcoinNova on X",
         "description": "Posts and updates from @TheBitcoinNova on X.",
@@ -177,8 +177,8 @@
         "image": "https://unavatar.io/x/TheBitcoinNova",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 550,
-        "followersCountRaw": "550 Followers",
+        "followersCount": 552,
+        "followersCountRaw": "552 Followers",
         "followingCount": 561,
         "followingCountRaw": "561 Following"
       },
@@ -197,13 +197,13 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com"
       },
-      "lastModified": "Mon, 08 Jun 2026 11:50:54 GMT"
+      "lastModified": "Wed, 10 Jun 2026 10:51:11 GMT"
     },
     "x": {
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fstacinova&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-06-09T10:31:03.508Z",
+      "updatedAt": "2026-06-10T10:52:13.260Z",
       "metadata": {
         "title": "@StaciNova on X",
         "description": "Posts and updates from @StaciNova on X.",
@@ -211,10 +211,10 @@
         "image": "https://unavatar.io/x/StaciNova",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/StaciNova",
-        "followersCount": 5772,
-        "followersCountRaw": "5,772 Followers",
-        "followingCount": 4403,
-        "followingCountRaw": "4,403 Following",
+        "followersCount": 5776,
+        "followersCountRaw": "5,776 Followers",
+        "followingCount": 4402,
+        "followingCountRaw": "4,402 Following",
         "membersCount": 1000,
         "membersCountRaw": "1K members"
       },
@@ -238,7 +238,7 @@
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@StaciNova/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-06-08T11:50:27.846Z",
+      "updatedAt": "2026-06-10T10:50:44.296Z",
       "metadata": {
         "title": "The Bitcoin Nova Podcast",
         "description": "Before Bitcoin, my job was listening. In a salon chair, people tell you everything, their fears, their hopes, the things they don't say out loud anywhere els...",
@@ -247,8 +247,8 @@
         "twitterImage": "https://yt3.googleusercontent.com/g3CEDb3UutJmqnwvj3kgq2PB73LbNnYlL2JqvIzZu0WAJVRxfYJ9cfqblVvi3MPuAanufVbK=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
         "profileImage": "https://yt3.googleusercontent.com/g3CEDb3UutJmqnwvj3kgq2PB73LbNnYlL2JqvIzZu0WAJVRxfYJ9cfqblVvi3MPuAanufVbK=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 21000,
-        "subscribersCountRaw": "21K subscribers"
+        "subscribersCount": 20900,
+        "subscribersCountRaw": "20.9K subscribers"
       }
     }
   }
