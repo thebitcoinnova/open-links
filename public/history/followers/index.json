@@ -1,7 +1,19 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-11T08:43:03.961Z",
+  "updatedAt": "2026-06-11T12:03:35.869Z",
   "entries": [
+    {
+      "linkId": "bright-builds-facebook",
+      "label": "Bright Builds LLC",
+      "platform": "facebook",
+      "handle": "bright-builds-llc",
+      "canonicalUrl": "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/",
+      "audienceKind": "followers",
+      "csvPath": "history/followers/bright-builds-facebook.csv",
+      "latestAudienceCount": 32,
+      "latestAudienceCountRaw": "32 followers",
+      "latestObservedAt": "2026-06-11T12:03:35.869Z"
+    },
     {
       "linkId": "github",
       "label": "GitHub",
@@ -12,7 +24,7 @@
       "csvPath": "history/followers/github.csv",
       "latestAudienceCount": 98,
       "latestAudienceCountRaw": "98 followers",
-      "latestObservedAt": "2026-06-11T08:43:03.961Z"
+      "latestObservedAt": "2026-06-11T12:03:35.869Z"
     },
     {
       "linkId": "instagram",
@@ -36,7 +48,7 @@
       "csvPath": "history/followers/medium.csv",
       "latestAudienceCount": 3300,
       "latestAudienceCountRaw": "3.3K followers",
-      "latestObservedAt": "2026-06-11T08:43:03.961Z"
+      "latestObservedAt": "2026-06-11T12:03:35.869Z"
     },
     {
       "linkId": "primal",
@@ -48,7 +60,7 @@
       "csvPath": "history/followers/primal.csv",
       "latestAudienceCount": 24,
       "latestAudienceCountRaw": "24 followers",
-      "latestObservedAt": "2026-06-11T08:43:03.961Z"
+      "latestObservedAt": "2026-06-11T12:03:35.869Z"
     },
     {
       "linkId": "substack",
@@ -60,7 +72,7 @@
       "csvPath": "history/followers/substack.csv",
       "latestAudienceCount": 15,
       "latestAudienceCountRaw": "15 subscribers",
-      "latestObservedAt": "2026-06-11T08:43:03.961Z"
+      "latestObservedAt": "2026-06-11T12:03:35.869Z"
     },
     {
       "linkId": "x",
@@ -84,7 +96,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 21,
       "latestAudienceCountRaw": "21 subscribers",
-      "latestObservedAt": "2026-06-11T08:43:03.961Z"
+      "latestObservedAt": "2026-06-11T12:03:35.869Z"
     }
   ]
 }
