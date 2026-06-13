@@ -30,6 +30,19 @@ read_result_field() {
   ' "$result_path" "$field_name"
 }
 
+print_failed_sync_result() {
+  local result_path="$1"
+
+  if [[ ! -s "$result_path" ]]; then
+    printf 'Upstream sync failed before writing a structured result: %s\n' "$result_path" >&2
+    return 0
+  fi
+
+  printf 'Upstream sync failed; structured result follows:\n' >&2
+  cat "$result_path" >&2
+  printf '\n' >&2
+}
+
 configure_upstream_remote() {
   local upstream_url="${UPSTREAM_REPOSITORY_URL:-https://github.com/pRizz/open-links.git}"
 
@@ -73,6 +86,10 @@ run_sync() {
   bun run sync:upstream:main --json > "$result_path"
   local command_status=$?
   set -e
+
+  if [[ "$command_status" -ne 0 ]]; then
+    print_failed_sync_result "$result_path"
+  fi
 
   write_output "command_status" "$command_status"
   write_output "result_path" "$result_path"
