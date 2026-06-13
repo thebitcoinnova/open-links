@@ -18,7 +18,7 @@ const writeExecutable = (filePath: string, contents: string) => {
 const createFakeGit = (binDir: string) => {
   writeExecutable(
     path.join(binDir, "git"),
-    `#!/usr/bin/env bash
+    `#!/bin/bash
 set -euo pipefail
 
 if [[ "$1" == "rev-parse" && "\${2:-}" == "HEAD" ]]; then
@@ -35,7 +35,7 @@ exit 1
 const createFakeBun = (binDir: string, exitCode: 0 | 1) => {
   writeExecutable(
     path.join(binDir, "bun"),
-    `#!/usr/bin/env bash
+    `#!/bin/bash
 set -euo pipefail
 
 if [[ "$1" == "run" && "\${2:-}" == "sync:upstream" && "\${3:-}" == "--json" ]]; then
@@ -69,7 +69,7 @@ const runWrapper = (t: test.TestContext, exitCode: 0 | 1) => {
   createFakeGit(binDir);
   createFakeBun(binDir, exitCode);
 
-  return spawnSync("bash", [SCRIPT_PATH, "run-sync"], {
+  return spawnSync("/bin/bash", [SCRIPT_PATH, "run-sync"], {
     cwd: ROOT,
     encoding: "utf8",
     env: {
