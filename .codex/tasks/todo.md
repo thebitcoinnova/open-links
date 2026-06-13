@@ -215,3 +215,15 @@
 - Result: `public:rich:sync` now defaults to two delayed retries spaced 120 seconds apart for nonfatal public audience failures, including browser capture misses and bootstrap sync errors. Fatal profile-unavailable classifications do not retry. Run summaries can now report attempt counts, and the nightly summary lists retried audience links plus final attempts on failed links.
 - Verification: `bun test scripts/public-rich-sync.test.ts`, `bun test scripts/public-rich-sync.test.ts scripts/github-actions/nightly-follower-history-workflow.test.ts`, `bun run test:deploy`, `bun run typecheck`, `bunx @biomejs/biome check scripts/public-rich-sync.ts scripts/public-rich-sync.test.ts scripts/github-actions/nightly-follower-history-summary.mjs .codex/tasks/todo.md --files-ignore-unknown=true`, `bun run enrich:rich:strict`, `bun run validate:data`, and `git diff --check` passed.
 - Residual risk: CI runner anti-bot behavior is external and may still outlast the default four-minute retry budget. `enrich:rich:strict` and `validate:data` continue to report the pre-existing Rumble partial-metadata warning for missing `followersCount`.
+
+## task-upstream-sync-staci | 2026-06-13 12:40 CDT | Sync fork with upstream and refresh public rich cache
+
+- [x] Run the fork-aware upstream sync path from the attached branch and install dependencies afterward.
+- [x] Persist safe public rich-cache updates surfaced by strict enrichment without mutating authenticated cache policy or link config.
+- [x] Verify the synced branch with data/enrichment diagnostics, image sync, required lint/typecheck/test commands, production build, and diff checks.
+
+### Completion Review
+
+- Result: `codex/upstream-sync-observability` was synchronized with `upstream/main` by `bun run sync:upstream`, producing merge commit `a43f0c7` (`chore: sync upstream/main`). The only manual follow-up change refreshed `data/cache/rich-public-cache.json` for current public metadata, including updated Instagram and Rumble image sources; `bun run images:sync` confirmed existing localized image-cache entries remained coherent.
+- Verification: `bun install` passed. `bun run enrich:rich:strict` passed. `bun run enrich:rich:strict:write-cache` passed. `bun run images:sync` passed. `bun run validate:data` passed with no errors. `bun run biome:check` passed. `bun run studio:lint` passed. `bun run typecheck` passed. `bun run studio:typecheck` passed. `bun run --filter @openlinks/studio-api test` passed. `bun run studio:test:integration` passed. `bun run build` passed. `git diff --check` passed.
+- Residual risk: Validation still reports stale authenticated cache warnings for `linkedin` and `facebook`, which require an authenticated cache refresh path, and Rumble still lacks `followersCount` in public metadata. In this fork checkout, I intentionally did not run auth/session-dependent cache refreshes or change link metadata without an explicit user choice.
