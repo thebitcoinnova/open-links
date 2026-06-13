@@ -3,18 +3,6 @@
   "updatedAt": "2026-06-13T08:20:17.883Z",
   "entries": [
     {
-      "linkId": "bright-builds-facebook",
-      "label": "Bright Builds LLC",
-      "platform": "facebook",
-      "handle": "bright-builds-llc",
-      "canonicalUrl": "https://www.facebook.com/people/Bright-Builds-LLC/61588043858384/",
-      "audienceKind": "followers",
-      "csvPath": "history/followers/bright-builds-facebook.csv",
-      "latestAudienceCount": 32,
-      "latestAudienceCountRaw": "32 followers",
-      "latestObservedAt": "2026-06-11T12:03:35.869Z"
-    },
-    {
       "linkId": "github",
       "label": "GitHub",
       "platform": "github",

@@ -93,7 +93,7 @@
         "enabled": false,
         "authenticatedExtractor": "facebook-auth-browser",
         "facebookPageMetrics": {
-          "enabled": true,
+          "enabled": false,
           "pageId": "1002804269589824"
         }
       },

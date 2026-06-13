@@ -1,17 +1,6 @@
 {
   "version": 1,
   "entries": {
-    "bright-builds-facebook": {
-      "linkId": "bright-builds-facebook",
-      "sourceUrl": "https://graph.facebook.com/v24.0/1002804269589824?fields=id%2Cname%2Cfollowers_count%2Cfan_count",
-      "capturedAt": "2026-06-11T11:57:45.666Z",
-      "updatedAt": "2026-06-11T11:57:45.666Z",
-      "metadata": {
-        "sourceLabel": "facebook.com",
-        "followersCount": 32,
-        "followersCountRaw": "32 followers"
-      }
-    },
     "cluborange": {
       "linkId": "cluborange",
       "sourceUrl": "https://app.cluborange.org/pryszkie",
