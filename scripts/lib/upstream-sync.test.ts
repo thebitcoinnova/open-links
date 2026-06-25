@@ -28,6 +28,39 @@ const remoteCachePolicyOverlay = (ruleId: string, domain: string): string =>
     ],
   })}\n`;
 
+const brightBuildsAudit = (options: {
+  exactCommit?: string;
+  lastOperation?: string;
+  lastUpdated: string;
+  managedFiles?: string[];
+}): string => {
+  const managedFiles = options.managedFiles ?? [
+    "AGENTS.md (managed block)",
+    "AGENTS.bright-builds.md",
+    "bright-builds-rules.audit.md",
+  ];
+
+  return `# Bright Builds Rules Audit Trail
+
+<!-- bright-builds-rules-managed-file: bright-builds-rules.audit.md -->
+
+This file records that this repository is using the Bright Builds Rules and shows where the managed adoption files came from.
+
+## Current installation
+
+- Source repository: \`https://github.com/bright-builds-llc/bright-builds-rules\`
+- Version pin: \`main\`
+- Exact commit: \`${options.exactCommit ?? "rules-commit"}\`
+- Canonical entrypoint: \`https://github.com/bright-builds-llc/bright-builds-rules/blob/main/standards/index.md\`
+- Last operation: \`${options.lastOperation ?? "update"}\`
+- Last updated (UTC): \`${options.lastUpdated}\`
+
+## Managed files
+
+${managedFiles.map((managedFile) => `- \`${managedFile}\``).join("\n")}
+`;
+};
+
 const git = (cwd: string, args: string[], allowFailure = false) =>
   runCommand("git", args, { allowFailure, cwd });
 
@@ -286,6 +319,165 @@ test("runUpstreamSync merges identical shared-path updates while preserving fork
     assert.deepEqual(result.conflictingPaths, ["README.md", "data/profile.json"]);
     assert.equal(profile, '{ "name": "Fork" }\n');
     assert.equal(readme, "# Synced README\n");
+    assert.equal(git(workspace.forkRepo, ["status", "--porcelain"]).stdout.trim(), "");
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync auto-resolves Bright Builds audit runtime metadata conflicts", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    const forkAudit = brightBuildsAudit({ lastUpdated: "2026-06-15T18:19:55Z" });
+    const upstreamAudit = brightBuildsAudit({ lastUpdated: "2026-06-15T16:00:21Z" });
+
+    // Arrange
+    writeText(path.join(workspace.forkRepo, "bright-builds-rules.audit.md"), forkAudit);
+    commitAll(workspace.forkRepo, "fork audit timestamp update");
+
+    writeText(path.join(workspace.upstreamWorktree, "bright-builds-rules.audit.md"), upstreamAudit);
+    commitAll(workspace.upstreamWorktree, "upstream audit timestamp update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    // Act
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+
+    // Assert
+    const audit = fs.readFileSync(
+      path.join(workspace.forkRepo, "bright-builds-rules.audit.md"),
+      "utf8",
+    );
+    assert.equal(result.status, "merged");
+    assert.equal(result.mergeCommitCreated, true);
+    assert.deepEqual(result.sharedConflicts, []);
+    assert.deepEqual(result.conflictingPaths, ["bright-builds-rules.audit.md"]);
+    assert.equal(audit, forkAudit);
+    assert.equal(git(workspace.forkRepo, ["status", "--porcelain"]).stdout.trim(), "");
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync blocks Bright Builds audit conflicts with different exact commits", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    // Arrange
+    writeText(
+      path.join(workspace.forkRepo, "bright-builds-rules.audit.md"),
+      brightBuildsAudit({ exactCommit: "fork-rules", lastUpdated: "2026-06-15T18:19:55Z" }),
+    );
+    commitAll(workspace.forkRepo, "fork audit exact commit update");
+
+    writeText(
+      path.join(workspace.upstreamWorktree, "bright-builds-rules.audit.md"),
+      brightBuildsAudit({ exactCommit: "upstream-rules", lastUpdated: "2026-06-15T16:00:21Z" }),
+    );
+    commitAll(workspace.upstreamWorktree, "upstream audit exact commit update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const headBefore = git(workspace.forkRepo, ["rev-parse", "HEAD"]).stdout.trim();
+
+    // Act
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+
+    // Assert
+    const headAfter = git(workspace.forkRepo, ["rev-parse", "HEAD"]).stdout.trim();
+    assert.equal(result.status, "conflict");
+    assert.deepEqual(result.sharedConflicts, ["bright-builds-rules.audit.md"]);
+    assert.equal(headAfter, headBefore);
+    assert.equal(git(workspace.forkRepo, ["status", "--porcelain"]).stdout.trim(), "");
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync blocks Bright Builds audit conflicts with different managed files", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    // Arrange
+    writeText(
+      path.join(workspace.forkRepo, "bright-builds-rules.audit.md"),
+      brightBuildsAudit({
+        lastUpdated: "2026-06-15T18:19:55Z",
+        managedFiles: ["AGENTS.md (managed block)", "bright-builds-rules.audit.md"],
+      }),
+    );
+    commitAll(workspace.forkRepo, "fork audit managed files update");
+
+    writeText(
+      path.join(workspace.upstreamWorktree, "bright-builds-rules.audit.md"),
+      brightBuildsAudit({
+        lastUpdated: "2026-06-15T16:00:21Z",
+        managedFiles: [
+          "AGENTS.md (managed block)",
+          "AGENTS.bright-builds.md",
+          "bright-builds-rules.audit.md",
+        ],
+      }),
+    );
+    commitAll(workspace.upstreamWorktree, "upstream audit managed files update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    const headBefore = git(workspace.forkRepo, ["rev-parse", "HEAD"]).stdout.trim();
+
+    // Act
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+
+    // Assert
+    const headAfter = git(workspace.forkRepo, ["rev-parse", "HEAD"]).stdout.trim();
+    assert.equal(result.status, "conflict");
+    assert.deepEqual(result.sharedConflicts, ["bright-builds-rules.audit.md"]);
+    assert.equal(headAfter, headBefore);
+    assert.equal(git(workspace.forkRepo, ["status", "--porcelain"]).stdout.trim(), "");
+  } finally {
+    workspace.cleanup();
+  }
+});
+
+test("runUpstreamSync resolves audit runtime metadata while preserving fork-owned conflicts", () => {
+  const workspace = initializeForkWorkspace();
+
+  try {
+    const forkAudit = brightBuildsAudit({ lastUpdated: "2026-06-15T18:19:55Z" });
+
+    // Arrange
+    writeText(path.join(workspace.forkRepo, "bright-builds-rules.audit.md"), forkAudit);
+    writeText(path.join(workspace.forkRepo, "data/profile.json"), '{ "name": "Fork" }\n');
+    commitAll(workspace.forkRepo, "fork audit and profile update");
+
+    writeText(
+      path.join(workspace.upstreamWorktree, "bright-builds-rules.audit.md"),
+      brightBuildsAudit({ lastUpdated: "2026-06-15T16:00:21Z" }),
+    );
+    writeText(
+      path.join(workspace.upstreamWorktree, "data/profile.json"),
+      '{ "name": "Upstream" }\n',
+    );
+    commitAll(workspace.upstreamWorktree, "upstream audit and profile update");
+    git(workspace.upstreamWorktree, ["push", "origin", "main"]);
+
+    // Act
+    const result = runUpstreamSync({ cwd: workspace.forkRepo });
+
+    // Assert
+    const audit = fs.readFileSync(
+      path.join(workspace.forkRepo, "bright-builds-rules.audit.md"),
+      "utf8",
+    );
+    const profile = fs.readFileSync(path.join(workspace.forkRepo, "data/profile.json"), "utf8");
+    assert.equal(result.status, "merged");
+    assert.equal(result.mergeCommitCreated, true);
+    assert.deepEqual(result.sharedConflicts, []);
+    assert.deepEqual(result.forkOwnedConflicts, ["data/profile.json"]);
+    assert.deepEqual(result.conflictingPaths, [
+      "bright-builds-rules.audit.md",
+      "data/profile.json",
+    ]);
+    assert.equal(audit, forkAudit);
+    assert.equal(profile, '{ "name": "Fork" }\n');
     assert.equal(git(workspace.forkRepo, ["status", "--porcelain"]).stdout.trim(), "");
   } finally {
     workspace.cleanup();
