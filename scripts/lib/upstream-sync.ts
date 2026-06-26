@@ -9,6 +9,11 @@ import { parseGitHubRepositorySlug } from "./github-repository";
 const DEFAULT_BRANCH = "main";
 const DEFAULT_REMOTE = "upstream";
 const AUTO_RESOLVE_COMMIT_MESSAGE = "chore: sync upstream while preserving fork-owned paths";
+const AUDIT_MANIFEST_PATHS = new Set([
+  "bright-builds-rules.audit.md",
+  "coding-and-architecture-requirements.audit.md",
+]);
+const AUDIT_RUNTIME_METADATA_PATTERN = /^- Last (?:operation|updated \(UTC\)): `/u;
 
 export type UpstreamSyncStatus = "up_to_date" | "fast_forwarded" | "merged" | "conflict" | "failed";
 
@@ -58,6 +63,41 @@ const listUnmergedPaths = (cwd: string): string[] =>
     .map((entry) => entry.trim())
     .filter(Boolean)
     .sort();
+
+const maybeReadMergeStage = (cwd: string, stage: 2 | 3, repoPath: string): string | undefined => {
+  const result = git(cwd, ["show", `:${stage}:${repoPath}`], { allowFailure: true });
+  if (result.status !== 0) {
+    return undefined;
+  }
+
+  return result.stdout;
+};
+
+const normalizeAuditManifest = (content: string): string =>
+  content
+    .split("\n")
+    .filter((line) => !AUDIT_RUNTIME_METADATA_PATTERN.test(line))
+    .join("\n");
+
+const maybeResolveAuditRuntimeMetadataConflict = (cwd: string, repoPath: string): boolean => {
+  if (!AUDIT_MANIFEST_PATHS.has(repoPath)) {
+    return false;
+  }
+
+  const maybeOurs = maybeReadMergeStage(cwd, 2, repoPath);
+  const maybeTheirs = maybeReadMergeStage(cwd, 3, repoPath);
+  if (maybeOurs === undefined || maybeTheirs === undefined) {
+    return false;
+  }
+
+  if (normalizeAuditManifest(maybeOurs) !== normalizeAuditManifest(maybeTheirs)) {
+    return false;
+  }
+
+  git(cwd, ["checkout", "--ours", "--", repoPath]);
+  git(cwd, ["add", "--", repoPath]);
+  return true;
+};
 
 const hasPendingMerge = (cwd: string): boolean => {
   const gitPath = trimStdout(git(cwd, ["rev-parse", "--git-path", "MERGE_HEAD"]).stdout);
@@ -124,16 +164,21 @@ const resolveConflictResult = (cwd: string, upstreamRef: string, headBefore: str
     upstreamChangedPaths: listChangedPaths(cwd, mergeBase, upstreamRef),
   });
   const unmergedPaths = listUnmergedPaths(cwd);
-  const unmergedSummary = classifyForkOwnedPaths(unmergedPaths);
+  const autoResolvedSharedPaths = unmergedPaths.filter((repoPath) =>
+    maybeResolveAuditRuntimeMetadataConflict(cwd, repoPath),
+  );
+  const remainingUnmergedPaths =
+    autoResolvedSharedPaths.length > 0 ? listUnmergedPaths(cwd) : unmergedPaths;
+  const remainingUnmergedSummary = classifyForkOwnedPaths(remainingUnmergedPaths);
   const conflictingPaths = Array.from(
     new Set([...conflictSummary.conflictingPaths, ...unmergedPaths]),
   ).sort();
   const forkOwnedConflicts = Array.from(
-    new Set([...conflictSummary.forkOwnedConflicts, ...unmergedSummary.forkOwnedPaths]),
+    new Set([...conflictSummary.forkOwnedConflicts, ...remainingUnmergedSummary.forkOwnedPaths]),
   ).sort();
 
-  if (unmergedSummary.sharedPaths.length > 0) {
-    const sharedConflicts = unmergedSummary.sharedPaths;
+  if (remainingUnmergedSummary.sharedPaths.length > 0) {
+    const sharedConflicts = remainingUnmergedSummary.sharedPaths;
 
     abortMerge(cwd);
     return {
@@ -142,11 +187,11 @@ const resolveConflictResult = (cwd: string, upstreamRef: string, headBefore: str
       message: describeSharedForkSyncConflicts(sharedConflicts),
       sharedConflicts,
       status: "conflict" as const,
-      unmergedPaths,
+      unmergedPaths: remainingUnmergedPaths,
     };
   }
 
-  for (const repoPath of unmergedPaths) {
+  for (const repoPath of remainingUnmergedPaths) {
     if (!isForkOwnedPath(repoPath)) {
       abortMerge(cwd);
       return {
@@ -155,7 +200,7 @@ const resolveConflictResult = (cwd: string, upstreamRef: string, headBefore: str
         message: describeSharedForkSyncConflicts([repoPath]),
         sharedConflicts: [repoPath],
         status: "conflict" as const,
-        unmergedPaths,
+        unmergedPaths: remainingUnmergedPaths,
       };
     }
 
@@ -176,7 +221,7 @@ const resolveConflictResult = (cwd: string, upstreamRef: string, headBefore: str
     message: "Fork synchronized while preserving fork-owned paths.",
     sharedConflicts: [] as string[],
     status: "merged" as const,
-    unmergedPaths,
+    unmergedPaths: remainingUnmergedPaths,
   };
 };
 
