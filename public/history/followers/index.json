@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-26T08:23:16.753Z",
+  "updatedAt": "2026-06-27T08:07:51.948Z",
   "entries": [
     {
       "linkId": "github",
@@ -10,9 +10,9 @@
       "canonicalUrl": "https://github.com/pRizz",
       "audienceKind": "followers",
       "csvPath": "history/followers/github.csv",
-      "latestAudienceCount": 101,
-      "latestAudienceCountRaw": "101 followers",
-      "latestObservedAt": "2026-06-26T08:23:16.753Z"
+      "latestAudienceCount": 100,
+      "latestAudienceCountRaw": "100 followers",
+      "latestObservedAt": "2026-06-27T08:07:51.948Z"
     },
     {
       "linkId": "instagram",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/medium.csv",
       "latestAudienceCount": 3300,
       "latestAudienceCountRaw": "3.3K followers",
-      "latestObservedAt": "2026-06-26T08:23:16.753Z"
+      "latestObservedAt": "2026-06-27T08:07:51.948Z"
     },
     {
       "linkId": "primal",
@@ -48,7 +48,7 @@
       "csvPath": "history/followers/primal.csv",
       "latestAudienceCount": 24,
       "latestAudienceCountRaw": "24 followers",
-      "latestObservedAt": "2026-06-26T08:23:16.753Z"
+      "latestObservedAt": "2026-06-27T08:07:51.948Z"
     },
     {
       "linkId": "substack",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/substack.csv",
       "latestAudienceCount": 15,
       "latestAudienceCountRaw": "15 subscribers",
-      "latestObservedAt": "2026-06-26T08:23:16.753Z"
+      "latestObservedAt": "2026-06-27T08:07:51.948Z"
     },
     {
       "linkId": "x",
@@ -84,7 +84,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 21,
       "latestAudienceCountRaw": "21 subscribers",
-      "latestObservedAt": "2026-06-26T08:23:16.753Z"
+      "latestObservedAt": "2026-06-27T08:07:51.948Z"
     }
   ]
 }
