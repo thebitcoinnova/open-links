@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-27T09:35:36.492Z",
+  "updatedAt": "2026-06-28T10:05:13.275Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -10,9 +10,9 @@
       "canonicalUrl": "https://www.youtube.com/@HiveMinded21",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
-      "latestAudienceCount": 473,
-      "latestAudienceCountRaw": "473 subscribers",
-      "latestObservedAt": "2026-06-27T09:35:36.492Z"
+      "latestAudienceCount": 484,
+      "latestAudienceCountRaw": "484 subscribers",
+      "latestObservedAt": "2026-06-28T10:05:13.275Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-06-27T09:35:36.492Z"
+      "latestObservedAt": "2026-06-28T10:05:13.275Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 21400,
       "latestAudienceCountRaw": "21.4K subscribers",
-      "latestObservedAt": "2026-06-27T09:35:36.492Z"
+      "latestObservedAt": "2026-06-28T10:05:13.275Z"
     }
   ]
 }
