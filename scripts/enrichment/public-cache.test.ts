@@ -13,6 +13,7 @@ import {
   isPublicCacheIdentityMatch,
   loadPublicCacheRegistry,
   mergePublicCacheMetadataForTarget,
+  prunePublicCacheMetadataForTarget,
   resolveCachedEntryStatus,
   resolvePublicCacheEntry,
   resolvePublicCacheMetadataRegression,
@@ -54,6 +55,35 @@ test("matches public cache identity by stable link id and exact resolved source 
     false,
   );
   assert.equal(isPublicCacheIdentityMatch(entry, "replacement-x", entry.sourceUrl), false);
+});
+
+test("prunes unrelated audience counts from X profile metadata", () => {
+  // Arrange
+  const metadata = {
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+    followingCount: 4497,
+    followingCountRaw: "4,497 Following",
+    membersCount: 1000,
+    membersCountRaw: "1K members",
+    subscribersCount: 500,
+    subscribersCountRaw: "500 subscribers",
+  };
+
+  // Act
+  const pruned = prunePublicCacheMetadataForTarget({
+    targetId: "x-public-oembed",
+    metadata,
+    audienceMetricsAreAuthoritative: true,
+  });
+
+  // Assert
+  assert.deepEqual(pruned, {
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+    followingCount: 4497,
+    followingCountRaw: "4,497 Following",
+  });
 });
 
 test("does not resolve a public cache entry across a renamed source identity", () => {

@@ -83,6 +83,17 @@ export const prunePublicCacheMetadataForTarget = (input: {
 }): PublicCacheMetadata => {
   const metadata = normalizeMetadata(input.metadata);
 
+  if (input.targetId === "x-public-oembed") {
+    const {
+      membersCount: _membersCount,
+      membersCountRaw: _membersCountRaw,
+      subscribersCount: _subscribersCount,
+      subscribersCountRaw: _subscribersCountRaw,
+      ...xProfileMetadata
+    } = metadata;
+    return xProfileMetadata;
+  }
+
   if (
     input.targetId !== "instagram-public-profile" ||
     !input.audienceMetricsAreAuthoritative ||
