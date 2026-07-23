@@ -542,7 +542,7 @@ const extractXDisplayHandle = (html: string | undefined, fallbackHandle: string)
     return fallbackHandle;
   }
 
-  const match = html.match(/Tweets by ([^<]+)/i);
+  const match = html.match(/\b(?:Tweets|Posts) by ([^<]+)/i);
   const extracted = safeTrim(match?.[1]);
   return extracted ? decodeEntities(extracted).trim().replace(/^@/, "") : fallbackHandle;
 };
@@ -999,9 +999,9 @@ const parseXOEmbed = (sourceUrl: string, payloadText: string): PublicAugmentatio
     html: payload.html,
   });
 
-  if (!/twitter/i.test(providerName)) {
+  if (!["twitter", "x"].includes(providerName.toLowerCase())) {
     throw new Error(
-      `X public augmentation expected oEmbed provider 'Twitter' but received '${providerName || "missing"}'.`,
+      `X public augmentation expected oEmbed provider 'Twitter' or 'X' but received '${providerName || "missing"}'.`,
     );
   }
 

@@ -787,7 +787,7 @@ export const resolvePublicCacheEntry = (
     return null;
   }
 
-  if (entry.sourceUrl !== expectedUrl || entry.linkId !== cacheKey) {
+  if (!isPublicCacheIdentityMatch(entry, cacheKey, expectedUrl)) {
     return null;
   }
 
@@ -797,6 +797,12 @@ export const resolvePublicCacheEntry = (
     fresh: isPublicCacheFresh(entry.expiresAt),
   };
 };
+
+export const isPublicCacheIdentityMatch = (
+  entry: Pick<PublicCacheStableEntry, "linkId" | "sourceUrl">,
+  linkId: string,
+  sourceUrl: string,
+): boolean => entry.linkId === linkId.trim() && entry.sourceUrl === sourceUrl.trim();
 
 export const hasCacheablePublicMetadata = (
   metadata: PublicCacheMetadata | EnrichmentMetadata,
@@ -1022,13 +1028,12 @@ export const buildPublicCacheEntry = (input: {
   checkedAt?: string;
   checkStatus?: RemoteCacheCheckStatus;
 }): PublicCacheEntry => {
-  const previous = input.previous ? normalizeEntry(input.previous) : undefined;
+  const previous =
+    input.previous && isPublicCacheIdentityMatch(input.previous, input.linkId, input.sourceUrl)
+      ? normalizeEntry(input.previous)
+      : undefined;
   const nextMetadata = normalizeMetadata(input.metadata);
-  const payloadChanged =
-    !previous ||
-    previous.linkId !== input.linkId.trim() ||
-    previous.sourceUrl !== input.sourceUrl.trim() ||
-    !arePublicCacheMetadataEqual(previous.metadata, nextMetadata);
+  const payloadChanged = !previous || !arePublicCacheMetadataEqual(previous.metadata, nextMetadata);
 
   const entry: PublicCacheEntry = {
     linkId: input.linkId.trim(),
@@ -1148,4 +1153,24 @@ export const resolveCachedEntryStatus = (
     status: missingFields.length === 0 ? "fetched" : "partial",
     missingFields: missingFields.length > 0 ? missingFields : undefined,
   };
+};
+
+export const resolvePublicCacheMetadataRegression = (input: {
+  previous?: PublicCacheEntry;
+  linkId: string;
+  sourceUrl: string;
+  nextMetadata: PublicCacheMetadata;
+}): PublicCacheEntry | null => {
+  if (
+    !input.previous ||
+    !isPublicCacheIdentityMatch(input.previous, input.linkId, input.sourceUrl)
+  ) {
+    return null;
+  }
+
+  const previousStatus = resolveCachedEntryStatus(input.previous.metadata);
+  const nextStatus = resolveCachedEntryStatus(input.nextMetadata);
+  return previousStatus.status === "fetched" && nextStatus.status !== "fetched"
+    ? input.previous
+    : null;
 };

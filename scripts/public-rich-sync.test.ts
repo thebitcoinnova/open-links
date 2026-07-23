@@ -670,6 +670,150 @@ test("retries nonfatal browser capture failures with the default delayed retry b
   ]);
 });
 
+test("source rename stages a fresh base and preserves the old cache until audience capture succeeds", async () => {
+  // Arrange
+  const renamedMediumLink = {
+    ...mediumLink,
+    url: "https://medium.com/@renamedperson",
+    metadata: {
+      handle: "renamedperson",
+    },
+  };
+  const registry = emptyRegistry();
+  registry.entries.medium = {
+    ...createMediumBaseEntry(
+      "medium",
+      "2026-03-08T13:00:00.000Z",
+      "https://medium.com/feed/@peterryszkiewicz",
+    ),
+    metadata: {
+      ...createMediumBaseEntry(
+        "medium",
+        "2026-03-08T13:00:00.000Z",
+        "https://medium.com/feed/@peterryszkiewicz",
+      ).metadata,
+      followersCount: 3300,
+      followersCountRaw: "3.3K followers",
+    },
+    etag: '"old-handle"',
+  };
+  const oldEntry = structuredClone(registry.entries.medium);
+  let bootstrapCalls = 0;
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "medium",
+      onlyMissing: true,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+      captureRetries: 0,
+    },
+    {
+      readLinks: () => ({ links: [renamedMediumLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {
+        throw new Error("failed capture must not replace the old cache identity");
+      },
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => {
+        bootstrapCalls += 1;
+        return createMediumBaseEntry(link.id, generatedAt, target.sourceUrl);
+      },
+      captureAudienceMetrics: async () =>
+        captureFailure("renamed profile audience was temporarily unavailable", {}),
+      nowIso: () => "2026-07-23T12:00:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(result.failed, 1);
+  assert.deepEqual(result.registry.entries.medium, oldEntry);
+});
+
+test("successful source rename publishes only the fresh identity and new audience data", async () => {
+  // Arrange
+  const renamedMediumLink = {
+    ...mediumLink,
+    url: "https://medium.com/@renamedperson",
+    metadata: {
+      handle: "renamedperson",
+    },
+  };
+  const registry = emptyRegistry();
+  registry.entries.medium = {
+    ...createMediumBaseEntry(
+      "medium",
+      "2026-03-08T13:00:00.000Z",
+      "https://medium.com/feed/@peterryszkiewicz",
+    ),
+    metadata: {
+      ...createMediumBaseEntry(
+        "medium",
+        "2026-03-08T13:00:00.000Z",
+        "https://medium.com/feed/@peterryszkiewicz",
+      ).metadata,
+      followersCount: 3300,
+      followersCountRaw: "3.3K followers",
+    },
+    etag: '"old-handle"',
+    lastModified: "Wed, 08 Mar 2026 13:00:00 GMT",
+  };
+
+  // Act
+  const result = await runPublicRichSyncWithDependencies(
+    {
+      linksPath: "data/links.json",
+      publicCachePath: "data/cache/rich-public-cache.json",
+      onlyLink: "medium",
+      onlyMissing: true,
+      force: false,
+      headed: false,
+      browserWaitMs: 5000,
+      captureRetries: 0,
+    },
+    {
+      readLinks: () => ({ links: [renamedMediumLink] }),
+      loadPublicCache: () => registry,
+      writePublicCache: () => {},
+      bootstrapBaseEntry: async ({ link, target, generatedAt }) => ({
+        ...createMediumBaseEntry(link.id, generatedAt, target.sourceUrl),
+        metadata: {
+          title: "Renamed Person on Medium",
+          description: "Fresh profile metadata.",
+          image: "https://cdn-images-1.medium.com/renamed.jpg",
+          profileImage: "https://cdn-images-1.medium.com/renamed.jpg",
+          handle: "renamedperson",
+          sourceLabel: "medium.com",
+        },
+      }),
+      captureAudienceMetrics: async () =>
+        captureSuccess({
+          followersCount: 25,
+          followersCountRaw: "25 followers",
+        }),
+      nowIso: () => "2026-07-23T12:05:00.000Z",
+      log: () => {},
+    },
+  );
+
+  // Assert
+  const entry = result.registry.entries.medium;
+  assert.equal(result.failed, 0);
+  assert.equal(entry?.sourceUrl, "https://medium.com/feed/@renamedperson");
+  assert.equal(entry?.capturedAt, "2026-07-23T12:05:00.000Z");
+  assert.equal(entry?.metadata.handle, "renamedperson");
+  assert.equal(entry?.metadata.followersCount, 25);
+  assert.equal(entry?.metadata.followersCountRaw, "25 followers");
+  assert.equal(entry?.etag, undefined);
+  assert.equal(entry?.lastModified, undefined);
+  assert.equal(result.entries[0]?.reason, "bootstrapped_and_refreshed");
+});
+
 test("retries nonfatal bootstrap sync errors before capturing audience metrics", async () => {
   // Arrange
   let bootstrapCalls = 0;

@@ -494,6 +494,61 @@ test("parses X oEmbed metadata into an avatar-first profile payload", () => {
   assert.equal(parsed?.metadata.profileImage, "https://unavatar.io/x/pryszkie");
 });
 
+test("parses the current X oEmbed provider and Posts by wording", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://x.com/StacingSats",
+    icon: "x",
+  });
+  const payload = JSON.stringify({
+    provider_name: "x",
+    title: "",
+    html: '<blockquote><a href="https://twitter.com/StacingSats">Posts by @StacingSats</a></blockquote>',
+  });
+
+  // Act
+  const parsed = target?.parse(payload);
+
+  // Assert
+  assert.equal(parsed?.completeness, "full");
+  assert.equal(parsed?.metadata.title, "@StacingSats on X");
+  assert.equal(parsed?.metadata.description, "Posts and updates from @StacingSats on X.");
+  assert.equal(parsed?.metadata.image, "https://unavatar.io/x/StacingSats");
+  assert.equal(parsed?.metadata.profileImage, "https://unavatar.io/x/StacingSats");
+});
+
+test("rejects unrelated X oEmbed providers", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://x.com/pryszkie",
+    icon: "x",
+  });
+  const payload = JSON.stringify({
+    provider_name: "Not Twitter",
+    title: "@pryszkie on X",
+    html: "<blockquote>Posts by pryszkie</blockquote>",
+  });
+
+  // Act / Assert
+  assert.throws(() => target?.parse(payload), /expected oEmbed provider 'Twitter' or 'X'/u);
+});
+
+test("rejects placeholder payloads from the current X oEmbed provider", () => {
+  // Arrange
+  const target = resolvePublicAugmentationTarget({
+    url: "https://x.com/pryszkie",
+    icon: "x",
+  });
+  const payload = JSON.stringify({
+    provider_name: "X",
+    title: "",
+    html: "<blockquote>Nothing to see here. This account doesn't exist.</blockquote>",
+  });
+
+  // Act / Assert
+  assert.throws(() => target?.parse(payload), /placeholder oEmbed payload/u);
+});
+
 test("parses X community crawler metadata into a banner-first payload", () => {
   // Arrange
   const target = resolvePublicAugmentationTarget({

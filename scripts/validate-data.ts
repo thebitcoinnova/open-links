@@ -1134,7 +1134,24 @@ export const publicAugmentedStableCacheCoverageIssues = (input: {
     const strategy = resolvePublicEnrichmentStrategy({
       url,
       icon: toStringOrUndefined(rawLink.icon),
+      metadataHandle: isRecord(rawLink.metadata) ? rawLink.metadata.handle : undefined,
     });
+    const stableEntry = isRecord(stableEntries[linkId]) ? stableEntries[linkId] : undefined;
+    if (
+      stableEntry &&
+      (toStringOrUndefined(stableEntry.linkId) !== linkId ||
+        toStringOrUndefined(stableEntry.sourceUrl) !== strategy.source.sourceUrl)
+    ) {
+      issues.push({
+        level: "error",
+        source: publicCachePath,
+        path: `$.entries.${linkId}`,
+        message: `Public-cache identity for active link '${linkId}' does not match its resolved source URL. Cached metadata from another handle or source must not be reused.`,
+        remediation: `For a verified same-account rename, run \`bun run social:profile:rename -- --link-id ${linkId} --new-url ${url}\`, then refresh with \`bun run enrich:rich:strict:write-cache\`. For a replacement account, create a new link ID.`,
+      });
+      continue;
+    }
+
     if (strategy.branch !== "public_augmented") {
       continue;
     }
@@ -1144,7 +1161,7 @@ export const publicAugmentedStableCacheCoverageIssues = (input: {
       continue;
     }
 
-    if (isRecord(stableEntries[linkId])) {
+    if (stableEntry) {
       continue;
     }
 
@@ -2236,7 +2253,9 @@ export const enrichmentIssues = (
             : "partial-warning";
 
     const missingFields =
-      entry.reason === "metadata_missing" && entry.missingFields && entry.missingFields.length > 0
+      (entry.reason === "metadata_missing" || entry.reason === "metadata_regression") &&
+      entry.missingFields &&
+      entry.missingFields.length > 0
         ? ` Missing fields: ${entry.missingFields.join(", ")}.`
         : "";
     const missingProfileFields =
