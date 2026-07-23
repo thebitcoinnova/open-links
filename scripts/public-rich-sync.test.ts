@@ -2025,7 +2025,7 @@ test("X sync in only-missing mode still refreshes when one audience metric is ab
   );
 });
 
-test("X sync in only-missing mode refreshes when profile description is absent", async () => {
+test("X sync in only-missing mode accepts complete audience counts without a profile description", async () => {
   // Arrange
   const registry = emptyRegistry();
   registry.entries.x = {
@@ -2073,8 +2073,6 @@ test("X sync in only-missing mode refreshes when profile description is absent",
           followersCountRaw: "1,350 Followers",
           followingCount: 643,
           followingCountRaw: "643 Following",
-          profileDescription:
-            "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
         });
       },
       nowIso: () => "2026-03-08T18:12:30.000Z",
@@ -2083,13 +2081,10 @@ test("X sync in only-missing mode refreshes when profile description is absent",
   );
 
   // Assert
-  assert.equal(captureCalls, 1);
-  assert.equal(result.skipped, 0);
-  assert.equal(result.processed, 1);
-  assert.equal(
-    result.registry.entries.x?.metadata.profileDescription,
-    "We the people demand justice for the victims. Otherwise, our politicians no longer represent us. Therefore, no taxation without representation.",
-  );
+  assert.equal(captureCalls, 0);
+  assert.equal(result.skipped, 1);
+  assert.equal(result.processed, 0);
+  assert.equal(result.registry.entries.x?.metadata.profileDescription, undefined);
 });
 
 test("preserves existing X metrics when a refresh attempt fails", async () => {
@@ -2163,7 +2158,7 @@ test("preserves existing X metrics when a refresh attempt fails", async () => {
     {
       linkId: "x",
       status: "failed",
-      reason: "profile_metadata_missing",
+      reason: "audience_missing",
       artifactPath: "output/playwright/public-rich-sync/x-failed.json",
       detail: "X public browser capture did not find a following count.",
     },
