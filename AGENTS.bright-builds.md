@@ -14,7 +14,7 @@ Record recurring repo-specific workflow facts in `AGENTS.md` under `## Repo-Loca
 
 - Standards repository: `https://github.com/bright-builds-llc/bright-builds-rules`
 - Version pin: `main`
-- Exact commit: `7dbfb5cfe6f197f035ebc6d253505b7f865e3c86`
+- Exact commit: `0391812ecb752eeddcbb4f42b75417c38e065e00`
 - Canonical entrypoint: `https://github.com/bright-builds-llc/bright-builds-rules/blob/main/standards/index.md`
 - Audit manifest path: `bright-builds-rules.audit.md`
 
@@ -55,11 +55,13 @@ Record recurring repo-specific workflow facts in `AGENTS.md` under `## Repo-Loca
 - Do not hide substantial foreign-language logic inside strings; keep orchestration thin, move scripts, queries, and similar artifacts into repo-owned or language-aware files, and make checked-in scripts rerunnable when sensible with breadcrumb-heavy logs and summaries in a repo-defined gitignored location.
 - Treat files over roughly 628 lines as refactor triggers; use `floor(100 * tau)` as the mnemonic, not a hard cap.
 - Before substantive implementation work, sync first: fetch remote state before editing; if the current branch tracks an upstream and the worktree is clean, prefer rebasing onto the latest upstream or the repo's equivalent sync path, such as `git pull --rebase` when local guidance uses it; if a worktree starts detached, assume the repo default branch, often `main`; resolve any sync conflicts before proceeding, then run the repo's normal bootstrap or dependency-sync step when dependencies or tools may be stale.
-- Before committing, run the relevant repo-native verification steps for the changed paths, including Markdown or shell formatter checks when supported tools are already available and local guidance does not define a clearer workflow, and do not commit if they fail.
+- Before formatting Markdown, inspect repo-local guidance and formatter configuration, require the configured syntax extensions, preserve existing configuration, use repo-owned setup or migration commands when provided, and run check mode before an authorized, scoped write. Never fall back to bare `mdformat` when required plugins are unavailable.
+- Before committing, run the relevant repo-native verification steps for the changed paths, including repository-compatible Markdown or shell formatter checks when supported tools are already available and local guidance does not define a clearer workflow, and do not commit if they fail.
 - Prefer the repo's own verify/check/validate entrypoint when it exists, and use affected-path or affected-package modes when the repo supports them.
 - Heavy integration, end-to-end, or external-service suites may stay CI-only when local guidance says so.
 - If hook-managed verification is detected and local docs are silent, ask before duplicating it manually.
 - If the repo tracks shared task or lesson files such as `tasks/todo.md`, `tasks/lessons.md`, `.codex/tasks/todo.md`, or `.codex/tasks/lessons.md`, keep them append-only with stable IDs and timestamps, edit only the relevant block, and avoid hot counters or whole-file rewrites when a localized edit is sufficient.
+- When a repository tracks active lessons, follow the bounded startup and maintenance policy in `standards/core/local-guidance.md`: read the repository-owned active set in full within the default 24,000-byte and 8,000-estimated-token budgets; above either budget, inventory all headings, load whole priority blocks, disclose omissions, and audit only on the five defined triggers. Normal install and update must not create or edit downstream lesson, audit, or archive files.
 - Parse boundary data into domain types instead of re-validating primitives everywhere.
 - Make illegal states unrepresentable when the language makes that practical.
 - Unit test pure code and business logic.
