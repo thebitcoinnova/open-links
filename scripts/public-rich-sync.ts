@@ -723,7 +723,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     fatalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
-    requiresProfileDescription: true,
+    requiresProfileDescription: false,
     requiresSubscribersCount: false,
   },
   "x-public-community": {
