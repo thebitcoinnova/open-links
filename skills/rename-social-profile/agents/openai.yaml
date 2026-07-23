@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rename Social Profile"
+  short_description: "Rename a social handle without losing history"
+  default_prompt: "Use $rename-social-profile to update a social-profile handle while preserving its historical audience series."

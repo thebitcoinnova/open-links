@@ -10,9 +10,12 @@ import {
   computePublicCacheExpiresAt,
   hasCacheablePublicMetadata,
   isPublicCacheFresh,
+  isPublicCacheIdentityMatch,
   loadPublicCacheRegistry,
   mergePublicCacheMetadataForTarget,
   resolveCachedEntryStatus,
+  resolvePublicCacheEntry,
+  resolvePublicCacheMetadataRegression,
   toEnrichmentMetadataFromPublicCache,
   toPublicCacheMetadata,
   writePublicCacheRegistry,
@@ -32,6 +35,162 @@ test("loads a missing public cache manifest as an empty registry", () => {
   // Assert
   assert.equal(registry.version, 1);
   assert.deepEqual(registry.entries, {});
+});
+
+test("matches public cache identity by stable link id and exact resolved source URL", () => {
+  // Arrange
+  const entry = {
+    linkId: "x",
+    sourceUrl: "https://publish.twitter.com/oembed?url=old",
+  };
+
+  // Act / Assert
+  assert.equal(
+    isPublicCacheIdentityMatch(entry, "x", "https://publish.twitter.com/oembed?url=old"),
+    true,
+  );
+  assert.equal(
+    isPublicCacheIdentityMatch(entry, "x", "https://publish.twitter.com/oembed?url=new"),
+    false,
+  );
+  assert.equal(isPublicCacheIdentityMatch(entry, "replacement-x", entry.sourceUrl), false);
+});
+
+test("does not resolve a public cache entry across a renamed source identity", () => {
+  // Arrange
+  const registry: PublicCacheRegistry = {
+    version: 1,
+    updatedAt: "2026-07-18T00:00:00.000Z",
+    entries: {
+      x: {
+        linkId: "x",
+        sourceUrl: "https://publish.twitter.com/oembed?url=old",
+        capturedAt: "2026-07-18T00:00:00.000Z",
+        updatedAt: "2026-07-18T00:00:00.000Z",
+        metadata: {
+          title: "@old on X",
+          description: "Posts and updates from @old on X.",
+          image: "https://unavatar.io/x/old",
+          followersCount: 100,
+        },
+      },
+    },
+  };
+
+  // Act
+  const resolved = resolvePublicCacheEntry(
+    registry,
+    "x",
+    "https://publish.twitter.com/oembed?url=new",
+  );
+
+  // Assert
+  assert.equal(resolved, null);
+});
+
+test("resets every inherited cache field when a source identity changes", () => {
+  // Arrange
+  const previous = {
+    linkId: "x",
+    sourceUrl: "https://publish.twitter.com/oembed?url=old",
+    capturedAt: "2026-07-18T00:00:00.000Z",
+    updatedAt: "2026-07-18T00:00:00.000Z",
+    metadata: {
+      title: "@old on X",
+      description: "Posts and updates from @old on X.",
+      image: "https://unavatar.io/x/old",
+      followersCount: 100,
+      followersCountRaw: "100 Followers",
+    },
+    etag: '"old"',
+    lastModified: "Fri, 18 Jul 2026 00:00:00 GMT",
+    cacheControl: "max-age=300",
+    expiresAt: "2026-07-18T00:05:00.000Z",
+    checkedAt: "2026-07-18T00:00:00.000Z",
+    checkStatus: "fetched" as const,
+  };
+
+  // Act
+  const next = buildPublicCacheEntry({
+    previous,
+    linkId: "x",
+    sourceUrl: "https://publish.twitter.com/oembed?url=new",
+    metadata: {
+      title: "@new on X",
+      description: "Posts and updates from @new on X.",
+      image: "https://unavatar.io/x/new",
+    },
+    updatedAt: "2026-07-23T00:00:00.000Z",
+  });
+
+  // Assert
+  assert.deepEqual(next, {
+    linkId: "x",
+    sourceUrl: "https://publish.twitter.com/oembed?url=new",
+    capturedAt: "2026-07-23T00:00:00.000Z",
+    updatedAt: "2026-07-23T00:00:00.000Z",
+    metadata: {
+      title: "@new on X",
+      description: "Posts and updates from @new on X.",
+      image: "https://unavatar.io/x/new",
+    },
+  });
+});
+
+test("retains complete same-source metadata when a refresh regresses", () => {
+  // Arrange
+  const previous = {
+    linkId: "altair-tech",
+    sourceUrl: "https://altairtech.io/",
+    capturedAt: "2026-04-01T00:00:00.000Z",
+    updatedAt: "2026-04-01T00:00:00.000Z",
+    metadata: {
+      title: "Altair",
+      description: "Complete last-known-good metadata.",
+      image: "https://altairtech.io/preview.jpg",
+    },
+  };
+
+  // Act
+  const fallback = resolvePublicCacheMetadataRegression({
+    previous,
+    linkId: "altair-tech",
+    sourceUrl: "https://altairtech.io/",
+    nextMetadata: {
+      title: "Altair",
+    },
+  });
+
+  // Assert
+  assert.equal(fallback, previous);
+});
+
+test("never treats a source identity change as a metadata regression fallback", () => {
+  // Arrange
+  const previous = {
+    linkId: "x",
+    sourceUrl: "https://publish.twitter.com/oembed?url=old",
+    capturedAt: "2026-07-18T00:00:00.000Z",
+    updatedAt: "2026-07-18T00:00:00.000Z",
+    metadata: {
+      title: "@old on X",
+      description: "Posts and updates from @old on X.",
+      image: "https://unavatar.io/x/old",
+    },
+  };
+
+  // Act
+  const fallback = resolvePublicCacheMetadataRegression({
+    previous,
+    linkId: "x",
+    sourceUrl: "https://publish.twitter.com/oembed?url=new",
+    nextMetadata: {
+      title: "@new on X",
+    },
+  });
+
+  // Assert
+  assert.equal(fallback, null);
 });
 
 test("round-trips stable and runtime public cache manifests through disk with normalized metadata", (t) => {

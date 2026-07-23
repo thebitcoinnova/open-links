@@ -20,6 +20,10 @@ an existing OpenLinks repo or fork, including requests like:
 - "customize this"
 - "change my links"
 - "edit my profile"
+- "changed my handle"
+- "renamed my profile"
+- "new username"
+- "preserve my social analytics/history"
 - other broad day-2 CRUD or maintenance phrasing
 
 Use `docs/openclaw-bootstrap.md` instead when the request is clearly first-time
@@ -37,6 +41,7 @@ Do not use this contract for:
 In scope:
 
 - Day-2 CRUD updates for `data/profile.json`, `data/links.json`, and `data/site.json`.
+- Verified same-account social-profile handle and username changes through `skills/rename-social-profile/SKILL.md`.
 - Referral authoring through `links[].referral`, including manual disclosures, `catalogRef` adoption, supported-family `non_profile` referral links, and catalog-backed shared-vs-fork decisions.
 - Optional profile-header vCard download configuration through `site.sharing.vcard`.
 - Optional full customization-audit path across all data-driven knobs in `docs/customization-catalog.md`.
@@ -85,6 +90,26 @@ Guardrails:
   dumps.
 - Do not auto-click auth actions that require explicit confirmation in the
   authenticated workflow.
+
+## Social-Profile Rename Routing
+
+When the user says a social handle, username, or profile URL changed and wants
+analytics or history continuity, use
+`skills/rename-social-profile/SKILL.md` before editing `data/*.json`.
+
+Treat the change as a rename only when the user confirms both URLs represent
+the same account:
+
+1. Preserve the existing `links[].id`.
+2. Inspect the read-only `bun run social:profile:rename` report.
+3. Apply with `--confirm-same-account`.
+4. Capture fresh metadata and audience data for the new source identity.
+5. Append the observation to the existing link-ID CSV and verify every older
+   row remains byte-equivalent.
+
+If platform, ownership, or account continuity is uncertain, stop. Replacement
+accounts use a new link ID and ordinary add/remove CRUD; never merge their
+follower history.
 
 ## Referral Authoring Guidance
 

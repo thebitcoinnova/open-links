@@ -52,6 +52,7 @@ import {
   mergePublicCacheMetadataForTarget,
   resolveCachedEntryStatus,
   resolvePublicCacheEntry,
+  resolvePublicCacheMetadataRegression,
   toEnrichmentMetadataFromPublicCache,
   toPublicCacheMetadata,
   writePublicCacheRegistry,
@@ -707,7 +708,7 @@ const printBlockingDiagnostics = (
       console.error(`   cacheCapturedAt: ${entry.cacheCapturedAt}`);
     }
     if (
-      entry.reason === "metadata_missing" &&
+      (entry.reason === "metadata_missing" || entry.reason === "metadata_regression") &&
       entry.missingFields &&
       entry.missingFields.length > 0
     ) {
@@ -1301,7 +1302,7 @@ const run = async () => {
         cachedPublicEntry.entry.expiresAt;
 
       const refreshedEntry = buildPublicCacheEntry({
-        previous: existingPublicEntry,
+        previous: cachedPublicEntry.entry,
         linkId: link.id,
         sourceUrl: publicSourceUrl,
         metadata: cachedPublicEntry.entry.metadata,
@@ -1675,29 +1676,111 @@ const run = async () => {
     });
     const cacheMetadata = mergePublicCacheMetadataForTarget({
       targetId: publicStrategy.branch === "public_augmented" ? publicStrategy.id : null,
-      previous: existingPublicEntry?.metadata,
+      previous: cachedPublicEntry?.entry.metadata,
       next: toPublicCacheMetadata(enrichedMetadata),
     });
+    const metadataRegressionEntry = resolvePublicCacheMetadataRegression({
+      previous: cachedPublicEntry?.entry,
+      linkId: link.id,
+      sourceUrl: publicSourceUrl,
+      nextMetadata: cacheMetadata,
+    });
+
+    if (metadataRegressionEntry) {
+      const cachedMetadata = toEnrichmentMetadataFromPublicCache(metadataRegressionEntry.metadata);
+      const metadata = mergeCachedPublicMetadata(
+        link,
+        supportedProfile,
+        handleForMetadata,
+        cachedMetadata,
+        metadataRegressionEntry.capturedAt,
+        "fetched",
+      );
+      const warningSupportedProfile = resolveSupportedProfileForMetadata(
+        link,
+        metadata,
+        supportedProfile,
+      );
+      const profileWarningContext = resolveProfileWarningContext(warningSupportedProfile, metadata);
+      warnForMissingProfileFields(
+        link.id,
+        link.url,
+        warningSupportedProfile,
+        profileWarningContext.missingProfileFields,
+      );
+      const generatedReferral = await resolveGeneratedReferralWithBrowserFallback({
+        link,
+        publicStrategy,
+        sourceUrl: publicSourceUrl,
+        finalUrl: fetched.finalUrl,
+        metadata,
+        generatedAt,
+      });
+      metadata.enrichmentReason = "metadata_regression";
+      metadata.enrichedAt = generatedAt;
+
+      entries.push({
+        linkId: link.id,
+        url: link.url,
+        status: "fetched",
+        reason: "metadata_regression",
+        attempts: fetched.attempts,
+        durationMs: fetched.durationMs,
+        statusCode: fetched.statusCode,
+        message:
+          "Current same-source refresh returned incomplete metadata; retained the complete last-known-good public cache entry.",
+        remediation:
+          "Retry the public metadata refresh later. The stable cache was intentionally not overwritten.",
+        metadata,
+        blocking: false,
+        missingFields: parsed.missing,
+        cacheKey: publicCacheKey,
+        cacheCapturedAt: metadataRegressionEntry.capturedAt,
+        staleCache: true,
+        referral: generatedReferral,
+        referralCompleteness: generatedReferral?.completeness,
+        ...profileWarningContext,
+      });
+      generatedLinks[link.id] = toGeneratedLinkEntry({
+        metadata,
+        referral: generatedReferral,
+      });
+      continue;
+    }
+
+    const sourceIdentityChanged = Boolean(
+      existingPublicEntry &&
+        (existingPublicEntry.linkId !== link.id ||
+          existingPublicEntry.sourceUrl !== publicSourceUrl),
+    );
+    const canPersistFetchedMetadata = !sourceIdentityChanged || parsed.completeness === "full";
     const publicCachePersistence = hasCacheablePublicMetadata(cacheMetadata)
-      ? applyPublicCachePersistence({
-          registry: publicCacheRegistry,
-          cacheKey: publicCacheKey,
-          nextEntry: buildPublicCacheEntry({
-            previous: existingPublicEntry,
-            linkId: link.id,
-            sourceUrl: publicSourceUrl,
-            metadata: cacheMetadata,
+      ? canPersistFetchedMetadata
+        ? applyPublicCachePersistence({
+            registry: publicCacheRegistry,
+            cacheKey: publicCacheKey,
+            nextEntry: buildPublicCacheEntry({
+              previous: cachedPublicEntry?.entry,
+              linkId: link.id,
+              sourceUrl: publicSourceUrl,
+              metadata: cacheMetadata,
+              updatedAt: generatedAt,
+              etag: fetched.etag,
+              lastModified: fetched.lastModified,
+              cacheControl: fetched.cacheControl,
+              expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
+              checkedAt: generatedAt,
+              checkStatus: fetched.checkStatus,
+            }),
+            allowStableWrite: config.writePublicCache,
             updatedAt: generatedAt,
-            etag: fetched.etag,
-            lastModified: fetched.lastModified,
-            cacheControl: fetched.cacheControl,
-            expiresAt: computePublicCacheExpiresAt(fetched.cacheControl, fetched.responseDate),
-            checkedAt: generatedAt,
-            checkStatus: fetched.checkStatus,
-          }),
-          allowStableWrite: config.writePublicCache,
-          updatedAt: generatedAt,
-        })
+          })
+        : {
+            action: "noop" as const,
+            changed: false,
+            stableWriteSkipped: true,
+            skippedStableOperation: "upsert" as const,
+          }
       : applyPublicCachePersistence({
           registry: publicCacheRegistry,
           cacheKey: publicCacheKey,

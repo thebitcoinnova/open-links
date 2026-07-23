@@ -624,6 +624,34 @@ test("stale public cache reuse stays strict-blocking when cached metadata is inc
   assert.equal(issues[0]?.strictBlocking, undefined);
 });
 
+test("same-source metadata regression is advisory and reports the regressed fields", () => {
+  // Arrange
+  const report = createEnrichmentReport({
+    linkId: "altair-tech",
+    url: "https://altairtech.io/",
+    reason: "metadata_regression",
+    message:
+      "Current same-source refresh returned incomplete metadata; retained the complete last-known-good public cache entry.",
+    missingFields: ["description", "image"],
+  });
+
+  // Act
+  const issues = enrichmentIssues(
+    "data/generated/rich-enrichment-report.json",
+    report,
+    true,
+    false,
+    new Set(),
+    new Set(),
+  );
+
+  // Assert
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.level, "warning");
+  assert.match(issues[0]?.message ?? "", /metadata_regression/u);
+  assert.match(issues[0]?.message ?? "", /Missing fields: description, image/u);
+});
+
 test("blocking enrichment failures remain strict-failing in strict mode", () => {
   // Arrange
   const report = createEnrichmentReport({
@@ -737,6 +765,115 @@ test("public augmentation coverage accepts committed stable public-cache entries
     publicCachePath,
   });
 
+  assert.deepEqual(issues, []);
+});
+
+test("public cache coverage rejects a source identity left behind by a handle rename", (t) => {
+  // Arrange
+  const baseDir = "tmp/tests/public-cache-identity-mismatch";
+  const publicCachePath = writeJsonFile(`${baseDir}/rich-public-cache.json`, {
+    $schema: "../../schema/rich-public-cache.schema.json",
+    version: 1,
+    entries: {
+      x: {
+        linkId: "x",
+        sourceUrl:
+          "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2FStaciNova&omit_script=true&hide_thread=true&dnt=true",
+        capturedAt: "2026-07-17T00:00:00.000Z",
+        updatedAt: "2026-07-17T00:00:00.000Z",
+        metadata: {
+          title: "@StaciNova on X",
+          description: "Posts and updates from @StaciNova on X.",
+          image: "https://unavatar.io/x/StaciNova",
+        },
+      },
+    },
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  // Act
+  const issues = publicAugmentedStableCacheCoverageIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "x",
+          type: "rich",
+          icon: "x",
+          enabled: true,
+          url: "https://x.com/StacingSats",
+        },
+      ],
+    },
+    siteData: {},
+    generatedMetadataByLink: {},
+    publicCachePath,
+  });
+
+  // Assert
+  assert.equal(issues.length, 1);
+  assert.match(issues[0]?.message ?? "", /does not match its resolved source URL/u);
+  assert.match(issues[0]?.remediation ?? "", /social:profile:rename/u);
+  assert.match(issues[0]?.remediation ?? "", /new link ID/u);
+});
+
+test("public cache identity uses the configured handle for custom-domain profiles", (t) => {
+  // Arrange
+  const baseDir = "tmp/tests/public-cache-custom-domain-identity";
+  const publicCachePath = writeJsonFile(`${baseDir}/rich-public-cache.json`, {
+    $schema: "../../schema/rich-public-cache.schema.json",
+    version: 1,
+    entries: {
+      substack: {
+        linkId: "substack",
+        sourceUrl: "https://substack.com/@peterryszkiewicz",
+        capturedAt: "2026-07-17T00:00:00.000Z",
+        updatedAt: "2026-07-17T00:00:00.000Z",
+        metadata: {
+          title: "Peter Ryszkiewicz",
+          description: "Agentic engineering and Bitcoin.",
+          image: "https://substackcdn.com/profile.jpg",
+        },
+      },
+    },
+  });
+
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, baseDir), { force: true, recursive: true });
+  });
+
+  // Act
+  const issues = publicAugmentedStableCacheCoverageIssues({
+    linksSource: "data/links.json",
+    linksData: {
+      links: [
+        {
+          id: "substack",
+          type: "rich",
+          icon: "substack",
+          enabled: true,
+          url: "https://peter.ryszkiewicz.us/",
+          metadata: {
+            handle: "peterryszkiewicz",
+          },
+        },
+      ],
+    },
+    siteData: {},
+    generatedMetadataByLink: {
+      substack: {
+        title: "Peter Ryszkiewicz",
+        description: "Agentic engineering and Bitcoin.",
+        image: "https://substackcdn.com/profile.jpg",
+      },
+    },
+    publicCachePath,
+  });
+
+  // Assert
   assert.deepEqual(issues, []);
 });
 
