@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-18T08:55:29.622Z",
+  "updatedAt": "2026-07-23T17:26:02.323Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -42,13 +42,13 @@
       "linkId": "x",
       "label": "X",
       "platform": "x",
-      "handle": "stacinova",
-      "canonicalUrl": "https://x.com/StaciNova",
-      "audienceKind": "members",
+      "handle": "stacingsats",
+      "canonicalUrl": "https://x.com/StacingSats",
+      "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 1000,
-      "latestAudienceCountRaw": "1K members",
-      "latestObservedAt": "2026-06-10T10:52:32.665Z"
+      "latestAudienceCount": 5828,
+      "latestAudienceCountRaw": "5,828 Followers",
+      "latestObservedAt": "2026-07-23T17:25:32.518Z"
     },
     {
       "linkId": "youtube",

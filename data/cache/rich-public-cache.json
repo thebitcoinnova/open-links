@@ -201,24 +201,22 @@
     },
     "x": {
       "linkId": "x",
-      "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fstacinova&omit_script=true&hide_thread=true&dnt=true",
-      "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-06-10T10:52:13.260Z",
+      "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fstacingsats&omit_script=true&hide_thread=true&dnt=true",
+      "capturedAt": "2026-07-23T17:26:18.572Z",
+      "updatedAt": "2026-07-23T17:26:18.572Z",
       "metadata": {
-        "title": "@StaciNova on X",
-        "description": "Posts and updates from @StaciNova on X.",
-        "profileDescription": "Host of @TheBitcoinNova @HiveMinded21 Podcasts http://freesamourai.com Bitcoin Army- https://app.cluborange.org/ebwkSwSY",
-        "image": "https://unavatar.io/x/StaciNova",
+        "title": "@StacingSats on X",
+        "description": "Posts and updates from @StacingSats on X.",
+        "profileDescription": "Host of @TheBitcoinNova Podcast signup.cluborange.org/co/staci @cluborange Bitcoin Army Group Chat 🧡✨👇app.cluborange.org/ebwkSwSY",
+        "image": "https://unavatar.io/x/StacingSats",
         "sourceLabel": "x.com",
-        "profileImage": "https://unavatar.io/x/StaciNova",
-        "followersCount": 5776,
-        "followersCountRaw": "5,776 Followers",
-        "followingCount": 4402,
-        "followingCountRaw": "4,402 Following",
-        "membersCount": 1000,
-        "membersCountRaw": "1K members"
+        "profileImage": "https://unavatar.io/x/StacingSats",
+        "followersCount": 5828,
+        "followersCountRaw": "5,828 Followers",
+        "followingCount": 4497,
+        "followingCountRaw": "4,497 Following"
       },
-      "lastModified": "Wed, 27 May 2026 10:51:51 GMT"
+      "lastModified": "Thu, 23 Jul 2026 17:26:18 GMT"
     },
     "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno": {
       "linkId": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
