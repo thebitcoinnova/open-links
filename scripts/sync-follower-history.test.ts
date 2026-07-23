@@ -4,7 +4,10 @@ import path from "node:path";
 import process from "node:process";
 import test from "node:test";
 import type { OpenLink } from "../src/lib/content/load-content";
-import { readFollowerHistoryCsvFile } from "./follower-history/append-history";
+import {
+  appendFollowerHistoryRows,
+  readFollowerHistoryCsvFile,
+} from "./follower-history/append-history";
 import {
   type HistoryRunSnapshotSummary,
   buildFollowerHistoryIndexEntries,
@@ -17,6 +20,69 @@ import {
 } from "./sync-follower-history";
 
 const ROOT = process.cwd();
+
+test("same-account X renames append to one link-id series without rewriting historical rows", (t) => {
+  // Arrange
+  const historyRepoRoot = "tmp/tests/follower-history-x-renames/public/history/followers";
+  const absoluteHistoryRoot = path.join(ROOT, historyRepoRoot);
+  const csvPath = path.join(absoluteHistoryRoot, "x.csv");
+  fs.mkdirSync(absoluteHistoryRoot, { recursive: true });
+  const historyBefore = [
+    "observedAt,linkId,platform,handle,canonicalUrl,audienceKind,audienceCount,audienceCountRaw,source",
+    '2025-04-01T10:00:00.000Z,x,x,xstac1,https://x.com/XSTAC1,followers,5581,"5,581 Followers",public-cache',
+    '2026-04-01T10:00:00.000Z,x,x,stacinova,https://x.com/StaciNova,followers,6000,"6,000 Followers",public-cache',
+    "",
+  ].join("\n");
+  fs.writeFileSync(csvPath, historyBefore, "utf8");
+  t.after(() => {
+    fs.rmSync(path.join(ROOT, "tmp/tests/follower-history-x-renames"), {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  // Act
+  appendFollowerHistoryRows({
+    historyRepoRoot,
+    linkId: "x",
+    rows: [
+      {
+        observedAt: "2026-07-23T10:00:00.000Z",
+        linkId: "x",
+        platform: "x",
+        handle: "stacingsats",
+        canonicalUrl: "https://x.com/StacingSats",
+        audienceKind: "followers",
+        audienceCount: 6100,
+        audienceCountRaw: "6,100 Followers",
+        source: "public-cache",
+      },
+    ],
+  });
+  const historyAfter = fs.readFileSync(csvPath, "utf8");
+  const indexEntries = buildFollowerHistoryIndexEntries(
+    [
+      {
+        id: "x",
+        label: "X",
+        url: "https://x.com/StacingSats",
+        type: "rich",
+        icon: "x",
+        enabled: true,
+      },
+    ],
+    { historyRepoRoot },
+  );
+
+  // Assert
+  assert.equal(historyAfter.startsWith(historyBefore.trimEnd()), true);
+  assert.equal(readFollowerHistoryCsvFile(`${historyRepoRoot}/x.csv`).length, 3);
+  assert.equal(indexEntries.length, 1);
+  assert.equal(indexEntries[0]?.linkId, "x");
+  assert.equal(indexEntries[0]?.handle, "stacingsats");
+  assert.equal(indexEntries[0]?.canonicalUrl, "https://x.com/StacingSats");
+  assert.equal(indexEntries[0]?.latestAudienceCount, 6100);
+});
 
 const createPublicRegistry = (
   entries: Parameters<typeof resolveSnapshots>[1]["entries"],

@@ -161,6 +161,7 @@ export interface RichLinkMetadata extends SocialProfileMetadataFields {
     | "metadata_complete"
     | "metadata_partial"
     | "metadata_missing"
+    | "metadata_regression"
     | "fetch_failed"
     | "public_cache"
     | "authenticated_cache"

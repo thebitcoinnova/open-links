@@ -32,6 +32,7 @@ import {
   loadPublicCacheRegistry,
   mergePublicCacheMetadataForTarget,
   prunePublicCacheMetadataForTarget,
+  resolvePublicCacheEntry,
   toPublicCacheMetadata,
   writePublicCacheRegistry,
 } from "./enrichment/public-cache";
@@ -722,7 +723,7 @@ const SYNCABLE_TARGET_BEHAVIORS = {
     fatalPlaceholderSignals: ["account_missing", "account_suspended"],
     requiresFollowingCount: true,
     requiresMembersCount: false,
-    requiresProfileDescription: true,
+    requiresProfileDescription: false,
     requiresSubscribersCount: false,
   },
   "x-public-community": {
@@ -1501,14 +1502,17 @@ const runPublicRichSyncCandidateAttempt = async (
 
   const generatedAt = dependencies.nowIso();
   const existingEntry = registry.entries[candidate.link.id];
-  let attemptDirty = false;
+  const sourceMatchedEntry =
+    resolvePublicCacheEntry(registry, candidate.link.id, candidate.target.sourceUrl)?.entry ??
+    undefined;
+  const attemptDirty = false;
   let attemptProcessed = false;
 
   try {
     if (
       args.onlyMissing &&
       !args.force &&
-      hasRequiredAudienceMetrics(candidate.target.id, existingEntry)
+      hasRequiredAudienceMetrics(candidate.target.id, sourceMatchedEntry)
     ) {
       return {
         dirty: false,
@@ -1522,7 +1526,7 @@ const runPublicRichSyncCandidateAttempt = async (
       };
     }
 
-    let workingEntry = existingEntry ? cloneEntry(existingEntry) : undefined;
+    let workingEntry = sourceMatchedEntry ? cloneEntry(sourceMatchedEntry) : undefined;
     if (!hasBaseProfileMetadata(candidate.target.id, workingEntry)) {
       workingEntry = await dependencies.bootstrapBaseEntry({
         link: candidate.link,
@@ -1532,9 +1536,6 @@ const runPublicRichSyncCandidateAttempt = async (
         remoteCachePolicyRegistry,
         remoteCacheStats,
       });
-      registry.entries[candidate.link.id] = workingEntry;
-      registry.updatedAt = generatedAt;
-      attemptDirty = true;
       dependencies.log(`[public:rich:sync] bootstrapped base metadata for ${candidate.link.id}.`);
     }
 
@@ -1683,7 +1684,7 @@ const runPublicRichSyncCandidateAttempt = async (
       entry: {
         linkId: candidate.link.id,
         status: "synced",
-        reason: input.originalExistingEntry ? "counts_refreshed" : "bootstrapped_and_refreshed",
+        reason: sourceMatchedEntry ? "counts_refreshed" : "bootstrapped_and_refreshed",
         artifactPath: capture.artifactPath,
       },
     };

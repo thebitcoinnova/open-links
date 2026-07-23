@@ -5,8 +5,13 @@
   const metricTexts = [];
   const seen = new Set();
   const selectors = ["a", "button", "span", "div", "p", "li", "h1", "h2", "h3"];
+  const semanticProfileRoot = document.querySelector(
+    '[itemprop="mainEntity"][itemscope][itemtype="https://schema.org/Person"]',
+  );
   const profileDescription = normalize(
-    document.querySelector('[data-testid="UserDescription"]')?.textContent || "",
+    document.querySelector('[data-testid="UserDescription"]')?.textContent ||
+      semanticProfileRoot?.querySelector('[dir="auto"].whitespace-pre-wrap')?.textContent ||
+      "",
   );
 
   for (const node of document.querySelectorAll(selectors.join(","))) {

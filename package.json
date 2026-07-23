@@ -80,6 +80,7 @@
     "enrich:rich:strict": "bun scripts/enrich-rich-links.ts --strict",
     "enrich:rich:strict:write-cache": "bun scripts/enrich-rich-links.ts --strict --write-public-cache",
     "public:rich:sync": "bun scripts/public-rich-sync.ts",
+    "social:profile:rename": "bun scripts/rename-social-profile.ts",
     "followers:history:sync": "bun scripts/sync-follower-history.ts",
     "linkedin:debug:bootstrap": "bun scripts/oneoff/linkedin-debug-bootstrap.ts",
     "linkedin:debug:login": "bun scripts/oneoff/linkedin-login-session.ts",
