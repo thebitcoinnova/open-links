@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-24T09:16:58.578Z",
+  "updatedAt": "2026-07-25T08:57:40.708Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -10,9 +10,9 @@
       "canonicalUrl": "https://www.youtube.com/@HiveMinded21",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
-      "latestAudienceCount": 626,
-      "latestAudienceCountRaw": "626 subscribers",
-      "latestObservedAt": "2026-07-24T09:16:58.578Z"
+      "latestAudienceCount": 625,
+      "latestAudienceCountRaw": "625 subscribers",
+      "latestObservedAt": "2026-07-25T08:57:40.708Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-07-24T09:16:58.578Z"
+      "latestObservedAt": "2026-07-25T08:57:40.708Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
       "latestAudienceCount": 648,
       "latestAudienceCountRaw": "648 Followers",
-      "latestObservedAt": "2026-07-24T09:16:58.578Z"
+      "latestObservedAt": "2026-07-25T08:57:40.708Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/StacingSats",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5830,
-      "latestAudienceCountRaw": "5,830 Followers",
-      "latestObservedAt": "2026-07-24T09:16:58.578Z"
+      "latestAudienceCount": 5835,
+      "latestAudienceCountRaw": "5,835 Followers",
+      "latestObservedAt": "2026-07-25T08:57:40.708Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 22200,
       "latestAudienceCountRaw": "22.2K subscribers",
-      "latestObservedAt": "2026-07-24T09:16:58.578Z"
+      "latestObservedAt": "2026-07-25T08:57:40.708Z"
     }
   ]
 }
