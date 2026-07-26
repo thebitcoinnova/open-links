@@ -44,6 +44,62 @@ test("primary audience resolution prefers subscribers and falls back to follower
   assert.equal(resolveFollowerHistoryPrimaryAudience({}), null);
 });
 
+test("primary audience resolution selects the required kind from mixed metadata", () => {
+  // Arrange
+  const metadata = {
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+    membersCount: 1000,
+    membersCountRaw: "1K members",
+  };
+
+  // Act
+  const audience = resolveFollowerHistoryPrimaryAudience(metadata, "followers");
+
+  // Assert
+  assert.deepEqual(audience, {
+    audienceKind: "followers",
+    audienceCount: 5828,
+    audienceCountRaw: "5,828 Followers",
+  });
+});
+
+test("primary audience resolution rejects metadata without the required kind", () => {
+  // Arrange
+  const metadata = {
+    membersCount: 1000,
+    membersCountRaw: "1K members",
+  };
+
+  // Act
+  const audience = resolveFollowerHistoryPrimaryAudience(metadata, "followers");
+
+  // Assert
+  assert.equal(audience, null);
+});
+
+test("primary audience resolution preserves legacy priority without a required kind", () => {
+  // Arrange
+  const metadata = {
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+    subscribersCount: 500,
+    subscribersCountRaw: "500 subscribers",
+    membersCount: 1000,
+    membersCountRaw: "1K members",
+  };
+
+  // Act
+  const audience = resolveFollowerHistoryPrimaryAudience(metadata);
+
+  // Assert
+  assert.deepEqual(audience, {
+    audienceKind: "members",
+    audienceCount: 1000,
+    audienceCountRaw: "1K members",
+  });
+});
+
 test("compact audience parsing supports commas and metric suffixes", () => {
   assert.equal(parseCompactAudienceCount("1,351 Followers"), 1351);
   assert.equal(parseCompactAudienceCount("3.3K followers"), 3300);

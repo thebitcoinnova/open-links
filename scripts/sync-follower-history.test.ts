@@ -113,6 +113,29 @@ const createSubstackLink = (): OpenLink => ({
   },
 });
 
+const createXProfileLink = (input?: {
+  enrichment?: OpenLink["enrichment"];
+  metadata?: OpenLink["metadata"];
+}): OpenLink => ({
+  id: "x",
+  label: "X",
+  url: "https://x.com/example",
+  type: "rich",
+  icon: "x",
+  enabled: true,
+  enrichment: input?.enrichment,
+  metadata: input?.metadata,
+});
+
+const createXCommunityLink = (): OpenLink => ({
+  id: "x-community",
+  label: "X Community",
+  url: "https://x.com/i/communities/1871996451812769951",
+  type: "rich",
+  icon: "x",
+  enabled: true,
+});
+
 const createBrightBuildsFacebookLink = (): OpenLink => ({
   id: "bright-builds-facebook",
   label: "Bright Builds LLC",
@@ -170,6 +193,33 @@ const createSubstackPublicRegistry = (): Parameters<typeof resolveSnapshots>[1] 
         subscribersCount: 15,
         subscribersCountRaw: "15 subscribers",
       },
+    },
+  });
+
+const createXProfilePublicRegistry = (
+  metadata: Parameters<typeof resolveSnapshots>[1]["entries"][string]["metadata"],
+): Parameters<typeof resolveSnapshots>[1] =>
+  createPublicRegistry({
+    x: {
+      linkId: "x",
+      sourceUrl:
+        "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fexample&omit_script=true&hide_thread=true&dnt=true",
+      capturedAt: "2026-07-23T17:25:00.000Z",
+      updatedAt: "2026-07-23T17:25:00.000Z",
+      metadata,
+    },
+  });
+
+const createXCommunityPublicRegistry = (
+  metadata: Parameters<typeof resolveSnapshots>[1]["entries"][string]["metadata"],
+): Parameters<typeof resolveSnapshots>[1] =>
+  createPublicRegistry({
+    "x-community": {
+      linkId: "x-community",
+      sourceUrl: "https://x.com/i/communities/1871996451812769951",
+      capturedAt: "2026-07-23T17:25:00.000Z",
+      updatedAt: "2026-07-23T17:25:00.000Z",
+      metadata,
     },
   });
 
@@ -304,6 +354,171 @@ test("resolveFreshPublicRichSyncLinkIds returns synced and freshly captured unch
 
   // Assert
   assert.deepEqual([...freshLinkIds].sort(), ["medium", "x"]);
+});
+
+test("resolveSnapshots records followers from mixed X profile metadata", () => {
+  // Arrange
+  const links = [createXProfileLink()];
+  const publicRegistry = createXProfilePublicRegistry({
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+    membersCount: 1000,
+    membersCountRaw: "1K members",
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(links, publicRegistry, null, "2026-07-23T17:30:00.000Z", {
+    freshPublicAudienceLinkIds: new Set(["x"]),
+  });
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.audienceKind, "followers");
+  assert.equal(snapshots[0]?.row.audienceCount, 5828);
+  assert.equal(snapshots[0]?.row.source, "public-cache");
+});
+
+test("resolveSnapshots ignores a manual member count for an X profile", () => {
+  // Arrange
+  const links = [
+    createXProfileLink({
+      metadata: {
+        membersCount: 1000,
+        membersCountRaw: "1K members",
+      },
+    }),
+  ];
+  const publicRegistry = createXProfilePublicRegistry({
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(links, publicRegistry, null, "2026-07-23T17:30:00.000Z", {
+    freshPublicAudienceLinkIds: new Set(["x"]),
+  });
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.audienceKind, "followers");
+  assert.equal(snapshots[0]?.row.audienceCount, 5828);
+  assert.equal(snapshots[0]?.row.source, "public-cache");
+});
+
+test("resolveSnapshots ignores an authenticated member count for an X profile", () => {
+  // Arrange
+  const links = [
+    createXProfileLink({
+      enrichment: {
+        authenticatedExtractor: "x-auth-browser",
+      },
+    }),
+  ];
+  const publicRegistry = createXProfilePublicRegistry({
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+  });
+  const authenticatedRegistry = {
+    entries: {
+      x: {
+        metadata: {
+          membersCount: 1000,
+          membersCountRaw: "1K members",
+        },
+      },
+    },
+  } as unknown as Parameters<typeof resolveSnapshots>[2];
+
+  // Act
+  const snapshots = resolveSnapshots(
+    links,
+    publicRegistry,
+    authenticatedRegistry,
+    "2026-07-23T17:30:00.000Z",
+    {
+      freshPublicAudienceLinkIds: new Set(["x"]),
+    },
+  );
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.audienceKind, "followers");
+  assert.equal(snapshots[0]?.row.audienceCount, 5828);
+  assert.equal(snapshots[0]?.row.source, "public-cache");
+});
+
+test("resolveSnapshots records members from mixed X community metadata", () => {
+  // Arrange
+  const links = [createXCommunityLink()];
+  const publicRegistry = createXCommunityPublicRegistry({
+    followersCount: 5828,
+    followersCountRaw: "5,828 Followers",
+    membersCount: 785,
+    membersCountRaw: "785 Members",
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(links, publicRegistry, null, "2026-07-23T17:30:00.000Z", {
+    freshPublicAudienceLinkIds: new Set(["x-community"]),
+  });
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.audienceKind, "members");
+  assert.equal(snapshots[0]?.row.audienceCount, 785);
+});
+
+test("resolveSnapshots records followers from mixed Rumble profile metadata", () => {
+  // Arrange
+  const links: OpenLink[] = [
+    {
+      id: "rumble",
+      label: "Rumble",
+      url: "https://rumble.com/user/example",
+      type: "rich",
+      icon: "rumble",
+      enabled: true,
+    },
+  ];
+  const publicRegistry = createPublicRegistry({
+    rumble: {
+      linkId: "rumble",
+      sourceUrl: "https://rumble.com/user/example/about",
+      capturedAt: "2026-07-23T17:25:00.000Z",
+      updatedAt: "2026-07-23T17:25:00.000Z",
+      metadata: {
+        followersCount: 12,
+        followersCountRaw: "12 Followers",
+        membersCount: 999,
+        membersCountRaw: "999 members",
+      },
+    },
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(links, publicRegistry, null, "2026-07-23T17:30:00.000Z");
+
+  // Assert
+  assert.equal(snapshots.length, 1);
+  assert.equal(snapshots[0]?.row.audienceKind, "followers");
+  assert.equal(snapshots[0]?.row.audienceCount, 12);
+});
+
+test("resolveSnapshots skips known targets that only expose an unexpected metric", () => {
+  // Arrange
+  const links = [createXProfileLink()];
+  const publicRegistry = createXProfilePublicRegistry({
+    membersCount: 1000,
+    membersCountRaw: "1K members",
+  });
+
+  // Act
+  const snapshots = resolveSnapshots(links, publicRegistry, null, "2026-07-23T17:30:00.000Z", {
+    freshPublicAudienceLinkIds: new Set(["x"]),
+  });
+
+  // Assert
+  assert.deepEqual(snapshots, []);
 });
 
 test("resolveSnapshots skips public-cache audience rows without fresh public sync evidence", () => {

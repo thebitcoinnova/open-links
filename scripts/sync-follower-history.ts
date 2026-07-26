@@ -191,6 +191,40 @@ const hasEnabledFacebookPageMetrics = (link: OpenLink): boolean => {
   return facebookPageMetrics.enabled === true;
 };
 
+const resolveRequiredAudienceKind = (
+  link: OpenLink,
+): FollowerHistoryRow["audienceKind"] | undefined => {
+  if (hasEnabledFacebookPageMetrics(link)) {
+    return "followers";
+  }
+
+  if (!link.url) {
+    return undefined;
+  }
+
+  const target = resolvePublicAugmentationTarget({
+    url: link.url,
+    icon: link.icon,
+    metadataHandle: link.metadata?.handle,
+  });
+
+  switch (target?.id) {
+    case "x-public-community":
+      return "members";
+    case "substack-public-profile":
+    case "youtube-public-profile":
+      return "subscribers";
+    case "instagram-public-profile":
+    case "medium-public-feed":
+    case "primal-public-profile":
+    case "rumble-public-profile":
+    case "x-public-oembed":
+      return "followers";
+    default:
+      return undefined;
+  }
+};
+
 const requiresFreshPublicAudienceCapture = (link: OpenLink): boolean => {
   if (hasEnabledFacebookPageMetrics(link)) {
     return true;
@@ -239,6 +273,7 @@ const resolveSourceAndMetadata = (
   link: OpenLink,
   publicRegistry: ReturnType<typeof loadPublicCacheRegistry>,
   authenticatedRegistry: ReturnType<typeof readOptionalAuthenticatedCache>,
+  maybeRequiredAudienceKind?: FollowerHistoryRow["audienceKind"],
 ): { metadata: Record<string, unknown>; source: FollowerHistorySource } => {
   const publicMetadata = publicRegistry.entries[link.id]?.metadata;
   const maybeAuthCacheKey = link.enrichment?.authenticatedExtractor
@@ -251,7 +286,10 @@ const resolveSourceAndMetadata = (
   const authenticatedMetadataRecord = authenticatedMetadata as Record<string, unknown> | undefined;
   const publicMetadataRecord = publicMetadata as Record<string, unknown> | undefined;
 
-  const manualAudience = resolveFollowerHistoryPrimaryAudience(manualMetadata);
+  const manualAudience = resolveFollowerHistoryPrimaryAudience(
+    manualMetadata,
+    maybeRequiredAudienceKind,
+  );
   if (manualAudience) {
     return {
       metadata:
@@ -265,8 +303,14 @@ const resolveSourceAndMetadata = (
     };
   }
 
-  const authenticatedAudience = resolveFollowerHistoryPrimaryAudience(authenticatedMetadataRecord);
-  const publicAudience = resolveFollowerHistoryPrimaryAudience(publicMetadataRecord);
+  const authenticatedAudience = resolveFollowerHistoryPrimaryAudience(
+    authenticatedMetadataRecord,
+    maybeRequiredAudienceKind,
+  );
+  const publicAudience = resolveFollowerHistoryPrimaryAudience(
+    publicMetadataRecord,
+    maybeRequiredAudienceKind,
+  );
   if (authenticatedMetadata) {
     const authenticatedWithPublicAudience =
       mergeMetadataWithManualSocialProfileOverrides(
@@ -326,13 +370,16 @@ export const resolveSnapshots = (
       return [];
     }
 
+    const maybeRequiredAudienceKind = resolveRequiredAudienceKind(link);
     const { metadata, source } = resolveSourceAndMetadata(
       link,
       publicRegistry,
       authenticatedRegistry,
+      maybeRequiredAudienceKind,
     );
     const primaryAudience = resolveFollowerHistoryPrimaryAudience(
       metadata as Parameters<typeof resolveFollowerHistoryPrimaryAudience>[0],
+      maybeRequiredAudienceKind,
     );
 
     if (!primaryAudience) {

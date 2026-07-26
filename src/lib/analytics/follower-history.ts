@@ -222,75 +222,43 @@ export const parseCompactAudienceCount = (value: string | undefined): number | u
 
 export const resolveFollowerHistoryPrimaryAudience = (
   metadata: FollowerHistoryLikeMetadata | undefined,
+  maybeRequiredAudienceKind?: FollowerHistoryAudienceKind,
 ): FollowerHistoryPrimaryAudience | null => {
   if (!metadata) {
     return null;
   }
 
-  const membersRaw = trimToUndefined(metadata.membersCountRaw);
-  const membersCount =
-    typeof metadata.membersCount === "number" && Number.isFinite(metadata.membersCount)
-      ? metadata.membersCount
-      : parseCompactAudienceCount(membersRaw);
+  const resolveAudienceByKind = (
+    audienceKind: FollowerHistoryAudienceKind,
+  ): FollowerHistoryPrimaryAudience | null => {
+    const countKey = `${audienceKind}Count` as const;
+    const rawKey = `${audienceKind}CountRaw` as const;
+    const maybeRaw = trimToUndefined(metadata[rawKey]);
+    const maybeCount =
+      typeof metadata[countKey] === "number" && Number.isFinite(metadata[countKey])
+        ? metadata[countKey]
+        : parseCompactAudienceCount(maybeRaw);
 
-  if (membersCount !== undefined && membersRaw) {
+    if (maybeCount === undefined) {
+      return null;
+    }
+
     return {
-      audienceKind: "members",
-      audienceCount: membersCount,
-      audienceCountRaw: membersRaw,
+      audienceKind,
+      audienceCount: maybeCount,
+      audienceCountRaw: maybeRaw ?? `${maybeCount.toLocaleString("en-US")} ${audienceKind}`,
     };
+  };
+
+  if (maybeRequiredAudienceKind) {
+    return resolveAudienceByKind(maybeRequiredAudienceKind);
   }
 
-  if (membersCount !== undefined) {
-    return {
-      audienceKind: "members",
-      audienceCount: membersCount,
-      audienceCountRaw: `${membersCount.toLocaleString("en-US")} members`,
-    };
-  }
-
-  const subscriberRaw = trimToUndefined(metadata.subscribersCountRaw);
-  const subscriberCount =
-    typeof metadata.subscribersCount === "number" && Number.isFinite(metadata.subscribersCount)
-      ? metadata.subscribersCount
-      : parseCompactAudienceCount(subscriberRaw);
-
-  if (subscriberCount !== undefined && subscriberRaw) {
-    return {
-      audienceKind: "subscribers",
-      audienceCount: subscriberCount,
-      audienceCountRaw: subscriberRaw,
-    };
-  }
-
-  if (subscriberCount !== undefined) {
-    return {
-      audienceKind: "subscribers",
-      audienceCount: subscriberCount,
-      audienceCountRaw: `${subscriberCount.toLocaleString("en-US")} subscribers`,
-    };
-  }
-
-  const followerRaw = trimToUndefined(metadata.followersCountRaw);
-  const followerCount =
-    typeof metadata.followersCount === "number" && Number.isFinite(metadata.followersCount)
-      ? metadata.followersCount
-      : parseCompactAudienceCount(followerRaw);
-
-  if (followerCount !== undefined && followerRaw) {
-    return {
-      audienceKind: "followers",
-      audienceCount: followerCount,
-      audienceCountRaw: followerRaw,
-    };
-  }
-
-  if (followerCount !== undefined) {
-    return {
-      audienceKind: "followers",
-      audienceCount: followerCount,
-      audienceCountRaw: `${followerCount.toLocaleString("en-US")} followers`,
-    };
+  for (const audienceKind of ["members", "subscribers", "followers"] as const) {
+    const maybeAudience = resolveAudienceByKind(audienceKind);
+    if (maybeAudience) {
+      return maybeAudience;
+    }
   }
 
   return null;
