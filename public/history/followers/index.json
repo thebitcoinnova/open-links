@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-29T09:34:41.184Z",
+  "updatedAt": "2026-07-30T09:27:21.652Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
       "latestAudienceCount": 625,
       "latestAudienceCountRaw": "625 subscribers",
-      "latestObservedAt": "2026-07-29T09:34:41.184Z"
+      "latestObservedAt": "2026-07-30T09:27:21.652Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-07-29T09:34:41.184Z"
+      "latestObservedAt": "2026-07-30T09:27:21.652Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -34,9 +34,9 @@
       "canonicalUrl": "https://x.com/TheBitcoinNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
-      "latestAudienceCount": 649,
-      "latestAudienceCountRaw": "649 Followers",
-      "latestObservedAt": "2026-07-29T09:34:41.184Z"
+      "latestAudienceCount": 652,
+      "latestAudienceCountRaw": "652 Followers",
+      "latestObservedAt": "2026-07-30T09:27:21.652Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/StacingSats",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5825,
-      "latestAudienceCountRaw": "5,825 Followers",
-      "latestObservedAt": "2026-07-29T09:34:41.184Z"
+      "latestAudienceCount": 5826,
+      "latestAudienceCountRaw": "5,826 Followers",
+      "latestObservedAt": "2026-07-30T09:27:21.652Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 22200,
       "latestAudienceCountRaw": "22.2K subscribers",
-      "latestObservedAt": "2026-07-29T09:34:41.184Z"
+      "latestObservedAt": "2026-07-30T09:27:21.652Z"
     }
   ]
 }
