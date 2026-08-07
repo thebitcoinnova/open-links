@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-06T09:36:54.177Z",
+  "updatedAt": "2026-08-07T08:10:12.513Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
       "latestAudienceCount": 622,
       "latestAudienceCountRaw": "622 subscribers",
-      "latestObservedAt": "2026-08-06T09:36:54.177Z"
+      "latestObservedAt": "2026-08-07T08:10:12.513Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-08-06T09:36:54.177Z"
+      "latestObservedAt": "2026-08-07T08:10:12.513Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -34,9 +34,9 @@
       "canonicalUrl": "https://x.com/TheBitcoinNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
-      "latestAudienceCount": 656,
-      "latestAudienceCountRaw": "656 Followers",
-      "latestObservedAt": "2026-08-06T09:36:54.177Z"
+      "latestAudienceCount": 654,
+      "latestAudienceCountRaw": "654 Followers",
+      "latestObservedAt": "2026-08-07T08:10:12.513Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/StacingSats",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5831,
-      "latestAudienceCountRaw": "5,831 Followers",
-      "latestObservedAt": "2026-08-06T09:36:54.177Z"
+      "latestAudienceCount": 5832,
+      "latestAudienceCountRaw": "5,832 Followers",
+      "latestObservedAt": "2026-08-07T08:10:12.513Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 22300,
       "latestAudienceCountRaw": "22.3K subscribers",
-      "latestObservedAt": "2026-08-06T09:36:54.177Z"
+      "latestObservedAt": "2026-08-07T08:10:12.513Z"
     }
   ]
 }
