@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-07T08:10:12.513Z",
+  "updatedAt": "2026-08-08T07:43:45.287Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
       "latestAudienceCount": 622,
       "latestAudienceCountRaw": "622 subscribers",
-      "latestObservedAt": "2026-08-07T08:10:12.513Z"
+      "latestObservedAt": "2026-08-08T07:43:45.287Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-08-07T08:10:12.513Z"
+      "latestObservedAt": "2026-08-08T07:43:45.287Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -34,9 +34,9 @@
       "canonicalUrl": "https://x.com/TheBitcoinNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
-      "latestAudienceCount": 654,
-      "latestAudienceCountRaw": "654 Followers",
-      "latestObservedAt": "2026-08-07T08:10:12.513Z"
+      "latestAudienceCount": 655,
+      "latestAudienceCountRaw": "655 Followers",
+      "latestObservedAt": "2026-08-08T07:43:45.287Z"
     },
     {
       "linkId": "x",
@@ -48,7 +48,7 @@
       "csvPath": "history/followers/x.csv",
       "latestAudienceCount": 5832,
       "latestAudienceCountRaw": "5,832 Followers",
-      "latestObservedAt": "2026-08-07T08:10:12.513Z"
+      "latestObservedAt": "2026-08-08T07:43:45.287Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 22300,
       "latestAudienceCountRaw": "22.3K subscribers",
-      "latestObservedAt": "2026-08-07T08:10:12.513Z"
+      "latestObservedAt": "2026-08-08T07:43:45.287Z"
     }
   ]
 }

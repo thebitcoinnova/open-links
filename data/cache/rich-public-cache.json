@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Logo_BitcoinSovryn_HeadBanner.png?v=1785658247&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:8f4ae435bd7eb242658c38ac2c10d044\""
+      "etag": "\"page_cache:93620306263:IndexController:275e35bcf0d52b3848c935f26555ade6\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -43,7 +43,7 @@
         "sourceLabel": "signup.cluborange.org",
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
-      "lastModified": "Sun, 02 Aug 2026 15:36:00 GMT"
+      "lastModified": "Fri, 07 Aug 2026 11:14:51 GMT"
     },
     "fountain": {
       "linkId": "fountain",
@@ -133,7 +133,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:840c58a152ef58ed3f0bab366cf65aaa\""
+      "etag": "\"page_cache:94205477246:IndexController:c24d2aa70f4f08f879647a21295cdf12\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -169,7 +169,7 @@
       "linkId": "the-bitcoin-nova-x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fthebitcoinnova&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-05-08T22:08:31.327Z",
-      "updatedAt": "2026-08-07T08:09:32.632Z",
+      "updatedAt": "2026-08-08T07:43:06.518Z",
       "metadata": {
         "title": "@TheBitcoinNova on X",
         "description": "Posts and updates from @TheBitcoinNova on X.",
@@ -177,12 +177,12 @@
         "image": "https://unavatar.io/x/TheBitcoinNova",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 654,
-        "followersCountRaw": "654 Followers",
-        "followingCount": 649,
-        "followingCountRaw": "649 Following"
+        "followersCount": 655,
+        "followersCountRaw": "655 Followers",
+        "followingCount": 648,
+        "followingCountRaw": "648 Following"
       },
-      "lastModified": "Fri, 07 Aug 2026 08:08:52 GMT"
+      "lastModified": "Sat, 08 Aug 2026 07:42:28 GMT"
     },
     "the-bitcoin-way": {
       "linkId": "the-bitcoin-way",
@@ -203,7 +203,7 @@
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fstacingsats&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-07-23T17:26:18.572Z",
-      "updatedAt": "2026-08-07T08:09:52.722Z",
+      "updatedAt": "2026-08-08T07:43:26.162Z",
       "metadata": {
         "title": "@StacingSats on X",
         "description": "Posts and updates from @StacingSats on X.",
@@ -213,10 +213,10 @@
         "profileImage": "https://unavatar.io/x/StacingSats",
         "followersCount": 5832,
         "followersCountRaw": "5,832 Followers",
-        "followingCount": 4534,
-        "followingCountRaw": "4,534 Following"
+        "followingCount": 4535,
+        "followingCountRaw": "4,535 Following"
       },
-      "lastModified": "Fri, 07 Aug 2026 08:08:52 GMT"
+      "lastModified": "Sat, 08 Aug 2026 07:42:28 GMT"
     },
     "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno": {
       "linkId": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
