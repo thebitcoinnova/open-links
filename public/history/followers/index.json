@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-18T07:32:29.043Z",
+  "updatedAt": "2026-08-19T07:32:54.950Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
       "latestAudienceCount": 619,
       "latestAudienceCountRaw": "619 subscribers",
-      "latestObservedAt": "2026-08-18T07:32:29.043Z"
+      "latestObservedAt": "2026-08-19T07:32:54.950Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-08-18T07:32:29.043Z"
+      "latestObservedAt": "2026-08-19T07:32:54.950Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -34,9 +34,9 @@
       "canonicalUrl": "https://x.com/TheBitcoinNova",
       "audienceKind": "followers",
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
-      "latestAudienceCount": 661,
-      "latestAudienceCountRaw": "661 Followers",
-      "latestObservedAt": "2026-08-18T07:32:29.043Z"
+      "latestAudienceCount": 662,
+      "latestAudienceCountRaw": "662 Followers",
+      "latestObservedAt": "2026-08-19T07:32:54.950Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/StacingSats",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5857,
-      "latestAudienceCountRaw": "5,857 Followers",
-      "latestObservedAt": "2026-08-18T07:32:29.043Z"
+      "latestAudienceCount": 5854,
+      "latestAudienceCountRaw": "5,854 Followers",
+      "latestObservedAt": "2026-08-19T07:32:54.950Z"
     },
     {
       "linkId": "youtube",
@@ -60,7 +60,7 @@
       "csvPath": "history/followers/youtube.csv",
       "latestAudienceCount": 24400,
       "latestAudienceCountRaw": "24.4K subscribers",
-      "latestObservedAt": "2026-08-18T07:32:29.043Z"
+      "latestObservedAt": "2026-08-19T07:32:54.950Z"
     }
   ]
 }
