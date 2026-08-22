@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-21T07:37:35.346Z",
+  "updatedAt": "2026-08-22T07:26:13.607Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -10,9 +10,9 @@
       "canonicalUrl": "https://www.youtube.com/@HiveMinded21",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
-      "latestAudienceCount": 617,
-      "latestAudienceCountRaw": "617 subscribers",
-      "latestObservedAt": "2026-08-21T07:37:35.346Z"
+      "latestAudienceCount": 616,
+      "latestAudienceCountRaw": "616 subscribers",
+      "latestObservedAt": "2026-08-22T07:26:13.607Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-08-21T07:37:35.346Z"
+      "latestObservedAt": "2026-08-22T07:26:13.607Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -36,7 +36,7 @@
       "csvPath": "history/followers/the-bitcoin-nova-x.csv",
       "latestAudienceCount": 662,
       "latestAudienceCountRaw": "662 Followers",
-      "latestObservedAt": "2026-08-21T07:37:35.346Z"
+      "latestObservedAt": "2026-08-22T07:26:13.607Z"
     },
     {
       "linkId": "x",
@@ -46,9 +46,9 @@
       "canonicalUrl": "https://x.com/StacingSats",
       "audienceKind": "followers",
       "csvPath": "history/followers/x.csv",
-      "latestAudienceCount": 5867,
-      "latestAudienceCountRaw": "5,867 Followers",
-      "latestObservedAt": "2026-08-21T07:37:35.346Z"
+      "latestAudienceCount": 5866,
+      "latestAudienceCountRaw": "5,866 Followers",
+      "latestObservedAt": "2026-08-22T07:26:13.607Z"
     },
     {
       "linkId": "youtube",
@@ -58,9 +58,9 @@
       "canonicalUrl": "https://www.youtube.com/@StaciNova",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/youtube.csv",
-      "latestAudienceCount": 24400,
-      "latestAudienceCountRaw": "24.4K subscribers",
-      "latestObservedAt": "2026-08-21T07:37:35.346Z"
+      "latestAudienceCount": 24300,
+      "latestAudienceCountRaw": "24.3K subscribers",
+      "latestObservedAt": "2026-08-22T07:26:13.607Z"
     }
   ]
 }
