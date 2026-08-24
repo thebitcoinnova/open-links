@@ -240,10 +240,10 @@
 
 - [x] Reproduce the scheduled upstream-sync failure locally and identify the exact shared conflict boundary.
 - [x] Merge current upstream while preserving every fork-owned path and reconcile the two shared files without losing fork behavior.
-- [ ] Run focused regression tests, all mandatory pre-commit checks, and the exact upstream-sync command; review the final merge diff and CI result.
+- [x] Run focused regression tests, all mandatory pre-commit checks, and the exact upstream-sync command; review the final merge diff and CI result.
 
 ### Completion Review
 
-- Result: Pending verification.
-- Verification: Focused sync-wrapper and content-image regression tests passed; full verification is in progress.
-- Residual risk: Pending verification.
+- Result: The fork now contains upstream `357e9bf` through merge commit `5006c68` while preserving all fork-owned paths. The two shared conflicts were reconciled by combining upstream's POSIX-portable sync fixture with the fork's main-branch telemetry assertions, and by porting source-URL-aware cache-validator isolation into upstream's new content-image module boundary.
+- Verification: The 10 focused sync-wrapper/content-image tests passed. `bun run biome:check`, `bun run studio:lint`, `bun run typecheck`, `bun run studio:typecheck`, Studio API tests, Studio integration tests, `bun run ci:required` (including 178 deploy/CI tests, validation, build, quality checks, and runtime-asset checks), `git diff --check`, and the pre-commit Studio API/web/worker Docker parity builds passed. `bun run sync:upstream --json` returned `up_to_date` with no conflicts, and GitHub Upstream Sync run `32739750977` passed on Ubuntu in 19 seconds.
+- Residual risk: Future upstream changes can still require another deliberate manual merge when both repositories edit the same shared file. The current known validation, SEO, accessibility, and bundle-budget warnings remain advisory and were not introduced by this repair.
