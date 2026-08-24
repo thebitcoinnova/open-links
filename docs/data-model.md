@@ -73,7 +73,7 @@ the site, including a person or an organization.
 ### Avatar materialization behavior
 
 - `profile.avatar` remains the source-of-truth URL in `data/profile.json`.
-- During `bun run dev` and `bun run build`, avatar sync fetches and stores a local copy at `public/cache/profile-avatar/profile-avatar.<ext>`.
+- During explicit `bun run content:refresh` flows, avatar sync fetches and stores a local copy at `public/cache/profile-avatar/profile-avatar.<ext>`.
 - Avatar sync writes the committed stable manifest `data/cache/profile-avatar.json` plus the gitignored runtime overlay `data/cache/profile-avatar.runtime.json`.
 - Runtime rendering uses the local resolved path from the committed avatar manifest, not the raw remote URL.
 - The main profile/site QR also reuses the resolved avatar and automatically pairs it with the site brand mark when both assets are available; there is no separate profile-QR config surface.
@@ -651,13 +651,13 @@ No QR resolver branch should be needed for a new provider once the central regis
 ### Rich image materialization behavior
 
 - Remote rich-image URLs are source data, but runtime does not render raw remote URLs.
-- During `bun run dev` and `bun run build`, `images:sync` fetches remote rich-link and SEO image candidates and writes:
+- During explicit `bun run content:refresh` flows, `images:sync` fetches remote rich-link and SEO image candidates and writes:
   - committed baked files in `public/cache/content-images/<content-hash>.<ext>`
   - committed stable manifest `data/cache/content-images.json`
   - gitignored runtime overlay `data/cache/content-images.runtime.json`
 - Runtime rich-card `metadata.image` values resolve to baked local paths when available.
 - Runtime also localizes `metadata.ogImage`, `metadata.twitterImage`, and `metadata.profileImage` when baked local assets are available.
-- If a link would render as a rich card without a materialized preview image, `bun run validate:data` (and therefore `bun run build`/`bun run dev`) now fails with remediation guidance.
+- If a link would render as a rich card without a materialized preview image, `bun run validate:data` (and therefore `bun run build`) fails with remediation guidance. `bun run dev` remains Vite-only, so run validation or refresh before local preview after content edits.
 - Header-only revalidation data is kept in the runtime overlay so routine `images:sync` runs do not rewrite tracked cache files unless the cached asset payload actually changes.
 - Force refresh is available via `bun run images:sync -- --force` or `OPENLINKS_IMAGES_FORCE=1`.
 
@@ -825,7 +825,7 @@ Built-in public augmentation currently covers Medium (RSS/feed), Rumble (public 
 
 When `links[].enrichment.authenticatedExtractor` is configured, enrichment uses committed cache entries (`reason=authenticated_cache`) and fails early with `authenticated_cache_missing` if cache data/assets are missing or invalid.
 
-`bun run dev` and `bun run build` run strict enrichment pre-steps and fail on configured blocking reasons plus known-blocker policy violations. Those routine pre-steps update only the local runtime overlay unless you intentionally run an explicit `*:write-cache` command.  
+`bun run content:refresh` runs strict enrichment with runtime-only public-cache behavior and fails on configured blocking reasons plus known-blocker policy violations. `bun run content:refresh:write-cache` intentionally persists stable public-cache updates. `bun run dev`, `bun run build`, and `bun run build:strict` consume committed content without running enrichment or modifying tracked outputs.
 Temporary emergency local bypass is available with `OPENLINKS_RICH_ENRICHMENT_BYPASS=1`.
 
 #### Public follower-history artifacts

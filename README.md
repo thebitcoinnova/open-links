@@ -242,7 +242,7 @@ bun run sync:upstream
 
 `bun run sync:upstream` is for forks and downstream repos only. `upstream` must point at a different repository than `origin`, typically `pRizz/open-links` for a fork. It fetches `upstream/main`, attempts a normal merge first, and only auto-resolves conflicts when every overlapping path is covered by `config/fork-owned-paths.json`. Fork-owned operational state such as `.codex/tasks/*.md` and `data/policy/*.local.json` stays with the fork. Shared-file conflicts still stop for manual resolution. The scheduled `Upstream Sync` GitHub workflow should not run in the canonical `pRizz/open-links` repo itself.
 
-If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before first `dev`/`build`:
+If your links use authenticated extractors (`links[].enrichment.authenticatedExtractor`), run guided cache setup before the first content refresh:
 
 ```bash
 bun run setup:rich-auth
@@ -267,6 +267,7 @@ If you want to refresh the public follower-history artifacts locally before the 
 
 ```bash
 bun run public:rich:sync -- --summary-json .ci-diagnostics/public-rich-sync-summary.json
+bun run content:refresh
 bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json
 ```
 
@@ -304,9 +305,13 @@ Starter presets:
 ### 6) Validate and run locally
 
 ```bash
+bun run content:refresh
 bun run validate:data
 bun run dev
 ```
+
+`content:refresh` updates tracked content outputs; review and commit those changes. `dev` and
+`build` consume committed content without refreshing it.
 
 ### 7) Build production output
 
@@ -415,6 +420,10 @@ Live build provenance surfaces:
 
 ### Core commands
 
+- `bun run content:refresh` - run the ordered content pipeline (public cleanup, avatar sync, strict enrichment with runtime-only public cache, content images, social preview, site badge, and standard validation). It reports refresh-owned tracked changes but never stages or commits them.
+- `bun run content:refresh:strict` - run the same refresh pipeline with strict validation.
+- `bun run content:refresh:write-cache` - run the refresh pipeline and intentionally persist stable public-cache metadata.
+- `bun run dev:refresh` - refresh committed content, then start Vite. Review and commit refresh-owned changes separately.
 - `bun run avatar:sync` - fetch profile avatar into `public/cache/profile-avatar/`, write the committed manifest `data/cache/profile-avatar.json`, and refresh the gitignored runtime overlay `data/cache/profile-avatar.runtime.json`.
 - `bun run enrich:rich` - run non-strict rich metadata enrichment (diagnostic/manual mode) with known-blocker + authenticated-cache policy enforcement; routine runs leave `data/cache/rich-public-cache.json` unchanged and only update the local runtime overlay when needed.
 - `bun run enrich:rich:write-cache` - run non-strict rich enrichment and explicitly persist refreshed public metadata into `data/cache/rich-public-cache.json`.
@@ -433,12 +442,12 @@ Live build provenance surfaces:
 - `bun run linkedin:debug:validate:cookie-bridge` - LinkedIn debug validator with cookie-bridge HTTP diagnostic.
 - `bun run images:sync` - fetch rich-card/SEO remote images into the committed cache at `public/cache/content-images/`, write the stable manifest `data/cache/content-images.json`, and refresh the gitignored runtime overlay `data/cache/content-images.runtime.json`.
 - Cache-backed fetches are governed by the committed per-domain registry `data/policy/remote-cache-policy.json`, plus optional fork-owned additions in `data/policy/remote-cache-policy.local.json`. Add shared hosts to the shared registry and fork-only hosts to the local overlay in the same change batch as link/extractor updates.
-- `bun run dev` - start local dev server (predev runs strict enrichment in read-only public-cache mode and fails on blocking enrichment policy issues).
+- `bun run dev` - start Vite against committed content without changing tracked files.
 - `bun run validate:data` - schema + policy checks (standard mode).
 - `bun run validate:data:strict` - fails on warnings and errors.
 - `bun run validate:data:json` - machine-readable validation output.
-- `bun run build` - avatar sync + strict enrichment + content-image sync + validation + production build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand; `images:sync` refreshes committed content-image cache artifacts when image bytes change.
-- `bun run build:strict` - avatar sync + strict enrichment + content-image sync + strict validation + build. The strict enrichment pre-step updates only the local runtime overlay unless you intentionally ran a `*:write-cache` command beforehand; `images:sync` refreshes committed content-image cache artifacts when image bytes change.
+- `bun run build` - standard validation plus a production Vite build from committed content; it does not refresh or modify tracked content.
+- `bun run build:strict` - strict validation plus a production Vite build from committed content; it does not refresh or modify tracked content.
 - `bun run preview` - serve built output.
 - `bun run typecheck` - TypeScript checks.
 
@@ -451,13 +460,15 @@ Live build provenance surfaces:
 - Local parity:
   - `bun run enrich:rich:strict:write-cache`
   - `bun run public:rich:sync -- --summary-json .ci-diagnostics/public-rich-sync-summary.json` or targeted `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for new/changed Instagram, Medium, X, Primal, YouTube, or Facebook Page links
+  - `bun run content:refresh -- --summary-json .ci-diagnostics/content-refresh-summary.json`
   - `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`
+  - review and commit only refresh-owned content outputs plus `public/history/followers/`
   - `bun run build`
 - Manual backfill for nonfatal public browser failures, such as Instagram login walls:
   - `bun run public:rich:sync -- --only-link instagram --headed --wait-ms 600000 --capture-retries 0 --summary-json .ci-diagnostics/public-rich-sync-summary.json`
   - sign in only inside the opened local browser profile, then rerun `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`
 - Nonfatal public audience capture failures are diagnostic-only in the nightly health gate; fatal profile-unavailable failures, missing diagnostics, stale rows, and missing fresh snapshots still fail the workflow.
-- The workflow commits directly to `main` and deploys Pages in the same run. This avoids depending on downstream workflow fan-out from a bot-authored push.
+- The workflow is the sole automated content writer: it refreshes, validates, allow-list stages, commits directly to `main`, builds that exact commit, pushes, and deploys Pages in the same run. If no allow-listed output changes, it skips commit, build, push, and deploy.
 
 ### Authenticated Cache Lifecycle
 
@@ -534,7 +545,7 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 
 - Re-run with `bun run build` and inspect first failing command output.
 - If strict mode fails, compare `bun run validate:data` vs `bun run validate:data:strict`.
-- Re-run blocking enrichment diagnostics: `bun run enrich:rich:strict`.
+- Re-run the explicit refresh pipeline: `bun run content:refresh` (or the leaf diagnostic `bun run enrich:rich:strict`).
 - Check canonical blocker registry: `data/policy/rich-enrichment-blockers.json`.
 - Check authenticated extractor policy: `data/policy/rich-authenticated-extractors.json`.
 - Check authenticated cache manifest: `data/cache/rich-authenticated-cache.json`.
@@ -546,8 +557,8 @@ For full data model details and examples, see [Data Model](https://raw.githubuse
 - If `authenticated_cache_missing` is reported, run `bun run setup:rich-auth` (or `bun run auth:rich:sync -- --only-link <link-id>`) and commit cache manifest/assets.
 - To reset stale/bad authenticated cache data, clear entries first with `bun run auth:rich:clear -- --only-link <link-id>` (or `--all`), then recapture with `bun run setup:rich-auth`.
 - If `metadata_missing` is blocking, add at least one manual field under `links[].metadata` (`title`, `description`, or `image`) or remediate remote OG/Twitter metadata.
-- If a manual or enriched rich-link image changed, run `bun run images:sync` and commit `data/cache/content-images.json` plus `public/cache/content-images/*` when they update.
-- Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build`.
+- If a manual or enriched rich-link image changed, run `bun run content:refresh` and commit its allow-listed cache/generated assets when they update.
+- Temporary emergency bypass (local only): `OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run content:refresh`.
 - Force-refresh avatar cache when needed: `bun run avatar:sync -- --force` (or set `OPENLINKS_AVATAR_FORCE=1`).
 - Force-refresh rich/SEO image cache when needed: `bun run images:sync -- --force` (or set `OPENLINKS_IMAGES_FORCE=1`).
 

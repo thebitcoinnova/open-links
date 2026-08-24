@@ -2,7 +2,7 @@
 
 This document tracks rich metadata fetch failures caused by anti-automation protections (authwalls, bot filters, challenge pages).
 
-`bun run dev` and `bun run build` now run strict rich enrichment before app build, so unresolved blockers can fail local and CI builds.
+`bun run content:refresh` runs strict rich enrichment explicitly. `bun run dev` and `bun run build` consume committed content without network refresh; validation still fails when committed enrichment artifacts violate policy.
 
 Canonical machine-readable blocker policy:
 

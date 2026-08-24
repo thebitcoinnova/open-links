@@ -2,6 +2,28 @@ import { existsSync, readFileSync } from "node:fs";
 import deploymentDefaultsConfigJson from "../../config/deployment.defaults.json" with {
   type: "json",
 };
+import { buildDeploymentConfig } from "./deployment-config-builder";
+import {
+  isPlaceholderDeployPublicOrigin,
+  isUpstreamRepository,
+  normalizeBasePath,
+  normalizeDeployPublicOrigin,
+  normalizeOrigin,
+  normalizeRoutePath,
+  parseDeployTarget,
+} from "./deployment-config-normalize";
+import { mergeTrackedDeploymentConfigInputs } from "./deployment-config-overlay";
+import type {
+  AwsPriceClass,
+  DeployTarget,
+  DeployTargetConfig,
+  DeploymentResolutionOptions,
+  DeploymentResolutionState,
+  GitHubPagesUrlOptions,
+  GitHubRepositoryContext,
+  TrackedDeployTargetConfig,
+  TrackedDeploymentConfig,
+} from "./deployment-config-types";
 import {
   DEFAULT_GITHUB_REPOSITORY_NAME,
   DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG,
@@ -11,65 +33,18 @@ import {
   trimToUndefined,
 } from "./github-repository";
 
-export type DeployTarget = "aws" | "github-pages" | "railway" | "render";
-export type AwsPriceClass = "PriceClass_100" | "PriceClass_200" | "PriceClass_All";
-
-export interface TrackedDeployTargetConfig {
-  priceClass?: AwsPriceClass;
-  publicOrigin?: string;
-  resourcePrefix?: string;
-}
-
-export interface TrackedDeploymentConfig {
-  enabledTargets: DeployTarget[];
-  primaryTarget: DeployTarget;
-  targets: Partial<Record<DeployTarget, TrackedDeployTargetConfig>>;
-}
-
-export interface DeployTargetConfig {
-  basePath: string;
-  id: DeployTarget;
-  label: string;
-  publicOrigin: string;
-  shouldIndex: boolean;
-}
-
-export interface DeploymentResolutionState {
-  awsPriceClass: AwsPriceClass;
-  awsResourcePrefix: string;
-  defaultRepositorySlug: string;
-  enabledTargets: DeployTarget[];
-  githubPagesBasePath: string;
-  githubPagesDefaultBasePath: string;
-  githubPagesDefaultUrl: string;
-  githubPagesOrigin: string;
-  primaryCanonicalDomain: string;
-  primaryCanonicalOrigin: string;
-  primaryTarget: DeployTarget;
-  repositorySlug: string;
-  targets: Record<DeployTarget, DeployTargetConfig>;
-  trackedConfig: TrackedDeploymentConfig;
-  upstreamRepository: boolean;
-}
-
-interface DeploymentResolutionOptions {
-  env?: Record<string, string | undefined>;
-  repositorySlug?: string;
-  trackedConfig?: TrackedDeploymentConfig;
-}
-
-interface GitHubRepositoryContext {
-  defaultRepositorySlug: string;
-  githubPagesOwner: string;
-  githubPagesRepository: string;
-  repositorySlug: string;
-}
-
-interface GitHubPagesUrlOptions {
-  env?: Record<string, string | undefined>;
-  publicOrigin?: string;
-  trackedConfig?: TrackedDeploymentConfig;
-}
+export type * from "./deployment-config-types";
+export { buildDeploymentConfig } from "./deployment-config-builder";
+export { mergeTrackedDeploymentConfigInputs } from "./deployment-config-overlay";
+export {
+  isPlaceholderDeployPublicOrigin,
+  isUpstreamRepository,
+  normalizeBasePath,
+  normalizeDeployPublicOrigin,
+  normalizeOrigin,
+  normalizeRoutePath,
+  parseDeployTarget,
+} from "./deployment-config-normalize";
 
 const DEPLOY_TARGET_VALUES: DeployTarget[] = ["aws", "github-pages", "railway", "render"];
 const DEFAULT_GITHUB_OWNER =
@@ -81,57 +56,6 @@ const DEFAULT_AWS_PRICE_CLASS: AwsPriceClass = "PriceClass_100";
 const DEFAULT_PRIMARY_TARGET: DeployTarget = "github-pages";
 const DEFAULT_DEPLOYMENT_RESOURCE_PREFIX = "open-links";
 const MAX_AWS_RESOURCE_PREFIX_LENGTH = 48;
-
-const asRecord = (input: unknown) =>
-  input && typeof input === "object" ? (input as Record<string, unknown>) : Object.create(null);
-
-const mergeTrackedDeploymentTargetsInput = (
-  defaultsTargetsInput: unknown,
-  overlayTargetsInput: unknown,
-) => {
-  const defaultsTargets = asRecord(defaultsTargetsInput);
-  const overlayTargets = asRecord(overlayTargetsInput);
-
-  return {
-    ...defaultsTargets,
-    ...overlayTargets,
-    aws: {
-      ...asRecord(defaultsTargets.aws),
-      ...asRecord(overlayTargets.aws),
-    },
-    "github-pages": {
-      ...asRecord(defaultsTargets["github-pages"]),
-      ...asRecord(overlayTargets["github-pages"]),
-    },
-    render: {
-      ...asRecord(defaultsTargets.render),
-      ...asRecord(overlayTargets.render),
-    },
-    railway: {
-      ...asRecord(defaultsTargets.railway),
-      ...asRecord(overlayTargets.railway),
-    },
-  };
-};
-
-export function mergeTrackedDeploymentConfigInputs(
-  defaultsInput: unknown,
-  maybeOverlayInput?: unknown,
-) {
-  const defaultsConfig = asRecord(defaultsInput);
-
-  if (!maybeOverlayInput || typeof maybeOverlayInput !== "object") {
-    return defaultsConfig;
-  }
-
-  const overlayConfig = asRecord(maybeOverlayInput);
-
-  return {
-    ...defaultsConfig,
-    ...overlayConfig,
-    targets: mergeTrackedDeploymentTargetsInput(defaultsConfig.targets, overlayConfig.targets),
-  };
-}
 
 export function buildEffectiveTrackedDeploymentConfig(
   defaultsInput: unknown,
@@ -159,41 +83,6 @@ const trackedDeploymentConfig = buildEffectiveTrackedDeploymentConfig(
 const deploymentState = resolveDeploymentState({
   trackedConfig: trackedDeploymentConfig,
 });
-
-export function buildDeploymentConfig(state: DeploymentResolutionState) {
-  return {
-    awsDeployPolicyName: `${state.awsResourcePrefix}-github-deploy`,
-    awsDeployRoleName: `${state.awsResourcePrefix}-github-deploy`,
-    awsGithubOidcAudience: "sts.amazonaws.com",
-    awsGithubOidcProviderUrl: "https://token.actions.githubusercontent.com",
-    awsPriceClass: state.awsPriceClass,
-    awsRegion: "us-east-1",
-    awsResourcePrefix: state.awsResourcePrefix,
-    awsStackName: `${state.awsResourcePrefix}-site`,
-    bucketNamePrefix: state.awsResourcePrefix,
-    enabledTargets: [...state.enabledTargets],
-    githubApiVersion: "2022-11-28",
-    githubAwsDeployEnabledVariableName: "OPENLINKS_ENABLE_AWS_DEPLOY",
-    githubPagesBasePath: state.githubPagesBasePath,
-    githubPagesDefaultBasePath: state.githubPagesDefaultBasePath,
-    githubPagesDefaultUrl: state.githubPagesDefaultUrl,
-    githubPagesEnvironmentName: "github-pages",
-    githubPagesOrigin: state.githubPagesOrigin,
-    githubProductionEnvironmentName: "production",
-    githubRoleArnDigestVariableName: "AWS_DEPLOY_ROLE_ARN_SHA256",
-    githubRoleArnSecretName: "AWS_DEPLOY_ROLE_ARN",
-    githubWorkflowFileName: "deploy-production.yml",
-    htmlCacheControl: "no-cache, no-store, must-revalidate",
-    immutableCacheControl: "public, max-age=31536000, immutable",
-    metadataCacheControl: "no-cache",
-    mutableAssetCacheControl: "public, max-age=300",
-    primaryCanonicalDomain: state.primaryCanonicalDomain,
-    primaryCanonicalOrigin: state.primaryCanonicalOrigin,
-    primaryTarget: state.primaryTarget,
-    repositorySlug: state.repositorySlug,
-    upstreamRepository: state.upstreamRepository,
-  } as const;
-}
 
 export const deploymentConfig = buildDeploymentConfig(deploymentState);
 
@@ -360,67 +249,6 @@ export function getTrackedDeployTargetConfig(
   maybeTrackedConfig: TrackedDeploymentConfig = trackedDeploymentConfig,
 ) {
   return { ...(maybeTrackedConfig.targets[target] ?? {}) };
-}
-
-export function normalizeBasePath(value?: string) {
-  if (!value || value.trim().length === 0) {
-    return "/";
-  }
-
-  const trimmed = value.trim();
-  const prefixed = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-  const normalized = prefixed.replace(/\/+/g, "/");
-
-  return normalized === "/" ? "/" : `${normalized.replace(/^\/+|\/+$/g, "")}/`.replace(/^/, "/");
-}
-
-export function normalizeOrigin(input: string) {
-  return input.replace(/\/$/, "");
-}
-
-export function normalizeDeployPublicOrigin(input?: string) {
-  const trimmed = input?.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-
-  try {
-    const url = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
-    return normalizeOrigin(url.origin);
-  } catch {
-    return undefined;
-  }
-}
-
-export function isPlaceholderDeployPublicOrigin(input: string) {
-  try {
-    const hostname = new URL(normalizeOrigin(input)).hostname.toLowerCase();
-    return hostname === "localhost" || hostname.endsWith(".local");
-  } catch {
-    return false;
-  }
-}
-
-export function normalizeRoutePath(input: string) {
-  const withLeadingSlash = input.startsWith("/") ? input : `/${input}`;
-  return withLeadingSlash === "/" ? "/" : withLeadingSlash.replace(/\/$/, "");
-}
-
-export function parseDeployTarget(input?: string): DeployTarget {
-  switch (input?.trim()) {
-    case "github-pages":
-      return "github-pages";
-    case "railway":
-      return "railway";
-    case "render":
-      return "render";
-    default:
-      return "aws";
-  }
-}
-
-export function isUpstreamRepository(input: string) {
-  return input.trim().toLowerCase() === DEFAULT_UPSTREAM_GITHUB_REPOSITORY_SLUG.toLowerCase();
 }
 
 export function buildGitHubPagesUrl(

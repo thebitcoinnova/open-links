@@ -235,3 +235,15 @@
 - Fork recovery: Staci's `x` cache now belongs to `StacingSats` and contains a fresh profile bio plus 5,828 followers and 4,497 following. The original 52-row CSV prefix remained byte-equivalent; the first verified `StacingSats` observation was appended without rewriting any `XSTAC1` or `StaciNova` row, and the successful nightly rerun appended the next normal observation to the same `x.csv` series. Altair's complete same-source cache was retained; its transient incomplete response no longer reproduces, while focused tests verify it would now surface as advisory `metadata_regression` instead of overwriting the stable entry.
 - Verification: `bun run biome:check`, `bun run studio:lint`, `bun run typecheck`, `bun run studio:typecheck`, Studio API tests, Studio integration tests, 176 focused enrichment/cache/rename/history/validation tests, `bun run validate:data`, `bun run build`, `bun run quality:check`, and `bun run ci:required` passed. The rename skill validator and clean forward dry-run passed. GitHub runs passed for CI `30029607500`, Upstream Sync `30029632653`, README Screenshot Sync `30029636559`, Bright Builds Auto Update `30029630978`, the isolated Nightly Follower History rerun `30029887450`, and Deploy Production `30029883943`.
 - Residual risk: The first manual nightly run `30029634709` reached and passed metadata refresh, audience refresh, history append, commit, and build, then lost a push race to the concurrently dispatched screenshot workflow. The isolated rerun completed the full push and deployment path successfully. Current non-blocking repository warnings remain for manual Amazon Music metadata fallback, top-level `$schema` extension keys, deterministic social-preview imagery, and existing JavaScript performance budgets.
+
+## task-repair-upstream-sync-conflict | 2026-08-24 09:32 CDT | Repair persistent upstream sync conflict
+
+- [x] Reproduce the scheduled upstream-sync failure locally and identify the exact shared conflict boundary.
+- [x] Merge current upstream while preserving every fork-owned path and reconcile the two shared files without losing fork behavior.
+- [ ] Run focused regression tests, all mandatory pre-commit checks, and the exact upstream-sync command; review the final merge diff and CI result.
+
+### Completion Review
+
+- Result: Pending verification.
+- Verification: Focused sync-wrapper and content-image regression tests passed; full verification is in progress.
+- Residual risk: Pending verification.

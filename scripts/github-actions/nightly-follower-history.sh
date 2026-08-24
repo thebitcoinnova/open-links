@@ -21,12 +21,8 @@ configure_git_identity() {
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 }
 
-stage_history_artifacts() {
-  git add data/cache/rich-public-cache.json
-  git add public/history/followers/index.json
-  if compgen -G "public/history/followers/*.csv" >/dev/null; then
-    git add public/history/followers/*.csv
-  fi
+stage_nightly_artifacts() {
+  bun scripts/stage-nightly-content.ts
 }
 
 resolve_aws_opt_in() {
@@ -39,7 +35,7 @@ resolve_aws_opt_in() {
 
 commit_history() {
   configure_git_identity
-  stage_history_artifacts
+  stage_nightly_artifacts
 
   if git diff --cached --quiet; then
     write_output "commit_result" "no_changes"
@@ -47,7 +43,8 @@ commit_history() {
     return 0
   fi
 
-  git commit -m "data(followers): refresh nightly history"
+  # The workflow validates during refresh and must build only after the commit exists.
+  HUSKY=0 git commit -m "data: refresh nightly content and follower history"
   write_output "commit_result" "committed"
   write_output "commit_sha" "$(git rev-parse HEAD)"
 }

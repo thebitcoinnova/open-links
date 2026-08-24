@@ -98,8 +98,8 @@ run_required_ci_parity() {
 
   run_check "typecheck" bun run ci:required:typecheck || failures+=("typecheck")
   run_check "deploy_tests" bun run ci:required:deploy || failures+=("deploy")
-  run_check "build" bun run ci:required:build || failures+=("build")
-  run_check "quality_check" bun run ci:required:quality || failures+=("quality:check")
+  run_check "build" bun run ci:required:hook:build || failures+=("build")
+  run_check "quality_check" bun run ci:required:hook:quality || failures+=("quality:check")
   run_check "studio_integration" bun run ci:required:studio-integration || failures+=("studio:test:integration")
 
   if matches_paths "$STUDIO_DOCKER_REGEX"; then

@@ -47,11 +47,6 @@ const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
     note: "Pages deployment creation talks to the GitHub API during CI orchestration and stays outside the committed content cache pipeline.",
   },
   {
-    file: "scripts/ci/wait-for-pages-deployment.ts",
-    classification: "automation",
-    note: "Pages deployment polling talks to the GitHub API during CI orchestration and stays outside the committed content cache pipeline.",
-  },
-  {
     file: "scripts/deploy/plan-pages.ts",
     classification: "automation",
     note: "Deploy planning fetches the live manifest for release automation and does not participate in the committed content cache pipeline.",
@@ -60,6 +55,31 @@ const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
     file: "scripts/deploy/verify.ts",
     classification: "automation",
     note: "Deploy verification fetches live deployment targets as release automation and does not participate in the committed content cache pipeline.",
+  },
+  {
+    file: "scripts/deploy/local-aws.ts",
+    classification: "automation",
+    note: "Local AWS verification reads live build metadata during deploy orchestration and does not generate committed content cache entries.",
+  },
+  {
+    file: "scripts/generate-payment-card-effect-screenshots.ts",
+    classification: "automation",
+    note: "Payment effect screenshot generation polls its local preview server and does not fetch committed remote content.",
+  },
+  {
+    file: "scripts/generate-payment-card-effect-videos.ts",
+    classification: "automation",
+    note: "Payment effect video generation polls its local preview server and does not fetch committed remote content.",
+  },
+  {
+    file: "scripts/referrals/import-resolver.ts",
+    classification: "automation",
+    note: "Referral import resolution follows redirects during an explicit operator workflow and records results in the import plan rather than the rich-content cache.",
+  },
+  {
+    file: "scripts/referrals/terms-policy.ts",
+    classification: "automation",
+    note: "Referral terms checks inspect official policy pages during an explicit compliance workflow outside rich-content generation.",
   },
   {
     file: "packages/studio-web/src/lib/api.ts",
@@ -82,31 +102,50 @@ const DIRECT_FETCH_CONTRACTS: FetchContract[] = [
     note: "GitHub OAuth token exchange is a runtime external API exchange and is intentionally uncached.",
   },
   {
-    file: "src/routes/index.tsx",
+    file: "src/routes/follower-history-data.ts",
     classification: "runtime",
-    note: "The public-site route fetches follower-history assets at runtime in the browser, outside the committed content cache pipeline.",
+    note: "The public-site follower-history adapter fetches history assets at runtime in the browser, outside the committed content cache pipeline.",
+  },
+  {
+    file: "src/lib/qr/logo-badges.ts",
+    classification: "runtime",
+    note: "QR badge composition loads a configured logo in the browser and does not participate in committed content generation.",
+  },
+  {
+    file: "src/lib/vcard/photo-vcard.ts",
+    classification: "runtime",
+    note: "vCard generation loads a profile photo on demand in the browser and does not participate in committed content generation.",
   },
 ];
 
 const PERSISTENCE_CONTRACTS: PersistenceContract[] = [
   {
-    file: "scripts/enrich-rich-links.ts",
+    file: "scripts/enrich-rich-links-runner.ts",
     requiredSnippets: [
-      "DEFAULT_PUBLIC_CACHE_PATH,",
-      "loadRemoteCachePolicyRegistry();",
+      'from "./enrichment/public-cache-contracts"',
+      "remoteCachePolicyRegistry: loadRemoteCachePolicyRegistry(),",
       'new RemoteCacheStatsCollector("enrich-rich-links")',
-      "--write-public-cache",
       "writePublicCacheRegistry(config.publicCachePath, publicCacheRegistry);",
       "writePublicCacheRuntimeRegistry(config.publicCachePath, publicCacheRegistry);",
     ],
   },
   {
-    file: "scripts/public-rich-sync.ts",
+    file: "scripts/enrich-rich-links-config.ts",
+    requiredSnippets: ["--write-public-cache"],
+  },
+  {
+    file: "scripts/public-rich-sync-capture.ts",
+    requiredSnippets: ["PUBLIC_RICH_SYNC_OUTPUT_DIRECTORY"],
+  },
+  {
+    file: "scripts/public-rich-sync-candidates.ts",
+    requiredSnippets: ["writePublicCacheRegistry(publicCachePath, registry)"],
+  },
+  {
+    file: "scripts/public-rich-sync-orchestration.ts",
     requiredSnippets: [
-      "PUBLIC_RICH_SYNC_OUTPUT_DIRECTORY",
       "loadRemoteCachePolicyRegistry();",
       'new RemoteCacheStatsCollector("public-rich-sync")',
-      "writePublicCacheRegistry(publicCachePath, registry)",
       "dependencies.writePublicCache(args.publicCachePath, registry);",
     ],
   },
@@ -219,9 +258,14 @@ test("inventories every direct fetch callsite so new uncached fetches require an
   assert.deepEqual(actualFiles, expectedFiles);
 });
 
-test("shared metadata fetch helper is only used by cache-writing enrichment entrypoints", () => {
+test("shared metadata fetch helper is only used by explicit enrichment and import entrypoints", () => {
   // Arrange
-  const expectedCallers = ["scripts/enrich-rich-links.ts", "scripts/public-rich-sync.ts"];
+  const expectedCallers = [
+    "scripts/bootstrap/linktree.ts",
+    "scripts/enrich-rich-links-support.ts",
+    "scripts/enrichment/public-link-prepare-steps.ts",
+    "scripts/public-rich-sync-capture.ts",
+  ];
 
   // Act
   const actualCallers = fetchMetadataCallers();
@@ -248,8 +292,8 @@ test("cache-backed fetch flows and explicit exemptions declare their persistence
 
 test("cache-backed flows declare remote cache policy wiring in code", () => {
   const policyAwareFiles = [
-    "scripts/enrich-rich-links.ts",
-    "scripts/public-rich-sync.ts",
+    "scripts/enrich-rich-links-runner.ts",
+    "scripts/public-rich-sync-orchestration.ts",
     "scripts/sync-authenticated-rich-cache.ts",
     "scripts/sync-profile-avatar.ts",
     "scripts/sync-content-images.ts",
@@ -283,7 +327,10 @@ test("direct fetch classifications keep runtime and diagnostics out of the commi
   // Assert
   assert.ok(
     runtimeFiles.every(
-      (file) => file.startsWith("packages/studio-") || file.startsWith("src/routes/"),
+      (file) =>
+        file.startsWith("packages/studio-") ||
+        file.startsWith("src/routes/") ||
+        file.startsWith("src/lib/"),
     ),
     "Runtime fetch exemptions must stay confined to Studio or public-route runtime codepaths.",
   );
@@ -296,7 +343,9 @@ test("direct fetch classifications keep runtime and diagnostics out of the commi
       (file) =>
         file.startsWith("scripts/github-actions/") ||
         file.startsWith("scripts/ci/") ||
-        file.startsWith("scripts/deploy/"),
+        file.startsWith("scripts/deploy/") ||
+        file.startsWith("scripts/referrals/") ||
+        file.startsWith("scripts/generate-payment-card-effect-"),
     ),
     "Automation fetch exemptions must stay confined to CI, deploy, or GitHub Actions scripts.",
   );

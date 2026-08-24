@@ -27,94 +27,31 @@ import {
   writeDeploySummary,
 } from "../lib/deploy-log";
 import { deploymentConfig } from "../lib/effective-deployment-config";
+import {
+  buildAwsResultingUrls,
+  initializeAwsBootstrap,
+  loadAwsBootstrapFailureContext,
+} from "./bootstrap-aws-initialize";
 import { parseArgs, recordTimedAction } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
-const mode: "apply" | "check" = args.apply === "true" ? "apply" : "check";
-const maxWaitMs = resolveMaxWaitMs(args["max-wait-ms"], mode);
-const commandName = "deploy:aws:bootstrap";
-const run = await createDeployRun({
-  command: commandName,
+const initialized = await initializeAwsBootstrap(args);
+const {
+  appliedChanges,
+  bucketName,
+  commandName,
+  domainReadiness,
+  identity,
+  initialStackState,
+  maxWaitMs,
   mode,
-  target: "aws",
-});
-
-const appliedChanges: string[] = [];
-const skippedReasons: string[] = [];
-const verificationResults: DeployVerificationResult[] = [];
+  run,
+  skippedReasons,
+  templateValidation,
+  verificationResults,
+} = initialized;
 let plannedChanges: unknown = {};
-let resultingUrls: string[] = [deploymentConfig.primaryCanonicalOrigin];
-
-await run.addBreadcrumb({
-  detail: "Validating AWS CLI access and current stack prerequisites.",
-  status: "info",
-  step: "initialize",
-});
-await recordTimedAction(
-  run,
-  {
-    detail: "Validated AWS CLI access.",
-    status: "passed",
-    step: "aws cli",
-  },
-  () => ensureAwsCliAvailable(),
-);
-
-const identity = await recordTimedAction(
-  run,
-  {
-    data: (currentIdentity: ReturnType<typeof loadAwsCallerIdentity>) => ({
-      accountId: currentIdentity.Account,
-      arn: currentIdentity.Arn,
-      userId: currentIdentity.UserId,
-    }),
-    detail: "Loaded the active AWS caller identity.",
-    status: "passed",
-    step: "caller identity",
-  },
-  () => loadAwsCallerIdentity(),
-);
-const domainReadiness = await recordTimedAction(
-  run,
-  {
-    data: (assessment: ReturnType<typeof assessAwsDomainReadiness>) => assessment,
-    detail: "Loaded AWS domain readiness for the canonical host.",
-    status: "passed",
-    step: "domain readiness",
-  },
-  () => assessAwsDomainReadiness(),
-);
-const bucketName = buildSiteBucketName(identity.Account);
-const templateValidation = await recordTimedAction(
-  run,
-  {
-    detail: `Validated CloudFormation template ${deploymentConfig.awsStackName}.`,
-    status: "passed",
-    step: "template validation",
-  },
-  () => validateAwsTemplate(),
-);
-const initialStackState = await recordTimedAction(
-  run,
-  {
-    data: (stackState: ReturnType<typeof loadStackState>) => ({
-      exists: stackState.exists,
-      stackId: stackState.stackId,
-      stackStatus: stackState.stackStatus,
-    }),
-    detail: "Loaded the current CloudFormation stack state.",
-    status: "passed",
-    step: "stack state",
-  },
-  () => loadStackState(),
-);
-
-resultingUrls = [
-  deploymentConfig.primaryCanonicalOrigin,
-  ...(initialStackState.outputs.DistributionDomainName
-    ? [`https://${initialStackState.outputs.DistributionDomainName}`]
-    : []),
-];
+let resultingUrls = initialized.resultingUrls;
 
 if (!domainReadiness.ready) {
   const blockerDetail = formatDomainReadinessMessage(domainReadiness);
@@ -613,12 +550,7 @@ try {
     () => loadStackState(),
   );
 
-  resultingUrls = [
-    deploymentConfig.primaryCanonicalOrigin,
-    ...(finalStackState.outputs.DistributionDomainName
-      ? [`https://${finalStackState.outputs.DistributionDomainName}`]
-      : []),
-  ];
+  resultingUrls = buildAwsResultingUrls(finalStackState);
 
   const { runDirectory } = await writeDeploySummary(
     {
@@ -652,13 +584,10 @@ try {
   console.log(`AWS bootstrap ${mode} complete. Summary: ${runDirectory}`);
 } catch (error) {
   const errorDetail = error instanceof Error ? error.message : String(error);
-  const failureContext = loadFailureContext();
-  resultingUrls = [
-    deploymentConfig.primaryCanonicalOrigin,
-    ...(failureContext.currentStackState?.outputs.DistributionDomainName
-      ? [`https://${failureContext.currentStackState.outputs.DistributionDomainName}`]
-      : []),
-  ];
+  const failureContext = loadAwsBootstrapFailureContext();
+  resultingUrls = failureContext.currentStackState
+    ? buildAwsResultingUrls(failureContext.currentStackState)
+    : [deploymentConfig.primaryCanonicalOrigin];
 
   verificationResults.push({
     detail: errorDetail,
@@ -696,34 +625,4 @@ try {
   );
 
   throw new Error(`${errorDetail}\nSee ${runDirectory}.`);
-}
-
-function resolveMaxWaitMs(maybeValue: string | undefined, mode: "apply" | "check") {
-  if (!maybeValue) {
-    return mode === "check" ? 15_000 : 30 * 60 * 1000;
-  }
-
-  const parsed = Number(maybeValue);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error(`Expected --max-wait-ms to be a positive number, received: ${maybeValue}`);
-  }
-
-  return Math.round(parsed);
-}
-
-function loadFailureContext() {
-  try {
-    const currentStackState = loadStackState();
-    return {
-      currentStackState,
-      recentFailureEvents: currentStackState.exists ? loadRecentStackFailureEvents() : [],
-    };
-  } catch (failureContextError) {
-    return {
-      failureContextError:
-        failureContextError instanceof Error
-          ? failureContextError.message
-          : String(failureContextError),
-    };
-  }
 }

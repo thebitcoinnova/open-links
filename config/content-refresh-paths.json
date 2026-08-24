@@ -1,0 +1,18 @@
+{
+  "exactPaths": [
+    "data/cache/content-images.json",
+    "data/cache/profile-avatar.json",
+    "data/cache/rich-public-cache.json",
+    "data/generated/rich-enrichment-report.json",
+    "data/generated/rich-metadata.json",
+    "public/badges/openlinks.svg",
+    "public/generated/profile-avatar.jpg",
+    "public/generated/seo/social-preview.png",
+    "public/generated/seo/social-preview.svg"
+  ],
+  "directoryPrefixes": [
+    "public/cache/content-images/",
+    "public/cache/profile-avatar/",
+    "public/generated/images/"
+  ]
+}

@@ -1,164 +1,25 @@
-import fs from "node:fs";
-import path from "node:path";
 import { performance } from "node:perf_hooks";
-import process from "node:process";
+import type {
+  RemoteCacheFetchOptions,
+  RemoteCacheFetchResult,
+  RemoteCacheHeadFallbackReason,
+  RemoteCachePreviousState,
+  RemoteCacheResponseHeaders,
+  RequestAttemptResult,
+} from "./remote-cache-contracts";
 import {
   type RemoteCacheCheckMode,
   type RemoteCachePipeline,
-  type RemoteCachePolicyRegistry,
-  type ResolvedRemoteCachePolicyRule,
   resolveRequiredRemoteCachePolicyRule,
 } from "./remote-cache-policy";
+import { RemoteCacheStatsCollector } from "./remote-cache-stats";
 
-export type RemoteCacheBodyType = "buffer" | "text";
-export type RemoteCacheCheckStatus =
-  | "cache_fresh"
-  | "head_unchanged"
-  | "get_not_modified"
-  | "fetched"
-  | "error";
-export type RemoteCacheHeadFallbackReason =
-  | "status_not_ok"
-  | "missing_validators"
-  | "changed"
-  | "network_error"
-  | "cache_value_missing";
-
-export interface RemoteCachePreviousState {
-  etag?: string;
-  lastModified?: string;
-  cacheControl?: string;
-  expiresAt?: string;
-  bytes?: number;
-}
-
-export interface RemoteCacheResponseHeaders {
-  etag?: string;
-  lastModified?: string;
-  cacheControl?: string;
-  responseDate?: string;
-  contentType?: string;
-  contentLength?: number;
-}
-
-export interface RemoteCacheFetchOptions {
-  url: string;
-  pipeline: RemoteCachePipeline;
-  policyRegistry: RemoteCachePolicyRegistry;
-  timeoutMs: number;
-  retries?: number;
-  retryDelayMs?: number;
-  headers?: Record<string, string>;
-  acceptHeader?: string;
-  userAgent: string;
-  bodyType: RemoteCacheBodyType;
-  previous?: RemoteCachePreviousState;
-  cacheValueAvailable?: boolean;
-  force?: boolean;
-  statsCollector?: RemoteCacheStatsCollector;
-}
-
-interface SuccessfulRequestResult {
-  ok: true;
-  response: Response;
-  statusCode: number;
-  headers: RemoteCacheResponseHeaders;
-  finalUrl?: string;
-}
-
-interface FailedRequestResult {
-  ok: false;
-  statusCode?: number;
-  error?: string;
-  headers?: RemoteCacheResponseHeaders;
-  finalUrl?: string;
-}
-
-type RequestAttemptResult = SuccessfulRequestResult | FailedRequestResult;
-
-interface RemoteCacheResultBase {
-  url: string;
-  finalUrl?: string;
-  pipeline: RemoteCachePipeline;
-  policy: ResolvedRemoteCachePolicyRule;
-  checkMode: RemoteCacheCheckMode;
-  checkedAt: string;
-  durationMs: number;
-  attemptedHead: boolean;
-  headFallbackReason?: RemoteCacheHeadFallbackReason;
-  headers: RemoteCacheResponseHeaders;
-  statusCode?: number;
-  bytesFetched: number;
-  bytesSkipped: number;
-}
-
-export interface RemoteCacheFreshResult extends RemoteCacheResultBase {
-  kind: "cache_fresh";
-  checkStatus: "cache_fresh";
-  method: "none";
-}
-
-export interface RemoteCacheNotModifiedResult extends RemoteCacheResultBase {
-  kind: "not_modified";
-  checkStatus: "head_unchanged" | "get_not_modified";
-  method: "HEAD" | "GET";
-}
-
-export interface RemoteCacheFetchedResult extends RemoteCacheResultBase {
-  kind: "fetched";
-  checkStatus: "fetched";
-  method: "GET";
-  body: Buffer | string;
-}
-
-export interface RemoteCacheErrorResult extends RemoteCacheResultBase {
-  kind: "error";
-  checkStatus: "error";
-  method: "HEAD" | "GET" | "none";
-  error: string;
-}
-
-export type RemoteCacheFetchResult =
-  | RemoteCacheFreshResult
-  | RemoteCacheNotModifiedResult
-  | RemoteCacheFetchedResult
-  | RemoteCacheErrorResult;
-
-export interface RemoteCacheStatsEntry {
-  pipeline: RemoteCachePipeline;
-  host: string;
-  matchedDomain: string;
-  ruleId: string;
-  checkMode: RemoteCacheCheckMode;
-  totalChecks: number;
-  cacheFresh: number;
-  headUnchanged: number;
-  getNotModified: number;
-  fetched: number;
-  errors: number;
-  bytesFetched: number;
-  bytesSkipped: number;
-  headFallbacks: Partial<Record<RemoteCacheHeadFallbackReason, number>>;
-}
-
-export interface RemoteCacheRunSummary {
-  version: 1;
-  scriptId: string;
-  generatedAt: string;
-  totals: {
-    totalChecks: number;
-    cacheFresh: number;
-    headUnchanged: number;
-    getNotModified: number;
-    fetched: number;
-    errors: number;
-    bytesFetched: number;
-    bytesSkipped: number;
-  };
-  entries: RemoteCacheStatsEntry[];
-}
-
-const ROOT = process.cwd();
+export type * from "./remote-cache-contracts";
+export {
+  RemoteCacheStatsCollector,
+  createRemoteCacheStatsOutputPath,
+  writeRemoteCacheRunSummary,
+} from "./remote-cache-stats";
 
 const trimToUndefined = (value: string | undefined): string | undefined => {
   if (typeof value !== "string") {
@@ -366,232 +227,175 @@ const resolveBytesSkipped = (
   fallbackContentLength: number | undefined,
 ): number => previous.bytes ?? fallbackContentLength ?? 0;
 
-export class RemoteCacheStatsCollector {
-  readonly scriptId: string;
-  private readonly entries = new Map<string, RemoteCacheStatsEntry>();
+type ResolvedRemoteCachePolicy = ReturnType<typeof resolveRequiredRemoteCachePolicyRule>;
 
-  constructor(scriptId: string) {
-    this.scriptId = scriptId;
-  }
+const remoteResultBase = (input: {
+  options: RemoteCacheFetchOptions;
+  policy: ResolvedRemoteCachePolicy;
+  checkedAt: string;
+  startedAt: number;
+  attemptedHead: boolean;
+  headFallbackReason?: RemoteCacheHeadFallbackReason;
+}) => ({
+  url: input.options.url,
+  pipeline: input.options.pipeline,
+  policy: input.policy,
+  checkMode: input.policy.rule.checkMode,
+  checkedAt: input.checkedAt,
+  durationMs: performance.now() - input.startedAt,
+  attemptedHead: input.attemptedHead,
+  headFallbackReason: input.headFallbackReason,
+});
 
-  record(result: RemoteCacheFetchResult): void {
-    const key = [
-      result.pipeline,
-      result.policy.rule.id,
-      result.policy.host,
-      result.policy.rule.checkMode,
-    ].join("|");
-    const existing = this.entries.get(key) ?? {
-      pipeline: result.pipeline,
-      host: result.policy.host,
-      matchedDomain: result.policy.matchedDomain,
-      ruleId: result.policy.rule.id,
-      checkMode: result.policy.rule.checkMode,
-      totalChecks: 0,
-      cacheFresh: 0,
-      headUnchanged: 0,
-      getNotModified: 0,
-      fetched: 0,
-      errors: 0,
-      bytesFetched: 0,
-      bytesSkipped: 0,
-      headFallbacks: {},
-    };
-
-    existing.pipeline = result.pipeline;
-    existing.totalChecks += 1;
-    existing.bytesFetched += result.bytesFetched;
-    existing.bytesSkipped += result.bytesSkipped;
-
-    if (result.checkStatus === "cache_fresh") {
-      existing.cacheFresh += 1;
-    } else if (result.checkStatus === "head_unchanged") {
-      existing.headUnchanged += 1;
-    } else if (result.checkStatus === "get_not_modified") {
-      existing.getNotModified += 1;
-    } else if (result.checkStatus === "fetched") {
-      existing.fetched += 1;
-    } else {
-      existing.errors += 1;
-    }
-
-    if (result.headFallbackReason) {
-      existing.headFallbacks[result.headFallbackReason] =
-        (existing.headFallbacks[result.headFallbackReason] ?? 0) + 1;
-    }
-
-    this.entries.set(key, existing);
-  }
-
-  toSummary(): RemoteCacheRunSummary {
-    const entries = [...this.entries.values()].sort((left, right) => {
-      if (left.pipeline !== right.pipeline) {
-        return left.pipeline.localeCompare(right.pipeline);
-      }
-      return left.host.localeCompare(right.host);
-    });
-
-    return {
-      version: 1,
-      scriptId: this.scriptId,
-      generatedAt: new Date().toISOString(),
-      totals: {
-        totalChecks: entries.reduce((sum, entry) => sum + entry.totalChecks, 0),
-        cacheFresh: entries.reduce((sum, entry) => sum + entry.cacheFresh, 0),
-        headUnchanged: entries.reduce((sum, entry) => sum + entry.headUnchanged, 0),
-        getNotModified: entries.reduce((sum, entry) => sum + entry.getNotModified, 0),
-        fetched: entries.reduce((sum, entry) => sum + entry.fetched, 0),
-        errors: entries.reduce((sum, entry) => sum + entry.errors, 0),
-        bytesFetched: entries.reduce((sum, entry) => sum + entry.bytesFetched, 0),
-        bytesSkipped: entries.reduce((sum, entry) => sum + entry.bytesSkipped, 0),
-      },
-      entries,
-    };
-  }
-}
-
-const absolutePath = (value: string): string =>
-  path.isAbsolute(value) ? value : path.join(ROOT, value);
-
-export const createRemoteCacheStatsOutputPath = (scriptId: string): string => {
-  const sanitizedId = scriptId.replaceAll(/[^a-zA-Z0-9_-]+/g, "-");
-  const timestamp = new Date().toISOString().replaceAll(":", "-");
-  return path.join("output", "cache-revalidation", `${timestamp}-${sanitizedId}.json`);
+const finalizeRemoteResult = <T extends RemoteCacheFetchResult>(
+  options: RemoteCacheFetchOptions,
+  result: T,
+): T => {
+  options.statsCollector?.record(result);
+  return result;
 };
 
-export const writeRemoteCacheRunSummary = (
-  relativePath: string,
-  collector: RemoteCacheStatsCollector,
-): void => {
-  const absolute = absolutePath(relativePath);
-  fs.mkdirSync(path.dirname(absolute), { recursive: true });
-  fs.writeFileSync(absolute, `${JSON.stringify(collector.toSummary(), null, 2)}\n`, "utf8");
+interface RemoteHeadCheckContext {
+  options: RemoteCacheFetchOptions;
+  policy: ResolvedRemoteCachePolicy;
+  previous: RemoteCachePreviousState;
+  cacheValueAvailable: boolean;
+  retries: number;
+  retryDelayMs: number;
+  checkedAt: string;
+  startedAt: number;
+  baseHeaders: Record<string, string>;
+}
+
+const createRemoteFetchContext = (options: RemoteCacheFetchOptions): RemoteHeadCheckContext => ({
+  options,
+  startedAt: performance.now(),
+  policy: resolveRequiredRemoteCachePolicyRule({
+    registry: options.policyRegistry,
+    pipeline: options.pipeline,
+    url: options.url,
+  }),
+  previous: normalizePreviousState(options.previous),
+  cacheValueAvailable: options.cacheValueAvailable === true,
+  retries: Math.max(0, Math.floor(options.retries ?? 0)),
+  retryDelayMs: Math.max(0, Math.floor(options.retryDelayMs ?? 250)),
+  checkedAt: new Date().toISOString(),
+  baseHeaders: buildBaseHeaders({
+    userAgent: options.userAgent,
+    headers: options.headers,
+    acceptHeader: options.acceptHeader,
+  }),
+});
+
+const maybeFreshRemoteResult = (
+  context: RemoteHeadCheckContext,
+): RemoteCacheFetchResult | undefined => {
+  const { options, policy, previous, cacheValueAvailable, checkedAt, startedAt } = context;
+  if (options.force || !cacheValueAvailable || !isRemoteCacheFresh(previous.expiresAt)) {
+    return undefined;
+  }
+  return finalizeRemoteResult(options, {
+    ...remoteResultBase({ options, policy, checkedAt, startedAt, attemptedHead: false }),
+    kind: "cache_fresh",
+    checkStatus: "cache_fresh",
+    method: "none",
+    finalUrl: options.url,
+    headers: {
+      etag: previous.etag,
+      lastModified: previous.lastModified,
+      cacheControl: previous.cacheControl,
+    },
+    bytesFetched: 0,
+    bytesSkipped: resolveBytesSkipped(previous, undefined),
+  });
+};
+
+const checkRemoteHead = async (
+  context: RemoteHeadCheckContext,
+): Promise<{
+  attemptedHead: boolean;
+  headFallbackReason?: RemoteCacheHeadFallbackReason;
+  result?: RemoteCacheFetchResult;
+}> => {
+  const {
+    options,
+    policy,
+    previous,
+    cacheValueAvailable,
+    retries,
+    retryDelayMs,
+    checkedAt,
+    startedAt,
+    baseHeaders,
+  } = context;
+  if (
+    options.force ||
+    policy.rule.checkMode !== "head_then_get" ||
+    !hasPreviousValidators(previous)
+  ) {
+    return { attemptedHead: false };
+  }
+
+  const headResult = await requestWithRetries({
+    method: "HEAD",
+    url: options.url,
+    timeoutMs: Math.max(500, Math.floor(options.timeoutMs)),
+    retries,
+    retryDelayMs,
+    headers: baseHeaders,
+  });
+  if (headResult.ok) {
+    const unchanged =
+      headResult.statusCode === 304 || validatorsMatch(previous, headResult.headers);
+    if (unchanged && cacheValueAvailable) {
+      return {
+        attemptedHead: true,
+        result: finalizeRemoteResult(options, {
+          ...remoteResultBase({ options, policy, checkedAt, startedAt, attemptedHead: true }),
+          kind: "not_modified",
+          checkStatus: "head_unchanged",
+          method: "HEAD",
+          finalUrl: headResult.finalUrl,
+          headers: headResult.headers,
+          statusCode: headResult.statusCode,
+          bytesFetched: 0,
+          bytesSkipped: resolveBytesSkipped(previous, headResult.headers.contentLength),
+        }),
+      };
+    }
+    if (unchanged) return { attemptedHead: true, headFallbackReason: "cache_value_missing" };
+    if (!headResult.headers.etag && !headResult.headers.lastModified) {
+      return { attemptedHead: true, headFallbackReason: "missing_validators" };
+    }
+    return { attemptedHead: true, headFallbackReason: "changed" };
+  }
+  return {
+    attemptedHead: true,
+    headFallbackReason: headResult.statusCode === undefined ? "network_error" : "status_not_ok",
+  };
 };
 
 export const fetchWithRemoteCachePolicy = async (
   options: RemoteCacheFetchOptions,
 ): Promise<RemoteCacheFetchResult> => {
-  const startedAt = performance.now();
-  const policy = resolveRequiredRemoteCachePolicyRule({
-    registry: options.policyRegistry,
-    pipeline: options.pipeline,
-    url: options.url,
-  });
-  const previous = normalizePreviousState(options.previous);
-  const cacheValueAvailable = options.cacheValueAvailable === true;
-  const retries = Math.max(0, Math.floor(options.retries ?? 0));
-  const retryDelayMs = Math.max(0, Math.floor(options.retryDelayMs ?? 250));
-  const checkedAt = new Date().toISOString();
-  const baseHeaders = buildBaseHeaders({
-    userAgent: options.userAgent,
-    headers: options.headers,
-    acceptHeader: options.acceptHeader,
-  });
+  const context = createRemoteFetchContext(options);
+  const {
+    startedAt,
+    policy,
+    previous,
+    cacheValueAvailable,
+    retries,
+    retryDelayMs,
+    checkedAt,
+    baseHeaders,
+  } = context;
 
-  const finalize = <T extends RemoteCacheFetchResult>(result: T): T => {
-    options.statsCollector?.record(result);
-    return result;
-  };
+  const maybeFreshResult = maybeFreshRemoteResult(context);
+  if (maybeFreshResult) return maybeFreshResult;
 
-  if (!options.force && cacheValueAvailable && isRemoteCacheFresh(previous.expiresAt)) {
-    return finalize({
-      kind: "cache_fresh",
-      checkStatus: "cache_fresh",
-      method: "none",
-      url: options.url,
-      pipeline: options.pipeline,
-      policy,
-      checkMode: policy.rule.checkMode,
-      checkedAt,
-      durationMs: performance.now() - startedAt,
-      attemptedHead: false,
-      finalUrl: options.url,
-      headers: {
-        etag: previous.etag,
-        lastModified: previous.lastModified,
-        cacheControl: previous.cacheControl,
-      },
-      bytesFetched: 0,
-      bytesSkipped: resolveBytesSkipped(previous, undefined),
-    });
-  }
-
-  let attemptedHead = false;
-  let headFallbackReason: RemoteCacheHeadFallbackReason | undefined;
-
-  if (
-    !options.force &&
-    policy.rule.checkMode === "head_then_get" &&
-    hasPreviousValidators(previous)
-  ) {
-    attemptedHead = true;
-    const headResult = await requestWithRetries({
-      method: "HEAD",
-      url: options.url,
-      timeoutMs: Math.max(500, Math.floor(options.timeoutMs)),
-      retries,
-      retryDelayMs,
-      headers: baseHeaders,
-    });
-
-    if (headResult.ok && headResult.statusCode === 304) {
-      if (cacheValueAvailable) {
-        return finalize({
-          kind: "not_modified",
-          checkStatus: "head_unchanged",
-          method: "HEAD",
-          url: options.url,
-          pipeline: options.pipeline,
-          policy,
-          checkMode: policy.rule.checkMode,
-          checkedAt,
-          durationMs: performance.now() - startedAt,
-          attemptedHead,
-          finalUrl: headResult.finalUrl,
-          headers: headResult.headers,
-          statusCode: headResult.statusCode,
-          bytesFetched: 0,
-          bytesSkipped: resolveBytesSkipped(previous, headResult.headers.contentLength),
-        });
-      }
-
-      headFallbackReason = "cache_value_missing";
-    } else if (headResult.ok) {
-      const matches = validatorsMatch(previous, headResult.headers);
-
-      if (matches && cacheValueAvailable) {
-        return finalize({
-          kind: "not_modified",
-          checkStatus: "head_unchanged",
-          method: "HEAD",
-          url: options.url,
-          pipeline: options.pipeline,
-          policy,
-          checkMode: policy.rule.checkMode,
-          checkedAt,
-          durationMs: performance.now() - startedAt,
-          attemptedHead,
-          finalUrl: headResult.finalUrl,
-          headers: headResult.headers,
-          statusCode: headResult.statusCode,
-          bytesFetched: 0,
-          bytesSkipped: resolveBytesSkipped(previous, headResult.headers.contentLength),
-        });
-      }
-
-      if (matches) {
-        headFallbackReason = "cache_value_missing";
-      } else if (!headResult.headers.etag && !headResult.headers.lastModified) {
-        headFallbackReason = "missing_validators";
-      } else {
-        headFallbackReason = "changed";
-      }
-    } else if (headResult.statusCode !== undefined) {
-      headFallbackReason = "status_not_ok";
-    } else {
-      headFallbackReason = "network_error";
-    }
-  }
+  const headCheck = await checkRemoteHead(context);
+  if (headCheck.result) return headCheck.result;
+  const { attemptedHead, headFallbackReason } = headCheck;
 
   const includeConditionalValidators =
     !options.force && policy.rule.checkMode !== "always_get" && hasPreviousValidators(previous);
@@ -610,19 +414,19 @@ export const fetchWithRemoteCachePolicy = async (
 
   if (getResult.ok && getResult.statusCode === 304) {
     if (!cacheValueAvailable) {
-      return finalize({
+      return finalizeRemoteResult(options, {
+        ...remoteResultBase({
+          options,
+          policy,
+          checkedAt,
+          startedAt,
+          attemptedHead,
+          headFallbackReason,
+        }),
         kind: "error",
         checkStatus: "error",
         method: "GET",
         error: `Received HTTP 304 for '${options.url}' but no cached value is available.`,
-        url: options.url,
-        pipeline: options.pipeline,
-        policy,
-        checkMode: policy.rule.checkMode,
-        checkedAt,
-        durationMs: performance.now() - startedAt,
-        attemptedHead,
-        headFallbackReason,
         finalUrl: getResult.finalUrl,
         headers: getResult.headers,
         statusCode: getResult.statusCode,
@@ -631,18 +435,18 @@ export const fetchWithRemoteCachePolicy = async (
       });
     }
 
-    return finalize({
+    return finalizeRemoteResult(options, {
+      ...remoteResultBase({
+        options,
+        policy,
+        checkedAt,
+        startedAt,
+        attemptedHead,
+        headFallbackReason,
+      }),
       kind: "not_modified",
       checkStatus: "get_not_modified",
       method: "GET",
-      url: options.url,
-      pipeline: options.pipeline,
-      policy,
-      checkMode: policy.rule.checkMode,
-      checkedAt,
-      durationMs: performance.now() - startedAt,
-      attemptedHead,
-      headFallbackReason,
       finalUrl: getResult.finalUrl,
       headers: getResult.headers,
       statusCode: getResult.statusCode,
@@ -652,19 +456,19 @@ export const fetchWithRemoteCachePolicy = async (
   }
 
   if (!getResult.ok) {
-    return finalize({
+    return finalizeRemoteResult(options, {
+      ...remoteResultBase({
+        options,
+        policy,
+        checkedAt,
+        startedAt,
+        attemptedHead,
+        headFallbackReason,
+      }),
       kind: "error",
       checkStatus: "error",
       method: "GET",
       error: getResult.error ?? "Metadata fetch failed.",
-      url: options.url,
-      pipeline: options.pipeline,
-      policy,
-      checkMode: policy.rule.checkMode,
-      checkedAt,
-      durationMs: performance.now() - startedAt,
-      attemptedHead,
-      headFallbackReason,
       finalUrl: getResult.finalUrl,
       headers: getResult.headers ?? {},
       statusCode: getResult.statusCode,
@@ -681,19 +485,19 @@ export const fetchWithRemoteCachePolicy = async (
   const bytesFetched = typeof body === "string" ? Buffer.byteLength(body, "utf8") : body.byteLength;
 
   if (bytesFetched === 0) {
-    return finalize({
+    return finalizeRemoteResult(options, {
+      ...remoteResultBase({
+        options,
+        policy,
+        checkedAt,
+        startedAt,
+        attemptedHead,
+        headFallbackReason,
+      }),
       kind: "error",
       checkStatus: "error",
       method: "GET",
       error: "Response body was empty.",
-      url: options.url,
-      pipeline: options.pipeline,
-      policy,
-      checkMode: policy.rule.checkMode,
-      checkedAt,
-      durationMs: performance.now() - startedAt,
-      attemptedHead,
-      headFallbackReason,
       finalUrl: getResult.finalUrl,
       headers: getResult.headers,
       statusCode: getResult.statusCode,
@@ -702,19 +506,19 @@ export const fetchWithRemoteCachePolicy = async (
     });
   }
 
-  return finalize({
+  return finalizeRemoteResult(options, {
+    ...remoteResultBase({
+      options,
+      policy,
+      checkedAt,
+      startedAt,
+      attemptedHead,
+      headFallbackReason,
+    }),
     kind: "fetched",
     checkStatus: "fetched",
     method: "GET",
     body,
-    url: options.url,
-    pipeline: options.pipeline,
-    policy,
-    checkMode: policy.rule.checkMode,
-    checkedAt,
-    durationMs: performance.now() - startedAt,
-    attemptedHead,
-    headFallbackReason,
     finalUrl: getResult.finalUrl,
     headers: getResult.headers,
     statusCode: getResult.statusCode,

@@ -85,11 +85,8 @@ Rules for this loop:
 - GitHub Actions stays enabled, but while debugging AWS you should treat workflow runs as confirmatory, not as the primary iteration loop.
 - `deploy:setup:github` is optional and only runs when you pass `--include-github-setup`.
 - The durable proof for local dirty-tree runs is the AWS artifact hash from `.artifacts/deploy/aws/deploy-manifest.json`, plus successful live verification. `build-info.commitSha` is only a secondary reference when local changes are uncommitted.
-- `--skip-content-sync` skips `avatar:sync`, `enrich:rich:strict`, `images:sync`, `social:preview:generate`, and `badge:site` during the build path. Use it for AWS/bootstrap/publish/debugging only; use the normal path when validating content freshness, rich metadata, or SEO asset generation.
-- When infra debugging produces incidental cache churn, restore it before committing unrelated changes:
-  - `git restore --worktree data/cache/content-images.json public/cache/content-images/54e10190cf9525d7d7796386830386257cee28aa453aaf7c3533cc180b269c21.jpg`
-  - `rm -f public/cache/content-images/04f7c6ded33f86fca3ab16b6b3afba8068cc69e23769b7cfa714719e107eb1c0.jpg`
-  - if you need to keep iterating before the infra alias is available in another checkout, prefer a disposable worktree or clone
+- Deploy artifact builds always validate and consume committed content without refreshing tracked outputs. `--skip-content-sync` remains accepted as a deprecated compatibility no-op for existing operator scripts.
+- Refresh content explicitly with `bun run content:refresh`, review and commit its allow-listed outputs, then build or deploy that committed snapshot.
 - Upstream `pRizz/open-links` intentionally reuses the fixed AWS resource prefix `open-links`, which keeps production on the existing `open-links-site` stack and CloudFront distribution `E334IP4L9JRO34`. The current live stack output bucket is `open-links-535002860186`. Forks should normally keep the slug-derived fallback unless they intentionally adopt an existing AWS stack.
 
 Target-specific setup wrappers remain available while the old flow is phased out:

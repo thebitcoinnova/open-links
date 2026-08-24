@@ -2,7 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import {
-  type RemoteCacheCheckStatus,
+  type AvatarCheckStatus,
+  type ProfileAvatarManifest,
+  type ProfileAvatarRuntimeManifest,
+  normalizeRuntimeManifest,
+  normalizeStableManifest,
+  stabilizeProfileAvatarManifest,
+} from "./profile-avatar-manifest";
+import {
   type RemoteCachePreviousState,
   RemoteCacheStatsCollector,
   computeRemoteCacheExpiresAt,
@@ -12,29 +19,15 @@ import {
 } from "./shared/remote-cache-fetch";
 import { loadRemoteCachePolicyRegistry } from "./shared/remote-cache-policy";
 
-export type AvatarCheckStatus = RemoteCacheCheckStatus | "cache_on_error" | "fallback_on_error";
+export type {
+  AvatarCheckStatus,
+  ProfileAvatarManifest,
+  ProfileAvatarRuntimeManifest,
+} from "./profile-avatar-manifest";
+export { stabilizeProfileAvatarManifest } from "./profile-avatar-manifest";
 
 interface ProfilePayload {
   avatar?: unknown;
-}
-
-export interface ProfileAvatarManifest {
-  sourceUrl: string;
-  resolvedPath: string;
-  updatedAt: string;
-  etag?: string;
-  lastModified?: string;
-  contentType?: string;
-  bytes?: number;
-}
-
-export interface ProfileAvatarRuntimeManifest {
-  sourceUrl: string;
-  checkStatus: AvatarCheckStatus;
-  checkedAt: string;
-  cacheControl?: string;
-  expiresAt?: string;
-  warning?: string;
 }
 
 interface AvatarSyncOptions {
@@ -172,55 +165,6 @@ const parseArgs = (): AvatarSyncOptions => {
   };
 };
 
-const normalizeStableManifest = (manifest: ProfileAvatarManifest): ProfileAvatarManifest => {
-  const normalized: ProfileAvatarManifest = {
-    sourceUrl: manifest.sourceUrl.trim(),
-    resolvedPath: normalizePublicPath(manifest.resolvedPath),
-    updatedAt: manifest.updatedAt.trim(),
-  };
-
-  if (trimToUndefined(manifest.etag)) {
-    normalized.etag = trimToUndefined(manifest.etag);
-  }
-  if (trimToUndefined(manifest.lastModified)) {
-    normalized.lastModified = trimToUndefined(manifest.lastModified);
-  }
-  if (trimToUndefined(manifest.contentType)) {
-    normalized.contentType = trimToUndefined(manifest.contentType);
-  }
-  if (
-    typeof manifest.bytes === "number" &&
-    Number.isFinite(manifest.bytes) &&
-    manifest.bytes >= 0
-  ) {
-    normalized.bytes = manifest.bytes;
-  }
-
-  return normalized;
-};
-
-const normalizeRuntimeManifest = (
-  manifest: ProfileAvatarRuntimeManifest,
-): ProfileAvatarRuntimeManifest => {
-  const normalized: ProfileAvatarRuntimeManifest = {
-    sourceUrl: manifest.sourceUrl.trim(),
-    checkStatus: manifest.checkStatus,
-    checkedAt: manifest.checkedAt.trim(),
-  };
-
-  if (trimToUndefined(manifest.cacheControl)) {
-    normalized.cacheControl = trimToUndefined(manifest.cacheControl);
-  }
-  if (trimToUndefined(manifest.expiresAt)) {
-    normalized.expiresAt = trimToUndefined(manifest.expiresAt);
-  }
-  if (trimToUndefined(manifest.warning)) {
-    normalized.warning = trimToUndefined(manifest.warning);
-  }
-
-  return normalized;
-};
-
 const readStableManifest = (manifestPath: string): ProfileAvatarManifest | null => {
   const parsed = maybeReadJson<unknown>(manifestPath);
   if (!parsed || !isRecord(parsed)) {
@@ -302,28 +246,6 @@ const areRuntimeManifestsEqual = (
     JSON.stringify(normalizeRuntimeManifest(left)) ===
     JSON.stringify(normalizeRuntimeManifest(right))
   );
-};
-
-const hasSameStablePayload = (left: ProfileAvatarManifest, right: ProfileAvatarManifest): boolean =>
-  left.sourceUrl === right.sourceUrl &&
-  normalizePublicPath(left.resolvedPath) === normalizePublicPath(right.resolvedPath) &&
-  left.etag === right.etag &&
-  left.lastModified === right.lastModified &&
-  left.contentType === right.contentType &&
-  left.bytes === right.bytes;
-
-export const stabilizeProfileAvatarManifest = (
-  previousManifest: ProfileAvatarManifest | null,
-  nextManifest: ProfileAvatarManifest,
-): ProfileAvatarManifest => {
-  if (!previousManifest || !hasSameStablePayload(previousManifest, nextManifest)) {
-    return normalizeStableManifest(nextManifest);
-  }
-
-  return normalizeStableManifest({
-    ...nextManifest,
-    updatedAt: previousManifest.updatedAt,
-  });
 };
 
 const extensionFromContentType = (contentType: string | undefined): string | undefined => {
@@ -436,7 +358,171 @@ const logWarning = (message: string) => {
   console.warn(`WARNING [avatar:sync] ${message}`);
 };
 
-const run = async () => {
+type AvatarFetchResult = Awaited<ReturnType<typeof fetchWithRemoteCachePolicy>>;
+type AvatarRunContext = {
+  options: AvatarSyncOptions;
+  sourceUrlRaw: string;
+  sourceUrl: string | null;
+  stableManifest: ProfileAvatarManifest | null;
+  runtimeManifest: ProfileAvatarRuntimeManifest | null;
+  fallbackResolvedPath: string;
+  fallbackAbsolutePath: string;
+  fallbackExists: boolean;
+  previousSourceMatches: boolean;
+  cachedAssetExists: boolean;
+  checkedAt: string;
+  remoteCacheStats: RemoteCacheStatsCollector;
+  remoteCachePolicyRegistry: ReturnType<typeof loadRemoteCachePolicyRegistry>;
+};
+
+const writeAvatarStats = (remoteCacheStats: RemoteCacheStatsCollector) => {
+  const statsPath = createRemoteCacheStatsOutputPath("sync-profile-avatar");
+  writeRemoteCacheRunSummary(statsPath, remoteCacheStats);
+  console.log(`OpenLinks avatar sync: remote cache stats -> '${statsPath}'.`);
+};
+
+const writeFallbackAvatar = (context: AvatarRunContext, warning: string) => {
+  logWarning(warning);
+  writeStableManifestIfChanged(context.options.manifestPath, context.stableManifest, {
+    sourceUrl: context.sourceUrl ?? context.sourceUrlRaw,
+    resolvedPath: context.fallbackResolvedPath,
+    updatedAt: context.checkedAt,
+  });
+  writeRuntimeManifestIfChanged(context.options.runtimeManifestPath, context.runtimeManifest, {
+    sourceUrl: context.sourceUrl ?? context.sourceUrlRaw,
+    checkStatus: "fallback_on_error",
+    checkedAt: context.checkedAt,
+    warning: context.fallbackExists
+      ? warning
+      : `${warning} Fallback file is missing at '${context.fallbackAbsolutePath}'.`,
+  });
+  writeAvatarStats(context.remoteCacheStats);
+};
+
+const handleMissingAvatarSource = (context: AvatarRunContext): boolean => {
+  if (context.sourceUrl) return false;
+  const warning = context.sourceUrlRaw
+    ? `Avatar URL '${context.sourceUrlRaw}' is invalid or unsupported (http/https required); using fallback asset '${context.fallbackResolvedPath}'.`
+    : `Avatar URL is missing; using fallback asset '${context.fallbackResolvedPath}'.`;
+  writeFallbackAvatar(context, warning);
+  return true;
+};
+
+const buildPreviousAvatarState = (
+  context: AvatarRunContext,
+): RemoteCachePreviousState | undefined =>
+  context.previousSourceMatches
+    ? {
+        etag: context.stableManifest?.etag,
+        lastModified: context.stableManifest?.lastModified,
+        cacheControl: context.runtimeManifest?.cacheControl,
+        expiresAt: context.runtimeManifest?.expiresAt,
+        bytes: context.stableManifest?.bytes,
+      }
+    : undefined;
+
+const handleFetchedAvatar = (
+  context: AvatarRunContext & { sourceUrl: string },
+  result: Extract<AvatarFetchResult, { kind: "fetched" }>,
+) => {
+  const extension = resolveExtension(
+    result.headers.contentType,
+    context.sourceUrl,
+    context.stableManifest?.resolvedPath,
+  );
+  const fileName = `${GENERATED_BASENAME}.${extension}`;
+  const absoluteOutputDir = absolutePath(context.options.outputDir);
+  const resolvedPath = resolvedPathFromOutputDir(context.options.outputDir, fileName);
+  fs.mkdirSync(absoluteOutputDir, { recursive: true });
+  fs.writeFileSync(path.join(absoluteOutputDir, fileName), result.body as Buffer);
+  cleanGeneratedVariants(context.options.outputDir, fileName);
+  writeStableManifestIfChanged(context.options.manifestPath, context.stableManifest, {
+    sourceUrl: context.sourceUrl,
+    resolvedPath,
+    updatedAt: context.checkedAt,
+    etag: result.headers.etag,
+    lastModified: result.headers.lastModified,
+    contentType: result.headers.contentType,
+    bytes: result.bytesFetched,
+  });
+  writeRuntimeManifestIfChanged(context.options.runtimeManifestPath, context.runtimeManifest, {
+    sourceUrl: context.sourceUrl,
+    checkStatus: "fetched",
+    checkedAt: result.checkedAt,
+    cacheControl: result.headers.cacheControl,
+    expiresAt: computeRemoteCacheExpiresAt(
+      result.headers.cacheControl,
+      result.headers.responseDate,
+    ),
+  });
+  console.log(`OpenLinks avatar sync: fetched avatar -> '${normalizePublicPath(resolvedPath)}'.`);
+  if (context.options.force) console.log("OpenLinks avatar sync: force refresh was enabled.");
+  writeAvatarStats(context.remoteCacheStats);
+};
+
+const handleRevalidatedAvatar = (
+  context: AvatarRunContext & { sourceUrl: string },
+  previousState: RemoteCachePreviousState | undefined,
+  result: AvatarFetchResult,
+): boolean => {
+  if (
+    (result.kind !== "not_modified" && result.kind !== "cache_fresh") ||
+    !context.previousSourceMatches ||
+    !context.cachedAssetExists ||
+    !context.stableManifest
+  )
+    return false;
+  writeStableManifestIfChanged(context.options.manifestPath, context.stableManifest, {
+    ...context.stableManifest,
+    sourceUrl: context.sourceUrl,
+    updatedAt: context.checkedAt,
+    etag: result.headers.etag ?? previousState?.etag,
+    lastModified: result.headers.lastModified ?? previousState?.lastModified,
+  });
+  writeRuntimeManifestIfChanged(context.options.runtimeManifestPath, context.runtimeManifest, {
+    sourceUrl: context.sourceUrl,
+    checkStatus: result.checkStatus,
+    checkedAt: result.checkedAt,
+    cacheControl: result.headers.cacheControl ?? context.runtimeManifest?.cacheControl,
+    expiresAt:
+      computeRemoteCacheExpiresAt(result.headers.cacheControl, result.headers.responseDate) ??
+      context.runtimeManifest?.expiresAt,
+  });
+  console.log(
+    result.kind === "cache_fresh"
+      ? `OpenLinks avatar sync: cache is fresh; using '${normalizePublicPath(context.stableManifest.resolvedPath)}' without network fetch.`
+      : `OpenLinks avatar sync: remote avatar not modified; using cached '${normalizePublicPath(context.stableManifest.resolvedPath)}'.`,
+  );
+  writeAvatarStats(context.remoteCacheStats);
+  return true;
+};
+
+const handleFailedAvatar = (
+  context: AvatarRunContext & { sourceUrl: string },
+  result: AvatarFetchResult,
+) => {
+  const failure = result.kind === "error" ? result.error : result.kind;
+  if (context.previousSourceMatches && context.cachedAssetExists && context.stableManifest) {
+    const warning = `Avatar fetch failed (${failure}). Reusing cached avatar '${normalizePublicPath(context.stableManifest.resolvedPath)}'.`;
+    logWarning(warning);
+    writeRuntimeManifestIfChanged(context.options.runtimeManifestPath, context.runtimeManifest, {
+      sourceUrl: context.sourceUrl,
+      checkStatus: "cache_on_error",
+      checkedAt: context.checkedAt,
+      cacheControl: context.runtimeManifest?.cacheControl,
+      expiresAt: context.runtimeManifest?.expiresAt,
+      warning,
+    });
+    writeAvatarStats(context.remoteCacheStats);
+    return;
+  }
+  writeFallbackAvatar(
+    context,
+    `Avatar fetch failed (${failure}). Using fallback asset '${context.fallbackResolvedPath}'.`,
+  );
+};
+
+const createAvatarRunContext = (): AvatarRunContext => {
   const options = parseArgs();
   const profile = readJson<ProfilePayload>(options.profilePath);
   const sourceUrlRaw = typeof profile.avatar === "string" ? profile.avatar.trim() : "";
@@ -444,187 +530,52 @@ const run = async () => {
   const stableManifest = readStableManifest(options.manifestPath);
   const runtimeManifest = readRuntimeManifest(options.runtimeManifestPath);
   const remoteCachePolicyRegistry = loadRemoteCachePolicyRegistry();
-  const remoteCacheStats = new RemoteCacheStatsCollector("sync-profile-avatar");
-
   const fallbackResolvedPath = normalizePublicPath(options.fallbackPath || DEFAULT_FALLBACK_PATH);
-  const fallbackAbsolutePath = resolveManifestAssetAbsolutePath(fallbackResolvedPath);
-  const fallbackExists = fs.existsSync(fallbackAbsolutePath);
   const previousSourceMatches = Boolean(sourceUrl && stableManifest?.sourceUrl === sourceUrl);
-  const cachedAssetExists =
-    previousSourceMatches &&
-    !!stableManifest &&
-    fs.existsSync(resolveManifestAssetAbsolutePath(stableManifest.resolvedPath));
-  const checkedAt = new Date().toISOString();
-
-  const writeStats = () => {
-    const statsPath = createRemoteCacheStatsOutputPath("sync-profile-avatar");
-    writeRemoteCacheRunSummary(statsPath, remoteCacheStats);
-    console.log(`OpenLinks avatar sync: remote cache stats -> '${statsPath}'.`);
+  return {
+    options,
+    sourceUrlRaw,
+    sourceUrl,
+    stableManifest,
+    runtimeManifest,
+    fallbackResolvedPath,
+    fallbackAbsolutePath: resolveManifestAssetAbsolutePath(fallbackResolvedPath),
+    fallbackExists: fs.existsSync(resolveManifestAssetAbsolutePath(fallbackResolvedPath)),
+    previousSourceMatches,
+    cachedAssetExists:
+      previousSourceMatches &&
+      !!stableManifest &&
+      fs.existsSync(resolveManifestAssetAbsolutePath(stableManifest.resolvedPath)),
+    checkedAt: new Date().toISOString(),
+    remoteCacheStats: new RemoteCacheStatsCollector("sync-profile-avatar"),
+    remoteCachePolicyRegistry,
   };
+};
 
-  if (!sourceUrl) {
-    const warning = sourceUrlRaw
-      ? `Avatar URL '${sourceUrlRaw}' is invalid or unsupported (http/https required); using fallback asset '${fallbackResolvedPath}'.`
-      : `Avatar URL is missing; using fallback asset '${fallbackResolvedPath}'.`;
-
-    logWarning(warning);
-    writeStableManifestIfChanged(options.manifestPath, stableManifest, {
-      sourceUrl: sourceUrlRaw,
-      resolvedPath: fallbackResolvedPath,
-      updatedAt: checkedAt,
-    });
-    writeRuntimeManifestIfChanged(options.runtimeManifestPath, runtimeManifest, {
-      sourceUrl: sourceUrlRaw,
-      checkStatus: "fallback_on_error",
-      checkedAt,
-      warning: fallbackExists
-        ? warning
-        : `${warning} Fallback file is missing at '${fallbackAbsolutePath}'.`,
-    });
-    writeStats();
-    return;
-  }
-
-  const previousState: RemoteCachePreviousState | undefined = previousSourceMatches
-    ? {
-        etag: stableManifest?.etag,
-        lastModified: stableManifest?.lastModified,
-        cacheControl: runtimeManifest?.cacheControl,
-        expiresAt: runtimeManifest?.expiresAt,
-        bytes: stableManifest?.bytes,
-      }
-    : undefined;
-
+const run = async () => {
+  const context = createAvatarRunContext();
+  if (handleMissingAvatarSource(context) || !context.sourceUrl) return;
+  const sourceContext = { ...context, sourceUrl: context.sourceUrl };
+  const previousState = buildPreviousAvatarState(sourceContext);
   const result = await fetchWithRemoteCachePolicy({
-    url: sourceUrl,
+    url: sourceContext.sourceUrl,
     pipeline: "profile_avatar",
-    policyRegistry: remoteCachePolicyRegistry,
+    policyRegistry: sourceContext.remoteCachePolicyRegistry,
     timeoutMs: FETCH_TIMEOUT_MS,
-    headers: {
-      accept: "image/*,*/*;q=0.8",
-    },
+    headers: { accept: "image/*,*/*;q=0.8" },
     userAgent: "open-links-avatar-sync/0.1",
     bodyType: "buffer",
     previous: previousState,
-    cacheValueAvailable: cachedAssetExists,
-    force: options.force,
-    statsCollector: remoteCacheStats,
+    cacheValueAvailable: sourceContext.cachedAssetExists,
+    force: sourceContext.options.force,
+    statsCollector: sourceContext.remoteCacheStats,
   });
-
   if (result.kind === "fetched") {
-    const extension = resolveExtension(
-      result.headers.contentType,
-      sourceUrl,
-      stableManifest?.resolvedPath,
-    );
-    const fileName = `${GENERATED_BASENAME}.${extension}`;
-    const absoluteOutputDir = absolutePath(options.outputDir);
-    const absoluteOutputFile = path.join(absoluteOutputDir, fileName);
-    const resolvedPath = resolvedPathFromOutputDir(options.outputDir, fileName);
-
-    fs.mkdirSync(absoluteOutputDir, { recursive: true });
-    fs.writeFileSync(absoluteOutputFile, result.body as Buffer);
-    cleanGeneratedVariants(options.outputDir, fileName);
-
-    writeStableManifestIfChanged(options.manifestPath, stableManifest, {
-      sourceUrl,
-      resolvedPath,
-      updatedAt: checkedAt,
-      etag: result.headers.etag,
-      lastModified: result.headers.lastModified,
-      contentType: result.headers.contentType,
-      bytes: result.bytesFetched,
-    });
-    writeRuntimeManifestIfChanged(options.runtimeManifestPath, runtimeManifest, {
-      sourceUrl,
-      checkStatus: "fetched",
-      checkedAt: result.checkedAt,
-      cacheControl: result.headers.cacheControl,
-      expiresAt: computeRemoteCacheExpiresAt(
-        result.headers.cacheControl,
-        result.headers.responseDate,
-      ),
-    });
-
-    console.log(`OpenLinks avatar sync: fetched avatar -> '${normalizePublicPath(resolvedPath)}'.`);
-    if (options.force) {
-      console.log("OpenLinks avatar sync: force refresh was enabled.");
-    }
-    writeStats();
+    handleFetchedAvatar(sourceContext, result);
     return;
   }
-
-  if (
-    (result.kind === "not_modified" || result.kind === "cache_fresh") &&
-    previousSourceMatches &&
-    cachedAssetExists &&
-    stableManifest
-  ) {
-    writeStableManifestIfChanged(options.manifestPath, stableManifest, {
-      sourceUrl,
-      resolvedPath: stableManifest.resolvedPath,
-      updatedAt: checkedAt,
-      etag: result.headers.etag ?? previousState?.etag,
-      lastModified: result.headers.lastModified ?? previousState?.lastModified,
-      contentType: stableManifest.contentType,
-      bytes: stableManifest.bytes,
-    });
-    writeRuntimeManifestIfChanged(options.runtimeManifestPath, runtimeManifest, {
-      sourceUrl,
-      checkStatus: result.checkStatus,
-      checkedAt: result.checkedAt,
-      cacheControl: result.headers.cacheControl ?? runtimeManifest?.cacheControl,
-      expiresAt:
-        computeRemoteCacheExpiresAt(result.headers.cacheControl, result.headers.responseDate) ??
-        runtimeManifest?.expiresAt,
-    });
-
-    if (result.kind === "cache_fresh") {
-      console.log(
-        `OpenLinks avatar sync: cache is fresh; using '${normalizePublicPath(stableManifest.resolvedPath)}' without network fetch.`,
-      );
-    } else {
-      console.log(
-        `OpenLinks avatar sync: remote avatar not modified; using cached '${normalizePublicPath(stableManifest.resolvedPath)}'.`,
-      );
-    }
-    writeStats();
-    return;
-  }
-
-  if (previousSourceMatches && cachedAssetExists && stableManifest) {
-    const warning = `Avatar fetch failed (${result.kind === "error" ? result.error : result.kind}). Reusing cached avatar '${normalizePublicPath(
-      stableManifest.resolvedPath,
-    )}'.`;
-    logWarning(warning);
-    writeRuntimeManifestIfChanged(options.runtimeManifestPath, runtimeManifest, {
-      sourceUrl,
-      checkStatus: "cache_on_error",
-      checkedAt: checkedAt,
-      cacheControl: runtimeManifest?.cacheControl,
-      expiresAt: runtimeManifest?.expiresAt,
-      warning,
-    });
-    writeStats();
-    return;
-  }
-
-  const warning = `Avatar fetch failed (${result.kind === "error" ? result.error : result.kind}). Using fallback asset '${fallbackResolvedPath}'.`;
-  logWarning(warning);
-  writeStableManifestIfChanged(options.manifestPath, stableManifest, {
-    sourceUrl,
-    resolvedPath: fallbackResolvedPath,
-    updatedAt: checkedAt,
-  });
-  writeRuntimeManifestIfChanged(options.runtimeManifestPath, runtimeManifest, {
-    sourceUrl,
-    checkStatus: "fallback_on_error",
-    checkedAt,
-    warning: fallbackExists
-      ? warning
-      : `${warning} Fallback file is missing at '${fallbackAbsolutePath}'.`,
-  });
-  writeStats();
+  if (handleRevalidatedAvatar(sourceContext, previousState, result)) return;
+  handleFailedAvatar(sourceContext, result);
 };
 
 if (import.meta.main) {

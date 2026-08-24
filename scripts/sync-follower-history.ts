@@ -26,7 +26,27 @@ import {
   writeFollowerHistoryIndex,
   writeFollowerHistoryRows,
 } from "./follower-history/append-history";
+import { dedupeFollowerHistoryRows } from "./follower-history/row-dedupe";
+import {
+  type HistoryRunSnapshotSummary,
+  type HistoryRunStatus,
+  type HistoryRunSummary,
+  createHistoryRunSummary,
+  resolveFreshPublicRichSyncLinkIds,
+  resolvePublicRichSyncFailedLinkIds,
+} from "./follower-history/run-summary";
 import type { PublicRichSyncSummary } from "./public-rich-sync";
+
+export type {
+  HistoryRunSnapshotSummary,
+  HistoryRunStatus,
+  HistoryRunSummary,
+} from "./follower-history/run-summary";
+export {
+  createHistoryRunSummary,
+  resolveFreshPublicRichSyncLinkIds,
+  resolvePublicRichSyncFailedLinkIds,
+} from "./follower-history/run-summary";
 
 interface CliArgs {
   authCachePath: string;
@@ -46,32 +66,6 @@ interface HistorySnapshot {
   label: string;
   platform: string;
   row: FollowerHistoryRow;
-}
-
-export interface HistoryRunSnapshotSummary {
-  audienceCount: number;
-  audienceCountRaw: string;
-  audienceKind: FollowerHistoryRow["audienceKind"];
-  csvChanged?: boolean;
-  csvPath: string;
-  handle: string;
-  label: string;
-  linkId: string;
-  platform: string;
-  rowCount?: number;
-  source: FollowerHistorySource;
-}
-
-export type HistoryRunStatus = "dry_run" | "no_snapshots" | "written";
-
-export interface HistoryRunSummary {
-  dryRun: boolean;
-  indexChanged: boolean;
-  indexEntryCount: number;
-  observedAt: string;
-  snapshotCount: number;
-  snapshots: HistoryRunSnapshotSummary[];
-  status: HistoryRunStatus;
 }
 
 const ROOT = process.cwd();
@@ -106,32 +100,6 @@ const trimToUndefined = (value: unknown): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
-const dedupeFollowerHistoryRows = (rows: readonly FollowerHistoryRow[]): FollowerHistoryRow[] => {
-  const seen = new Set<string>();
-  const deduped: FollowerHistoryRow[] = [];
-
-  for (const row of normalizeFollowerHistoryRows(rows)) {
-    const key = [
-      row.observedAt,
-      row.linkId,
-      row.platform,
-      row.handle,
-      row.canonicalUrl,
-      row.audienceKind,
-      row.audienceCount,
-      row.audienceCountRaw,
-      row.source,
-    ].join("\u0000");
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    deduped.push(row);
-  }
-
-  return deduped;
-};
-
 const readOptionalAuthenticatedCache = (cachePath: string) => {
   try {
     return loadAuthenticatedCacheRegistry({ cachePath });
@@ -139,28 +107,6 @@ const readOptionalAuthenticatedCache = (cachePath: string) => {
     return null;
   }
 };
-
-export const resolvePublicRichSyncFailedLinkIds = (
-  summary: Pick<PublicRichSyncSummary, "entries"> | null | undefined,
-): Set<string> =>
-  new Set(
-    (summary?.entries ?? [])
-      .filter((entry) => entry.status === "failed")
-      .map((entry) => entry.linkId),
-  );
-
-export const resolveFreshPublicRichSyncLinkIds = (
-  summary: Pick<PublicRichSyncSummary, "entries"> | null | undefined,
-): Set<string> =>
-  new Set(
-    (summary?.entries ?? [])
-      .filter(
-        (entry) =>
-          entry.status === "synced" ||
-          (entry.status === "skipped" && entry.reason === "counts_unchanged"),
-      )
-      .map((entry) => entry.linkId),
-  );
 
 const readOptionalPublicRichSyncSummary = (
   summaryPath: string | undefined,
@@ -527,23 +473,6 @@ export const buildFollowerHistoryIndexEntries = (
       (left, right) =>
         left.platform.localeCompare(right.platform) || left.linkId.localeCompare(right.linkId),
     );
-
-export const createHistoryRunSummary = (input: {
-  dryRun: boolean;
-  indexChanged: boolean;
-  indexEntryCount: number;
-  observedAt: string;
-  snapshots: HistoryRunSnapshotSummary[];
-  status: HistoryRunStatus;
-}): HistoryRunSummary => ({
-  dryRun: input.dryRun,
-  indexChanged: input.indexChanged,
-  indexEntryCount: input.indexEntryCount,
-  observedAt: input.observedAt,
-  snapshotCount: input.snapshots.length,
-  snapshots: input.snapshots,
-  status: input.status,
-});
 
 export const writeHistoryRunSummary = (summaryPath: string, summary: HistoryRunSummary): void => {
   writeJsonFile(summaryPath, summary);

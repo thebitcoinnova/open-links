@@ -1,0 +1,36 @@
+import type { DeploymentResolutionState } from "./deployment-config-types";
+
+export function buildDeploymentConfig(state: DeploymentResolutionState) {
+  return {
+    awsDeployPolicyName: `${state.awsResourcePrefix}-github-deploy`,
+    awsDeployRoleName: `${state.awsResourcePrefix}-github-deploy`,
+    awsGithubOidcAudience: "sts.amazonaws.com",
+    awsGithubOidcProviderUrl: "https://token.actions.githubusercontent.com",
+    awsPriceClass: state.awsPriceClass,
+    awsRegion: "us-east-1",
+    awsResourcePrefix: state.awsResourcePrefix,
+    awsStackName: `${state.awsResourcePrefix}-site`,
+    bucketNamePrefix: state.awsResourcePrefix,
+    enabledTargets: [...state.enabledTargets],
+    githubApiVersion: "2022-11-28",
+    githubAwsDeployEnabledVariableName: "OPENLINKS_ENABLE_AWS_DEPLOY",
+    githubPagesBasePath: state.githubPagesBasePath,
+    githubPagesDefaultBasePath: state.githubPagesDefaultBasePath,
+    githubPagesDefaultUrl: state.githubPagesDefaultUrl,
+    githubPagesEnvironmentName: "github-pages",
+    githubPagesOrigin: state.githubPagesOrigin,
+    githubProductionEnvironmentName: "production",
+    githubRoleArnDigestVariableName: "AWS_DEPLOY_ROLE_ARN_SHA256",
+    githubRoleArnSecretName: "AWS_DEPLOY_ROLE_ARN",
+    githubWorkflowFileName: "deploy-production.yml",
+    htmlCacheControl: "no-cache, no-store, must-revalidate",
+    immutableCacheControl: "public, max-age=31536000, immutable",
+    metadataCacheControl: "no-cache",
+    mutableAssetCacheControl: "public, max-age=300",
+    primaryCanonicalDomain: state.primaryCanonicalDomain,
+    primaryCanonicalOrigin: state.primaryCanonicalOrigin,
+    primaryTarget: state.primaryTarget,
+    repositorySlug: state.repositorySlug,
+    upstreamRepository: state.upstreamRepository,
+  } as const;
+}

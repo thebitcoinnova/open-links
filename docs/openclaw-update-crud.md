@@ -305,13 +305,13 @@ Execute in this exact order:
    - `data/links.json`
    - `data/site.json`
 9. Refresh caches, validate, and build:
-   - `bun run enrich:rich:strict`
+   - `bun run content:refresh`
    - for new or changed Instagram, Medium, X, Primal, YouTube, or Facebook Page links that should publish analytics, run `bun run public:rich:sync -- --only-link <link-id> --summary-json .ci-diagnostics/public-rich-sync-summary.json` for each affected link before `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json`; Instagram metadata can lag the browser-rendered public counts, X oEmbed enrichment alone does not expose follower counts, and Facebook Page metrics require `OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN` plus the Meta Graph Page ID, not necessarily the public Facebook URL ID
    - when public audience metrics are refreshed, run `bun run followers:history:sync -- --public-rich-sync-summary .ci-diagnostics/public-rich-sync-summary.json` and keep follower-history CSV/index artifacts aligned by link id, not just platform; public-cache rows are skipped when the same-run public sync did not successfully capture fresh audience data
    - ensure any newly introduced remote fetch domains are covered by shared
      `data/policy/remote-cache-policy.json` rules or fork-only
      `data/policy/remote-cache-policy.local.json` overlay rules
-   - `bun run images:sync`
+   - after `public:rich:sync`, rerun `bun run content:refresh` so generated metadata and images reflect the refreshed public cache
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
@@ -322,6 +322,7 @@ Execute in this exact order:
      - `public/cache/content-images/*`
      - `data/cache/rich-authenticated-cache.json`
      - `public/cache/rich-authenticated/*`
+   - treat `bun run build` as read-only; review and commit refresh-owned outputs before deployment
 10. Commit and push directly to `main`.
 11. If deployment verification is in scope for a fork, ensure GitHub is actually running workflows for that fork:
    - if the fork’s Actions tab shows "Workflows aren’t being run on this forked repository", tell the user to click **Enable workflows**,

@@ -6,843 +6,152 @@ import {
   resolveLinkProfileSemantics,
   resolveSupportedSocialProfile,
 } from "../../src/lib/content/social-profile-fields";
-import {
-  KNOWN_SITE_ALIASES,
-  normalizeKnownSiteAlias,
-  resolveKnownSiteId,
-} from "../../src/lib/icons/known-sites-data";
 import { normalizeHandle, resolveHandleFromUrl } from "../../src/lib/identity/handle-resolver";
-import { type PaymentRailType, isPaymentRailType } from "../../src/lib/payments/types";
+import {
+  BASE_ALLOWED_SCHEMES,
+  LINKS_ROOT_KEYS,
+  LINK_KEYS,
+  PAYMENT_ALLOWED_SCHEMES,
+  PROFILE_KEYS,
+  SITE_KEYS,
+  checkCustomConflicts,
+  checkIconOverrideAliases,
+  checkKnownIconAlias,
+  checkScheme,
+  handleResolutionReasonSummary,
+  isRecord,
+  toStringOrUndefined,
+  unknownTopLevelWarnings,
+} from "./rules-common";
+import type { PolicyInput, ValidationIssue } from "./rules-contracts";
+import { checkPaymentConfig, checkSitePaymentsConfig } from "./rules-payment";
 
-export interface ValidationIssue {
-  level: "error" | "warning";
-  strictBlocking?: boolean;
-  source: string;
-  path: string;
-  message: string;
-  remediation: string;
-}
+export type { PolicyInput, ValidationIssue } from "./rules-contracts";
 
-interface PolicyInput {
-  profile: Record<string, unknown>;
-  links: Record<string, unknown>;
-  site: Record<string, unknown>;
-  sources?: {
-    profile: string;
-    links: string;
-    site: string;
-  };
-}
-
-const BASE_ALLOWED_SCHEMES = new Set(["http:", "https:", "mailto:", "tel:"]);
-const PAYMENT_ALLOWED_SCHEMES = new Set([
-  ...BASE_ALLOWED_SCHEMES,
-  "bitcoin:",
-  "lightning:",
-  "ethereum:",
-  "solana:",
-]);
-
-const PROFILE_KEYS = new Set([
-  "name",
-  "headline",
-  "avatar",
-  "bio",
-  "entityType",
-  "location",
-  "pronouns",
-  "status",
-  "profileLinks",
-  "contact",
-  "custom",
-]);
-
-const LINKS_ROOT_KEYS = new Set(["links", "groups", "order", "custom"]);
-const LINK_KEYS = new Set([
-  "id",
-  "label",
-  "url",
-  "type",
-  "icon",
-  "description",
-  "group",
-  "order",
-  "enabled",
-  "metadata",
-  "enrichment",
-  "referral",
-  "payment",
-  "custom",
-]);
-
-const SITE_KEYS = new Set([
-  "title",
-  "description",
-  "baseUrl",
-  "theme",
-  "ui",
-  "quality",
-  "sharing",
-  "custom",
-]);
-
-const WEB_PAYMENT_RAILS = new Set<PaymentRailType>([
-  "patreon",
-  "kofi",
-  "paypal",
-  "cashapp",
-  "stripe",
-  "coinbase",
-]);
-
-const CRYPTO_PAYMENT_RAILS = new Set<PaymentRailType>([
-  "bitcoin",
-  "lightning",
-  "ethereum",
-  "solana",
-]);
-
-const BITCOIN_ADDRESS_PATTERN = /^(bc1[ac-hj-np-z02-9]{25,87}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/;
-const LIGHTNING_INVOICE_OR_LNURL_PATTERN = /^(lnbc|lntb|lnbcrt|lno|lnurl)[0-9a-z]+$/i;
-const LIGHTNING_ADDRESS_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const ETH_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
-const ENS_PATTERN = /^.+\.eth$/i;
-const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const toStringOrUndefined = (value: unknown): string | undefined =>
-  typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
-
-const handleResolutionReasonSummary = (reason: string): string => {
-  switch (reason) {
-    case "missing_handle_segment":
-      return "Missing expected username segment in the URL path.";
-    case "not_profile_url":
-      return "URL does not match a supported profile URL shape.";
-    case "invalid_handle":
-      return "URL path segment failed handle-format checks.";
-    default:
-      return "Supported handle extractor could not resolve a handle from this URL.";
-  }
-};
-
-const unknownTopLevelWarnings = (
+const collectLinkPolicyIssues = (
+  links: Record<string, unknown>,
   source: string,
-  payload: Record<string, unknown>,
-  allowed: Set<string>,
 ): ValidationIssue[] => {
-  const warnings: ValidationIssue[] = [];
-
-  for (const key of Object.keys(payload)) {
-    if (!allowed.has(key)) {
-      warnings.push({
-        level: "warning",
-        source,
-        path: `$.${key}`,
-        message: `Unknown top-level key '${key}' is allowed but not part of the core contract.`,
-        remediation: `Move '${key}' into a dedicated custom block if it is extension data, or document why it belongs at top level.`,
-      });
-    }
-  }
-
-  return warnings;
-};
-
-const checkCustomConflicts = (
-  source: string,
-  customValue: unknown,
-  reservedKeys: Set<string>,
-  pathPrefix: string,
-): ValidationIssue[] => {
-  const errors: ValidationIssue[] = [];
-
-  if (!isRecord(customValue)) {
-    return errors;
-  }
-
-  for (const key of Object.keys(customValue)) {
-    if (reservedKeys.has(key)) {
-      errors.push({
-        level: "error",
-        source,
-        path: `${pathPrefix}.${key}`,
-        message: `Custom key '${key}' conflicts with reserved core key '${key}'.`,
-        remediation: `Rename '${pathPrefix}.${key}' to a non-reserved extension key (for example '${key}Extra').`,
-      });
-    }
-  }
-
-  return errors;
-};
-
-const checkScheme = (
-  source: string,
-  path: string,
-  value: unknown,
-  options?: {
-    allowedSchemes?: Set<string>;
-    remediation?: string;
-  },
-): ValidationIssue[] => {
-  if (typeof value !== "string" || value.length === 0) {
-    return [];
-  }
-
-  try {
-    const parsed = new URL(value);
-
-    if (options?.allowedSchemes && !options.allowedSchemes.has(parsed.protocol)) {
-      return [
-        {
-          level: "error",
-          source,
-          path,
-          message: `URL scheme '${parsed.protocol}' is not allowed.`,
-          remediation: options.remediation ?? "Use an allowed URL scheme for this field.",
-        },
-      ];
-    }
-  } catch {
-    return [
-      {
-        level: "error",
-        source,
-        path,
-        message: "URL value is not parseable.",
-        remediation:
-          options?.remediation ?? "Provide a valid absolute URL or supported scheme-based URL.",
-      },
-    ];
-  }
-
-  return [];
-};
-
-const checkKnownIconAlias = (source: string, path: string, value: unknown): ValidationIssue[] => {
-  if (typeof value !== "string") {
-    return [];
-  }
-
-  const alias = normalizeKnownSiteAlias(value);
-  if (!alias) {
-    return [];
-  }
-
-  if (KNOWN_SITE_ALIASES.has(alias)) {
-    return [];
-  }
-
-  return [
-    {
-      level: "warning",
-      source,
-      path,
-      message: `Unknown icon alias '${value}'. Runtime rendering will fall back to URL-domain matching or generic icon fallback.`,
-      remediation:
-        "Use a known alias from src/lib/icons/known-sites-data.ts, or remove links[].icon to rely on domain mapping.",
-    },
-  ];
-};
-
-const checkIconOverrideAliases = (
-  source: string,
-  path: string,
-  value: unknown,
-): ValidationIssue[] => {
-  if (!isRecord(value)) {
-    return [];
-  }
-
-  const warnings: ValidationIssue[] = [];
-
-  for (const [sourceAliasRaw, targetAliasRaw] of Object.entries(value)) {
-    const sourceAlias = normalizeKnownSiteAlias(sourceAliasRaw);
-    if (!sourceAlias || !KNOWN_SITE_ALIASES.has(sourceAlias)) {
-      warnings.push({
-        level: "warning",
-        source,
-        path: `${path}.${sourceAliasRaw}`,
-        message: `Unknown icon override source alias '${sourceAliasRaw}'. Runtime remapping will ignore this entry.`,
-        remediation:
-          "Use a known source alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides.",
-      });
+  const issues: ValidationIssue[] = [];
+  const linkItems = Array.isArray(links.links) ? links.links : [];
+  linkItems.forEach((link, index) => {
+    if (!isRecord(link)) {
+      return;
     }
 
-    if (typeof targetAliasRaw !== "string") {
-      continue;
-    }
-
-    const targetAlias = normalizeKnownSiteAlias(targetAliasRaw);
-    if (!targetAlias || !KNOWN_SITE_ALIASES.has(targetAlias)) {
-      warnings.push({
-        level: "warning",
-        source,
-        path: `${path}.${sourceAliasRaw}`,
-        message: `Unknown icon override target alias '${targetAliasRaw}'. Runtime remapping will ignore this entry.`,
-        remediation:
-          "Use a known target alias from src/lib/icons/known-sites-data.ts in ui.brandIcons.iconOverrides.",
-      });
-    }
-  }
-
-  return warnings;
-};
-
-const isLikelyCssColor = (value: string): boolean => {
-  const normalized = value.trim();
-
-  return (
-    /^#[\da-fA-F]{3,8}$/.test(normalized) ||
-    /^rgba?\(/i.test(normalized) ||
-    /^hsla?\(/i.test(normalized) ||
-    /^var\(--[\w-]+\)$/.test(normalized) ||
-    /^[a-zA-Z]+$/.test(normalized)
-  );
-};
-
-const checkQrColor = (
-  source: string,
-  path: string,
-  value: unknown,
-  label: string,
-): ValidationIssue[] => {
-  const color = toStringOrUndefined(value);
-  if (!color) {
-    return [];
-  }
-
-  if (isLikelyCssColor(color)) {
-    return [];
-  }
-
-  return [
-    {
-      level: "warning",
-      source,
-      path,
-      message: `${label} '${color}' does not look like a valid CSS color value.`,
-      remediation: "Use hex/rgb/hsl/named color values for QR foreground/background styling.",
-    },
-  ];
-};
-
-const checkLogoUrlShape = (source: string, path: string, value: unknown): ValidationIssue[] => {
-  const url = toStringOrUndefined(value);
-  if (!url) {
-    return [];
-  }
-
-  if (url.startsWith("/")) {
-    return [];
-  }
-
-  if (/^https?:\/\//i.test(url)) {
-    return [];
-  }
-
-  return [
-    {
-      level: "warning",
-      source,
-      path,
-      message: `Custom QR logo URL '${url}' should be an absolute http(s) URL or a root-relative asset path.`,
-      remediation:
-        "Use '/payment-logos/...' for local assets or a full https URL for remote assets.",
-    },
-  ];
-};
-
-const checkBitcoinFormat = (
-  source: string,
-  path: string,
-  rail: Record<string, unknown>,
-): ValidationIssue[] => {
-  const issues: ValidationIssue[] = [];
-  const uri = toStringOrUndefined(rail.uri);
-  const address = toStringOrUndefined(rail.address);
-
-  if (uri && !uri.toLowerCase().startsWith("bitcoin:")) {
-    issues.push({
-      level: "warning",
-      source,
-      path,
-      message: `Bitcoin URI '${uri}' does not start with 'bitcoin:'.`,
-      remediation: "Use BIP-21/BIP-321 style bitcoin: URIs for better wallet compatibility.",
-    });
-  }
-
-  if (address && !BITCOIN_ADDRESS_PATTERN.test(address)) {
-    issues.push({
-      level: "warning",
-      source,
-      path: `${path}.address`,
-      message: `Bitcoin address '${address}' does not match common on-chain address formats.`,
-      remediation: "Use a valid bech32 (bc1...) or legacy/base58 BTC address.",
-    });
-  }
-
-  return issues;
-};
-
-const checkLightningFormat = (
-  source: string,
-  path: string,
-  rail: Record<string, unknown>,
-): ValidationIssue[] => {
-  const issues: ValidationIssue[] = [];
-  const uri = toStringOrUndefined(rail.uri);
-  const address = toStringOrUndefined(rail.address);
-
-  if (uri?.includes(":") && !uri.toLowerCase().startsWith("lightning:")) {
-    issues.push({
-      level: "warning",
-      source,
-      path,
-      message: `Lightning URI '${uri}' does not start with 'lightning:'.`,
-      remediation:
-        "Use lightning: URIs, or provide invoice/LNURL/Lightning Address in the rail address field.",
-    });
-  }
-
-  const candidate = address ?? (uri && !uri.includes(":") ? uri : undefined);
-  if (!candidate) {
-    return issues;
-  }
-
-  if (
-    LIGHTNING_INVOICE_OR_LNURL_PATTERN.test(candidate) ||
-    LIGHTNING_ADDRESS_PATTERN.test(candidate)
-  ) {
-    return issues;
-  }
-
-  issues.push({
-    level: "warning",
-    source,
-    path: `${path}.address`,
-    message: `Lightning value '${candidate}' does not match common invoice/LNURL/lightning-address patterns.`,
-    remediation:
-      "Use an invoice (lnbc...), LNURL (lnurl...), offer (lno...), or user@domain lightning address.",
-  });
-
-  return issues;
-};
-
-const checkEthereumFormat = (
-  source: string,
-  path: string,
-  rail: Record<string, unknown>,
-): ValidationIssue[] => {
-  const issues: ValidationIssue[] = [];
-  const uri = toStringOrUndefined(rail.uri);
-  const address = toStringOrUndefined(rail.address);
-
-  if (uri && !uri.toLowerCase().startsWith("ethereum:")) {
-    issues.push({
-      level: "warning",
-      source,
-      path,
-      message: `Ethereum URI '${uri}' does not start with 'ethereum:'.`,
-      remediation: "Prefer EIP-681 style ethereum: URIs for best wallet compatibility.",
-    });
-  }
-
-  if (address && !ETH_ADDRESS_PATTERN.test(address) && !ENS_PATTERN.test(address)) {
-    issues.push({
-      level: "warning",
-      source,
-      path: `${path}.address`,
-      message: `Ethereum target '${address}' is not a standard hex address or ENS name.`,
-      remediation: "Use a 0x-prefixed 40-byte hex address or ENS name (for example name.eth).",
-    });
-  }
-
-  return issues;
-};
-
-const checkSolanaFormat = (
-  source: string,
-  path: string,
-  rail: Record<string, unknown>,
-): ValidationIssue[] => {
-  const issues: ValidationIssue[] = [];
-  const uri = toStringOrUndefined(rail.uri);
-  const address = toStringOrUndefined(rail.address);
-
-  if (uri && !uri.toLowerCase().startsWith("solana:")) {
-    issues.push({
-      level: "warning",
-      source,
-      path,
-      message: `Solana URI '${uri}' does not start with 'solana:'.`,
-      remediation: "Prefer Solana Pay style solana: URIs for wallet interop.",
-    });
-  }
-
-  if (address && !SOLANA_ADDRESS_PATTERN.test(address)) {
-    issues.push({
-      level: "warning",
-      source,
-      path: `${path}.address`,
-      message: `Solana address '${address}' is not a valid base58 public key shape.`,
-      remediation: "Use a valid base58 Solana public key (typically 32-44 chars).",
-    });
-  }
-
-  return issues;
-};
-
-const checkRailFormatWarnings = (
-  source: string,
-  path: string,
-  railType: PaymentRailType,
-  rail: Record<string, unknown>,
-): ValidationIssue[] => {
-  switch (railType) {
-    case "bitcoin":
-      return checkBitcoinFormat(source, path, rail);
-    case "lightning":
-      return checkLightningFormat(source, path, rail);
-    case "ethereum":
-      return checkEthereumFormat(source, path, rail);
-    case "solana":
-      return checkSolanaFormat(source, path, rail);
-    default:
-      return [];
-  }
-};
-
-const checkPaymentQrConfig = (source: string, path: string, value: unknown): ValidationIssue[] => {
-  if (!isRecord(value)) {
-    return [];
-  }
-
-  const issues: ValidationIssue[] = [];
-  const logoMode = toStringOrUndefined(value.logoMode);
-
-  if (logoMode === "custom" && !toStringOrUndefined(value.logoUrl)) {
-    issues.push({
-      level: "error",
-      source,
-      path,
-      message: "QR logoMode is 'custom' but logoUrl is missing.",
-      remediation: "Provide qr.logoUrl when qr.logoMode is set to custom.",
-    });
-  }
-
-  issues.push(
-    ...checkQrColor(
-      source,
-      `${path}.foregroundColor`,
-      value.foregroundColor,
-      "QR foreground color",
-    ),
-  );
-  issues.push(
-    ...checkQrColor(
-      source,
-      `${path}.backgroundColor`,
-      value.backgroundColor,
-      "QR background color",
-    ),
-  );
-  issues.push(...checkLogoUrlShape(source, `${path}.logoUrl`, value.logoUrl));
-
-  if (typeof value.logoSize === "number" && (value.logoSize < 0.15 || value.logoSize > 0.35)) {
-    issues.push({
-      level: "warning",
-      source,
-      path: `${path}.logoSize`,
-      message: `QR logoSize ${value.logoSize} is outside the recommended 0.15-0.35 range for scan reliability.`,
-      remediation: "Use qr.logoSize between 0.15 and 0.35 to reduce scanning failures.",
-    });
-  }
-
-  const badge = isRecord(value.badge) ? value.badge : undefined;
-  const badgeMode = toStringOrUndefined(badge?.mode);
-  const badgeItems = Array.isArray(badge?.items) ? badge.items : undefined;
-
-  if (badgeMode === "custom" && (!badgeItems || badgeItems.length === 0)) {
-    issues.push({
-      level: "error",
-      source,
-      path: `${path}.badge.items`,
-      message: "QR badge mode 'custom' requires at least one badge item.",
-      remediation: "Provide qr.badge.items when qr.badge.mode is set to custom.",
-    });
-  }
-
-  if (badgeItems && badgeItems.length > 2) {
-    issues.push({
-      level: "error",
-      source,
-      path: `${path}.badge.items`,
-      message: `QR badge supports at most 2 items, received ${badgeItems.length}.`,
-      remediation: "Limit qr.badge.items to 1 or 2 entries to preserve scan reliability.",
-    });
-  }
-
-  if (badgeItems) {
-    badgeItems.forEach((item, itemIndex) => {
-      if (!isRecord(item)) {
-        return;
-      }
-
-      const itemType = toStringOrUndefined(item.type);
-      const itemValue = toStringOrUndefined(item.value);
-
-      if ((itemType === "site" || itemType === "asset") && !itemValue) {
-        issues.push({
-          level: "error",
-          source,
-          path: `${path}.badge.items[${itemIndex}].value`,
-          message: `QR badge item '${itemType}' requires a value.`,
-          remediation: `Provide qr.badge.items[${itemIndex}].value for ${itemType} badge items.`,
-        });
-      }
-
-      if (itemType === "site" && itemValue && !resolveKnownSiteId(itemValue)) {
-        issues.push({
-          level: "error",
-          source,
-          path: `${path}.badge.items[${itemIndex}].value`,
-          message: `QR badge site '${itemValue}' is not a known site id.`,
-          remediation:
-            "Use a supported known-site id such as 'cluborange', 'lightning', or 'bitcoin'.",
-        });
-      }
-
-      if (itemType === "asset") {
-        issues.push(
-          ...checkLogoUrlShape(source, `${path}.badge.items[${itemIndex}].value`, item.value),
-        );
-      }
-    });
-  }
-
-  if (typeof badge?.size === "number" && (badge.size < 0.15 || badge.size > 0.35)) {
-    issues.push({
-      level: "warning",
-      source,
-      path: `${path}.badge.size`,
-      message: `QR badge size ${badge.size} is outside the recommended 0.15-0.35 range for scan reliability.`,
-      remediation: "Use qr.badge.size between 0.15 and 0.35 to reduce scanning failures.",
-    });
-  }
-
-  return issues;
-};
-
-const checkPaymentRail = (source: string, path: string, value: unknown): ValidationIssue[] => {
-  const issues: ValidationIssue[] = [];
-
-  if (!isRecord(value)) {
-    return [
-      {
-        level: "error",
-        source,
-        path,
-        message: "Payment rail must be an object.",
-        remediation: "Provide each payment rail as an object with id and rail fields.",
-      },
-    ];
-  }
-
-  const railTypeRaw = value.rail;
-  if (!isPaymentRailType(railTypeRaw)) {
-    issues.push({
-      level: "error",
-      source,
-      path: `${path}.rail`,
-      message: `Unknown payment rail '${String(railTypeRaw)}'.`,
-      remediation:
-        "Use a supported rail type (for example bitcoin, lightning, paypal, patreon, etc.).",
+    const linkUrl = toStringOrUndefined(link.url);
+    const linkIcon = toStringOrUndefined(link.icon);
+    const linkEnabled = link.enabled !== false;
+    const metadata = isRecord(link.metadata) ? link.metadata : undefined;
+    const enrichment = isRecord(link.enrichment) ? link.enrichment : undefined;
+    const referral = normalizeReferralConfig(isRecord(link.referral) ? link.referral : undefined);
+    const manualHandle = normalizeHandle(metadata?.handle);
+    const profileSemantics = resolveLinkProfileSemantics(enrichment?.profileSemantics);
+    const handleResolution = resolveHandleFromUrl({
+      url: linkUrl,
+      icon: linkIcon,
     });
 
-    return issues;
-  }
-
-  if (typeof value.id !== "string" || value.id.trim().length === 0) {
-    issues.push({
-      level: "error",
-      source,
-      path: `${path}.id`,
-      message: "Payment rail id is required.",
-      remediation: "Provide a stable payment rail id (for example 'btc' or 'paypal').",
-    });
-  }
-
-  issues.push(...checkKnownIconAlias(source, `${path}.icon`, value.icon));
-
-  if (typeof value.provider === "string" && !resolveKnownSiteId(value.provider)) {
-    issues.push({
-      level: "error",
-      source,
-      path: `${path}.provider`,
-      message: `Payment provider '${value.provider}' is not a known site id or alias.`,
-      remediation:
-        "Register the provider in src/lib/icons/known-sites-data.ts, then use that known site id or alias.",
-    });
-  }
-
-  const url = toStringOrUndefined(value.url);
-  const uri = toStringOrUndefined(value.uri);
-  const address = toStringOrUndefined(value.address);
-  const scheme = toStringOrUndefined(value.scheme);
-
-  if (WEB_PAYMENT_RAILS.has(railTypeRaw) && !url && !uri) {
-    issues.push({
-      level: "error",
-      source,
-      path,
-      message: `Rail '${railTypeRaw}' requires url or uri.`,
-      remediation: `Provide payment.rails[].url or payment.rails[].uri for ${railTypeRaw}.`,
-    });
-  }
-
-  if (CRYPTO_PAYMENT_RAILS.has(railTypeRaw) && !uri && !address) {
-    issues.push({
-      level: "error",
-      source,
-      path,
-      message: `Rail '${railTypeRaw}' requires uri or address.`,
-      remediation: `Provide payment.rails[].uri or payment.rails[].address for ${railTypeRaw}.`,
-    });
-  }
-
-  if (railTypeRaw === "custom-crypto" && !uri && !(scheme && address) && !url) {
-    issues.push({
-      level: "error",
-      source,
-      path,
-      message: "Rail 'custom-crypto' requires uri, url, or scheme + address.",
-      remediation: "Provide uri, url, or both scheme and address for custom-crypto rails.",
-    });
-  }
-
-  issues.push(
-    ...checkScheme(source, `${path}.url`, value.url, {
-      allowedSchemes: PAYMENT_ALLOWED_SCHEMES,
-      remediation: "Use http/https or supported payment schemes in payment rail URL fields.",
-    }),
-  );
-
-  if (uri?.includes(":")) {
-    issues.push(
-      ...checkScheme(source, `${path}.uri`, uri, {
-        remediation:
-          "Use a valid URI for payment rails (for example bitcoin:, lightning:, ethereum:, solana:, or https://).",
-      }),
-    );
-  }
-
-  if (Array.isArray(value.appLinks)) {
-    value.appLinks.forEach((entry, appIndex) => {
-      if (!isRecord(entry)) {
-        return;
-      }
-
-      issues.push(
-        ...checkScheme(source, `${path}.appLinks[${appIndex}].url`, entry.url, {
-          remediation: "Provide a parseable app deep-link URL.",
-        }),
-      );
-    });
-  }
-
-  issues.push(...checkPaymentQrConfig(source, `${path}.qr`, value.qr));
-  issues.push(...checkRailFormatWarnings(source, path, railTypeRaw, value));
-
-  return issues;
-};
-
-const checkPaymentConfig = (source: string, path: string, value: unknown): ValidationIssue[] => {
-  if (!isRecord(value)) {
-    return [];
-  }
-
-  const issues: ValidationIssue[] = [];
-
-  issues.push(
-    ...checkCustomConflicts(
-      source,
-      value.custom,
-      new Set(["rails", "qrDisplay", "primaryRailId"]),
-      `${path}.custom`,
-    ),
-  );
-
-  const rails = Array.isArray(value.rails) ? value.rails : [];
-
-  rails.forEach((rail, railIndex) => {
-    issues.push(...checkPaymentRail(source, `${path}.rails[${railIndex}]`, rail));
-  });
-
-  const primaryRailId = toStringOrUndefined(value.primaryRailId);
-  if (primaryRailId && rails.length > 0) {
-    const exists = rails.some(
-      (rail) => isRecord(rail) && toStringOrUndefined(rail.id) === primaryRailId,
-    );
-    if (!exists) {
+    if (linkEnabled && referral && !hasMeaningfulReferralContent(referral)) {
       issues.push({
         level: "warning",
-        source,
-        path: `${path}.primaryRailId`,
-        message: `primaryRailId '${primaryRailId}' does not match any rail id.`,
-        remediation: "Set primaryRailId to an existing payment.rails[].id value.",
+        strictBlocking: false,
+        source: source,
+        path: `$.links[${index}].referral`,
+        message: `Referral disclosure warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': referral is marked, but no meaningful disclosure fields are present.`,
+        remediation:
+          "Add one or more of links[].referral.visitorBenefit, ownerBenefit, offerSummary, " +
+          "termsSummary, termsUrl, or code. `kind` alone classifies the link but does not disclose the offer.",
       });
     }
-  }
 
-  return issues;
-};
+    if (linkEnabled && referral && linkUrl) {
+      const supportedReferralProfile = resolveSupportedSocialProfile({
+        url: linkUrl,
+        icon: linkIcon,
+        metadataHandle: metadata?.handle,
+        profileSemantics: "auto",
+      });
 
-const checkSitePaymentsConfig = (
-  source: string,
-  site: Record<string, unknown>,
-): ValidationIssue[] => {
-  const ui = isRecord(site.ui) ? site.ui : undefined;
-  const payments = ui && isRecord(ui.payments) ? ui.payments : undefined;
-  const qr = payments && isRecord(payments.qr) ? payments.qr : undefined;
+      if (supportedReferralProfile && profileSemantics !== "non_profile") {
+        issues.push({
+          level: "warning",
+          strictBlocking: false,
+          source: source,
+          path: `$.links[${index}].enrichment.profileSemantics`,
+          message: `Referral semantics warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': supported ${supportedReferralProfile.platform} profile-family URLs used as referral links should usually set enrichment.profileSemantics='non_profile' to avoid profile-style rendering.`,
+          remediation:
+            "Set links[].enrichment.profileSemantics to 'non_profile' for referral/promo links on supported profile-family URLs unless you intentionally want profile-style semantics.",
+        });
+      }
+    }
 
-  if (!qr) {
-    return [];
-  }
+    if (linkEnabled && linkUrl && profileSemantics === "profile") {
+      const supportedProfile = resolveSupportedSocialProfile({
+        url: linkUrl,
+        icon: linkIcon,
+        metadataHandle: metadata?.handle,
+        profileSemantics,
+      });
 
-  const issues: ValidationIssue[] = [];
+      if (!supportedProfile) {
+        issues.push({
+          level: "warning",
+          strictBlocking: false,
+          source: source,
+          path: `$.links[${index}].enrichment.profileSemantics`,
+          message: `Profile semantics warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': enrichment.profileSemantics='profile' is set, but no supported social profile could be resolved from the URL or metadata.handle.`,
+          remediation:
+            "Use a canonical profile URL for this domain, set links[].metadata.handle manually, or switch links[].enrichment.profileSemantics to 'auto' or 'non_profile'.",
+        });
+      }
+    }
 
-  issues.push(
-    ...checkQrColor(
-      source,
-      "$.ui.payments.qr.foregroundColorDefault",
-      qr.foregroundColorDefault,
-      "Default QR foreground color",
-    ),
-  );
-  issues.push(
-    ...checkQrColor(
-      source,
-      "$.ui.payments.qr.backgroundColorDefault",
-      qr.backgroundColorDefault,
-      "Default QR background color",
-    ),
-  );
+    if (
+      linkEnabled &&
+      linkUrl &&
+      profileSemantics === "auto" &&
+      !manualHandle &&
+      handleResolution.supported &&
+      !handleResolution.handle
+    ) {
+      const extractorLabel = handleResolution.extractorId ?? "supported";
+      issues.push({
+        level: "warning",
+        strictBlocking: false,
+        source: source,
+        path: `$.links[${index}].metadata.handle`,
+        message:
+          `Handle extraction warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': ` +
+          `supported extractor '${extractorLabel}' could not resolve a handle. ` +
+          `${handleResolutionReasonSummary(handleResolution.reason)}`,
+        remediation:
+          "Use a canonical profile URL for this domain or set links[].metadata.handle manually. " +
+          "Handle coverage warnings are informational and do not fail strict validation.",
+      });
+    }
 
-  if (
-    typeof qr.logoSizeDefault === "number" &&
-    (qr.logoSizeDefault < 0.15 || qr.logoSizeDefault > 0.35)
-  ) {
-    issues.push({
-      level: "warning",
-      source,
-      path: "$.ui.payments.qr.logoSizeDefault",
-      message: `logoSizeDefault ${qr.logoSizeDefault} is outside the recommended 0.15-0.35 range for scan reliability.`,
-      remediation: "Use a default logo size between 0.15 and 0.35 to reduce scanning failures.",
-    });
-  }
+    const linkType = toStringOrUndefined(link.type);
+    const paymentConfig = isRecord(link.payment) ? link.payment : undefined;
+    const isPaymentContext = linkType === "payment" || Boolean(paymentConfig);
 
+    if (linkType === "simple" || linkType === "rich" || linkUrl) {
+      issues.push(
+        ...checkScheme(source, `$.links[${index}].url`, linkUrl, {
+          allowedSchemes: isPaymentContext ? PAYMENT_ALLOWED_SCHEMES : BASE_ALLOWED_SCHEMES,
+          remediation: isPaymentContext
+            ? "Use http/https/mailto/tel or a supported payment scheme for payment-enabled links."
+            : "Use one of: http, https, mailto, tel.",
+        }),
+      );
+    }
+
+    issues.push(...checkKnownIconAlias(source, `$.links[${index}].icon`, link.icon));
+    issues.push(...checkPaymentConfig(source, `$.links[${index}].payment`, link.payment));
+    issues.push(
+      ...checkCustomConflicts(source, link.custom, LINK_KEYS, `$.links[${index}].custom`),
+    );
+  });
   return issues;
 };
 
@@ -902,125 +211,7 @@ export const runPolicyRules = ({
     }
   });
 
-  const linkItems = Array.isArray(links.links) ? links.links : [];
-  linkItems.forEach((link, index) => {
-    if (!isRecord(link)) {
-      return;
-    }
-
-    const linkUrl = toStringOrUndefined(link.url);
-    const linkIcon = toStringOrUndefined(link.icon);
-    const linkEnabled = link.enabled !== false;
-    const metadata = isRecord(link.metadata) ? link.metadata : undefined;
-    const enrichment = isRecord(link.enrichment) ? link.enrichment : undefined;
-    const referral = normalizeReferralConfig(isRecord(link.referral) ? link.referral : undefined);
-    const manualHandle = normalizeHandle(metadata?.handle);
-    const profileSemantics = resolveLinkProfileSemantics(enrichment?.profileSemantics);
-    const handleResolution = resolveHandleFromUrl({
-      url: linkUrl,
-      icon: linkIcon,
-    });
-
-    if (linkEnabled && referral && !hasMeaningfulReferralContent(referral)) {
-      issues.push({
-        level: "warning",
-        strictBlocking: false,
-        source: sources.links,
-        path: `$.links[${index}].referral`,
-        message: `Referral disclosure warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': referral is marked, but no meaningful disclosure fields are present.`,
-        remediation:
-          "Add one or more of links[].referral.visitorBenefit, ownerBenefit, offerSummary, " +
-          "termsSummary, termsUrl, or code. `kind` alone classifies the link but does not disclose the offer.",
-      });
-    }
-
-    if (linkEnabled && referral && linkUrl) {
-      const supportedReferralProfile = resolveSupportedSocialProfile({
-        url: linkUrl,
-        icon: linkIcon,
-        metadataHandle: metadata?.handle,
-        profileSemantics: "auto",
-      });
-
-      if (supportedReferralProfile && profileSemantics !== "non_profile") {
-        issues.push({
-          level: "warning",
-          strictBlocking: false,
-          source: sources.links,
-          path: `$.links[${index}].enrichment.profileSemantics`,
-          message: `Referral semantics warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': supported ${supportedReferralProfile.platform} profile-family URLs used as referral links should usually set enrichment.profileSemantics='non_profile' to avoid profile-style rendering.`,
-          remediation:
-            "Set links[].enrichment.profileSemantics to 'non_profile' for referral/promo links on supported profile-family URLs unless you intentionally want profile-style semantics.",
-        });
-      }
-    }
-
-    if (linkEnabled && linkUrl && profileSemantics === "profile") {
-      const supportedProfile = resolveSupportedSocialProfile({
-        url: linkUrl,
-        icon: linkIcon,
-        metadataHandle: metadata?.handle,
-        profileSemantics,
-      });
-
-      if (!supportedProfile) {
-        issues.push({
-          level: "warning",
-          strictBlocking: false,
-          source: sources.links,
-          path: `$.links[${index}].enrichment.profileSemantics`,
-          message: `Profile semantics warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': enrichment.profileSemantics='profile' is set, but no supported social profile could be resolved from the URL or metadata.handle.`,
-          remediation:
-            "Use a canonical profile URL for this domain, set links[].metadata.handle manually, or switch links[].enrichment.profileSemantics to 'auto' or 'non_profile'.",
-        });
-      }
-    }
-
-    if (
-      linkEnabled &&
-      linkUrl &&
-      profileSemantics === "auto" &&
-      !manualHandle &&
-      handleResolution.supported &&
-      !handleResolution.handle
-    ) {
-      const extractorLabel = handleResolution.extractorId ?? "supported";
-      issues.push({
-        level: "warning",
-        strictBlocking: false,
-        source: sources.links,
-        path: `$.links[${index}].metadata.handle`,
-        message:
-          `Handle extraction warning for link '${toStringOrUndefined(link.id) ?? `links[${index}]`}': ` +
-          `supported extractor '${extractorLabel}' could not resolve a handle. ` +
-          `${handleResolutionReasonSummary(handleResolution.reason)}`,
-        remediation:
-          "Use a canonical profile URL for this domain or set links[].metadata.handle manually. " +
-          "Handle coverage warnings are informational and do not fail strict validation.",
-      });
-    }
-
-    const linkType = toStringOrUndefined(link.type);
-    const paymentConfig = isRecord(link.payment) ? link.payment : undefined;
-    const isPaymentContext = linkType === "payment" || Boolean(paymentConfig);
-
-    if (linkType === "simple" || linkType === "rich" || linkUrl) {
-      issues.push(
-        ...checkScheme(sources.links, `$.links[${index}].url`, linkUrl, {
-          allowedSchemes: isPaymentContext ? PAYMENT_ALLOWED_SCHEMES : BASE_ALLOWED_SCHEMES,
-          remediation: isPaymentContext
-            ? "Use http/https/mailto/tel or a supported payment scheme for payment-enabled links."
-            : "Use one of: http, https, mailto, tel.",
-        }),
-      );
-    }
-
-    issues.push(...checkKnownIconAlias(sources.links, `$.links[${index}].icon`, link.icon));
-    issues.push(...checkPaymentConfig(sources.links, `$.links[${index}].payment`, link.payment));
-    issues.push(
-      ...checkCustomConflicts(sources.links, link.custom, LINK_KEYS, `$.links[${index}].custom`),
-    );
-  });
+  issues.push(...collectLinkPolicyIssues(links, sources.links));
 
   return issues;
 };

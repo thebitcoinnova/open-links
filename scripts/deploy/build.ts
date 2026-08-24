@@ -1,6 +1,5 @@
-import { mkdir, rm } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import path from "node:path";
-import { runPublicBuildCleanup } from "../clean-public-build-artifacts";
 import { resolveStableBuildTimestamp } from "../lib/build-timestamp";
 import { runCommand } from "../lib/command";
 import { copyArtifact, finalizeArtifact, readDeployManifest } from "../lib/deploy-artifact";
@@ -15,7 +14,7 @@ import { parseArgs } from "./shared";
 
 const args = parseArgs(process.argv.slice(2));
 const requestedTarget = args.target;
-const skipContentSync = args["skip-content-sync"] === "true";
+const legacySkipContentSyncRequested = args["skip-content-sync"] === "true";
 const targets = requestedTarget ? [parseDeployTarget(requestedTarget)] : enabledDeployTargets;
 const outputDir = path.resolve("dist");
 const deployArtifactsDir = path.resolve(".artifacts/deploy");
@@ -41,35 +40,14 @@ await run.addBreadcrumb({
   step: "initialize",
 });
 
-const removedPublicArtifacts = runPublicBuildCleanup();
+runCommand("bun", ["run", "validate:data"]);
 await run.addBreadcrumb({
-  data: {
-    removedPaths: removedPublicArtifacts,
-  },
-  detail:
-    removedPublicArtifacts.length > 0
-      ? `Removed ${removedPublicArtifacts.length} legacy or OS-generated public artifacts before the deploy build.`
-      : "No legacy or OS-generated public artifacts needed cleanup before the deploy build.",
+  data: { legacySkipContentSyncRequested },
+  detail: legacySkipContentSyncRequested
+    ? "Validated committed content. --skip-content-sync is retained as a deprecated no-op."
+    : "Validated committed content without running refresh or generation steps.",
   status: "passed",
-  step: "public cleanup",
-});
-
-if (!skipContentSync) {
-  runCommand("bun", ["run", "avatar:sync"]);
-  runCommand("bun", ["run", "enrich:rich:strict"]);
-  runCommand("bun", ["run", "images:sync"]);
-  runCommand("bun", ["run", "social:preview:generate"]);
-  runCommand("bun", ["run", "validate:data"]);
-  runCommand("bun", ["run", "badge:site"]);
-} else {
-  runCommand("bun", ["run", "validate:data"]);
-}
-await run.addBreadcrumb({
-  detail: skipContentSync
-    ? "Skipped content sync and generation steps before the deploy build and ran validate:data only."
-    : "Ran the shared pre-build sync and validation steps for deployment artifacts.",
-  status: "passed",
-  step: "prebuild",
+  step: "content validation",
 });
 
 for (const target of targets) {
@@ -119,19 +97,19 @@ const { runDirectory } = await writeDeploySummary(
     command: commandName,
     discoveredRemoteState: {
       outputDir,
-      skipContentSync,
+      skipContentSync: legacySkipContentSyncRequested,
     },
     mode: "check",
     plannedChanges: {
-      skipContentSync,
+      skipContentSync: legacySkipContentSyncRequested,
       targets,
     },
     resultingUrls: builtArtifacts.map(
       (artifact) => getDeployTargetConfig(artifact.target).publicOrigin,
     ),
-    skippedReasons: skipContentSync
+    skippedReasons: legacySkipContentSyncRequested
       ? [
-          "Skipped avatar/rich/image/social-preview/badge generation for an infra/debug-oriented artifact build.",
+          "Accepted deprecated --skip-content-sync compatibility flag; deploy builds always consume committed content.",
         ]
       : [],
     target: requestedTarget ?? "all",

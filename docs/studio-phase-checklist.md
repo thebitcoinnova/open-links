@@ -86,6 +86,7 @@ Use this file as the source of truth for implementation status, priorities, and 
 - [x] `P1` Accessibility remediation for onboarding/editor interaction semantics and live status messaging
 - [x] `P1` Security review checklist and runbook completion
 - [x] `P1` Launch checklist and production incident playbook
+- [x] `P2` Bright Builds module-length remediation for the Studio editor
 
 ## Backlog and Future Ideas
 

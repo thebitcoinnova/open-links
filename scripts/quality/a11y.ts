@@ -3,6 +3,7 @@ import path from "node:path";
 import { resolveBrandIconOptions } from "../../src/lib/icons/brand-icon-options";
 import { resolveIconPalette } from "../../src/lib/icons/icon-contrast";
 import { KNOWN_SITES } from "../../src/lib/icons/known-sites-data";
+import { readCombinedSourceText, readSourceText } from "./source-text";
 import type { QualityDomainResult, QualityIssue, QualitySiteInput } from "./types";
 import { analyzeUtilityMenuImplementation } from "./utility-menu";
 
@@ -12,9 +13,6 @@ interface RunA11yChecksInput {
   focusContrastStrict: boolean;
   site: QualitySiteInput;
 }
-
-const readText = (rootDir: string, relativePath: string): string =>
-  fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 
 const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -51,7 +49,7 @@ const resolveThemeModeVars = (
   textPrimary: string;
   borderSubtle: string;
 } => {
-  const tokenCss = readText(rootDir, "src/styles/tokens.css");
+  const tokenCss = readSourceText(rootDir, "src/styles/tokens.css");
   const tokenVars = parseCssVariables(extractCssBlock(tokenCss, ":root"));
 
   const themePath = path.join(rootDir, "src/styles/themes", `${themeId}.css`);
@@ -134,14 +132,25 @@ export const runA11yChecks = ({
 }: RunA11yChecksInput): QualityDomainResult => {
   const issues: QualityIssue[] = [];
 
-  const routeIndex = readText(rootDir, "src/routes/index.tsx");
-  const nonPaymentCardShell = readText(rootDir, "src/components/cards/NonPaymentLinkCardShell.tsx");
-  const utilityBar = readText(rootDir, "src/components/layout/TopUtilityBar.tsx");
-  const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
+  const routeIndex = readCombinedSourceText(rootDir, [
+    "src/routes/index.tsx",
+    "src/routes/RouteIndexView.tsx",
+  ]);
+  const nonPaymentCardShell = readSourceText(
+    rootDir,
+    "src/components/cards/NonPaymentLinkCardShell.tsx",
+  );
+  const utilityBar = readSourceText(rootDir, "src/components/layout/TopUtilityBar.tsx");
+  const utilityMenu = readSourceText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
   const utilityMenuAnalysis = analyzeUtilityMenuImplementation(utilityMenu);
-  const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
-  const styles = readText(rootDir, "src/styles/base.css");
-  const tokens = readText(rootDir, "src/styles/tokens.css");
+  const themeToggle = readSourceText(rootDir, "src/components/theme/ThemeToggle.tsx");
+  const styles = readCombinedSourceText(rootDir, [
+    "src/styles/base.css",
+    "src/styles/base/foundations.css",
+    "src/styles/base/non-payment-cards.css",
+    "src/styles/base/profile-actions.css",
+  ]);
+  const tokens = readSourceText(rootDir, "src/styles/tokens.css");
 
   if (!routeIndex.includes("<main")) {
     issues.push({

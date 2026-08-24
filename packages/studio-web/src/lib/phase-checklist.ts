@@ -166,6 +166,12 @@ export const phaseChecklist: PhaseChecklist[] = [
         status: "done",
         priority: "P1",
       },
+      {
+        id: "p7-8",
+        label: "Bright Builds module-length remediation for the Studio editor",
+        status: "done",
+        priority: "P2",
+      },
     ],
   },
 ];

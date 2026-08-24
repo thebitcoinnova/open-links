@@ -201,10 +201,10 @@ Agent should:
 12. If exact referral terms are unclear, it is acceptable to add a soft marker or partial manual disclosure first. Do not block the authoring flow on extractor work by default.
 13. If a fork adds a generic shared catalog item that would help other forks, recommend a clean upstream PR for the shared catalog/docs change and keep `data/policy/referral-catalog.local.json` out of that PR scope.
 14. When adding or changing Instagram, Medium, X, Primal, or YouTube rich profile links that should show analytics, run `bun run public:rich:sync -- --only-link <link-id>` for each affected link before `bun run followers:history:sync`; do not rely on stale Instagram metadata or X oEmbed alone for follower counts.
-15. When a rich link uses remote image URLs, refresh the committed image cache in the same change batch:
+15. When content changes affect remote images or generated presentation assets, refresh all committed content outputs in the same change batch:
 
 ```bash
-bun run images:sync
+bun run content:refresh
 ```
 
 Validation checkpoint:
@@ -280,9 +280,12 @@ References:
 Agent should run:
 
 ```bash
+bun run content:refresh
 bun run build
 bun run quality:check
 ```
+
+The refresh command is the mutating step; review and commit its allow-listed outputs. Build and strict build consume committed content without modifying tracked files.
 
 If strict verification requested:
 

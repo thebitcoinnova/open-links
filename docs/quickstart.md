@@ -228,7 +228,14 @@ Then commit the updated files under `public/history/followers/`.
 bun run dev
 ```
 
-`bun run dev` runs `avatar:sync`, `enrich:rich:strict`, and `images:sync` first (`predev`) so profile/rich/SEO images are baked into committed local cache assets and blocking enrichment issues fail early. The strict enrichment step is read-only for `data/cache/rich-public-cache.json`; it only updates the local runtime overlay unless you explicitly run `bun run enrich:rich:strict:write-cache`. `avatar:sync` writes stable avatar-cache outputs to `data/cache/profile-avatar.json` and `public/cache/profile-avatar/`, while volatile avatar revalidation state lives in `data/cache/profile-avatar.runtime.json` (gitignored). `images:sync` writes stable image-cache outputs to `data/cache/content-images.json` and `public/cache/content-images/`, while volatile revalidation headers live in `data/cache/content-images.runtime.json` (gitignored).
+`bun run dev` starts Vite against committed content and does not modify tracked files. After changing source data, refresh generated content explicitly first:
+
+```bash
+bun run content:refresh
+git diff -- data/cache data/generated public/cache public/generated public/badges
+```
+
+Review and commit the refresh-owned outputs before deployment. Use `bun run dev:refresh` as a local convenience when you intentionally want refresh followed by Vite. Use `bun run content:refresh:write-cache` only when stable public-cache persistence is intended.
 
 ### Build production output
 
@@ -237,7 +244,7 @@ bun run build
 bun run preview
 ```
 
-`bun run build` runs avatar sync, strict rich enrichment, and content-image sync before validation/build. Like `bun run dev`, the strict enrichment step keeps `data/cache/rich-public-cache.json` unchanged unless you explicitly ran `bun run enrich:rich:strict:write-cache`. When image bytes change, `images:sync` updates the committed stable image-cache artifacts in the repo. Cache-backed fetches across avatar/image/public/authenticated pipelines are governed by `data/policy/remote-cache-policy.json` plus optional fork-only additions in `data/policy/remote-cache-policy.local.json`; add shared domains to the shared registry and fork-only domains to the local overlay whenever a change introduces a new remote host. If a public-augmentation rich link picks up new generated metadata and should stay deployable from a fresh CI runner, run `bun run enrich:rich:strict:write-cache` before commit so cold-run deploys can fall back to committed public cache when the remote source is transiently unavailable.
+`bun run build` validates and builds committed content without refreshing or modifying tracked files. `bun run build:strict` uses strict validation with the same read-only build behavior. Cache-backed fetches across avatar/image/public/authenticated pipelines remain governed by `data/policy/remote-cache-policy.json` plus optional fork-only additions in `data/policy/remote-cache-policy.local.json`; add shared domains to the shared registry and fork-only domains to the local overlay whenever a change introduces a new remote host. If a public-augmentation rich link should persist newly fetched stable metadata for cold CI runners, run `bun run content:refresh:write-cache`, review its allow-listed output changes, and commit them before building or deploying.
 
 ## First Production Deploy
 
@@ -392,11 +399,11 @@ Fix:
 1. Rename conflicting key under `custom`.
 2. Keep core fields in their dedicated schema properties.
 
-### Problem: Build/dev fails on rich metadata enrichment
+### Problem: Content refresh fails on rich metadata enrichment
 
 Symptoms:
 
-- `bun run dev` or `bun run build` stops during `enrich:rich:strict`.
+- `bun run content:refresh` stops during `enrich:rich:strict`, or validation/build reports stale or missing committed enrichment artifacts.
 - Output includes `fetch_failed`, `metadata_missing`, `known_blocker`, or `authenticated_cache_missing` diagnostics for one or more links.
 
 Fix:
@@ -442,13 +449,13 @@ bun run auth:rich:clear -- --only-link <link-id>
 bun run auth:rich:clear -- --all
 ```
 
-Then commit cache manifest/assets and rerun build.
+Then run `bun run content:refresh`, commit the refresh/cache outputs, and rerun build.
 6. If a known blocked domain must be tested intentionally, set per-link override: `links[].enrichment.allowKnownBlocker=true`.
-7. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata. After adding or changing remote image URLs, run `bun run images:sync` and commit `data/cache/content-images.json` plus `public/cache/content-images/*` when they change.
+7. For `metadata_missing`, add at least one manual metadata field under `links[].metadata` (`title`, `description`, or `image`) or improve target-site OG/Twitter metadata. Then rerun `bun run content:refresh` and commit its allow-listed outputs.
 8. Temporary emergency local bypass:
 
 ```bash
-OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run build
+OPENLINKS_RICH_ENRICHMENT_BYPASS=1 bun run content:refresh
 ```
 
 ### Problem: `deploy:verify` blocks on DNS readiness

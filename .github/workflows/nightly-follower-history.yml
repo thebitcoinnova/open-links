@@ -46,10 +46,13 @@ jobs:
           OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN: ${{ secrets.OPENLINKS_FACEBOOK_PAGE_ACCESS_TOKEN }}
         run: bun run public:rich:sync -- --defer-failures --summary-json .ci-diagnostics/public-rich-sync-summary.json
 
+      - name: Project refreshed cache into committed content
+        run: bun run content:refresh -- --summary-json .ci-diagnostics/content-refresh-summary.json
+
       - name: Append follower history snapshots
         run: bash scripts/github-actions/nightly-follower-history.sh append-history
 
-      - name: Commit follower-history artifacts
+      - name: Commit nightly content artifacts
         id: commit
         shell: bash
         run: bash scripts/github-actions/nightly-follower-history.sh commit-history
@@ -58,7 +61,7 @@ jobs:
         if: steps.commit.outputs.commit_result == 'committed'
         run: bun run deploy:build
 
-      - name: Push follower-history artifacts
+      - name: Push nightly content artifacts
         if: steps.commit.outputs.commit_result == 'committed'
         id: push
         shell: bash

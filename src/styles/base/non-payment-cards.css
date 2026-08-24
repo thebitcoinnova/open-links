@@ -1,0 +1,432 @@
+.non-payment-card-frame {
+  --non-payment-card-lead-size: var(--non-payment-card-icon-mobile);
+
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: var(--page-target-size);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent 50%);
+  padding: calc(var(--space-3) * var(--density-scale));
+  background: color-mix(in srgb, var(--surface-card) 95%, var(--surface-bg) 5%);
+  transition: border-color var(--motion-fast), transform var(--motion-fast), background-color
+    var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.non-payment-card-frame[data-has-referral="true"] {
+  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border-subtle) 72%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 90%, var(--accent) 10%),
+    color-mix(in srgb, var(--surface-card) 96%, var(--surface-bg) 4%)
+  );
+}
+
+.card-action-row {
+  margin-top: 0;
+}
+
+.non-payment-card-frame:hover {
+  border-color: color-mix(in srgb, var(--border-strong) 65%, transparent 35%);
+  transform: translateY(-1px);
+}
+
+.non-payment-card-frame[data-card-variant="simple"][data-has-profile-layout="true"] {
+  background: color-mix(in srgb, var(--surface-card) 90%, var(--accent) 10%);
+}
+
+.non-payment-card-frame:has(> .simple-link-card:active),
+.non-payment-card-frame:has(> .rich-link-card:active) {
+  transform: translateY(0);
+}
+
+.non-payment-card-frame:has(> .simple-link-card:active) {
+  background: color-mix(in srgb, var(--surface-card) 78%, var(--accent) 22%);
+}
+
+.non-payment-card-frame:has(> .rich-link-card:active) {
+  background: color-mix(in srgb, var(--surface-card) 80%, var(--accent) 20%);
+}
+
+.non-payment-card-frame:focus-within {
+  box-shadow: var(--shadow-focus);
+  border-color: var(--accent-strong);
+}
+
+.simple-link-card,
+.rich-link-card {
+  display: block;
+  min-width: 0;
+  min-height: var(--page-target-size);
+  color: inherit;
+  text-decoration: none;
+}
+
+.simple-link-card:focus-visible,
+.rich-link-card:focus-visible {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-strong) 68%, transparent 32%);
+  border-radius: calc(var(--radius-md) - 0.12rem);
+}
+
+.rich-card-media {
+  display: block;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: calc(var(--radius-md) - 0.2rem);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-pill) 82%);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent 30%);
+}
+
+.rich-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.rich-link-card[data-image-fit="cover"] .non-payment-card-lead-media img,
+.rich-link-card[data-image-fit="cover"] .non-payment-card-profile-preview-bottom-row img {
+  object-fit: cover;
+}
+
+.non-payment-card-frame[data-lead-kind="avatar"] {
+  --non-payment-card-lead-size: var(--rich-card-avatar-mobile);
+}
+
+.non-payment-card-frame[data-card-variant="rich"][data-lead-kind="preview"] {
+  --non-payment-card-lead-size: var(--card-rich-media-inline-mobile);
+}
+
+.non-payment-card-frame[data-card-variant="rich"][data-image-treatment="thumbnail"][data-lead-kind="preview"] {
+  --non-payment-card-lead-size: var(--card-rich-media-thumbnail-mobile);
+}
+
+.non-payment-card-shell {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: var(--non-payment-card-lead-size) minmax(0, 1fr);
+  grid-template-areas:
+    "lead summary"
+    "lead footer";
+  column-gap: var(--space-3);
+  row-gap: var(--space-2);
+  align-items: start;
+}
+
+.rich-link-card[data-profile-preview-render="top-banner"] .non-payment-card-shell {
+  grid-template-areas:
+    "banner banner"
+    "lead summary"
+    "lead footer";
+}
+
+.rich-link-card[data-profile-preview-render="bottom-row"] .non-payment-card-shell {
+  grid-template-areas:
+    "lead summary"
+    "media media"
+    "footer footer";
+}
+
+.rich-link-card[data-profile-preview-render="compact-end"] .non-payment-card-shell {
+  grid-template-areas:
+    "lead summary"
+    "lead footer"
+    "lead end-media";
+}
+
+.non-payment-card-lead {
+  grid-area: lead;
+  width: var(--non-payment-card-lead-size);
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.non-payment-card-lead-media {
+  width: 100%;
+  min-height: var(--non-payment-card-lead-size);
+  aspect-ratio: 1 / 1;
+}
+
+.card-lead-avatar {
+  width: var(--non-payment-card-lead-size);
+  height: var(--non-payment-card-lead-size);
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, transparent 22%);
+  background: color-mix(in srgb, var(--surface-panel) 82%, var(--accent) 18%);
+  box-shadow: var(--shadow-soft);
+}
+
+.card-lead-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-lead-avatar-empty {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.non-payment-card-lead-icon {
+  display: inline-flex;
+}
+
+.non-payment-card-lead-icon .card-icon {
+  --card-icon-box-size: var(--non-payment-card-lead-size);
+  --card-icon-glyph-size: calc(var(--non-payment-card-lead-size) * 0.5);
+}
+
+.non-payment-card-summary {
+  grid-area: summary;
+  min-width: 0;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.non-payment-card-summary[data-has-referral="true"] {
+  gap: 0.5rem;
+}
+
+.non-payment-card-referral-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.non-payment-card-referral-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.58rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 28%, var(--border-subtle) 72%);
+  background: color-mix(in srgb, var(--surface-pill) 76%, var(--accent) 24%);
+  color: color-mix(in srgb, var(--text-primary) 86%, var(--accent-strong) 14%);
+  font-size: calc(var(--page-type-caption) - 0.02rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-card-source);
+  text-transform: uppercase;
+}
+
+.non-payment-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.non-payment-card-title {
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-size: var(--type-card-title);
+  line-height: var(--line-height-card-title);
+  font-weight: var(--weight-card-title);
+  overflow-wrap: anywhere;
+}
+
+.non-payment-card-header-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.7rem;
+  min-width: 0;
+  max-width: 100%;
+  color: color-mix(in srgb, var(--text-primary) 76%, var(--text-muted) 24%);
+  font-size: var(--page-type-caption);
+  line-height: var(--line-height-card-description);
+}
+
+.non-payment-card-meta-item {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.non-payment-card-referral-benefits {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.non-payment-card-referral-benefit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 5.25rem) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.non-payment-card-referral-benefit-label {
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--accent) 18%);
+  font-size: calc(var(--page-type-caption) - 0.03rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-card-source);
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.non-payment-card-referral-benefit-value {
+  min-width: 0;
+  color: color-mix(in srgb, var(--text-primary) 88%, var(--accent-strong) 12%);
+  font-size: var(--page-type-caption);
+  line-height: var(--line-height-card-description);
+  overflow-wrap: anywhere;
+}
+
+.non-payment-card-description {
+  min-width: 0;
+  max-width: 100%;
+  color: color-mix(in srgb, var(--text-primary) 74%, var(--text-muted) 26%);
+  font-size: var(--page-type-caption);
+  line-height: var(--line-height-card-description);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.non-payment-card-description-email {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.non-payment-card-referral-terms {
+  min-width: 0;
+  color: color-mix(in srgb, var(--text-muted) 84%, var(--accent) 16%);
+  font-size: calc(var(--page-type-caption) - 0.01rem);
+  line-height: var(--line-height-card-description);
+  overflow-wrap: anywhere;
+}
+
+.non-payment-card-profile-preview {
+  min-width: 0;
+}
+
+.non-payment-card-profile-preview-top-banner {
+  grid-area: banner;
+  min-height: 0;
+}
+
+.non-payment-card-profile-preview-top-banner img,
+.non-payment-card-profile-preview-compact-end img {
+  height: auto;
+  object-fit: contain;
+}
+
+.non-payment-card-profile-preview-bottom-row {
+  grid-area: media;
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(9.5rem, 34vw, 11.5rem);
+  aspect-ratio: 1.9 / 1;
+}
+
+.non-payment-card-profile-preview-compact-end {
+  grid-area: end-media;
+  width: min(100%, 15rem);
+  max-width: 100%;
+  min-height: 0;
+  justify-self: start;
+}
+
+.non-payment-card-profile-preview-compact-end img {
+  max-height: 8rem;
+}
+
+.non-payment-card-footer {
+  grid-area: footer;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.non-payment-card-footer-icon {
+  display: inline-flex;
+}
+
+.non-payment-card-footer-icon .card-icon {
+  --card-icon-box-size: var(--non-payment-card-footer-icon-size);
+  --card-icon-glyph-size: calc(var(--non-payment-card-footer-icon-size) * 0.53);
+}
+
+.card-handle {
+  color: color-mix(in srgb, var(--text-primary) 90%, var(--accent-strong) 10%);
+  font-size: calc(var(--page-type-caption) + 0.02rem);
+  font-weight: 700;
+  line-height: var(--line-height-card-description);
+  white-space: normal;
+}
+
+.card-metric {
+  color: color-mix(in srgb, var(--text-primary) 76%, var(--accent-strong) 24%);
+  font-size: var(--page-type-caption);
+  line-height: var(--line-height-card-description);
+}
+
+.non-payment-card-source-label {
+  min-width: 0;
+  max-width: 100%;
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--accent) 14%);
+  font-size: var(--page-type-caption);
+  letter-spacing: var(--tracking-card-source);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.card-source-inline {
+  color: color-mix(in srgb, var(--text-primary) 72%, var(--text-muted) 28%);
+  font-size: var(--page-type-caption);
+  line-height: var(--line-height-card-description);
+  letter-spacing: normal;
+}
+
+.non-payment-card-secondary-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.non-payment-card-referral-terms-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(var(--page-target-size) - 0.65rem);
+  padding: 0.28rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent 28%);
+  background: color-mix(in srgb, var(--surface-pill) 90%, var(--surface-card) 10%);
+  color: color-mix(in srgb, var(--text-primary) 82%, var(--text-muted) 18%);
+  font-size: var(--page-type-caption);
+  font-weight: 600;
+  letter-spacing: var(--tracking-card-source);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.non-payment-card-referral-terms-link:hover {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--accent-strong) 26%, var(--border-subtle) 74%);
+}
+
+.non-payment-card-referral-terms-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-strong) 42%, transparent);
+  outline-offset: 2px;
+}

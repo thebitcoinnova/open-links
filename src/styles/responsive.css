@@ -244,6 +244,12 @@
     text-align: center;
   }
 
+  body
+    .payment-rail-qr-panel[data-fullscreen-enabled="true"][data-has-logo="false"]
+    .payment-rail-qr-activator {
+    padding: var(--space-3);
+  }
+
   body .payment-rail-qr-canvas {
     width: min(100%, 210px);
     height: auto;

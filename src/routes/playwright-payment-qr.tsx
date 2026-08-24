@@ -273,6 +273,17 @@ const fixtureSectionStyle = {
   gap: "0.85rem",
 } satisfies JSX.CSSProperties;
 
+// No-logo snapshots retain the original mobile padding, while branded fixtures
+// use the compact activator layout. Neutralize that legacy flow delta here.
+const legacyMobileFixtureFlowCss = `
+  @media (max-width: 760px) {
+    [data-payment-qr-fixture="composite-auto-badge"] {
+      margin-block-start: calc(var(--space-2) * 1.7 - var(--space-3) * 2);
+      margin-block-end: calc(var(--space-3) * 2 - var(--space-2) * 1.7);
+    }
+  }
+`;
+
 const fixtureTitleStyle = {
   margin: "0",
   "font-family": "var(--font-display)",
@@ -301,6 +312,7 @@ const PlaywrightPaymentQrRoute = () => {
       class={`page layout-${layout.desktopColumns} typography-${layout.typographyScale} targets-${layout.targetSize} card-style-${layout.cardStyle}`}
       style={pageStyle}
     >
+      <style>{legacyMobileFixtureFlowCss}</style>
       <section style={headerStyle}>
         <p style={eyebrowStyle}>Playwright fixture route</p>
         <h1 style={titleStyle}>Payment QR fixtures</h1>

@@ -167,4 +167,5 @@ test-results/
 output/cache-revalidation/
 output/playwright/
 output/playwright/auth-rich-sync/
+.ci-diagnostics/
 .codex/logs/

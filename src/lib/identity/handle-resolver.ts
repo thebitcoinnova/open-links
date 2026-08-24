@@ -45,240 +45,31 @@ export interface ResolvedLinkHandle {
   resolution: HandleResolution;
 }
 
-const GITHUB_HOSTS = new Set(["github.com", "gist.github.com"]);
-const X_HOSTS = new Set(["x.com", "twitter.com", "mobile.twitter.com"]);
-const LINKEDIN_HOSTS = new Set(["linkedin.com", "lnkd.in"]);
-const FACEBOOK_HOSTS = new Set(["facebook.com", "m.facebook.com", "fb.com"]);
-const INSTAGRAM_HOSTS = new Set(["instagram.com"]);
-const CLUB_ORANGE_DOMAIN = "cluborange.org";
-const RUMBLE_HOSTS = new Set(["rumble.com"]);
-const PRIMAL_HOSTS = new Set(["primal.net"]);
-const MEDIUM_HOSTS = new Set(["medium.com"]);
-const SUBSTACK_HOSTS = new Set(["substack.com"]);
-const YOUTUBE_HOSTS = new Set(["youtube.com", "m.youtube.com", "youtu.be"]);
-
-const GITHUB_RESERVED = new Set([
-  "about",
-  "account",
-  "apps",
-  "blog",
-  "collections",
-  "contact",
-  "dashboard",
-  "enterprise",
-  "events",
-  "explore",
-  "features",
-  "gist",
-  "gist.github.com",
-  "issues",
-  "login",
-  "logout",
-  "marketplace",
-  "new",
-  "notifications",
-  "organizations",
-  "orgs",
-  "pricing",
-  "pulls",
-  "readme",
-  "search",
-  "security",
-  "settings",
-  "signup",
-  "site",
-  "sponsors",
-  "team",
-  "topics",
-  "trending",
-  "users",
-]);
-
-const X_RESERVED = new Set([
-  "about",
-  "compose",
-  "explore",
-  "hashtag",
-  "home",
-  "i",
-  "intent",
-  "login",
-  "messages",
-  "notifications",
-  "privacy",
-  "search",
-  "settings",
-  "share",
-  "signup",
-  "tos",
-]);
-
-const FACEBOOK_RESERVED = new Set([
-  "about",
-  "accounts",
-  "adsmanager",
-  "business",
-  "events",
-  "friends",
-  "gaming",
-  "groups",
-  "help",
-  "home.php",
-  "login",
-  "marketplace",
-  "messages",
-  "notifications",
-  "pages",
-  "people",
-  "photo.php",
-  "photos",
-  "plugins",
-  "privacy",
-  "profile.php",
-  "reel",
-  "reels",
-  "search",
-  "settings",
-  "share",
-  "stories",
-  "story.php",
-  "watch",
-]);
-
-const INSTAGRAM_RESERVED = new Set([
-  "about",
-  "accounts",
-  "api",
-  "challenge",
-  "developer",
-  "direct",
-  "explore",
-  "legal",
-  "p",
-  "press",
-  "privacy",
-  "reel",
-  "reels",
-  "stories",
-  "tv",
-  "web",
-]);
-
-const PRIMAL_RESERVED = new Set([
-  "about",
-  "bookmarks",
-  "downloads",
-  "explore",
-  "home",
-  "login",
-  "messages",
-  "notifications",
-  "premium",
-  "search",
-  "settings",
-  "signup",
-  "wallet",
-]);
-
-const RUMBLE_RESERVED = new Set([
-  "about",
-  "account",
-  "ads",
-  "c",
-  "categories",
-  "channel",
-  "channels",
-  "contact-us",
-  "embed",
-  "help",
-  "live",
-  "login",
-  "logout",
-  "news",
-  "our-picks",
-  "privacy",
-  "search",
-  "settings",
-  "terms",
-  "user",
-  "video",
-  "videos",
-]);
-
-const RUMBLE_PROFILE_TABS = new Set(["about", "channels", "livestreams", "reposts", "videos"]);
-
-const CLUB_ORANGE_RESERVED = new Set([
-  "about",
-  "admin",
-  "app",
-  "community",
-  "download",
-  "events",
-  "groups",
-  "home",
-  "login",
-  "messages",
-  "notifications",
-  "privacy",
-  "settings",
-  "signup",
-  "terms",
-  "user",
-  "wallet",
-]);
-
-const MEDIUM_RESERVED = new Set([
-  "about",
-  "creators",
-  "m",
-  "me",
-  "membership",
-  "notifications",
-  "plans",
-  "policy",
-  "privacy",
-  "publish",
-  "p",
-  "search",
-  "signin",
-  "signup",
-  "tag",
-  "topics",
-  "write",
-]);
-
-const SUBSTACK_SUBDOMAIN_RESERVED = new Set([
-  "api",
-  "app",
-  "cdn",
-  "help",
-  "podcasts",
-  "profile",
-  "static",
-  "substack",
-  "support",
-  "www",
-]);
-
-const YOUTUBE_RESERVED = new Set([
-  "about",
-  "account",
-  "feed",
-  "gaming",
-  "hashtag",
-  "jobs",
-  "kids",
-  "live",
-  "music",
-  "news",
-  "playlist",
-  "premium",
-  "results",
-  "shorts",
-  "watch",
-]);
-
-const LINKEDIN_PREFIXES = new Set(["in", "company", "school"]);
+import {
+  CLUB_ORANGE_DOMAIN,
+  CLUB_ORANGE_RESERVED,
+  FACEBOOK_HOSTS,
+  FACEBOOK_RESERVED,
+  GITHUB_HOSTS,
+  GITHUB_RESERVED,
+  INSTAGRAM_HOSTS,
+  INSTAGRAM_RESERVED,
+  LINKEDIN_HOSTS,
+  LINKEDIN_PREFIXES,
+  MEDIUM_HOSTS,
+  MEDIUM_RESERVED,
+  PRIMAL_HOSTS,
+  PRIMAL_RESERVED,
+  RUMBLE_HOSTS,
+  RUMBLE_PROFILE_TABS,
+  RUMBLE_RESERVED,
+  SUBSTACK_HOSTS,
+  SUBSTACK_SUBDOMAIN_RESERVED,
+  X_HOSTS,
+  X_RESERVED,
+  YOUTUBE_HOSTS,
+  YOUTUBE_RESERVED,
+} from "./handle-resolver-rules";
 
 const normalizeHost = (value: string): string => value.toLowerCase().replace(/^www\./, "");
 

@@ -78,9 +78,11 @@ Execute in this exact order.
    - `data/links.json`
    - `data/site.json`
 13. Validate and build:
+   - `bun run content:refresh`
    - `bun run validate:data`
    - `bun run build`
    - `bun run quality:check`
+   - review and commit refresh-owned outputs before deployment; `build` itself is read-only
 14. Commit and push directly to `main`.
 15. Resolve deployment target selection and primary host:
    - upstream default: `aws` primary + `github-pages` mirror

@@ -80,7 +80,7 @@ const readAwsDeploymentUrl = () => {
   }
 };
 
-lines.push("## Nightly Follower History");
+lines.push("## Nightly Content and Follower History");
 lines.push(`- Event: \`${process.env.GITHUB_EVENT_NAME ?? "unknown"}\``);
 lines.push(`- Commit result: \`${process.env.COMMIT_RESULT || "unknown"}\``);
 if (process.env.COMMIT_SHA) {
@@ -247,8 +247,11 @@ if (process.env.PAGES_DEPLOYMENT_CHANGED === "true" && process.env.PAGES_DEPLOYM
 
 lines.push("");
 lines.push("### Local Parity");
+lines.push("- `bun run enrich:rich:strict:write-cache`");
 lines.push("- `bun run public:rich:sync`");
+lines.push("- `bun run content:refresh`");
 lines.push("- `bun run followers:history:sync`");
+lines.push("- commit the allow-listed content and history outputs");
 lines.push("- `bun run deploy:build`");
 lines.push(
   "- Direct AWS and GitHub Pages deploys stay in this workflow because bot-authored pushes should not rely on downstream workflow fan-out.",

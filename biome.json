@@ -9,6 +9,7 @@
       "**/.cache/**",
       "data/generated/**",
       "public/generated/**",
+      "scripts/bright-builds-check.ts",
       "playwright-report/**",
       "test-results/**",
       "output/playwright/**"

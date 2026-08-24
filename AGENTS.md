@@ -20,6 +20,20 @@ The managed Bright Builds baseline now lives in `AGENTS.bright-builds.md`.
 Everything below this heading is OpenLinks-specific local guidance that takes
 precedence when it is more specific.
 
+## Content Refresh and Read-Only Builds
+
+- `bun run dev`, `bun run build`, `bun run build:strict`, CI builds, screenshot
+  builds, and deploy artifact builds consume committed content and must not
+  modify tracked files.
+- Use `bun run content:refresh` when committed avatar, rich metadata, content
+  images, social preview, or badge outputs need regeneration. Review and commit
+  the resulting allow-listed content outputs before deployment.
+- Use `bun run content:refresh:write-cache` only when stable public-cache
+  persistence is intentional. Authenticated-cache refresh remains a separate,
+  credentialed workflow.
+- `.github/workflows/nightly-follower-history.yml` is the sole automated writer
+  for refresh-owned content outputs and follower-history artifacts.
+
 ## Canonical Standards Source
 
 - Standards repository: `https://github.com/bright-builds-llc/coding-and-architecture-requirements`
@@ -238,7 +252,7 @@ This file defines mandatory agent behavior for rich-enrichment failures in this 
 
 Scope:
 
-- `bun run build`, `bun run dev`, `bun run enrich:rich*`, and `bun run validate:data*` failures tied to rich metadata policies.
+- `bun run content:refresh`, `bun run enrich:rich*`, `bun run validate:data*`, and build failures tied to committed rich metadata policy artifacts.
 - Known blocked domains, missing authenticated cache, and newly discovered social-domain blockers.
 
 This is orchestration guidance for agents. It does not replace runtime policy sources of truth.

@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
+import { readCombinedSourceText, readSourceText } from "./source-text";
 import type { ManualSmokeCheckResult, QualityDomainResult, QualityIssue } from "./types";
 import { analyzeUtilityMenuImplementation } from "./utility-menu";
 
@@ -7,9 +6,6 @@ interface RunManualSmokeInput {
   rootDir: string;
   checklistLabels: string[];
 }
-
-const readText = (rootDir: string, relativePath: string): string =>
-  fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 
 const escapeForRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 
@@ -29,16 +25,27 @@ export const runManualSmokeChecks = ({
   domainResult: QualityDomainResult;
   checks: ManualSmokeCheckResult[];
 } => {
-  const routeIndex = readText(rootDir, "src/routes/index.tsx");
-  const simpleCard = readText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
-  const richCard = readText(rootDir, "src/components/cards/RichLinkCard.tsx");
-  const nonPaymentCardShell = readText(rootDir, "src/components/cards/NonPaymentLinkCardShell.tsx");
-  const topUtilityBar = readText(rootDir, "src/components/layout/TopUtilityBar.tsx");
-  const profileHeader = readText(rootDir, "src/components/profile/ProfileHeader.tsx");
-  const themeToggle = readText(rootDir, "src/components/theme/ThemeToggle.tsx");
-  const utilityMenu = readText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
-  const baseCss = readText(rootDir, "src/styles/base.css");
-  const responsiveCss = readText(rootDir, "src/styles/responsive.css");
+  const routeIndex = readCombinedSourceText(rootDir, [
+    "src/routes/index.tsx",
+    "src/routes/RouteIndexView.tsx",
+  ]);
+  const simpleCard = readSourceText(rootDir, "src/components/cards/SimpleLinkCard.tsx");
+  const richCard = readSourceText(rootDir, "src/components/cards/RichLinkCard.tsx");
+  const nonPaymentCardShell = readSourceText(
+    rootDir,
+    "src/components/cards/NonPaymentLinkCardShell.tsx",
+  );
+  const topUtilityBar = readSourceText(rootDir, "src/components/layout/TopUtilityBar.tsx");
+  const profileHeader = readSourceText(rootDir, "src/components/profile/ProfileHeader.tsx");
+  const themeToggle = readSourceText(rootDir, "src/components/theme/ThemeToggle.tsx");
+  const utilityMenu = readSourceText(rootDir, "src/components/layout/UtilityControlsMenu.tsx");
+  const baseCss = readCombinedSourceText(rootDir, [
+    "src/styles/base.css",
+    "src/styles/base/foundations.css",
+    "src/styles/base/non-payment-cards.css",
+    "src/styles/base/profile-actions.css",
+  ]);
+  const responsiveCss = readSourceText(rootDir, "src/styles/responsive.css");
   const utilityMenuAnalysis = analyzeUtilityMenuImplementation(utilityMenu);
   const sharedNonPaymentCardHasActionLabel =
     nonPaymentCardShell.includes("<a") &&

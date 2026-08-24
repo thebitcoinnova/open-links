@@ -33,6 +33,10 @@ This synopsis reflects the downstream repo state inspected on 2026-03-25.
 - Its site build flow asks the upstream `open-links` repo to build each
   person-page site, then wraps those outputs in a root landing page and
   multi-site deployment layer.
+- The existing leaf enrichment/avatar/image/validation entrypoints and schema
+  shapes remain stable. Site builds now consume the materialized committed
+  outputs without rerunning those mutating leaf commands, so downstream
+  materialization must finish refresh work before invoking the build.
 
 ## Current Integration Shape
 

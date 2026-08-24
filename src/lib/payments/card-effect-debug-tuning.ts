@@ -1,73 +1,18 @@
-export type PaymentCardEffectDebugPhase = "low" | "mid" | "max";
-export type PaymentCardEffectDebugGroupId = "ambient" | "lightning" | "glitter" | "wash";
-export type PaymentCardEffectDebugMetricId =
-  | "count"
-  | "opacity"
-  | "size"
-  | "duration"
-  | "drift"
-  | "wash";
+import type {
+  LightningMetricId,
+  ParticleFamilyMetricId,
+  PaymentCardEffectAmbientDebugTuning,
+  PaymentCardEffectDebugCurve,
+  PaymentCardEffectDebugGroupDefinition,
+  PaymentCardEffectDebugGroupId,
+  PaymentCardEffectDebugMetricDefinition,
+  PaymentCardEffectDebugMetricId,
+  PaymentCardEffectDebugPhase,
+  PaymentCardEffectDebugPhaseDefinition,
+  PaymentCardEffectDebugTuning,
+} from "./card-effect-debug-tuning-types";
 
-export interface PaymentCardEffectDebugCurve {
-  low: number;
-  mid: number;
-  max: number;
-}
-
-export interface PaymentCardEffectAmbientDebugTuning {
-  count: PaymentCardEffectDebugCurve;
-  opacity: PaymentCardEffectDebugCurve;
-  size: PaymentCardEffectDebugCurve;
-  duration: PaymentCardEffectDebugCurve;
-  drift: PaymentCardEffectDebugCurve;
-}
-
-export interface PaymentCardEffectLightningDebugTuning {
-  count: PaymentCardEffectDebugCurve;
-  opacity: PaymentCardEffectDebugCurve;
-  size: PaymentCardEffectDebugCurve;
-  duration: PaymentCardEffectDebugCurve;
-}
-
-export interface PaymentCardEffectGlitterDebugTuning {
-  count: PaymentCardEffectDebugCurve;
-  opacity: PaymentCardEffectDebugCurve;
-  size: PaymentCardEffectDebugCurve;
-  duration: PaymentCardEffectDebugCurve;
-  drift: PaymentCardEffectDebugCurve;
-}
-
-export interface PaymentCardEffectDebugTuning {
-  ambient: PaymentCardEffectAmbientDebugTuning;
-  lightning: PaymentCardEffectLightningDebugTuning;
-  glitter: PaymentCardEffectGlitterDebugTuning;
-  wash: PaymentCardEffectDebugCurve;
-}
-
-type ParticleFamilyGroupId = "ambient" | "glitter";
-type ParticleFamilyMetricId = keyof PaymentCardEffectAmbientDebugTuning;
-type LightningMetricId = keyof PaymentCardEffectLightningDebugTuning;
-
-export interface PaymentCardEffectDebugPhaseDefinition {
-  id: PaymentCardEffectDebugPhase;
-  label: string;
-}
-
-export interface PaymentCardEffectDebugMetricDefinition {
-  groupId: PaymentCardEffectDebugGroupId;
-  metricId: PaymentCardEffectDebugMetricId;
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-}
-
-export interface PaymentCardEffectDebugGroupDefinition {
-  id: PaymentCardEffectDebugGroupId;
-  label: string;
-  description: string;
-  metrics: readonly PaymentCardEffectDebugMetricDefinition[];
-}
+export type * from "./card-effect-debug-tuning-types";
 
 export const PAYMENT_CARD_EFFECT_DEBUG_PHASES: readonly PaymentCardEffectDebugPhaseDefinition[] = [
   { id: "low", label: "Low" },
