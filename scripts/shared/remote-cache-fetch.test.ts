@@ -159,6 +159,63 @@ test("head_then_get falls back to GET when HEAD omits validators", async (t) => 
   assert.equal(getCalls, 1);
 });
 
+test("head_then_get omits validators when the cached value is missing", async (t) => {
+  // Arrange
+  const originalFetch = globalThis.fetch;
+  const seenMethods: string[] = [];
+  globalThis.fetch = async (_input, init) => {
+    const method = init?.method ?? "GET";
+    const headers = new Headers(init?.headers);
+    seenMethods.push(method);
+
+    if (method === "HEAD") {
+      return new Response(null, {
+        status: 200,
+        headers: { etag: '"asset-1"' },
+      });
+    }
+
+    if (headers.has("if-none-match")) {
+      return new Response(null, {
+        status: 304,
+        headers: { etag: '"asset-1"' },
+      });
+    }
+
+    return new Response("recovered-image", {
+      status: 200,
+      headers: {
+        etag: '"asset-1"',
+        "content-type": "text/plain",
+      },
+    });
+  };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  // Act
+  const result = await fetchWithRemoteCachePolicy({
+    url: "https://example.com/missing-image.txt",
+    pipeline: "content_images",
+    policyRegistry: TEST_POLICY_REGISTRY,
+    timeoutMs: 1_000,
+    userAgent: "test-agent",
+    bodyType: "text",
+    previous: {
+      etag: '"asset-1"',
+      bytes: 15,
+    },
+    cacheValueAvailable: false,
+  });
+
+  // Assert
+  assert.equal(result.kind, "fetched");
+  assert.equal(result.headFallbackReason, "cache_value_missing");
+  assert.equal(result.kind === "fetched" ? result.body : undefined, "recovered-image");
+  assert.deepEqual(seenMethods, ["HEAD", "GET"]);
+});
+
 test("conditional_get returns not_modified on HTTP 304", async (t) => {
   // Arrange
   const originalFetch = globalThis.fetch;

@@ -398,7 +398,10 @@ export const fetchWithRemoteCachePolicy = async (
   const { attemptedHead, headFallbackReason } = headCheck;
 
   const includeConditionalValidators =
-    !options.force && policy.rule.checkMode !== "always_get" && hasPreviousValidators(previous);
+    cacheValueAvailable &&
+    !options.force &&
+    policy.rule.checkMode !== "always_get" &&
+    hasPreviousValidators(previous);
   const getResult = await requestWithRetries({
     method: "GET",
     url: options.url,

@@ -9,6 +9,7 @@ import type {
   ContentRefreshPhaseResult,
   ContentRefreshSummary,
 } from "./contracts";
+import { listGitChangedPaths } from "./git-changes";
 import { classifyContentRefreshPaths } from "./paths";
 import { buildContentRefreshPlan } from "./plan";
 
@@ -20,26 +21,6 @@ export interface ContentRefreshDependencies {
   runPhase: (phase: ContentRefreshPhase) => CommandResult;
   writeSummary: (summaryPath: string, summary: ContentRefreshSummary) => void;
 }
-
-const listGitChangedPaths = (): string[] => {
-  const commands: string[][] = [
-    ["diff", "--name-only", "HEAD"],
-    ["ls-files", "--others", "--exclude-standard"],
-  ];
-  const changedPaths = new Set<string>();
-
-  for (const args of commands) {
-    const result = runCommand("git", args);
-    for (const repoPath of result.stdout.split("\n")) {
-      const trimmedPath = repoPath.trim();
-      if (trimmedPath) {
-        changedPaths.add(trimmedPath);
-      }
-    }
-  }
-
-  return [...changedPaths].sort();
-};
 
 const hashPathState = (repoPath: string): string => {
   if (!fs.existsSync(repoPath)) return "missing";

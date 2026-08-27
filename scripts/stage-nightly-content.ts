@@ -1,17 +1,10 @@
 import process from "node:process";
+import { listGitChangedPaths } from "./content-refresh/git-changes";
 import { classifyNightlyArtifactPaths } from "./content-refresh/nightly-artifacts";
 import { runCommand } from "./lib/command";
 
-const listTrackedChanges = (): string[] => {
-  const result = runCommand("git", ["diff", "--name-only", "HEAD"]);
-  return result.stdout
-    .split("\n")
-    .map((repoPath) => repoPath.trim())
-    .filter(Boolean);
-};
-
 export const stageNightlyContent = (): string[] => {
-  const classification = classifyNightlyArtifactPaths(listTrackedChanges());
+  const classification = classifyNightlyArtifactPaths(listGitChangedPaths());
   if (classification.unexpectedPaths.length > 0) {
     throw new Error(
       `Nightly refresh changed tracked paths outside its ownership contract: ${classification.unexpectedPaths.join(", ")}.`,
