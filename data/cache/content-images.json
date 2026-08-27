@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T07:41:33.261Z",
+  "generatedAt": "2026-08-27T18:03:05.300Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/4a992fc355aded365589d438e23b1e86c41f1ed53c4a6674644178fe002bec65.png",
@@ -26,28 +26,28 @@
       "bytes": 244370
     },
     "link:live-with-the-hive-podcast:image": {
-      "resolvedPath": "cache/content-images/78569702d1795170d538c9419748dcb64d27b5d1d5f019e18e4041607913aa70.jpg",
-      "updatedAt": "2026-08-25T07:39:05.789Z",
+      "resolvedPath": "cache/content-images/a500f17287e535ac9336343cca7b9e141af7c52fcaecdb9261b07fbdb717a4cb.jpg",
+      "updatedAt": "2026-08-27T18:02:59.848Z",
       "contentType": "image/jpeg",
-      "bytes": 94142
+      "bytes": 94149
     },
     "link:live-with-the-hive-podcast:profileImage": {
-      "resolvedPath": "cache/content-images/78569702d1795170d538c9419748dcb64d27b5d1d5f019e18e4041607913aa70.jpg",
-      "updatedAt": "2026-08-25T07:39:05.963Z",
+      "resolvedPath": "cache/content-images/a500f17287e535ac9336343cca7b9e141af7c52fcaecdb9261b07fbdb717a4cb.jpg",
+      "updatedAt": "2026-08-27T18:02:59.950Z",
       "contentType": "image/jpeg",
-      "bytes": 94142
+      "bytes": 94149
     },
     "link:live-with-the-hive-podcast:ogImage": {
-      "resolvedPath": "cache/content-images/78569702d1795170d538c9419748dcb64d27b5d1d5f019e18e4041607913aa70.jpg",
-      "updatedAt": "2026-08-25T07:39:05.970Z",
+      "resolvedPath": "cache/content-images/a500f17287e535ac9336343cca7b9e141af7c52fcaecdb9261b07fbdb717a4cb.jpg",
+      "updatedAt": "2026-08-27T18:02:59.975Z",
       "contentType": "image/jpeg",
-      "bytes": 94142
+      "bytes": 94149
     },
     "link:live-with-the-hive-podcast:twitterImage": {
-      "resolvedPath": "cache/content-images/78569702d1795170d538c9419748dcb64d27b5d1d5f019e18e4041607913aa70.jpg",
-      "updatedAt": "2026-08-25T07:39:05.975Z",
+      "resolvedPath": "cache/content-images/a500f17287e535ac9336343cca7b9e141af7c52fcaecdb9261b07fbdb717a4cb.jpg",
+      "updatedAt": "2026-08-27T18:02:59.990Z",
       "contentType": "image/jpeg",
-      "bytes": 94142
+      "bytes": 94149
     },
     "link:fountain:image": {
       "resolvedPath": "cache/content-images/0a9133a7d8ed3354b26eb95739bd0b24e6a8ba87db0e24c43188d98e399a9176.jpg",
@@ -80,22 +80,22 @@
       "bytes": 163771
     },
     "link:the-bitcoin-adviser-the-bitcoin-nova:image": {
-      "resolvedPath": "cache/content-images/472fe0cdabab2e48409947e489f903f5c38ca805d72093179b5c9373b07a9fb9.png",
-      "updatedAt": "2026-08-26T07:41:29.216Z",
+      "resolvedPath": "cache/content-images/c653a3a15421b6450b50a105d03bdd7b12ae92a328a3cb123d7ce65466654a8e.png",
+      "updatedAt": "2026-08-27T18:03:01.123Z",
       "contentType": "image/png",
-      "bytes": 836682
+      "bytes": 801483
     },
     "link:the-bitcoin-adviser-the-bitcoin-nova:ogImage": {
-      "resolvedPath": "cache/content-images/472fe0cdabab2e48409947e489f903f5c38ca805d72093179b5c9373b07a9fb9.png",
-      "updatedAt": "2026-08-26T07:41:29.621Z",
+      "resolvedPath": "cache/content-images/c653a3a15421b6450b50a105d03bdd7b12ae92a328a3cb123d7ce65466654a8e.png",
+      "updatedAt": "2026-08-27T18:03:01.325Z",
       "contentType": "image/png",
-      "bytes": 836682
+      "bytes": 801483
     },
     "link:the-bitcoin-adviser-the-bitcoin-nova:twitterImage": {
-      "resolvedPath": "cache/content-images/472fe0cdabab2e48409947e489f903f5c38ca805d72093179b5c9373b07a9fb9.png",
-      "updatedAt": "2026-08-26T07:41:29.653Z",
+      "resolvedPath": "cache/content-images/c653a3a15421b6450b50a105d03bdd7b12ae92a328a3cb123d7ce65466654a8e.png",
+      "updatedAt": "2026-08-27T18:03:01.417Z",
       "contentType": "image/png",
-      "bytes": 836682
+      "bytes": 801483
     },
     "link:home-microseed:image": {
       "resolvedPath": "cache/content-images/481d4fb1a2bcd6dbce9991f9a6c42c0b384fe34b3fbb09f200fadc30e494797f.jpg",
@@ -212,28 +212,28 @@
       "bytes": 73958
     },
     "link:youtube:image": {
-      "resolvedPath": "cache/content-images/2b687bc944ae3a7978be64bcc2f5417634af21194508ebbace2fc2505fa720b7.jpg",
-      "updatedAt": "2026-08-25T07:39:08.252Z",
+      "resolvedPath": "cache/content-images/e7213e5b0bf78acbac0a58aa0e3a7fbdca63b62b0123146388aa0740165f34ec.jpg",
+      "updatedAt": "2026-08-27T18:03:03.919Z",
       "contentType": "image/jpeg",
-      "bytes": 98001
+      "bytes": 98017
     },
     "link:youtube:profileImage": {
-      "resolvedPath": "cache/content-images/2b687bc944ae3a7978be64bcc2f5417634af21194508ebbace2fc2505fa720b7.jpg",
-      "updatedAt": "2026-08-25T07:39:08.520Z",
+      "resolvedPath": "cache/content-images/e7213e5b0bf78acbac0a58aa0e3a7fbdca63b62b0123146388aa0740165f34ec.jpg",
+      "updatedAt": "2026-08-27T18:03:04.002Z",
       "contentType": "image/jpeg",
-      "bytes": 98001
+      "bytes": 98017
     },
     "link:youtube:ogImage": {
-      "resolvedPath": "cache/content-images/2b687bc944ae3a7978be64bcc2f5417634af21194508ebbace2fc2505fa720b7.jpg",
-      "updatedAt": "2026-08-25T07:39:08.524Z",
+      "resolvedPath": "cache/content-images/e7213e5b0bf78acbac0a58aa0e3a7fbdca63b62b0123146388aa0740165f34ec.jpg",
+      "updatedAt": "2026-08-27T18:03:04.019Z",
       "contentType": "image/jpeg",
-      "bytes": 98001
+      "bytes": 98017
     },
     "link:youtube:twitterImage": {
-      "resolvedPath": "cache/content-images/2b687bc944ae3a7978be64bcc2f5417634af21194508ebbace2fc2505fa720b7.jpg",
-      "updatedAt": "2026-08-25T07:39:08.528Z",
+      "resolvedPath": "cache/content-images/e7213e5b0bf78acbac0a58aa0e3a7fbdca63b62b0123146388aa0740165f34ec.jpg",
+      "updatedAt": "2026-08-27T18:03:04.035Z",
       "contentType": "image/jpeg",
-      "bytes": 98001
+      "bytes": 98017
     },
     "link:the-bitcoin-nova-x:image": {
       "resolvedPath": "cache/content-images/8978a826c2abd75e04c741d1118359ebd0a3a0f7aa549cf08749628f4d2e4b07.jpg",
