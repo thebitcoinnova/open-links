@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">OpenLinks social preview</title>
+  <desc id="desc">Staci Costopoulos | Bitcoin educator, podcast host, and community builder. Own your links. Host of Bitcoin Nova Podcast, Bitcoin educator, and community leader sharing shows, links, and projects.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05080e" />
+      <stop offset="58%" stop-color="#0c1420" />
+      <stop offset="100%" stop-color="#152636" />
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#50e3c2" />
+      <stop offset="100%" stop-color="#7cf2d8" stop-opacity="0.28" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="36" fill="url(#bg)" />
+  <path d="M0 0 H1200 V180 C1085 144 965 126 842 126 C739 126 633 138 523 162 C357 198 170 226 0 184 Z" fill="#f5f7fb" fill-opacity="0.02" />
+  <rect x="96" y="98" width="248" height="34" rx="17" fill="#f5f7fb" fill-opacity="0.07" stroke="#f5f7fb" stroke-opacity="0.09" />
+  <text x="120.98" y="120.42" font-family="'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif" font-size="16" font-weight="700" fill="#d7e2f7" letter-spacing="0.18em">OPEN SOURCE LINKS</text>
+<text x="96" y="248" font-family="'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif" font-size="94" font-weight="700" fill="#f5f7fb">Staci</text>
+<text x="96" y="336" font-family="'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif" font-size="94" font-weight="700" fill="#f5f7fb">Costopoulos |</text>
+  <text x="96" y="430" font-family="'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif" font-size="46" font-weight="700" fill="#7cf2d8">Own your links</text>
+<text x="96" y="488" font-family="'Manrope', 'IBM Plex Sans', 'Segoe UI', sans-serif" font-size="28" font-weight="600" fill="#c0cadf">Host of Bitcoin Nova Podcast, Bitcoin educator, and</text>
+<text x="96" y="522" font-family="'Manrope', 'IBM Plex Sans', 'Segoe UI', sans-serif" font-size="28" font-weight="600" fill="#c0cadf">community leader sharing shows, links, and projects.</text>
+  <rect x="96" y="500" width="372" height="2" rx="1" fill="url(#accentLine)" />
+  <g transform="translate(736 118) scale(3.88)">
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#f5f7fb" stroke-width="8.5" />
+<path d="M38.5961 27.1921 V72.8079 H61.4039" fill="none" stroke="#f5f7fb" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <g transform="translate(96 562)">
+    <rect x="0" y="-22" width="295" height="33" rx="17" fill="#09111b" fill-opacity="0.78" stroke="#f5f7fb" stroke-opacity="0.12" />
+    <text x="19.24" y="-2" font-family="'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif" font-size="14" font-weight="700" fill="#f5f7fb" letter-spacing="0.14em">STATIC / OPEN SOURCE / YOURS</text>
+  </g>
+</svg>
