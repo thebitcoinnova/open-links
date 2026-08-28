@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-27T03:02:33.931Z",
+  "generatedAt": "2026-08-28T19:12:09.881Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -36,11 +36,11 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-08-27T03:00:37.931Z",
+        "enrichedAt": "2026-08-28T19:10:29.190Z",
         "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 613,
-        "subscribersCountRaw": "613 subscribers"
+        "subscribersCount": 612,
+        "subscribersCountRaw": "612 subscribers"
       }
     },
     "fountain": {
@@ -116,8 +116,8 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-07-25T17:36:26.966Z"
+        "enrichmentReason": "public_cache",
+        "enrichedAt": "2026-04-07T10:37:09.694Z"
       }
     },
     "altair-tech": {
@@ -129,8 +129,8 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-06-25T20:29:06.416Z"
+        "enrichmentReason": "metadata_regression",
+        "enrichedAt": "2026-08-28T19:10:29.190Z"
       },
       "referral": {
         "kind": "affiliate",
@@ -168,8 +168,8 @@
         "handle": "bitcoinnova",
         "sourceLabel": "signup.cluborange.org",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-08-27T03:00:37.931Z",
+        "enrichmentReason": "public_cache",
+        "enrichedAt": "2026-04-01T09:40:23.555Z",
         "profileDescription": "Chicago hairstylist. https://www.angieshairstudio.us/ Accepting Bitcoin for payment.",
         "profileImage": "https://orange-pill-app-dev.s3.amazonaws.com/avatars/b5d546cd-01af-4c37-bd52-a3d64953606c"
       },
@@ -236,15 +236,15 @@
       "metadata": {
         "title": "The Bitcoin Nova Podcast",
         "description": "Staci drives Bitcoin education through raw, human centered conversation. Known for translating real world moments into clear, relatable insights on Bitcoin adoption and self custody, she brings clarity without jargon or fear. As host of The Bitcoin Nova Podcast, Staci delivers thoughtful, unfiltered interviews focused on Bitcoin, energy, sovereignty, and the future of money. Her work emphasizes honest dialogue, community engagement, and practical understanding over noise. Staci is also active in grassroots Bitcoin advocacy and regularly supports community discussions and educational spaces.",
-        "image": "https://hugh.cdn.rumble.cloud/video/z8/M/0/K/D/M0KDa.caa-TheBitcoinNova-szrx8e.jpeg",
-        "ogImage": "https://hugh.cdn.rumble.cloud/video/z8/M/0/K/D/M0KDa.caa-TheBitcoinNova-szrx8e.jpeg",
+        "image": "https://1a-1791.com/video/z8/M/0/K/D/M0KDa.caa-TheBitcoinNova-szrx8e.jpeg",
+        "ogImage": "https://1a-1791.com/video/z8/M/0/K/D/M0KDa.caa-TheBitcoinNova-szrx8e.jpeg",
         "handle": "c-7752998",
         "sourceLabel": "rumble.com",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-08-27T03:00:37.931Z",
+        "enrichmentReason": "public_cache",
+        "enrichedAt": "2026-04-01T09:40:23.555Z",
         "profileDescription": "Staci drives Bitcoin education through raw, human centered conversation. Known for translating real world moments into clear, relatable insights on Bitcoin adoption and self custody, she brings clarity without jargon or fear. As host of The Bitcoin Nova Podcast, Staci delivers thoughtful, unfiltered interviews focused on Bitcoin, energy, sovereignty, and the future of money. Her work emphasizes honest dialogue, community engagement, and practical understanding over noise. Staci is also active in grassroots Bitcoin advocacy and regularly supports community discussions and educational spaces.",
-        "profileImage": "https://hugh.cdn.rumble.cloud/video/z8/M/0/K/D/M0KDa.baa.1-TheBitcoinNova-t8kb1o.jpeg",
+        "profileImage": "https://1a-1791.com/video/z8/M/0/K/D/M0KDa.baa.1-TheBitcoinNova-t8kb1o.jpeg",
         "followersCount": 23,
         "followersCountRaw": "23 Followers"
       }
@@ -260,10 +260,10 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-08-27T03:00:37.931Z",
+        "enrichedAt": "2026-08-28T19:10:29.190Z",
         "profileImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 24400,
-        "subscribersCountRaw": "24.4K subscribers"
+        "subscribersCount": 24500,
+        "subscribersCountRaw": "24.5K subscribers"
       }
     },
     "the-bitcoin-nova-x": {
@@ -275,11 +275,11 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-08-25T07:38:02.170Z",
+        "enrichedAt": "2026-08-28T19:11:34.483Z",
         "profileDescription": "Head of Community at Sell.conduit.market Host of The Bitcoin Nova Podcast @Stacingsats Links.thebitcoinnova.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 666,
-        "followersCountRaw": "666 Followers",
+        "followersCount": 667,
+        "followersCountRaw": "667 Followers",
         "followingCount": 655,
         "followingCountRaw": "655 Following"
       }
@@ -293,13 +293,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-08-26T07:40:41.153Z",
+        "enrichedAt": "2026-08-28T19:11:51.945Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @ Conduit.Market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
-        "followersCount": 5872,
-        "followersCountRaw": "5,872 Followers",
-        "followingCount": 4558,
-        "followingCountRaw": "4,558 Following"
+        "followersCount": 5875,
+        "followersCountRaw": "5,875 Followers",
+        "followingCount": 4564,
+        "followingCountRaw": "4,564 Following"
       }
     }
   }
