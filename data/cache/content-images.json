@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T12:56:26.615Z",
+  "generatedAt": "2026-08-30T12:30:33.788Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/4a992fc355aded365589d438e23b1e86c41f1ed53c4a6674644178fe002bec65.png",
@@ -182,16 +182,16 @@
       "bytes": 179684
     },
     "link:audible-the-bitcoin-nova-podcast:image": {
-      "resolvedPath": "cache/content-images/80eac3715e52ca766c4d83bb3a2b3e81781ee09dd8cd6a9179b77dd7a506c628.jpg",
-      "updatedAt": "2026-08-25T07:39:07.346Z",
+      "resolvedPath": "cache/content-images/3b92db79aab8c5c5ccc195d6b5305927bcc7a8709b72fdce03c8d4c44f83a529.jpg",
+      "updatedAt": "2026-08-30T12:30:32.332Z",
       "contentType": "image/jpeg",
-      "bytes": 77522
+      "bytes": 77824
     },
     "link:the-bitcoin-nova-podcast-on-amazon-music:image": {
-      "resolvedPath": "cache/content-images/80eac3715e52ca766c4d83bb3a2b3e81781ee09dd8cd6a9179b77dd7a506c628.jpg",
-      "updatedAt": "2026-08-25T07:39:07.745Z",
+      "resolvedPath": "cache/content-images/3b92db79aab8c5c5ccc195d6b5305927bcc7a8709b72fdce03c8d4c44f83a529.jpg",
+      "updatedAt": "2026-08-30T12:30:32.721Z",
       "contentType": "image/jpeg",
-      "bytes": 77522
+      "bytes": 77824
     },
     "link:rumble:image": {
       "resolvedPath": "cache/content-images/0a1c23169a2aa426138b20ec24e2115c30e58845cedf80a7d33a768c793af547.jpg",

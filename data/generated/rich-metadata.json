@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T12:55:59.283Z",
+  "generatedAt": "2026-08-30T12:30:07.740Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -275,13 +275,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-08-29T12:55:20.399Z",
+        "enrichedAt": "2026-08-30T12:29:28.799Z",
         "profileDescription": "Head of Community at Sell.conduit.market Host of The Bitcoin Nova Podcast @Stacingsats Links.thebitcoinnova.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
         "followersCount": 666,
         "followersCountRaw": "666 Followers",
-        "followingCount": 655,
-        "followingCountRaw": "655 Following"
+        "followingCount": 656,
+        "followingCountRaw": "656 Following"
       }
     },
     "x": {
@@ -293,11 +293,11 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-08-29T12:55:39.384Z",
+        "enrichedAt": "2026-08-30T12:29:47.578Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @ Conduit.Market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
-        "followersCount": 5876,
-        "followersCountRaw": "5,876 Followers",
+        "followersCount": 5875,
+        "followersCountRaw": "5,875 Followers",
         "followingCount": 4565,
         "followingCountRaw": "4,565 Following"
       }
