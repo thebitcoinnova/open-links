@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-30T12:30:07.740Z",
+  "generatedAt": "2026-08-31T14:42:24.142Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -129,8 +129,8 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_regression",
-        "enrichedAt": "2026-08-29T12:55:59.283Z"
+        "enrichmentReason": "public_cache",
+        "enrichedAt": "2026-04-07T10:37:09.694Z"
       },
       "referral": {
         "kind": "affiliate",
@@ -275,13 +275,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-08-30T12:29:28.799Z",
+        "enrichedAt": "2026-08-31T14:41:46.367Z",
         "profileDescription": "Head of Community at Sell.conduit.market Host of The Bitcoin Nova Podcast @Stacingsats Links.thebitcoinnova.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 666,
-        "followersCountRaw": "666 Followers",
-        "followingCount": 656,
-        "followingCountRaw": "656 Following"
+        "followersCount": 667,
+        "followersCountRaw": "667 Followers",
+        "followingCount": 657,
+        "followingCountRaw": "657 Following"
       }
     },
     "x": {
@@ -293,13 +293,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-08-30T12:29:47.578Z",
-        "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @ Conduit.Market 💜 Connecting energy, creating a brighter world ✨",
+        "enrichedAt": "2026-08-31T14:42:04.540Z",
+        "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @Conduit_market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
-        "followersCount": 5875,
-        "followersCountRaw": "5,875 Followers",
-        "followingCount": 4565,
-        "followingCountRaw": "4,565 Following"
+        "followersCount": 5881,
+        "followersCountRaw": "5,881 Followers",
+        "followingCount": 4582,
+        "followingCountRaw": "4,582 Following"
       }
     }
   }
