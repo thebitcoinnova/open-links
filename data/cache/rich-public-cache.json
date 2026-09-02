@@ -14,7 +14,7 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io"
       },
-      "lastModified": "Tue, 01 Sep 2026 12:14:45 GMT"
+      "lastModified": "Wed, 02 Sep 2026 10:42:40 GMT"
     },
     "bitcoin-sovryn": {
       "linkId": "bitcoin-sovryn",
@@ -27,7 +27,7 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Logo_BitcoinSovryn_HeadBanner.png?v=1785658247&width=500",
         "sourceLabel": "bitcoinsovryn.com"
       },
-      "etag": "\"page_cache:93620306263:IndexController:1c79c0258eea3f87aee8727b24ae72ab:c31895c342e72fa1b9fb688a4d6107fa\""
+      "etag": "\"page_cache:93620306263:IndexController:bc5dbe856a0150e46142e1e7488d152d:36a2cfb0eb9d515b9395e060cf6b9dcb\""
     },
     "club-orange": {
       "linkId": "club-orange",
@@ -43,19 +43,19 @@
         "sourceLabel": "signup.cluborange.org",
         "profileImage": "https://cdn.prod.website-files.com/6369265d66eb946d6a92ce82/65b33128be4fad42734db544_Bitcoin_Social_Layer.webp"
       },
-      "lastModified": "Tue, 01 Sep 2026 12:16:13 GMT"
+      "lastModified": "Wed, 02 Sep 2026 11:54:01 GMT"
     },
     "fountain": {
       "linkId": "fountain",
       "sourceUrl": "https://fountain.fm/show/ACfqgNSBFCxAxuB5jXgu",
       "capturedAt": "2026-04-07T10:37:09.694Z",
-      "updatedAt": "2026-08-25T07:36:55.264Z",
+      "updatedAt": "2026-09-02T11:53:33.804Z",
       "metadata": {
         "title": "The Bitcoin Nova Podcast • Listen on Fountain",
         "description": "Welcome to The Bitcoin Nova ⚡️\nBitcoin is more than money. It’s a movement built by people choosing ownership, freedom, and a different way forward.\nI’m Staci, The Bitcoin Nova: podcaster, community builder, Bitcoiner, and Head of Community at Conduit.\nI share conversations with the builders, creators, entrepreneurs, educators, and everyday Bitcoiners who are actually moving this space forward. We talk Bitcoin, self-sovereignty, open protocols, culture, and what it looks like to actually use Bitcoin in the real world.\n🎙️ Interviews & conversations   \n⚡ Bitcoin, Nostr & open commerce   \n🧡 Community, creators & builders   \n🚀 Stories from the people pushing Bitcoin forward",
-        "image": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
-        "ogImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
-        "twitterImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
+        "image": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
+        "ogImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
+        "twitterImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
         "sourceLabel": "fountain.fm"
       }
     },
@@ -133,7 +133,7 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk"
       },
-      "etag": "\"page_cache:94205477246:IndexController:941356599089dba55201a898feb412d0:afc545d741fbacc50a78c5fafb2fb53f\""
+      "etag": "\"page_cache:94205477246:IndexController:7f140735a5a3c62492cb29e95770dc9b:68018e29a81c690a35d9e65db5280123\""
     },
     "the-bitcoin-adviser-the-bitcoin-nova": {
       "linkId": "the-bitcoin-adviser-the-bitcoin-nova",
@@ -148,7 +148,7 @@
         "twitterImage": "https://content.thebitcoinadviser.com/hubfs/block3.png",
         "sourceLabel": "content.thebitcoinadviser.com"
       },
-      "lastModified": "Tue, 01 Sep 2026 12:16:08 GMT"
+      "lastModified": "Wed, 02 Sep 2026 11:53:57 GMT"
     },
     "the-bitcoin-nova": {
       "linkId": "the-bitcoin-nova",
@@ -163,13 +163,13 @@
         "twitterImage": "https://imgproxy.fourthwall.dev/NAyaO0KRbLeRPi9fCxfKafCsg9joK0bCPE9Mz0Jdm-A/w:1200/sm:1/enc/FNEq3fHnhor1KeC-/uNNaBGJ5cCaEPfgy/4aVqCKBdDo49WVWy/OK9b3ZlOTvaqhOxy/LBUiJuwWy4p9duQT/_q7k1xYKVn2qv7TA/8KZ9BS58ETH3yKSD/M80b5OUDjWGzwSKC/ZXUNGRnLhvSolD8Y/ztjXJ93Y0yFy3xTz/4hwl85Quf2Ii7-47/t7fGJG6IRJ43JtIu/28C-YgJr6fM7-yMN/Vrzr8A5Y0Y5QfFlA/pKltqUli_-7yc_eq/f_8vLp-uumS2fmKc.png",
         "sourceLabel": "bitcoinnova.store"
       },
-      "etag": "W/\"b90993eefe10620df5990f3b284de52c\""
+      "etag": "W/\"834f8fb17a63f29fb15df27557b1bbd7\""
     },
     "the-bitcoin-nova-x": {
       "linkId": "the-bitcoin-nova-x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fthebitcoinnova&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-05-08T22:08:31.327Z",
-      "updatedAt": "2026-09-01T12:16:51.217Z",
+      "updatedAt": "2026-09-02T11:54:40.999Z",
       "metadata": {
         "title": "@TheBitcoinNova on X",
         "description": "Posts and updates from @TheBitcoinNova on X.",
@@ -177,12 +177,12 @@
         "image": "https://unavatar.io/x/TheBitcoinNova",
         "sourceLabel": "x.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 670,
-        "followersCountRaw": "670 Followers",
-        "followingCount": 657,
-        "followingCountRaw": "657 Following"
+        "followersCount": 677,
+        "followersCountRaw": "677 Followers",
+        "followingCount": 659,
+        "followingCountRaw": "659 Following"
       },
-      "lastModified": "Tue, 01 Sep 2026 12:16:14 GMT"
+      "lastModified": "Wed, 02 Sep 2026 11:54:02 GMT"
     },
     "the-bitcoin-way": {
       "linkId": "the-bitcoin-way",
@@ -197,13 +197,13 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com"
       },
-      "lastModified": "Tue, 01 Sep 2026 12:16:11 GMT"
+      "lastModified": "Wed, 02 Sep 2026 11:54:00 GMT"
     },
     "x": {
       "linkId": "x",
       "sourceUrl": "https://publish.twitter.com/oembed?url=https%3A%2F%2Ftwitter.com%2Fstacingsats&omit_script=true&hide_thread=true&dnt=true",
       "capturedAt": "2026-07-23T17:26:18.572Z",
-      "updatedAt": "2026-09-01T12:17:08.787Z",
+      "updatedAt": "2026-09-02T11:55:00.431Z",
       "metadata": {
         "title": "@StacingSats on X",
         "description": "Posts and updates from @StacingSats on X.",
@@ -213,10 +213,10 @@
         "profileImage": "https://unavatar.io/x/StacingSats",
         "followersCount": 5883,
         "followersCountRaw": "5,883 Followers",
-        "followingCount": 4582,
-        "followingCountRaw": "4,582 Following"
+        "followingCount": 4581,
+        "followingCountRaw": "4,581 Following"
       },
-      "lastModified": "Tue, 01 Sep 2026 12:16:14 GMT"
+      "lastModified": "Wed, 02 Sep 2026 11:54:03 GMT"
     },
     "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno": {
       "linkId": "xstaci-sweet-biddi-beats-by-thebitcoinnova-suno",
@@ -236,15 +236,15 @@
       "linkId": "youtube",
       "sourceUrl": "https://www.youtube.com/@StaciNova/about",
       "capturedAt": "2026-04-01T09:40:23.555Z",
-      "updatedAt": "2026-08-27T18:00:42.026Z",
+      "updatedAt": "2026-09-02T11:53:33.804Z",
       "metadata": {
         "title": "The Bitcoin Nova Podcast",
         "description": "⚡️ Welcome to The Bitcoin Nova ⚡️Bitcoin is more than money. It’s a movement built by people choosing ownership, freedom, and a different way forward.I’m Sta...",
-        "image": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
-        "ogImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
-        "twitterImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
+        "image": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
+        "ogImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
+        "twitterImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
         "sourceLabel": "youtube.com",
-        "profileImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
+        "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
         "subscribersCount": 24500,
         "subscribersCountRaw": "24.5K subscribers"
       }

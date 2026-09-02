@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T12:17:27.431Z",
+  "generatedAt": "2026-09-02T11:55:20.350Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -47,13 +47,13 @@
       "metadata": {
         "title": "The Bitcoin Nova Podcast • Listen on Fountain",
         "description": "Welcome to The Bitcoin Nova ⚡️\nBitcoin is more than money. It’s a movement built by people choosing ownership, freedom, and a different way forward.\nI’m Staci, The Bitcoin Nova: podcaster, community builder, Bitcoiner, and Head of Community at Conduit.\nI share conversations with the builders, creators, entrepreneurs, educators, and everyday Bitcoiners who are actually moving this space forward. We talk Bitcoin, self-sovereignty, open protocols, culture, and what it looks like to actually use Bitcoin in the real world.\n🎙️ Interviews & conversations   \n⚡ Bitcoin, Nostr & open commerce   \n🧡 Community, creators & builders   \n🚀 Stories from the people pushing Bitcoin forward",
-        "image": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
-        "ogImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
-        "twitterImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
+        "image": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
+        "ogImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
+        "twitterImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
         "sourceLabel": "fountain.fm",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-08-27T03:00:37.931Z"
+        "enrichedAt": "2026-09-02T11:53:33.804Z"
       }
     },
     "satoshoes": {
@@ -253,15 +253,15 @@
       "metadata": {
         "title": "The Bitcoin Nova Podcast",
         "description": "⚡️ Welcome to The Bitcoin Nova ⚡️Bitcoin is more than money. It’s a movement built by people choosing ownership, freedom, and a different way forward.I’m Sta...",
-        "image": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
-        "ogImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
-        "twitterImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
+        "image": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
+        "ogImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
+        "twitterImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
         "handle": "stacinova",
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-08-28T19:10:29.190Z",
-        "profileImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
+        "enrichedAt": "2026-09-02T11:53:33.804Z",
+        "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
         "subscribersCount": 24500,
         "subscribersCountRaw": "24.5K subscribers"
       }
@@ -275,13 +275,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-01T12:16:51.217Z",
+        "enrichedAt": "2026-09-02T11:54:40.999Z",
         "profileDescription": "Head of Community at Sell.conduit.market Host of The Bitcoin Nova Podcast @Stacingsats Links.thebitcoinnova.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 670,
-        "followersCountRaw": "670 Followers",
-        "followingCount": 657,
-        "followingCountRaw": "657 Following"
+        "followersCount": 677,
+        "followersCountRaw": "677 Followers",
+        "followingCount": 659,
+        "followingCountRaw": "659 Following"
       }
     },
     "x": {
@@ -293,13 +293,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-01T12:17:08.787Z",
+        "enrichedAt": "2026-09-02T11:55:00.431Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @Conduit_market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
         "followersCount": 5883,
         "followersCountRaw": "5,883 Followers",
-        "followingCount": 4582,
-        "followingCountRaw": "4,582 Following"
+        "followingCount": 4581,
+        "followingCountRaw": "4,581 Following"
       }
     }
   }

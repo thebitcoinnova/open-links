@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T12:17:27.431Z",
+  "generatedAt": "2026-09-02T11:55:20.350Z",
   "strict": true,
   "summary": {
     "total": 17,
@@ -15,7 +15,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 198.13796800000003,
+      "durationMs": 124.07596900000004,
       "statusCode": 304,
       "message": "Using committed public cache metadata.",
       "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
@@ -62,7 +62,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 234.17835900000006,
+      "durationMs": 266.13581199999993,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
@@ -76,7 +76,7 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:17:27.431Z",
+        "enrichedAt": "2026-09-02T11:55:20.350Z",
         "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
         "subscribersCount": 611,
@@ -91,20 +91,20 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 186.85352899999998,
+      "durationMs": 182.99592400000006,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
       "metadata": {
         "title": "The Bitcoin Nova Podcast • Listen on Fountain",
         "description": "Welcome to The Bitcoin Nova ⚡️\nBitcoin is more than money. It’s a movement built by people choosing ownership, freedom, and a different way forward.\nI’m Staci, The Bitcoin Nova: podcaster, community builder, Bitcoiner, and Head of Community at Conduit.\nI share conversations with the builders, creators, entrepreneurs, educators, and everyday Bitcoiners who are actually moving this space forward. We talk Bitcoin, self-sovereignty, open protocols, culture, and what it looks like to actually use Bitcoin in the real world.\n🎙️ Interviews & conversations   \n⚡ Bitcoin, Nostr & open commerce   \n🧡 Community, creators & builders   \n🚀 Stories from the people pushing Bitcoin forward",
-        "image": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
-        "ogImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
-        "twitterImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---09e71de8-ef83-478b-b258-fda03bc81f9a.jpg",
+        "image": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
+        "ogImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
+        "twitterImage": "https://feeds.fountain.fm/AQ51qsrZAhJEKtSMUc96/files/COVER_ART---DEFAULT---d7a9605c-08db-40e9-9836-d8e38b148543.jpg",
         "sourceLabel": "fountain.fm",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:17:27.431Z"
+        "enrichedAt": "2026-09-02T11:55:20.350Z"
       },
       "blocking": false
     },
@@ -114,7 +114,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 322.78267200000005,
+      "durationMs": 924.927362,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully. Stable public-cache persistence was skipped for this run, so generated output uses the freshly fetched metadata while the tracked cache manifest stays unchanged.",
       "remediation": "Run `bun run enrich:rich:strict:write-cache` to persist the updated public cache entry.",
@@ -126,7 +126,7 @@
         "sourceLabel": "satoshoes.co.uk",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:17:27.431Z"
+        "enrichedAt": "2026-09-02T11:55:20.350Z"
       },
       "blocking": false,
       "referral": {
@@ -143,7 +143,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 186.918872000002,
+      "durationMs": 156.01171799999793,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
@@ -156,7 +156,7 @@
         "sourceLabel": "content.thebitcoinadviser.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:17:27.431Z"
+        "enrichedAt": "2026-09-02T11:55:20.350Z"
       },
       "blocking": false
     },
@@ -166,10 +166,10 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 2827.131580000001,
+      "durationMs": 1953.2437509999982,
       "statusCode": 200,
-      "message": "Preview metadata fetched successfully.",
-      "remediation": "No action required.",
+      "message": "Preview metadata fetched successfully. Stable public-cache persistence was skipped for this run, so generated output uses the freshly fetched metadata while the tracked cache manifest stays unchanged.",
+      "remediation": "Run `bun run enrich:rich:strict:write-cache` to persist the updated public cache entry.",
       "metadata": {
         "title": "Home - MicroSeed",
         "description": "Premium Seed Phrase Backup MicroSeed engraves your entire Bitcoin seed phrase on fireproof, waterproof steel or titanium the size of a coin Unlock Security",
@@ -179,7 +179,7 @@
         "sourceLabel": "microseed.io",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:17:27.431Z"
+        "enrichedAt": "2026-09-02T11:55:20.350Z"
       },
       "blocking": false,
       "referral": {
@@ -197,7 +197,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 497.1544509999985,
+      "durationMs": 235.95069800000056,
       "statusCode": 304,
       "message": "Using committed public cache metadata.",
       "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
@@ -222,7 +222,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 79.48338499999954,
+      "durationMs": 17.93274200000087,
       "statusCode": 304,
       "message": "Using committed public cache metadata.",
       "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
@@ -255,7 +255,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 1008.2825080000002,
+      "durationMs": 295.2161789999991,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully. Stable public-cache persistence was skipped for this run, so generated output uses the freshly fetched metadata while the tracked cache manifest stays unchanged.",
       "remediation": "Run `bun run enrich:rich:strict:write-cache` to persist the updated public cache entry.",
@@ -266,7 +266,7 @@
         "sourceLabel": "bitcoinsovryn.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:17:27.431Z"
+        "enrichedAt": "2026-09-02T11:55:20.350Z"
       },
       "blocking": false,
       "referral": {
@@ -284,7 +284,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 360.6996849999996,
+      "durationMs": 27.87768700000015,
       "statusCode": 304,
       "message": "Using committed public cache metadata.",
       "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
@@ -360,7 +360,7 @@
         "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
         "enrichmentStatus": "skipped",
         "enrichmentReason": "enrichment_disabled",
-        "enrichedAt": "2026-09-01T12:17:27.431Z"
+        "enrichedAt": "2026-09-02T11:55:20.350Z"
       },
       "blocking": false
     },
@@ -370,7 +370,7 @@
       "status": "partial",
       "reason": "metadata_missing",
       "attempts": 2,
-      "durationMs": 216.7961439999999,
+      "durationMs": 151.40476000000126,
       "statusCode": 200,
       "message": "No remote preview metadata found; using manual link.metadata fallback.",
       "remediation": "Manual metadata fallback is active. Optional: improve target-site Open Graph/Twitter metadata to clear this warning.",
@@ -381,7 +381,7 @@
         "sourceLabel": "music.amazon.com",
         "enrichmentStatus": "partial",
         "enrichmentReason": "metadata_missing",
-        "enrichedAt": "2026-09-01T12:17:27.431Z"
+        "enrichedAt": "2026-09-02T11:55:20.350Z"
       },
       "blocking": false,
       "manualFallbackUsed": true,
@@ -397,7 +397,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 381.1405780000023,
+      "durationMs": 348.74689099999887,
       "statusCode": 403,
       "message": "Public metadata fetch failed; using stale committed public cache metadata.",
       "remediation": "Transient fetch failure. Re-run `bun run enrich:rich:strict` later for fresh generated output for 'rumble', then use `bun run enrich:rich:strict:write-cache` if you want to persist the recovered public cache entry.",
@@ -428,22 +428,22 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 443.55123599999934,
+      "durationMs": 496.18716199999835,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
       "metadata": {
         "title": "The Bitcoin Nova Podcast",
         "description": "⚡️ Welcome to The Bitcoin Nova ⚡️Bitcoin is more than money. It’s a movement built by people choosing ownership, freedom, and a different way forward.I’m Sta...",
-        "image": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
-        "ogImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
-        "twitterImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
+        "image": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
+        "ogImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
+        "twitterImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
         "handle": "stacinova",
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:17:27.431Z",
-        "profileImage": "https://yt3.googleusercontent.com/ns_2xOYHR7b_TYF1fmlcjXQYbb4PNiTsd15aqBrTFyeJG17mllxFi_n4pclBJZSw96msEKWiEls=s900-c-k-c0x00ffffff-no-rj",
+        "enrichedAt": "2026-09-02T11:55:20.350Z",
+        "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
         "subscribersCount": 24500,
         "subscribersCountRaw": "24.5K subscribers"
       },
@@ -467,13 +467,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-01T12:16:51.217Z",
+        "enrichedAt": "2026-09-02T11:54:40.999Z",
         "profileDescription": "Head of Community at Sell.conduit.market Host of The Bitcoin Nova Podcast @Stacingsats Links.thebitcoinnova.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 670,
-        "followersCountRaw": "670 Followers",
-        "followingCount": 657,
-        "followingCountRaw": "657 Following"
+        "followersCount": 677,
+        "followersCountRaw": "677 Followers",
+        "followingCount": 659,
+        "followingCountRaw": "659 Following"
       },
       "blocking": false,
       "cacheKey": "the-bitcoin-nova-x",
@@ -497,13 +497,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-01T12:17:08.787Z",
+        "enrichedAt": "2026-09-02T11:55:00.431Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @Conduit_market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
         "followersCount": 5883,
         "followersCountRaw": "5,883 Followers",
-        "followingCount": 4582,
-        "followingCountRaw": "4,582 Following"
+        "followingCount": 4581,
+        "followingCountRaw": "4,581 Following"
       },
       "blocking": false,
       "cacheKey": "x",
