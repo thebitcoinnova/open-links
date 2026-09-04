@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T11:53:14.451Z",
+  "generatedAt": "2026-09-04T12:00:26.324Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -36,11 +36,11 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-01T12:15:42.275Z",
+        "enrichedAt": "2026-09-04T11:58:36.632Z",
         "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 611,
-        "subscribersCountRaw": "611 subscribers"
+        "subscribersCount": 610,
+        "subscribersCountRaw": "610 subscribers"
       }
     },
     "fountain": {
@@ -275,11 +275,11 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-03T11:52:36.916Z",
+        "enrichedAt": "2026-09-04T11:59:44.834Z",
         "profileDescription": "Head of Community at Sell.conduit.market Host of The Bitcoin Nova Podcast @Stacingsats Links.thebitcoinnova.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 678,
-        "followersCountRaw": "678 Followers",
+        "followersCount": 682,
+        "followersCountRaw": "682 Followers",
         "followingCount": 664,
         "followingCountRaw": "664 Following"
       }
@@ -293,13 +293,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-03T11:52:55.372Z",
+        "enrichedAt": "2026-09-04T12:00:04.909Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @Conduit_market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
-        "followersCount": 5882,
-        "followersCountRaw": "5,882 Followers",
-        "followingCount": 4586,
-        "followingCountRaw": "4,586 Following"
+        "followersCount": 5883,
+        "followersCountRaw": "5,883 Followers",
+        "followingCount": 4588,
+        "followingCountRaw": "4,588 Following"
       }
     }
   }

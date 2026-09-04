@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T11:55:49.307Z",
+  "generatedAt": "2026-09-04T12:00:58.463Z",
   "bySlot": {
     "link:the-bitcoin-nova:image": {
       "resolvedPath": "cache/content-images/4a992fc355aded365589d438e23b1e86c41f1ed53c4a6674644178fe002bec65.png",
@@ -68,34 +68,34 @@
       "bytes": 252032
     },
     "link:satoshoes:image": {
-      "resolvedPath": "cache/content-images/1a9aa6663ba831dda77aeb673278e6a0b9432ae0573092d40aae0d9bcf0ca0b0.png",
-      "updatedAt": "2026-08-25T07:39:06.112Z",
+      "resolvedPath": "cache/content-images/3b7b4aa43c85fb19b84528362a57dd4d5a625157f1995d8f67e7eee44a56b8dd.png",
+      "updatedAt": "2026-09-04T12:00:53.133Z",
       "contentType": "image/png",
-      "bytes": 163771
+      "bytes": 113325
     },
     "link:satoshoes:ogImage": {
-      "resolvedPath": "cache/content-images/1a9aa6663ba831dda77aeb673278e6a0b9432ae0573092d40aae0d9bcf0ca0b0.png",
-      "updatedAt": "2026-08-25T07:39:06.406Z",
+      "resolvedPath": "cache/content-images/3b7b4aa43c85fb19b84528362a57dd4d5a625157f1995d8f67e7eee44a56b8dd.png",
+      "updatedAt": "2026-09-04T12:00:53.841Z",
       "contentType": "image/png",
-      "bytes": 163771
+      "bytes": 113325
     },
     "link:the-bitcoin-adviser-the-bitcoin-nova:image": {
-      "resolvedPath": "cache/content-images/c653a3a15421b6450b50a105d03bdd7b12ae92a328a3cb123d7ce65466654a8e.png",
-      "updatedAt": "2026-08-27T18:03:01.123Z",
+      "resolvedPath": "cache/content-images/472fe0cdabab2e48409947e489f903f5c38ca805d72093179b5c9373b07a9fb9.png",
+      "updatedAt": "2026-09-04T12:00:53.969Z",
       "contentType": "image/png",
-      "bytes": 801483
+      "bytes": 836682
     },
     "link:the-bitcoin-adviser-the-bitcoin-nova:ogImage": {
-      "resolvedPath": "cache/content-images/c653a3a15421b6450b50a105d03bdd7b12ae92a328a3cb123d7ce65466654a8e.png",
-      "updatedAt": "2026-08-27T18:03:01.325Z",
+      "resolvedPath": "cache/content-images/472fe0cdabab2e48409947e489f903f5c38ca805d72093179b5c9373b07a9fb9.png",
+      "updatedAt": "2026-09-04T12:00:54.581Z",
       "contentType": "image/png",
-      "bytes": 801483
+      "bytes": 836682
     },
     "link:the-bitcoin-adviser-the-bitcoin-nova:twitterImage": {
-      "resolvedPath": "cache/content-images/c653a3a15421b6450b50a105d03bdd7b12ae92a328a3cb123d7ce65466654a8e.png",
-      "updatedAt": "2026-08-27T18:03:01.417Z",
+      "resolvedPath": "cache/content-images/472fe0cdabab2e48409947e489f903f5c38ca805d72093179b5c9373b07a9fb9.png",
+      "updatedAt": "2026-09-04T12:00:54.644Z",
       "contentType": "image/png",
-      "bytes": 801483
+      "bytes": 836682
     },
     "link:home-microseed:image": {
       "resolvedPath": "cache/content-images/481d4fb1a2bcd6dbce9991f9a6c42c0b384fe34b3fbb09f200fadc30e494797f.jpg",
