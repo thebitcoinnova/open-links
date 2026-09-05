@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T12:00:26.324Z",
+  "generatedAt": "2026-09-05T11:14:25.022Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -129,8 +129,8 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-04-07T10:37:09.694Z"
+        "enrichmentReason": "metadata_complete",
+        "enrichedAt": "2026-09-05T11:03:49.307Z"
       },
       "referral": {
         "kind": "affiliate",
