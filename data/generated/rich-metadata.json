@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-05T11:14:25.022Z",
+  "generatedAt": "2026-09-06T11:29:10.342Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -36,11 +36,11 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-04T11:58:36.632Z",
+        "enrichedAt": "2026-09-06T11:27:34.425Z",
         "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 610,
-        "subscribersCountRaw": "610 subscribers"
+        "subscribersCount": 609,
+        "subscribersCountRaw": "609 subscribers"
       }
     },
     "fountain": {
@@ -129,8 +129,8 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-05T11:03:49.307Z"
+        "enrichmentReason": "public_cache",
+        "enrichedAt": "2026-04-07T10:37:09.694Z"
       },
       "referral": {
         "kind": "affiliate",
@@ -260,10 +260,10 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-02T11:53:33.804Z",
+        "enrichedAt": "2026-09-06T11:27:34.425Z",
         "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 24500,
-        "subscribersCountRaw": "24.5K subscribers"
+        "subscribersCount": 24600,
+        "subscribersCountRaw": "24.6K subscribers"
       }
     },
     "the-bitcoin-nova-x": {
@@ -275,11 +275,11 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-04T11:59:44.834Z",
+        "enrichedAt": "2026-09-06T11:28:36.222Z",
         "profileDescription": "Head of Community at Sell.conduit.market Host of The Bitcoin Nova Podcast @Stacingsats Links.thebitcoinnova.com",
         "profileImage": "https://unavatar.io/x/TheBitcoinNova",
-        "followersCount": 682,
-        "followersCountRaw": "682 Followers",
+        "followersCount": 684,
+        "followersCountRaw": "684 Followers",
         "followingCount": 664,
         "followingCountRaw": "664 Following"
       }
@@ -293,13 +293,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-04T12:00:04.909Z",
+        "enrichedAt": "2026-09-06T11:28:52.764Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @Conduit_market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
-        "followersCount": 5883,
-        "followersCountRaw": "5,883 Followers",
-        "followingCount": 4588,
-        "followingCountRaw": "4,588 Following"
+        "followersCount": 5886,
+        "followersCountRaw": "5,886 Followers",
+        "followingCount": 4590,
+        "followingCountRaw": "4,590 Following"
       }
     }
   }
