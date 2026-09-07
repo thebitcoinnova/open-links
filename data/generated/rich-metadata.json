@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-06T11:29:10.342Z",
+  "generatedAt": "2026-09-07T13:19:19.840Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -129,8 +129,8 @@
         "twitterImage": "https://altairtech.io/wp-content/uploads/2022/07/1648917687084.jpg",
         "sourceLabel": "altairtech.io",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-04-07T10:37:09.694Z"
+        "enrichmentReason": "metadata_complete",
+        "enrichedAt": "2026-09-07T13:10:57.996Z"
       },
       "referral": {
         "kind": "affiliate",
@@ -260,10 +260,10 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-06T11:27:34.425Z",
+        "enrichedAt": "2026-09-07T13:10:57.996Z",
         "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 24600,
-        "subscribersCountRaw": "24.6K subscribers"
+        "subscribersCount": 24700,
+        "subscribersCountRaw": "24.7K subscribers"
       }
     },
     "the-bitcoin-nova-x": {
@@ -293,13 +293,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-06T11:28:52.764Z",
+        "enrichedAt": "2026-09-07T13:19:03.825Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @Conduit_market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
-        "followersCount": 5886,
-        "followersCountRaw": "5,886 Followers",
-        "followingCount": 4590,
-        "followingCountRaw": "4,590 Following"
+        "followersCount": 5883,
+        "followersCountRaw": "5,883 Followers",
+        "followingCount": 4588,
+        "followingCountRaw": "4,588 Following"
       }
     }
   }
