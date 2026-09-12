@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T12:08:48.700Z",
+  "generatedAt": "2026-09-12T11:32:48.904Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -293,13 +293,13 @@
         "sourceLabel": "x.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-09-07T13:19:03.825Z",
+        "enrichedAt": "2026-09-12T11:32:29.767Z",
         "profileDescription": "🎙️ Host of @TheBitcoinNova | The Bitcoin Army Community Leader | Head of Community @Conduit_market 💜 Connecting energy, creating a brighter world ✨",
         "profileImage": "https://unavatar.io/x/StacingSats",
-        "followersCount": 5883,
-        "followersCountRaw": "5,883 Followers",
-        "followingCount": 4588,
-        "followingCountRaw": "4,588 Following"
+        "followersCount": 5893,
+        "followersCountRaw": "5,893 Followers",
+        "followingCount": 4592,
+        "followingCountRaw": "4,592 Following"
       }
     }
   }
