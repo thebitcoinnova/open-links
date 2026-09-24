@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-23T12:38:52.254Z",
+  "generatedAt": "2026-09-24T12:38:16.509Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -116,8 +116,8 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-04-07T10:37:09.694Z"
+        "enrichmentReason": "metadata_complete",
+        "enrichedAt": "2026-09-24T12:27:12.707Z"
       }
     },
     "altair-tech": {
@@ -260,10 +260,10 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:27:51.163Z",
+        "enrichedAt": "2026-09-24T12:27:12.707Z",
         "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 29700,
-        "subscribersCountRaw": "29.7K subscribers"
+        "subscribersCount": 30300,
+        "subscribersCountRaw": "30.3K subscribers"
       }
     },
     "the-bitcoin-nova-x": {

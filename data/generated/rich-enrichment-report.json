@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-23T12:38:52.254Z",
+  "generatedAt": "2026-09-24T12:38:16.509Z",
   "strict": true,
   "summary": {
     "total": 17,
@@ -15,7 +15,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 172.06060100000002,
+      "durationMs": 221.66071399999998,
       "statusCode": 304,
       "message": "Using committed public cache metadata.",
       "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
@@ -62,7 +62,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 251.22086399999995,
+      "durationMs": 356.292066,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
@@ -76,7 +76,7 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:38:52.254Z",
+        "enrichedAt": "2026-09-24T12:38:16.509Z",
         "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
         "subscribersCount": 602,
@@ -91,7 +91,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 132.52765699999998,
+      "durationMs": 199.34112300000004,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
@@ -104,7 +104,7 @@
         "sourceLabel": "fountain.fm",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:38:52.254Z"
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
       "blocking": false
     },
@@ -114,7 +114,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 254.0157589999999,
+      "durationMs": 460.48921600000017,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully. Stable public-cache persistence was skipped for this run, so generated output uses the freshly fetched metadata while the tracked cache manifest stays unchanged.",
       "remediation": "Run `bun run enrich:rich:strict:write-cache` to persist the updated public cache entry.",
@@ -126,7 +126,7 @@
         "sourceLabel": "satoshoes.co.uk",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:38:52.254Z"
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
       "blocking": false,
       "referral": {
@@ -143,7 +143,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 267.1438139999991,
+      "durationMs": 328.39908899999864,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
@@ -156,7 +156,7 @@
         "sourceLabel": "content.thebitcoinadviser.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:38:52.254Z"
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
       "blocking": false
     },
@@ -166,7 +166,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 2687.894252000002,
+      "durationMs": 3411.3649149999983,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
@@ -179,7 +179,7 @@
         "sourceLabel": "microseed.io",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:38:52.254Z"
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
       "blocking": false,
       "referral": {
@@ -195,12 +195,12 @@
       "linkId": "the-bitcoin-way",
       "url": "http://www.thebitcoinway.com/bitcoinnova",
       "status": "fetched",
-      "reason": "public_cache",
+      "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 272.99449500000264,
-      "statusCode": 304,
-      "message": "Using committed public cache metadata.",
-      "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
+      "durationMs": 440.18427299999894,
+      "statusCode": 200,
+      "message": "Preview metadata fetched successfully. Stable public-cache persistence was skipped for this run, so generated output uses the freshly fetched metadata while the tracked cache manifest stays unchanged.",
+      "remediation": "Run `bun run enrich:rich:strict:write-cache` to persist the updated public cache entry.",
       "metadata": {
         "title": "Bitcoin Nova – Bitcoin YouTube Channel",
         "description": "See what Bitcoin Nova has to say about us. Real feedback from someone securing their Bitcoin the right way.",
@@ -209,12 +209,10 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-04-07T10:37:09.694Z"
+        "enrichmentReason": "metadata_complete",
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
-      "blocking": false,
-      "cacheKey": "the-bitcoin-way",
-      "cacheCapturedAt": "2026-04-07T10:37:09.694Z"
+      "blocking": false
     },
     {
       "linkId": "altair-tech",
@@ -222,7 +220,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 162.92589900000166,
+      "durationMs": 245.30513599999904,
       "statusCode": 304,
       "message": "Using committed public cache metadata.",
       "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
@@ -255,7 +253,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 838.7144679999983,
+      "durationMs": 590.7511599999998,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully. Stable public-cache persistence was skipped for this run, so generated output uses the freshly fetched metadata while the tracked cache manifest stays unchanged.",
       "remediation": "Run `bun run enrich:rich:strict:write-cache` to persist the updated public cache entry.",
@@ -266,7 +264,7 @@
         "sourceLabel": "bitcoinsovryn.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:38:52.254Z"
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
       "blocking": false,
       "referral": {
@@ -284,7 +282,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 234.47200099999827,
+      "durationMs": 126.90312599999743,
       "statusCode": 304,
       "message": "Using committed public cache metadata.",
       "remediation": "No action required. Stable public-cache refreshes are explicit; run `bun run enrich:rich:strict:write-cache` when you want to persist fetched public metadata changes.",
@@ -360,7 +358,7 @@
         "image": "https://m.media-amazon.com/images/I/51kpmcJOswL._SL10_UR1600,800_CR200,50,1200,630_CLa%7C1200,630%7C51kpmcJOswL.jpg%7C0,0,1200,630+82,82,465,465_PJAdblSocialShare-Gradientoverlay-largeasin-0to70,TopLeft,0,0_PJAdblSocialShare-AudibleLogo-Large,TopLeft,600,270_OU01_ZBLISTENING%20ON,617,216,52,500,AudibleSansMd,30,255,255,255_PJAdblSocialShare-PodcastIcon-Small,TopLeft,1094,50.jpg",
         "enrichmentStatus": "skipped",
         "enrichmentReason": "enrichment_disabled",
-        "enrichedAt": "2026-09-23T12:38:52.254Z"
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
       "blocking": false
     },
@@ -370,7 +368,7 @@
       "status": "partial",
       "reason": "metadata_missing",
       "attempts": 2,
-      "durationMs": 166.30133099999875,
+      "durationMs": 186.1142690000015,
       "statusCode": 200,
       "message": "No remote preview metadata found; using manual link.metadata fallback.",
       "remediation": "Manual metadata fallback is active. Optional: improve target-site Open Graph/Twitter metadata to clear this warning.",
@@ -381,7 +379,7 @@
         "sourceLabel": "music.amazon.com",
         "enrichmentStatus": "partial",
         "enrichmentReason": "metadata_missing",
-        "enrichedAt": "2026-09-23T12:38:52.254Z"
+        "enrichedAt": "2026-09-24T12:38:16.509Z"
       },
       "blocking": false,
       "manualFallbackUsed": true,
@@ -397,7 +395,7 @@
       "status": "fetched",
       "reason": "public_cache",
       "attempts": 2,
-      "durationMs": 294.93541200000254,
+      "durationMs": 377.22680799999944,
       "statusCode": 403,
       "message": "Public metadata fetch failed; using stale committed public cache metadata.",
       "remediation": "Transient fetch failure. Re-run `bun run enrich:rich:strict` later for fresh generated output for 'rumble', then use `bun run enrich:rich:strict:write-cache` if you want to persist the recovered public cache entry.",
@@ -428,7 +426,7 @@
       "status": "fetched",
       "reason": "metadata_complete",
       "attempts": 2,
-      "durationMs": 424.8704450000005,
+      "durationMs": 487.21785199999795,
       "statusCode": 200,
       "message": "Preview metadata fetched successfully.",
       "remediation": "No action required.",
@@ -442,10 +440,10 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-23T12:38:52.254Z",
+        "enrichedAt": "2026-09-24T12:38:16.509Z",
         "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 29700,
-        "subscribersCountRaw": "29.7K subscribers"
+        "subscribersCount": 30300,
+        "subscribersCountRaw": "30.3K subscribers"
       },
       "blocking": false,
       "supportedProfilePlatform": "youtube"
