@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-26T12:10:29.852Z",
+  "updatedAt": "2026-09-27T12:47:53.912Z",
   "entries": [
     {
       "linkId": "live-with-the-hive-podcast",
@@ -12,7 +12,7 @@
       "csvPath": "history/followers/live-with-the-hive-podcast.csv",
       "latestAudienceCount": 601,
       "latestAudienceCountRaw": "601 subscribers",
-      "latestObservedAt": "2026-09-26T12:10:29.852Z"
+      "latestObservedAt": "2026-09-27T12:47:53.912Z"
     },
     {
       "linkId": "rumble",
@@ -24,7 +24,7 @@
       "csvPath": "history/followers/rumble.csv",
       "latestAudienceCount": 23,
       "latestAudienceCountRaw": "23 Followers",
-      "latestObservedAt": "2026-09-26T12:10:29.852Z"
+      "latestObservedAt": "2026-09-27T12:47:53.912Z"
     },
     {
       "linkId": "the-bitcoin-nova-x",
@@ -58,9 +58,9 @@
       "canonicalUrl": "https://www.youtube.com/@StaciNova",
       "audienceKind": "subscribers",
       "csvPath": "history/followers/youtube.csv",
-      "latestAudienceCount": 31300,
-      "latestAudienceCountRaw": "31.3K subscribers",
-      "latestObservedAt": "2026-09-26T12:10:29.852Z"
+      "latestAudienceCount": 31800,
+      "latestAudienceCountRaw": "31.8K subscribers",
+      "latestObservedAt": "2026-09-27T12:47:53.912Z"
     }
   ]
 }

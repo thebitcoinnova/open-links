@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T12:10:01.464Z",
+  "generatedAt": "2026-09-27T12:47:25.333Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -260,10 +260,10 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-26T11:59:03.739Z",
+        "enrichedAt": "2026-09-27T12:36:29.359Z",
         "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 31300,
-        "subscribersCountRaw": "31.3K subscribers"
+        "subscribersCount": 31800,
+        "subscribersCountRaw": "31.8K subscribers"
       }
     },
     "the-bitcoin-nova-x": {
