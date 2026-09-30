@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-29T13:47:27.633Z",
+  "generatedAt": "2026-09-30T13:23:44.806Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -64,8 +64,8 @@
         "ogImage": "http://satoshoes.co.uk/cdn/shop/files/New_Satoshoes_Logo.png?height=628&pad_color=ffffff&v=1764584362&width=1200",
         "sourceLabel": "satoshoes.co.uk",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-06-25T20:29:06.416Z"
+        "enrichmentReason": "public_cache",
+        "enrichedAt": "2026-04-01T09:40:23.555Z"
       },
       "referral": {
         "originalUrl": "https://satoshoes.co.uk/?ref=xstac1",
@@ -116,8 +116,8 @@
         "twitterImage": "https://cdn.prod.website-files.com/671a74f2583a01a80b2c4c13/691b3b0f5b25c0df5f70d4bf_Partner%20Headshots.avif",
         "sourceLabel": "thebitcoinway.com",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "public_cache",
-        "enrichedAt": "2026-04-07T10:37:09.694Z"
+        "enrichmentReason": "metadata_complete",
+        "enrichedAt": "2026-09-30T13:13:03.159Z"
       }
     },
     "altair-tech": {
@@ -147,8 +147,8 @@
         "image": "https://bitcoinsovryn.com/cdn/shop/files/Logo_BitcoinSovryn_HeadBanner.png?v=1785658247&width=500",
         "sourceLabel": "bitcoinsovryn.com",
         "enrichmentStatus": "fetched",
-        "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-08-27T03:00:37.931Z"
+        "enrichmentReason": "public_cache",
+        "enrichedAt": "2026-04-07T10:37:09.694Z"
       },
       "referral": {
         "kind": "promo",
@@ -260,10 +260,10 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-09-29T13:36:25.006Z",
+        "enrichedAt": "2026-09-30T13:13:03.159Z",
         "profileImage": "https://yt3.googleusercontent.com/D_4xv3vaZH0G1LHHy13hLLKQ_Meg80my8QTy-NlF_9G4gYt9XJTvYFAFxggVzVUnrP16RFwFug=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 32900,
-        "subscribersCountRaw": "32.9K subscribers"
+        "subscribersCount": 33500,
+        "subscribersCountRaw": "33.5K subscribers"
       }
     },
     "the-bitcoin-nova-x": {
