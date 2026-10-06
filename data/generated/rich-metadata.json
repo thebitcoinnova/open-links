@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T15:37:30.850Z",
+  "generatedAt": "2026-10-06T14:00:12.407Z",
   "links": {
     "the-bitcoin-nova": {
       "metadata": {
@@ -36,11 +36,11 @@
         "sourceLabel": "youtube.com",
         "enrichmentStatus": "fetched",
         "enrichmentReason": "metadata_complete",
-        "enrichedAt": "2026-10-05T15:26:30.776Z",
+        "enrichedAt": "2026-10-06T13:49:08.583Z",
         "profileDescription": "Hive Minded is Staci Costopoulos's Bitcoin roundtable and reaction channel, built around live hangs, sharp commentary, laughter, and group energy with people deep in the Bitcoin space. It extends The Bitcoin Nova ecosystem with raw conversation, community signal, and grassroots connection instead of polished talking points.",
         "profileImage": "https://yt3.googleusercontent.com/jgT_Z5_VUstZ801ghPeNNzQ0MBgznSfiIMJIKLDvp6H-lbBFZ9IMw6awzWxNG3tS8_hJ4fhLGA=s900-c-k-c0x00ffffff-no-rj",
-        "subscribersCount": 623,
-        "subscribersCountRaw": "623 subscribers"
+        "subscribersCount": 625,
+        "subscribersCountRaw": "625 subscribers"
       }
     },
     "fountain": {
